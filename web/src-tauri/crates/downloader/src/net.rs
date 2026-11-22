@@ -67,8 +67,9 @@ fn public_v6(ip: Ipv6Addr) -> bool {
     if first == 0x2002 {
         return public_v4(v4(seg[1], seg[2]));
     }
-    // ::/96 (IPv4-compatible, deprecated) and fec0::/10 (site-local, deprecated)
-    if seg[..6] == [0; 6] || (first & 0xffc0) == 0xfec0 {
+    // ::/96 (IPv4-compatible, deprecated), fec0::/10 (site-local, deprecated) and the NAT64
+    // local-use prefix 64:ff9b:1::/48 (RFC 8215)
+    if seg[..6] == [0; 6] || (first & 0xffc0) == 0xfec0 || seg[..3] == [0x64, 0xff9b, 1] {
         return false;
     }
     !(ip.is_unspecified()
@@ -322,6 +323,7 @@ mod tests {
             "2002:c0a8:0101::1",
             "::192.168.0.1",
             "fec0::1",
+            "64:ff9b:1::c0a8:1",
         ] {
             assert!(!is_public_ip(bad.parse().unwrap()), "{bad}");
         }

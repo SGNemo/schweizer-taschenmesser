@@ -1,4 +1,5 @@
 import { Channel, invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 import type { TorrentInfo, TorrentService, TorrentSource } from '../torrent';
 
 const unsupported = (): Promise<never> => Promise.reject(new Error('unsupported'));
@@ -23,6 +24,18 @@ export function createTorrent(supported: boolean): TorrentService {
     supported: true,
     configure: (settings) => invoke<void>('torrent_configure', { settings }),
     stop: () => invoke<void>('torrent_stop'),
+    onStopped(callback) {
+      let off: (() => void) | undefined;
+      let gone = false;
+      void listen('torrent-stopped', () => callback()).then((un) => {
+        if (gone) un();
+        else off = un;
+      });
+      return () => {
+        gone = true;
+        off?.();
+      };
+    },
     preview: (source) =>
       invoke('torrent_preview', { input: input(source) }) as ReturnType<TorrentService['preview']>,
     add: (source, dir, files) =>

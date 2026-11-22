@@ -24,7 +24,7 @@ import { DownloadsEmpty } from '../components/DownloadsEmpty';
 import styles from './DownloadsPage.module.css';
 import { TorrentIp } from './TorrentIp';
 
-type Status = 'starting' | 'ready' | 'failed';
+type Status = 'starting' | 'ready' | 'failed' | 'stopped';
 
 /** A magnet link or `.torrent` file path that arrived from outside (OS association, browser). */
 export interface TorrentIncoming {
@@ -70,19 +70,16 @@ export function TorrentSection({
   };
   const limitKey = JSON.stringify(limits);
   const { dht, upnp } = device;
-  // The engine can stop while the window is hidden (the tray's „Torrent läuft – beenden“, closing
-  // into the tray when idle): coming back into view starts it again and watches anew.
+  // Stopped outside the page (the tray's „Torrent läuft – beenden“, closing into the tray while
+  // idle): the page says so and waits for a click; a deliberate stop is not undone by itself.
   const [epoch, setEpoch] = useState(0);
   useEffect(() => {
-    if (!device.torrent) return;
-    const onVisible = () => {
-      if (document.visibilityState !== 'visible') return;
+    if (!device.torrent || !platform.onStopped) return;
+    return platform.onStopped(() => {
       resetTorrents();
-      setEpoch((n) => n + 1);
-    };
-    document.addEventListener('visibilitychange', onVisible);
-    return () => document.removeEventListener('visibilitychange', onVisible);
-  }, [device.torrent]);
+      setStatus('stopped');
+    });
+  }, [platform, device.torrent]);
 
   // The engine starts only after the notice was confirmed; limits apply as soon as they change.
   useEffect(() => {
@@ -184,6 +181,21 @@ export function TorrentSection({
         <Button onClick={() => void turnOff()}>{t.downloads.torrent.turnOff}</Button>
       </div>
       {status === 'starting' ? <p role="status">{t.downloads.torrent.starting}</p> : null}
+      {status === 'stopped' ? (
+        <div className={styles.bar}>
+          <p role="status" className={styles.hint}>
+            {t.downloads.torrent.stopped}
+          </p>
+          <Button
+            onClick={() => {
+              setStatus('starting');
+              setEpoch((n) => n + 1);
+            }}
+          >
+            {t.downloads.torrent.restart}
+          </Button>
+        </div>
+      ) : null}
       {status === 'failed' ? (
         <p role="alert" className={styles.error}>
           {t.downloads.torrent.startFailed}
@@ -212,7 +224,7 @@ export function TorrentSection({
           </Button>
         </div>
       ) : null}
-      <div>
+      <div role="group" aria-describedby="downloads-device-only">
         <Switch
           label={t.downloads.settings.torrentDht}
           checked={dht}
@@ -222,8 +234,10 @@ export function TorrentSection({
           label={t.downloads.settings.torrentUpnp}
           checked={upnp}
           onChange={(on) => void setNetwork({ upnp: on })}
-          hint={t.downloads.torrent.deviceOnly}
         />
+        <p id="downloads-device-only" className={styles.hint}>
+          {t.downloads.torrent.deviceOnly}
+        </p>
       </div>
       <TorrentIp />
       <AddTorrentDialog

@@ -8820,7 +8820,7 @@ export const de = {
     errors: {
       scheme: 'Nur Adressen mit http:// oder https:// gehen.',
       url: 'Das ist keine gültige Adresse.',
-      dir: 'Nemo speichert nur in Ordnern, die du mit „Ordner wählen“ ausgesucht hast. Wähle den Ordner dort (neu) aus.',
+      dir: 'Nemo speichert nur in Ordnern, die du mit „Ordner wählen“ ausgesucht hast. Wähle den Ordner dort aus.',
       blocked: 'Von Adressen im Heimnetz oder auf diesem PC lädt Nemo nichts herunter.',
       hash: 'Die Prüfsumme muss 64 (SHA-256) oder 128 (SHA-512) Zeichen aus 0–9 und a–f haben.',
       other: 'Das hat nicht geklappt.',
@@ -8840,7 +8840,7 @@ export const de = {
       blocked:
         'Die Adresse führt ins Heimnetz oder auf diesen PC. Von dort lädt Nemo nichts. Prüfe die Adresse.',
       redirect:
-        'Die Adresse leitet zu oft weiter oder auf eine unverschlüsselte Adresse. Lade die Datei im Browser, wenn du der Seite vertraust.',
+        'Die Adresse leitet zu oft weiter oder auf eine unverschlüsselte Adresse. Prüfe die Adresse oder hole die Datei direkt von der Seite des Anbieters.',
       url: 'Die gespeicherte Adresse ist ungültig.',
       scheme: 'Nur Adressen mit http:// oder https:// gehen.',
     },
@@ -8890,7 +8890,9 @@ export const de = {
       },
       turnOff: 'Torrent-Teil ausschalten',
       deviceOnly:
-        'Torrent-Schalter und Ordner gelten nur auf diesem PC. Umschalten startet BitTorrent kurz neu.',
+        'Torrent-Schalter und Ordner gelten nur auf diesem PC. Ein Schalter-Wechsel startet BitTorrent kurz neu.',
+      stopped: 'BitTorrent ist angehalten. Deine Torrents bleiben in der Liste.',
+      restart: 'Wieder starten',
       starting: 'Wird gestartet …',
       launch: {
         needModule: 'Dafür braucht es das Modul „Downloads“.',
@@ -8928,7 +8930,7 @@ export const de = {
         notMagnet: 'Das ist kein Magnet-Link.',
         timeout: 'Keine Quellen gefunden. Prüfe den Link oder versuche es später noch einmal.',
         alreadyAdded: 'Dieser Torrent ist schon in der Liste.',
-        dir: 'Nemo speichert nur in Ordnern, die du mit „Ordner wählen“ ausgesucht hast. Wähle den Ordner dort (neu) aus.',
+        dir: 'Nemo speichert nur in Ordnern, die du mit „Ordner wählen“ ausgesucht hast. Wähle den Ordner dort aus.',
         badPath:
           'Der Torrent enthält Dateinamen, die auf Windows an einer anderen Stelle landen könnten. Nemo lädt ihn nicht.',
         tracker:

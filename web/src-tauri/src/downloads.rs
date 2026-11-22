@@ -147,8 +147,12 @@ pub(crate) fn wipe(app: &AppHandle) -> Result<(), String> {
             }
         }
     }
-    *state.picked.lock().unwrap_or_else(|e| e.into_inner()) = Some(Vec::new());
-    crate::device_wipe::remove_file(&picked_file(app)?)?;
+    {
+        // not between a pick's read and write
+        let _one_at_a_time = state.gate.lock().unwrap_or_else(|e| e.into_inner());
+        *state.picked.lock().unwrap_or_else(|e| e.into_inner()) = Some(Vec::new());
+        crate::device_wipe::remove_file(&picked_file(app)?)?;
+    }
     crate::device_wipe::remove_file(&state_file(app)?)
 }
 

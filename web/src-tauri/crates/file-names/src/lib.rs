@@ -228,9 +228,13 @@ pub fn safe_segment(segment: &str) -> bool {
     !bad_char
         && trim_end(segment).len() == segment.len()
         && !reserved(trim_end(segment.split('.').next().unwrap_or("")))
-        // shortcut types Explorer resolves on sight (`.url`, `.lnk`, `desktop.ini` …): the other
-        // paths defuse them, a name that cannot be renamed is refused
-        && !defused_ext(segment)
+}
+
+/// Whether a name is a shortcut type Explorer resolves just by showing the folder (`.url`, `.lnk`,
+/// `desktop.ini` …). [`clean`] defuses such names; where a name cannot be renamed (a file inside
+/// a torrent), the caller leaves the file out.
+pub fn shortcut(name: &str) -> bool {
+    defused_ext(name)
 }
 
 /// The `Zone.Identifier` text Windows reads for a file from the internet (zone 3): SmartScreen,
@@ -292,9 +296,6 @@ mod tests {
             "gnp.\u{202E}exe",
             "zero\u{200B}width",
             "tab\there",
-            "Ordner.url",
-            "x.LNK",
-            "desktop.ini",
         ] {
             assert!(!safe_segment(bad), "{bad:?}");
         }
@@ -310,6 +311,14 @@ mod tests {
         assert_eq!(clean("Rechnung\u{202E}fdp.exe"), "Rechnungfdp.exe");
         assert_eq!(clean("../../etc/passwd"), "passwd");
         assert_eq!(clean("Bild.png:Zone.Identifier"), "Bild.png_Zone.Identifier");
+    }
+
+    #[test]
+    fn shortcut_types_are_recognised() {
+        for s in ["Besuche uns.url", "x.LNK", "desktop.ini", "a.library-ms"] {
+            assert!(shortcut(s), "{s}");
+        }
+        assert!(!shortcut("film.mkv") && !shortcut("url"));
     }
 
     #[test]

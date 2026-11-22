@@ -67,7 +67,7 @@ export const downloads: Strings['downloads'] = {
   errors: {
     scheme: 'Only addresses with http:// or https:// work.',
     url: 'That is not a valid address.',
-    dir: 'Nemo only saves into folders you picked with “Choose folder”. Pick the folder there (again).',
+    dir: 'Nemo only saves into folders you picked with “Choose folder”. Pick the folder there.',
     blocked: 'Nemo does not download from addresses in the home network or on this PC.',
     hash: 'The checksum needs 64 (SHA-256) or 128 (SHA-512) characters from 0–9 and a–f.',
     other: 'That did not work.',
@@ -87,7 +87,7 @@ export const downloads: Strings['downloads'] = {
     blocked:
       'The address leads into the home network or to this PC. Nemo does not download from there. Check the address.',
     redirect:
-      'The address redirects too often or to an unencrypted address. Download the file in the browser if you trust the site.',
+      'The address redirects too often or to an unencrypted address. Check the address or get the file directly from the provider’s site.',
     url: 'The saved address is not valid.',
     scheme: 'Only addresses with http:// or https:// work.',
   },
@@ -137,7 +137,9 @@ export const downloads: Strings['downloads'] = {
     },
     turnOff: 'Switch the torrent part off',
     deviceOnly:
-      'The torrent switches and the folder apply on this PC only. Changing one restarts BitTorrent briefly.',
+      'The torrent switches and the folder apply on this PC only. Changing a switch restarts BitTorrent briefly.',
+    stopped: 'BitTorrent is stopped. Your torrents stay in the list.',
+    restart: 'Start again',
     starting: 'Starting …',
     launch: {
       needModule: 'This needs the “Downloads” module.',
@@ -175,7 +177,7 @@ export const downloads: Strings['downloads'] = {
       notMagnet: 'That is not a magnet link.',
       timeout: 'No sources found. Check the link or try again later.',
       alreadyAdded: 'This torrent is already in the list.',
-      dir: 'Nemo only saves into folders you picked with “Choose folder”. Pick the folder there (again).',
+      dir: 'Nemo only saves into folders you picked with “Choose folder”. Pick the folder there.',
       badPath:
         'The torrent contains file names that could land somewhere else on Windows. Nemo does not load it.',
       tracker:

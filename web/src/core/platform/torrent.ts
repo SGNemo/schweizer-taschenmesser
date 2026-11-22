@@ -73,6 +73,11 @@ export interface TorrentService {
   remove(id: number, deleteData: boolean): Promise<void>;
   /** The list now and about once a second. */
   watch(onList: (torrents: TorrentInfo[]) => void): Promise<void>;
+  /**
+   * The engine was stopped outside the page (tray, closing into the tray when idle). Optional so
+   * fakes keep compiling. Returns an unsubscribe function.
+   */
+  onStopped?(callback: () => void): () => void;
   /** System dialog for a `.torrent` file; `null` when cancelled. */
   pickFile(): Promise<string | null>;
 }
