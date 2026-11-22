@@ -21,4 +21,4 @@ Das war der alte Name. Technische Kennungen (Paketname, Dateipfade) behalten ihn
 Ja, MIT-Lizenz. Kosten entstehen nur bei bezahlten KI-Anbietern, die du selbst einrichtest. Freiwillige Unterstützung geht über [Ko-fi](https://ko-fi.com/nemojr) und schaltet nur kosmetische Extras frei.
 
 ## Schickt Nemo meine Daten irgendwohin?
-Nein. Die Daten bleiben auf deinem Gerät. Sync läuft nur über einen Server, den du selbst betreibst, und KI-Anbieter bekommen nie deine Einträge. Details: [Sicherheit](security.de.md).
+Nicht von selbst. Die Daten bleiben auf deinem Gerät, solange du nichts einrichtest: Sync (ein Server, den du selbst betreibst, oder deine eigenen gekoppelten Geräte im Heimnetz), eine Verbindung wie Google oder Spotify oder einen KI-Anbieter. Der Assistent schickt deine Frage und Feldnamen, nie Einträge; im Chat kannst du Daten eines Moduls nach einer Vorschau anhängen. Was wohin verbindet: [Sicherheit](security.de.md).
