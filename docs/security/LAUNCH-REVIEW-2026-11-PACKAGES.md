@@ -1,6 +1,6 @@
 # Launch review 2 – packages (prompts)
 
-Findings and evidence: [LAUNCH-REVIEW-2026-11.md](LAUNCH-REVIEW-2026-11.md). One package = one chat, one branch from fresh `develop`, one PR against `develop`; paste one prompt per chat. Start order after SC1: package 2, then 1, then 3, then 5–7; the rest in any order. "Sven merges" = the package touches a hard-limit area (signing, secrets, gitleaks configuration, artifact audit, `release.yml`, sync encryption, crypto, vault logic, `guard.rs`) or needs GitHub settings; the chat never merges. Every package: a test that is red before, `.changes/*-security.md` (de + en), hand tests into [../MANUAL-TESTS.md](../MANUAL-TESTS.md) next to the `SEC-…` block, `council` with a Guardian. Delete this file in the PR that closes the last package.
+Findings and evidence: [LAUNCH-REVIEW-2026-11.md](LAUNCH-REVIEW-2026-11.md). One package = one chat, one branch from fresh `develop`, one PR against `develop` (package 10: two branches and PRs, web and Rust); paste one prompt per chat. Start order after SC1: package 2, then 1, then 3, then 5–7; the rest in any order. "Sven merges" = the package touches a hard-limit area (signing, secrets, gitleaks configuration, artifact audit, `release.yml`, sync encryption, crypto, vault logic, `guard.rs`) or needs GitHub settings; the chat never merges. Every package: a test that is red before, `.changes/*-security.md` (de + en), hand tests into [../MANUAL-TESTS.md](../MANUAL-TESTS.md) next to the `SEC-…` block, `council` with a Guardian. Delete this file in the PR that closes the last package.
 
 | # | Package | Branch | Findings | Blocks | Who merges |
 |---|---|---|---|---|---|
@@ -14,8 +14,8 @@ Findings and evidence: [LAUNCH-REVIEW-2026-11.md](LAUNCH-REVIEW-2026-11.md). One
 | 7 | Chat stays with its provider | `fix/security-ai-provider-pin` | AI1 | exe, APK, PWA (condition) | – |
 | 8 | Home network and remote control, small hardening | `fix/security-lan-hardening` | H1, H2, H3 (proposal), H4, H5, H6, H10, F1, F2, F3 (= NS7), E1–E5 | – | – (H3, H10 rule text: Sven) |
 | 9 | Android: manifest, lock screen, clipboard | `fix/security-android-surface` | NS5, NS6, NS8 (V4) | – | Sven (NS8 is in the secret-store plugin) |
-| 10 | Web layer and server lows | `fix/security-web-lows` | R5, R6, R8, M2, M5, M6, Q1, Q2, Q3, B1–B3, PC2, PC3, N9, SC6, SC7; V5 only if not accepted | – | – |
-| 11 | Privacy texts, second pass | `docs/security-privacy-texts-2` | D9, D10 (rest), D11, D13, M7, M8, F5 | – | – |
+| 10 | Web layer and server lows | `fix/security-web-lows` (+ `fix/security-native-lows` for the Rust part) | R5, R6, R8, M2, M5, M6, Q1, Q2, Q3, B1–B3, PC2, PC3, N9, SC6, SC7; V5 only if not accepted | exe, APK, PWA (only if V5 is not accepted) | – |
+| 11 | Privacy texts, second pass | `docs/security-privacy-texts-2` | D9, D10 (rest), D11, D13, D19 (proposal), M7, M8, F5 | – | – |
 
 Not packaged – info items and lows whose recommendation is "accept for 1.0": H7–H9, F4, F6, F7, E6–E9 (review with the exchange file packages), B4–B7, PC4, PC5, A5 (low, accept), A9–A11, MOD1, MOD2, NS9, NS10, Q4, Q5, SC5 (low, accept: not reachable), SC8, SC11, D15, V9, T6–T8, P5 (low, accept). Mediums with recommendation accept: S13, V5, X4.
 
@@ -64,7 +64,7 @@ Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Q
 Routing: Claude Code · Sicherheit Paket 3 – Downloads und Torrent härten · Opus
 
 # Aufgabe (unbeaufsichtigt): DL1–DL11
-Lies docs/security/LAUNCH-REVIEW-2026-11.md (Abschnitt Downloads, DL1–DL11), web/src-tauri/crates/{downloader,torrent}, src/{downloads,torrent}.rs, modules/downloads. Zuerst im Quelltext von librqbit 9.1.0 klären (im PR-Text festhalten): wie Dateipfade aus der Metainfo behandelt werden (`..`, absolut, reservierte Namen), ob `Session::stop` Listener und DHT schließt.
+Lies docs/security/LAUNCH-REVIEW-2026-11.md (Abschnitt Downloads, DL1–DL11), web/src-tauri/crates/{downloader,torrent}, src/{downloads,torrent}.rs, modules/downloads. Hotspot `crates/lan-sync` (gemeinsamer Namens-Bereiniger): vorher `npm run chats:status` und Heads-up im Notizen-Repo. Zuerst im Quelltext von librqbit 9.1.0 klären (im PR-Text festhalten): wie Dateipfade aus der Metainfo behandelt werden (`..`, absolut, reservierte Namen), ob `Session::stop` Listener und DHT schließt.
 ## Pflichtliste
 - DL1: nie überschreiben (eigener Unterordner oder Vorabprüfung; Fortsetzen eines eigenen Torrents bleibt möglich).
 - DL2: Engine stoppt, wenn das Modul oder der Torrent-Teil ausgeht und beim Schließen ins Tray ohne aktive Torrents; sichtbare Zeile „Torrent läuft“.
@@ -92,7 +92,7 @@ Lies docs/security/LAUNCH-REVIEW-2026-11.md (NS2, NS3, S13), web/src-tauri/src/u
 - NS2: vor dem Tausch die Version der geprüften Nutzlast mit der laufenden vergleichen; ältere ablehnen.
 - S13: drei Wege mit Aufwand und Folgen (Digest im signierten Manifest, `.apk.sig` mit dem Updater-Schlüssel, so lassen); Empfehlung, nichts bauen.
 ## Abnahme
-Rust-Tests vorher rot; Handtests SEC-6, SEC-7 angepasst.
+Rust-Tests vorher rot; Handtests SEC-6, SEC-7, SEC-14 angepasst.
 ## Skills
 council. Mergt Sven selbst. Full stop.
 ```
@@ -163,7 +163,7 @@ Lies docs/security/LAUNCH-REVIEW-2026-11.md (H1–H10, F1–F3, E1–E5), RULES 
 - E1–E5: Grenzen je Gerät, Limit am Handy, Modul-aus erreicht den nativen Schalter, Ausgang bei Pause, Namensfilter im Dialog.
 - H3: Text und Ablauf „Schlüssel erneuern nach dem Entkoppeln“ als Vorschlag im PR-Text (Sync-Verschlüsselung: Sven entscheidet). H10: mDNS je Schnittstelle binden oder den Regelsatz „nie 0.0.0.0“ auf den TCP-Listener einschränken – beide Wege mit Aufwand, Sven entscheidet (Regeltext).
 ## Abnahme
-Rust-Tests je Punkt vorher rot; `tests/rules.rs` erweitert; Handtests SEC-3, SEC-10.
+Rust-Tests je Punkt vorher rot; `tests/rules.rs` erweitert; Handtests SEC-3, SEC-5, SEC-10.
 ## Skills
 council. Full stop.
 ```
@@ -176,6 +176,7 @@ Routing: Claude Code · Sicherheit Paket 9 – Android: Sicherung, Sperrbildschi
 
 # Aufgabe (unbeaufsichtigt): NS5, NS6, NS8
 Lies docs/security/LAUNCH-REVIEW-2026-11.md (Abschnitt „Native shell“).
+## Pflichtliste
 - NS5: `dataExtractionRules` (nichts in Cloud-Backup und Geräteumzug) über `web/scripts/lib/androidManifest.ts` + Test.
 - NS6: Benachrichtigungen mit Sichtbarkeit „privat“, Einstellung „Inhalt auf dem Sperrbildschirm zeigen“ (aus), de + en.
 - NS8: Kotlin-Befehl in `plugins/secure-store` setzt `EXTRA_IS_SENSITIVE`.
@@ -192,7 +193,7 @@ Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Q
 Routing: Claude Code · Sicherheit Paket 10 – kleine Befunde in Web-Schicht und Server · Opus
 
 # Aufgabe (unbeaufsichtigt): R5, R6, R8, M2, M5, M6, Q1, Q2, Q3, B1–B3, PC2, PC3, N9, SC6, SC7 (V5 nur, wenn Sven es nicht angenommen hat)
-Lies docs/security/LAUNCH-REVIEW-2026-11.md; je Befund die kleinste Änderung mit einem Test, der vorher rot ist. Höchstens zwei PRs (Web/Server · Rust). Was sich als größer zeigt, kommt als Vorschlag in den PR-Text.
+Lies docs/security/LAUNCH-REVIEW-2026-11.md; je Befund die kleinste Änderung mit einem Test, der vorher rot ist. Zwei Branches und PRs: `fix/security-web-lows` (Web/Server) und `fix/security-native-lows` (Rust). Was sich als größer zeigt, kommt als Vorschlag in den PR-Text.
 ## Abnahme
 check, test, e2e grün; Liste „gemacht / zurückgestellt mit Grund“.
 ## Skills
@@ -208,6 +209,7 @@ Routing: Claude Code · Sicherheit Paket 11 – Datenschutztexte, zweiter Durchg
 # Aufgabe (unbeaufsichtigt): D9, D10 (Rest), D11, D13, M7, M8, F5
 Lies docs/security/LAUNCH-REVIEW-2026-11.md (Abschnitt „Promises against code“, M7, M8, F5).
 - Neue Flüsse in `docs/legal/DATA-FLOWS.md` und `tLegal.flows` (de + en, ids in `core/legal/legal.test.ts`): Austausch und Fernsteuerung im Heimnetz als eigene Zeile, Leck-Prüfung (pwnedpasswords), Link- und Tab-Vorschau („nie im Hintergrund“ in `strings.legal.ts:118,368` berichtigen).
+- D19 nur als Vorschlag im PR-Text (Schlagzeile der Startseite und README-Zeile 12: „Deine Daten liegen auf deinem Gerät; ins Netz geht nur, was du einrichtest oder auslöst“) – Sven entscheidet über den Wortlaut.
 - `core/net/catalogue.ts`: api.anthropic.com. Spotify: Trennen widerruft nicht bei Spotify (Text + docs/user/spotify*.md). Regeltext Fernsteuerung: Maus/Tastatur-Freigabe reicht so weit wie der Nutzer.
 - Website-Liste und docs/user/security*.md nachziehen.
 ## Abnahme

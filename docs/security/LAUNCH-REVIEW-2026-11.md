@@ -12,33 +12,33 @@ Rule: an open critical or high finding in a channel = **no**; medium = condition
 
 | Channel | Verdict | Open findings that decide it | Way to "yes" |
 |---|---|---|---|
-| Windows exe | **no** | high: SC1. Medium: SC3, R1, DL1–DL3, X2, S5, AI1, V5; PC1, M1, D6 (fixed, to merge) | 1. Close SC1. 2. Merge the three fix PRs. 3. Packages 1 (SC3), 2 (R1) and 3 (DL1–DL3; DL1 and DL2 can be accepted instead only once the DL10 point of package 3 is in, because until then another device can switch torrent on). 4. X2, S5, AI1: fix (packages 5–7) or accept in writing. V5: recommendation accept |
+| Windows exe | **no** | high: SC1. Medium: SC3, R1, DL1–DL3, X2, S5, AI1, V5; PC1, M1, D6 (fixed, to merge) | 1. Close SC1. 2. Merge the three fix PRs. 3. Packages 2 (R1), 1 (SC3) and 3 (DL1–DL3; DL1 and DL2 can be accepted instead only once the DL10 point of package 3 is in, because until then another device can switch torrent on). 4. X2, S5, AI1: fix (packages 5–7) or accept in writing. V5: recommendation accept |
 | Android APK | **no** | high: SC1. Medium: SC2, SC3, S13, S5, AI1, V5; D6 (fixed, to merge). R1 is a PC finding; on the phone the reset leaves the pairing entries (list under R1–R3) | 1. Close SC1. 2. Merge the fix PRs. 3. Package 1 (SC2, SC3); package 2 also clears the phone side. 4. S13 and V5: recommendation accept; S5, AI1: fix or accept in writing |
-| PWA | **yes with conditions** | medium: S5, AI1, V5; D6 (fixed, to merge) | S5: accept with the documented reason (in the browser IndexedDB stays the only store; package 6 changes the apps, not the PWA). AI1: package 7 or accept. V5: accept. Merge the texts PR. Lows: R6 (no CSP for the self-hosted PWA), Q2 |
+| PWA | **yes with conditions** | medium: S5, AI1, V5; D6 (fixed, to merge) | S5: accept with the documented reason (in the browser IndexedDB stays the only store; package 6 changes the apps, not the PWA). AI1: package 7 (recommendation) or accept in writing. V5: accept. Merge the texts PR. Lows: R6 (no CSP for the self-hosted PWA), Q2 |
 | Sync server | **yes** | none from medium up. Lows: N9, R8 | list only: say in the server doc how to publish on `127.0.0.1` behind a tunnel (package 10) |
 | Browser extension | **yes with conditions** | medium: X2, X4 (open since October) | package 5, or accept both as documented limits in VAULT-EXTENSION.md (recommendation: fix X2, accept X4) |
 | Website | **no** | high: SC1. Medium: D6, D8 (fixed, to merge) | 1. close SC1. 2. Merge the privacy-texts PR. Not security: legal placeholders in [../legal/LAUNCH-LEGAL-CHECKLIST.md](../legal/LAUNCH-LEGAL-CHECKLIST.md) (3 done, 14 open) |
 
 SC1 has one closing condition everywhere in these documents: **every step of the private note is done**. It decides the Windows exe, the Android APK and the website. PWA and sync server are built by the user from the repository; the extension has no release channel yet (open decision 4 in CHATS.md) – if it ships as a release file it inherits SC1. For every channel the same sentence holds: each medium listed in its row is either merged as a fix or accepted in writing in the release issue (recommendations: see the rule above). Order of work after SC1: merge the three fix PRs, then package 2 (R1), package 1 (SC2, SC3), package 3 (DL1–DL3, DL10), then packages 5–7.
 
-No critical finding. One high finding (SC1). The Dev-Preview that friends already run is affected by every finding below that is not marked "preview module". None of the findings described in this document works without a user action, a paired device or script execution inside the app.
+No critical finding. One high finding (SC1). The Dev-Preview that friends already run is affected by every finding below that is not marked "preview module". None of the findings described in this document works without a user action, a paired device, script execution inside the app or presence in the same network (H1, H2, H10: denial of service and fingerprinting only).
 
-### Blockers, in order
+### Blockers, in the order of work
 
 1. **SC1** – release pipeline, high. Details and steps are not in this repository (public repo, no fix in this PR): they were handed to the maintainer privately. Until it is closed: no release.
-2. **R1** – "Alle Daten löschen" leaves the home-network hub running and trusted (medium, package 2).
-3. **PC1, M1, D6, D8** – fixed in the three fix PRs of this review (below); they only need a merge.
-4. **DL1–DL3** – torrent overwrites existing files, peer listener outlives the module, no Mark-of-the-Web (medium, package 3).
-5. **SC2, SC3** – dev and production APK share one keystore; dry runs see production keys (medium, hard-limit area, package 1; the parked draft PR #542 touches the same secrets).
-6. **X2, X4, S5, S13, AI1, V5** – known or residual mediums: decide fix or accept (packages 4–7; recommendation: accept S13, V5 and X4, fix X2, S5 in the apps and AI1).
+2. **PC1, M1, D6, D8** – fixed in the three fix PRs of this review (below); they only need a merge.
+3. **R1** – "Alle Daten löschen" leaves the home-network hub running and trusted (medium, package 2).
+4. **SC2, SC3** – dev and production APK share one keystore; dry runs see production keys (medium, hard-limit area, package 1; the parked draft PR #542 touches the same secrets).
+5. **DL1–DL3** – torrent overwrites existing files, peer listener outlives the module, no Mark-of-the-Web (medium, package 3, with DL10).
+6. **X2, X4, S5, S13, AI1, V5** – known or residual mediums: decide fix or accept (packages 4–7, V5 in package 10; recommendation: accept S13, V5 and X4, fix X2, S5 in the apps and AI1).
 
 ### Fixed in this review (three PRs, each with a test that was red before)
 
 | PR branch | Findings | Test |
 |---|---|---|
-| `fix/security-web-inputs` | M1 mail images only from public https hosts, every redirect judged again; M3 attachment name; M4 feed link scheme; R4 push link stays in the app; R7 diagnostics scrubber | `core/mail/sanitize.test.ts`, `core/mail/fileName.test.ts`, `core/net/publicUrl.test.ts`, `core/platform/tauri/redirect.test.ts`, `feeds.page.test.tsx`, `pushPayload.test.ts`, `core/diagnostics/scrub.test.ts` |
+| `fix/security-web-inputs` | M1 mail images only from public https hosts (home-router names included), every redirect judged again; M3 attachment name; M4 feed link scheme; R4 push link stays in the app; R7 diagnostics scrubber | `core/mail/sanitize.test.ts`, `core/mail/fileName.test.ts`, `core/net/publicUrl.test.ts`, `core/platform/tauri/redirect.test.ts`, `feeds.page.test.tsx`, `pushPayload.test.ts`, `core/diagnostics/scrub.test.ts` |
 | `fix/security-windows-spawn` | PC1 system tools by full path | `tests/commands.rs` `no_program_is_started_by_bare_name` + Windows unit tests |
-| `fix/security-privacy-texts` | D6, D8 (list completed; the claim "every connection" is gone on the page, its heading and the start-page link; the page points to the in-app list), D10, D12, D14, D16, D17, D18, D7 | `core/legal/legal.test.ts` |
+| `fix/security-privacy-texts` | D6, D8 (list completed; the claim "every connection" is gone on the page, its heading and the start-page link; the page points to the in-app list), D10, D12, D14, D16, D17, D18, D20, D7 | `core/legal/legal.test.ts` |
 
 ## Findings
 
@@ -72,7 +72,7 @@ No critical finding. One high finding (SC1). The Dev-Preview that friends alread
 
 | ID | Sev | Finding | Evidence | Size |
 |---|---|---|---|---|
-| H1 | low | Connection slots (32, 4 per address) are taken at accept, the rate limit counts only complete first messages; a replayed first message of a paired phone idles 120 s. About 8 addresses in the subnet block sync for everyone | `crates/lan-sync/src/transport/mod.rs:51-55,311,504`, `endpoint.rs:158`, `hub/router.rs:112` | S |
+| H1 | low | Connection slots (32, 4 per address) are taken at accept, the rate limit counts only complete first messages; a replayed first message of a paired phone idles 120 s. About 8 addresses in the subnet block sync for everyone | `crates/lan-sync/src/transport/mod.rs:51-55,311,504`, `crates/lan-sync/src/endpoint.rs:158`, `hub/router.rs:112` | S |
 | H2 | low | "Wi-Fi only" is a label: each sync round while the app is open dials the pinned private `ip:port` on every network, and when that fails the phone searches for the hub by mDNS (`_nemo-sync._tcp`) on whatever Wi-Fi it is on, at most every 30 s. Both are a stable fingerprint on foreign networks; no data, no identity (`IK`) | `src/lan_client.rs:43-47,205-209,234-250`, `core/sync/service.ts:365,416`, `pages/settings/LanClientSection.tsx:129` | S |
 | H3 | low | Unpairing revokes and closes sessions (≤ 200 ms) but neither rotates the data key nor offers it; a lost device keeps the key for any ciphertext it later obtains. Rotation revokes nobody | `src/lan_sync.rs:650-670,674-697`, `crates/lan-sync/src/hub/handler.rs:157` | S–M, Sven merges (sync encryption) |
 | H4 | low | The pairing window has no total lifetime (renewed every 2 s until cancel): hub listens on every "Private" network meanwhile | `crates/lan-sync/src/pairing/mod.rs:321,400,641`, `src/lan_sync.rs:283` | S |
@@ -121,7 +121,7 @@ No critical finding. One high finding (SC1). The Dev-Preview that friends alread
 | DL7 | low | No size cap, free-space check or read timeout; preview cache never evicted | `crates/downloader/src/worker.rs:92,141,253-258` | S |
 | DL8 | low | Bidi overrides stay in names; reserved-name gaps (`CON .txt`, `COM¹`); torrent folder name unchecked | `crates/downloader/src/name.rs:37,57-61`, `crates/torrent/src/engine.rs:416-434` | S |
 | DL9 | low | `downloads.json` keeps full URLs (credentials, signed tokens); reloaded unchecked, so an edited file makes "remove + delete data" delete another path | `crates/downloader/src/manager.rs:113-125,223,292-295` | S |
-| DL10 | low | The Downloads settings live in the synced settings: another device with the data key (or a merged backup) can switch the torrent part, DHT and UPnP on and set the default target folder. The peer listener then opens the next time the Downloads page is opened (after its notice, unless this PC acknowledged the notice before), and a pre-filled folder such as the Startup folder is accepted natively (DL6) and gets no Mark-of-the-Web (DL3). "Torrent off by default" is therefore a default, not a guarantee | `modules/downloads/settings.ts:7-11,25-33,42-47`, `core/settings/settings.ts:9` | S (device-local keys, native check of the folder) |
+| DL10 | low | The Downloads settings live in the synced settings: another device with the data key, a merged backup, or the sync server when end-to-end encryption was switched off (the same holds for module switches, MOD2, and bookmark addresses, Q3) can switch the torrent part, DHT and UPnP on and set the default target folder. The peer listener then opens the next time the Downloads page is opened (after its notice, unless this PC acknowledged the notice before), and a pre-filled folder such as the Startup folder is accepted natively (DL6) and gets no Mark-of-the-Web (DL3). "Torrent off by default" is therefore a default, not a guarantee | `modules/downloads/settings.ts:7-11,25-33,42-47`, `core/settings/settings.ts:9` | S (device-local keys, native check of the folder) |
 | DL11 | info | Unchecked multiplications | `src/torrent.rs:133,136` | S |
 
 **This PC / tweaks / OS entry points (B6).** `git diff d48a4fe..7ef17176 -- '**/guard.rs'` is empty. Closed catalogue, HKCU only, no elevation, journal native-only, association on click, launch arguments only pre-fill a dialog.
@@ -222,9 +222,11 @@ Audit results (run on this commit):
 | D12 | low | Spotify scopes are broader than the site text – **fixed** (ledger, privacy pages, user docs) | `connectors/spotify/index.ts:121-166` |
 | D13 | info | Stale: `docs/legal/data-flows-hinweise.md:9`; the in-app host list lacks api.anthropic.com (`core/net/catalogue.ts:31-38`) | – |
 | D14 | low | SECURITY.md scope did not name the new parts – **fixed** | `SECURITY.md` |
-| D16 | low | The website privacy pages said about AI "never your entries; in chat the chat text goes to the provider" – the chat can attach module data after a preview (the in-app notice says so) – **fixed** in the texts PR | `modules/chat/engine.ts:98-105`, `site/src/pages/datenschutz.astro:54`, `site/src/pages/en/privacy.astro:52`, `docs/user/faq.md:24` |
+| D16 | low | The website privacy pages said about AI "never your entries; in chat the chat text goes to the provider" – the chat can attach module data after a preview (the in-app notice says so) – **fixed** in the texts PR | `modules/chat/engine.ts:98-105`, `site/src/pages/datenschutz.astro:54`, `site/src/pages/en/privacy.astro:52`, `docs/user/faq.md:24`, `site/src/i18n/de.ts:202-204` (data page heading "The AI does not see your entries … nothing more", reworded) |
 | D17 | low | User docs said the server "only sees collection, IDs and timestamps" with end-to-end encryption; field names are readable too – **fixed** | `server/src/store.ts:8,117`, `docs/user/security.md:8` |
 | D18 | low | The sync guide said the PC "only listens on your home network" (the mDNS sockets of H10 listen on every interface) and that keys "are never synced"; the in-app sync notice said keys are never transferred – at pairing the data key goes once, encrypted, to the paired device – **fixed** in the texts PR ("accepts connections", the one exception named) | `docs/user/sync.md:13,102`, `strings.legal.ts:38,288`, `crates/lan-sync/src/pairing/mod.rs:31,108-109` |
+| D19 | low | The start-page headline and the README tagline say "your data stays on your device" without a condition; the lead right below is conditional since the texts PR. A tagline is the maintainer's wording: not changed, proposal in package 11 ("your data lives on your device; only what you set up or trigger goes online") | `site/src/i18n/de.ts:56`, `site/src/i18n/en.ts:50`, `README.md:12`, `README.de.md:12` |
+| D20 | low | The backup guide said "an edited file is refused"; the checksum is a plain SHA-256 that anyone can recompute, and a file without one passes as unprotected – **fixed** in the texts PR ("a damaged file is noticed") | `docs/user/backup.md:29`, `core/backup/encrypted.ts:113-125`, `core/backup/verify.ts:116-123` |
 
 ## Status of the earlier findings (LAUNCH-REVIEW-2026-10-06, AUDIT-2026-09-30)
 
