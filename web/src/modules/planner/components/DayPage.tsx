@@ -100,6 +100,8 @@ export function DayPage({
   headEnd,
   onSwipe,
   dayEnd,
+  onSpread,
+  hints,
 }: {
   day: BoardDay;
   /** The day after today: its title says „Morgen“. */
@@ -120,6 +122,10 @@ export function DayPage({
   onSwipe?: (dir: 1 | -1) => void;
   /** The „Tagesende“ of the settings ('H:mm' as shown), named in the „Warum?“ line when set. */
   dayEnd?: string;
+  /** „Rest verteilen“ of this day beside its overbooking line (a preview of the day's things that are not „fest“). */
+  onSpread?: () => void;
+  /** The muted rows „In ToDos: Do · Hierher legen“ of this day (never counted). */
+  hints?: ReactNode;
 }) {
   const id = useId();
   const [all, setAll] = useState(false);
@@ -242,12 +248,12 @@ export function DayPage({
         ) : null}
       </div>
 
+      {/* A day may hold more than its time and says so in one calm line: a fact, no symbol, no tone (CONCEPT §2). */}
       {state === 'over' ? (
-        <p className={styles.overLine}>
-          <Icon name="alert" size={16} />
-          <span>{t.planner.sheet.overLine}</span>
-          {onRest ? (
-            <button type="button" className={styles.textLink} onClick={onRest}>
+        <p className={styles.overLine} data-testid="planner-over-line">
+          <span>{t.planner.head.over(compact(day.over))}</span>
+          {onSpread ? (
+            <button type="button" className={styles.textLink} onClick={onSpread}>
               {t.planner.rest.link}
             </button>
           ) : null}
@@ -323,6 +329,8 @@ export function DayPage({
           </div>
         </>
       ) : null}
+
+      {hints}
 
       {hasRows && (onRest || onSetup) ? (
         <div className={styles.sheetFoot}>

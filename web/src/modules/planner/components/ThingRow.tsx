@@ -63,6 +63,7 @@ export function ThingRow({
   onLater,
   noDuration,
   was,
+  lock,
 }: {
   row: BoardRow;
   /** The first row of „Zuerst“: its title is strong. */
@@ -80,6 +81,8 @@ export function ThingRow({
   noDuration?: boolean;
   /** „Noch offen“: the day the row lies on, which has passed – said as „war Mo“, calm, never a tone. */
   was?: string;
+  /** The lock („fest“) in one tap; left out where the row cannot be locked (a fixed block, „Frist vorbei“). */
+  lock?: { locked: boolean; onToggle: () => void };
 }) {
   const navigate = useNavigate();
   // Ticked: the row fades while the source stores it, then leaves with the board's next reading.
@@ -111,11 +114,10 @@ export function ThingRow({
         {source.word}
       </span>,
     );
-  // A fixed block (S4, a training at 18:00): its time and „fest“ – it stands there, nothing moves it.
-  if (row.fixed) {
-    facts.push(<span>{`${row.fixed.from}–${row.fixed.to}`}</span>);
-    facts.push(<span>{t.planner.row.fixed}</span>);
-  } else if (row.pinned) facts.push(<span>{t.planner.row.fixed}</span>);
+  // A fixed block (S4, a training at 18:00): its time alone – „fest“ means the lock only (CONCEPT-COPY, R12).
+  if (row.fixed) facts.push(<span>{`${row.fixed.from}–${row.fixed.to}`}</span>);
+  // Without the lock control (a row of „Frist vorbei“) the state is said in the meta; with it, the control says it.
+  else if (row.pinned && !lock) facts.push(<span>{t.planner.row.fixed}</span>);
   if (was) facts.push(<span>{t.planner.open.was(dayName(was))}</span>);
   if (entry?.detail)
     facts.push(
@@ -194,6 +196,23 @@ export function ThingRow({
       }
       below={links.length > 0 ? <LinkChips views={links} /> : undefined}
       end={noDuration ? undefined : <span className={styles.duration}>{duration}</span>}
+      actions={
+        lock && !row.fixed ? (
+          <button
+            type="button"
+            className={lock.locked ? `${styles.lock} ${styles.lockOn}` : styles.lock}
+            aria-pressed={lock.locked}
+            aria-label={t.planner.row.lockName(row.title)}
+            title={t.planner.row.lockName(row.title)}
+            data-testid="row-lock"
+            onClick={lock.onToggle}
+          >
+            <Icon name={lock.locked ? 'lock' : 'unlock'} size={16} />
+            {/* The state in a word beside the symbol, never in colour alone. */}
+            {lock.locked ? <span aria-hidden="true">{t.planner.row.fixed}</span> : null}
+          </button>
+        ) : undefined
+      }
       menu={fullMenu}
       menuLabel={t.planner.row.menu(row.title)}
       onSwipeRight={done}
@@ -213,12 +232,15 @@ export function WaitRow({
   reason,
   why,
   menu,
+  chip,
 }: {
   row: WaitingRow;
   reason: string;
   /** „Warum hier?“ is open for this row. */
   why: boolean;
   menu: RowMenuItem[];
+  /** „Vorschlag: Do · Frist Fr · Übernehmen“ or „In ToDos: Mo 16.“: one fact and at most one step. */
+  chip?: ReactNode;
 }) {
   const links = useRowLinks(row.entry);
   const linkMenu = useLinkMenu(links);
@@ -234,10 +256,51 @@ export function WaitRow({
       // The reason only behind „Warum hier?“, like on the board (U12). A row without a menu (no entry) keeps its
       // reason in sight.
       meta={why || !row.entry ? reason : undefined}
-      below={links.length > 0 ? <LinkChips views={links} /> : undefined}
+      below={
+        chip || links.length > 0 ? (
+          <>
+            {chip}
+            {links.length > 0 ? <LinkChips views={links} /> : null}
+          </>
+        ) : undefined
+      }
       end={<span className={styles.minutes}>{compact(row.minutes)}</span>}
       menu={withLinks(menu, [], linkMenu)}
       menuLabel={t.planner.row.menu(row.title)}
+    />
+  );
+}
+
+/**
+ * „In ToDos: Do · Hierher legen“ (CONCEPT-MIGRATION §4): a date set in ToDos that the plan does not hold, shown muted on
+ * that day. Derived, never stored, counts for no load; one tap lays the thing there.
+ */
+export function TodoHintRow({
+  title,
+  date,
+  onPlace,
+}: {
+  title: string;
+  date: string;
+  onPlace: () => void;
+}) {
+  return (
+    <ItemRow
+      recessed
+      title={<span className={styles.thingTitle}>{title}</span>}
+      meta={<span className={styles.meta}>{t.planner.chips.inTodos(dayName(date))}</span>}
+      controls="always"
+      actions={
+        <button
+          type="button"
+          className={styles.textLink}
+          aria-label={t.planner.chips.placeName(title, dayName(date))}
+          onClick={onPlace}
+          data-testid="todo-hint-place"
+        >
+          {t.planner.chips.place}
+        </button>
+      }
     />
   );
 }

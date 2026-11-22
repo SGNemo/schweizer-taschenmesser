@@ -77,7 +77,7 @@ export const planner: Strings['planner'] = {
     things: (n: number) => (n === 1 ? '1 thing' : `${n} things`),
     tomorrowIs: (day: string) => `Tomorrow · ${day}`,
     freeShort: (min: string) => `${min} free`,
-    overShort: (min: string) => `${min} over`,
+    overShort: (min: string) => `+ ${min} more`,
     tileToday: (day: string) => `Today, ${day}`,
     tileTomorrow: (day: string) => `Tomorrow, ${day}`,
     tileName: (day: string, capacity: string, things: string) =>
@@ -96,7 +96,6 @@ export const planner: Strings['planner'] = {
     then: (n: number, min: string) => `Then · ${n} · ${min}`,
     thenFold: (n: number) => `Then · ${n === 1 ? '1 thing' : `${n} things`}`,
     more: (n: number) => `${n} more`,
-    overLine: 'The day holds more things than time.',
     dayOffNext: (day: string) => `Today is free. The next day with things is ${day}.`,
     emptyDay: 'Nothing is planned for this day.',
     onlyLate: 'The week is empty. Only the invoices under “Deadline passed” are open.',
@@ -190,6 +189,7 @@ export const planner: Strings['planner'] = {
     blocker: 'Blocker',
     doneName: (title: string) => `Done: ${title}`,
     fixed: 'fixed',
+    lockName: (title: string) => `Keep on this day: ${title}`,
     more: 'More',
     focus: 'Start focus',
     asBreak: 'As a break …',
@@ -263,6 +263,12 @@ export const planner: Strings['planner'] = {
     pinned: (day: string) => `Fixed on ${day}`,
     unpinned: 'No longer fixed',
     laid: (day: string) => `On ${day}`,
+    laidLocked: (title: string, day: string) => `${title} is on ${day} · fixed`,
+    laidOver: (day: string) => `On ${day}. More is planned now than fits.`,
+    overNow: 'More is planned now than fits.',
+    keptFree: (day: string) => `${day} is kept free. It sits there anyway.`,
+    heldBack: (n: number) =>
+      n === 1 ? '1 stays where it is: no room' : `${n} stay where they are: no room`,
     excluded: 'Not in the plan',
     included: 'Back in the plan',
     markedDue: (day: string) => `Deadline: ${day}`,
@@ -379,6 +385,20 @@ export const planner: Strings['planner'] = {
     dayEndSet: (time: string) => `End of day ${time}, for every day`,
     dayEndCleared: 'No end of day any more',
     eventsFill: 'Appointments on this day already fill this time.',
+  },
+  chips: {
+    proposal: (day: string) => `Suggestion: ${day}`,
+    proposalDue: (day: string, due: string) => `Suggestion: ${day} · due ${due}`,
+    take: 'Apply',
+    takeName: (title: string, day: string) => `Apply: ${title} on ${day}`,
+    inTodos: (day: string) => `In To-dos: ${day}`,
+    place: 'Place here',
+    placeName: (title: string, day: string) => `Place here: ${title} on ${day}`,
+  },
+  spread: {
+    line: 'What is not fixed on this day goes to this day or the next ones.',
+    done: 'Spread.',
+    fixed: (n: number) => (n === 1 ? '1 stays: fixed' : `${n} stay: fixed`),
   },
   chip: {
     title: (planned: string, n: number) =>

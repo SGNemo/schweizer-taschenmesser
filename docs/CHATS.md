@@ -62,6 +62,7 @@ Not stored in this file: `npm run chats:sync` prints the list from GitHub (`chat
 | images under `docs/`                                                                     | none ([DOCS-GUIDE](meta/DOCS-GUIDE.md#images)); screenshots go into the PR text             |
 | `docs/STATUS.md`                                                                         | only in a `docs(status)` PR of its own (docs only), never in a feature PR                   |
 | `docs/DECISIONS.md`, `docs/HOW-TO.md`, `docs/ARCHITECTURE-MAP.md`, `README.md`           | touch only on real change; one line / one block, no reformatting                            |
+| planner rethink: `modules/planner/{dueWords.ts,routes/PlannerPage.tsx,components/ThingRow.tsx}`, `PlannableItem.day?` | package 2 (`feat/plan-lock-overbook`) until merged; packages 3–7 strictly after it            |
 
 ## Hand-over conventions
 

@@ -11,7 +11,6 @@ import {
   markDue,
   sourceAbilities,
   type SourceAbility,
-  setLocked,
   unmarkDue,
 } from '../actions';
 import type { BoardRow, WaitingRow } from '../board';
@@ -101,9 +100,6 @@ export function useRowMenu(ctx: {
         { id: 'open', label: t.planner.row.open, onSelect: () => void navigate(e.to) },
       ];
     const day = date ?? ctx.today;
-    const pinned = 'pinned' in row && row.pinned;
-    // A row on a passed day („Noch offen“) is not made „fest“ there – it needs a new day first.
-    const laid = 'pinned' in row && !opts.open;
     const hard = row.item?.due?.hard === true;
     // A deadline the source holds (invoice, cancellation) is not the planner's to lift or set.
     const sourceHard = e.due?.hard === true;
@@ -166,24 +162,7 @@ export function useRowMenu(ctx: {
       ...(excluded
         ? [{ id: 'include', label: t.planner.row.include, onSelect: () => void include(e, titles) }]
         : [
-            // „fest“: the thing must be on this day – no proposal takes it (the one-tap lock comes with package 2).
-            ...(pinned
-              ? [
-                  {
-                    id: 'unpin',
-                    label: t.planner.row.unpin,
-                    onSelect: () => void setLocked(e, false, titles),
-                  },
-                ]
-              : laid
-                ? [
-                    {
-                      id: 'pin',
-                      label: t.planner.row.pin,
-                      onSelect: () => void setLocked(e, true, titles),
-                    },
-                  ]
-                : []),
+            // „fest“ is the lock on the row itself (one tap, `ThingRow`), not an entry here.
             {
               id: 'exclude',
               label: t.planner.row.exclude,

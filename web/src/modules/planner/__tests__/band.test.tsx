@@ -74,7 +74,7 @@ describe('week band', () => {
         'So15frei',
         'Mo1637 Min',
         'Di173 h 12',
-        'Mi1840 Min mehr',
+        'Mi18+ 40 Min mehr',
         'Do193 h 12',
         'Fr203 h 12',
         'Sa213 h 12',

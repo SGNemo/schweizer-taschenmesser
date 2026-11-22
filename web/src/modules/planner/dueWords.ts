@@ -127,3 +127,36 @@ export function readFieldWithPart(
   const { text: line, part } = extractPart(text);
   return part ? { ...readField(line, now, today, de), part } : plain;
 }
+
+/**
+ * The lock words of the planner's field (planner rethink, CONCEPT §4): „… fest“, „… lock“ or a trailing „!“ at the end
+ * of the line. They lock only next to a day („Zahnarzt Do fest“, „Zahnarzt 7.12.!“) – whether a day is there the caller
+ * reads from the rest; without one the words stay the title. A bare short weekday right before them („Do“) is that day
+ * (the parser reads only full names outside its planning words); it is taken out of the text. Never „muss“ (too common
+ * in titles). Pure, German only like the parser.
+ */
+const LOCK_WORD = /(?:\s+(?:fest|lock)|\s*!)\s*$/iu;
+// Capitalised only, as the parser reads a bare short weekday (C03): „mach das so fest“ is no Sunday.
+const SHORT_BEFORE = /(?<![\p{L}\d])(Mo|Di|Mi|Do|Fr|Sa|So)\.?\s*$/u;
+
+export interface LockPhrase {
+  /** The line without the lock word (and without a bare short weekday it read as the day). */
+  text: string;
+  /** A bare short weekday before the lock word: its next date. */
+  date?: string;
+}
+
+export function extractLock(text: string, today: string): LockPhrase | undefined {
+  const m = LOCK_WORD.exec(text);
+  if (!m) return undefined;
+  const rest = text.slice(0, m.index).trimEnd();
+  // „!!“ or a line that is nothing but the word: no lock word, the text stays as it is.
+  if (!rest || rest.endsWith('!')) return undefined;
+  const day = SHORT_BEFORE.exec(rest);
+  if (day) {
+    const stripped = rest.slice(0, day.index).trimEnd();
+    if (stripped)
+      return { text: stripped, date: nextWeekday(today, SHORT[day[1]!.toLowerCase()]!) };
+  }
+  return { text: rest };
+}

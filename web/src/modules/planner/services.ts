@@ -38,6 +38,7 @@ import type { PlanItem } from '@/core/plan/types';
 import {
   LAST_RUN_KEY,
   previewPlanner,
+  proposeDays,
   requestedIds,
   restoreSources,
   runPlanner,
@@ -156,6 +157,8 @@ export interface RunScope {
   loose?: readonly string[];
   touched?: readonly string[];
   ops?: readonly PlanOp[];
+  /** „Rest verteilen“ of one day: the handed-over things go nowhere before it. */
+  notBefore?: string;
 }
 
 export interface UserRun {
@@ -186,6 +189,9 @@ export function runUser(
             loose: [...(opts.loose ?? []), ...(scope.loose ?? [])],
             touched: [...(opts.touched ?? []), ...(scope.touched ?? [])],
             ops: [...(opts.ops ?? []), ...(scope.ops ?? [])],
+            ...((scope.notBefore ?? opts.notBefore)
+              ? { notBefore: scope.notBefore ?? opts.notBefore }
+              : {}),
           });
         },
         MODULE_ID,
@@ -203,10 +209,22 @@ export function runUser(
 export function previewUser(
   ops: readonly PlanOp[],
   extra: readonly PlanItem[] = [],
+  spread?: { loose: readonly string[]; notBefore: string },
 ): Promise<PreviewOutcome> {
   return enqueue(async () => {
     if (await switchedOff()) throw new PlannerOffError();
-    return previewPlanner(await depsNow(false), ops, extra);
+    return previewPlanner(await depsNow(false), ops, extra, spread);
+  });
+}
+
+/**
+ * The days of the chips „Vorschlag: Do“: one dry run over the given things, queued like a preview, writing nothing.
+ * Switched off: no chips.
+ */
+export function proposeUser(keys: readonly string[]): Promise<Record<string, string>> {
+  return enqueue(async () => {
+    if (await switchedOff()) return {};
+    return proposeDays(await depsNow(false), keys);
   });
 }
 

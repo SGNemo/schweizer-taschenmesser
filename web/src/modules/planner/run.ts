@@ -441,6 +441,8 @@ export async function runPlanner(
     ops?: readonly PlanOp[];
     /** Narrows what is handed over (the seed: only its own things). */
     looseIf?: (itemKey: string) => boolean;
+    /** „Rest verteilen“ of one day: its handed-over things go nowhere before that day (in memory, never stored). */
+    notBefore?: string;
   } = {},
 ): Promise<RunOutcome> {
   const repos = plannerRepos(deps.database);
@@ -476,7 +478,7 @@ export async function runPlanner(
   const result = plan({
     today: deps.today,
     days: inputs.days,
-    items: inputs.items,
+    items: boundedItems(inputs.items, loose, opts.notBefore),
     prev: inputs.prev,
     loose,
     settings: inputs.settings,
@@ -592,18 +594,71 @@ export async function previewPlanner(
   deps: RunDeps,
   ops: readonly PlanOp[],
   extra: readonly PlanItem[] = [],
+  /** A spread of one day („Rest verteilen“ on an overbooked day): these things, not before `notBefore`. */
+  spread?: { loose: readonly string[]; notBefore: string },
 ): Promise<PreviewOutcome> {
   const inputs = await buildInputs(deps, plannerRepos(deps.database));
   const next = withOps({ ...inputs, items: [...inputs.items, ...extra] }, ops);
+  const loose = [...new Set([...looseOf(inputs, ops, extra), ...(spread?.loose ?? [])])];
   const result = plan({
     today: deps.today,
     days: next.days,
-    items: next.items,
+    items: boundedItems(next.items, loose, spread?.notBefore),
     prev: inputs.prev,
-    loose: looseOf(inputs, ops, extra),
+    loose,
     settings: next.settings,
   });
   return { result, titles: inputs.titles, prev: inputs.prev };
+}
+
+/** The handed-over items may go nowhere before `notBefore` (a day's spread keeps its things on that day or later). */
+function boundedItems(
+  items: readonly PlanItem[],
+  loose: readonly string[],
+  notBefore: string | undefined,
+): PlanItem[] {
+  if (!notBefore) return [...items];
+  const handed = new Set(loose);
+  return items.map((i) =>
+    handed.has(i.key) && !(i.earliest && i.earliest > notBefore)
+      ? { ...i, earliest: notBefore }
+      : i,
+  );
+}
+
+/**
+ * The chips „Vorschlag: Do · Frist Fr“ (planner rethink, CONCEPT §2): one dry `plan()` over every thing that gets a
+ * chip, so two chips never claim the same room. What lies stays (a source's dated turn without a row counts on its
+ * day); nothing is written, no source hears anything. Item key → the proposed day; a thing without room has none.
+ */
+export async function proposeDays(
+  deps: RunDeps,
+  keys: readonly string[],
+): Promise<Record<string, string>> {
+  if (keys.length === 0) return {};
+  const inputs = await buildInputs(deps, plannerRepos(deps.database));
+  const laid = new Set([...inputs.prevRows.values()].map((r) => r.itemKey));
+  // A dated turn shown on its day without a row takes that day's time, as on the board.
+  const turns: PrevAssignment[] = inputs.entries.flatMap((e) => {
+    const key = itemKeyOf(e.moduleId, e.id);
+    return e.day && !e.done && !e.fixed && !laid.has(key)
+      ? [{ id: `${key}#0`, date: e.day, reason: 'kept' as const }]
+      : [];
+  });
+  const loose = keys.filter((k) => !inputs.lockedKeys.has(k) && !laid.has(k));
+  const result = plan({
+    today: deps.today,
+    days: inputs.days,
+    items: inputs.items,
+    prev: [...inputs.prev, ...turns],
+    loose,
+    settings: inputs.settings,
+  });
+  const out: Record<string, string> = {};
+  const wanted = new Set(loose);
+  for (const a of [...result.assignments].sort((x, y) => x.date.localeCompare(y.date)))
+    if (wanted.has(a.itemKey) && out[a.itemKey] === undefined) out[a.itemKey] = a.date;
+  return out;
 }
 
 export interface PreviewOutcome {

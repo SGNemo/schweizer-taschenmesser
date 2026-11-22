@@ -9,6 +9,7 @@ import { formatMinutes } from '@/core/i18n/format';
 import { getLang } from '@/core/i18n/lang';
 import { plannableSource, type PlannableEntry } from '@/core/modules/contributions';
 import { availableManifests } from '@/core/modules/available';
+import { capacity } from '@/core/plan/capacity';
 import { addDays } from '@/core/plan/dates';
 import { dayName, partWord } from '@/core/plan/explain';
 import { DEFAULT_MIN, type DayPart } from '@/core/plan/types';
@@ -31,7 +32,7 @@ import { setSettings } from '@/core/settings/settings';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import type { SetupThing } from './daySetup';
-import { readFieldWithPart } from './dueWords';
+import { extractLock, readFieldWithPart } from './dueWords';
 import { assignmentRepo, dayRepo, itemKeyOf, itemRepo, putRow } from './repo';
 import type { AssignmentRow, PlanDayRow, PlanItemRow } from './schema';
 import { overloadLine } from './overload';
@@ -64,7 +65,12 @@ export async function act(
   lead: string,
   titles: Record<string, string>,
   fn: () => Promise<void | RunScope>,
-  opts: { reshuffle?: boolean; leadOnly?: boolean } & RunScope = {},
+  opts: {
+    reshuffle?: boolean;
+    leadOnly?: boolean;
+    /** A line read after the run (the day a new thing landed on is full or kept free): it replaces `lead`. */
+    leadAfter?: (run: UserRun) => Promise<string | undefined>;
+  } & RunScope = {},
 ): Promise<boolean> {
   let run: UserRun;
   try {
@@ -81,7 +87,12 @@ export async function act(
   // `leadOnly`: one calm sentence (a template); the board shows where things went. An action that hands nothing
   // to the engine moved nothing else, so its line is that one fact as well.
   const proposes = opts.reshuffle || !!opts.loose?.length || !!opts.ops?.length;
-  const line = opts.leadOnly || !proposes ? lead : runToast(run.outcome.result, titleOf, lead);
+  const after = opts.leadAfter ? await opts.leadAfter(run) : undefined;
+  const first =
+    after ?? (opts.leadOnly || !proposes ? lead : runToast(run.outcome.result, titleOf, lead));
+  // A proposal that found no room for a thing says so after „Übernehmen“ too (the thing kept its day).
+  const held = proposes ? (run.outcome.result?.heldBack?.length ?? 0) : 0;
+  const line = held > 0 ? `${first}\n${t.planner.toast.heldBack(held)}` : first;
   toast(withOverload(line, await overloadNotice(run)), run);
   return true;
 }
@@ -314,7 +325,11 @@ async function layOn(
   return { touched: [key] };
 }
 
-/** The one field: a ToDo through the quick-capture target; „bis Do“ or „Frist“ makes the planner item's due hard. */
+/**
+ * The one field: a ToDo through the quick-capture target; „bis Do“ or „Frist“ makes the planner item's due hard. A
+ * lock word next to a day („Zahnarzt Do fest“, „… lock“, „…!“) lays it there „fest“; without a day the word stays the
+ * title. The `p` prefix keeps its pin: the thing lies „fest“ on that day (ANALYSIS R13).
+ */
 export async function addFromField(
   text: string,
   titles: Record<string, string>,
@@ -322,15 +337,29 @@ export async function addFromField(
 ): Promise<boolean> {
   // The phrase is German, like the quick-capture parser (CONCEPT §6c); elsewhere the ⋯ action sets a deadline.
   // „Duschen nachmittags“ (package 4b): the part word becomes the item's part (`readFieldWithPart`).
-  const { fields, hardDue, hardDueTime, isBreak, part } = readFieldWithPart(
-    text,
-    new Date(now()),
-    today(),
-    getLang() === 'de',
-  );
+  const de = getLang() === 'de';
+  const day = today();
+  const read = (line: string) => readFieldWithPart(line, new Date(now()), day, de);
+  let reading = read(text);
+  let lockDay: string | undefined;
+  const lock = de && !reading.isBreak ? extractLock(text, day) : undefined;
+  if (lock) {
+    const locked = read(lock.text);
+    const on =
+      lock.date ??
+      (!locked.hardDue && locked.fields.date && locked.fields.date >= day
+        ? locked.fields.date
+        : undefined);
+    // Only next to a day: „Bin fest“ stays a title.
+    if (on) {
+      reading = locked;
+      lockDay = on;
+    }
+  }
+  const { fields, hardDue, hardDueTime, isBreak, part } = reading;
   // „Pause 2 Std Zocken“: a blocker of its day through the quick-capture target, no ToDo (package 4a).
   if (isBreak) {
-    const b = breakOf(fields, { today: today() });
+    const b = breakOf(fields, { today: day });
     return act(
       t.planner.day.addBlocker,
       t.planner.toast.asBreak(
@@ -345,33 +374,77 @@ export async function addFromField(
       { leadOnly: true },
     );
   }
+  // „p Zahnarzt Donnerstag“: the plan capture's pin – the day, „fest“ (the global capture's pin becomes the same).
+  const pin = fields.pin && fields.pin >= day ? fields.pin : undefined;
+  const { pin: _pin, ...todoFields } = fields;
+  void _pin;
   // A part word read from the line says so (as a deadline does), so „nachmittags“ is not taken for a title word.
   // The new thing lies on the day on the sheet, else today; a day in the text wins (a deadline is no day).
-  const day = today();
   const dated = !hardDue && fields.date && fields.date >= day ? fields.date : undefined;
-  const target = dated ?? (shown && shown >= day ? shown : day);
+  const fixedOn = lockDay ?? pin;
+  const target = fixedOn ?? dated ?? (shown && shown >= day ? shown : day);
   const lead = hardDue
     ? t.planner.toast.addedWithDue(dayName(hardDue))
-    : part && fields.title
-      ? t.planner.toast.part(short(fields.title), partWord(part))
-      : t.planner.toast.laid(dayName(target));
-  return act(t.planner.toast.added, lead, titles, async () => {
-    const saved = await saveCapture('todo', fields);
-    const scope = await layOn(
-      { moduleId: saved.moduleId, id: saved.id, durationMin: fields.estimateMin },
-      target,
-    );
-    if (hardDue || part)
-      await putRow(itemRepo, itemKeyOf(saved.moduleId, saved.id), {
-        source: { module: saved.moduleId, id: saved.id },
-        ...(hardDue
-          ? { due: { date: hardDue, hard: true, ...(hardDueTime ? { time: hardDueTime } : {}) } }
-          : {}),
-        ...(part ? { part } : {}),
-        order: 0,
-      });
-    return scope;
-  });
+    : fixedOn
+      ? t.planner.toast.laidLocked(short(fields.title ?? ''), dayName(target))
+      : part && fields.title
+        ? t.planner.toast.part(short(fields.title), partWord(part))
+        : t.planner.toast.laid(dayName(target));
+  return act(
+    t.planner.toast.added,
+    lead,
+    titles,
+    async () => {
+      const saved = await saveCapture('todo', todoFields);
+      const key = itemKeyOf(saved.moduleId, saved.id);
+      const scope = await layOn(
+        { moduleId: saved.moduleId, id: saved.id, durationMin: fields.estimateMin },
+        target,
+      );
+      if (fixedOn)
+        for (const r of await rowsOf(key))
+          await putRow(assignmentRepo, r.id, { ...rowOf(r), locked: true });
+      if (hardDue || part)
+        await putRow(itemRepo, key, {
+          source: { module: saved.moduleId, id: saved.id },
+          ...(hardDue
+            ? { due: { date: hardDue, hard: true, ...(hardDueTime ? { time: hardDueTime } : {}) } }
+            : {}),
+          ...(part ? { part } : {}),
+          order: 0,
+        });
+      return scope;
+    },
+    // A deadline or a part says its own fact; otherwise a full or kept-free day says so in the one line.
+    hardDue || (part && !fixedOn) ? {} : { leadAfter: (run) => dayNote(target, run, lead) },
+  );
+}
+
+/**
+ * The line after entering on a day that is full or kept free (CONCEPT-COPY): „Liegt auf Mo. Jetzt ist mehr geplant als
+ * planbar.“ / „Do ist frei gehalten. Liegt trotzdem dort.“ – a fact, no tone; undefined on an ordinary day (the lead
+ * stays). Counted as the board counts: the open things' rows of that day and the dated turns shown there.
+ */
+async function dayNote(date: string, run: UserRun, lead: string): Promise<string | undefined> {
+  const inputs = run.outcome.inputs;
+  const plan = inputs.days.find((d) => d.date === date);
+  if (!plan) return undefined;
+  if (plan.availableMin === 0) return t.planner.toast.keptFree(dayName(date));
+  const open = new Map(
+    inputs.entries.filter((e) => !e.done).map((e) => [itemKeyOf(e.moduleId, e.id), e]),
+  );
+  const rows = ((await assignmentRepo.active().toArray()) as AssignmentRow[]).filter(
+    (r) => r.date === date && open.has(r.itemKey) && !inputs.removeKeys.has(r.itemKey) && !r.from,
+  );
+  const laid = new Set(rows.map((r) => r.itemKey));
+  const turns = [...open]
+    .filter(([key, e]) => e.day === date && !e.fixed && !laid.has(key))
+    .reduce((n, [, e]) => n + (e.durationMin ?? DEFAULT_MIN), 0);
+  const planned = rows.reduce((n, r) => n + r.minutes, 0) + turns;
+  if (planned <= capacity(plan, inputs.settings).usable) return undefined;
+  return lead.startsWith(t.planner.toast.laid(dayName(date)))
+    ? t.planner.toast.laidOver(dayName(date))
+    : `${lead}\n${t.planner.toast.overNow}`;
 }
 
 /** „Erledigt“: only for a source that takes it back (an invoice or a cancellation does not: false, nothing happens). */
@@ -393,9 +466,10 @@ export async function later(e: PlannableEntry, titles: Record<string, string>): 
   if (!s?.onAssign) return false;
   // The thing's row moves to the day after the one it lies on, never before tomorrow; nothing else moves and
   // „fest“ stays with it.
-  const on = (await rowsOf(itemKeyOf(e.moduleId, e.id))).map((r) => r.date).sort()[0];
+  // A dated turn without a row lies on its source's day.
+  const on = (await rowsOf(itemKeyOf(e.moduleId, e.id))).map((r) => r.date).sort()[0] ?? e.day;
   const to = addDays(on && on > today() ? on : today(), 1);
-  return act(t.planner.toast.later, t.planner.toast.laid(dayName(to)), titles, () => layOn(e, to));
+  return act(t.planner.toast.later, await laidLine(e, to), titles, () => layOn(e, to));
 }
 
 /** The lengths „Als Pause …“ offers (minutes): 1 h · 2 h · 3 h. */
@@ -485,23 +559,75 @@ export const setPart = (
   );
 
 /** „Verschieben …“: the thing lies on that day from now on. Nothing else moves; it is not „fest“ by that. */
-export const moveTo = (e: PlannableEntry, date: string, titles: Record<string, string>) =>
-  act(t.planner.row.move, t.planner.toast.laid(dayName(date)), titles, () => layOn(e, date));
+export async function moveTo(e: PlannableEntry, date: string, titles: Record<string, string>) {
+  return act(t.planner.row.move, await laidLine(e, date), titles, () => layOn(e, date));
+}
+
+/**
+ * The toast of a move by hand: „Liegt auf Mi“ – or, for a thing that is „fest“, „Steuer liegt auf Mi · fest“: the lock
+ * moved with it (it binds proposals, not him), never released silently.
+ */
+async function laidLine(e: Pick<PlannableEntry, 'moduleId' | 'id' | 'title'>, date: string) {
+  const locked = (await rowsOf(itemKeyOf(e.moduleId, e.id))).some((r) => r.locked);
+  return locked
+    ? t.planner.toast.laidLocked(short(e.title), dayName(date))
+    : t.planner.toast.laid(dayName(date));
+}
+
+/**
+ * „Hierher legen“ (the muted row „In ToDos: Do“) and „Übernehmen“ of a chip „Vorschlag: Do“: the thing lies on that
+ * day. The same move as „Verschieben …“ – one row, one undo; the ToDo hears the day as for every laid thing.
+ */
+export async function layHere(e: PlannableEntry, date: string, titles: Record<string, string>) {
+  return act(t.planner.chips.place, await laidLine(e, date), titles, () => layOn(e, date));
+}
+
+/**
+ * „Rest verteilen“ of one day (the line „2 h 10 mehr als planbar“): the things of that day that are not „fest“ go to the
+ * proposer – that day first, else a later one; nothing before it. The preview showed exactly this; one undo. The toast
+ * says what stayed: the fixed ones („1 bleibt: fest“), a thing without room („… kein Platz“).
+ */
+export function spreadDay(
+  date: string,
+  loose: readonly string[],
+  fixed: number,
+  titles: Record<string, string>,
+) {
+  const lead =
+    fixed > 0
+      ? `${t.planner.spread.done}\n${t.planner.spread.fixed(fixed)}`
+      : t.planner.spread.done;
+  return act(t.planner.rest.link, lead, titles, async () => undefined, {
+    leadOnly: true,
+    loose,
+    notBefore: date,
+  });
+}
 
 /** „Fest an diesem Tag“ / „Nicht mehr fest“: the lock on the thing's rows. No proposal takes a thing that is fest. */
 export async function setLocked(
   e: PlannableEntry,
   locked: boolean,
   titles: Record<string, string>,
+  /** The day the row shows on: a dated turn without a stored row gets its row there (CONCEPT-MIGRATION §6). */
+  shownOn?: string,
 ): Promise<boolean> {
   // The toast names the day the thing lies on („Fest am Mi“).
-  const on = (await rowsOf(itemKeyOf(e.moduleId, e.id))).map((r) => r.date).sort()[0];
+  const on = (await rowsOf(itemKeyOf(e.moduleId, e.id))).map((r) => r.date).sort()[0] ?? shownOn;
   return act(
     locked ? t.planner.row.pin : t.planner.row.unpin,
     locked ? t.planner.toast.pinned(dayName(on ?? today())) : t.planner.toast.unpinned,
     titles,
     async () => {
-      for (const r of await rowsOf(itemKeyOf(e.moduleId, e.id))) {
+      const key = itemKeyOf(e.moduleId, e.id);
+      const rows = await rowsOf(key);
+      if (rows.length === 0 && locked && shownOn) {
+        await layOn(e, shownOn);
+        for (const r of await rowsOf(key))
+          await putRow(assignmentRepo, r.id, { ...rowOf(r), locked: true });
+        return { touched: [key] };
+      }
+      for (const r of rows) {
         const { locked: _was, ...rest } = rowOf(r);
         void _was;
         await putRow(assignmentRepo, r.id, locked ? { ...rest, locked: true } : rest);
