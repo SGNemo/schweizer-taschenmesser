@@ -19,6 +19,7 @@ function errorText(code: string): string {
   if (code === 'already-added') return e.alreadyAdded;
   if (code === 'dir') return e.dir;
   if (code === 'bad-path') return e.badPath;
+  if (code === 'shortcut') return e.shortcut;
   if (code === 'tracker') return e.tracker;
   return e.other;
 }

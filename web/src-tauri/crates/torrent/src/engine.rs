@@ -64,6 +64,8 @@ pub struct Engine {
 struct Marked {
     file: PathBuf,
     hashes: HashSet<String>,
+    /// Keys tried in this run: a folder without streams (FAT32, a share) is not retried every pass.
+    tried: HashSet<String>,
 }
 
 impl Marked {
@@ -73,11 +75,21 @@ impl Marked {
             .ok()
             .and_then(|b| serde_json::from_slice(&b).ok())
             .unwrap_or_default();
-        Marked { file, hashes }
+        Marked {
+            file,
+            hashes,
+            tried: HashSet::new(),
+        }
     }
 
+    #[cfg(test)]
     fn contains(&self, key: &str) -> bool {
         self.hashes.contains(key)
+    }
+
+    /// `true` once per run for a key not marked yet.
+    fn try_now(&mut self, key: &str) -> bool {
+        !self.hashes.contains(key) && self.tried.insert(key.to_owned())
     }
 
     /// Records a key (after its files were marked) and keeps the set on disk.
@@ -193,6 +205,11 @@ impl Engine {
                 if !paths_safe(&info.info) {
                     bail!("bad-path");
                 }
+                // librqbit creates every file of a torrent, selected or not: a shortcut file
+                // (`Besuche uns.url`, `desktop.ini` …) cannot be left out, so the torrent is refused
+                if has_shortcut(&info.info) {
+                    bail!("shortcut");
+                }
                 if !trackers_public(&info.torrent_bytes) {
                     bail!("tracker");
                 }
@@ -260,12 +277,6 @@ impl Engine {
             None => source,
         };
         let info = self.list_only(source.clone(), peers.clone()).await?;
-        // shortcut files (`Besuche uns.url`, `desktop.ini` …) are never written: Explorer would
-        // resolve them on sight (DL8); the rest of the torrent is fine
-        let files = without_shortcuts(&info.info, files);
-        if files.as_ref().is_some_and(|f| f.is_empty()) {
-            bail!("bad-path");
-        }
         let raw = info.info.name().map(|n| n.into_owned()).unwrap_or_default();
         let single = info.info.iter_file_details().count() == 1;
         let target = new_folder(dir, &folder_name(&raw, single))?;
@@ -415,15 +426,18 @@ impl Engine {
                     let since = *lock(&finished_at).entry(id).or_insert_with(Instant::now);
                     // the torrent's own files (never the rest of its folder), once per torrent, folder
                     // and selection (a re-download or a wider selection is marked again) (DL3)
-                    let key = mark_key(&h);
-                    if cfg!(windows) && !lock(&marked).contains(&key) {
-                        let files = own_files(&h);
+                    let key = if cfg!(windows) { Some(mark_key(&h)) } else { None };
+                    if let Some(key) = key.filter(|k| lock(&marked).try_now(k)) {
+                        // a file the user deleted is not created again by the stream write
+                        let files: Vec<PathBuf> =
+                            own_files(&h).into_iter().filter(|f| f.is_file()).collect();
                         let marked = marked.clone();
                         tokio::task::spawn_blocking(move || {
-                            let ok = files
-                                .iter()
-                                .all(|f| file_names::mark_of_the_web(f, None).is_ok());
-                            // a failure is tried again on the next pass
+                            // every file is tried, also after one failed
+                            let ok = files.iter().fold(true, |ok, f| {
+                                file_names::mark_of_the_web(f, None).is_ok() && ok
+                            });
+                            // a failure is tried again after the next start (once per run)
                             if ok {
                                 lock(&marked).insert(key);
                             }
@@ -590,26 +604,14 @@ fn paths_safe<B: AsRef<[u8]>>(info: &librqbit::ValidatedTorrentMetaV1Info<B>) ->
         .all(|d| d.filename.to_vec().iter().all(|c| file_names::safe_segment(c)))
 }
 
-/// The selection without files whose name is a shortcut type; `None` (everything) stays `None`
-/// when the torrent has none.
-fn without_shortcuts<B: AsRef<[u8]>>(
-    info: &librqbit::ValidatedTorrentMetaV1Info<B>,
-    files: Option<Vec<usize>>,
-) -> Option<Vec<usize>> {
-    let shortcut: Vec<bool> = info
-        .iter_file_details()
-        .map(|d| d.filename.to_vec().last().is_some_and(|n| file_names::shortcut(n)))
-        .collect();
-    if files.is_none() && !shortcut.contains(&true) {
-        return None;
-    }
-    let wanted = files.unwrap_or_else(|| (0..shortcut.len()).collect());
-    Some(
-        wanted
-            .into_iter()
-            .filter(|i| !shortcut.get(*i).copied().unwrap_or(true))
-            .collect(),
-    )
+/// Whether a file of the torrent is a shortcut type Explorer resolves on sight (DL8).
+fn has_shortcut<B: AsRef<[u8]>>(info: &librqbit::ValidatedTorrentMetaV1Info<B>) -> bool {
+    info.iter_file_details().any(|d| {
+        d.filename
+            .to_vec()
+            .last()
+            .is_some_and(|n| file_names::shortcut(n))
+    })
 }
 
 /// A tracker address librqbit may contact: `http`, `https` or `udp` to a host that is not this PC
@@ -711,25 +713,23 @@ mod tests {
         assert!(Marked::open(&dir).contains("abc|/x|"), "kept on disk");
         // the same torrent in a new folder (removed and added again) is a new key
         assert!(!Marked::open(&dir).contains("abc|/x (2)|"));
+        // tried once per run, also when it failed
+        let mut fresh = Marked::open(&dir);
+        assert!(fresh.try_now("def|/y|"));
+        assert!(!fresh.try_now("def|/y|"));
+        assert!(!fresh.try_now("abc|/x|"), "marked already");
         let _ = std::fs::remove_dir_all(&dir);
     }
 
-    /// DL8: a shortcut file in a torrent is left out, the rest downloads.
+    /// DL8: librqbit writes every file of a torrent, so one with a shortcut file is refused.
     #[tokio::test]
-    async fn shortcut_files_are_left_out_of_the_selection() {
-        let t = torrent_with(&["film.mkv", "Besuche uns.url", "desktop.ini"], None).await;
+    async fn a_torrent_with_a_shortcut_file_is_refused() {
+        let t = torrent_with(&["film.mkv", "Besuche uns.url"], None).await;
         let meta = librqbit::torrent_from_bytes(&t).unwrap();
-        let info = meta.info.data.validate().unwrap();
-        let names: Vec<String> = info
-            .iter_file_details()
-            .map(|d| d.filename.to_vec().join("/"))
-            .collect();
-        let film = names.iter().position(|n| n == "film.mkv").unwrap();
-        assert_eq!(without_shortcuts(&info, None), Some(vec![film]));
-        assert_eq!(without_shortcuts(&info, Some(vec![film])), Some(vec![film]));
-        let plain = torrent_with(&["a.bin", "b.bin"], None).await;
+        assert!(has_shortcut(&meta.info.data.validate().unwrap()));
+        let plain = torrent_with(&["film.mkv", "info.txt"], None).await;
         let meta = librqbit::torrent_from_bytes(&plain).unwrap();
-        assert_eq!(without_shortcuts(&meta.info.data.validate().unwrap(), None), None);
+        assert!(!has_shortcut(&meta.info.data.validate().unwrap()));
     }
 
     #[test]

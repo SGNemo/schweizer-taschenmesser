@@ -9,12 +9,14 @@ import { getPlatform, setPlatform } from '@/core/platform';
 import { createFakeTorrent } from '@/core/platform/fakeTorrent';
 import { t } from '@/strings';
 import { resetDevicePrefsCache, setDevicePrefs } from '../devicePrefs';
+import { clearStopped, useTorrents } from '../torrentStore';
 import { settings, type DownloadsPrefs } from '../settings';
 import { TorrentSection } from '../routes/TorrentSection';
 
 beforeEach(() => {
   localStorage.clear();
   resetDevicePrefsCache();
+  clearStopped();
 });
 afterEach(() => setPlatform(undefined));
 
@@ -44,7 +46,10 @@ describe('torrent stopped outside the page', () => {
     expect(stopped).toBeDefined();
     act(() => stopped!());
     expect(screen.getByText(t.downloads.torrent.stopped)).toBeTruthy();
+    // the stop survives leaving the page: nothing starts by itself
+    expect(useTorrents.getState().stopped).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: t.downloads.torrent.restart }));
     expect(screen.queryByText(t.downloads.torrent.stopped)).toBeNull();
+    expect(useTorrents.getState().stopped).toBe(false);
   });
 });

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { requireNotice } from '@/core/legal/notices';
 import { getPlatform } from '@/core/platform';
 import type { TorrentInfo } from '@/core/platform/torrent';
@@ -18,13 +18,19 @@ import {
 import { useDevicePrefs } from '../devicePrefs';
 import { formatBytes, percent } from '../lib/format';
 import type { DownloadsPrefs } from '../settings';
-import { resetTorrents, useTorrents, watchTorrents } from '../torrentStore';
+import {
+  clearStopped,
+  markStopped,
+  resetTorrents,
+  useTorrents,
+  watchTorrents,
+} from '../torrentStore';
 import { AddTorrentDialog } from './AddTorrentDialog';
 import { DownloadsEmpty } from '../components/DownloadsEmpty';
 import styles from './DownloadsPage.module.css';
 import { TorrentIp } from './TorrentIp';
 
-type Status = 'starting' | 'ready' | 'failed' | 'stopped';
+type Status = 'starting' | 'ready' | 'failed';
 
 /** A magnet link or `.torrent` file path that arrived from outside (OS association, browser). */
 export interface TorrentIncoming {
@@ -55,7 +61,9 @@ export function TorrentSection({
   // on/off, DHT, UPnP and the folder: this PC only (DL10)
   const [device, setDevice] = useDevicePrefs();
   const torrents = useTorrents((s) => s.torrents);
+  const stopped = useTorrents((s) => s.stopped);
   const [status, setStatus] = useState<Status>('starting');
+  const hintId = useId();
   const [adding, setAdding] = useState(false);
   // What the dialog starts with; it only pre-fills, the user still reviews the files and confirms.
   const [initial, setInitial] = useState<TorrentIncoming | null>(null);
@@ -75,15 +83,12 @@ export function TorrentSection({
   const [epoch, setEpoch] = useState(0);
   useEffect(() => {
     if (!device.torrent || !platform.onStopped) return;
-    return platform.onStopped(() => {
-      resetTorrents();
-      setStatus('stopped');
-    });
+    return platform.onStopped(markStopped);
   }, [platform, device.torrent]);
 
   // The engine starts only after the notice was confirmed; limits apply as soon as they change.
   useEffect(() => {
-    if (!device.torrent || !platform.supported) return;
+    if (!device.torrent || !platform.supported || stopped) return;
     let alive = true;
     void (async () => {
       await requireNotice('downloads-torrent');
@@ -99,17 +104,26 @@ export function TorrentSection({
     return () => {
       alive = false;
     };
-  }, [platform, device.torrent, dht, upnp, limitKey, epoch]);
+  }, [platform, device.torrent, dht, upnp, limitKey, epoch, stopped]);
 
   // Something arrived from outside: once the engine is up, the add dialog opens with it.
   useEffect(() => {
-    if (!incoming || !device.torrent || status !== 'ready') return;
+    if (!incoming || !device.torrent) return;
+    // a link the user opened is the wish to use BitTorrent: a stop from the tray ends here
+    if (stopped) {
+      queueMicrotask(() => {
+        clearStopped();
+        setStatus('starting');
+      });
+      return;
+    }
+    if (status !== 'ready') return;
     queueMicrotask(() => {
       setInitial(incoming);
       setAdding(true);
       onIncomingHandled();
     });
-  }, [incoming, device.torrent, status, onIncomingHandled]);
+  }, [incoming, device.torrent, status, stopped, onIncomingHandled]);
 
   const launch = getPlatform().launch;
   useEffect(() => {
@@ -151,6 +165,7 @@ export function TorrentSection({
 
   async function turnOn() {
     await requireNotice('downloads-torrent');
+    clearStopped();
     setDevice({ torrent: true });
   }
 
@@ -165,6 +180,7 @@ export function TorrentSection({
   async function setNetwork(patch: { dht?: boolean; upnp?: boolean }) {
     await platform.stop().catch(() => undefined);
     resetTorrents();
+    clearStopped();
     setStatus('starting');
     setDevice(patch);
   }
@@ -180,14 +196,17 @@ export function TorrentSection({
         </Button>
         <Button onClick={() => void turnOff()}>{t.downloads.torrent.turnOff}</Button>
       </div>
-      {status === 'starting' ? <p role="status">{t.downloads.torrent.starting}</p> : null}
-      {status === 'stopped' ? (
+      {status === 'starting' && !stopped ? (
+        <p role="status">{t.downloads.torrent.starting}</p>
+      ) : null}
+      {stopped ? (
         <div className={styles.bar}>
           <p role="status" className={styles.hint}>
             {t.downloads.torrent.stopped}
           </p>
           <Button
             onClick={() => {
+              clearStopped();
               setStatus('starting');
               setEpoch((n) => n + 1);
             }}
@@ -224,7 +243,7 @@ export function TorrentSection({
           </Button>
         </div>
       ) : null}
-      <div role="group" aria-describedby="downloads-device-only">
+      <div role="group" aria-describedby={hintId}>
         <Switch
           label={t.downloads.settings.torrentDht}
           checked={dht}
@@ -235,7 +254,7 @@ export function TorrentSection({
           checked={upnp}
           onChange={(on) => void setNetwork({ upnp: on })}
         />
-        <p id="downloads-device-only" className={styles.hint}>
+        <p id={hintId} className={styles.hint}>
           {t.downloads.torrent.deviceOnly}
         </p>
       </div>

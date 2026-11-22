@@ -21,9 +21,10 @@ const PREVIEW_TIMEOUT: Duration = Duration::from_secs(90);
 pub struct Torrents {
     engine: Mutex<Option<Arc<Engine>>>,
     watchers: Arc<std::sync::Mutex<Vec<Channel<Vec<TorrentInfo>>>>>,
-    watching: Arc<std::sync::atomic::AtomicBool>,
     /// Moves with every stop: a watch loop of an older engine ends at its next tick.
     generation: Arc<std::sync::atomic::AtomicU64>,
+    /// Generation + 1 of the running watch loop (0: none).
+    loop_of: Arc<std::sync::atomic::AtomicU64>,
 }
 
 #[derive(Deserialize)]
@@ -79,6 +80,7 @@ fn code(e: impl std::fmt::Display) -> String {
         "not-found",
         "already-added",
         "bad-path",
+        "shortcut",
         "tracker",
     ] {
         if msg == known {
@@ -167,15 +169,14 @@ async fn stop_engine(app: &AppHandle, state: &Torrents, engine: Option<Arc<Engin
         w.clear();
     }
     state.generation.fetch_add(1, SeqCst);
-    state.watching.store(false, SeqCst);
     if let Some(e) = engine {
         e.stop().await;
     }
     crate::capture::set_torrent_tray(app, false);
 }
 
-/// "Torrent läuft – beenden" in the tray (DL2). The torrents stay in the list, paused; the
-/// page starts the engine again the next time it becomes visible with the torrent part on.
+/// "Torrent läuft – beenden" in the tray (DL2). The torrents stay saved, paused; the page says
+/// "angehalten" and waits for "Wieder starten".
 pub fn stop_from_tray(app: &AppHandle) {
     let app = app.clone();
     tauri::async_runtime::spawn(async move {
@@ -283,31 +284,31 @@ pub async fn torrent_watch(
     state: State<'_, Torrents>,
     events: Channel<Vec<TorrentInfo>>,
 ) -> Result<(), String> {
+    use std::sync::atomic::Ordering::SeqCst;
+    // read before the engine: a stop in between moves it, and the loop below ends at once
+    let mine = state.generation.load(SeqCst);
     let engine = state.engine().await?;
     let _ = events.send(engine.list());
     // one page watches: a new watch replaces the earlier channel
     *state.watchers.lock().map_err(|_| "internal".to_string())? = vec![events];
-    if !state
-        .watching
-        .swap(true, std::sync::atomic::Ordering::SeqCst)
-    {
+    // one loop per engine generation
+    if state.loop_of.swap(mine + 1, SeqCst) != mine + 1 {
         let watchers = state.watchers.clone();
-        let watching = state.watching.clone();
         let generation = state.generation.clone();
-        let mine = generation.load(std::sync::atomic::Ordering::SeqCst);
+        let loop_of = state.loop_of.clone();
         tokio::spawn(async move {
             loop {
                 tokio::time::sleep(Duration::from_secs(1)).await;
-                // the engine this loop watches was stopped: a newer loop (if any) takes over
-                if generation.load(std::sync::atomic::Ordering::SeqCst) != mine {
+                // the engine this loop watches was stopped: the next watch starts a new loop
+                if generation.load(SeqCst) != mine {
                     break;
                 }
                 let list = engine.list();
                 let Ok(mut w) = watchers.lock() else { break };
                 w.retain(|c| c.send(list.clone()).is_ok());
-                // nobody watches (the engine stopped, or the page went): end, and let go of it
+                // nobody watches any more: end, and let go of the engine
                 if w.is_empty() {
-                    watching.store(false, std::sync::atomic::Ordering::SeqCst);
+                    let _ = loop_of.compare_exchange(mine + 1, 0, SeqCst, SeqCst);
                     break;
                 }
             }

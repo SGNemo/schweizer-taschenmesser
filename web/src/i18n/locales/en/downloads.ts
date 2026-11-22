@@ -138,7 +138,7 @@ export const downloads: Strings['downloads'] = {
     turnOff: 'Switch the torrent part off',
     deviceOnly:
       'The torrent switches and the folder apply on this PC only. Changing a switch restarts BitTorrent briefly.',
-    stopped: 'BitTorrent is stopped. Your torrents stay in the list.',
+    stopped: 'BitTorrent is stopped. Your torrents are saved and come back when it starts.',
     restart: 'Start again',
     starting: 'Starting …',
     launch: {
@@ -180,6 +180,8 @@ export const downloads: Strings['downloads'] = {
       dir: 'Nemo only saves into folders you picked with “Choose folder”. Pick the folder there.',
       badPath:
         'The torrent contains file names that could land somewhere else on Windows. Nemo does not load it.',
+      shortcut:
+        'The torrent contains shortcut files (.url, .lnk or desktop.ini) that Windows opens just by showing them. Nemo does not load it.',
       tracker:
         'The torrent names a tracker in the home network or on this PC. Nemo does not load it.',
       other: 'That did not work.',

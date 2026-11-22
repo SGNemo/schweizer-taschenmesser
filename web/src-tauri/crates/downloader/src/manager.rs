@@ -181,7 +181,8 @@ fn still_valid(mut job: Job, reach: net::Reach) -> Option<Job> {
     net::check_url_for(&parsed, reach).ok()?;
     job.url = net::without_credentials(&parsed).to_string();
     let plain = file_names::safe_segment(&job.file_name)
-        && file_names::safe_segment(&format!("{}.part", job.file_name));
+        && file_names::safe_segment(&format!("{}.part", job.file_name))
+        && !file_names::shortcut(&job.file_name);
     (job.dir.is_absolute() && plain).then_some(job)
 }
 

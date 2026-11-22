@@ -8891,7 +8891,8 @@ export const de = {
       turnOff: 'Torrent-Teil ausschalten',
       deviceOnly:
         'Torrent-Schalter und Ordner gelten nur auf diesem PC. Ein Schalter-Wechsel startet BitTorrent kurz neu.',
-      stopped: 'BitTorrent ist angehalten. Deine Torrents bleiben in der Liste.',
+      stopped:
+        'BitTorrent ist angehalten. Deine Torrents sind gespeichert und erscheinen nach dem Start wieder.',
       restart: 'Wieder starten',
       starting: 'Wird gestartet …',
       launch: {
@@ -8933,6 +8934,8 @@ export const de = {
         dir: 'Nemo speichert nur in Ordnern, die du mit „Ordner wählen“ ausgesucht hast. Wähle den Ordner dort aus.',
         badPath:
           'Der Torrent enthält Dateinamen, die auf Windows an einer anderen Stelle landen könnten. Nemo lädt ihn nicht.',
+        shortcut:
+          'Der Torrent enthält Verknüpfungsdateien (.url, .lnk oder desktop.ini), die Windows schon beim Anzeigen öffnet. Nemo lädt ihn nicht.',
         tracker:
           'Der Torrent nennt einen Tracker im Heimnetz oder auf diesem PC. Nemo lädt ihn nicht.',
         other: 'Das hat nicht geklappt.',
