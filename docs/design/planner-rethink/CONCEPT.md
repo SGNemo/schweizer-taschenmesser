@@ -18,13 +18,13 @@ dayOf(thing) = date of its placement row      (the thing is open at its source)
 
 `dayOf` is per unit (a thing, or one part of it); where a reader needs one day for a thing in parts (the ToDo mirror, „Im Plan · Mi“), it is the earliest part from today on.
 
-| State               | Is                                                                                          | Seen as                                        | Who sets it                                             |
-| ------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------- |
-| **no day**          | `dayOf` = none                                                                              | folded group „Noch ohne Tag“ under the day     | default for a thing without a date; „Vom Tag nehmen“    |
-| **laid**            | `dayOf` = a day from today on                                                               | a row on its day                               | entering, moving, dragging, taking a proposal or a chip |
-| **locked** („fest“) | the row has `locked`                                                                        | the row with a closed lock and the word „fest“ | the lock on the row; „… fest“ / „…!“ in the field       |
-| **proposed**        | **never stored** – a row of a preview, or the chip „Vorschlag: Do“ on a thing without a day | preview / chip                                 | the proposer, on request                                |
-| **missed**          | a placement row with a date before today, thing still open                                  | a row in the tab „Noch offen“                  | nobody – a date passing is not a write                  |
+| State | Is | Seen as | Who sets it |
+| --- | --- | --- | --- |
+| **no day** | `dayOf` = none | folded group „Noch ohne Tag“ under the day | default for a thing without a date; „Vom Tag nehmen“ |
+| **laid** | `dayOf` = a day from today on | a row on its day | entering, moving, dragging, taking a proposal or a chip |
+| **locked** („fest“) | the row has `locked` | the row with a closed lock and the word „fest“ | the lock on the row; „… fest“ / „…!“ in the field |
+| **proposed** | **never stored** – a row of a preview, or the chip „Vorschlag: Do“ on a thing without a day | preview / chip | the proposer, on request |
+| **missed** | a placement row with a date before today, thing still open | a row in the tab „Noch offen“ | nobody – a date passing is not a write |
 
 Transitions – each is one undoable action of the person; the proposer has none:
 
@@ -81,24 +81,24 @@ Drag a row onto a day of the band or grid (mouse; touch after a long press); the
 
 ## 7. Counter-scenarios
 
-| Scenario                                                           | Today                                            | New                                                                                   | Verdict                                   |
-| ------------------------------------------------------------------ | ------------------------------------------------ | ------------------------------------------------------------------------------------- | ----------------------------------------- |
-| First morning („Wochenende“ A–C): pile → days                      | „Tage einteilen“, preview, „Übernehmen“ (7 taps) | same sheet; its last step is the proposal with preview                                | equal                                     |
-| „Kopf leer“: dump a pile (pile sheet or quick capture), sort later | things spread at once, 16 wait                   | they arrive in „Noch ohne Tag“ (folded); „Woche vorschlagen“ → preview → „Übernehmen“ | calmer; +2 taps for who wants them spread |
-| Reminder chain (invoice → deadline → pay)                          | invoice placed by the run                        | chip „Vorschlag: Do · Frist Fr“, one tap; „Nächste Fristen“ unchanged                 | +1 tap, no silent day                     |
-| A training or routine dated at its source                          | shown on its day                                 | shown on its day (`dayOf`), no tap                                                    | equal                                     |
-| Someone who liked the automaton                                    | default                                          | setting „Neues automatisch vorschlagen“ + „Woche vorschlagen“                         | 2 taps a day, nothing silent              |
-| Evening „Rest verteilen“                                           | 2 taps                                           | same                                                                                  | equal                                     |
+| Scenario | Today | New | Verdict |
+| --- | --- | --- | --- |
+| First morning („Wochenende“ A–C): pile → days | „Tage einteilen“, preview, „Übernehmen“ (7 taps) | same sheet; its last step is the proposal with preview | equal |
+| „Kopf leer“: dump a pile (pile sheet or quick capture), sort later | things spread at once, 16 wait | they arrive in „Noch ohne Tag“ (folded); „Woche vorschlagen“ → preview → „Übernehmen“ | calmer; +2 taps for who wants them spread |
+| Reminder chain (invoice → deadline → pay) | invoice placed by the run | chip „Vorschlag: Do · Frist Fr“, one tap; „Nächste Fristen“ unchanged | +1 tap, no silent day |
+| A training or routine dated at its source | shown on its day | shown on its day (`dayOf`), no tap | equal |
+| Someone who liked the automaton | default | setting „Neues automatisch vorschlagen“ + „Woche vorschlagen“ | 2 taps a day, nothing silent |
+| Evening „Rest verteilen“ | 2 taps | same | equal |
 
 ## 8. Target, measured against the use case
 
-| Figure                                                                  | Now            | Target                                                                |
-| ----------------------------------------------------------------------- | -------------- | --------------------------------------------------------------------- |
-| Things on another day than laid, without an action (U1, after two days) | 5              | **0**                                                                 |
-| Things that move while another is moved (laying + repair)               | 1 + 4          | **0**                                                                 |
-| Missed things without a trace                                           | 5              | **0**                                                                 |
-| Handles to put five missed things back, each on a chosen day            | 17 in 3 passes | **10** in 1 pass (also possible: 1 „Alle auf heute“, 2 „Verteilen …“) |
-| New thing lands on the day on the sheet (empty / full / kept free)      | no / no / no   | yes / yes / yes                                                       |
-| A thing onto a day in three weeks                                       | not possible   | **3** taps                                                            |
+| Figure | Now | Target |
+| --- | --- | --- |
+| Things on another day than laid, without an action (U1, after two days) | 5 | **0** |
+| Things that move while another is moved (laying + repair) | 1 + 4 | **0** |
+| Missed things without a trace | 5 | **0** |
+| Handles to put five missed things back, each on a chosen day | 17 in 3 passes | **10** in 1 pass (also possible: 1 „Alle auf heute“, 2 „Verteilen …“) |
+| New thing lands on the day on the sheet (empty / full / kept free) | no / no / no | yes / yes / yes |
+| A thing onto a day in three weeks | not possible | **3** taps |
 
 The same values stand as `TARGET` in the measuring script; each package re-measures `IST` for the paths it changes, the last one switches the assertion to `TARGET`.

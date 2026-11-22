@@ -4,13 +4,13 @@ Part of [CONCEPT](CONCEPT.md). Paths under `web/src/`. Rule above all: **the pla
 
 ## 1. Stored shape
 
-| Collection                                                         | Stays                                                        | Changes                                                                                                                                                                                                                                                                       |
-| ------------------------------------------------------------------ | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `planner_assignment` (id `<itemKey>#<k>`, index `date`, `itemKey`) | `date`, `minutes`, `order`, `k`                              | new `locked?: boolean`; `of`, `reason`, `bumpedBy`, `late` are no longer written and ignored on read (dropped from the schema with `manifest.version` + a no-op migration); rows of fixed blocks are no longer written; old ones are hidden by the selector, not deleted (§3) |
-| `planner_item`                                                     | `excluded`, `due { hard, time }`, `part`, `skipped`, `order` | `pinned` is cleared by the migration and no longer written; `earliest` and `splittable` are no longer read                                                                                                                                                                    |
-| `planner_day`                                                      | all                                                          | –                                                                                                                                                                                                                                                                             |
-| Settings (synced)                                                  | the rest                                                     | `autoReplan` is set to `false` once and hidden (§5); the new switch „Neues automatisch vorschlagen“ gets its **own key** `suggestNew` (default off)                                                                                                                           |
-| `_meta` (device-local)                                             | –                                                            | `planner.lastRun` is deleted; new `planner.model = 2` marks the migration as done on this device                                                                                                                                                                              |
+| Collection | Stays | Changes |
+| --- | --- | --- |
+| `planner_assignment` (id `<itemKey>#<k>`, index `date`, `itemKey`) | `date`, `minutes`, `order`, `k` | new `locked?: boolean`; `of`, `reason`, `bumpedBy`, `late` are no longer written and ignored on read (dropped from the schema with `manifest.version` + a no-op migration); rows of fixed blocks are no longer written; old ones are hidden by the selector, not deleted (§3) |
+| `planner_item` | `excluded`, `due { hard, time }`, `part`, `skipped`, `order` | `pinned` is cleared by the migration and no longer written; `earliest` and `splittable` are no longer read |
+| `planner_day` | all | – |
+| Settings (synced) | the rest | `autoReplan` is set to `false` once and hidden (§5); the new switch „Neues automatisch vorschlagen“ gets its **own key** `suggestNew` (default off) |
+| `_meta` (device-local) | – | `planner.lastRun` is deleted; new `planner.model = 2` marks the migration as done on this device |
 
 `manifest.dataApi: false` and „no `aiSchema`“ are untouched; so is field LWW (nothing here changes `core/sync/ops.ts` or its two siblings).
 
@@ -18,16 +18,16 @@ Part of [CONCEPT](CONCEPT.md). Paths under `web/src/`. Rule above all: **the pla
 
 Runs when the device-local flag `planner.model` is missing: on the first start of the new version, and after a backup restore – `_meta` is not part of a backup (`core/backup/apply.ts` writes only the backup's tables), so **the restore path clears the flag explicitly** (a named change of package 1 in `core/backup`). It waits for `syncSettled()`, is deterministic (two devices that both run it write the same field values) and sets the flag last. It does not look at the data again afterwards – rows a device on the old version writes later are not „re-migrated“.
 
-| Found                                                                                                   | Becomes                                                                                    | Why                                                                                                                                           |
-| ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| a placement row                                                                                         | stays as it is = laid                                                                      | nothing moves at the update                                                                                                                   |
-| `item.pinned` equal to the date of one of the thing's rows                                              | `locked` on that row (other parts stay unlocked), `pinned` cleared                         | today's „fest“ is the lock                                                                                                                    |
+| Found | Becomes | Why |
+| --- | --- | --- |
+| a placement row | stays as it is = laid | nothing moves at the update |
+| `item.pinned` equal to the date of one of the thing's rows | `locked` on that row (other parts stay unlocked), `pinned` cleared | today's „fest“ is the lock |
 | `item.pinned` today or later, no row on that date (the pin lay beyond the horizon, or the thing waited) | the thing's row moves to the pinned date (or is created there), `locked`; `pinned` cleared | a day he fixed explicitly; the engine only ignored it while it lay outside the horizon (`core/plan/engine.ts:88`), and the new model has none |
-| `item.pinned` before today, row elsewhere (the pin had passed, the run placed the thing anew)           | row stays where it is, **not** locked, `pinned` cleared                                    | the row is where he sees the thing today                                                                                                      |
-| a row written for a fixed block                                                                         | stays stored, hidden by the selector                                                       | a failing source must not decide what is deleted                                                                                              |
-| a thing the last run left waiting, no pin                                                               | no row = „Noch ohne Tag“                                                                   | –                                                                                                                                             |
-| `plannedFor` / `planMark` on ToDos                                                                      | untouched (also `planMark.prior`)                                                          | they already mirror the rows                                                                                                                  |
-| setting `autoReplan`                                                                                    | `false`                                                                                    | §5                                                                                                                                            |
+| `item.pinned` before today, row elsewhere (the pin had passed, the run placed the thing anew) | row stays where it is, **not** locked, `pinned` cleared | the row is where he sees the thing today |
+| a row written for a fixed block | stays stored, hidden by the selector | a failing source must not decide what is deleted |
+| a thing the last run left waiting, no pin | no row = „Noch ohne Tag“ | – |
+| `plannedFor` / `planMark` on ToDos | untouched (also `planMark.prior`) | they already mirror the rows |
+| setting `autoReplan` | `false` | §5 |
 
 Acceptance for package 1: on a copy of the seed and on a plan shaped like U1 after its repair (everything pinned, two pins passed, one pin three weeks ahead) – every row before = the same row after, same date, except the rows that follow a pin of today or later; locked exactly where the table says; a second start writes nothing; restoring a backup of the old shape runs it again.
 
@@ -54,14 +54,14 @@ Acceptance for package 1: on a copy of the seed and on a plan shaped like U1 aft
 
 ## 6. Sources
 
-| Source thing                                                                                                                         | Arrives as                                                                             |
-| ------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
-| a dated turn (training session, routine's occurrence) – marked by a new optional `day` on `PlannableItem`, set only by those sources | shown on that day by `dayOf` without a row; moving it writes a row                     |
-| carries a deadline only (invoice, cancellation, document, gift, packing list)                                                        | „Noch ohne Tag“ with the chip „Vorschlag: Do · Frist Fr“; one tap lays it (question 2) |
-| timed block (`fixed`) and habit blocks                                                                                               | shown at their time, never a placement, never movable here                             |
-| asked in by „In den Plan“ (`plan.requested`)                                                                                         | laid on the day asked for, else today                                                  |
-| a ToDo dated in ToDos                                                                                                                | muted row with the chip „In ToDos: Do“ on that day (§4)                                |
-| everything else                                                                                                                      | „Noch ohne Tag“                                                                        |
+| Source thing | Arrives as |
+| --- | --- |
+| a dated turn (training session, routine's occurrence) – marked by a new optional `day` on `PlannableItem`, set only by those sources | shown on that day by `dayOf` without a row; moving it writes a row |
+| carries a deadline only (invoice, cancellation, document, gift, packing list) | „Noch ohne Tag“ with the chip „Vorschlag: Do · Frist Fr“; one tap lays it (question 2) |
+| timed block (`fixed`) and habit blocks | shown at their time, never a placement, never movable here |
+| asked in by „In den Plan“ (`plan.requested`) | laid on the day asked for, else today |
+| a ToDo dated in ToDos | muted row with the chip „In ToDos: Do“ on that day (§4) |
+| everything else | „Noch ohne Tag“ |
 
 `day?` is the one change to the `plannable` contract (`core/modules/types.ts`, a hotspot: heads-up in the notes repo before package 1 starts).
 
