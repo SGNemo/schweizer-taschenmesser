@@ -3,6 +3,8 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
+import { createCollectionRepo } from '@/core/db/repo';
+import { getManifest } from '@/core/modules/registry';
 import { setNow } from '@/core/time/now';
 import { WidgetSizeContext } from '@/ui/widgets/size';
 import { assignmentRepo, dayRepo } from '../repo';
@@ -62,15 +64,33 @@ describe('week widget', () => {
 
   it('one row per day with the free minutes, the summary labelled with the last shown day; never red', async () => {
     await dayRepo.upsert('2026-11-10', { date: '2026-11-10', availableMin: 0, blockers: [] });
-    await assignmentRepo.upsert('todos:a#0', {
-      itemKey: 'todos:a',
-      k: 0,
-      of: 1,
-      date: '2026-11-09',
-      minutes: 145,
-      order: 0,
-      reason: 'new',
+    await db.table('_modules').put({
+      id: 'todos',
+      enabled: true,
+      dataPolicy: null,
+      createdAt: 1,
+      updatedAt: 1,
+      deviceId: 't',
+      deletedAt: null,
+      _f: {},
     });
+    await createCollectionRepo(getManifest('todos')!, 'task').create(
+      { listId: 'inbox', title: 'A', done: false, priority: 0, order: 0, estimateMin: 145 },
+      { id: 'a' },
+    );
+    const row = (id: string, minutes: number) =>
+      assignmentRepo.upsert(`todos:${id}#0`, {
+        itemKey: `todos:${id}`,
+        k: 0,
+        of: 1,
+        date: '2026-11-09',
+        minutes,
+        order: 0,
+        reason: 'new',
+      });
+    await row('a', 145);
+    // A stored row whose thing no source lists (it is gone, its module is off): hidden, not in any sum.
+    await row('gone', 40);
     view('s');
     expect(await screen.findByText('Heute · 47 Min frei')).toBeInTheDocument();
     expect(screen.getByText('2 h 25 geplant')).toBeInTheDocument();

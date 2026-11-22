@@ -6,7 +6,7 @@ import { DAY_PARTS, type DayPart } from '@/core/plan/types';
 import { today } from '@/core/time/now';
 import { t } from '@/strings';
 import { Chip, Chips, Dialog } from '@/ui';
-import { asBreak, BREAK_CHOICES, ESTIMATE_CHOICES, pin, setEstimate, setPart } from '../actions';
+import { asBreak, BREAK_CHOICES, ESTIMATE_CHOICES, moveTo, setEstimate, setPart } from '../actions';
 import { BOARD_DAYS } from '../calendar';
 import { compact } from './capacity';
 import styles from '../routes/planner.module.css';
@@ -19,8 +19,8 @@ export type RowChoiceState =
   | { kind: 'break'; entry: PlannableEntry; date: string }
   | { kind: 'estimate'; entry: PlannableEntry; current?: number }
   | { kind: 'part'; entry: PlannableEntry; current?: DayPart }
-  /** „Verschieben …“: `on` = the day the row is on (none while it waits), `pinned` = the day it is nailed to. */
-  | { kind: 'move'; entry: PlannableEntry; on?: string; pinned?: string };
+  /** „Verschieben …“: `on` = the day the row lies on (none while it has no day). */
+  | { kind: 'move'; entry: PlannableEntry; on?: string };
 
 /**
  * The small sheet behind one ⋯ entry (REVIEW-FABLE R8: one entry opens the choice instead of a menu row per
@@ -59,9 +59,9 @@ export function RowChoice({
   };
   const pickDay = (date: string) => {
     onClose();
-    // Nailed there already: nothing to change, no run and no toast.
-    if (choice.kind !== 'move' || choice.pinned === date) return;
-    void pin(choice.entry, date, titles);
+    // It lies there already: nothing to change, no run and no toast.
+    if (choice.kind !== 'move' || choice.on === date) return;
+    void moveTo(choice.entry, date, titles);
   };
   if (choice.kind === 'move')
     return (
@@ -73,7 +73,7 @@ export function RowChoice({
               key={date}
               // „Mi 18.“ – weekday and day, as on the week band's tiles.
               label={`${dayName(date)} ${formatDay(date, 'd.')}`}
-              selected={choice.pinned === date}
+              selected={choice.on === date}
               onClick={() => pickDay(date)}
             />
           ))}

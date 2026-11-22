@@ -111,6 +111,7 @@ const PAGES = [
   ['calendar', '/calendar'],
   ['todos', '/todos'],
   ['planner', '/planner'],
+  ['planner open', '/planner?tab=open'],
   ['habits', '/habits'],
   ['clock', '/clock'],
   ['fitness', '/fitness'],

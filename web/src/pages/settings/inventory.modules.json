@@ -587,11 +587,6 @@
         "label": "Kürzeste Sitzung (Minuten)",
         "default": 25
       },
-      "autoReplan": {
-        "type": "boolean",
-        "label": "Plan von selbst aktuell halten",
-        "default": true
-      },
       "calendarBlocks": {
         "type": "boolean",
         "label": "Termine blocken Zeit",

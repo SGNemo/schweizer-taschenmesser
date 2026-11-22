@@ -133,8 +133,15 @@ describe('overload figure', () => {
     await addRequested({ title: 'Groß', durationMin: 300 });
     const over = (await getMeta<LastRun>(LAST_RUN_KEY))!.overflowMin;
     expect(over).toBe(90);
-    // Too big for the week: it waits, and the second line of the same toast names the overload.
-    expect(messages()).toEqual([`Im Plan: Groß · wartet\n${overloadText(90)}`]);
+    // Asked into the plan it lies on today, however big (nothing waits, nothing else moves): the day is over its
+    // time, and the second line of the same toast names the overload.
+    expect(messages()).toEqual([`Im Plan: Groß · Mo\n${overloadText(90)}`]);
+    expect(
+      (await assignmentRepo.active().toArray()).map((a) => [a.date, a.minutes]).sort(),
+    ).toEqual([
+      [TODAY, 30],
+      [TODAY, 300],
+    ]);
     // One toast: the undo stays.
     expect(useUiStore.getState().toasts[0]?.action?.label).toBe('Rückgängig');
     expect(await getMeta(OVERLOAD_WEEK_KEY)).toBe('2026-W46');
@@ -209,7 +216,7 @@ describe('the automation event planner.overloaded', () => {
 });
 
 describe('invoices in the plan', () => {
-  it('an invoice due Thursday is planned before its deadline and shows it; paid → the item goes', async () => {
+  it('an invoice due Thursday is planned before its deadline and shows it; paid → the board hides it, the row stays', async () => {
     const inv = await invoiceRepo.create({
       payee: 'Stadtwerke',
       amountMinor: 8990,
@@ -223,7 +230,11 @@ describe('invoices in the plan', () => {
       planLimit: 3,
       settled: true,
     };
-    const r = await runPlanner(deps);
+    // A pass nobody asked for lays nothing; handed to the engine the invoice gets a day before its deadline.
+    expect((await runPlanner(deps)).result!.unplaced).toMatchObject([
+      { itemKey: `invoices:${inv.id}`, reason: 'no-day' },
+    ]);
+    const r = await runPlanner(deps, { force: true, loose: [`invoices:${inv.id}`] });
     const a = r.result!.assignments.find((x) => x.itemKey === `invoices:${inv.id}`)!;
     expect(a.date <= '2026-11-12').toBe(true);
     expect(a.minutes).toBe(10);
@@ -244,9 +255,28 @@ describe('invoices in the plan', () => {
     // Nothing was written back to the invoice.
     expect(await invoiceRepo.get(inv.id)).toMatchObject({ status: 'open' });
     await invoiceRepo.update(inv.id, { status: 'paid', paidAt: TODAY });
-    await runPlanner(deps);
+    const paid = await runPlanner(deps);
+    expect(paid.rowWrites).toBe(0);
+    // Paid: the row stays stored on its day (nothing is tidied), the board no longer shows the thing.
     expect(
-      (await assignmentRepo.active().toArray()).filter((x) => x.itemKey === `invoices:${inv.id}`),
-    ).toEqual([]);
+      (await assignmentRepo.active().toArray())
+        .filter((x) => x.itemKey === `invoices:${inv.id}`)
+        .map((x) => x.date),
+    ).toEqual([a.date]);
+    const after = buildBoard({
+      today: TODAY,
+      span: 7,
+      settings: deps.settings,
+      dayRows: await dayRepo.active().toArray(),
+      itemRows: await itemRepo.active().toArray(),
+      assignments: await assignmentRepo.active().toArray(),
+      entries: paid.inputs.entries,
+      calendar: [],
+      unplaced: paid.result!.unplaced,
+      titles: paid.inputs.titles,
+    });
+    expect(after.days.flatMap((d) => d.rows)).toEqual([]);
+    expect(after.waiting).toEqual([]);
+    expect(after.open).toEqual([]);
   });
 });

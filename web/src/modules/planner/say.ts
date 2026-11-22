@@ -55,7 +55,8 @@ export function instructionItems(board: Board): InstructionItem[] {
   const fixed = new Set<string>();
   for (const day of board.days)
     for (const row of day.rows) {
-      if (row.item?.pinned) pinned.set(row.itemKey, row.item.pinned);
+      // „fest“ on its day: no spread takes it (the rules read that as a pin on that day).
+      if (row.pinned) pinned.set(row.itemKey, day.date);
       // A fixed block (S4): its source's day and time – no sentence moves it.
       if (row.fixed || (row.entry && fixedOf(row.entry))) fixed.add(row.itemKey);
     }

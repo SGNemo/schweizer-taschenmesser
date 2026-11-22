@@ -12,10 +12,14 @@ import { ready } from '../helpers';
  *  - `untraceable`: missed things whose row says nothing about the day they were meant for.
  * Plus four entry paths: a new thing on a chosen day, on a full day, on a day off, and on a day in three weeks.
  *
- * `IST` is the state measured on `develop` (2026-11-21); the script is green against it. `TARGET` holds the
- * values the rebuild has to reach (CONCEPT.md §8). Every package of the rebuild re-measures `IST` for the paths it
- * changes (and says so in its PR); the last one switches the assertion from `IST` to `TARGET`. The table lands in
- * `test-results/usecase-planner-rethink.md`, the facts next to it.
+ * `IST` is the measured state: on `develop` before the rebuild (2026-11-21) U1 read 5 unasked moves, 5 untraceable
+ * things, 17 repair taps in 3 passes and 4 + 1 collateral moves, and U2–U4 „nein“. Package 1 (`feat/plan-stays-put`)
+ * brought it to the figures below: nothing moves unasked. Laying the week by hand now costs 31 taps instead of 8,
+ * because nothing is spread beforehand (things start under „Noch ohne Tag“) – „Woche vorschlagen“ and dragging
+ * (packages 5 and 6) bring that down. `TARGET` holds the values the rebuild has to reach (CONCEPT.md §8). Every
+ * package re-measures `IST` for the paths it changes (`MEASURE=1` only measures); the last one switches the
+ * assertion from `IST` to `TARGET`. The table lands in `test-results/usecase-planner-rethink.md`, the facts next
+ * to it.
  *
  *   npx playwright test e2e/usecases/planner-rethink.spec.ts --project=desktop-chrome --trace off
  */
@@ -32,21 +36,21 @@ const IN_THREE_WEEKS = day(21);
 
 type Figures = Record<string, number | string>;
 
-/** Measured on `develop`; a path fails when the planner behaves differently (then re-measure and say why). */
+/** The measured state; a path fails when the planner behaves differently (then re-measure and say why). */
 const IST: Record<string, Figures> = {
   'U1 Woche legen, zwei Tage verpassen, zurücklegen': {
-    layTaps: 8,
-    layCollateral: 1,
-    unaskedAfterTwoDays: 5,
-    untraceable: 5,
-    repairTaps: 17,
-    repairRounds: 3,
-    collateral: 4,
+    layTaps: 31,
+    layCollateral: 0,
+    unaskedAfterTwoDays: 0,
+    untraceable: 0,
+    repairTaps: 16,
+    repairRounds: 1,
+    collateral: 0,
     layoutReached: 'ja',
   },
-  'U2 Neues am gewählten Tag': { landsOnChosenDay: 'nein', collateral: 0 },
-  'U3 Neues an einem vollen Tag': { landsOnChosenDay: 'nein', collateral: 0 },
-  'U4 Neues an einem freien Tag': { landsOnChosenDay: 'nein', collateral: 0 },
+  'U2 Neues am gewählten Tag': { landsOnChosenDay: 'ja', collateral: 0 },
+  'U3 Neues an einem vollen Tag': { landsOnChosenDay: 'ja', collateral: 0 },
+  'U4 Neues an einem freien Tag': { landsOnChosenDay: 'ja', collateral: 0 },
   'U5 Ding auf einen Tag in drei Wochen': {
     possible: 'nein',
     taps: 2,
@@ -187,7 +191,33 @@ const changed = (
 class Hand {
   taps = 0;
   keys = 0;
+  /** The day the fixed clock shows: a thing on an earlier day is found in the tab „Noch offen“. */
+  today = MONDAY;
   constructor(private page: Page) {}
+  /** The tab „Plan“ or „Noch offen“ (one tap when the other one is shown). */
+  async tab(open: boolean) {
+    const shown = await this.page.getByTestId('planner-open').count();
+    if (!!shown === open) return;
+    await this.tap(
+      this.page
+        .getByRole('navigation', { name: 'Ansicht' })
+        .getByText(open ? /^Noch offen/ : /^Plan$/),
+    );
+  }
+  /** A thing without a day sits in the folded group „Noch ohne Tag“: one tap opens it. */
+  async unfold(title: string) {
+    await this.tab(false);
+    const menu = this.page.getByRole('button', { name: `Aktionen für ${title}`, exact: true });
+    if (
+      await menu
+        .first()
+        .isVisible()
+        .catch(() => false)
+    )
+      return;
+    await this.tap(this.page.getByRole('button', { name: /Noch ohne Tag ausklappen/ }));
+    await expect(menu.first()).toBeVisible();
+  }
   async tap(target: Locator) {
     this.taps += 1;
     await target.click();
@@ -199,6 +229,8 @@ class Hand {
   }
   /** Opens the day a thing sits on (one tap on its tile; none when that day is already shown). */
   async show(date: string) {
+    if (date < this.today) return this.tab(true);
+    await this.tab(false);
     const shown = await this.page
       .locator('main [data-testid^="day-"]')
       .first()
@@ -214,6 +246,7 @@ class Hand {
   async move(title: string, to: string): Promise<boolean> {
     const at = (await layout(this.page))[title]?.split('+')[0];
     if (at) await this.show(at);
+    else await this.unfold(title);
     await this.tap(
       this.page.getByRole('button', { name: `Aktionen für ${title}`, exact: true }).first(),
     );
@@ -263,7 +296,9 @@ function record(info: TestInfo, name: string, figures: Figures, facts: unknown) 
   );
   info.annotations.push({ type: 'usecase', description: `${name}: ${JSON.stringify(figures)}` });
   console.log(name, JSON.stringify(figures));
-  if (IST[name]) expect(figures, `${name}: Ist-Zustand auf develop`).toEqual(IST[name]);
+  // MEASURE=1 only measures (a package re-measures before it writes its figures into `IST`).
+  if (process.env.MEASURE !== '1' && IST[name])
+    expect(figures, `${name}: Ist-Zustand`).toEqual(IST[name]);
 }
 
 test.beforeEach(async ({ page }, info) => {
@@ -291,7 +326,7 @@ test('U1 Woche legen, zwei Tage verpassen, zurücklegen', async ({ page }, info)
   };
   await prepare(page, Object.keys(WANT));
   await ready(page, '/planner');
-  await expect(page.getByTestId('planner-head')).toBeVisible();
+  await expect(page.locator('main h1')).toContainText('Planer');
   const auto = await settled(page);
 
   // 1. Lay out the week: every thing that is not where he wants it is moved there („Verschieben …“).
@@ -308,7 +343,7 @@ test('U1 Woche legen, zwei Tage verpassen, zurücklegen', async ({ page }, info)
   // 2. Two days pass, nothing is ticked off. Wednesday morning he opens the planner.
   await page.clock.setFixedTime(new Date(`${MI}T08:00:00`));
   await page.reload();
-  await expect(page.getByTestId('planner-head')).toBeVisible();
+  await expect(page.locator('main h1')).toContainText('Planer');
   await page.waitForTimeout(1500);
   const wednesday = await settled(page);
   const unasked = changed(laid, wednesday);
@@ -322,16 +357,35 @@ test('U1 Woche legen, zwei Tage verpassen, zurücklegen', async ({ page }, info)
       traces[title] = '(auf keinem Tag)';
       continue;
     }
-    await page.getByTestId(`week-${at}`).click();
-    const row = page.getByTestId(`day-${at}`).locator('li').filter({ hasText: title }).first();
+    const probe = new Hand(page);
+    probe.today = MI;
+    await probe.show(at);
+    const row = page
+      .getByTestId(at < MI ? 'planner-open' : `day-${at}`)
+      .locator('li')
+      .filter({ hasText: title })
+      .first();
+    await row.waitFor({ timeout: 5000 }).catch(() => undefined);
+    // The trace of its day: the row's own words („war Mo“ among the fixed things) or the head of its group
+    // („Mo 16.“) – read as the nearest heading above the row.
     traces[title] = (await row.count())
-      ? (await row.innerText()).replace(/\s+/g, ' ')
+      ? await row.evaluate((li) => {
+          let head = '';
+          for (let el = li.parentElement; el && !head; el = el.parentElement)
+            head =
+              (
+                el.querySelector(
+                  ':scope > * h2, :scope > * h3, :scope > h2, :scope > h3',
+                ) as HTMLElement | null
+              )?.innerText ?? '';
+          return `${head} · ${(li as HTMLElement).innerText}`.replace(/\s+/g, ' ');
+        })
       : '(nicht gefunden)';
   }
   const untraceable = missed.filter(
-    (k) => !/verpasst|weiter von|war (Mo|Di)|Montag|Dienstag/i.test(traces[k]!),
+    (k) => !/war (Mo|Di)|\b(Mo|Di) 1[67]\.|Montag|Dienstag/.test(traces[k]!),
   );
-  await page.getByTestId(`week-${MI}`).click();
+  await new Hand(page).tab(false);
 
   // 4. Put it back: Wednesday to Friday as laid; Monday's things to Thursday, Tuesday's to Friday.
   const GOAL: Record<string, string> = {
@@ -343,6 +397,7 @@ test('U1 Woche legen, zwei Tage verpassen, zurücklegen', async ({ page }, info)
     Fahrrad: FR,
   };
   const fix = new Hand(page);
+  fix.today = MI;
   const repairCollateral: string[] = [];
   let rounds = 0;
   let reached = false;
@@ -398,11 +453,24 @@ async function waits(page: Page, title: string): Promise<string | undefined> {
 
 const SIX = ['Angebot', 'Steuer', 'Keller', 'Blogpost', 'Fahrrad', 'Geschenk'];
 
+/**
+ * The starting plan of the entry paths: the six things spread over the days (three on Monday, three on Tuesday)
+ * through the page's „Neu verteilen“ – a proposal he takes; not counted, it only sets the scene.
+ */
+async function spread(page: Page) {
+  await page.getByRole('button', { name: 'Weitere Optionen', exact: true }).first().click();
+  await page.getByRole('menuitem', { name: 'Neu verteilen' }).click();
+  await page.getByRole('button', { name: 'Übernehmen' }).click();
+  await expect(page.getByRole('button', { name: 'Übernehmen' })).toBeHidden();
+  await expect.poll(async () => Object.keys(await layout(page)).length).toBe(SIX.length);
+}
+
 test('U2 Neues am gewählten Tag', async ({ page }, info) => {
   // Monday and Tuesday hold three things each, Thursday is empty and on the sheet.
   await prepare(page, SIX);
   await ready(page, '/planner');
-  await expect(page.getByTestId('planner-head')).toBeVisible();
+  await expect(page.locator('main h1')).toContainText('Planer');
+  await spread(page);
   await settled(page);
   const hand = new Hand(page);
   const r = await enter(page, hand, DO, 'Zahnarzt anrufen', 'Zahnarzt anrufen');
@@ -418,7 +486,8 @@ test('U3 Neues an einem vollen Tag', async ({ page }, info) => {
   // Today holds three things of an hour (12 minutes free); the new thing takes an hour.
   await prepare(page, SIX);
   await ready(page, '/planner');
-  await expect(page.getByTestId('planner-head')).toBeVisible();
+  await expect(page.locator('main h1')).toContainText('Planer');
+  await spread(page);
   await settled(page);
   const hand = new Hand(page);
   const r = await enter(page, hand, MO, 'Paket abholen 1 Std', 'Paket abholen');
@@ -434,7 +503,8 @@ test('U4 Neues an einem freien Tag', async ({ page }, info) => {
   // Thursday is a day off („Donnerstag frei“); he still wants one thing there.
   await prepare(page, SIX);
   await ready(page, '/planner');
-  await expect(page.getByTestId('planner-head')).toBeVisible();
+  await expect(page.locator('main h1')).toContainText('Planer');
+  await spread(page);
   await settled(page);
   const field = page.getByRole('textbox', { name: 'Eintragen oder sagen' });
   await field.fill('Donnerstag frei');
@@ -457,7 +527,8 @@ test('U5 Ding auf einen Tag in drei Wochen', async ({ page }, info) => {
   // and the sentence „schieb Angebot auf 7.12.“.
   await prepare(page, SIX);
   await ready(page, '/planner');
-  await expect(page.getByTestId('planner-head')).toBeVisible();
+  await expect(page.locator('main h1')).toContainText('Planer');
+  await spread(page);
   const before = await settled(page);
   const hand = new Hand(page);
   const byMenu = await hand.move('Angebot', IN_THREE_WEEKS);

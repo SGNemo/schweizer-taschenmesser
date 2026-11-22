@@ -25,7 +25,7 @@ const manifest: ModuleManifest = {
     signature: 'weekBars',
     type: 'sans',
   },
-  version: 5,
+  version: 6,
   get description() {
     return t.planner.meta.description;
   },
@@ -73,7 +73,7 @@ const manifest: ModuleManifest = {
   automation: () => import('./automation'),
   defaultEnabled: false,
   maturity: 'stable',
-  seed: { version: 2, dependsOn: ['todos'] },
+  seed: { version: 3, dependsOn: ['todos'] },
   layout: 'split',
   order: 15,
   area: 'plan',

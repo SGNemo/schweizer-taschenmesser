@@ -92,12 +92,14 @@ describe('links, action and detail are display only', () => {
       (await plannerRepos(database).assignment.active().toArray())
         .map((r) => [r.id, r.date, r.minutes, r.order, r.reason])
         .sort();
-    const first = await runPlanner(deps(one, plain));
-    await runPlanner(deps(two, decorated));
+    // The same action on both („alles auslegen“).
+    const first = await runPlanner(deps(one, plain), { force: true, reshuffle: true });
+    await runPlanner(deps(two, decorated), { force: true, reshuffle: true });
     expect(first.rowWrites).toBeGreaterThan(0);
     expect(await rows(two)).toEqual(await rows(one));
     // The source starts sending links: same hash, same rows → the run writes nothing.
     const again = await runPlanner(deps(one, decorated));
+    expect(again.ran).toBe(false);
     expect(again.rowWrites).toBe(0);
     expect(await rows(one)).toEqual(await rows(two));
     await one.delete();
