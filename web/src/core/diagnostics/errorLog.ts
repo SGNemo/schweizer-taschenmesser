@@ -50,7 +50,8 @@ export function scrub(text: string): string {
       // backslash, the end of the line or 64 characters; then the rest up to a space. When no backslash
       // follows, a few words after the name go too: rather too much hidden than a name left over.
       .replace(/[A-Za-z]:\\(?:Users\\[^\\\r\n"']{1,64}?(?=\\|[\r\n]|$))?[^\s"']*/gi, '[path]')
-      // Network paths: machine, share and the folder after it (often a person's name) the same way.
+      // Network paths: machine, share and the folder after it (often a person's name) the same way. Known
+      // limit: a name with spaces deeper down, or in the share name itself, keeps its second word.
       .replace(
         /\\\\[^\s"'\\]+(?:\\[^\s"'\\]+(?:\\[^\\\r\n"']{1,64}?(?=\\|[\r\n]|$))?)?[^\s"']*/g,
         '[path]',

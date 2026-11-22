@@ -8,7 +8,7 @@
  * The result is shown in a sandboxed `<iframe srcdoc>` without scripts (`MailFrame`); this file is the
  * second line of defence, the iframe CSP (`mailDocument`) the third.
  */
-import { isPublicHttpsUrl } from '@/core/net/publicUrl';
+import { isPublicImageUrl } from '@/core/net/publicUrl';
 import DOMPurify from 'dompurify';
 
 export interface SanitizeOptions {
@@ -144,7 +144,7 @@ function install(): void {
         else node.remove();
       } else if (/^data:image\//i.test(src)) {
         // already inline
-      } else if (isPublicHttpsUrl(src)) {
+      } else if (isPublicImageUrl(src)) {
         // Only what "Bilder laden" can really fetch is offered: a public https address.
         current.remote.add(src);
         const data = current.options.images?.[src];
@@ -231,7 +231,7 @@ const MAX_IMAGE_REDIRECTS = 3;
 
 /**
  * One image request that never follows a redirect by itself: every hop is judged again
- * (`isPublicHttpsUrl`), so a public address cannot hand the request on to a device in the home network.
+ * (`isPublicImageUrl`), so a public address cannot hand the request on to a device in the home network.
  * With `redirect: 'manual'` the desktop's own fetch hands back the 3xx answer with its `Location` (the
  * platform translates the option); a browser answers with an opaque response, which simply counts as
  * "not loaded".
@@ -259,7 +259,7 @@ async function fetchChecked(
     } catch {
       return undefined;
     }
-    if (!isPublicHttpsUrl(next)) return undefined;
+    if (!isPublicImageUrl(next)) return undefined;
     current = next;
   }
   return undefined;
@@ -269,7 +269,7 @@ async function fetchChecked(
  * Downloads the images the user allowed (through the platform `fetch`: native, no CORS) and returns them
  * as data URLs. Bounded: at most `max` images of at most `maxBytes` each; failures are skipped.
  *
- * The sender chooses these addresses, so only public https hosts are asked (`isPublicHttpsUrl`): never
+ * The sender chooses these addresses, so only public https hosts are asked (`isPublicImageUrl`): never
  * plain http, a device in the home network, this computer or a cloud metadata address. A body whose
  * declared length is over the limit is not read at all, and every redirect is judged by the same rule.
  */
@@ -280,7 +280,7 @@ export async function fetchRemoteImages(
 ): Promise<Record<string, string>> {
   const { max = 20, maxBytes = 1_500_000, timeoutMs = 8000 } = opts;
   const out: Record<string, string> = {};
-  for (const url of urls.filter(isPublicHttpsUrl).slice(0, max)) {
+  for (const url of urls.filter(isPublicImageUrl).slice(0, max)) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {

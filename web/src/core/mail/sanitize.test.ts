@@ -154,6 +154,7 @@ describe('fetchRemoteImages', () => {
         'http://127.0.0.1:8787/x.png',
         'https://169.254.169.254/latest',
         'https://router.lan/x.png',
+        'https://fritz.box/x.png',
         'https://user:pw@a.example/x.png',
         'https://a.example/ok.png',
       ],
@@ -185,6 +186,10 @@ describe('fetchRemoteImages', () => {
       'https://a.example/lan.png': 'http://192.168.1.1/cgi-bin/reboot',
       'https://a.example/lan2.png': 'https://router.lan/x.png',
       'https://a.example/loop.png': 'https://a.example/loop.png',
+      'https://a.example/bare.png': '//10.0.0.1/x.png',
+      'https://a.example/cred.png': 'https://user:pw@cdn.example/x.png',
+      'https://a.example/router.png': 'https://fritz.box/x.png',
+      'https://a.example/rel.png': '/real2.png',
     };
     const fetchFn = (async (url: string) => {
       asked.push(url);
@@ -193,7 +198,14 @@ describe('fetchRemoteImages', () => {
       return new Response(png, { status: 200, headers: { 'content-type': 'image/png' } });
     }) as unknown as typeof fetch;
     const out = await fetchRemoteImages(Object.keys(hops), fetchFn);
-    expect(Object.keys(out)).toEqual(['https://a.example/moved.png']);
+    expect(Object.keys(out)).toEqual(['https://a.example/moved.png', 'https://a.example/rel.png']);
+    expect(asked).toContain('https://a.example/real2.png');
+    for (const never of [
+      'https://10.0.0.1/x.png',
+      'https://user:pw@cdn.example/x.png',
+      'https://fritz.box/x.png',
+    ])
+      expect(asked, never).not.toContain(never);
     expect(asked).not.toContain('http://192.168.1.1/cgi-bin/reboot');
     expect(asked).not.toContain('https://router.lan/x.png');
     expect(asked.filter((u) => u === 'https://a.example/loop.png')).toHaveLength(4);
@@ -201,7 +213,7 @@ describe('fetchRemoteImages', () => {
 });
 
 describe('sanitizeMailHtml: which remote images are offered', () => {
-  it('offers only public https images; http and home-network sources are dropped, not counted', () => {
+  it('offers only public https images; http and home-network sources are withheld and counted as such', () => {
     const out = sanitizeMailHtml(
       '<p>x</p><img src="https://a.example/ok.png" width="200" height="100">' +
         '<img src="http://a.example/plain.png" width="200" height="100">' +

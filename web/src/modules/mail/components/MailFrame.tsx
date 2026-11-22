@@ -66,6 +66,11 @@ export function MailFrame({
     };
   }, [autoLoadImages, pending, imageKey]);
 
+  // Images that are never fetched (plain http, home network) count into the line only while nothing was
+  // loaded: once the user (or „Immer laden“) has loaded what can load, the line names what is still out.
+  const loaded = Object.keys(images).length > 0;
+  const missing = result.blocked + (loaded || autoLoadImages ? 0 : result.withheld);
+
   function onLoad() {
     const document_ = frame.current?.contentDocument;
     if (!document_) return;
@@ -81,11 +86,9 @@ export function MailFrame({
 
   return (
     <div className={styles.frameBox}>
-      {result.blocked > 0 || result.withheld > 0 || result.trackers > 0 ? (
+      {missing > 0 || result.trackers > 0 ? (
         <div className={styles.imageBar} role="status">
-          {result.blocked + result.withheld > 0 ? (
-            <span>{t.mail.view.blockedImages(result.blocked + result.withheld)}</span>
-          ) : null}
+          {missing > 0 ? <span>{t.mail.view.blockedImages(missing)}</span> : null}
           {result.trackers > 0 ? <span>{t.mail.view.trackers(result.trackers)}</span> : null}
           {result.blocked > 0 ? (
             <Button disabled={loadingImages} onClick={() => void loadImages()}>
