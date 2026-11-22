@@ -3,7 +3,7 @@ import { coverageFindings } from './audit';
 
 /** AUDIT_SECRET_ENV names and which of them have a value (the coverage check never sees values). */
 const env = (...pairs: [string, boolean][]) => ({
-  secretNames: pairs.map(([n]) => n),
+  listed: pairs.map(([n]) => n),
   provided: pairs.filter(([, has]) => has).map(([n]) => n),
 });
 const KEY = env(['TAURI_SIGNING_PRIVATE_KEY', true]);

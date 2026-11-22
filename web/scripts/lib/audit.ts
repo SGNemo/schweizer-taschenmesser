@@ -214,8 +214,8 @@ export interface AuditCoverage {
   publish: boolean;
   /** Each `--path` with the number of files found under it. */
   paths: readonly { path: string; files: number }[];
-  /** The names from AUDIT_SECRET_ENV. */
-  secretNames: readonly string[];
+  /** The variable names listed in AUDIT_SECRET_ENV. */
+  listed: readonly string[];
   /** The names among them that have a value (none in a dry run). Never the values themselves. */
   provided: readonly string[];
   /** Signatures checked against the public key; undefined without `--pubkey-from`. */
@@ -233,14 +233,14 @@ export function coverageFindings(c: AuditCoverage): Finding[] {
   if (c.paths.length === 0) findings.push({ file: '(none)', rule: 'empty-path' });
   for (const p of c.paths) if (p.files === 0) findings.push({ file: p.path, rule: 'empty-path' });
   if (c.publish) {
-    if (c.secretNames.length === 0) {
+    if (c.listed.length === 0) {
       findings.push({
         file: '(environment)',
         rule: 'secret-not-provided',
         detail: 'AUDIT_SECRET_ENV',
       });
     }
-    for (const name of c.secretNames) {
+    for (const name of c.listed) {
       if (!c.provided.includes(name)) {
         findings.push({ file: '(environment)', rule: 'secret-not-provided', detail: name });
       }
