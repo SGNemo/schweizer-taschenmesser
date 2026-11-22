@@ -61,7 +61,7 @@ export function setDevicePrefs(patch: Partial<DevicePrefs>): void {
  * network, and another device may have set them.
  */
 export function adoptSyncedOnce(row: unknown): void {
-  let stored: string | null = null;
+  let stored: string | null;
   try {
     stored = storage()?.getItem(KEY) ?? null;
   } catch {

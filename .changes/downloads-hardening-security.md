@@ -24,8 +24,8 @@ type: security
 area: downloads
 breaking: true
 highlight: true
-de: Nach dem Update ist der Torrent-Teil aus: Schalte ihn auf jedem PC einmal neu ein, ebenso UPnP und deinen Download-Ordner.
-en: After the update the torrent part is off: switch it on again once on each PC, and UPnP and your download folder too.
+de: Nach dem Update ist der Torrent-Teil aus: Schalte ihn auf jedem PC einmal neu ein, ebenso UPnP und deinen Download-Ordner. Ein ausgeschaltetes DHT bleibt aus.
+en: After the update the torrent part is off: switch it on again once on each PC, and UPnP and your download folder too. A DHT you switched off stays off.
 ---
 ---
 type: security
