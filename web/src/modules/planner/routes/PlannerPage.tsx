@@ -206,10 +206,7 @@ export default function PlannerPage() {
    * fixed ones stay and are named („1 bleibt: fest“).
    */
   async function showSpread(day: BoardDay) {
-    // A thing in parts stays out: its other parts lie on other days the action does not name.
-    const free = day.rows.filter(
-      (r) => !r.pinned && !r.fixed && !r.derived && r.entry && r.of === 1,
-    );
+    const free = day.rows.filter(movable);
     const loose = [...new Set(free.map((r) => r.itemKey))];
     const fixed = new Set(day.rows.filter((r) => r.pinned).map((r) => r.itemKey)).size;
     setAsk(undefined);
@@ -559,10 +556,16 @@ export default function PlannerPage() {
    * replaces the word and „Nicht mehr fest“); an open row is locked from ⋯ there. Wider pages show it on every row.
    */
   const lockHidden = (row: BoardRow) => phone && !row.pinned;
+  /**
+   * What a day's „Rest verteilen“ may hand over: not „fest“, no fixed block, no dated turn of its source, and no part of
+   * a thing in parts (its other parts lie on days the action does not name).
+   */
+  const movable = (r: BoardRow) => !r.pinned && !r.fixed && !r.derived && !!r.entry && r.of === 1;
   /** The lock on a row: one tap, one undo; a dated turn without a row gets its row on the day it shows on. */
-  // A thing in parts (from the engine's time) is locked on all its days: no one-day toggle on its rows.
+  // A thing in parts (from the engine's time) is locked on all its days: no one-day toggle on its rows. A source's
+  // dated turn needs none: no proposal moves it.
   const lockOf = (row: BoardRow, date: string) =>
-    row.entry && !row.fixed && (row.of === 1 || row.pinned)
+    row.entry && !row.fixed && !row.derived && (row.of === 1 || row.pinned)
       ? {
           locked: row.pinned,
           onToggle: () =>
@@ -594,7 +597,7 @@ export default function PlannerPage() {
         menu={rowMenu(row, day.date, reason, {
           tick,
           // The same rule as the toggle: no one-day lock on a part of a thing.
-          lockInMenu: lockHidden(row) && row.of === 1,
+          lockInMenu: lockHidden(row) && row.of === 1 && !row.derived,
         })}
         lock={lockHidden(row) ? undefined : lockOf(row, day.date)}
         onDone={tick ? () => done(row) : undefined}
@@ -1101,14 +1104,15 @@ export default function PlannerPage() {
                     void setMeta(phone ? THEN_NARROW_KEY : THEN_WIDE_KEY, open)
                   }
                   empty={emptySheet}
-                  onRest={shownDay.isToday ? () => void showRest() : undefined}
+                  // „Rest verteilen“ only where something can go (a day of dated turns and locks alone has nothing).
+                  onRest={
+                    shownDay.isToday && shownDay.rows.some(movable)
+                      ? () => void showRest()
+                      : undefined
+                  }
                   // Only where something can go: a day over its time by fixed blocks, turns or locks alone has no link.
                   onSpread={
-                    shownDay.rows.some(
-                      (r) => !r.pinned && !r.fixed && !r.derived && r.entry && r.of === 1,
-                    )
-                      ? () => void showSpread(shownDay)
-                      : undefined
+                    shownDay.rows.some(movable) ? () => void showSpread(shownDay) : undefined
                   }
                   hints={
                     shownDay.hints?.length ? (
