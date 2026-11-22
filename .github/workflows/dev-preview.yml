@@ -460,7 +460,10 @@ jobs:
         run: |
           set -euo pipefail
           BT="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -n1)"
-          "${BT}apksigner" verify --print-certs ../assets/Nemo-dev.apk | grep -E "Verifies|SHA-256 digest" | sed 's/^/  /'
+          "${BT}apksigner" verify --print-certs ../assets/Nemo-dev.apk > "$RUNNER_TEMP/dev-certs.txt"
+          grep -E "Verifies|SHA-256 digest" "$RUNNER_TEMP/dev-certs.txt" | sed 's/^/  /'
+          # Never the release key, even if the old shared keystore was stored as ANDROID_DEV_* (SC2).
+          node scripts/apk-signer-check.mjs --dev "$RUNNER_TEMP/dev-certs.txt"
           "${BT}aapt2" dump badging ../assets/Nemo-dev.apk | grep -E "^package: name='io.github.sgnemo.taschenmesser.dev'" 
 
       - name: Audit – no secrets in the APK or what goes into it

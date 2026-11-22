@@ -413,6 +413,14 @@ jobs:
             node scripts/android-sign.mjs "${{ steps.apk.outputs.path }}" ../assets/Nemo.apk
           (cd ../assets && sha256sum Nemo.apk > Nemo.apk.sha256 && cat Nemo.apk.sha256)
 
+      - name: The release APK carries the release key
+        if: needs.prepare.outputs.publish == 'true'
+        run: |
+          set -euo pipefail
+          BT="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -n1)"
+          "${BT}apksigner" verify --print-certs ../assets/Nemo.apk > "$RUNNER_TEMP/certs.txt"
+          node scripts/apk-signer-check.mjs --release "$RUNNER_TEMP/certs.txt"
+
       - name: Unsigned APK (dry run)
         if: needs.prepare.outputs.publish != 'true'
         run: |

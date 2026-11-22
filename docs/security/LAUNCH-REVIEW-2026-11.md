@@ -194,7 +194,7 @@ No critical finding. One high finding (SC1). The Dev-Preview that friends alread
 
 | ID | Sev | Finding | Evidence | Size |
 |---|---|---|---|---|
-| SC4 | low | The publishing build restores caches | `.github/workflows/release.yml:212-219,328,338-342` | S, **fixed (#1050)** |
+| SC4 | low | The publishing build restores caches | `.github/workflows/release.yml:212-219,328,338-342` | S, **fixed (#1050)** for `release.yml`; the Dev-Preview keeps its caches (accepted: dev key only) |
 | SC5 | low | `libsqlite3-sys` 0.30.1, RUSTSEC-2026-0459 (needs write access next to the hub database; not realistically reachable) | `web/src-tauri/Cargo.lock`, `crates/lan-sync/src/store.rs:97` | M |
 | SC6 | low | The pin test does not read `.github/actions/*/action.yml` (all five `uses:` there are pinned today) | `web/scripts/lib/actionsPinned.test.ts:11` | S |
 | SC7 | low | Dependabot misses the root and `scripts/agents` npm projects, two crate lockfiles and one Gradle project; no audit job in CI | `.github/dependabot.yml` | S |

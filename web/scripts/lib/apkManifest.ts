@@ -10,11 +10,14 @@ import type { Finding } from './audit';
 
 export interface MergedManifest {
   permissions: string[];
+  /** Permissions the app itself declares (`<permission>`), with their protection level. */
+  declared: { name: string; protectionLevel: string }[];
   /** Attributes of `<application>`. */
   application: Record<string, string>;
   /**
    * Components another app can start or bind (explicitly exported, or with an intent filter and no
-   * `exported`), as `name` or `name (permission)` when `android:permission` guards it.
+   * `exported`), as `name` or `name (permission)` when `android:permission` guards it. A provider's
+   * `readPermission`/`writePermission` is not read: such a provider is listed unguarded (fails closed).
    */
   exported: string[];
 }
@@ -71,7 +74,7 @@ function attributes(raw: string): Record<string, string> {
 
 /** A small reader for the machine-written XML `apkanalyzer` prints; throws when it is not a manifest. */
 export function parseManifest(xml: string): MergedManifest {
-  const result: MergedManifest = { permissions: [], application: {}, exported: [] };
+  const result: MergedManifest = { permissions: [], declared: [], application: {}, exported: [] };
   const stack: { tag: string; attrs: Record<string, string>; filter: boolean }[] = [];
   let sawManifest = false;
   let sawApplication = false;
@@ -106,6 +109,12 @@ export function parseManifest(xml: string): MergedManifest {
     }
     if (PERMISSION_TAGS.has(tag) && stack.at(-1)?.tag === 'manifest' && attrs['android:name']) {
       result.permissions.push(attrs['android:name']);
+    }
+    if (tag === 'permission' && stack.at(-1)?.tag === 'manifest' && attrs['android:name']) {
+      result.declared.push({
+        name: attrs['android:name'],
+        protectionLevel: attrs['android:protectionLevel'] ?? 'normal',
+      });
     }
     if (tag === 'intent-filter') {
       const owner = stack.at(-1);
@@ -142,11 +151,23 @@ export function checkMergedManifest(
     if (!allow.exported.includes(c))
       findings.push({ file: FILE, rule: 'exported-not-allowed', detail: c });
   }
+  // Another app must not be able to hold a permission the app declares for itself.
+  for (const p of m.declared) {
+    const level = p.protectionLevel;
+    // apkanalyzer prints the name; a raw value is the flag word (base 0x2 = signature)
+    const signature = /^0x/i.test(level)
+      ? (Number.parseInt(level, 16) & 0xf) === 2
+      : level.split('|').includes('signature');
+    if (!signature) {
+      findings.push({ file: FILE, rule: 'permission-not-signature', detail: p.name });
+    }
+  }
   const app = m.application;
   if (app['android:allowBackup'] !== 'false') findings.push({ file: FILE, rule: 'backup-allowed' });
   if (app['android:usesCleartextTraffic'] === 'true')
     findings.push({ file: FILE, rule: 'cleartext-allowed' });
   if (app['android:debuggable'] === 'true') findings.push({ file: FILE, rule: 'debuggable' });
+  if (app['android:testOnly'] === 'true') findings.push({ file: FILE, rule: 'test-only' });
   // A network security config can allow cleartext per domain; none is expected.
   if (app['android:networkSecurityConfig'] !== undefined) {
     findings.push({ file: FILE, rule: 'network-security-config' });
