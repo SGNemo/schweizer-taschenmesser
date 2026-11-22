@@ -77,5 +77,9 @@ describe('torrent stopped outside the page', () => {
     expect((configure.mock.calls[0] as unknown as [{ resume?: boolean }])[0].resume).toBe(false);
     // the page shows the stop and waits for a click
     expect(await screen.findByText(t.downloads.torrent.stopped)).toBeTruthy();
+    // a click asks Rust to end the hold
+    fireEvent.click(screen.getByRole('button', { name: t.downloads.torrent.restart }));
+    await vi.waitFor(() => expect(configure).toHaveBeenCalledTimes(2));
+    expect((configure.mock.calls[1] as unknown as [{ resume?: boolean }])[0].resume).toBe(true);
   });
 });
