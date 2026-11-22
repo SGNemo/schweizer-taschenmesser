@@ -203,4 +203,9 @@ export interface PlanResult {
   usableMin: number;
   /** With `loose`: unit ids whose stored day lies outside the planned days – untouched, to be kept as they are. */
   kept?: string[];
+  /**
+   * With `loose`: handed-over item keys the rules found no room for, so they keep the day they had (taken back out of
+   * `loose`). A proposal says so („1 bleibt, wo es liegt: kein Platz“) – in the preview and in the toast.
+   */
+  heldBack?: string[];
 }

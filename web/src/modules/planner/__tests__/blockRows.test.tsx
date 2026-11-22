@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * Planner hub S4 (CONCEPT-DESIGN §4): the day's blocks lie recessed above „Zuerst“ in time order – an appointment,
- * a fixed training (tick, its time, „fest“, a ⋯ without moving steps) and a habit's kept time (clock, the typed
+ * a fixed training (tick, its time (never „fest“: that word is the lock's), a ⋯ without moving steps) and a habit's kept time (clock, the typed
  * name, its minutes; no tick, no ⋯, never „offen“).
  */
 import { render, screen, within } from '@testing-library/react';
@@ -115,14 +115,14 @@ describe('the blocks of a day (S4)', () => {
     expect(within(first).getByText('Steuer')).toBeInTheDocument();
   });
 
-  it('the training keeps its tick and says its time and „fest“', () => {
+  it('the training keeps its tick and says its time alone – „fest“ belongs to the lock', () => {
     draw();
     const li = screen.getByText('Training: Oberkörper').closest('li')!;
     expect(
       within(li).getByRole('checkbox', { name: 'Erledigt: Training: Oberkörper' }),
     ).toBeInTheDocument();
     expect(li.textContent).toContain('18:00–19:00');
-    expect(li.textContent).toContain('fest');
+    expect(li.textContent).not.toContain('fest');
   });
 
   it('the habit block has no tick and no ⋯, says its source and minutes, never „offen“', () => {

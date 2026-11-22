@@ -32,6 +32,8 @@ const source: PlannableSource = {
       to: `/routines?open=${encodeURIComponent(r.id)}`,
       durationMin: r.minutes ?? DEFAULT_MINUTES,
       earliest: r.dueDate > ctx.today ? r.dueDate : ctx.today,
+      // The turn's day (planner rethink): shown there without a row; a turn that is due already shows on today.
+      day: r.dueDate > ctx.today ? r.dueDate : ctx.today,
       due: { date: r.dueDate > ctx.today ? r.dueDate : ctx.today, hard: false },
       createdAt: r.createdAt,
     }));

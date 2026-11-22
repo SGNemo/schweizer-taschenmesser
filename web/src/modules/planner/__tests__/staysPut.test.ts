@@ -25,15 +25,23 @@ import {
   exclude,
   later,
   markDone,
+  layHere,
   moveTo,
   setAvailable,
   setLocked,
+  spreadDay,
 } from '../actions';
 import { buildBoard } from '../board';
 import manifest from '../manifest';
 import { assignmentRepo, dayRepo, itemRepo } from '../repo';
 import { LAST_RUN_KEY, type LastRun } from '../run';
-import { previewUser, runBackground, runsSettled, setManifestsForTests } from '../services';
+import {
+  previewUser,
+  proposeUser,
+  runBackground,
+  runsSettled,
+  setManifestsForTests,
+} from '../services';
 import { DEFAULT_PLANNER_SETTINGS } from '../settings';
 
 const MON = '2026-11-16';
@@ -183,7 +191,16 @@ interface Case {
   to?: string | null;
   /** What else the action must have done (so no case passes by doing nothing). */
   did: () => Promise<void>;
+  /** State the case needs besides the four laid things (written before the snapshot, no undo entry). */
+  prep?: () => Promise<void>;
 }
+
+/** Package 2: the proposal a chip showed (read in `prep`, taken by the case). */
+let proposed: string | undefined;
+const lastToast = () => useUiStore.getState().toasts.at(-1)?.message;
+const lockRow = async (id: string) => {
+  await assignmentRepo.update(`${key(id)}#0`, { locked: true } as never);
+};
 
 const cases: Case[] = [
   {
@@ -279,9 +296,149 @@ const cases: Case[] = [
       expect(mon.rows).toHaveLength(2);
     },
   },
+  // Package 2 (planner rethink): the lock on the row, the lock words, the chips – each names one thing.
+  {
+    name: 'the lock on the row, off again („Nicht mehr fest“)',
+    prep: () => lockRow('p3'),
+    run: async () => setLocked(await entryOf('p3'), false, {}),
+    named: ['p3'],
+    did: async () => {
+      expect((await assignmentRepo.get(`${key('p3')}#0`))?.locked).toBeUndefined();
+      expect(lastToast()).toBe('Nicht mehr fest');
+    },
+  },
+  {
+    name: 'moveTo of a thing that is „fest“: the lock moves with it, the toast says so',
+    prep: () => lockRow('p1'),
+    run: async () => moveTo(await entryOf('p1'), THU, {}),
+    named: ['p1'],
+    to: THU,
+    did: async () => {
+      expect((await assignmentRepo.get(`${key('p1')}#0`))?.locked).toBe(true);
+      expect(lastToast()).toBe('Ding p1 liegt auf Do · fest');
+    },
+  },
+  {
+    name: 'addFromField with a lock word after a day („Zahnarzt Do fest“)',
+    run: () => addFromField('Zahnarzt Do fest', {}, TUE),
+    named: ['new'],
+    to: THU,
+    did: async () => {
+      const [row] = (await assignmentRepo.active().toArray()).filter((r) => r.date === THU);
+      expect(row?.locked).toBe(true);
+      const task = (await taskRepo.active().toArray()).find((x) => !(x.id in LAID))!;
+      expect(task.title).toBe('Zahnarzt');
+      expect(lastToast()).toBe('Zahnarzt liegt auf Do · fest');
+    },
+  },
+  {
+    name: 'addFromField with „!“ after a date („Steuer 20.11.!“)',
+    run: () => addFromField('Steuer 20.11.!', {}, TUE),
+    named: ['new'],
+    to: FRI,
+    did: async () => {
+      const row = (await assignmentRepo.active().toArray()).find((r) => r.date === FRI);
+      expect(row?.locked).toBe(true);
+    },
+  },
+  {
+    name: 'addFromField with a lock word and no day („Bin fest“): a title, laid on the sheet, not fest',
+    run: () => addFromField('Bin fest', {}, TUE),
+    named: ['new'],
+    to: TUE,
+    did: async () => {
+      const task = (await taskRepo.active().toArray()).find((x) => !(x.id in LAID))!;
+      expect(task.title).toBe('Bin fest');
+      expect((await assignmentRepo.active().toArray()).some((r) => r.locked)).toBe(false);
+    },
+  },
+  {
+    name: 'addFromField with a lock word after a deadline („Steuer bis Fr fest“): the deadline stays, nothing is fest',
+    run: () => addFromField('Steuer bis Fr fest', {}, TUE),
+    named: ['new'],
+    to: TUE,
+    did: async () => {
+      expect((await assignmentRepo.active().toArray()).some((r) => r.locked)).toBe(false);
+      const task = (await taskRepo.active().toArray()).find((x) => !(x.id in LAID))!;
+      expect((await itemRepo.get(key(task.id)))?.due).toMatchObject({ date: FRI, hard: true });
+    },
+  },
+  {
+    name: 'addFromField with the `p` prefix keeps its pin („p Zahnarzt Donnerstag“, ANALYSIS R13)',
+    run: () => addFromField('p Zahnarzt Donnerstag', {}, TUE),
+    named: ['new'],
+    to: THU,
+    did: async () => {
+      const row = (await assignmentRepo.active().toArray()).find((r) => r.date === THU);
+      expect(row?.locked).toBe(true);
+    },
+  },
+  {
+    name: '„Hierher legen“ of a date set in ToDos',
+    prep: async () => {
+      await addTask('p5', 'Arzt anrufen');
+      await taskRepo.update('p5', { plannedFor: FRI } as never);
+      // The muted row stands on Friday and counts for nothing; the thing is not „Noch ohne Tag“ as well.
+      const fri = (await boardOn(MON)).days.find((d) => d.date === FRI)!;
+      expect(fri.hints?.map((h) => h.itemKey)).toEqual([key('p5')]);
+      expect(fri.planned).toBe(0);
+    },
+    run: async () => layHere(await entryOf('p5'), FRI, {}),
+    named: ['p5'],
+    to: FRI,
+    did: async () => {
+      const fri = (await boardOn(MON)).days.find((d) => d.date === FRI)!;
+      expect(fri.hints).toEqual([]);
+      expect(fri.rows.map((r) => r.itemKey)).toEqual([key('p5')]);
+      expect(lastToast()).toBe('Liegt auf Fr');
+    },
+  },
+  {
+    name: '„Übernehmen“ of a chip „Vorschlag: … · Frist Fr“',
+    prep: async () => {
+      await addTask('p6', 'Rechnung prüfen', 60);
+      await itemRepo.create(
+        {
+          source: { module: 'todos', id: 'p6' },
+          order: 0,
+          due: { date: FRI, hard: true },
+        } as never,
+        { id: key('p6') },
+      );
+      proposed = (await proposeUser([key('p6')]))[key('p6')];
+      expect(proposed).toBeDefined();
+    },
+    run: async () => layHere(await entryOf('p6'), proposed!, {}),
+    named: ['p6'],
+    get to() {
+      return proposed;
+    },
+    did: async () => {
+      expect((await assignmentRepo.get(`${key('p6')}#0`))?.locked).toBeUndefined();
+    },
+  },
+  {
+    // Monday keeps 30 min of time (24 usable): p1 and p2 (30 min each) overbook it; p2 is „fest“.
+    name: '„Rest verteilen“ of an overbooked day: the free thing goes, the fixed one stays and is named',
+    prep: async () => {
+      await dayRepo.create({ date: MON, availableMin: 30, blockers: [] } as never, { id: MON });
+      await lockRow('p2');
+      expect((await boardOn(MON)).days[0]!.over).toBe(36);
+    },
+    run: () => spreadDay(MON, [key('p1')], 1, {}),
+    named: ['p1'],
+    to: TUE,
+    did: async () => {
+      expect(await assignmentRepo.get(`${key('p2')}#0`)).toMatchObject({ date: MON, locked: true });
+      expect(lastToast()).toBe('Verteilt.\n1 bleibt: fest');
+    },
+  },
 ];
 
-describe.each(cases)('$name', ({ run, named, to, did }) => {
+describe.each(cases)('$name', (c) => {
+  const { run, named, did, prep } = c;
+  // Read when the test runs (a chip's proposed day is known only after `prep`).
+  const to = () => c.to;
   beforeEach(layFour);
   /** The item keys the action named, the new thing included. */
   const namedKeys = async () => {
@@ -292,6 +449,7 @@ describe.each(cases)('$name', ({ run, named, to, did }) => {
   };
 
   it('(a) only the rows of the named thing change their day; no other row disappears or appears', async () => {
+    await prepare(prep);
     const before = await rowDates();
     expect(await run()).toBe(true);
     await runsSettled();
@@ -306,13 +464,14 @@ describe.each(cases)('$name', ({ run, named, to, did }) => {
       if (!(id in before)) expect(keys.has(itemKeyOfRow(id)), `${id} appeared`).toBe(true);
     for (const k of keys) {
       const id = `${k}#0`;
-      if (to === null) expect(after[id]).toBeUndefined();
-      else expect(after[id]).toBe(to ?? before[id]);
+      if (to() === null) expect(after[id]).toBeUndefined();
+      else expect(after[id]).toBe(to() ?? before[id]);
     }
     await did();
   });
 
   it('(d) is exactly one undo entry, and the undo restores the rows', async () => {
+    await prepare(prep);
     const before = await snapshot();
     expect(undoDepth()).toBe(0);
     expect(await run()).toBe(true);
@@ -333,6 +492,15 @@ describe.each(cases)('$name', ({ run, named, to, did }) => {
     expect(await snapshot()).toEqual(before);
   });
 });
+
+/** A case's own state, then a clean journal: the case's action is the one undo entry. */
+async function prepare(prep?: () => Promise<void>) {
+  if (!prep) return;
+  await prep();
+  await runsSettled();
+  resetUndoJournal();
+  useUiStore.setState({ toasts: [] });
+}
 
 describe('„Nicht planen“ lets the thing go at its source too', () => {
   beforeEach(layFour);
@@ -532,5 +700,258 @@ describe('(e) a preview', () => {
     // A day off moves nothing off that day.
     const off = await previewUser([{ op: 'available', date: MON, min: 0 }]);
     expect(off.result.diff).toMatchObject({ added: [], moved: [], removed: [] });
+  });
+});
+
+describe('package 2: chips and muted rows are derived, never stored', () => {
+  beforeEach(layFour);
+
+  const everything = async () => ({
+    days: await db.table('planner_day').toArray(),
+    items: await db.table('planner_item').toArray(),
+    rows: await db.table('planner_assignment').toArray(),
+    tasks: await db.table('todos_task').toArray(),
+    last: await getMeta<LastRun>(LAST_RUN_KEY),
+  });
+  /** A thing without a day with a hard deadline: it gets a chip. */
+  const deadline = async (id: string, minutes: number, due: string) => {
+    await addTask(id, `Frist ${id}`, minutes);
+    await itemRepo.create(
+      { source: { module: 'todos', id }, order: 0, due: { date: due, hard: true } } as never,
+      { id: key(id) },
+    );
+  };
+
+  it('the chips („Vorschlag“) and the muted rows („In ToDos“) write nothing: no row, no ToDo, no undo entry', async () => {
+    await deadline('d1', 60, FRI);
+    await addTask('d2', 'Datiert');
+    await taskRepo.update('d2', { plannedFor: THU } as never);
+    await runsSettled();
+    resetUndoJournal();
+    const before = await everything();
+    const days = await proposeUser([key('d1')]);
+    expect(days[key('d1')]).toBeDefined();
+    const thu = (await boardOn(MON)).days.find((d) => d.date === THU)!;
+    expect(thu.hints?.map((h) => h.title)).toEqual(['Datiert']);
+    // A muted row counts for no load.
+    expect(thu.planned).toBe(0);
+    await runsSettled();
+    expect(await everything()).toEqual(before);
+    expect(undoDepth()).toBe(0);
+    expect(useUiStore.getState().toasts).toEqual([]);
+  });
+
+  it('two deadline things never get the same place: one dry run over both', async () => {
+    // Monday keeps 132 free minutes, Tuesday and Wednesday 162: neither 150-minute thing fits on Monday, one each on
+    // Tuesday and Wednesday. Asked one at a time, both would have been offered Tuesday.
+    await deadline('d1', 150, FRI);
+    await deadline('d2', 150, FRI);
+    const alone = [
+      (await proposeUser([key('d1')]))[key('d1')],
+      (await proposeUser([key('d2')]))[key('d2')],
+    ];
+    expect(alone).toEqual([TUE, TUE]);
+    const both = await proposeUser([key('d1'), key('d2')]);
+    expect(Object.values(both).sort()).toEqual([TUE, WED]);
+  });
+
+  it('a date set in ToDos before today shows as a chip under „Noch ohne Tag“, not on a day', async () => {
+    await addTask('d3', 'Alt datiert');
+    await taskRepo.update('d3', { plannedFor: '2026-11-12' } as never);
+    await runBackground({ force: true });
+    const board = await boardOn(MON);
+    expect(board.days.flatMap((d) => d.hints ?? [])).toEqual([]);
+    expect(board.waiting.find((w) => w.itemKey === key('d3'))?.todoDate).toBe('2026-11-12');
+  });
+});
+
+describe('package 2: a dated turn of its source (`PlannableItem.day`)', () => {
+  beforeEach(layFour);
+
+  it('shows on its day without a row and counts there; locking it writes its row, one undo', async () => {
+    await addTask('t1', 'Training');
+    const listed = await entryOf('t1');
+    const turn: PlannableEntry = { ...listed, day: THU };
+    const board = buildBoard({
+      today: MON,
+      span: 7,
+      settings: DEFAULT_PLANNER_SETTINGS,
+      dayRows: [],
+      itemRows: [],
+      assignments: await assignmentRepo.active().toArray(),
+      entries: [turn],
+      calendar: [],
+      unplaced: [
+        { id: `${key('t1')}#0`, itemKey: key('t1'), k: 0, of: 1, minutes: 30, reason: 'no-day' },
+      ],
+    });
+    const thu = board.days.find((d) => d.date === THU)!;
+    expect(thu.rows).toMatchObject([{ itemKey: key('t1'), derived: true, pinned: false }]);
+    expect(thu.planned).toBe(30);
+    expect(board.waiting).toEqual([]);
+    expect(await assignmentRepo.get(`${key('t1')}#0`)).toBeUndefined();
+
+    const before = await rowDates();
+    expect(await setLocked(turn, true, {}, THU)).toBe(true);
+    await runsSettled();
+    expect(undoDepth()).toBe(1);
+    expect(await assignmentRepo.get(`${key('t1')}#0`)).toMatchObject({ date: THU, locked: true });
+    expect(useUiStore.getState().toasts.at(-1)?.message).toBe('Fest am Do');
+    expect(await rowDates()).toEqual({ ...before, [`${key('t1')}#0`]: THU });
+    await undoLast();
+    await runsSettled();
+    expect(await rowDates()).toEqual(before);
+  });
+});
+
+describe('package 2: a proposal that finds no room says so after „Übernehmen“', () => {
+  beforeEach(layFour);
+
+  it('„Rest verteilen“ with a thing longer than any day: it stays where it lies, the toast names it', async () => {
+    await taskRepo.update('p1', { estimateMin: 480 } as never);
+    // Every day keeps 2 h (96 min usable): 8 h fit nowhere.
+    for (const d of [
+      MON,
+      TUE,
+      WED,
+      THU,
+      FRI,
+      '2026-11-21',
+      '2026-11-22',
+      '2026-11-23',
+      '2026-11-24',
+      '2026-11-25',
+      '2026-11-26',
+      '2026-11-27',
+      '2026-11-28',
+      '2026-11-29',
+    ])
+      await dayRepo.create({ date: d, availableMin: 120, blockers: [] } as never, { id: d });
+    await assignmentRepo.update(`${key('p1')}#0`, { minutes: 480 } as never);
+    await runsSettled();
+    resetUndoJournal();
+    useUiStore.setState({ toasts: [] });
+    const before = await rowDates();
+    expect(await spreadDay(MON, [key('p1')], 0, {})).toBe(true);
+    await runsSettled();
+    expect(await rowDates()).toEqual(before);
+    expect(useUiStore.getState().toasts.at(-1)?.message).toBe(
+      'Verteilt.\n1 bleibt, wo es liegt: kein Platz',
+    );
+    // Nothing was written, so there is nothing to undo (and the toast offers no undo).
+    expect(undoDepth()).toBe(0);
+    expect(useUiStore.getState().toasts.at(-1)?.action).toBeUndefined();
+  });
+});
+
+describe('package 2: a dated turn takes its day for every proposal and is never written', () => {
+  beforeEach(layFour);
+
+  it('a background run writes no row for it; a chip does not claim its time; a reshuffle does not move it', async () => {
+    const turns = {
+      id: 'routines',
+      contributions: {
+        plannable: async () => ({
+          default: {
+            list: async () => [
+              {
+                id: 'bad',
+                kind: 'routine',
+                title: 'Bad putzen',
+                to: '/routines',
+                durationMin: 150,
+                day: TUE,
+              },
+            ],
+          },
+        }),
+      },
+    } as unknown as ModuleManifest;
+    setManifestsForTests(async () => [todos, turns]);
+    const before = await rowDates();
+    const pass = await runBackground({ force: true });
+    expect(pass!.rowWrites).toBe(0);
+    expect(await rowDates()).toEqual(before);
+    expect(pass!.inputs.turns).toEqual([{ id: 'routines:bad#0', date: TUE, reason: 'kept' }]);
+    // Tuesday holds p3 (30) and the turn (150) of its 192 minutes: a 60-minute deadline thing is not offered Tuesday.
+    await addTask('d1', 'Frist d1', 60);
+    await itemRepo.create(
+      { source: { module: 'todos', id: 'd1' }, order: 0, due: { date: FRI, hard: true } } as never,
+      { id: key('d1') },
+    );
+    const offered = (await proposeUser([key('d1')]))[key('d1')];
+    expect(offered).toBe(MON);
+    const preview = await previewUser([{ op: 'replan', reshuffle: true }]);
+    expect(preview.result.assignments.find((a) => a.itemKey === 'routines:bad')?.date).toBe(TUE);
+    await runsSettled();
+    expect(await assignmentRepo.get('routines:bad#0')).toBeUndefined();
+  });
+});
+
+describe('package 2, council round 2', () => {
+  beforeEach(layFour);
+
+  const routine = (day: string) =>
+    ({
+      id: 'routines',
+      contributions: {
+        plannable: async () => ({
+          default: {
+            list: async () => [
+              {
+                id: 'bad',
+                kind: 'routine',
+                title: 'Bad putzen',
+                to: '/routines',
+                durationMin: 30,
+                day,
+              },
+            ],
+          },
+        }),
+      },
+    }) as unknown as ModuleManifest;
+
+  it('a turn beyond the board’s days is listed with its day, not lost', async () => {
+    const later = '2026-11-26';
+    const board = buildBoard({
+      today: MON,
+      span: 7,
+      settings: DEFAULT_PLANNER_SETTINGS,
+      dayRows: [],
+      itemRows: [],
+      assignments: [],
+      entries: [
+        {
+          moduleId: 'routines',
+          id: 'bad',
+          kind: 'routine',
+          title: 'Bad putzen',
+          to: '/',
+          day: later,
+        },
+      ],
+      calendar: [],
+      unplaced: [],
+    });
+    expect(board.waiting).toMatchObject([
+      { itemKey: 'routines:bad', reason: 'later', date: later },
+    ]);
+  });
+
+  it('a sentence move of a turn: the preview shows the move the apply makes', async () => {
+    setManifestsForTests(async () => [todos, routine(TUE)]);
+    const preview = await previewUser([{ op: 'pin', key: 'routines:bad', date: THU }]);
+    expect(preview.result.assignments.find((a) => a.itemKey === 'routines:bad')?.date).toBe(THU);
+  });
+
+  it('„Übernehmen“ of a spread hands over only what still lies unlocked on that day', async () => {
+    // The preview named p1 and p2; meanwhile p2 was locked on another device.
+    await lockRow('p2');
+    await runsSettled();
+    resetUndoJournal();
+    expect(await spreadDay(MON, [key('p1'), key('p2')], 0, {})).toBe(true);
+    await runsSettled();
+    expect(await assignmentRepo.get(`${key('p2')}#0`)).toMatchObject({ date: MON, locked: true });
   });
 });

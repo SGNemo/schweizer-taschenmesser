@@ -4,16 +4,16 @@
  * not run here; the board shows what the last run stored (`assignment` rows, `LastRun`).
  */
 import type { PlanBlockEntry, PlannableEntry } from '@/core/modules/contributions';
-import type { CalendarItem } from '@/core/modules/types';
+import { isPlannerOwned, type CalendarItem } from '@/core/modules/types';
 import { capacity, fixedCharges } from '@/core/plan/capacity';
 import { cmp } from '@/core/plan/dates';
 import { DEFAULT_MIN, type PlaceReason, type Unplaced } from '@/core/plan/types';
-import { fixedOf, planDays, type DayBlocker } from './days';
+import { fixedOf, planDays, turnDayOf, type DayBlocker } from './days';
 import { lateMoneyDue } from './late';
 import { itemKeyOf } from './repo';
 import type { AssignmentRow, PlanDayRow, PlanItemRow } from './schema';
 import { defaultAvailable, type PlannerSettings } from './settings';
-import { isoWeekday, toEpoch } from '@/core/time/dates';
+import { addDaysStr as addDaysIso, isoWeekday, toEpoch } from '@/core/time/dates';
 
 export type BoardBlocker = DayBlocker;
 
@@ -41,6 +41,23 @@ export interface BoardRow {
    * moved, never late; it takes from the day only what no timed blocker covers already.
    */
   fixed?: { from: string; to: string };
+  /**
+   * A dated turn of its source (a training, a routine's occurrence – `PlannableItem.day`) shown on its day without a
+   * stored row (planner rethink, CONCEPT-MIGRATION §6). Moving or locking it writes the row.
+   */
+  derived?: true;
+}
+
+/**
+ * „In ToDos: Do · Hierher legen“ (CONCEPT-MIGRATION §4): a date set in ToDos that the plan does not hold – the thing
+ * has no row, or its row lies on another day. Derived at read time, never stored, counts for no load.
+ */
+export interface TodoHint {
+  itemKey: string;
+  title: string;
+  /** The ToDo's own date (= the day this hint stands on). */
+  date: string;
+  entry: PlannableEntry;
 }
 
 /** A row on a day that has passed („Noch offen“): the row and the day it lies on. */
@@ -67,6 +84,8 @@ export interface BoardDay {
   ownWindow?: boolean;
   blockers: BoardBlocker[];
   rows: BoardRow[];
+  /** Muted rows „In ToDos: Do“ (never counted); empty when left out. */
+  hints?: TodoHint[];
 }
 
 export interface WaitingRow {
@@ -82,6 +101,10 @@ export interface WaitingRow {
   bumpedBy?: string[];
   entry?: PlannableEntry;
   item?: PlanItemRow;
+  /** The hard deadline („Frist Fr“): such a thing gets the chip „Vorschlag: Do · Frist Fr“. */
+  hardDue?: string;
+  /** A date set in ToDos that lies before today or beyond the board's days: the chip „In ToDos: Mo 16.“. */
+  todoDate?: string;
 }
 
 export interface Board {
@@ -217,6 +240,49 @@ export function buildBoard(input: BoardInput): Board {
       ...(fixed ? { fixed: { from: a.from!, to: a.to! } } : {}),
     };
   };
+  // Where each thing lies (its rows, any day): a stored row always wins over a source's dated turn or ToDo date.
+  const rowDates = new Map<string, string[]>();
+  for (const a of input.assignments)
+    rowDates.set(a.itemKey, [...(rowDates.get(a.itemKey) ?? []), a.date]);
+  const lastDate = addDaysIso(input.today, input.span - 1);
+  /** A source's dated turn (`day`) without a row, not fixed (a fixed block has its row), still open. */
+  const turnDay = (key: string, e: PlannableEntry): string | undefined =>
+    turnDayOf(e, {
+      laid: rowDates.has(key),
+      excluded: items.get(key)?.excluded === true,
+      late: lateDue.has(key),
+    });
+  /** A date the person set in ToDos that the plan does not hold (`isPlannerOwned` false, no row on it). */
+  const todoDay = (key: string, e: PlannableEntry): string | undefined =>
+    e.plannedFor &&
+    !e.done &&
+    !isPlannerOwned(e) &&
+    !(rowDates.get(key) ?? []).includes(e.plannedFor) &&
+    !e.day &&
+    !fixedOf(e) &&
+    !lateDue.has(key) &&
+    !items.get(key)?.excluded
+      ? e.plannedFor
+      : undefined;
+  const turnRow = (key: string, e: PlannableEntry): BoardRow => {
+    const item = items.get(key);
+    const minutes = item?.durationMin ?? e.durationMin ?? DEFAULT_MIN;
+    return {
+      unitId: `${key}#0`,
+      itemKey: key,
+      title: e.title,
+      minutes,
+      k: 0,
+      of: 1,
+      reason: 'kept',
+      approx: item?.durationMin === undefined && e.durationMin === undefined,
+      pinned: false,
+      ...(item?.due?.hard ? dueOf(item.due, e.due) : e.due?.hard ? dueOf(e.due) : {}),
+      entry: e,
+      ...(item ? { item } : {}),
+      derived: true,
+    };
+  };
   const built = planDays({
     today: input.today,
     span: input.span,
@@ -231,6 +297,14 @@ export function buildBoard(input: BoardInput): Board {
       .filter((a) => a.date === date && !lateDue.has(a.itemKey) && shown(a))
       .sort((a, b) => a.order - b.order)
       .map((a) => toRow(a, date));
+    // A dated turn without a row stands on its day (`dayOf`), after the laid things.
+    for (const [key, e] of entries) if (turnDay(key, e) === date) rows.push(turnRow(key, e));
+    const hints: TodoHint[] = [...entries]
+      .filter(([key, e]) => todoDay(key, e) === date)
+      .map(([key, e]) => ({ itemKey: key, title: e.title, date, entry: e }))
+      .sort(
+        (a, b) => (a.entry.createdAt ?? 0) - (b.entry.createdAt ?? 0) || cmp(a.itemKey, b.itemKey),
+      );
     // As the engine counts (`core/plan/engine.ts` rule 2b): a fixed block takes only what no timed blocker covers.
     const fixedRows = rows
       .filter((r) => r.fixed)
@@ -258,12 +332,31 @@ export function buildBoard(input: BoardInput): Board {
       ...(ownWindow ? { ownWindow: true } : {}),
       blockers,
       rows,
+      hints,
     };
   });
+  // Shown on a day of the board (a dated turn, a ToDo's own date): not „Noch ohne Tag“ as well.
+  const onADay = new Set<string>();
+  for (const [key, e] of entries) {
+    const turn = turnDay(key, e);
+    const todo = todoDay(key, e);
+    if (
+      (turn && turn >= input.today && turn <= lastDate) ||
+      (todo && todo >= input.today && todo <= lastDate)
+    )
+      onADay.add(key);
+  }
+  const hardDueOf = (key: string): string | undefined => {
+    const item = items.get(key);
+    const entry = entries.get(key);
+    return item?.due?.hard ? item.due.date : entry?.due?.hard ? entry.due.date : undefined;
+  };
   const placed = new Set(input.assignments.map((a) => a.itemKey));
   const waiting: WaitingRow[] = input.unplaced
     .filter((u) => u.reason !== 'after-hard-due' || !placed.has(u.itemKey) || u.date === undefined)
-    .filter((u) => entries.has(u.itemKey) && !lateDue.has(u.itemKey))
+    .filter((u) => entries.has(u.itemKey) && !lateDue.has(u.itemKey) && !onADay.has(u.itemKey))
+    // A thing with a row is never „Noch ohne Tag“, whatever the last pass said.
+    .filter((u) => u.reason !== 'no-day' || !rowDates.has(u.itemKey))
     .map((u) => ({
       unitId: u.id,
       itemKey: u.itemKey,
@@ -275,6 +368,10 @@ export function buildBoard(input: BoardInput): Board {
       ...(u.bumpedBy ? { bumpedBy: u.bumpedBy } : {}),
       ...(entries.get(u.itemKey) ? { entry: entries.get(u.itemKey) } : {}),
       ...(items.get(u.itemKey) ? { item: items.get(u.itemKey) } : {}),
+      ...(hardDueOf(u.itemKey) ? { hardDue: hardDueOf(u.itemKey) } : {}),
+      ...(todoDay(u.itemKey, entries.get(u.itemKey)!)
+        ? { todoDate: todoDay(u.itemKey, entries.get(u.itemKey)!) }
+        : {}),
     }));
   // „Nicht planen“: listed at the end of the waiting group, so „Wieder planen“ has a place.
   for (const [key, item] of items) {
@@ -334,7 +431,31 @@ export function buildBoard(input: BoardInput): Board {
         ...(items.get(a.itemKey) ? { item: items.get(a.itemKey) } : {}),
       });
     }
+    // A dated turn on a day after the board's last one: listed with its day, like a laid thing.
+    for (const [key, e] of entries) {
+      const turn = turnDay(key, e);
+      if (!turn || turn <= lastShown || seen.has(key)) continue;
+      seen.add(key);
+      const row = turnRow(key, e);
+      waiting.push({
+        unitId: row.unitId,
+        itemKey: key,
+        title: row.title,
+        minutes: row.minutes,
+        k: 0,
+        of: 1,
+        reason: 'later',
+        date: turn,
+        entry: e,
+        ...(row.item ? { item: row.item } : {}),
+      });
+    }
   }
+  // „Liegt weiter voraus“ in date order, laid things and dated turns together.
+  const laterRows = waiting
+    .filter((w) => w.reason === 'later')
+    .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? '') || a.unitId.localeCompare(b.unitId));
+  waiting.splice(0, waiting.length, ...waiting.filter((w) => w.reason !== 'later'), ...laterRows);
   const todayDay = days[0];
   const todayCount = todayDay ? new Set(todayDay.rows.map((r) => r.itemKey)).size : 0;
   return { days, waiting, late, open, todayCount };

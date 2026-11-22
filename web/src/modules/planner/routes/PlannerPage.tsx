@@ -35,12 +35,12 @@ import {
 import { useHeroTargets } from '@/core/shell/heroContext';
 import { usePageAction } from '@/core/shell/pageAction';
 import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
-import { addFromField, applyOps, later, markDone } from '../actions';
+import { addFromField, applyOps, layHere, later, markDone, setLocked, spreadDay } from '../actions';
 import type { BoardDay, BoardRow, OpenRow } from '../board';
 import { Capture } from '../components/Capture';
 import { CaptureDialog } from '../components/CaptureDialog';
 import { useAbilities, useRowMenu } from '../components/rowMenu';
-import { ThingRow, WaitRow } from '../components/ThingRow';
+import { ThingRow, TodoHintRow, WaitRow } from '../components/ThingRow';
 import { appointmentsOf, Context, nextDeadlinesOf } from '../components/Context';
 import { DayPage, DayPageLoading } from '../components/DayPage';
 import { LateGroup, LateRow } from '../components/LateGroup';
@@ -59,7 +59,7 @@ import { BOARD_DAYS } from '../calendar';
 import { overloadText } from '../overload';
 import { readSentence, warmLocalStage, type Said } from '../localStage';
 import { instructionItems, opLines, planLines, restIsEmpty } from '../say';
-import { PlannerOffError, previewUser } from '../services';
+import { PlannerOffError, previewUser, proposeUser } from '../services';
 import { useBoard } from '../useBoard';
 import { useUiStore } from '@/stores/ui';
 import styles from './planner.module.css';
@@ -87,6 +87,8 @@ interface Pending {
   local?: { sentence: string; rules: Instruction };
   /** „Rest verteilen“: one calm sentence above the moves and in the toast, never a count of what was left. */
   rest?: boolean;
+  /** „Rest verteilen“ of one overbooked day: its things that are not „fest“, nothing before that day. */
+  spread?: { date: string; loose: string[]; fixed: number };
 }
 
 /** The days the open rows lie on, for the tab's name: up to three short day names, else „seit Do 12.“-like. */
@@ -198,6 +200,45 @@ export default function PlannerPage() {
     );
   }
 
+  /**
+   * „Rest verteilen“ on the line „2 h 10 mehr als planbar“ of a day: the day's things that are not „fest“ (and not a
+   * fixed block or a source's dated turn) go to the proposer, that day first, nothing before it – as a preview. The
+   * fixed ones stay and are named („1 bleibt: fest“).
+   */
+  async function showSpread(day: BoardDay) {
+    const free = day.rows.filter(movable);
+    const loose = [...new Set(free.map((r) => r.itemKey))];
+    const fixed = new Set(day.rows.filter((r) => r.pinned).map((r) => r.itemKey)).size;
+    setAsk(undefined);
+    if (loose.length === 0) {
+      setPending(undefined);
+      setSayLine(t.planner.spread.fixed(fixed));
+      return;
+    }
+    setSayLine(undefined);
+    try {
+      const out = await previewUser([], [], { loose, notBefore: day.date });
+      setPending({
+        ops: [],
+        lead: t.planner.spread.done,
+        spread: { date: day.date, loose, fixed },
+        data: {
+          lines: [t.planner.spread.line, ...(fixed > 0 ? [t.planner.spread.fixed(fixed)] : [])],
+          noCounts: true,
+          dues: board ? duesOf(board) : {},
+          diff: out.result.diff,
+          ...(out.result.heldBack?.length
+            ? { note: t.planner.toast.heldBack(out.result.heldBack.length) }
+            : {}),
+        },
+        fromField: false,
+      });
+    } catch (e) {
+      if (!(e instanceof PlannerOffError)) throw e;
+      useUiStore.getState().toast(t.planner.toast.off);
+    }
+  }
+
   /** The rest preview – unless only what is nailed to today (or nothing) is left: then one calm line, no preview. */
   function previewRest(ops: PlanOp[], fromField: boolean) {
     if (restIsEmpty(ops)) {
@@ -276,7 +317,9 @@ export default function PlannerPage() {
     if (!pending) return;
     setBusy(true);
     try {
-      await applyOps(pending.ops, pending.lead, titles, pending.rest === true);
+      if (pending.spread)
+        await spreadDay(pending.spread.date, pending.spread.loose, pending.spread.fixed, titles);
+      else await applyOps(pending.ops, pending.lead, titles, pending.rest === true);
       if (pending.fromField) setText('');
       setPending(undefined);
       // A sentence said in the phone's sheet changed the plan: the sheet gives the page back.
@@ -508,6 +551,28 @@ export default function PlannerPage() {
     return true;
   }
 
+  /**
+   * The phone's stimulus budget (`e2e/usecases/kopf-leer.spec.ts` path D): the lock stands on a row that is „fest“ (it
+   * replaces the word and „Nicht mehr fest“); an open row is locked from ⋯ there. Wider pages show it on every row.
+   */
+  const lockHidden = (row: BoardRow) => phone && !row.pinned;
+  /**
+   * What a day's „Rest verteilen“ may hand over: not „fest“, no fixed block, no dated turn of its source, and no part of
+   * a thing in parts (its other parts lie on days the action does not name).
+   */
+  const movable = (r: BoardRow) => !r.pinned && !r.fixed && !r.derived && !!r.entry && r.of === 1;
+  /** The lock on a row: one tap, one undo; a dated turn without a row gets its row on the day it shows on. */
+  // A thing in parts (from the engine's time) is locked on all its days: no one-day toggle on its rows. A source's
+  // dated turn needs none: no proposal moves it.
+  const lockOf = (row: BoardRow, date: string) =>
+    row.entry && !row.fixed && !row.derived && (row.of === 1 || row.pinned)
+      ? {
+          locked: row.pinned,
+          onToggle: () =>
+            void setLocked(row.entry!, !row.pinned, titles, row.derived ? date : undefined),
+        }
+      : undefined;
+
   // „Frist So 18:00“ turns into „Frist war So 18:00“ once the hour has passed (package 5b); read once a minute.
   const dueClock = useNow(60_000);
   const renderRow = (row: BoardRow, day: BoardDay, next: boolean) => {
@@ -529,7 +594,12 @@ export default function PlannerPage() {
         reason={reason}
         whyOpen={why === row.unitId}
         dueClock={dueClock}
-        menu={rowMenu(row, day.date, reason, { tick })}
+        menu={rowMenu(row, day.date, reason, {
+          tick,
+          // The same rule as the toggle: no one-day lock on a part of a thing.
+          lockInMenu: lockHidden(row) && row.of === 1 && !row.derived,
+        })}
+        lock={lockHidden(row) ? undefined : lockOf(row, day.date)}
         onDone={tick ? () => done(row) : undefined}
         onLater={
           row.entry && canAssign(row.entry.moduleId)
@@ -556,6 +626,8 @@ export default function PlannerPage() {
         // Under its day's head the row need not repeat the day; among the fixed things (several days) it says it.
         was={row.pinned ? row.date : undefined}
         menu={rowMenu(row, undefined, undefined, { tick, open: true })}
+        // A passed day is not made „fest“ (it needs a new day first); a thing that is „fest“ can be let go here.
+        lock={row.pinned ? lockOf(row, row.date) : undefined}
         onDone={tick ? () => done(row) : undefined}
         onLater={
           row.entry && canAssign(row.entry.moduleId)
@@ -697,6 +769,92 @@ export default function PlannerPage() {
   // Things laid on a day the board does not show yet have a day – they get their own small group, not „Noch ohne Tag“.
   const noDay = waiting.filter((w) => w.reason !== 'later');
   const laidLater = waiting.filter((w) => w.reason === 'later');
+  // „Vorschlag: Do · Frist Fr“ (CONCEPT §2): things without a day that carry a deadline get a day proposed by one dry
+  // run over all of them – computed here, never stored; two chips never claim the same room.
+  // A ToDo date still ahead gets its own chip („In ToDos“): such a thing takes no room in the proposal either.
+  const todoAhead = (w: (typeof waiting)[number]) =>
+    !!w.todoDate && data !== undefined && w.todoDate >= data.today;
+  const chipKeys = waiting
+    .filter(
+      (w) =>
+        w.reason !== 'later' && w.reason !== 'excluded' && w.hardDue && w.entry && !todoAhead(w),
+    )
+    .map((w) => w.itemKey)
+    .sort();
+  const chipSig = data
+    ? JSON.stringify([
+        data.today,
+        chipKeys,
+        waiting.map((w) => [
+          w.itemKey,
+          w.hardDue,
+          w.minutes,
+          w.item?.priority ?? w.entry?.priority,
+          w.entry?.earliest,
+          w.item?.part,
+        ]),
+        data.settings,
+        board?.days.map((d) => [d.date, d.usable, d.rows.map((r) => [r.unitId, r.minutes])]),
+      ])
+    : '';
+  const [proposals, setProposals] = useState<{ sig: string; days: Record<string, string> }>();
+  useEffect(() => {
+    if (!chipSig || chipKeys.length === 0) return;
+    let live = true;
+    void proposeUser(chipKeys)
+      .catch(() => ({}))
+      .then((days) => {
+        if (live) setProposals({ sig: chipSig, days });
+      });
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `chipSig` holds the keys and the days they depend on
+  }, [chipSig]);
+  const chipOf = (w: (typeof waiting)[number]) => {
+    const e = w.entry;
+    if (!e) return undefined;
+    // Only a proposal for the plan as it is now (a stale one could lay the thing on a day that filled up since).
+    // A date the person set in ToDos comes first: its chip, never a proposal over it.
+    const proposed =
+      w.hardDue && !todoAhead(w) && proposals?.sig === chipSig
+        ? proposals.days[w.itemKey]
+        : undefined;
+    if (proposed)
+      return (
+        <span className={styles.hintRow} data-testid="proposal-chip">
+          <span>{t.planner.chips.proposalDue(dayName(proposed), dayName(w.hardDue!))}</span>
+          <button
+            type="button"
+            className={styles.textLink}
+            aria-label={t.planner.chips.takeName(w.title, dayName(proposed))}
+            onClick={() => void layHere(e, proposed, titles)}
+          >
+            {t.planner.chips.take}
+          </button>
+        </span>
+      );
+    if (w.todoDate) {
+      const when = `${dayName(w.todoDate)} ${formatDay(w.todoDate, 'd.')}`;
+      const ahead = data !== undefined && w.todoDate >= data.today;
+      return (
+        <span className={styles.hintRow} data-testid="todo-chip">
+          <span>{t.planner.chips.inTodos(when)}</span>
+          {ahead ? (
+            <button
+              type="button"
+              className={styles.textLink}
+              aria-label={t.planner.chips.placeName(w.title, when)}
+              onClick={() => void layHere(e, w.todoDate!, titles)}
+            >
+              {t.planner.chips.place}
+            </button>
+          ) : null}
+        </span>
+      );
+    }
+    return undefined;
+  };
   const waitRows = (list: typeof waiting) => (
     <ItemList>
       {list.map((w) => {
@@ -713,6 +871,7 @@ export default function PlannerPage() {
             reason={reason}
             why={why === w.unitId}
             menu={rowMenu(w, undefined, reason)}
+            chip={chipOf(w)}
           />
         );
       })}
@@ -945,7 +1104,30 @@ export default function PlannerPage() {
                     void setMeta(phone ? THEN_NARROW_KEY : THEN_WIDE_KEY, open)
                   }
                   empty={emptySheet}
-                  onRest={shownDay.isToday ? () => void showRest() : undefined}
+                  // „Rest verteilen“ only where something can go (a day of dated turns and locks alone has nothing).
+                  onRest={
+                    shownDay.isToday && shownDay.rows.some(movable)
+                      ? () => void showRest()
+                      : undefined
+                  }
+                  // Only where something can go: a day over its time by fixed blocks, turns or locks alone has no link.
+                  onSpread={
+                    shownDay.rows.some(movable) ? () => void showSpread(shownDay) : undefined
+                  }
+                  hints={
+                    shownDay.hints?.length ? (
+                      <ItemList label={t.planner.chips.todoList}>
+                        {shownDay.hints.map((h) => (
+                          <TodoHintRow
+                            key={h.itemKey}
+                            title={h.title}
+                            date={h.date}
+                            onPlace={() => void layHere(h.entry, h.date, titles)}
+                          />
+                        ))}
+                      </ItemList>
+                    ) : undefined
+                  }
                   // On the phone the page's ⋯ stands in the sheet's head and holds „Tage einteilen“: said once.
                   onSetup={phone ? undefined : () => setSettingUp(true)}
                   headEnd={phone ? pageMenuButton : undefined}
