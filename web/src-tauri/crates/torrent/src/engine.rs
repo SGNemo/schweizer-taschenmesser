@@ -811,8 +811,19 @@ mod tests {
         let ok = torrent_with(&["a.bin", "b.bin"], None).await;
         let meta = librqbit::torrent_from_bytes(&ok).unwrap();
         assert!(paths_safe(&meta.info.data.validate().unwrap()));
+        // Windows cannot create such files, so a harmless name of the same byte length is put
+        // into the metainfo instead (librqbit parses it without checking the info hash here)
         for bad in ["con.txt", "C:evil", "gnp.\u{202E}exe"] {
-            let t = torrent_with(&["a.bin", bad], None).await;
+            let stand_in = "x".repeat(bad.len());
+            let t = torrent_with(&["a.bin", &stand_in], None).await;
+            let from = format!("{}:{stand_in}", stand_in.len());
+            let to = format!("{}:{bad}", bad.len());
+            let at = t
+                .windows(from.len())
+                .position(|w| w == from.as_bytes())
+                .expect("name in the metainfo");
+            let mut t = t;
+            t[at..at + to.len()].copy_from_slice(to.as_bytes());
             let meta = librqbit::torrent_from_bytes(&t).unwrap();
             assert!(!paths_safe(&meta.info.data.validate().unwrap()), "{bad:?}");
         }
