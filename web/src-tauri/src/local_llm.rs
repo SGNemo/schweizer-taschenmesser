@@ -123,6 +123,33 @@ mod real {
         pub fn new() -> Self {
             Self::default()
         }
+
+        /// "Alle Daten löschen": cancels a running download and generation and waits (at most
+        /// 5 s) until both have let go, then frees a loaded model, so the folder can be deleted
+        /// (Windows keeps open and mapped files locked). Best effort: a download stuck in a read
+        /// or a generation just starting can keep the folder; the step then reports a failure.
+        pub(crate) fn release(&self) {
+            let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+            loop {
+                // a download holds its file, a generation its own handle on the model
+                let busy = [&self.downloading, &self.generating]
+                    .iter()
+                    .filter(|slot| match slot.lock() {
+                        Ok(slot) => slot
+                            .as_ref()
+                            .map(|flag| flag.store(true, Ordering::Relaxed))
+                            .is_some(),
+                        Err(_) => false,
+                    })
+                    .count();
+                if busy == 0 || std::time::Instant::now() >= deadline {
+                    break;
+                }
+                std::thread::sleep(std::time::Duration::from_millis(50));
+            }
+            let old = self.loaded.lock().ok().and_then(|mut l| l.take());
+            drop(old);
+        }
     }
 
     #[derive(Serialize)]
@@ -386,6 +413,9 @@ mod real {
         pub fn new() -> Self {
             Self
         }
+
+        /// Nothing is ever loaded without the feature.
+        pub(crate) fn release(&self) {}
     }
 
     #[derive(Serialize)]

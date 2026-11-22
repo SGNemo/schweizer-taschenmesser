@@ -10,6 +10,7 @@ import { noExchange } from './noExchange';
 import { noRemote } from './noRemote';
 import { noRemoteHost } from './noRemoteHost';
 import { createFakeLanClient, createFakeLanWatch, noLanClient, noLanWatch } from './fakeLanClient';
+import { noDeviceWipe } from './deviceWipe';
 import { createFakeBrowser } from './fakeBrowser';
 import { createFakeLocalModel } from './fakeLocalModel';
 import { createFakeCustomTabs } from './fakeCustomTabs';
@@ -304,6 +305,7 @@ export function createWebPlatform(): PlatformService {
       : noExchange,
     lanClient: isE2eBuild() ? createFakeLanClient() : noLanClient,
     lanWatch: isE2eBuild() ? createFakeLanWatch() : noLanWatch,
+    deviceWipe: noDeviceWipe,
     // E2E builds only: an invented folder tree instead of the native scan.
     disk: isE2eBuild()
       ? createFakeDisk()

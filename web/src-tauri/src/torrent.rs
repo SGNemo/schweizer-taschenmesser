@@ -148,6 +148,16 @@ pub async fn torrent_stop(state: State<'_, Torrents>) -> Result<(), String> {
     Ok(())
 }
 
+/// "Alle Daten löschen": shuts the engine down, then removes `torrent-state/` (the saved torrent
+/// list and resume data; downloaded files stay where the user put them).
+pub(crate) async fn wipe(app: &AppHandle) -> Result<(), String> {
+    let engine = app.state::<Torrents>().engine.lock().await.take();
+    if let Some(e) = engine {
+        e.stop().await;
+    }
+    crate::device_wipe::remove_dir(&state_dir(app)?)
+}
+
 /// The file list of a magnet link / `.torrent` before anything is added.
 #[tauri::command]
 pub async fn torrent_preview(

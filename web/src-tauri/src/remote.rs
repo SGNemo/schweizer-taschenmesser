@@ -355,6 +355,11 @@ impl RemoteHost {
         &self.power
     }
 
+    /// "Alle Daten löschen": forgets the program list held for the whole run.
+    pub(crate) fn forget_programs(&self) {
+        self.programs.forget();
+    }
+
     fn parts(&self) -> Result<Parts, String> {
         let slot = self.slot.lock().map_err(|_| "internal")?;
         Ok(slot.as_ref().ok_or("not-started")?.parts.clone())

@@ -99,6 +99,26 @@ fn inbox<R: Runtime>(app: &AppHandle<R>) -> Result<Arc<Inbox>, String> {
     Ok(opened)
 }
 
+/// "Alle Daten löschen" on the phone: ends an open session and removes `exchange/inbox.json`
+/// (messages and links that arrived from the PC). Blocking.
+pub(crate) fn wipe<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {
+    let state = app.state::<ExchangeClient>();
+    let taken = state.open.lock().map_err(|_| "internal")?.take();
+    end(taken);
+    let mut slot = state.inbox.lock().map_err(|_| "internal")?;
+    *slot = None;
+    let dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|_| "no-data-dir")?
+        .join("exchange");
+    match std::fs::remove_dir_all(dir) {
+        Ok(()) => Ok(()),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(_) => Err("io".to_owned()),
+    }
+}
+
 fn current<R: Runtime>(app: &AppHandle<R>, session: u64) -> Result<Arc<ExchangeSession>, String> {
     let state = app.state::<ExchangeClient>();
     let open = state.open.lock().map_err(|_| "internal")?;

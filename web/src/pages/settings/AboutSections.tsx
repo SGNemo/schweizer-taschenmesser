@@ -26,6 +26,7 @@ import {
   SettingRow,
   SettingsGroup,
   DoubleConfirmDialog,
+  Checkbox,
 } from '@/ui';
 import { SupporterBadge } from '@/layout/SupporterBadge';
 import styles from './settings.module.css';
@@ -282,6 +283,9 @@ export function DiagnosticsSection() {
 /** Irreversible: removes all local data. Typed confirmation, nothing happens before it. */
 export function DeviceResetSection() {
   const [open, setOpen] = useState(false);
+  const [models, setModels] = useState(false);
+  const [wiping, setWiping] = useState(false);
+  const { kind, localModel } = getPlatform();
   return (
     <SettingsGroup id="device-reset" title={a.reset.title}>
       <DangerZone on="page">
@@ -293,12 +297,45 @@ export function DeviceResetSection() {
       </DangerZone>
       <DoubleConfirmDialog
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={() => {
+          setOpen(false);
+          setModels(false);
+        }}
         title={a.reset.dialogTitle}
         confirmLabel={a.reset.confirm}
-        onConfirm={() => resetDevice()}
+        onConfirm={async () => {
+          setWiping(true);
+          // The page reloads at the end; on an error the dialog stays usable.
+          try {
+            await resetDevice(undefined, { models });
+          } finally {
+            setWiping(false);
+          }
+        }}
       >
         <p>{a.reset.warning}</p>
+        <p>{a.reset.alsoAll}</p>
+        {kind === 'desktop' && (
+          <>
+            <p>{a.reset.alsoDesktop}</p>
+            <ul>
+              {a.reset.alsoDesktopItems.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+            <p>{a.reset.pcCare}</p>
+          </>
+        )}
+        {kind === 'android' && <p>{a.reset.alsoAndroid}</p>}
+        {kind === 'desktop' && localModel.supported && (
+          <Checkbox
+            label={a.reset.models}
+            description={a.reset.modelsHint}
+            checked={models}
+            onChange={(e) => setModels(e.target.checked)}
+          />
+        )}
+        <p role="status">{wiping ? a.reset.busy : ''}</p>
       </DoubleConfirmDialog>
     </SettingsGroup>
   );

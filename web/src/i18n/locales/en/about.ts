@@ -68,6 +68,23 @@ export const about: Strings['about'] = {
     dialogTitle: 'Delete all data on this device?',
     warning:
       'This can’t be undone. Make a backup first (Sync & backup) if you still need the data.',
+    alsoAll:
+      'Also gone: codes for “Share with partner” and, if set up, push reminders on the sync server.',
+    alsoDesktop: 'On this PC also:',
+    alsoDesktopItems: [
+      'Home-network sync, paired devices and their permissions',
+      'List of downloads and torrents (the files stay)',
+      'The built-in browser’s data',
+      'Error log',
+      'The browser extension’s registration',
+    ],
+    pcCare:
+      'Changes that “This PC” can still undo are kept. To undo one, do it first under This PC → History.',
+    alsoAndroid:
+      'On this phone also: the pairing with the PC and the messages and links received from the PC.',
+    models: 'Also delete downloaded AI models',
+    modelsHint: 'The files are large. If you leave this unticked, they stay.',
+    busy: 'Deleting …',
     confirm: 'Delete for good',
   },
   licenses: 'Licence notices',

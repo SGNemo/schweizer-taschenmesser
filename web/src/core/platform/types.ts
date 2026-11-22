@@ -5,6 +5,7 @@ import type { DiskService } from './disk';
 import type { LocalModelService } from './localModel';
 import type { BrowserService } from './browser';
 import type { CustomTabsService } from './customTabs';
+import type { DeviceWipeService } from './deviceWipe';
 import type { LaunchService } from './launch';
 import type { DownloadsService } from './downloads';
 import type { TorrentService } from './torrent';
@@ -189,7 +190,8 @@ export interface LanHubDevice {
 /**
  * Desktop only (Windows listens; elsewhere the hub stays off): the home-network sync hub of
  * `src-tauri/crates/lan-sync`. Every call rejects with a short code (`not-started`, `client-paired`,
- * `keystore-unavailable`, `busy`, `wrong-code`, …). Never logs, never stores the key in the web app
+ * `keystore-unavailable`, `busy`, `wrong-code`, `wiped` = a start during or within a minute after „Alle Daten
+ * löschen“, …). Never logs, never stores the key in the web app
  * beyond the non-extractable `CryptoKey` the sync service imports.
  */
 export interface LanHubService {
@@ -791,6 +793,8 @@ export interface PlatformService {
   exchange: ExchangeService;
   /** Home-network sync, device side (Android). */
   lanClient: LanClientService;
+  /** Native part of "Alle Daten löschen" (desktop and Android). */
+  deviceWipe: DeviceWipeService;
   /** Wi-Fi available/lost for home-network sync (Android). */
   lanWatch: LanWatchService;
   /** Drive overview and read-only scans for the disk module (desktop only). */

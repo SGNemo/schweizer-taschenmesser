@@ -240,6 +240,12 @@ impl ProgramsCore {
         self.version.fetch_add(1, Ordering::SeqCst);
     }
 
+    /// "Alle Daten löschen": the list in memory goes too (its file goes with `lan-sync/`).
+    pub fn forget(&self) {
+        *self.list() = None;
+        self.changed();
+    }
+
     /// Reads the list of `file` once; the same file again keeps what is in memory.
     pub fn load(&self, file: &Path, plain: impl Fn(&str) -> String) {
         let mut list = self.list();
@@ -494,6 +500,23 @@ mod tests {
         assert!(list.entries().is_empty(), "removed all the same");
         assert_eq!(list.remove(0), Err(ListError::NotFound));
         std::fs::remove_dir_all(d).ok();
+    }
+
+    /// "Alle Daten löschen": the list held for the run goes; the same file loads fresh (empty once
+    /// the wipe removed it), the epoch moves.
+    #[test]
+    fn a_wipe_forgets_the_list_held_for_the_run() {
+        let d = dir("wipe-forgets");
+        let file = d.join(FILE);
+        let core = ProgramsCore::default();
+        core.load(&file, plain);
+        core.add(entry(&d, "Editor")).unwrap();
+        let before = core.version();
+        std::fs::remove_dir_all(&d).ok();
+        core.forget();
+        assert!(core.version() > before);
+        core.load(&file, plain);
+        assert!(core.names().unwrap().1.is_empty());
     }
 
     #[test]

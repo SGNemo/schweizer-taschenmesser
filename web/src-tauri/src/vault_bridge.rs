@@ -122,6 +122,20 @@ pub fn vault_bridge_unregister(app: AppHandle) -> Result<(), String> {
     ::vault_bridge::registry::unregister(&dir).map_err(|_| "failed".to_owned())
 }
 
+/// "Alle Daten löschen": stops the pipe server and removes the host manifest and its registry
+/// entries (the extension then finds no app until the user registers it again).
+pub(crate) fn wipe(app: &AppHandle) -> Result<(), String> {
+    use tauri::Manager as _;
+    vault_bridge_stop(app.state::<VaultBridge>());
+    #[cfg(windows)]
+    {
+        let exe = std::env::current_exe().map_err(|_| "failed")?;
+        let dir = data_dir(app, &exe)?;
+        ::vault_bridge::registry::unregister(&dir).map_err(|_| "failed".to_owned())?;
+    }
+    Ok(())
+}
+
 // Browser registration is a Windows registry matter; elsewhere the commands exist (the handler list
 // is the same on every desktop OS) and report that they are unsupported.
 #[cfg(not(windows))]
