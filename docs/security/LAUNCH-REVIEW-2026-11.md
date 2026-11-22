@@ -28,7 +28,7 @@ No critical finding. One high finding (SC1). The Dev-Preview that friends alread
 1. **SC1** – release pipeline, high. Details and steps are not in this repository (public repo, no fix in this PR): they were handed to the maintainer privately. Until it is closed: no release.
 2. **PC1, M1, D6, D8** – fixed in the three fix PRs of this review (below); they only need a merge.
 3. **R1** – "Alle Daten löschen" leaves the home-network hub running and trusted (medium, package 2) – **fixed (#1046)**.
-4. **SC2, SC3** – dev and production APK share one keystore; dry runs see production keys (medium, hard-limit area, package 1; the parked draft PR #542 touches the same secrets).
+4. **SC2, SC3** – dev and production APK share one keystore; dry runs see production keys (medium, hard-limit area, package 1; the parked draft PR #542 touches the same secrets) – **fixed (#1050)**; SC3 residual (secrets on the runner of a dry-run job) stays with #542.
 5. **DL1–DL3** – torrent overwrites existing files, peer listener outlives the module, no Mark-of-the-Web (medium, package 3, with DL10) – **fixed (#1047)**.
 6. **X2, X4, S5, S13, AI1, V5** – known or residual mediums: decide fix or accept (packages 4–7, V5 in package 10; recommendation: accept S13, V5 and X4, fix X2, S5 in the apps and AI1).
 
@@ -49,8 +49,8 @@ No critical finding. One high finding (SC1). The Dev-Preview that friends alread
 | ID | Sev | Area | Finding (attacker → effect) | Evidence | Fix size | Who |
 |---|---|---|---|---|---|---|
 | SC1 | high | release pipeline | Details private | private note | private note | Sven |
-| SC2 | medium | pipeline | Dev-Preview and release sign the APK with the same keystore (old P2, APK half; old P3 residual). The dev pipeline therefore handles the production APK key | `.github/workflows/dev-preview.yml:413-416`, `.github/workflows/release.yml:382-385` | M (re-keys the dev app) | Sven merges |
-| SC3 | medium | pipeline | Dry runs on `develop` put the production updater key into the audit step's environment and sign the dry-run APK whenever the key exists. Code merged to `develop` → repo scripts run next to production keys | `.github/workflows/release.yml:295-304,379-385,406-415` | S | Sven merges |
+| SC2 | medium | pipeline | Dev-Preview and release sign the APK with the same keystore (old P2, APK half; old P3 residual). The dev pipeline therefore handles the production APK key | `.github/workflows/dev-preview.yml:413-416`, `.github/workflows/release.yml:382-385` | M (re-keys the dev app) | **fixed (#1050)**; Sven creates `ANDROID_DEV_*` before merging |
+| SC3 | medium | pipeline | Dry runs on `develop` put the production updater key into the audit step's environment and sign the dry-run APK whenever the key exists. Code merged to `develop` → repo scripts run next to production keys | `.github/workflows/release.yml:295-304,379-385,406-415` | S | **fixed (#1050)** for steps; residual: a job that references a secret can still receive it on the runner, closed only by separate signing jobs (#542) |
 | R1 | medium | reset / LAN sync | "Alle Daten löschen" runs only in the web layer: no native call. The hub keeps listening until the app quits; trust list, remote and exchange grants, `hub.db` and both keyring slots stay. A paired phone keeps pulling the full data set; once home-network sync is switched on again the old devices are trusted again and the wiped PC is re-seeded; whoever gets the PC (same Windows account) finds `hub.db` plus the data key | `web/src/core/reset/device.ts:84-110` (no platform call besides secrets/biometrics), `src/lan_sync.rs:348-406,511`, `src/remote.rs:238-242`, `src/exchange.rs:99-134` | M | **fixed (#1046)**; Sven merges (deletes LAN key storage) |
 | DL1 | medium | torrent | `overwrite: true`; a single-file torrent is written straight into the chosen folder. Malicious torrent + a same-named file → the user's file is overwritten. The HTTP downloader never overwrites | `crates/torrent/src/engine.rs:209-214,226` | S | **fixed (#1047)** |
 | DL2 | medium | torrent | The peer listener binds `0.0.0.0` (random port) and, once started, keeps running with DHT and seeding after leaving the page, switching the module off or closing to tray; no "home network only" or metered rule. Inherent to torrent while it is on; the finding is that "off" does not stop it | `crates/torrent/src/engine.rs:101-104`, `src/torrent.rs:118-126`, `modules/downloads/routes/TorrentSection.tsx:136-141` (only caller of `stop`) | M | **fixed (#1047)** |
@@ -167,7 +167,7 @@ No critical finding. One high finding (SC1). The Dev-Preview that friends alread
 |---|---|---|---|---|
 | NS2 | low | Updater manifest version is unsigned: an older validly signed exe can be served as newer (rollback) | `src/update.rs:146-163`, `src/portable.rs:91-103` | M, Sven merges |
 | NS3 | low | The APK installer's URL check is not flavour-aware: a stable app may fetch the dev APK (installs as a second app after confirmation) | `plugins/apk-installer/src/validate.rs:6-36` | S |
-| NS4 | low | Only the pre-merge manifest is asserted (`allowBackup="false"`); cleartext is printed, the merged manifest of the shipped APK (permissions, exported components) never checked | `web/scripts/lib/androidManifest.ts:20-33`, `.github/workflows/release.yml:354-357` | S, Sven merges |
+| NS4 | low | Only the pre-merge manifest is asserted (`allowBackup="false"`); cleartext is printed, the merged manifest of the shipped APK (permissions, exported components) never checked | `web/scripts/lib/androidManifest.ts:20-33`, `.github/workflows/release.yml:354-357` | S, **fixed (#1050)** |
 | NS5 | low | No `dataExtractionRules`: device-to-device transfer can copy the database | `web/scripts/lib/androidManifest.ts:20-33` | S |
 | NS6 | low | Notifications set no visibility: reminder titles show on the lock screen unless the OS hides them | `core/platform/tauri/index.ts:103-107,139-147` | S |
 | NS7 | low | = F3; on Android `exchange/inbox.json` is inside the page's file scope | `capabilities/default.json:59-70`, `src/exchange_client.rs:91-97` | S |
@@ -194,11 +194,11 @@ No critical finding. One high finding (SC1). The Dev-Preview that friends alread
 
 | ID | Sev | Finding | Evidence | Size |
 |---|---|---|---|---|
-| SC4 | low | The publishing build restores caches | `.github/workflows/release.yml:212-219,328,338-342` | S, Sven merges |
+| SC4 | low | The publishing build restores caches | `.github/workflows/release.yml:212-219,328,338-342` | S, **fixed (#1050)** for `release.yml`; the Dev-Preview keeps its caches (accepted: dev key only) |
 | SC5 | low | `libsqlite3-sys` 0.30.1, RUSTSEC-2026-0459 (needs write access next to the hub database; not realistically reachable) | `web/src-tauri/Cargo.lock`, `crates/lan-sync/src/store.rs:97` | M |
 | SC6 | low | The pin test does not read `.github/actions/*/action.yml` (all five `uses:` there are pinned today) | `web/scripts/lib/actionsPinned.test.ts:11` | S |
 | SC7 | low | Dependabot misses the root and `scripts/agents` npm projects, two crate lockfiles and one Gradle project; no audit job in CI | `.github/dependabot.yml` | S |
-| SC8–SC11 | info | Ratchet proxy approval ends 2026-11-22; the artifact audit passes on an empty folder; one stale line in `.gitleaksignore`; the licence list ships ids and links, no licence texts (Apache-2.0 §4) | `web/scripts/ratchet.mjs:52-54`, `web/scripts/audit-release.mjs:38-46`, `.gitleaksignore:17`, `web/src/core/about/licenses.json` | S–M; SC9 and SC10: Sven merges |
+| SC8–SC11 | info | Ratchet proxy approval ends 2026-11-22; the artifact audit passes on an empty folder; one stale line in `.gitleaksignore`; the licence list ships ids and links, no licence texts (Apache-2.0 §4) | `web/scripts/ratchet.mjs:52-54`, `web/scripts/audit-release.mjs:38-46`, `.gitleaksignore:17`, `web/src/core/about/licenses.json` | S–M; SC9 and SC10: Sven merges; SC9 **fixed (#1050)**, SC10 proposal in #1050 |
 
 Audit results (run on this commit):
 

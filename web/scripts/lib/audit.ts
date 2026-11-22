@@ -206,3 +206,48 @@ export function checkSignatures(
   }
   return findings;
 }
+
+/* ---- coverage: what the audit actually looked at ---- */
+
+export interface AuditCoverage {
+  /** The run publishes (tag / manual run with version, every Dev-Preview upload). */
+  publish: boolean;
+  /** Each `--path` with the number of files found under it. */
+  paths: readonly { path: string; files: number }[];
+  /** The variable names listed in AUDIT_SECRET_ENV. */
+  listed: readonly string[];
+  /** The names among them that have a value (none in a dry run). Never the values themselves. */
+  provided: readonly string[];
+  /** Signatures checked against the public key; undefined without `--pubkey-from`. */
+  signatures?: number;
+}
+
+/**
+ * An audit that saw nothing must not pass (SC9): a path without files is always a finding. When
+ * publishing, AUDIT_SECRET_ENV must name secrets and every one of them must have a value (a gating mistake in the workflow
+ * would otherwise turn the value search off unnoticed), and a public key without a single signature
+ * to check is a finding too.
+ */
+export function coverageFindings(c: AuditCoverage): Finding[] {
+  const findings: Finding[] = [];
+  if (c.paths.length === 0) findings.push({ file: '(none)', rule: 'empty-path' });
+  for (const p of c.paths) if (p.files === 0) findings.push({ file: p.path, rule: 'empty-path' });
+  if (c.publish) {
+    if (c.listed.length === 0) {
+      findings.push({
+        file: '(environment)',
+        rule: 'secret-not-provided',
+        detail: 'AUDIT_SECRET_ENV',
+      });
+    }
+    for (const name of c.listed) {
+      if (!c.provided.includes(name)) {
+        findings.push({ file: '(environment)', rule: 'secret-not-provided', detail: name });
+      }
+    }
+    if (c.signatures === 0) {
+      findings.push({ file: c.paths.map((p) => p.path).join(', '), rule: 'no-signature' });
+    }
+  }
+  return findings;
+}
