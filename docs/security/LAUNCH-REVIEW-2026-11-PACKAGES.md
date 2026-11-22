@@ -15,7 +15,7 @@ Findings and evidence: [LAUNCH-REVIEW-2026-11.md](LAUNCH-REVIEW-2026-11.md). One
 | 8 | Home network and remote control, small hardening | `fix/security-lan-hardening` | H1, H2, H3 (proposal), H4, H5, H6, H10, F1, F2, F3 (= NS7), E1–E5 | – | – (H3, H10 rule text: Sven) |
 | 9 | Android: manifest, lock screen, clipboard | `fix/security-android-surface` | NS5, NS6, NS8 (V4) | – | Sven (NS8 is in the secret-store plugin) |
 | 10 | Web layer and server lows | `fix/security-web-lows` (+ `fix/security-native-lows` for the Rust part) | R5, R6, R8, M2, M5, M6, Q1, Q2, Q3, B1–B3, PC2, PC3, N9, SC6, SC7; V5 only if not accepted | exe, APK, PWA (only if V5 is not accepted) | – |
-| 11 | Privacy texts, second pass | `docs/security-privacy-texts-2` | D9, D10 (rest), D11, D13, D19 (proposal), M7, M8, F5 | – | – |
+| 11 | Privacy texts, second pass | `docs/security-privacy-texts-2` | D9, D10 (rest), D11, D13, D19 (social preview image), M7, M8, F5 | – | – |
 
 Not packaged – info items and lows whose recommendation is "accept for 1.0": H7–H9, F4, F6, F7, E6–E9 (review with the exchange file packages), B4–B7, PC4, PC5, A5 (low, accept), A9–A11, MOD1, MOD2, NS9, NS10, Q4, Q5, SC5 (low, accept: not reachable), SC8, SC11, D15, V9, T6–T8, P5 (low, accept). Mediums with recommendation accept: S13, V5, X4.
 
@@ -209,7 +209,7 @@ Routing: Claude Code · Sicherheit Paket 11 – Datenschutztexte, zweiter Durchg
 # Aufgabe (unbeaufsichtigt): D9, D10 (Rest), D11, D13, M7, M8, F5
 Lies docs/security/LAUNCH-REVIEW-2026-11.md (Abschnitt „Promises against code“, M7, M8, F5).
 - Neue Flüsse in `docs/legal/DATA-FLOWS.md` und `tLegal.flows` (de + en, ids in `core/legal/legal.test.ts`): Austausch und Fernsteuerung im Heimnetz als eigene Zeile, Leck-Prüfung (pwnedpasswords), Link- und Tab-Vorschau („nie im Hintergrund“ in `strings.legal.ts:118,368` berichtigen).
-- D19 nur als Vorschlag im PR-Text (Schlagzeile der Startseite und README-Zeile 12: „Deine Daten liegen auf deinem Gerät; ins Netz geht nur, was du einrichtest oder auslöst“) – Sven entscheidet über den Wortlaut.
+- D19 (Rest): das Social-Preview-Bild trägt noch die alte Zeile (`web/scripts/gen-social.mjs`); Text an die neue Schlagzeile angleichen, Bild neu erzeugen (`docs/brand/social-preview.png`), Sven lädt es in den Repo-Einstellungen hoch.
 - `core/net/catalogue.ts`: api.anthropic.com. Spotify: Trennen widerruft nicht bei Spotify (Text + docs/user/spotify*.md). Regeltext Fernsteuerung: Maus/Tastatur-Freigabe reicht so weit wie der Nutzer.
 - Website-Liste und docs/user/security*.md nachziehen.
 ## Abnahme
