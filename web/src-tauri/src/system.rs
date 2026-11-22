@@ -84,7 +84,10 @@ pub fn system_play_tone(notes: Vec<Note>, volume: f32) -> Result<(), String> {
 pub fn system_open_task_manager() -> Result<(), String> {
     #[cfg(windows)]
     {
-        std::process::Command::new("taskmgr.exe")
+        // By full path in System32, never by bare name (that is looked up next to our exe first).
+        let exe = ::pc_tune::system_program(::pc_tune::Home::System32, "taskmgr.exe")
+            .ok_or_else(|| "unsupported".to_string())?;
+        std::process::Command::new(exe)
             .spawn()
             .map(|_| ())
             .map_err(|_| "unsupported".to_string())

@@ -22,7 +22,7 @@ pub use journal::{
     MAX_ENTRIES,
 };
 pub use reg::{valid_key, writable, MemRegistry, RegError, Registry, Value, WRITABLE};
-pub use tools::{Home, Tool};
+pub use tools::{system_program, Home, Tool};
 pub use tweaks::{system_effects, Effects, MemEffects, Target, TweakError, TweakState};
 
 /// The registry of this machine; `None` where there is none (Linux, macOS).
