@@ -19,12 +19,14 @@ import { backSettled, dismissNotices, ready, showPreview } from '../helpers';
  * The scene is the maintainer's Sunday (CONCEPT-DESIGN: „Monday nine things, 37 min free of 3 h 12; six invoices
  * past their deadline“): 2026-11-15, an empty install with ToDos, Rechnungen and Planer on, nine ToDos (35 + 30 +
  * 30 and six of 10 min) and six open invoices that were due on the Sunday, Tuesday and Thursday before. The
- * planner's defaults (Sunday 0 min, weekday 4 h less 20 % buffer) put the nine ToDos on Monday and leave 37 min
- * free there; the six invoices are „Frist vorbei“ since R2 – a group of their own, on no day and in no day's sum.
+ * nine ToDos lie on Monday (stored placement rows: since the planner rethink, package 1, nothing is spread unasked –
+ * before it the engine put them there by itself); the planner's defaults (Sunday 0 min, weekday 4 h less 20 %
+ * buffer) leave 37 min free there; the six invoices are „Frist vorbei“ since R2 – a group of their own, on no day
+ * and in no day's sum.
  * (Before R2 the scene had three ToDos and the six invoices were Monday's other six rows; R2 took them off the day,
  * so six short ToDos fill their places: Monday is nine rows and 37 min free as before, and the measures compare.)
  * Since R2 also three invoices due later in the week, moved by the person to Tuesday, Thursday and Friday (stored
- * pins): „Nächste Fristen“ in the context column; Monday is untouched by them.
+ * placement rows): „Nächste Fristen“ in the context column; Monday is untouched by them.
  * Since R1 the page opens on that Monday (the first day that holds things). Made-up data only; rows go straight
  * into IndexedDB, as in `wochenende.spec.ts`.
  *
@@ -351,25 +353,26 @@ const INVOICES = [
 ];
 
 /**
- * R2 („Nächste Fristen“): three open invoices due later this week, each moved by the person to a later day with
- * „Verschieben …“ (a stored pin) – the context column's second card names them; Monday stays as it is.
+ * R2 („Nächste Fristen“): three open invoices due later this week, each laid by the person on a day with
+ * „Verschieben …“ (its stored placement row) – the context column's second card names them; Monday stays as it is.
  */
 const UPCOMING = [
-  { payee: 'Hausverwaltung Muster', dueDate: '2026-11-18', pinned: '2026-11-17' },
-  { payee: 'Musikschule Beispiel', dueDate: '2026-11-19', pinned: '2026-11-19' },
-  { payee: 'Stadtbibliothek Muster', dueDate: '2026-11-20', pinned: '2026-11-20' },
+  { payee: 'Hausverwaltung Muster', dueDate: '2026-11-18', laidOn: '2026-11-17' },
+  { payee: 'Musikschule Beispiel', dueDate: '2026-11-19', laidOn: '2026-11-19' },
+  { payee: 'Stadtbibliothek Muster', dueDate: '2026-11-20', laidOn: '2026-11-20' },
 ];
 
 /**
  * An empty install with the planner and its sources switched on (what the switches in the library write).
- * `week`: the three ToDos and six overdue invoices of the scene; `empty`: nothing. `mail` also switches the mail
+ * `week`: the nine ToDos, laid on Monday as the person would (`planner_assignment`), and the invoices of the scene;
+ * `empty`: nothing. `mail` also switches the mail
  * module on and hangs a mail link on the third ToDo (what „In den Plan“ in the mail list writes).
  */
 async function prepare(page: Page, scene: 'week' | 'empty', opts: { mail?: boolean } = {}) {
   await page.goto('/');
   await expect(page.locator('main h1')).toBeVisible();
   await page.evaluate(
-    ({ scene, mail, todos, invoices, upcoming, base }) =>
+    ({ scene, mail, todos, invoices, upcoming, monday, base }) =>
       new Promise<void>((resolve, reject) => {
         const open = indexedDB.open('taschenmesser');
         open.onerror = () => reject(open.error);
@@ -381,7 +384,7 @@ async function prepare(page: Page, scene: 'week' | 'empty', opts: { mail?: boole
               'todos_list',
               'todos_task',
               'invoices_invoice',
-              'planner_item',
+              'planner_assignment',
               ...(mail ? ['mail_thread'] : []),
             ],
             'readwrite',
@@ -411,7 +414,20 @@ async function prepare(page: Page, scene: 'week' | 'empty', opts: { mail?: boole
             tx.objectStore('_modules').put({ ...base, id, enabled: true, dataPolicy: null });
           if (scene === 'week') {
             tx.objectStore('todos_list').put({ ...base, id: 'inbox', name: 'Eingang', order: 0 });
-            todos.forEach((t, i) =>
+            /** A thing laid on a day: the row „Verschieben …“ writes (`<itemKey>#0`, whole, not „fest“). */
+            const lay = (itemKey: string, date: string, minutes: number, order: number) =>
+              tx.objectStore('planner_assignment').put({
+                ...base,
+                id: `${itemKey}#0`,
+                itemKey,
+                k: 0,
+                of: 1,
+                date,
+                minutes,
+                order,
+                reason: 'new',
+              });
+            todos.forEach((t, i) => {
               tx.objectStore('todos_task').put({
                 ...base,
                 id: `p${i}`,
@@ -423,8 +439,9 @@ async function prepare(page: Page, scene: 'week' | 'empty', opts: { mail?: boole
                 ...(mail && i === 2
                   ? { links: [{ kind: 'mail', id: 'demo-thread', label: 'Angebot' }] }
                   : {}),
-              }),
-            );
+              });
+              lay(`todos:p${i}`, monday, t.estimateMin, i);
+            });
             invoices.forEach((inv, i) =>
               tx.objectStore('invoices_invoice').put({
                 ...base,
@@ -434,7 +451,7 @@ async function prepare(page: Page, scene: 'week' | 'empty', opts: { mail?: boole
                 ...inv,
               }),
             );
-            upcoming.forEach(({ pinned, ...inv }, i) => {
+            upcoming.forEach(({ laidOn, ...inv }, i) => {
               const id = `inv${invoices.length + i}`;
               tx.objectStore('invoices_invoice').put({
                 ...base,
@@ -443,13 +460,8 @@ async function prepare(page: Page, scene: 'week' | 'empty', opts: { mail?: boole
                 status: 'open',
                 ...inv,
               });
-              tx.objectStore('planner_item').put({
-                ...base,
-                id: `invoices:${id}`,
-                source: { module: 'invoices', id },
-                pinned,
-                order: 0,
-              });
+              // An invoice counts ten minutes in the plan (the source's default).
+              lay(`invoices:${id}`, laidOn, 10, 0);
             });
           }
           tx.oncomplete = () => {
@@ -465,6 +477,7 @@ async function prepare(page: Page, scene: 'week' | 'empty', opts: { mail?: boole
       todos: TODOS,
       invoices: INVOICES,
       upcoming: UPCOMING,
+      monday: MONDAY,
       base: meta('x'),
     },
   );
@@ -1044,10 +1057,18 @@ test('B Ding auf einen anderen Tag', async ({ page, isMobile }, info) => {
   await settledCount(things(page, WEDNESDAY));
   const onWednesday = await day(page, WEDNESDAY).getByText('Wohnung saugen').count();
   if (onWednesday === 0) m.detour();
-  const pinned = (
-    await rows<{ id: string; pinned?: string; source?: { id: string } }>(page, 'planner_item')
-  ).find((r) => r.source?.id === 'p1')?.pinned;
-  expect(pinned).toBe(WEDNESDAY);
+  // The thing lies on Wednesday now (its stored row); it is not „fest“ by that, and no pin is written.
+  const laid = (
+    await rows<{ itemKey: string; date: string; locked?: boolean }>(page, 'planner_assignment')
+  ).filter((r) => r.itemKey === 'todos:p1');
+  expect(laid.map((r) => [r.date, r.locked === true])).toEqual([[WEDNESDAY, false]]);
+  const pinned = (await rows<{ pinned?: string }>(page, 'planner_item')).filter((r) => r.pinned);
+  expect(pinned).toEqual([]);
+  // Nothing else moved: the other eight are still on Monday.
+  const others = (await rows<{ itemKey: string; date: string }>(page, 'planner_assignment')).filter(
+    (r) => r.itemKey.startsWith('todos:') && r.itemKey !== 'todos:p1',
+  );
+  expect(others.map((r) => r.date)).toEqual(TODOS.slice(1).map(() => MONDAY));
   // „Später“ on a thing of tomorrow (the taps are not counted): a thing that stays is a detour.
   await dayPick(page, MONDAY).click();
   await settledCount(things(page, MONDAY));
@@ -1073,7 +1094,7 @@ test('B Ding auf einen anderen Tag', async ({ page, isMobile }, info) => {
     previewText,
     stillOnMonday: stillMonday > 0,
     onWednesday: onWednesday > 0,
-    pinned,
+    laidOn: laid.map((r) => r.date),
     laterMovedAThingOfTomorrow: laterMoved,
   });
   await record(info, m, name);
@@ -1277,13 +1298,24 @@ test('E Ding über das Planer-Feld', async ({ page, isMobile }, info) => {
   const focused = await field.evaluate((el) => el === document.activeElement);
   await m.type(field, 'Paket abholen');
   await m.enter(field);
-  const toast = page.getByText(/^Eingetragen/).first();
+  // The thing lies on the day on the sheet (Monday; today, Sunday, is not shown) and the toast says so.
+  const toast = page
+    .getByRole('status')
+    .filter({ hasText: /^Liegt auf Mo/ })
+    .last();
   await expect(toast).toBeVisible();
   const said = await toast.innerText();
   const saved = (await rows<{ title: string }>(page, 'todos_task')).some(
     (t) => t.title === 'Paket abholen',
   );
   if (!saved) m.detour();
+  // … and it does lie there (its stored row; on the sheet it may stand behind „Danach“ / „… weitere“), while the
+  // nine others stayed on Monday.
+  const laid = (await rows<{ itemKey: string; date: string }>(page, 'planner_assignment')).filter(
+    (r) => r.itemKey.startsWith('todos:'),
+  );
+  expect(laid.map((r) => r.date)).toEqual([...TODOS.map(() => MONDAY), MONDAY]);
+  await expect(dayPick(page, MONDAY)).toHaveAccessibleName(/· 10 Dinge$/);
   facts(info, 'E', {
     emptyStateOnArrival: emptyAtFirst > 0,
     fieldYOnArrival: firstBox?.y,
@@ -1379,7 +1411,7 @@ test('M Designmaße: die Woche des Sonntags, wie sie öffnet, und heute', async 
   expect(placed.sort()).toEqual(
     [
       ...TODOS.map((_, i) => `todos:p${i} ${MONDAY}`),
-      ...UPCOMING.map((u, i) => `invoices:inv${INVOICES.length + i} ${u.pinned}`),
+      ...UPCOMING.map((u, i) => `invoices:inv${INVOICES.length + i} ${u.laidOn}`),
     ].sort(),
   );
   if (isMobile) {

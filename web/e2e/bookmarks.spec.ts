@@ -213,7 +213,13 @@ test.describe('Plan and widget (round 2026-11, package 3)', () => {
     await expect(page.getByText('Steht jetzt im Plan.')).toBeVisible();
     await expect(rowOf(page, 'Dune')).toContainText('im Plan');
     await ready(page, '/planner');
-    await expect(page.locator('main').getByText('Film/Serie: Dune').first()).toBeVisible();
+    // A wish has no day: nothing is spread unasked (planner rethink, package 1), so it sits in the folded group
+    // „Noch ohne Tag“ until the person lays it on a day or applies „Neu verteilen“.
+    const noDay = page.locator('[data-group="wait"]');
+    await expect(noDay.locator('h2')).toContainText('Noch ohne Tag');
+    await expect(page.locator('[data-testid^="day-"] li')).toHaveCount(0);
+    await noDay.locator('h2').getByRole('button').click();
+    await expect(noDay.getByText('Film/Serie: Dune').first()).toBeVisible();
     await ready(page, '/bookmarks');
     await (
       await rowMenu(page, 'Dune')

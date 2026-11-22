@@ -568,14 +568,27 @@ test('C Handy: eine Sache im Vorbeigehen', async ({ page, isMobile }, info) => {
 test('D Planer öffnen bei Überlast', async ({ page, isMobile }, info) => {
   const name = 'D Planer öffnen bei Überlast';
   await prepare(page);
+  // The scene is a week that was laid out and holds more than fits. Nothing is spread unasked any more (planner
+  // rethink, package 1), so the person took the page's proposal once: ⋯ → „Neu verteilen“ → „Übernehmen“ (not
+  // counted, it only sets the scene – the path is the look at the page afterwards).
+  await ready(page, '/planner');
+  await expect(page.getByText(/Noch ohne Tag/)).toBeVisible({ timeout: 15_000 });
+  const onDays = page.locator('main [data-testid^="day-"] li');
+  await expect(onDays).toHaveCount(0);
+  await page.getByRole('button', { name: 'Weitere Optionen', exact: true }).first().click();
+  await page.getByRole('menuitem', { name: 'Neu verteilen' }).click();
+  await page.getByTestId('plan-preview').getByRole('button', { name: 'Übernehmen' }).click();
+  await expect(page.getByTestId('plan-preview')).toHaveCount(0);
+  await expect(onDays).not.toHaveCount(0);
   const m = new Meter(page, isMobile);
   await m.go('/planner');
   // The head figure is the free time of the day that asks for something (planner hub R1: the context line names
   // the day, the figure lost its „heute“).
   const head = page.getByTestId('planner-head');
   await expect(head).toContainText('frei');
-  // The overload shows as a number in the head of the waiting group, folded with its calming half (F4).
-  const waiting = page.getByText(/Wartet auf freie Zeit/);
+  // What found no day waits in the folded group „Noch ohne Tag“ with its calming half (F4); the overload figure
+  // stands inside it.
+  const waiting = page.getByText(/Noch ohne Tag/);
   await expect(waiting).toBeVisible({ timeout: 15_000 });
   // Settled: the run may still add rows after the heading appears.
   const rowCount = () => page.locator('main li').count();
