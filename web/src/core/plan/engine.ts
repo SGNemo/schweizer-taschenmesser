@@ -326,7 +326,17 @@ function planOnce(input: PlanInput): PlanResult {
     const pinnedIds = new Set(units.filter((u) => u.item.pinned === day.date).map((u) => u.id));
     const mustIds = new Set(must.map((u) => u.id));
     const tierOf = (a: Assignment): number =>
-      unitById.get(a.id)!.item.fixed ? -1 : pinnedIds.has(a.id) ? 0 : mustIds.has(a.id) ? 1 : 2;
+      unitById.get(a.id)!.item.fixed
+        ? -1
+        : staying
+          ? // The plan stays put: the tier comes from the cause the row carries, so a later pass that hands
+            // nothing over orders the day as the pass that placed the thing did (no row is rewritten).
+            tierOfReason(a.reason)
+          : pinnedIds.has(a.id)
+            ? 0
+            : mustIds.has(a.id)
+              ? 1
+              : 2;
     todayList
       .sort((a, b) => {
         const ua = unitById.get(a.id)!.item;

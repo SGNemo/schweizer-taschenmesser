@@ -1,3 +1,5 @@
+import { DEFAULT_MIN } from '@/core/plan/types';
+import { unitId } from '@/core/plan/units';
 import type { AfterSeedContext, SeedContext, SeedModule, SeedRows } from '@/core/seed/types';
 import { assignmentRepo, itemKeyOf, itemRepo } from './repo';
 import { resumeRuns, runBackground, suspendRuns } from './services';
@@ -5,8 +7,8 @@ import { resumeRuns, runBackground, suspendRuns } from './services';
 /**
  * Test data of the planner (contract: docs/howto/seed-data.md). Days the user touched (available
  * time, a day off, two blockers) and planning facts on ToDos of the todos seed (`dependsOn`): one
- * pinned, one with a hard due, one long and splittable, one that stays out. Assignments are not
- * seeded: the service computes them from these inputs on the first run (deterministic anyway).
+ * fixed on a day (its row is seeded), one with a hard due, one long and splittable, one that stays out. The other
+ * assignments are not seeded: the run inside the seed lays them out (deterministic anyway).
  * The ToDo without an estimate („Keller aufräumen“, index 3 of the todos seed) shows „~30 Min“.
  */
 const WEEKDAY_DEFAULT = 240;
@@ -67,12 +69,11 @@ function seed(ctx: SeedContext): SeedRows {
     ),
   ];
   const items = [
-    // Pinned to the day after tomorrow: „Präsentation proben“.
+    // „Fest“ on the day after tomorrow: „Präsentation proben“ (its placement row is seeded below).
     {
       id: task(7),
       data: {
         source: { module: 'todos', id: ctx.id('todos', 'task', 7) },
-        pinned: ctx.day(2),
         order: 0,
       },
     },
@@ -105,7 +106,24 @@ function seed(ctx: SeedContext): SeedRows {
       },
     },
   ];
-  return { day: days, item: items };
+  // The one seeded placement: a thing the person fixed on a day. Seeded as a row (not as a pin of the old model),
+  // so no run has to convert it after the seed – that write would be the person's and enter the sync outbox.
+  const assignments = [
+    {
+      id: unitId(task(7), 0),
+      data: {
+        itemKey: task(7),
+        k: 0,
+        of: 1,
+        date: ctx.day(2),
+        minutes: DEFAULT_MIN,
+        order: 0,
+        reason: 'pinned',
+        locked: true,
+      },
+    },
+  ];
+  return { day: days, item: items, assignment: assignments };
 }
 
 /** Every planner source with seed rows (`plannable.ts` of todos, invoices, subscriptions, fitness, routines, lists). */
@@ -139,7 +157,7 @@ async function afterSeed(ctx: AfterSeedContext): Promise<{ collection: string; i
     return false;
   };
   // The test data is laid out once – only the seed's own things are handed to the engine, a person's own plan
-  // stays as it is. The seed's pin („Präsentation proben“) becomes „fest“ on its day with this run (`run.ts`).
+  // stays as it is; the seeded „fest“ row („Präsentation proben“) keeps its day.
   await runBackground({ force: true, reshuffle: true, looseIf: isSeed });
   // Every row of a seed task – also one the service's own run wrote before this hook (re-registering is harmless),
   // and also a deleted one: on a slow device the service runs between the todos rows and the planner's own rows,

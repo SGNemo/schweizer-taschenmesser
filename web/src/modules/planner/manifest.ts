@@ -73,7 +73,7 @@ const manifest: ModuleManifest = {
   automation: () => import('./automation'),
   defaultEnabled: false,
   maturity: 'stable',
-  seed: { version: 2, dependsOn: ['todos'] },
+  seed: { version: 3, dependsOn: ['todos'] },
   layout: 'split',
   order: 15,
   area: 'plan',

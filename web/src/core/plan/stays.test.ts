@@ -53,6 +53,33 @@ describe('the plan stays put (`loose`)', () => {
     expect(where(r)).toEqual({ a: MON, b: MON, c: MON, urgent: addDays(MON, 3) });
   });
 
+  it('a later pass that hands nothing over gives every row the same place in its day', () => {
+    // A hard due that has to start today stands before the rest of the day; the pass after it must agree,
+    // or it would rewrite rows nobody touched (the seed's outbox guard caught exactly that).
+    const items = [
+      item('a', { priority: 3 }),
+      item('due', { due: { date: MON, hard: true } }),
+      item('b', { priority: 2 }),
+    ];
+    const first = plan({
+      today: MON,
+      days: days(),
+      items,
+      prev: [],
+      loose: ['a', 'due', 'b'],
+      settings,
+    });
+    const place = (r: ReturnType<typeof plan>) =>
+      r.assignments.map((x) => [x.id, x.date, x.order, x.reason]).sort();
+    expect(first.assignments.find((x) => x.itemKey === 'due')).toMatchObject({
+      date: MON,
+      order: 0,
+    });
+    const prev = first.assignments.map(({ id, date, reason }) => ({ id, date, reason }));
+    const again = plan({ today: MON, days: days(), items, prev, loose: [], settings });
+    expect(place(again)).toEqual(place(first));
+  });
+
   it('leaves a passed day alone: not placed anew, not removed, not in the diff', () => {
     const items = [item('missed'), item('today')];
     const prev = [on('missed', addDays(MON, -2)), on('today', MON)];
