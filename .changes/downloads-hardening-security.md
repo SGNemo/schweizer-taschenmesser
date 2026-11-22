@@ -16,8 +16,16 @@ en: A torrent always lands in a new folder of its own and never overwrites an ex
 type: security
 area: downloads
 breaking: false
-de: Den Zielordner wählst du im Ordnerdialog; Torrent-Teil, DHT und UPnP gelten nur auf diesem PC und müssen nach dem Update dort einmal neu eingeschaltet werden.
-en: You choose the target folder in the folder dialog; the torrent part, DHT and UPnP apply to this PC only and need to be switched on there once again after the update.
+de: Den Zielordner wählst du jetzt im Ordnerdialog; das Eintippen eines Pfads geht nicht mehr.
+en: You now choose the target folder in the folder dialog; typing a path no longer works.
+---
+---
+type: security
+area: downloads
+breaking: true
+highlight: true
+de: Nach dem Update ist der Torrent-Teil aus: Schalte ihn auf jedem PC einmal neu ein, ebenso UPnP und deinen Download-Ordner.
+en: After the update the torrent part is off: switch it on again once on each PC, and UPnP and your download folder too.
 ---
 ---
 type: security

@@ -59,6 +59,7 @@ export const downloads: Strings['downloads'] = {
     pick: 'Choose folder',
     hash: 'Checksum (optional, SHA-256 or SHA-512)',
     hashHelp: 'The finished file is compared with it.',
+    folderHelp: 'Change it with “Choose folder”.',
     submit: 'Download',
     cancel: 'Cancel',
     http: 'This address is not encrypted (HTTP).',
@@ -66,7 +67,7 @@ export const downloads: Strings['downloads'] = {
   errors: {
     scheme: 'Only addresses with http:// or https:// work.',
     url: 'That is not a valid address.',
-    dir: 'Nemo does not take this folder. Choose it with “Choose folder”.',
+    dir: 'Nemo only saves into folders you picked with “Choose folder”. Pick the folder there (again).',
     blocked: 'Nemo does not download from addresses in the home network or on this PC.',
     hash: 'The checksum needs 64 (SHA-256) or 128 (SHA-512) characters from 0–9 and a–f.',
     other: 'That did not work.',
@@ -84,8 +85,9 @@ export const downloads: Strings['downloads'] = {
     checksum: 'The checksum does not match. The file was deleted.',
     size: 'The file arrived incomplete.',
     blocked:
-      'The address leads into the home network or to this PC. Nemo does not download from there.',
-    redirect: 'The address redirects too often or to an unencrypted address.',
+      'The address leads into the home network or to this PC. Nemo does not download from there. Check the address.',
+    redirect:
+      'The address redirects too often or to an unencrypted address. Download the file in the browser if you trust the site.',
     url: 'The saved address is not valid.',
     scheme: 'Only addresses with http:// or https:// work.',
   },
@@ -130,11 +132,12 @@ export const downloads: Strings['downloads'] = {
     hint: 'Only for legal content. While you download you upload at the same time.',
     off: {
       title: 'BitTorrent is off',
-      body: 'The torrent part is switched off. A short notice comes first when you switch it on.',
+      body: 'The torrent part is switched off. The switch applies to this PC only; your torrents stay saved. A short notice comes first when you switch it on.',
       turnOn: 'Switch the torrent part on',
     },
     turnOff: 'Switch the torrent part off',
-    deviceOnly: 'These switches apply on this PC only.',
+    deviceOnly:
+      'The torrent switches and the folder apply on this PC only. Changing one restarts BitTorrent briefly.',
     starting: 'Starting …',
     launch: {
       needModule: 'This needs the “Downloads” module.',
@@ -172,9 +175,9 @@ export const downloads: Strings['downloads'] = {
       notMagnet: 'That is not a magnet link.',
       timeout: 'No sources found. Check the link or try again later.',
       alreadyAdded: 'This torrent is already in the list.',
-      dir: 'Nemo does not take this folder. Choose it with “Choose folder”.',
+      dir: 'Nemo only saves into folders you picked with “Choose folder”. Pick the folder there (again).',
       badPath:
-        'The torrent contains file names Windows could read differently. Nemo does not load it.',
+        'The torrent contains file names that could land somewhere else on Windows. Nemo does not load it.',
       tracker:
         'The torrent names a tracker in the home network or on this PC. Nemo does not load it.',
       other: 'That did not work.',

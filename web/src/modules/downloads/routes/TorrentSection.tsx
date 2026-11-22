@@ -209,8 +209,8 @@ export function TorrentSection({
           label={t.downloads.settings.torrentUpnp}
           checked={upnp}
           onChange={(on) => void setNetwork({ upnp: on })}
+          hint={t.downloads.torrent.deviceOnly}
         />
-        <p className={styles.hint}>{t.downloads.torrent.deviceOnly}</p>
       </div>
       <TorrentIp />
       <AddTorrentDialog

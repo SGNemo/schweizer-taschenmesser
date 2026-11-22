@@ -198,7 +198,12 @@ export function AddTorrentDialog({
             {t.downloads.torrent.add.selected}: {formatBytes(selectedBytes)}
           </p>
           {/* shown only: a folder is chosen in the system dialog, which Nemo remembers (DL6) */}
-          <TextField label={t.downloads.add.folder} value={dir} readOnly />
+          <TextField
+            label={t.downloads.add.folder}
+            hint={t.downloads.add.folderHelp}
+            value={dir}
+            readOnly
+          />
           <div>
             <Button
               onClick={() =>

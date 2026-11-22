@@ -401,7 +401,12 @@ function AddDialog({
           <p className={styles.sub}>{t.downloads.add.http}</p>
         ) : null}
         {/* shown only: a folder is chosen in the system dialog, which Nemo remembers (DL6) */}
-        <TextField label={t.downloads.add.folder} value={dir} readOnly />
+        <TextField
+          label={t.downloads.add.folder}
+          hint={t.downloads.add.folderHelp}
+          value={dir}
+          readOnly
+        />
         <div>
           <Button
             onClick={() =>

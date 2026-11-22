@@ -8812,6 +8812,7 @@ export const de = {
       pick: 'Ordner wählen',
       hash: 'Prüfsumme (optional, SHA-256 oder SHA-512)',
       hashHelp: 'Nach dem Download wird die Datei damit verglichen.',
+      folderHelp: 'Ändern mit „Ordner wählen“.',
       submit: 'Herunterladen',
       cancel: 'Abbrechen',
       http: 'Diese Adresse ist nicht verschlüsselt (HTTP).',
@@ -8819,7 +8820,7 @@ export const de = {
     errors: {
       scheme: 'Nur Adressen mit http:// oder https:// gehen.',
       url: 'Das ist keine gültige Adresse.',
-      dir: 'Diesen Ordner nimmt Nemo nicht. Wähle ihn mit „Ordner wählen“ aus.',
+      dir: 'Nemo speichert nur in Ordnern, die du mit „Ordner wählen“ ausgesucht hast. Wähle den Ordner dort (neu) aus.',
       blocked: 'Von Adressen im Heimnetz oder auf diesem PC lädt Nemo nichts herunter.',
       hash: 'Die Prüfsumme muss 64 (SHA-256) oder 128 (SHA-512) Zeichen aus 0–9 und a–f haben.',
       other: 'Das hat nicht geklappt.',
@@ -8836,8 +8837,10 @@ export const de = {
       io: 'Die Datei konnte nicht geschrieben werden.',
       checksum: 'Die Prüfsumme stimmt nicht. Die Datei wurde gelöscht.',
       size: 'Die Datei ist unvollständig angekommen.',
-      blocked: 'Die Adresse führt ins Heimnetz oder auf diesen PC. Von dort lädt Nemo nichts.',
-      redirect: 'Die Adresse leitet zu oft weiter oder auf eine unverschlüsselte Adresse.',
+      blocked:
+        'Die Adresse führt ins Heimnetz oder auf diesen PC. Von dort lädt Nemo nichts. Prüfe die Adresse.',
+      redirect:
+        'Die Adresse leitet zu oft weiter oder auf eine unverschlüsselte Adresse. Lade die Datei im Browser, wenn du der Seite vertraust.',
       url: 'Die gespeicherte Adresse ist ungültig.',
       scheme: 'Nur Adressen mit http:// oder https:// gehen.',
     },
@@ -8882,11 +8885,12 @@ export const de = {
       hint: 'Nur für legale Inhalte. Beim Herunterladen lädst du zugleich hoch.',
       off: {
         title: 'BitTorrent ist aus',
-        body: 'Der Torrent-Teil ist ausgeschaltet. Beim Einschalten kommt vorher ein kurzer Hinweis.',
+        body: 'Der Torrent-Teil ist ausgeschaltet. Der Schalter gilt nur auf diesem PC; deine Torrents bleiben gespeichert. Beim Einschalten kommt vorher ein kurzer Hinweis.',
         turnOn: 'Torrent-Teil einschalten',
       },
       turnOff: 'Torrent-Teil ausschalten',
-      deviceOnly: 'Diese Schalter gelten nur auf diesem PC.',
+      deviceOnly:
+        'Torrent-Schalter und Ordner gelten nur auf diesem PC. Umschalten startet BitTorrent kurz neu.',
       starting: 'Wird gestartet …',
       launch: {
         needModule: 'Dafür braucht es das Modul „Downloads“.',
@@ -8924,9 +8928,9 @@ export const de = {
         notMagnet: 'Das ist kein Magnet-Link.',
         timeout: 'Keine Quellen gefunden. Prüfe den Link oder versuche es später noch einmal.',
         alreadyAdded: 'Dieser Torrent ist schon in der Liste.',
-        dir: 'Diesen Ordner nimmt Nemo nicht. Wähle ihn mit „Ordner wählen“ aus.',
+        dir: 'Nemo speichert nur in Ordnern, die du mit „Ordner wählen“ ausgesucht hast. Wähle den Ordner dort (neu) aus.',
         badPath:
-          'Der Torrent enthält Dateinamen, die Windows anders lesen könnte. Nemo lädt ihn nicht.',
+          'Der Torrent enthält Dateinamen, die auf Windows an einer anderen Stelle landen könnten. Nemo lädt ihn nicht.',
         tracker:
           'Der Torrent nennt einen Tracker im Heimnetz oder auf diesem PC. Nemo lädt ihn nicht.',
         other: 'Das hat nicht geklappt.',
