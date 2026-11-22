@@ -222,7 +222,12 @@ test.describe('Planer: Bewegen (package 5)', () => {
         .poll(() => rowDays(page))
         .toEqual({ ...before, Keller: '2026-11-12', Fenster: '2026-11-12' });
       // One undo brings both back.
-      await page.getByRole('status').getByRole('button', { name: 'Rückgängig' }).last().click();
+      // (The move's own toast – the entries' „Liegt auf Mo“ toasts may still stand.)
+      await page
+        .getByRole('status')
+        .filter({ hasText: '2 Dinge liegen auf Do' })
+        .getByRole('button', { name: 'Rückgängig' })
+        .click();
       await expect.poll(() => rowDays(page)).toEqual(before);
     });
 
