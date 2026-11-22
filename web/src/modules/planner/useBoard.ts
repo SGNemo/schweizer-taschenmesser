@@ -18,6 +18,8 @@ import {
 
 export interface BoardData {
   board: Board;
+  /** The days in view when they differ from the board's (package 4: a later week, the 4-week grid). */
+  view?: Board['days'];
   settings: PlannerSettings;
   planLimit: number;
   last: LastRun | undefined;
@@ -25,14 +27,26 @@ export interface BoardData {
   today: string;
 }
 
-/** Live data of the board for `span` days from today; `undefined` while loading. */
-export function useBoard(span: number): BoardData | undefined {
+/**
+ * Live data of the board for `span` days from today; `undefined` while loading. `view` = the days in view when they
+ * are another stretch (a later week, the four weeks of the grid from a Monday that may have passed): built from the
+ * same reads, the sources listed up to the last day in view.
+ */
+export function useBoard(
+  span: number,
+  view?: { from: string; span: number },
+): BoardData | undefined {
   const day = today();
-  const until = addDays(day, span - 1);
+  const boardEnd = addDays(day, span - 1);
+  const viewEnd = view ? addDays(view.from, view.span - 1) : boardEnd;
+  const until = viewEnd > boardEnd ? viewEnd : boardEnd;
+  const first = view && view.from < day ? view.from : day;
+  const viewFrom = view?.from;
+  const viewSpan = view?.span;
   const [stored] = useSettings(PLANNER_SCOPE, plannerSettingsSchema, DEFAULT_PLANNER_SETTINGS);
   const settings = stored ?? DEFAULT_PLANNER_SETTINGS;
   const [focus] = useFocusSettings();
-  const calendar = useCalendarItems({ from: day, to: until });
+  const calendar = useCalendarItems({ from: first, to: until });
   const blocks = usePlanBlocks({ today: day, until });
   const own = useLiveQuery(
     async () => ({
@@ -64,6 +78,31 @@ export function useBoard(span: number): BoardData | undefined {
       unplaced: last?.unplaced ?? [],
       titles,
     });
-    return { board, settings, planLimit: focus.planLimit, last, titles, today: day };
-  }, [own, entries, calendar, blocks, settings, focus.planLimit, day, span]);
+    const shown =
+      viewFrom !== undefined &&
+      viewSpan !== undefined &&
+      buildBoard({
+        today: day,
+        from: viewFrom,
+        span: viewSpan,
+        settings,
+        dayRows: own.dayRows,
+        itemRows: own.itemRows,
+        assignments: own.assignments,
+        entries,
+        calendar,
+        blocks,
+        unplaced: [],
+        titles,
+      }).days;
+    return {
+      board,
+      ...(shown ? { view: shown } : {}),
+      settings,
+      planLimit: focus.planLimit,
+      last,
+      titles,
+      today: day,
+    };
+  }, [own, entries, calendar, blocks, settings, focus.planLimit, day, span, viewFrom, viewSpan]);
 }

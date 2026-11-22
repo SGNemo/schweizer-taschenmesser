@@ -58,6 +58,7 @@ import { DayPage, DayPageLoading } from '../components/DayPage';
 import { LateGroup, LateRow } from '../components/LateGroup';
 import { PassedTrainings } from '../components/PassedTrainings';
 import { tileName, WeekBand } from '../components/WeekBand';
+import { WeekGrid } from '../components/WeekGrid';
 import { firstDayWithRows, plannerHead } from '../head';
 import { DaySetup } from '../components/DaySetup';
 import { DaySheet } from '../components/DaySheet';
@@ -110,8 +111,33 @@ interface Pending {
   spread?: { date: string; loose: string[]; fixed: number; open?: true };
 }
 
+/** „4 Wochen“ (package 4): the grid's days, four weeks from a Monday. */
+const GRID_DAYS = 28;
+/** The board always reads four weeks from today (the move dialog's days, a later week's sheet). */
+const READ_DAYS = 28;
+
+const daysBetween = (from: string, to: string) =>
+  Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
+const mondayOf = (date: string) => addDaysStr(date, 1 - isoWeekday(date));
+
 export default function PlannerPage() {
-  const data = useBoard(SPAN);
+  const [searchParams] = useSearchParams();
+  const now = today();
+  // The band's first day (package 4): today, or a later week paged to (`?week=` from the calendar's „Plan“).
+  const [weekStart, setWeekStart] = useState<string>(() => {
+    const asked = searchParams.get('week');
+    return asked && /^\d{4}-\d{2}-\d{2}$/.test(asked) && asked > now ? asked : now;
+  });
+  const [grid, setGrid] = useState(false);
+  // A new day (the page stayed open over midnight) never leaves the band on a passed start.
+  const start = weekStart < now ? now : weekStart;
+  const viewFrom = grid ? mondayOf(start) : start;
+  const viewSpan = grid ? GRID_DAYS : SPAN;
+  const viewEnd = addDaysStr(viewFrom, viewSpan - 1);
+  const data = useBoard(
+    Math.max(READ_DAYS, daysBetween(now, viewEnd) + 1),
+    viewFrom === now && !grid ? undefined : { from: viewFrom, span: viewSpan },
+  );
   // Planner hub R1 (layout `split`): field, week band and the picked day's sheet in the main column; on a wide page
   // the context column (appointments, what waits) lies beside them, below that width it follows the sheet.
   const wide = useSplitView();
@@ -487,9 +513,21 @@ export default function PlannerPage() {
 
   // The head reports the next day that asks for something (CONCEPT-DESIGN §5): `head.ts`. With no thing on any
   // day there is no figure; the unseen placeholder keeps the head's height (U01).
-  const head = board ? plannerHead(board.days, { short: phone, late: board.late }) : undefined;
+  const head = board
+    ? plannerHead(board.days.slice(0, SPAN), { short: phone, late: board.late })
+    : undefined;
 
   const pageMenu: RowMenuItem[] = [
+    // Phone: the switch „4 Wochen“ lives here (the band's row keeps the phone's stimulus budget).
+    ...(phone
+      ? [
+          {
+            id: 'grid',
+            label: grid ? t.planner.board.weekViewMenu : t.planner.board.gridViewMenu,
+            onSelect: () => setGrid((g) => !g),
+          },
+        ]
+      : []),
     {
       id: 'replan',
       label: t.planner.head.replan,
@@ -539,7 +577,7 @@ export default function PlannerPage() {
   const biggest = (() => {
     if (!board) return [];
     const sum = new Map<string, { title: string; minutes: number }>();
-    for (const r of [...board.days.flatMap((d) => d.rows), ...board.waiting]) {
+    for (const r of [...board.days.slice(0, SPAN).flatMap((d) => d.rows), ...board.waiting]) {
       const cur = sum.get(r.itemKey) ?? { title: r.title, minutes: 0 };
       cur.minutes += r.minutes;
       sum.set(r.itemKey, cur);
@@ -849,7 +887,9 @@ export default function PlannerPage() {
   const waiting = board?.waiting ?? [];
   const late = board?.late ?? [];
   const overflow = data?.last?.today === data?.today ? (data?.last?.overflowMin ?? 0) : 0;
-  const nothingPlanned = board !== undefined && board.days.every((d) => d.rows.length === 0);
+  // The week from today decides what the page says about itself (four weeks are read for the views, package 4).
+  const nothingPlanned =
+    board !== undefined && board.days.slice(0, SPAN).every((d) => d.rows.length === 0);
   // Things on passed days („Noch offen“) are no empty plan: the first-start state would say he has nothing.
   const openCount = board?.open.length ?? 0;
   const boardEmpty = nothingPlanned && waiting.length === 0 && late.length === 0 && openCount === 0;
@@ -857,13 +897,19 @@ export default function PlannerPage() {
   // The day the sheet shows: `?day=` or a tile → the pick stored today on this device → the first day that holds
   // things → today. Once shown it stays (a day does not change under the hand when its last thing is ticked).
   const days = board?.days;
+  /** The days from today the page speaks of (head, empty texts): one week. */
+  const week = days?.slice(0, SPAN);
+  /** The days in view: the band's week, or the grid's four weeks (passed days included). */
+  const bandDays = data?.view ?? week;
+  /** The week in view from today on („Zeiten dieser Woche“, the context column). */
+  const viewWeek = bandDays?.filter((d) => d.date >= (data?.today ?? now)).slice(0, SPAN);
   const storedDate = storedPick && storedPick.on === data?.today ? storedPick.date : undefined;
   const shownDay =
     !days || storedPick === undefined || thenStored === undefined
       ? undefined
       : (days.find((d) => d.date === pickedDay) ??
         days.find((d) => d.date === storedDate) ??
-        firstDayWithRows(days) ??
+        firstDayWithRows(week ?? []) ??
         days[0]);
   const shownDate = shownDay?.date;
   // Adjusting state during render: the day the page opened on becomes the pick – once the plan holds things (the
@@ -873,12 +919,75 @@ export default function PlannerPage() {
 
   /** A tile (or a swipe) picks the day: stored for today on this device, said in the status line. */
   function pick(date: string) {
+    if (!data) return;
+    // A passed day (the grid shows this week's Monday on): what is open there is in the tab „Noch offen“.
+    if (date < data.today) {
+      setParams({ tab: 'open' }, { replace: true });
+      return;
+    }
     const day = days?.find((d) => d.date === date);
-    if (!day || !data) return;
+    if (!day) return;
     setPickedDay(date);
+    // The band follows the picked day (a swipe past its end, a cell of the grid): the week it lies in.
+    if (date < start || date > addDaysStr(start, SPAN - 1))
+      setWeekStart(addDaysStr(data.today, Math.floor(daysBetween(data.today, date) / SPAN) * SPAN));
     void setMeta(DAY_KEY, { date, on: data.today });
     setStatus(tileName(day, days?.[1]?.date === date));
   }
+
+  /** ‹ › of the band (a week) or of the grid (four weeks); never before today's week. */
+  function page(dir: 1 | -1) {
+    const step = grid ? GRID_DAYS : SPAN;
+    const next = addDaysStr(start, dir * step);
+    setWeekStart(next < now ? now : next);
+  }
+  const bandRange = bandDays?.length
+    ? t.planner.board.range(
+        `${dayName(bandDays[0]!.date)} ${formatDay(bandDays[0]!.date, 'd.')}`,
+        `${dayName(bandDays.at(-1)!.date)} ${formatDay(bandDays.at(-1)!.date, 'd. MMM')}`,
+      )
+    : '';
+  // The band's row: paging, „Heute“ once paged, the switch „4 Wochen“ (on the phone in the sheet's ⋯ – the phone's
+  // stimulus budget). „‹“ only once there is an earlier week to go back to.
+  // Phone, this week, no grid: no row at all – the sheet's swipe pages day by day, ⋯ opens the grid.
+  const bandRow =
+    phone && !grid && start === now ? null : (
+      <div className={styles.bandRow} data-testid="band-row">
+        {start > now ? (
+          <IconButton
+            className={styles.bandControl}
+            label={grid ? t.planner.board.gridPrev : t.planner.board.prev}
+            onClick={() => page(-1)}
+          >
+            <Icon name="chevronLeft" size={16} />
+          </IconButton>
+        ) : null}
+        <span className={styles.bandLabel}>{bandRange}</span>
+        <IconButton
+          className={styles.bandControl}
+          label={grid ? t.planner.board.gridNext : t.planner.board.next}
+          onClick={() => page(1)}
+        >
+          <Icon name="chevronRight" size={16} />
+        </IconButton>
+        {start > now ? (
+          <button type="button" className={styles.textLink} onClick={() => setWeekStart(now)}>
+            {t.planner.board.today}
+          </button>
+        ) : null}
+        {phone ? null : (
+          <button
+            type="button"
+            className={`${styles.textLink} ${styles.bandControl}`}
+            aria-pressed={grid}
+            onClick={() => setGrid((g) => !g)}
+            data-testid="grid-switch"
+          >
+            {t.planner.board.gridView}
+          </button>
+        )}
+      </div>
+    );
 
   // „Danach“ is folded on the phone and open on the desktop until the user says otherwise (device-local).
   const thenOpen = thenStored ?? !phone;
@@ -1085,13 +1194,15 @@ export default function PlannerPage() {
       // The phone's last row is the field alone, its label for screen readers (placeholder and „Eintragen“ say
       // it; M-3: the row fits above the bottom bar on arrival); its examples stand in the plus's sheet.
       labelHidden={inDialog || phone}
-      examples={inDialog || !phone}
+      // The examples help the first entries; once the week holds things they step back (package 4: the band's row
+      // keeps the page's stimulus budget). The phone's plus sheet always has them.
+      examples={inDialog || (!phone && nothingPlanned)}
       formRef={addRef}
     />
   );
 
   // What the sheet says while its day holds nothing: the one empty state of a board without things, else a line.
-  const firstFull = days ? firstDayWithRows(days) : undefined;
+  const firstFull = week ? firstDayWithRows(week) : undefined;
   const emptySheet = boardEmpty ? (
     <EmptyState
       title={t.planner.empty}
@@ -1128,10 +1239,10 @@ export default function PlannerPage() {
   // above the day's sheet.
   // „Nächste Fristen“ (R2): a card of the column beside the sheet only – the phone's context is the waiting group
   // (CONCEPT-DESIGN §4).
-  const deadlines = wide && days ? nextDeadlinesOf(days, waiting) : [];
-  const context = days ? (
+  const deadlines = wide && viewWeek ? nextDeadlinesOf(viewWeek, waiting) : [];
+  const context = viewWeek ? (
     <Context
-      days={days}
+      days={viewWeek}
       before={wide ? <LateGroup rows={late} renderRow={renderLate} /> : undefined}
       deadlines={deadlines}
     >
@@ -1139,7 +1250,8 @@ export default function PlannerPage() {
     </Context>
   ) : null;
   const hasBeside =
-    !!days && (waiting.length > 0 || appointmentsOf(days).length > 0 || deadlines.length > 0);
+    !!viewWeek &&
+    (waiting.length > 0 || appointmentsOf(viewWeek).length > 0 || deadlines.length > 0);
   const hasContext = hasBeside || (wide && late.length > 0);
 
   return (
@@ -1202,8 +1314,15 @@ export default function PlannerPage() {
             openBlock
           ) : (
             <>
-              {days ? (
-                <WeekBand days={days} picked={shownDate} onPick={pick} />
+              {bandDays && data ? (
+                <>
+                  {bandRow}
+                  {grid ? (
+                    <WeekGrid days={bandDays} picked={shownDate} today={data.today} onPick={pick} />
+                  ) : (
+                    <WeekBand days={bandDays} picked={shownDate} onPick={pick} today={data.today} />
+                  )}
+                </>
               ) : (
                 <div className={styles.bandPending} aria-hidden="true" />
               )}
@@ -1338,7 +1457,7 @@ export default function PlannerPage() {
       ) : null}
       {checking && board ? (
         <WeekCheck
-          days={board.days}
+          days={viewWeek ?? board.days.slice(0, SPAN)}
           biggest={biggest}
           titles={titles}
           onClose={() => setChecking(false)}

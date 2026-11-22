@@ -684,3 +684,36 @@ section.sheet .headEnd button[aria-expanded='true'] {
   color: var(--text-muted);
   font-size: var(--text-meta);
 }
+/* The band's row (package 4): paging, the stretch in view, „Heute“ and the switch „4 Wochen“ – one quiet line. */
+.bandRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.bandLabel {
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+  font-variant-numeric: var(--font-num);
+}
+/* „Verschieben …“ (package 4): the four weeks in view and their ‹ ›. */
+.pickPaging {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.pickRange {
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+  font-variant-numeric: var(--font-num);
+}
+/* The band's controls keep a whole touch target (44 px), however small their glyph. */
+.bandControl {
+  min-width: var(--touch);
+  min-height: var(--touch);
+}
+.bandControl[aria-pressed='true'] {
+  color: var(--text);
+  font-weight: var(--weight-semibold);
+}

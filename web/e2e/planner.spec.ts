@@ -445,7 +445,8 @@ test.describe('Planer (week board, package 1)', () => {
     await expect(page.getByRole('menuitem', { name: /Festnageln/ })).toHaveCount(0);
     await page.getByRole('menuitem', { name: 'Verschieben …' }).click();
     const move = page.getByRole('dialog', { name: 'Verschieben: Keller' });
-    await expect(move.getByRole('group').getByRole('button')).toHaveText([
+    // Four weeks from today, a row per week (package 4); ‹ › page by four weeks.
+    await expect(move.getByRole('group').first().getByRole('button')).toHaveText([
       'Mo 9.',
       'Di 10.',
       'Mi 11.',
@@ -454,6 +455,8 @@ test.describe('Planer (week board, package 1)', () => {
       'Sa 14.',
       'So 15.',
     ]);
+    await expect(move.getByRole('group')).toHaveCount(4);
+    await expect(move.getByRole('group').last().getByRole('button').last()).toHaveText('So 6.');
     await move.getByRole('button', { name: 'Mi 11.', exact: true }).click();
     await expect(toast(page)).toContainText('Liegt auf Mi');
     // Nothing else moved: Angebot is still on Monday, alone.
@@ -614,7 +617,9 @@ test.describe('Planer (week board, package 1)', () => {
     expect(results.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
   });
 
-  test('„Woche prüfen“ from the head menu confirms the week in two taps', async ({ page }) => {
+  test('„Zeiten dieser Woche“ from the head menu confirms the week in two taps', async ({
+    page,
+  }) => {
     await enablePlanner(page);
     await ready(page, '/planner');
     // The page's ⋯ sits in the head's title row (planner hub R1), not beside the field or in a row of its own.
@@ -625,8 +630,8 @@ test.describe('Planer (week board, package 1)', () => {
       page.locator('main form').getByRole('button', { name: 'Weitere Optionen' }),
     ).toHaveCount(0);
     await page.getByRole('button', { name: 'Weitere Optionen' }).click();
-    await page.getByRole('menuitem', { name: 'Woche prüfen' }).click();
-    const dialog = page.getByRole('dialog', { name: 'Woche prüfen' });
+    await page.getByRole('menuitem', { name: 'Zeiten dieser Woche' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Zeiten dieser Woche' });
     await dialog.getByRole('button', { name: 'Mehr Zeit' }).first().click();
     await dialog.getByRole('button', { name: 'Passt so' }).click();
     await expect(page.getByText('Woche bestätigt.')).toBeVisible();
@@ -768,7 +773,7 @@ test.describe('Planer (calendar chip, prefix, sentences – package 2)', () => {
     expect(requests).toEqual([]);
   });
 
-  test('Monday: „Woche prüfen“ line only with the switch; × hides it, also after a reload', async ({
+  test('Monday: „Zeiten dieser Woche“ line only with the switch; × hides it, also after a reload', async ({
     page,
   }) => {
     await enablePlanner(page);
@@ -777,16 +782,16 @@ test.describe('Planer (calendar chip, prefix, sentences – package 2)', () => {
     await expect(page.getByTestId('week-check-link')).toHaveCount(0);
     await ready(page, '/settings/barrierefreiheit');
     await openMoreFocus(page);
-    const sw = page.getByRole('switch', { name: '„Woche prüfen“ am Montag' });
+    const sw = page.getByRole('switch', { name: '„Zeiten dieser Woche“ am Montag' });
     await sw.click();
     await expect(sw).toHaveAttribute('aria-checked', 'true');
     await ready(page, '/planner');
     const line = page.getByTestId('week-check-link');
-    await expect(line).toContainText('Woche prüfen · 2 Schritte');
+    await expect(line).toContainText('Zeiten dieser Woche · 2 Schritte');
     await expect(page.getByRole('dialog')).toHaveCount(0);
     // The line opens the sheet (Mo–So and the three biggest things) only when tapped.
-    await line.getByRole('button', { name: 'Woche prüfen · 2 Schritte' }).click();
-    await expect(page.getByRole('dialog', { name: 'Woche prüfen' })).toBeVisible();
+    await line.getByRole('button', { name: 'Zeiten dieser Woche · 2 Schritte' }).click();
+    await expect(page.getByRole('dialog', { name: 'Zeiten dieser Woche' })).toBeVisible();
     await page.keyboard.press('Escape');
     await line.getByRole('button', { name: 'Für diese Woche ausblenden' }).click();
     await expect(page.getByTestId('week-check-link')).toHaveCount(0);
@@ -796,10 +801,10 @@ test.describe('Planer (calendar chip, prefix, sentences – package 2)', () => {
     // Switched off: no line, the sheet stays in ⋯.
     await ready(page, '/settings/barrierefreiheit');
     await openMoreFocus(page);
-    await page.getByRole('switch', { name: '„Woche prüfen“ am Montag' }).click();
+    await page.getByRole('switch', { name: '„Zeiten dieser Woche“ am Montag' }).click();
     await ready(page, '/planner');
     await page.getByRole('button', { name: 'Weitere Optionen' }).click();
-    await expect(page.getByRole('menuitem', { name: 'Woche prüfen' })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: 'Zeiten dieser Woche' })).toBeVisible();
     await expect(page.getByTestId('week-check-link')).toHaveCount(0);
   });
 });
@@ -994,15 +999,15 @@ test.describe('Planer (time windows, templates – package 5)', () => {
     await expect(grid.getByRole('button').filter({ hasText: 'Plan · ' })).toHaveCount(0);
   });
 
-  test('„Woche prüfen“ → „Krank“: today is free, one calm sentence, the thing stays where it lies, undo', async ({
+  test('„Zeiten dieser Woche“ → „Krank“: today is free, one calm sentence, the thing stays where it lies, undo', async ({
     page,
   }) => {
     await enablePlanner(page);
     await ready(page, '/planner');
     await enter(page, 'Blogpost 90min');
     await page.getByRole('button', { name: 'Weitere Optionen' }).click();
-    await page.getByRole('menuitem', { name: 'Woche prüfen' }).click();
-    const dialog = page.getByRole('dialog', { name: 'Woche prüfen' });
+    await page.getByRole('menuitem', { name: 'Zeiten dieser Woche' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Zeiten dieser Woche' });
     await dialog
       .getByRole('group', { name: 'Vorlage für die Woche' })
       .getByRole('button', { name: 'Krank' })
@@ -1256,5 +1261,49 @@ test.describe('Planer (planner rethink, package 3: „Noch offen“ in one move)
     await expect(open.locator('li')).toHaveCount(2);
     await expect(open).toContainText('Steuer');
     await expect(open).toContainText('Blogpost');
+  });
+});
+
+test.describe('Planer (planner rethink, package 4: more than a week)', () => {
+  test.beforeEach(({ isMobile }) => {
+    test.skip(isMobile, 'wide board only');
+  });
+
+  test('the band pages by week and back to today; „4 Wochen“ shows four weeks from Monday, a passed day says „offen“ and leads to the tab', async ({
+    page,
+  }) => {
+    await enablePlanner(page);
+    await ready(page, '/planner');
+    await enter(page, 'Keller 30min');
+    await expect(toast(page)).toContainText('Liegt auf Mo');
+    // Thursday: Monday's thing is open.
+    await page.clock.setFixedTime(new Date('2026-11-12T10:00:00'));
+    await ready(page, '/planner');
+    const row = page.getByTestId('band-row');
+    await expect(row).toContainText('Do 12. – Mi 18. Nov.');
+    await expect(row.getByRole('button', { name: 'Woche davor' })).toHaveCount(0);
+    await row.getByRole('button', { name: 'Woche danach' }).click();
+    await expect(row).toContainText('Do 19. – Mi 25. Nov.');
+    await expect(page.getByTestId('week-2026-11-25')).toBeVisible();
+    await row.getByRole('button', { name: 'Heute' }).click();
+    await expect(row).toContainText('Do 12. – Mi 18. Nov.');
+
+    await row.getByRole('button', { name: '4 Wochen' }).click();
+    await expect(row.getByRole('button', { name: '4 Wochen' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    const grid = page.getByRole('grid', { name: 'Vier Wochen' });
+    await expect(grid.getByRole('row')).toHaveCount(4);
+    await expect(grid.getByRole('gridcell')).toHaveCount(28);
+    // From this week's Monday: the passed Monday says „offen“, without a figure; today is the current date.
+    const monday = page.getByTestId('week-2026-11-09');
+    await expect(monday).toHaveAccessibleName('Montag, 9. November: offen');
+    await expect(monday).not.toContainText(/\d+ Ding/);
+    await expect(page.getByTestId('week-2026-11-12')).toHaveAttribute('aria-current', 'date');
+    await expect(page.getByTestId('week-2026-12-06')).toBeVisible();
+    await monday.click();
+    await expect(page).toHaveURL(/tab=open/);
+    await expect(page.getByTestId('planner-open')).toContainText('Keller');
   });
 });

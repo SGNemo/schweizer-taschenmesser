@@ -126,3 +126,8 @@
     white-space: normal;
   }
 }
+
+/* A passed day (package 4): the muted ink token, not a lower opacity – it stays readable. */
+.tile[data-passed] .pick {
+  color: var(--text-muted);
+}

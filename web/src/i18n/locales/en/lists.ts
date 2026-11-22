@@ -9,7 +9,7 @@ export const lists: Strings['lists'] = {
     hint: 'A small checklist to tick off. Once done, “Reset” makes it ready again.',
     add: 'Create list',
     created: 'List created.',
-    weekInPlanner: 'Check the week in the planner',
+    weekInPlanner: 'Times of this week in the planner',
     inRoutines: (name: string) => `${name} in Routines`,
     morning: {
       name: 'Morning routine',

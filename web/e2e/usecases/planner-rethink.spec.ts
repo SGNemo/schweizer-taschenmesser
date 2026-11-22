@@ -52,11 +52,12 @@ const IST: Record<string, Figures> = {
   'U2 Neues am gewählten Tag': { landsOnChosenDay: 'ja', collateral: 0 },
   'U3 Neues an einem vollen Tag': { landsOnChosenDay: 'ja', collateral: 0 },
   'U4 Neues an einem freien Tag': { landsOnChosenDay: 'ja', collateral: 0 },
+  // Package 4 (2026-11-22): „Verschieben …“ offers four weeks – ⋯ · „Verschieben …“ · the day; the grid shows it.
   'U5 Ding auf einen Tag in drei Wochen': {
-    possible: 'nein',
-    taps: 2,
-    keys: 25,
-    dayVisibleInPlanner: 'nein',
+    possible: 'ja',
+    taps: 3,
+    keys: 0,
+    dayVisibleInPlanner: 'ja',
     collateral: 0,
   },
   // Package 2 (2026-11-22): the lock is one tap on the row (package 1: ⋯ and „Fest an diesem Tag“, 2 taps).
@@ -581,6 +582,9 @@ test('U5 Ding auf einen Tag in drei Wochen', async ({ page }, info) => {
   }
   const after = await settled(page);
   const bySentence = after['Angebot'] === IN_THREE_WEEKS;
+  // Is the day there to look at (package 4: the switch „4 Wochen“ in the band's row; not counted – a look)?
+  const gridSwitch = page.getByTestId('grid-switch');
+  if (await gridSwitch.count()) await gridSwitch.click();
   const weekTile = await page.getByTestId(`week-${IN_THREE_WEEKS}`).count();
   record(
     info,

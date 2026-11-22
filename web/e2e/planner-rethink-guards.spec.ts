@@ -199,3 +199,34 @@ test.describe('phone', () => {
     await expect(page.getByRole('status').filter({ hasText: 'Nicht mehr fest' })).toBeVisible();
   });
 });
+
+for (const scheme of ['light', 'dark'] as const) {
+  test(`axe: the band's row and the 4-week grid with a passed day (${scheme})`, async ({
+    page,
+    isMobile,
+  }) => {
+    await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' });
+    await plannerOn(page);
+    await page.goto('/planner');
+    await enter(page, 'Keller 30 Min');
+    await expect(page.getByRole('status').filter({ hasText: 'Liegt auf Di' })).toBeVisible();
+    // Sunday: the grid starts on Monday 28 Sep, so whatever was placed this week has passed.
+    await page.clock.setFixedTime(new Date('2026-10-04T10:00:00'));
+    await page.goto('/planner');
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    if (isMobile) {
+      await page.getByRole('button', { name: 'Weitere Optionen', exact: true }).first().click();
+      await page.getByRole('menuitem', { name: '4 Wochen zeigen' }).click();
+    } else await page.getByTestId('grid-switch').click();
+    await expect(page.getByRole('grid', { name: 'Vier Wochen' })).toBeVisible();
+    await expect(page.getByTestId('week-2026-09-29')).toHaveAccessibleName(
+      'Dienstag, 29. September: offen',
+    );
+    await audit(page, `band row and grid (${scheme})`);
+    // 412 px: no sideways scroll.
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(0);
+  });
+}

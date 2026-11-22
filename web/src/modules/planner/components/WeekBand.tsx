@@ -1,6 +1,6 @@
 import { type KeyboardEvent, useRef } from 'react';
 import { dayName } from '@/core/plan/explain';
-import { formatDay } from '@/core/time/dates';
+import { addDaysStr, formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Progress } from '@/ui';
 import type { BoardDay } from '../board';
@@ -21,8 +21,16 @@ export function dayWords(day: Pick<BoardDay, 'date' | 'isToday'>, tomorrow: bool
       : full;
 }
 
+/** A day before today (package 4: a passed day in view): it says „offen“ while it holds something, never a figure. */
+export const isPassed = (day: Pick<BoardDay, 'date'>, today: string): boolean => day.date < today;
+
 /** A tile's accessible name: „Morgen, Montag, 16. November: 37 Min frei von 3 h 12 · 9 Dinge“. */
-export function tileName(day: BoardDay, tomorrow: boolean): string {
+export function tileName(day: BoardDay, tomorrow: boolean, today?: string): string {
+  if (today && isPassed(day, today))
+    return t.planner.board.cellName(
+      dayWords(day, false),
+      day.rows.length > 0 ? t.planner.board.open : '',
+    );
   const n = thingCount(day);
   return t.planner.board.tileName(
     dayWords(day, tomorrow),
@@ -40,10 +48,13 @@ export function WeekBand({
   days,
   picked,
   onPick,
+  today,
 }: {
   days: readonly BoardDay[];
   picked: string | undefined;
   onPick: (date: string) => void;
+  /** Today ('YYYY-MM-DD'): a day before it is a passed day („offen“, no load). Default: none is passed. */
+  today?: string;
 }) {
   const box = useRef<HTMLDivElement>(null);
   const most = Math.max(1, ...days.map((d) => d.usable));
@@ -82,10 +93,18 @@ export function WeekBand({
           const n = thingCount(d);
           const state = capacityState(d);
           const number = formatDay(d.date, 'd.');
+          const passed = !!today && isPassed(d, today);
+          // A passed day: „offen“ while something of it is open, else nothing – never a figure, never a bar.
+          const passedWord = passed && d.rows.length > 0 ? t.planner.board.open : '';
           return (
             // The tile is a box with the button over all of it and the bar laid on top (a bar is a `div`: it may
             // not stand inside a button). The bar takes no pointer, so the whole tile answers.
-            <div key={d.date} className={styles.tile} data-off={d.off || undefined}>
+            <div
+              key={d.date}
+              className={styles.tile}
+              data-off={d.off || undefined}
+              data-passed={passed || undefined}
+            >
               <button
                 type="button"
                 className={styles.pick}
@@ -97,7 +116,9 @@ export function WeekBand({
               >
                 {/* The name is the sentence; the two visible forms are its short picture (hidden from the name,
                     so the tile is not read twice). */}
-                <span className="sr-only">{tileName(d, i === 1)}</span>
+                <span className="sr-only">
+                  {tileName(d, today ? d.date === addDaysStr(today, 1) : i === 1, today)}
+                </span>
                 <span className={styles.wide} aria-hidden="true">
                   <span className={styles.top}>
                     {/* Weekday and number stay together (a no-break space); a narrow tile breaks „Heute ·“
@@ -107,22 +128,22 @@ export function WeekBand({
                         ? t.planner.board.todayIs(`${dayName(d.date)}\u00a0${number}`)
                         : `${dayName(d.date)}\u00a0${number}`}
                     </span>
-                    {n > 0 ? (
+                    {n > 0 && !passed ? (
                       <span className={styles.count}>{t.planner.board.things(n)}</span>
                     ) : null}
                   </span>
-                  <span className={styles.state}>{capacityTile(d)}</span>
+                  <span className={styles.state}>{passed ? passedWord : capacityTile(d)}</span>
                 </span>
                 <span className={styles.compact} aria-hidden="true">
                   <span className={styles.day}>{dayName(d.date)}</span>
                   <span className={styles.day}>{formatDay(d.date, 'd')}</span>
                   {/* One unit on every tile (M-2): the free time or one state word („frei“, „voll“); the count of
                       things is in the tile's name only. */}
-                  <span className={styles.state}>{capacityShort(d)}</span>
+                  <span className={styles.state}>{passed ? passedWord : capacityShort(d)}</span>
                 </span>
               </button>
-              {/* The button's name says the load in words; the bar is its picture. */}
-              <div className={styles.bar} aria-hidden="true">
+              {/* The button's name says the load in words; the bar is its picture (none for a passed day). */}
+              <div className={styles.bar} aria-hidden="true" hidden={passed}>
                 <Progress
                   value={d.off ? 0 : d.planned}
                   max={Math.max(d.usable, 1)}

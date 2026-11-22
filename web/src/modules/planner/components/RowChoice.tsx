@@ -5,7 +5,7 @@ import { addDaysStr, formatDay } from '@/core/time/dates';
 import { DAY_PARTS, type DayPart } from '@/core/plan/types';
 import { today } from '@/core/time/now';
 import { t } from '@/strings';
-import { Chip, Chips, Dialog } from '@/ui';
+import { Chip, Chips, Dialog, Icon, IconButton } from '@/ui';
 import {
   asBreak,
   BREAK_CHOICES,
@@ -39,8 +39,71 @@ export type RowChoiceState =
  * acts and closes; the toast carries the undo.
  */
 /** Without the board's days: the seven days from today, the board's horizon. */
-const weekFromToday = (): string[] =>
-  Array.from({ length: BOARD_DAYS }, (_, i) => addDaysStr(today(), i));
+/** „Verschieben …“ shows four weeks (package 4); ‹ › page by as many. */
+const PICK_DAYS = 28;
+
+/**
+ * The days of „Verschieben …“ (package 4): four weeks from today in rows of a week, ‹ › for the four weeks before or
+ * after – a day in three weeks is ⋯ · „Verschieben …“ · the day: three taps. One tap on a day acts.
+ */
+function DayPick({
+  label,
+  first,
+  on,
+  onPick,
+}: {
+  label: string;
+  /** The first day offered: today. */
+  first: string;
+  /** The day the thing lies on (selected), if any. */
+  on?: string;
+  onPick: (date: string) => void;
+}) {
+  const [offset, setOffset] = useState(0);
+  const from = addDaysStr(first, offset);
+  const dates = Array.from({ length: PICK_DAYS }, (_, i) => addDaysStr(from, i));
+  const weeks = Array.from({ length: PICK_DAYS / BOARD_DAYS }, (_, w) =>
+    dates.slice(w * BOARD_DAYS, w * BOARD_DAYS + BOARD_DAYS),
+  );
+  return (
+    <>
+      <div className={styles.pickPaging}>
+        <IconButton
+          label={t.planner.board.gridPrev}
+          disabled={offset === 0}
+          onClick={() => setOffset((o) => Math.max(0, o - PICK_DAYS))}
+        >
+          <Icon name="chevronLeft" size={16} />
+        </IconButton>
+        <span className={styles.pickRange}>
+          {t.planner.board.range(
+            `${dayName(dates[0]!)} ${formatDay(dates[0]!, 'd.')}`,
+            `${dayName(dates.at(-1)!)} ${formatDay(dates.at(-1)!, 'd. MMM')}`,
+          )}
+        </span>
+        <IconButton
+          label={t.planner.board.gridNext}
+          onClick={() => setOffset((o) => o + PICK_DAYS)}
+        >
+          <Icon name="chevronRight" size={16} />
+        </IconButton>
+      </div>
+      {weeks.map((week) => (
+        <Chips key={week[0]} label={label}>
+          {week.map((date) => (
+            <Chip
+              key={date}
+              // „Mi 18.“ – weekday and day, as on the week band's tiles.
+              label={`${dayName(date)} ${formatDay(date, 'd.')}`}
+              selected={on === date}
+              onClick={() => onPick(date)}
+            />
+          ))}
+        </Chips>
+      ))}
+    </>
+  );
+}
 
 export function RowChoice({
   choice,
@@ -61,19 +124,15 @@ export function RowChoice({
     return (
       <Dialog open onClose={onClose} title={heading}>
         <p className={styles.capacity}>{r.moveHint}</p>
-        <Chips label={heading}>
-          {(days ?? weekFromToday()).map((date) => (
-            <Chip
-              key={date}
-              label={`${dayName(date)} ${formatDay(date, 'd.')}`}
-              onClick={() => {
-                onClose();
-                choice.onDone?.();
-                void moveMany(choice.entries, date, titles);
-              }}
-            />
-          ))}
-        </Chips>
+        <DayPick
+          label={heading}
+          first={days?.[0] ?? today()}
+          onPick={(date) => {
+            onClose();
+            choice.onDone?.();
+            void moveMany(choice.entries, date, titles);
+          }}
+        />
       </Dialog>
     );
   }
@@ -98,17 +157,12 @@ export function RowChoice({
     return (
       <Dialog open onClose={onClose} title={r.moveTitle(title)}>
         <p className={styles.capacity}>{r.moveHint}</p>
-        <Chips label={r.moveTitle(title)}>
-          {(days ?? weekFromToday()).map((date) => (
-            <Chip
-              key={date}
-              // „Mi 18.“ – weekday and day, as on the week band's tiles.
-              label={`${dayName(date)} ${formatDay(date, 'd.')}`}
-              selected={choice.on === date}
-              onClick={() => pickDay(date)}
-            />
-          ))}
-        </Chips>
+        <DayPick
+          label={r.moveTitle(title)}
+          first={days?.[0] ?? today()}
+          {...(choice.on ? { on: choice.on } : {})}
+          onPick={pickDay}
+        />
       </Dialog>
     );
   const heading =
