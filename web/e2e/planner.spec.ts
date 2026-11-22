@@ -427,7 +427,7 @@ test.describe('Planer (week board, package 1)', () => {
     await expect(page.getByTestId('all-today')).toHaveCount(0);
   });
 
-  test('Erledigt and Rückgängig, „Verschieben …“ lays, „Fest an diesem Tag“ locks, Später; the ToDo page shows „im Plan“', async ({
+  test('Erledigt and Rückgängig, „Verschieben …“ lays, the lock on the row locks, Später; the ToDo page shows „im Plan“', async ({
     page,
   }) => {
     await enablePlanner(page);
@@ -463,22 +463,28 @@ test.describe('Planer (week board, package 1)', () => {
     const keller = wednesday.locator('li', { hasText: 'Keller' });
     await expect(keller).toBeVisible();
     await expect(keller).not.toContainText('fest');
-    // The lock is its own action in ⋯ → „Mehr“: „Fest an diesem Tag“, shown on the row; the way back beside it.
+    // The lock is one tap on the row (package 2): a toggle named „Fest an diesem Tag: Keller“; the menu has no entry.
+    const lock = keller.getByRole('button', { name: 'Fest an diesem Tag: Keller' });
+    await expect(lock).toHaveAttribute('aria-pressed', 'false');
     await keller.getByRole('button', { name: 'Aktionen für Keller' }).click();
+    await expect(page.getByRole('menuitem', { name: 'Fest an diesem Tag' })).toHaveCount(0);
     await expect(page.getByRole('menuitem', { name: 'Nicht mehr fest' })).toHaveCount(0);
-    await page.getByRole('menuitem', { name: 'Fest an diesem Tag' }).click();
-    await expect(toast(page)).toContainText('Fest am ');
+    await page.keyboard.press('Escape');
+    await lock.click();
+    await expect(toast(page)).toContainText('Fest am Mi');
+    await expect(lock).toHaveAttribute('aria-pressed', 'true');
     await expect(keller).toContainText('fest');
-    // „Später“ moves the row to the next day; the lock stays with it.
+    // „Später“ moves the row to the next day; the lock stays with it and the toast says so.
     await keller.getByRole('button', { name: 'Aktionen für Keller' }).click();
     await page.getByRole('menuitem', { name: 'Später' }).click();
-    await expect(toast(page)).toContainText('Liegt auf Do');
+    await expect(toast(page)).toContainText('Keller liegt auf Do · fest');
     const kellerThu = (await day(page, '2026-11-12')).locator('li', { hasText: 'Keller' });
+    const lockThu = kellerThu.getByRole('button', { name: 'Fest an diesem Tag: Keller' });
+    await expect(lockThu).toHaveAttribute('aria-pressed', 'true');
     await expect(kellerThu).toContainText('fest');
-    await kellerThu.getByRole('button', { name: 'Aktionen für Keller' }).click();
-    await expect(page.getByRole('menuitem', { name: 'Fest an diesem Tag' })).toHaveCount(0);
-    await page.getByRole('menuitem', { name: 'Nicht mehr fest' }).click();
+    await lockThu.click();
     await expect(toast(page)).toContainText('Nicht mehr fest');
+    await expect(lockThu).toHaveAttribute('aria-pressed', 'false');
     await expect(kellerThu).not.toContainText('fest');
     // Später on today's thing: its row lies on tomorrow; in Bald the ToDo page says where it lies in the plan.
     await (
@@ -1079,5 +1085,101 @@ test.describe('Planer (package 3 of „Wochenende retten“: „Rest verteilen�
       .getByRole('button', { name: /eintragen$/ })
       .click();
     await expect(page.getByTestId('planner-passed')).toHaveCount(0);
+  });
+});
+
+test.describe('Planer (planner rethink, package 2: lock words, overbooking, chips)', () => {
+  test.beforeEach(({ isMobile }) => {
+    test.skip(isMobile, 'wide board only');
+  });
+
+  test('a deadline gets „Vorschlag: … · Frist Do“; a ToDo date shows muted on its day; a full day says so and spreads; „Do fest“ locks', async ({
+    page,
+  }) => {
+    await enablePlanner(page);
+    await put(page, 'invoices_invoice', {
+      id: 'inv-strom',
+      payee: 'Strom',
+      amountMinor: 4200,
+      dueDate: '2026-11-12',
+      status: 'open',
+    });
+    await put(page, 'todos_list', { id: 'inbox', name: 'Eingang', order: 0 });
+    await put(page, 'todos_task', {
+      id: 'e2e-arzt',
+      listId: 'inbox',
+      title: 'Arzt anrufen',
+      done: false,
+      priority: 0,
+      order: 0,
+      estimateMin: 15,
+      plannedFor: '2026-11-11',
+    });
+    await ready(page, '/planner');
+
+    // The deadline: no day yet, a proposal from one dry run; one tap lays it, nothing else.
+    await openWaiting(page);
+    const chip = waiting(page).getByTestId('proposal-chip');
+    await expect(chip).toHaveText(/^Vorschlag: Mo · Frist DoÜbernehmen$/);
+    await chip.getByRole('button', { name: 'Übernehmen: Strom bezahlen auf Mo' }).click();
+    await expect(toast(page)).toContainText('Liegt auf Mo');
+    await expect(today(page)).toContainText('Strom bezahlen');
+
+    // The date set in ToDos: a muted row on Wednesday, counted nowhere; „Hierher legen“ lays it.
+    const wed = await day(page, '2026-11-11');
+    await expect(wed.locator('li')).toHaveCount(1);
+    await expect(wed.locator('li')).toContainText('In ToDos: Mi');
+    await expect(page.getByTestId('week-2026-11-11')).toContainText('3 h 12 frei');
+    await wed.getByRole('button', { name: 'Hierher legen: Arzt anrufen auf Mi' }).click();
+    await expect(toast(page)).toContainText('Liegt auf Mi');
+    await expect(wed.locator('li')).toContainText('Arzt anrufen');
+    await expect(wed).not.toContainText('In ToDos');
+
+    // A full day: entering says so in the one toast, the sheet says it in one calm line (no symbol), the tile
+    // says „+ … mehr“.
+    await page.getByTestId('week-2026-11-09').click();
+    await enter(page, 'Umzug 3 Std');
+    await expect(toast(page)).toContainText('Liegt auf Mo');
+    await expect(page.getByTestId('planner-over-line')).toHaveCount(0);
+    await enter(page, 'Keller 1 Std');
+    await expect(toast(page)).toContainText('Liegt auf Mo. Jetzt ist mehr geplant als planbar.');
+    const over = page.getByTestId('planner-over-line');
+    await expect(over).toHaveText(/^58 Min mehr als planbarRest verteilen$/);
+    await expect(over.locator('svg')).toHaveCount(0);
+    await expect(page.getByTestId('week-2026-11-09')).toContainText('+ 58 Min mehr');
+    // „Rest verteilen“ of this day: a preview of what is not „fest“; the lock keeps Strom on Monday.
+    await today(page).getByRole('button', { name: 'Fest an diesem Tag: Strom bezahlen' }).click();
+    await expect(toast(page)).toContainText('Fest am Mo');
+    await over.getByRole('button', { name: 'Rest verteilen' }).click();
+    const preview = page.getByTestId('plan-preview');
+    await expect(preview).toContainText(
+      'Was an diesem Tag nicht fest ist, geht auf diesen oder die nächsten Tage.',
+    );
+    await expect(preview).toContainText('1 bleibt: fest');
+    await expect(today(page)).toContainText('Umzug');
+    await preview.getByRole('button', { name: 'Übernehmen' }).click();
+    await expect(toast(page)).toContainText('Verteilt.');
+    // Monday keeps the fixed Strom and what fits beside it; the other thing goes to a later day.
+    await expect(today(page)).toContainText('Strom bezahlen');
+    await expect(today(page).locator('li')).toHaveCount(2);
+    await expect(page.getByTestId('planner-over-line')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Rückgängig' }).last().click();
+    await expect(today(page).locator('li')).toHaveCount(3);
+    await expect(page.getByTestId('planner-over-line')).toBeVisible();
+
+    // A lock word next to a day: the thing lies there „fest“; without a day the word is the title.
+    await enter(page, 'Zahnarzt Do fest');
+    await expect(toast(page)).toContainText('Zahnarzt liegt auf Do · fest');
+    const thu = await day(page, '2026-11-12');
+    await expect(thu.getByRole('button', { name: 'Fest an diesem Tag: Zahnarzt' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await enter(page, 'Bin fest');
+    await expect(toast(page)).toContainText('Liegt auf Do');
+    await expect(thu.getByRole('button', { name: 'Fest an diesem Tag: Bin fest' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
   });
 });

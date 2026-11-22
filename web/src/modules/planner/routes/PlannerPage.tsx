@@ -551,6 +551,11 @@ export default function PlannerPage() {
     return true;
   }
 
+  /**
+   * The phone's stimulus budget (`e2e/usecases/kopf-leer.spec.ts` path D): the lock stands on a row that is „fest“ (it
+   * replaces the word and „Nicht mehr fest“); an open row is locked from ⋯ there. Wider pages show it on every row.
+   */
+  const lockHidden = (row: BoardRow) => phone && !row.pinned;
   /** The lock on a row: one tap, one undo; a dated turn without a row gets its row on the day it shows on. */
   const lockOf = (row: BoardRow, date: string) =>
     row.entry && !row.fixed
@@ -582,8 +587,8 @@ export default function PlannerPage() {
         reason={reason}
         whyOpen={why === row.unitId}
         dueClock={dueClock}
-        menu={rowMenu(row, day.date, reason, { tick })}
-        lock={lockOf(row, day.date)}
+        menu={rowMenu(row, day.date, reason, { tick, lockInMenu: lockHidden(row) })}
+        lock={lockHidden(row) ? undefined : lockOf(row, day.date)}
         onDone={tick ? () => done(row) : undefined}
         onLater={
           row.entry && canAssign(row.entry.moduleId)
@@ -609,8 +614,12 @@ export default function PlannerPage() {
         dueClock={dueClock}
         // Under its day's head the row need not repeat the day; among the fixed things (several days) it says it.
         was={row.pinned ? row.date : undefined}
-        menu={rowMenu(row, undefined, undefined, { tick, open: true })}
-        lock={lockOf(row, row.date)}
+        menu={rowMenu(row, undefined, undefined, {
+          tick,
+          open: true,
+          lockInMenu: lockHidden(row),
+        })}
+        lock={lockHidden(row) ? undefined : lockOf(row, row.date)}
         onDone={tick ? () => done(row) : undefined}
         onLater={
           row.entry && canAssign(row.entry.moduleId)

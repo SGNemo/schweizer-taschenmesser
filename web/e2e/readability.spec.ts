@@ -275,3 +275,50 @@ test.describe('Reading aid keeps words whole and follows the state of controls',
     expect(await look()).toEqual(after);
   });
 });
+
+/** The contrast of an element's text against the first opaque background behind it (WCAG relative luminance). */
+async function textContrast(page: Page, testId: string): Promise<number> {
+  return page.getByTestId(testId).evaluate((el) => {
+    const rgb = (c: string) => (c.match(/[\d.]+/g) ?? []).map(Number);
+    const lum = ([r, g, b]: number[]) => {
+      const f = (v: number) => {
+        const s = v / 255;
+        return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+      };
+      return 0.2126 * f(r!) + 0.7152 * f(g!) + 0.0722 * f(b!);
+    };
+    let bg: number[] | undefined;
+    for (let n: Element | null = el; n && !bg; n = n.parentElement) {
+      const c = rgb(getComputedStyle(n).backgroundColor);
+      if (c.length >= 3 && (c[3] ?? 1) > 0.99) bg = c;
+    }
+    const fg = lum(rgb(getComputedStyle(el).color));
+    const back = lum(bg ?? [255, 255, 255]);
+    return (Math.max(fg, back) + 0.05) / (Math.min(fg, back) + 0.05);
+  });
+}
+
+test.describe('Planner: the overbooking line (planner rethink, package 2)', () => {
+  for (const scheme of ['light', 'dark'] as const) {
+    test(`„… mehr als planbar“ and its link read at AA, no symbol, no warning colour (${scheme})`, async ({
+      page,
+    }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await enable(page, 'todos');
+      await enable(page, 'planner');
+      await ready(page, '/planner');
+      const field = page.getByRole('textbox', { name: 'Eintragen oder sagen', exact: true });
+      await field.fill('Umzug 5 Std');
+      await field.press('Enter');
+      const line = page.getByTestId('planner-over-line');
+      await expect(line).toHaveText(/^1 h 48 mehr als planbarRest verteilen$/);
+      await expect(line.locator('svg')).toHaveCount(0);
+      expect(await textContrast(page, 'planner-over-line')).toBeGreaterThanOrEqual(4.5);
+      const results = await new AxeBuilder({ page })
+        .include('[data-testid="planner-over-line"]')
+        .withRules(['color-contrast'])
+        .analyze();
+      expect(results.violations).toEqual([]);
+    });
+  }
+});

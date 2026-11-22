@@ -9,6 +9,7 @@ import {
   later,
   markDone,
   markDue,
+  setLocked,
   sourceAbilities,
   type SourceAbility,
   unmarkDue,
@@ -59,7 +60,13 @@ export function useRowMenu(ctx: {
     row: BoardRow | WaitingRow,
     date?: string,
     reason?: string,
-    opts: { tick?: boolean; late?: boolean; open?: boolean } = {},
+    opts: {
+      tick?: boolean;
+      late?: boolean;
+      open?: boolean;
+      /** The row shows no lock control (phone, not „fest“): „Fest an diesem Tag“ stays in ⋯. */
+      lockInMenu?: boolean;
+    } = {},
   ): RowMenuItem[] => {
     const e = row.entry;
     if (!e || !ctx.today) return [];
@@ -162,7 +169,23 @@ export function useRowMenu(ctx: {
       ...(excluded
         ? [{ id: 'include', label: t.planner.row.include, onSelect: () => void include(e, titles) }]
         : [
-            // „fest“ is the lock on the row itself (one tap, `ThingRow`), not an entry here.
+            // „fest“ is the lock on the row itself (one tap, `ThingRow`). Where the row shows no lock (the phone's stimulus
+            // budget keeps it for rows that are „fest“), locking stays here.
+            ...(opts.lockInMenu && 'pinned' in row && !row.pinned
+              ? [
+                  {
+                    id: 'pin',
+                    label: t.planner.row.pin,
+                    onSelect: () =>
+                      void setLocked(
+                        e,
+                        true,
+                        titles,
+                        'derived' in row && row.derived ? day : undefined,
+                      ),
+                  },
+                ]
+              : []),
             {
               id: 'exclude',
               label: t.planner.row.exclude,
