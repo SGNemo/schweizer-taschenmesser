@@ -24,6 +24,12 @@ Do this on a **fresh Windows VM** and a **real Android device** before a release
 - [ ] **Update N → N+1:** install N+1 over N (same signature); data stays.
 - [ ] Uninstall: app removed; no leftover entry in Settings → Apps; keystore secrets gone with it.
 
+## Security
+- [ ] Verdict per channel read: [security/LAUNCH-REVIEW-2026-11.md](security/LAUNCH-REVIEW-2026-11.md). No channel with "no" is published; every condition is fixed or accepted with a reason (note it in the release issue).
+- [ ] SC1 closed: every step of the private note is done.
+- [ ] Per channel: every medium finding listed in its verdict row is merged as a fix (the three fix PRs of the review, packages of [security/LAUNCH-REVIEW-2026-11-PACKAGES.md](security/LAUNCH-REVIEW-2026-11-PACKAGES.md)) or accepted in writing in the release issue (which to fix and which may be accepted: the rule line above the verdict table in the review).
+- [ ] Hand tests SEC-1 to SEC-14 in [MANUAL-TESTS.md](MANUAL-TESTS.md) are done; deviations are in the release issue.
+
 ## Sign-off
 - [ ] Nothing in the screenshots/logs contains real data.
 - [ ] Known problems written into the release notes.

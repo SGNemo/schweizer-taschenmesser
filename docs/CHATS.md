@@ -17,6 +17,8 @@ Not stored in this file: `npm run chats:sync` prints the list from GitHub (`chat
 
 **Handtests:** alle in [MANUAL-TESTS.md](MANUAL-TESTS.md), eine Liste je Gerät; im PR #704 die Liste „möglicherweise veraltet“ bestätigen.
 
+**Sicherheitskontrolle – Urteil und Blocker:** [LAUNCH-REVIEW-2026-11](security/LAUNCH-REVIEW-2026-11.md): Windows, Android, Website „no“ bis SC1 zu ist (private Notiz); dann je Kanal jeden „medium“-Befund seiner Zeile per Fix mergen oder im Release-Issue schriftlich annehmen (Empfehlungen dort); Handtests SEC-1–14.
+
 **Entscheidungen** (Empfehlung in Klammern):
 
 1. Übersicht ohne Daten springt je Laden um 0,18: hinnehmen oder Raster erst nach allen Karten packen? ([qa/round-6](qa/round-6/STATUS.md))
@@ -30,6 +32,7 @@ Not stored in this file: `npm run chats:sync` prints the list from GitHub (`chat
 9. Planer-Zentrale ([planner-hub](design/planner-hub/README.md)): läuft ohne Stopp durch; ansehen: Richtung A und die zwei zurückgenommenen Entscheidungen D2/D3 (Mockups im PR-Text von #922), Reiz-Budget der Planer-Ansichten für R1. (so lassen)
 10. Austausch Handy ↔ PC ([CONCEPT §11](design/device-exchange/CONCEPT.md)): Handy holt erst beim Öffnen? (ja, v1) · nur Heimnetz? (ja) · Name „Austausch“? (ja) · Regelzeile (Paket R) mergen.
 11. „Werte ausblenden“ (DESIGN-CHECK K2): nur Kopfzahl + Zeile darunter (so gebaut, #752) oder alle Beträge der Geld-Seiten und Karten? (alle Geld-Karten, Wunsch aus Budgets; eigener kleiner PR)
+12. Planer neu gedacht ([planner-rethink](design/planner-rethink/README.md)): beantwortet, Pakete 1–7 in [PACKAGES](design/planner-rethink/PACKAGES.md); ansehen: Reiter „Noch offen“ nach Paket 3, Handy und PC gemeinsam aktualisieren. (so lassen)
 
 **Handgriffe:**
 
