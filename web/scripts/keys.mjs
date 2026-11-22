@@ -98,7 +98,8 @@ function android() {
     '-keystore',
     keystore,
     '-alias',
-    alias,
+    // the release alias never changes (brand-ids.test.ts pins it)
+    dev ? 'taschenmesser-dev' : 'taschenmesser',
     '-keyalg',
     'RSA',
     '-keysize',
