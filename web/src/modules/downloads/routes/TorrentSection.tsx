@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { requireNotice } from '@/core/legal/notices';
 import { getPlatform } from '@/core/platform';
 import type { TorrentInfo } from '@/core/platform/torrent';
@@ -80,10 +80,15 @@ export function TorrentSection({
   const { dht, upnp } = device;
   // Stopped outside the page (the tray's „Torrent läuft – beenden“, closing into the tray while
   // idle): the page says so and waits for a click; a deliberate stop is not undone by itself.
-  const [epoch, setEpoch] = useState(0);
+  // a click asked for the engine: the next configure ends a stop made outside the page
+  const resume = useRef(false);
   useEffect(() => {
     if (!device.torrent || !platform.onStopped) return;
-    return platform.onStopped(markStopped);
+    return platform.onStopped(() => {
+      setAdding(false);
+      setStatus('starting');
+      markStopped();
+    });
   }, [platform, device.torrent]);
 
   // The engine starts only after the notice was confirmed; limits apply as soon as they change.
@@ -93,18 +98,28 @@ export function TorrentSection({
     void (async () => {
       await requireNotice('downloads-torrent');
       try {
-        await platform.configure({ dht, upnp, ...(JSON.parse(limitKey) as typeof limits) });
+        const asked = resume.current;
+        resume.current = false;
+        await platform.configure({
+          dht,
+          upnp,
+          ...(JSON.parse(limitKey) as typeof limits),
+          resume: asked,
+        });
         if (!alive) return;
         watchTorrents();
         setStatus('ready');
-      } catch {
-        if (alive) setStatus('failed');
+      } catch (e) {
+        if (!alive) return;
+        // stopped in the tray while this page was away: wait for a click
+        if ((e instanceof Error ? e.message : String(e)) === 'stopped') markStopped();
+        else setStatus('failed');
       }
     })();
     return () => {
       alive = false;
     };
-  }, [platform, device.torrent, dht, upnp, limitKey, epoch, stopped]);
+  }, [platform, device.torrent, dht, upnp, limitKey, stopped]);
 
   // Something arrived from outside: once the engine is up, the add dialog opens with it.
   useEffect(() => {
@@ -112,8 +127,9 @@ export function TorrentSection({
     // a link the user opened is the wish to use BitTorrent: a stop from the tray ends here
     if (stopped) {
       queueMicrotask(() => {
-        clearStopped();
         setStatus('starting');
+        resume.current = true;
+        clearStopped();
       });
       return;
     }
@@ -165,6 +181,7 @@ export function TorrentSection({
 
   async function turnOn() {
     await requireNotice('downloads-torrent');
+    resume.current = true;
     clearStopped();
     setDevice({ torrent: true });
   }
@@ -180,8 +197,9 @@ export function TorrentSection({
   async function setNetwork(patch: { dht?: boolean; upnp?: boolean }) {
     await platform.stop().catch(() => undefined);
     resetTorrents();
-    clearStopped();
     setStatus('starting');
+    resume.current = true;
+    clearStopped();
     setDevice(patch);
   }
 
@@ -191,7 +209,11 @@ export function TorrentSection({
       <p className={styles.hint}>{t.downloads.torrent.intro}</p>
       <p className={styles.hint}>{t.downloads.torrent.hint}</p>
       <div className={styles.bar}>
-        <Button variant="primary" disabled={status !== 'ready'} onClick={() => setAdding(true)}>
+        <Button
+          variant="primary"
+          disabled={status !== 'ready' || stopped}
+          onClick={() => setAdding(true)}
+        >
           {t.downloads.torrent.add.button}
         </Button>
         <Button onClick={() => void turnOff()}>{t.downloads.torrent.turnOff}</Button>
@@ -206,9 +228,9 @@ export function TorrentSection({
           </p>
           <Button
             onClick={() => {
-              clearStopped();
               setStatus('starting');
-              setEpoch((n) => n + 1);
+              resume.current = true;
+              clearStopped();
             }}
           >
             {t.downloads.torrent.restart}

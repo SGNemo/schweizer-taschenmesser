@@ -8935,7 +8935,7 @@ export const de = {
         badPath:
           'Der Torrent enthält Dateinamen, die auf Windows an einer anderen Stelle landen könnten. Nemo lädt ihn nicht.',
         shortcut:
-          'Der Torrent enthält Verknüpfungsdateien (.url, .lnk oder desktop.ini), die Windows schon beim Anzeigen öffnet. Nemo lädt ihn nicht.',
+          'Der Torrent enthält Dateien wie .url, .lnk oder desktop.ini, die Windows schon beim Anzeigen des Ordners ausliest. Nemo lädt ihn nicht.',
         tracker:
           'Der Torrent nennt einen Tracker im Heimnetz oder auf diesem PC. Nemo lädt ihn nicht.',
         other: 'Das hat nicht geklappt.',

@@ -181,7 +181,7 @@ export const downloads: Strings['downloads'] = {
       badPath:
         'The torrent contains file names that could land somewhere else on Windows. Nemo does not load it.',
       shortcut:
-        'The torrent contains shortcut files (.url, .lnk or desktop.ini) that Windows opens just by showing them. Nemo does not load it.',
+        'The torrent contains files such as .url, .lnk or desktop.ini that Windows reads as soon as the folder is shown. Nemo does not load it.',
       tracker:
         'The torrent names a tracker in the home network or on this PC. Nemo does not load it.',
       other: 'That did not work.',

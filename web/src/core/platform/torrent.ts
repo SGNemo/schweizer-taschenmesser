@@ -56,6 +56,11 @@ export interface TorrentSettings {
   seedRatio: number;
   /** Stop seeding this many minutes after the download finished; 0 = no limit. */
   seedMinutes: number;
+  /**
+   * The user asked for the engine (a click). Without it, `configure` rejects with `stopped`
+   * after a stop outside the page (tray, closing into the tray while idle).
+   */
+  resume?: boolean;
 }
 
 export interface TorrentService {

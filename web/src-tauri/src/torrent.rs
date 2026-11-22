@@ -21,6 +21,9 @@ const PREVIEW_TIMEOUT: Duration = Duration::from_secs(90);
 pub struct Torrents {
     engine: Mutex<Option<Arc<Engine>>>,
     watchers: Arc<std::sync::Mutex<Vec<Channel<Vec<TorrentInfo>>>>>,
+    /// Set by a stop outside the page (tray, closing into the tray while idle): no configure
+    /// starts the engine again until the page asks with `resume` (a click there).
+    held: std::sync::atomic::AtomicBool,
     /// Moves with every stop: a watch loop of an older engine ends at its next tick.
     generation: Arc<std::sync::atomic::AtomicU64>,
     /// Generation + 1 of the running watch loop (0: none).
@@ -40,6 +43,9 @@ pub struct TorrentSettings {
     seed_ratio: f64,
     /// Minutes, 0 = no limit.
     seed_minutes: u64,
+    /// The user asked for the engine (a click): ends a stop made outside the page.
+    #[serde(default)]
+    resume: bool,
 }
 
 /// What the user handed over: a pasted magnet link, or the path of a `.torrent` file picked in the
@@ -81,6 +87,7 @@ fn code(e: impl std::fmt::Display) -> String {
         "already-added",
         "bad-path",
         "shortcut",
+        "stopped",
         "tracker",
     ] {
         if msg == known {
@@ -115,7 +122,14 @@ pub async fn torrent_configure(
     state: State<'_, Torrents>,
     settings: TorrentSettings,
 ) -> Result<(), String> {
+    use std::sync::atomic::Ordering::SeqCst;
     let mut slot = state.engine.lock().await;
+    if settings.resume {
+        state.held.store(false, SeqCst);
+    }
+    if slot.is_none() && state.held.load(SeqCst) {
+        return Err("stopped".into());
+    }
     if slot.is_none() {
         let default_dir = app
             .path()
@@ -180,7 +194,10 @@ async fn stop_engine(app: &AppHandle, state: &Torrents, engine: Option<Arc<Engin
 pub fn stop_from_tray(app: &AppHandle) {
     let app = app.clone();
     tauri::async_runtime::spawn(async move {
-        stop(&app, &app.state::<Torrents>()).await;
+        let state = app.state::<Torrents>();
+        // held before the stop: a configure in between cannot start a new engine
+        state.held.store(true, std::sync::atomic::Ordering::SeqCst);
+        stop(&app, &state).await;
         // the page says "angehalten" and waits for a click
         let _ = app.emit_to("main", "torrent-stopped", ());
     });
@@ -196,7 +213,10 @@ pub fn stop_if_idle(app: &AppHandle) {
         let idle = {
             let mut slot = state.engine.lock().await;
             match slot.as_ref() {
-                Some(engine) if !engine.list().iter().any(|t| active(t.state)) => slot.take(),
+                Some(engine) if !engine.list().iter().any(|t| active(t.state)) => {
+                    state.held.store(true, std::sync::atomic::Ordering::SeqCst);
+                    slot.take()
+                }
                 _ => None,
             }
         };
