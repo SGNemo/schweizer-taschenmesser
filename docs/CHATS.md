@@ -35,7 +35,7 @@ Not stored in this file: `npm run chats:sync` prints the list from GitHub (`chat
 
 **Handgriffe:**
 
-- PRs: #1035 (Planer Paket 1) einen Ratschen-Treffer freigeben (`e2e/a11y.spec.ts`, eine Zeile mehr; Label `stimulus-raise`), Handy und PC gemeinsam aktualisieren; #1027 zwei Ratschen-Treffer (`checkModules`, geschützt) freigeben (ja; Ernte H25); #606 mergen, wenn grün; #542 vor dem Launch entscheiden (Dev-Preview- und Dev-Keystore-Teil offen; Repo-Secrets bis dahin unverändert).
+- PRs: #1035 Ratschen-Treffer `e2e/a11y.spec.ts` freigeben (`stimulus-raise`); #1027 zwei Ratschen-Treffer (`checkModules`, geschützt) freigeben (ja; Ernte H25); #606 mergen, wenn grün; #542 vor dem Launch entscheiden (Dev-Preview- und Dev-Keystore-Teil offen; Repo-Secrets bis dahin unverändert).
 - `ci.yml`-Patch aus #653 einspielen (`GITHUB_TOKEN` nur am Ratschen-Schritt statt im Job-`env` von `stimulus-budget`).
 - Dezember: `nemo-merge` (`meta/agents-v3/nemo-merge.json`) anlegen, Probelauf `ratchet.mjs --pr` mit Wegwerf-PR, Treffer von #640/#642 ansehen (`decisions/meta.md`).
 - Agenten v3.1: `ant apply` der sieben, `--prune` der 16 alten, dann `claude-lock.json` committen ([SETUP](meta/agents-v3/SETUP.md) §2a).
