@@ -572,7 +572,9 @@ test('D Planer öffnen bei Überlast', async ({ page, isMobile }, info) => {
   // rethink, package 1), so the person took the page's proposal once: ⋯ → „Neu verteilen“ → „Übernehmen“ (not
   // counted, it only sets the scene – the path is the look at the page afterwards).
   await ready(page, '/planner');
-  await expect(page.getByText(/Noch ohne Tag/)).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('heading', { name: /Noch ohne Tag/ })).toBeVisible({
+    timeout: 15_000,
+  });
   const onDays = page.locator('main [data-testid^="day-"] li');
   await expect(onDays).toHaveCount(0);
   await page.getByRole('button', { name: 'Weitere Optionen', exact: true }).first().click();
@@ -631,8 +633,12 @@ test('D Planer öffnen bei Überlast', async ({ page, isMobile }, info) => {
   // Planner hub K1b (2026-11-15): 27 – the late invoice's lead is now the action „Bezahlt …“ (one tap to the pay
   // step) instead of a silent icon; path F of planner-hub.spec.ts went from 5 taps and a detour to 4. Raised with
   // the maintainer's approval in the chat (docs/decisions/plan-links.md, K1b).
+  // Planner rethink package 1 (2026-11-22): 28 on the phone. The scene is now laid by „Neu verteilen“ and nothing is
+  // cut into parts any more, so today holds a fourth, small thing where develop had three rows (one of them
+  // „Teil 1/2“) – the sheet's existing fold „Danach · 1 Ding“ is the one control more. No new control was added
+  // (compared element by element against a develop build); named in the PR for the maintainer's veto.
   const bound = isMobile
-    ? { interactive: 27, words: 200, rows: 5, scroll: 800 }
+    ? { interactive: 28, words: 200, rows: 5, scroll: 800 }
     : { interactive: 40, words: 280, rows: 13, scroll: 700 };
   expect(s.interactive, 'interactive elements').toBeLessThanOrEqual(bound.interactive);
   expect(s.words, 'words').toBeLessThanOrEqual(bound.words);
