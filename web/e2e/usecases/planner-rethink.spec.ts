@@ -58,6 +58,8 @@ const IST: Record<string, Figures> = {
     dayVisibleInPlanner: 'nein',
     collateral: 0,
   },
+  // Package 2 (2026-11-22): the lock is one tap on the row (package 1: ⋯ and „Fest an diesem Tag“, 2 taps).
+  'U6 Ding fest machen': { taps: 1, locked: 'ja', collateral: 0 },
 };
 /** What the rebuild has to reach. */
 const TARGET: Record<string, Figures> = {
@@ -79,6 +81,7 @@ const TARGET: Record<string, Figures> = {
     dayVisibleInPlanner: 'ja',
     collateral: 0,
   },
+  'U6 Ding fest machen': { taps: 1, locked: 'ja', collateral: 0 },
 };
 
 const base = { createdAt: 1, updatedAt: 1, deviceId: 'e2e', deletedAt: null, _f: {} };
@@ -557,5 +560,29 @@ test('U5 Ding auf einen Tag in drei Wochen', async ({ page }, info) => {
       collateral: changed(before, after, ['Angebot']).length,
     },
     { byMenu, bySentence, sentence, landed: after['Angebot'] ?? 'wartet', before, after },
+  );
+});
+
+test('U6 Ding fest machen', async ({ page }, info) => {
+  // „Steuer“ lies on the day on the sheet and shall be „fest“ there (CONCEPT §1: laid ⇄ locked in one tap).
+  await prepare(page, SIX);
+  await ready(page, '/planner');
+  await expect(page.locator('main h1')).toContainText('Planer');
+  await spread(page);
+  const before = await settled(page);
+  const hand = new Hand(page);
+  const at = before['Steuer']!.split('+')[0]!;
+  await hand.show(at);
+  await hand.tap(page.getByRole('button', { name: 'Fest an diesem Tag: Steuer', exact: true }));
+  await expect(page.getByRole('status').filter({ hasText: /^Fest am / })).toBeVisible();
+  const after = await settled(page);
+  const locked = (
+    await rows<{ itemKey: string; locked?: boolean }>(page, 'planner_assignment')
+  ).some((r) => r.itemKey === 'todos:r1' && r.locked === true);
+  record(
+    info,
+    'U6 Ding fest machen',
+    { taps: hand.taps, locked: locked ? 'ja' : 'nein', collateral: changed(before, after).length },
+    { at, before, after },
   );
 });

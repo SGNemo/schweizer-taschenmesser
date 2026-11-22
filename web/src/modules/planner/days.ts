@@ -98,3 +98,17 @@ export function fixedOf(
   if (!e.fixed || !date) return undefined;
   return { date, from: e.fixed.from, ...(e.fixed.to ? { to: e.fixed.to } : {}) };
 }
+
+/**
+ * The day of a source's dated turn shown without a row (planner rethink, `PlannableItem.day`): open, not a fixed block
+ * (that has its row), not laid (a row wins), not taken out („Nicht planen“) and not late money. The one predicate for
+ * the board, the proposer and the toasts, so they all count the same time on that day.
+ */
+export function turnDayOf(
+  e: Pick<PlannableEntry, 'day' | 'done' | 'fixed' | 'plannedFor' | 'earliest'>,
+  facts: { laid: boolean; excluded: boolean; late: boolean },
+): string | undefined {
+  if (!e.day || e.done || fixedOf(e) || facts.laid || facts.excluded || facts.late)
+    return undefined;
+  return e.day;
+}

@@ -63,6 +63,7 @@ export function plan(input: PlanInput): PlanResult {
   // back out of `loose`, so the stay rule sets it there) – it must not lie on its old day and wait as well.
   // Every round takes at least one item out, so this ends.
   let loose = [...input.loose];
+  const heldBack: string[] = [];
   const had = new Set((input.prev ?? []).map((a) => a.id.slice(0, a.id.lastIndexOf('#'))));
   for (;;) {
     const back = new Set(
@@ -77,7 +78,9 @@ export function plan(input: PlanInput): PlanResult {
         .map((u) => u.itemKey),
     );
     const next = loose.filter((k) => !back.has(k));
-    if (next.length === loose.length) return result;
+    if (next.length === loose.length)
+      return heldBack.length ? { ...result, heldBack: heldBack.sort() } : result;
+    heldBack.push(...loose.filter((k) => back.has(k)));
     loose = next;
     result = planOnce({ ...input, loose });
   }

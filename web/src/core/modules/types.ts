@@ -605,6 +605,12 @@ export interface PlannableItem {
   due?: { date: string; hard: boolean; time?: string };
   /** Not before this day. */
   earliest?: string;
+  /**
+   * The day of a dated turn at its source (a training session, a routine's occurrence; planner rethink, CONCEPT-MIGRATION
+   * §6): the planner shows the thing on that day without a placement row; moving it there writes one. Only those
+   * sources set it.
+   */
+  day?: string;
   /** The day the source carries (a ToDo's `plannedFor`); the planner reads it as the earliest day. */
   plannedFor?: string;
   /** The planner's ownership mark on the source (a ToDo's `planMark`): `plannedFor` is planner-own only if `planMark.date === plannedFor`. */

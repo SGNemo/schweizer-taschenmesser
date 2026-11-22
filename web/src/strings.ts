@@ -9359,7 +9359,7 @@ export const de = {
       things: (n: number) => (n === 1 ? '1 Ding' : `${n} Dinge`),
       tomorrowIs: (day: string) => `Morgen · ${day}`,
       freeShort: (min: string) => `${min} frei`,
-      overShort: (min: string) => `${min} mehr`,
+      overShort: (min: string) => `+ ${min} mehr`,
       tileToday: (day: string) => `Heute, ${day}`,
       tileTomorrow: (day: string) => `Morgen, ${day}`,
       tileName: (day: string, capacity: string, things: string) =>
@@ -9380,7 +9380,6 @@ export const de = {
       then: (n: number, min: string) => `Danach · ${n} · ${min}`,
       thenFold: (n: number) => `Danach · ${n === 1 ? '1 Ding' : `${n} Dinge`}`,
       more: (n: number) => `${n} weitere`,
-      overLine: 'Der Tag hat mehr Dinge als Zeit.',
       dayOffNext: (day: string) => `Heute ist frei. Der nächste Tag mit Dingen ist ${day}.`,
       emptyDay: 'Für diesen Tag ist nichts geplant.',
       onlyLate: 'Die Woche ist leer. Offen sind nur die Rechnungen unter „Frist vorbei“.',
@@ -9474,6 +9473,7 @@ export const de = {
       blocker: 'Blocker',
       doneName: (title: string) => `Erledigt: ${title}`,
       fixed: 'fest',
+      lockName: (title: string) => `Fest an diesem Tag: ${title}`,
       more: 'Mehr',
       focus: 'Fokus starten',
       asBreak: 'Als Pause …',
@@ -9547,6 +9547,12 @@ export const de = {
       pinned: (day: string) => `Fest am ${day}`,
       unpinned: 'Nicht mehr fest',
       laid: (day: string) => `Liegt auf ${day}`,
+      laidLocked: (title: string, day: string) => `${title} liegt auf ${day} · fest`,
+      laidOver: (day: string) => `Liegt auf ${day}. Jetzt ist mehr geplant als planbar.`,
+      overNow: 'Jetzt ist mehr geplant als planbar.',
+      keptFree: (day: string) => `${day} ist frei gehalten. Liegt trotzdem dort.`,
+      heldBack: (n: number) =>
+        n === 1 ? '1 bleibt, wo es liegt: kein Platz' : `${n} bleiben, wo sie liegen: kein Platz`,
       excluded: 'Nicht im Plan',
       included: 'Wieder im Plan',
       markedDue: (day: string) => `Frist: ${day}`,
@@ -9664,6 +9670,20 @@ export const de = {
       dayEndSet: (time: string) => `Tagesende ${time}, für jeden Tag`,
       dayEndCleared: 'Kein Tagesende mehr',
       eventsFill: 'Termine an diesem Tag füllen diese Zeit schon.',
+    },
+    chips: {
+      proposalDue: (day: string, due: string) => `Vorschlag: ${day} · Frist ${due}`,
+      take: 'Übernehmen',
+      takeName: (title: string, day: string) => `Übernehmen: ${title} auf ${day}`,
+      inTodos: (day: string) => `In ToDos: ${day}`,
+      place: 'Hierher legen',
+      todoList: 'In ToDos',
+      placeName: (title: string, day: string) => `Hierher legen: ${title} auf ${day}`,
+    },
+    spread: {
+      line: 'Was nicht fest ist, geht auf diesen oder spätere Tage.',
+      done: 'Verteilt.',
+      fixed: (n: number) => (n === 1 ? '1 bleibt: fest' : `${n} bleiben: fest`),
     },
     chip: {
       title: (planned: string, n: number) =>

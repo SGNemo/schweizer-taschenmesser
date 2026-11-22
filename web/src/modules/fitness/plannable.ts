@@ -42,6 +42,8 @@ const source: PlannableSource = {
         to: '/fitness',
         durationMin: template.durationMin ?? DEFAULT_MINUTES,
         earliest: date,
+        // A dated turn (planner rethink): shown on its day without a row.
+        day: date,
         due: { date, hard: true },
         createdAt: template.createdAt,
       }),
@@ -54,6 +56,7 @@ const source: PlannableSource = {
         to: `/fitness?open=${encodeURIComponent(s.id)}`,
         durationMin: sessionMinutes(s) || DEFAULT_MINUTES,
         earliest: s.date,
+        day: s.date,
         // With a time: from there for its minutes (the planner ends it), on its day only.
         ...(s.time ? { fixed: { from: s.time } } : { due: { date: s.date, hard: true } }),
         createdAt: s.createdAt,

@@ -256,9 +256,41 @@ section.lateFold {
   color: var(--text-muted);
   font-size: var(--text-meta);
 }
-.overLine > svg {
-  flex: none;
-  color: var(--text-3);
+/* The lock („fest“) on a row: one tap, the word beside the symbol when set; quiet, no colour carries the state. */
+.lock {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-width: var(--touch);
+  min-height: var(--touch);
+  padding: 0 var(--space-2);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-meta);
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.lock:hover {
+  color: var(--text);
+}
+.lock:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+.lockOn {
+  color: var(--text);
+}
+/* „In ToDos: Do · Hierher legen“ and „Vorschlag: Do“: a fact and its one step, muted, never a tone. */
+.hintRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--space-3);
+  color: var(--text-muted);
+  font-size: var(--text-meta);
 }
 .emptyDay {
   margin: 0;

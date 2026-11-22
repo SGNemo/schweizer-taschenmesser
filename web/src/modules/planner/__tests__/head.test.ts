@@ -78,8 +78,8 @@ describe('capacity: more planned than fits is a state of its own', () => {
   it('says the overrun in words on every surface; full stays full', () => {
     expect(capacityState(over)).toBe('over');
     expect(capacityLabel(over)).toBe('40 Min mehr als planbar');
-    expect(capacityShort(over)).toBe('40 Min mehr');
-    expect(capacityTile(over)).toBe('40 Min mehr');
+    expect(capacityShort(over)).toBe('+ 40 Min mehr');
+    expect(capacityTile(over)).toBe('+ 40 Min mehr');
     expect(capacityState({ ...over, planned: 60, over: 0 })).toBe('full');
     expect(capacityState({ ...over, off: true })).toBe('off');
   });
