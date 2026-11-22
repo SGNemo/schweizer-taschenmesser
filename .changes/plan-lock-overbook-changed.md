@@ -17,6 +17,13 @@ en: Planner: things with a deadline get a suggestion under “No day yet” (“
 type: changed
 area: planner
 breaking: false
-de: Planer: Ein voller Tag sagt ruhig „2 h 10 mehr als planbar“ und bietet „Rest verteilen“ für genau diesen Tag an; Festes bleibt liegen. Trainings und Routinen stehen jetzt an ihrem Tag im Planer.
-en: Planner: a full day calmly says “2 h 10 more than fits” and offers “Spread the rest” for that day; fixed things stay. Trainings and routines now show on their day in the planner.
+de: Planer: Ein voller Tag sagt ruhig „2 h 10 mehr als planbar“ und bietet „Rest verteilen“ für genau diesen Tag an; Festes bleibt liegen.
+en: Planner: a full day calmly says “2 h 10 more than fits” and offers “Spread the rest” for that day; fixed things stay.
+---
+---
+type: added
+area: planner
+breaking: false
+de: Planer: Trainings und Routinen stehen jetzt an ihrem Tag im Planer, ohne dass du sie erst einteilst.
+en: Planner: trainings and routines now show on their day in the planner without laying them first.
 ---

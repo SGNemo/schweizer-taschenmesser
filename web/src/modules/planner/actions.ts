@@ -70,6 +70,8 @@ export async function act(
     leadOnly?: boolean;
     /** A line read after the run (the day a new thing landed on is full or kept free): it replaces `lead`. */
     leadAfter?: (run: UserRun) => Promise<string | undefined>;
+    /** The action hands things to the proposer itself (its scope): a thing without room is named. */
+    proposes?: boolean;
   } & RunScope = {},
 ): Promise<boolean> {
   let run: UserRun;
@@ -86,7 +88,7 @@ export async function act(
   };
   // `leadOnly`: one calm sentence (a template); the board shows where things went. An action that hands nothing
   // to the engine moved nothing else, so its line is that one fact as well.
-  const proposes = opts.reshuffle || !!opts.loose?.length || !!opts.ops?.length;
+  const proposes = opts.proposes || opts.reshuffle || !!opts.loose?.length || !!opts.ops?.length;
   const after = opts.leadAfter ? await opts.leadAfter(run) : undefined;
   const first =
     after ?? (opts.leadOnly || !proposes ? lead : runToast(run.outcome.result, titleOf, lead));
@@ -317,7 +319,8 @@ async function layOn(
       k: 0,
       of: 1,
       date,
-      minutes: e.durationMin ?? DEFAULT_MIN,
+      // The length the board showed: the plan's own over the source's.
+      minutes: (await itemRepo.get(key))?.durationMin ?? e.durationMin ?? DEFAULT_MIN,
       order: 0,
       reason: 'new',
     });
@@ -346,10 +349,13 @@ export async function addFromField(
   if (lock) {
     const locked = read(lock.text);
     // A deadline is no day: „Steuer bis Fr fest“ keeps its deadline and locks nothing.
-    const on = locked.hardDue
-      ? undefined
-      : (lock.date ??
-        (locked.fields.date && locked.fields.date >= day ? locked.fields.date : undefined));
+    // Two days in one line („7.12. Do fest“): which one is meant is unclear – nothing is locked.
+    const clash = lock.date && locked.fields.date && locked.fields.date !== lock.date;
+    const on =
+      locked.hardDue || clash
+        ? undefined
+        : (lock.date ??
+          (locked.fields.date && locked.fields.date >= day ? locked.fields.date : undefined));
     // Only next to a day: „Bin fest“ stays a title.
     if (on) {
       reading = locked;
@@ -436,7 +442,10 @@ async function dayNote(
   const inputs = run.outcome.inputs;
   const plan = inputs.days.find((d) => d.date === date);
   if (!plan) return undefined;
-  if (plan.availableMin === 0) return t.planner.toast.keptFree(dayName(date));
+  if (plan.availableMin === 0)
+    return keep
+      ? `${keep}\n${t.planner.toast.keptFree(dayName(date))}`
+      : t.planner.toast.keptFree(dayName(date));
   const open = new Set(
     inputs.entries.filter((e) => !e.done).map((e) => itemKeyOf(e.moduleId, e.id)),
   );
@@ -594,7 +603,12 @@ async function laidLine(e: Pick<PlannableEntry, 'moduleId' | 'id' | 'title'>, da
  * day. The same move as „Verschieben …“ – one row, one undo; the ToDo hears the day as for every laid thing.
  */
 export async function layHere(e: PlannableEntry, date: string, titles: Record<string, string>) {
-  return act(t.planner.chips.place, await laidLine(e, date), titles, () => layOn(e, date));
+  const line = await laidLine(e, date);
+  const plain = line === t.planner.toast.laid(dayName(date));
+  // A full or kept-free day says so, as when entering in the field.
+  return act(t.planner.chips.place, line, titles, () => layOn(e, date), {
+    leadAfter: (run) => dayNote(date, run, plain ? undefined : line),
+  });
 }
 
 /**
@@ -612,11 +626,21 @@ export function spreadDay(
     fixed > 0
       ? `${t.planner.spread.done}\n${t.planner.spread.fixed(fixed)}`
       : t.planner.spread.done;
-  return act(t.planner.rest.link, lead, titles, async () => undefined, {
-    leadOnly: true,
-    loose,
-    notBefore: date,
-  });
+  return act(
+    t.planner.rest.link,
+    lead,
+    titles,
+    async () => {
+      // As it is now, not as the preview found it: a thing locked or moved meanwhile is not handed over.
+      const still: string[] = [];
+      for (const key of loose) {
+        const rows = await rowsOf(key);
+        if (rows.length > 0 && rows.every((r) => r.date === date && !r.locked)) still.push(key);
+      }
+      return { loose: still, notBefore: date };
+    },
+    { leadOnly: true, proposes: true },
+  );
 }
 
 /** „Fest an diesem Tag“ / „Nicht mehr fest“: the lock on the thing's rows. No proposal takes a thing that is fest. */

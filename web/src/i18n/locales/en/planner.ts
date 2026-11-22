@@ -189,7 +189,7 @@ export const planner: Strings['planner'] = {
     blocker: 'Blocker',
     doneName: (title: string) => `Done: ${title}`,
     fixed: 'fixed',
-    lockName: (title: string) => `Keep on this day: ${title}`,
+    lockName: (title: string) => `Fixed on this day: ${title}`,
     more: 'More',
     focus: 'Start focus',
     asBreak: 'As a break …',

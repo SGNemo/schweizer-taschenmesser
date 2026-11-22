@@ -431,6 +431,25 @@ export function buildBoard(input: BoardInput): Board {
         ...(items.get(a.itemKey) ? { item: items.get(a.itemKey) } : {}),
       });
     }
+    // A dated turn on a day after the board's last one: listed with its day, like a laid thing.
+    for (const [key, e] of entries) {
+      const turn = turnDay(key, e);
+      if (!turn || turn <= lastShown || seen.has(key)) continue;
+      seen.add(key);
+      const row = turnRow(key, e);
+      waiting.push({
+        unitId: row.unitId,
+        itemKey: key,
+        title: row.title,
+        minutes: row.minutes,
+        k: 0,
+        of: 1,
+        reason: 'later',
+        date: turn,
+        entry: e,
+        ...(row.item ? { item: row.item } : {}),
+      });
+    }
   }
   const todayDay = days[0];
   const todayCount = todayDay ? new Set(todayDay.rows.map((r) => r.itemKey)).size : 0;

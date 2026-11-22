@@ -560,8 +560,9 @@ export default function PlannerPage() {
    */
   const lockHidden = (row: BoardRow) => phone && !row.pinned;
   /** The lock on a row: one tap, one undo; a dated turn without a row gets its row on the day it shows on. */
+  // A thing in parts (from the engine's time) is locked on all its days: no one-day toggle on its rows.
   const lockOf = (row: BoardRow, date: string) =>
-    row.entry && !row.fixed
+    row.entry && !row.fixed && (row.of === 1 || row.pinned)
       ? {
           locked: row.pinned,
           onToggle: () =>
@@ -771,7 +772,9 @@ export default function PlannerPage() {
     ? JSON.stringify([
         data.today,
         chipKeys,
-        board?.days.map((d) => [d.date, d.usable, d.rows.map((r) => r.unitId)]),
+        waiting.map((w) => [w.itemKey, w.hardDue, w.minutes]),
+        data.settings,
+        board?.days.map((d) => [d.date, d.usable, d.rows.map((r) => [r.unitId, r.minutes])]),
       ])
     : '';
   const [proposals, setProposals] = useState<{ sig: string; days: Record<string, string> }>();
@@ -792,8 +795,11 @@ export default function PlannerPage() {
     const e = w.entry;
     if (!e) return undefined;
     // Only a proposal for the plan as it is now (a stale one could lay the thing on a day that filled up since).
+    // A date the person set in ToDos comes first: its chip, never a proposal over it.
     const proposed =
-      w.hardDue && proposals?.sig === chipSig ? proposals.days[w.itemKey] : undefined;
+      w.hardDue && !w.todoDate && proposals?.sig === chipSig
+        ? proposals.days[w.itemKey]
+        : undefined;
     if (proposed)
       return (
         <span className={styles.hintRow} data-testid="proposal-chip">
@@ -1079,7 +1085,14 @@ export default function PlannerPage() {
                   }
                   empty={emptySheet}
                   onRest={shownDay.isToday ? () => void showRest() : undefined}
-                  onSpread={() => void showSpread(shownDay)}
+                  // Only where something can go: a day over its time by fixed blocks, turns or locks alone has no link.
+                  onSpread={
+                    shownDay.rows.some(
+                      (r) => !r.pinned && !r.fixed && !r.derived && r.entry && r.of === 1,
+                    )
+                      ? () => void showSpread(shownDay)
+                      : undefined
+                  }
                   hints={
                     shownDay.hints?.length ? (
                       <ItemList label={t.planner.chips.todoList}>

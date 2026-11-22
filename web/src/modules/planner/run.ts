@@ -622,14 +622,18 @@ export async function previewPlanner(
 ): Promise<PreviewOutcome> {
   const inputs = await buildInputs(deps, plannerRepos(deps.database));
   const next = withOps({ ...inputs, items: [...inputs.items, ...extra] }, ops);
+  // A sentence that names a turn („schieb Training auf Mi“) moves it as `applyOps` does (it lays a row): it is handed
+  // over with its pin and no longer stands on its source's day; every other turn stays where it is.
+  const pinned = new Set(ops.flatMap((op) => (op.op === 'pin' ? [op.key] : [])));
+  const turns = inputs.turns.filter((x) => !pinned.has(x.id.slice(0, x.id.lastIndexOf('#'))));
   const loose = [...new Set([...looseOf(inputs, ops, extra), ...(spread?.loose ?? [])])].filter(
-    (k) => !turnKeys(inputs).has(k),
+    (k) => pinned.has(k) || !turnKeys(inputs).has(k),
   );
   const result = plan({
     today: deps.today,
     days: next.days,
     items: boundedItems(next.items, loose, spread?.notBefore),
-    prev: [...inputs.prev, ...inputs.turns],
+    prev: [...inputs.prev, ...turns],
     loose,
     settings: next.settings,
   });
@@ -667,7 +671,9 @@ export async function proposeDays(
   if (keys.length === 0) return {};
   const inputs = await buildInputs(deps, plannerRepos(deps.database));
   const laid = new Set([...inputs.prevRows.values()].map((r) => r.itemKey));
-  const loose = keys.filter((k) => !inputs.lockedKeys.has(k) && !laid.has(k));
+  const loose = keys.filter(
+    (k) => !inputs.lockedKeys.has(k) && !laid.has(k) && !turnKeys(inputs).has(k),
+  );
   const result = plan({
     today: deps.today,
     days: inputs.days,

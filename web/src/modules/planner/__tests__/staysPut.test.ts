@@ -887,3 +887,71 @@ describe('package 2: a dated turn takes its day for every proposal and is never 
     expect(await assignmentRepo.get('routines:bad#0')).toBeUndefined();
   });
 });
+
+describe('package 2, council round 2', () => {
+  beforeEach(layFour);
+
+  const routine = (day: string) =>
+    ({
+      id: 'routines',
+      contributions: {
+        plannable: async () => ({
+          default: {
+            list: async () => [
+              {
+                id: 'bad',
+                kind: 'routine',
+                title: 'Bad putzen',
+                to: '/routines',
+                durationMin: 30,
+                day,
+              },
+            ],
+          },
+        }),
+      },
+    }) as unknown as ModuleManifest;
+
+  it('a turn beyond the board’s days is listed with its day, not lost', async () => {
+    const later = '2026-11-26';
+    const board = buildBoard({
+      today: MON,
+      span: 7,
+      settings: DEFAULT_PLANNER_SETTINGS,
+      dayRows: [],
+      itemRows: [],
+      assignments: [],
+      entries: [
+        {
+          moduleId: 'routines',
+          id: 'bad',
+          kind: 'routine',
+          title: 'Bad putzen',
+          to: '/',
+          day: later,
+        },
+      ],
+      calendar: [],
+      unplaced: [],
+    });
+    expect(board.waiting).toMatchObject([
+      { itemKey: 'routines:bad', reason: 'later', date: later },
+    ]);
+  });
+
+  it('a sentence move of a turn: the preview shows the move the apply makes', async () => {
+    setManifestsForTests(async () => [todos, routine(TUE)]);
+    const preview = await previewUser([{ op: 'pin', key: 'routines:bad', date: THU }]);
+    expect(preview.result.assignments.find((a) => a.itemKey === 'routines:bad')?.date).toBe(THU);
+  });
+
+  it('„Übernehmen“ of a spread hands over only what still lies unlocked on that day', async () => {
+    // The preview named p1 and p2; meanwhile p2 was locked on another device.
+    await lockRow('p2');
+    await runsSettled();
+    resetUndoJournal();
+    expect(await spreadDay(MON, [key('p1'), key('p2')], 0, {})).toBe(true);
+    await runsSettled();
+    expect(await assignmentRepo.get(`${key('p2')}#0`)).toMatchObject({ date: MON, locked: true });
+  });
+});
