@@ -360,7 +360,10 @@ async fn an_existing_file_of_the_same_name_is_never_overwritten() {
         .unwrap();
     until("download done", || one(&leech).progress_bytes >= TOTAL).await;
     file_is(&out.join("pack (2)/a.bin"), bytes(A, 1)).await;
-    assert_eq!(std::fs::read(out.join("pack/a.bin")).unwrap(), b"meine Datei");
+    assert_eq!(
+        std::fs::read(out.join("pack/a.bin")).unwrap(),
+        b"meine Datei"
+    );
     // DL3: the torrent's own file gets the Mark-of-the-Web, the user's file beside it does not
     #[cfg(windows)]
     {
@@ -370,7 +373,9 @@ async fn an_existing_file_of_the_same_name_is_never_overwritten() {
             std::fs::read_to_string(s)
         };
         until("marked", || stream(out.join("pack (2)/a.bin")).is_ok()).await;
-        assert!(stream(out.join("pack (2)/a.bin")).unwrap().contains("ZoneId=3"));
+        assert!(stream(out.join("pack (2)/a.bin"))
+            .unwrap()
+            .contains("ZoneId=3"));
         assert!(stream(out.join("pack/a.bin")).is_err());
     }
 }

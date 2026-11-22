@@ -204,7 +204,6 @@ pub fn cut_bytes(text: &str, max: usize) -> &str {
     &text[..end]
 }
 
-
 /// Longest single path segment most file systems take (NTFS, ext4: 255).
 const MAX_SEGMENT_BYTES: usize = 255;
 
@@ -310,7 +309,10 @@ mod tests {
         assert_eq!(clean("COM¹"), "_COM¹");
         assert_eq!(clean("Rechnung\u{202E}fdp.exe"), "Rechnungfdp.exe");
         assert_eq!(clean("../../etc/passwd"), "passwd");
-        assert_eq!(clean("Bild.png:Zone.Identifier"), "Bild.png_Zone.Identifier");
+        assert_eq!(
+            clean("Bild.png:Zone.Identifier"),
+            "Bild.png_Zone.Identifier"
+        );
     }
 
     #[test]

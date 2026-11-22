@@ -151,7 +151,9 @@ pub fn next_hop(current: &Url, location: &str) -> Result<Url, Refused> {
 }
 
 pub(crate) fn next_hop_for(current: &Url, location: &str, reach: Reach) -> Result<Url, Refused> {
-    let next = current.join(location.trim()).map_err(|_| Refused::Redirect)?;
+    let next = current
+        .join(location.trim())
+        .map_err(|_| Refused::Redirect)?;
     if current.scheme() == "https" && next.scheme() != "https" {
         return Err(Refused::Redirect);
     }
@@ -291,7 +293,10 @@ pub(crate) fn agent(reach: Reach) -> (ureq::Agent, Arc<AtomicBool>) {
     let resolver = PublicResolver::new(reach);
     let blocked = resolver.blocked.clone();
     let connector = DefaultConnector::default().chain(IdleConnector);
-    (ureq::Agent::with_parts(config, connector, resolver), blocked)
+    (
+        ureq::Agent::with_parts(config, connector, resolver),
+        blocked,
+    )
 }
 
 #[cfg(test)]
@@ -349,7 +354,10 @@ mod tests {
             next_hop(&from, "/files/a.iso").unwrap().as_str(),
             "https://example.org/files/a.iso"
         );
-        assert_eq!(next_hop(&from, "http://example.org/a"), Err(Refused::Redirect));
+        assert_eq!(
+            next_hop(&from, "http://example.org/a"),
+            Err(Refused::Redirect)
+        );
         assert_eq!(next_hop(&from, "https://127.0.0.1/a"), Err(Refused::Host));
         let plain = u("http://example.org/dl");
         assert!(next_hop(&plain, "https://cdn.example.org/a").is_ok());
@@ -374,6 +382,9 @@ mod tests {
             after: UreqDuration::from(Duration::from_secs(5)),
             reason: ureq::Timeout::Global,
         };
-        assert_eq!(capped(short).after, UreqDuration::from(Duration::from_secs(5)));
+        assert_eq!(
+            capped(short).after,
+            UreqDuration::from(Duration::from_secs(5))
+        );
     }
 }

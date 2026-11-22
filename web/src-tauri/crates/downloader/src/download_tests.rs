@@ -360,28 +360,38 @@ fn home_network_addresses_and_redirects_are_checked() {
     let e = env("hosts");
     let internet_only = Manager::open(e.state.clone(), Arc::new(|| {}));
     assert_eq!(
-        internet_only.add("http://127.0.0.1:9/x.bin", &e.dir, None).unwrap_err(),
+        internet_only
+            .add("http://127.0.0.1:9/x.bin", &e.dir, None)
+            .unwrap_err(),
         AddError::Host
     );
     assert_eq!(
-        internet_only.add("http://192.168.178.1/x.bin", &e.dir, None).unwrap_err(),
+        internet_only
+            .add("http://192.168.178.1/x.bin", &e.dir, None)
+            .unwrap_err(),
         AddError::Host
     );
     assert_eq!(
-        internet_only.add("http://localhost/x.bin", &e.dir, None).unwrap_err(),
+        internet_only
+            .add("http://localhost/x.bin", &e.dir, None)
+            .unwrap_err(),
         AddError::Host
     );
     drop(internet_only);
 
     let srv = serve(body(1000));
     let m = open(&e);
-    let home = m.add(&format!("{}/to-home", srv.base), &e.dir, None).unwrap();
+    let home = m
+        .add(&format!("{}/to-home", srv.base), &e.dir, None)
+        .unwrap();
     let failed = wait(&m, home.id, "blocked", |j| j.state == State::Failed);
     assert_eq!(failed.error.as_deref(), Some("blocked"));
     let looping = m.add(&format!("{}/loop", srv.base), &e.dir, None).unwrap();
     let failed = wait(&m, looping.id, "redirect", |j| j.state == State::Failed);
     assert_eq!(failed.error.as_deref(), Some("redirect"));
-    let fine = m.add(&format!("{}/to-file", srv.base), &e.dir, None).unwrap();
+    let fine = m
+        .add(&format!("{}/to-file", srv.base), &e.dir, None)
+        .unwrap();
     assert_eq!(done(&m, fine.id).total, Some(1000));
     let _ = std::fs::remove_dir_all(&e.root);
 }
@@ -393,12 +403,17 @@ fn credentials_stay_out_of_the_job_list() {
     let srv = serve(body(500));
     let m = open(&e);
     let with = srv.base.replace("http://", "http://nutzer:geheim@");
-    let job = m.add(&format!("{with}/data.bin?token=t"), &e.dir, None).unwrap();
+    let job = m
+        .add(&format!("{with}/data.bin?token=t"), &e.dir, None)
+        .unwrap();
     assert!(!job.url.contains("geheim") && !job.url.contains("nutzer"));
     done(&m, job.id);
     let saved = std::fs::read_to_string(&e.state).unwrap();
     assert!(!saved.contains("geheim") && !saved.contains("nutzer"));
-    assert!(saved.contains("token=t"), "the address itself stays for resuming");
+    assert!(
+        saved.contains("token=t"),
+        "the address itself stays for resuming"
+    );
     let _ = std::fs::remove_dir_all(&e.root);
 }
 
@@ -425,8 +440,10 @@ fn an_edited_job_list_is_checked_on_load() {
         "]}",
         &format!(
             r#",{}]}}"#,
-            job(4, "later.bin", "https://example.org/later.bin")
-                .replace(&dir, &e.root.join("usb").to_string_lossy().replace('\\', "\\\\"))
+            job(4, "later.bin", "https://example.org/later.bin").replace(
+                &dir,
+                &e.root.join("usb").to_string_lossy().replace('\\', "\\\\")
+            )
         ),
     );
     std::fs::write(&e.state, list).unwrap();
@@ -446,7 +463,10 @@ fn a_finished_file_is_marked_as_from_the_internet() {
     let srv = serve(body(300));
     let m = open(&e);
     let with = srv.base.replace("http://", "http://nutzer:geheim@");
-    let job = done(&m, m.add(&format!("{with}/data.bin"), &e.dir, None).unwrap().id);
+    let job = done(
+        &m,
+        m.add(&format!("{with}/data.bin"), &e.dir, None).unwrap().id,
+    );
     let mut stream = job.final_path().into_os_string();
     stream.push(":Zone.Identifier");
     let text = std::fs::read_to_string(stream).unwrap();

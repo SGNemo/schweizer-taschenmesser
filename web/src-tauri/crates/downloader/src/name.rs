@@ -1,6 +1,5 @@
 use std::path::{Path, PathBuf};
 
-
 fn percent_decode(s: &str) -> String {
     let bytes = s.as_bytes();
     let mut out = Vec::with_capacity(bytes.len());
@@ -101,7 +100,10 @@ mod tests {
         // DL8: device names with a space or a superscript digit, bidi overrides, shortcut types
         assert_eq!(sanitize_file_name("CON .txt"), "_CON.txt");
         assert_eq!(sanitize_file_name("COM¹.log"), "_COM¹.log");
-        assert_eq!(sanitize_file_name("Rechnung\u{202E}fdp.exe"), "Rechnungfdp.exe");
+        assert_eq!(
+            sanitize_file_name("Rechnung\u{202E}fdp.exe"),
+            "Rechnungfdp.exe"
+        );
         assert_eq!(sanitize_file_name("Ordner.url"), "Ordner.url_");
         assert_eq!(sanitize_file_name("CON.txt"), "_CON.txt");
         assert_eq!(sanitize_file_name("nul"), "_nul");

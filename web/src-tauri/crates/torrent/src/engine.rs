@@ -426,7 +426,11 @@ impl Engine {
                     let since = *lock(&finished_at).entry(id).or_insert_with(Instant::now);
                     // the torrent's own files (never the rest of its folder), once per torrent, folder
                     // and selection (a re-download or a wider selection is marked again) (DL3)
-                    let key = if cfg!(windows) { Some(mark_key(&h)) } else { None };
+                    let key = if cfg!(windows) {
+                        Some(mark_key(&h))
+                    } else {
+                        None
+                    };
                     if let Some(key) = key.filter(|k| lock(&marked).try_now(k)) {
                         // a file the user deleted is not created again by the stream write
                         let files: Vec<PathBuf> =
@@ -542,7 +546,12 @@ fn mark_saved_torrents_paused(state_dir: &Path) {
 fn mark_key(h: &Arc<ManagedTorrent>) -> String {
     let only = h
         .only_files()
-        .map(|o| o.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(","))
+        .map(|o| {
+            o.iter()
+                .map(|i| i.to_string())
+                .collect::<Vec<_>>()
+                .join(",")
+        })
         .unwrap_or_default();
     format!(
         "{}|{}|{only}",
@@ -575,7 +584,11 @@ fn own_files(h: &Arc<ManagedTorrent>) -> Vec<PathBuf> {
 /// A torrent name as a single safe folder name (the shared cleaner, DL8); a single file's folder
 /// drops the extension (`ubuntu.iso` → `ubuntu`).
 fn folder_name(name: &str, single: bool) -> String {
-    let cleaned = file_names::clean(if name.trim().is_empty() { "torrent" } else { name });
+    let cleaned = file_names::clean(if name.trim().is_empty() {
+        "torrent"
+    } else {
+        name
+    });
     match (single, cleaned.rfind('.')) {
         (true, Some(dot)) if dot > 0 => file_names::clean(&cleaned[..dot]),
         _ => cleaned,
@@ -600,8 +613,12 @@ fn new_folder(dir: &Path, name: &str) -> Result<PathBuf> {
 /// letter or stream (`C:x`, `a:b`), no device name, no invisible or bidi character, no `.`/`..`.
 /// librqbit itself refuses only `..` and separators (security review 2026-11, package 3).
 fn paths_safe<B: AsRef<[u8]>>(info: &librqbit::ValidatedTorrentMetaV1Info<B>) -> bool {
-    info.iter_file_details()
-        .all(|d| d.filename.to_vec().iter().all(|c| file_names::safe_segment(c)))
+    info.iter_file_details().all(|d| {
+        d.filename
+            .to_vec()
+            .iter()
+            .all(|c| file_names::safe_segment(c))
+    })
 }
 
 /// Whether a file of the torrent is a shortcut type Explorer resolves on sight (DL8).
@@ -697,7 +714,10 @@ mod tests {
         let first = new_folder(&dir, "pack").unwrap();
         assert_eq!(first, dir.join("pack (2)"));
         assert_eq!(new_folder(&dir, "pack").unwrap(), dir.join("pack (3)"));
-        assert_eq!(std::fs::read(dir.join("pack").join("a.bin")).unwrap(), b"mine");
+        assert_eq!(
+            std::fs::read(dir.join("pack").join("a.bin")).unwrap(),
+            b"mine"
+        );
         let _ = std::fs::remove_dir_all(&dir);
     }
 

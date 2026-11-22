@@ -5,8 +5,8 @@
 //! only. Pure: no file system here, nothing is logged. Mirrors the prototype `proto/wire.mjs`
 //! (`cleanName`, `risk`, `partName`) and its cases in `proto/run.mjs`.
 
-pub use file_names::{candidates, clean, defused, unique, MAX_NAME_BYTES};
 use file_names::extension;
+pub use file_names::{candidates, clean, defused, unique, MAX_NAME_BYTES};
 
 /// Types Nemo may open on a click (with the system's default app). Everything else is "other".
 /// An allow-list on purpose: a deny-list always misses a handler. Archives are not on it:
