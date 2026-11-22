@@ -79,7 +79,7 @@ export const about: Strings['about'] = {
       'The browser extension’s registration',
     ],
     pcCare:
-      'Anything “This PC” can still undo is kept. To take a change back, do it first under This PC → History.',
+      'Changes that “This PC” can still undo are kept. To undo one, do it first under This PC → History.',
     alsoAndroid:
       'On this phone also: the pairing with the PC and the messages and links received from the PC.',
     models: 'Also delete downloaded AI models',

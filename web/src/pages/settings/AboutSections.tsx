@@ -335,7 +335,7 @@ export function DeviceResetSection() {
             onChange={(e) => setModels(e.target.checked)}
           />
         )}
-        {wiping && <p role="status">{a.reset.busy}</p>}
+        <p role="status">{wiping ? a.reset.busy : ''}</p>
       </DoubleConfirmDialog>
     </SettingsGroup>
   );
