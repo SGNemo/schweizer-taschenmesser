@@ -45,7 +45,7 @@ import {
   type RunDeps,
   type RunOutcome,
 } from './run';
-import { migrateModel } from './migrateModel';
+import { ensureAutoReplanOff } from './migrateModel';
 import { getPlannerSettings } from './prefs';
 import { REST_PATH } from './rest';
 
@@ -123,6 +123,8 @@ export function runBackground(
   return enqueue(async () => {
     if ((suspended && !opts.force) || (await switchedOff())) return undefined;
     const deps = await depsNow(true);
+    // For the sake of a device still on the old version (once per app start, no read of its own unless needed).
+    await ensureAutoReplanOff(deps.settings).catch(logError('planner.migrate'));
     return runPlanner(deps, opts);
   });
 }
@@ -292,19 +294,7 @@ export default function start(): () => void {
   };
   void preload()
     .catch(() => undefined)
-    .then(async () => {
-      if (!active) return;
-      // The step into „the plan stays put“ (pins → locks), once the sync has settled; a start that is not settled
-      // leaves it to the next one – a pin that is still stored is found again.
-      if (await syncSettled(undefined, { wait: true })) {
-        const moved = await migrateModel(today()).catch((e: unknown) => {
-          logError('planner.migrate')(e);
-          return [] as string[];
-        });
-        // A thing the step laid on its pinned day: its source hears that day (the one write-back of the step).
-        if (moved.length > 0)
-          await runBackground({ force: true, touched: moved }).catch(logError('planner.run'));
-      }
+    .then(() => {
       if (!active) return;
       sub = liveQuery(inputSnapshot).subscribe({
         next: schedule,

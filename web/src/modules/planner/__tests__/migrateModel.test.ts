@@ -1,9 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
-import { getMeta } from '@/core/db/metaKv';
 import { setNow } from '@/core/time/now';
 import { createTestDb } from '@/test-utils';
-import { migrateModel, migratePins, MODEL, MODEL_KEY } from '../migrateModel';
+import { ensureAutoReplanOff, migratePins, resetAutoReplanCheck } from '../migrateModel';
 import { assignmentRepo, itemRepo, putRow } from '../repo';
 import type { AssignmentRow } from '../schema';
 import { getPlannerSettings } from '../prefs';
@@ -105,26 +104,28 @@ describe('pins become locks on the row', () => {
   });
 
   it('takes a pin that arrives later (an old backup, a device on the old version) the same way', async () => {
-    await migrateModel(TODAY);
+    await migratePins(TODAY);
     await item('todos:late', '2026-11-20');
     await row('todos:late', '2026-11-20');
-    await migrateModel(TODAY);
+    await migratePins(TODAY);
     expect(await plan()).toEqual({ 'todos:late#0': '2026-11-20 fest' });
   });
 
-  it('marks the device; without a sync nothing is written to the settings (no other device to stop)', async () => {
-    await migrateModel(TODAY);
-    expect(await getMeta(MODEL_KEY)).toBe(MODEL);
+  it('without a sync nothing is written to the settings (no other device to stop)', async () => {
+    resetAutoReplanCheck();
+    await ensureAutoReplanOff(await getPlannerSettings());
     expect(await db.table('_settings').count()).toBe(0);
     expect(await db.table('_outbox').count()).toBe(0);
   });
 
   it('with a sync set up the old automatic planning is stored as off, once', async () => {
+    resetAutoReplanCheck();
     await db.table('_secrets').put({ key: 'syncConfig', value: { kind: 'server' } });
-    await migrateModel(TODAY);
+    await ensureAutoReplanOff(await getPlannerSettings());
     expect((await getPlannerSettings()).autoReplan).toBe(false);
     const writes = await db.table('_outbox').count();
-    await migrateModel(TODAY);
+    resetAutoReplanCheck();
+    await ensureAutoReplanOff(await getPlannerSettings());
     expect(await db.table('_outbox').count()).toBe(writes);
   });
 });

@@ -30,6 +30,7 @@ import {
 import { isPlannerOwned, type CalendarItem, type ModuleManifest } from '@/core/modules/types';
 import { fixedOf, planDays } from './days';
 import { lateMoneyDue } from './late';
+import { migratePins } from './migrateModel';
 import { itemKeyOf, plannerRepos, putRow, type PlannerDb, type PlannerRepos } from './repo';
 import type { AssignmentRow, PlanItemRow } from './schema';
 import { planSettings, type PlannerSettings } from './settings';
@@ -444,6 +445,19 @@ export async function runPlanner(
 ): Promise<RunOutcome> {
   const repos = plannerRepos(deps.database);
   const inputs = await buildInputs(deps, repos);
+  // The step into „the plan stays put“: a pin of before (`item.pinned`) becomes „fest“ on the placement row. It is
+  // found in the rows this run has read anyway – no start-up read of its own – and only once the sync has settled;
+  // a pin that arrives later (an old backup, a device on the old version) is taken the same way. The source of a
+  // thing the step laid on its pinned day hears that day.
+  if (deps.settled && !deps.aborted?.() && [...inputs.itemRows.values()].some((r) => r.pinned)) {
+    const moved: string[] = [];
+    if ((await migratePins(deps.today, deps.database, moved)) > 0)
+      return runPlanner(deps, {
+        ...opts,
+        force: true,
+        touched: [...(opts.touched ?? []), ...moved],
+      });
+  }
   const last = await getMeta<LastRun>(LAST_RUN_KEY, deps.database);
   const rowsSig = rowsSignature([...inputs.prevRows.values()]);
   if (!opts.force && last && last.hash === inputs.hash && last.rowsSig === rowsSig)
