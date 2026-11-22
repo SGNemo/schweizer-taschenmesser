@@ -2,6 +2,6 @@
 type: security
 area: platform
 breaking: false
-de: Windows: Nemo startet Task-Manager, Explorer und das Registrierungswerkzeug nur noch aus dem Windows-Ordner – eine gleichnamige Datei neben der Nemo-Exe (etwa im Download-Ordner) wird nie ausgeführt.
-en: Windows: Nemo starts Task Manager, Explorer and the registry tool only from the Windows folder – a file of the same name next to the Nemo exe (for example in Downloads) is never run.
+de: Nemo startet Task-Manager, Explorer und andere Windows-Programme nur noch aus dem Windows-Ordner, nie eine gleichnamige Datei aus deinem Download-Ordner.
+en: Nemo starts Task Manager, Explorer and other Windows programs only from the Windows folder, never a file of the same name from your Downloads folder.
 ---

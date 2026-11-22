@@ -82,7 +82,8 @@ impl Tool {
 
 /// Full path of one of Windows' own programs (`taskmgr.exe` in `System32`, …), asked from Windows.
 /// For callers that start such a program themselves: never by bare name, see [`Tool::open`].
-/// `None` on other systems and when Windows does not name the folder.
+/// `program` is a plain file name (no folder parts). `None` on other systems and when Windows does
+/// not name the folder.
 pub fn system_program(home: Home, program: &str) -> Option<std::path::PathBuf> {
     #[cfg(windows)]
     {

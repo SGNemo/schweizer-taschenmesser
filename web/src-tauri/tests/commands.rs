@@ -1131,6 +1131,7 @@ fn rust_files(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
 /// app's own exe first. The portable exe often lives in the Downloads folder, so a downloaded
 /// file called `reg.exe` would run in its place. Programs are started by a full path that
 /// Windows names (system folder) or that the app built itself, never by a text literal.
+/// (A line rule: a literal on the next line or behind a `const` is not seen; reviews keep those out.)
 #[test]
 fn no_program_is_started_by_bare_name() {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
