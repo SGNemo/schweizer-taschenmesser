@@ -25,5 +25,5 @@ type: added
 area: planner
 breaking: false
 de: Planer: Trainings und Routinen stehen jetzt an ihrem Tag im Planer, ohne dass du sie erst einteilst.
-en: Planner: trainings and routines now show on their day in the planner without laying them first.
+en: Planner: trainings and routines now show on their day in the planner without placing them first.
 ---

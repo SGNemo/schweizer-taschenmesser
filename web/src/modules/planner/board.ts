@@ -451,6 +451,11 @@ export function buildBoard(input: BoardInput): Board {
       });
     }
   }
+  // „Liegt weiter voraus“ in date order, laid things and dated turns together.
+  const laterRows = waiting
+    .filter((w) => w.reason === 'later')
+    .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? '') || a.unitId.localeCompare(b.unitId));
+  waiting.splice(0, waiting.length, ...waiting.filter((w) => w.reason !== 'later'), ...laterRows);
   const todayDay = days[0];
   const todayCount = todayDay ? new Set(todayDay.rows.map((r) => r.itemKey)).size : 0;
   return { days, waiting, late, open, todayCount };

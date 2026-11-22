@@ -622,24 +622,35 @@ export function spreadDay(
   fixed: number,
   titles: Record<string, string>,
 ) {
-  const lead =
-    fixed > 0
-      ? `${t.planner.spread.done}\n${t.planner.spread.fixed(fixed)}`
-      : t.planner.spread.done;
+  // The toast says what is true at „Übernehmen“: the fixed ones counted then, nothing „verteilt“ when nothing went.
+  let still: string[] = [];
+  let fixedNow = fixed;
+  const lineOf = () =>
+    still.length === 0
+      ? fixedNow > 0
+        ? t.planner.spread.fixed(fixedNow)
+        : t.planner.preview.nothing
+      : fixedNow > 0
+        ? `${t.planner.spread.done}\n${t.planner.spread.fixed(fixedNow)}`
+        : t.planner.spread.done;
   return act(
     t.planner.rest.link,
-    lead,
+    t.planner.spread.done,
     titles,
     async () => {
-      // As it is now, not as the preview found it: a thing locked or moved meanwhile is not handed over.
-      const still: string[] = [];
+      // As it is now, not as the preview found it: a thing locked, moved or cut into parts meanwhile is not handed
+      // over (the preview's own rule: one unlocked row on that day).
+      still = [];
       for (const key of loose) {
         const rows = await rowsOf(key);
-        if (rows.length > 0 && rows.every((r) => r.date === date && !r.locked)) still.push(key);
+        if (rows.length === 1 && rows[0]!.of === 1 && rows[0]!.date === date) {
+          if (rows[0]!.locked) fixedNow += 1;
+          else still.push(key);
+        }
       }
       return { loose: still, notBefore: date };
     },
-    { leadOnly: true, proposes: true },
+    { leadOnly: true, proposes: true, leadAfter: async () => lineOf() },
   );
 }
 

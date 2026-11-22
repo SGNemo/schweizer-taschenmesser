@@ -591,7 +591,11 @@ export default function PlannerPage() {
         reason={reason}
         whyOpen={why === row.unitId}
         dueClock={dueClock}
-        menu={rowMenu(row, day.date, reason, { tick, lockInMenu: lockHidden(row) })}
+        menu={rowMenu(row, day.date, reason, {
+          tick,
+          // The same rule as the toggle: no one-day lock on a part of a thing.
+          lockInMenu: lockHidden(row) && row.of === 1,
+        })}
         lock={lockHidden(row) ? undefined : lockOf(row, day.date)}
         onDone={tick ? () => done(row) : undefined}
         onLater={
@@ -764,15 +768,28 @@ export default function PlannerPage() {
   const laidLater = waiting.filter((w) => w.reason === 'later');
   // „Vorschlag: Do · Frist Fr“ (CONCEPT §2): things without a day that carry a deadline get a day proposed by one dry
   // run over all of them – computed here, never stored; two chips never claim the same room.
+  // A ToDo date still ahead gets its own chip („In ToDos“): such a thing takes no room in the proposal either.
+  const todoAhead = (w: (typeof waiting)[number]) =>
+    !!w.todoDate && data !== undefined && w.todoDate >= data.today;
   const chipKeys = waiting
-    .filter((w) => w.reason !== 'later' && w.reason !== 'excluded' && w.hardDue && w.entry)
+    .filter(
+      (w) =>
+        w.reason !== 'later' && w.reason !== 'excluded' && w.hardDue && w.entry && !todoAhead(w),
+    )
     .map((w) => w.itemKey)
     .sort();
   const chipSig = data
     ? JSON.stringify([
         data.today,
         chipKeys,
-        waiting.map((w) => [w.itemKey, w.hardDue, w.minutes]),
+        waiting.map((w) => [
+          w.itemKey,
+          w.hardDue,
+          w.minutes,
+          w.item?.priority ?? w.entry?.priority,
+          w.entry?.earliest,
+          w.item?.part,
+        ]),
         data.settings,
         board?.days.map((d) => [d.date, d.usable, d.rows.map((r) => [r.unitId, r.minutes])]),
       ])
@@ -797,7 +814,7 @@ export default function PlannerPage() {
     // Only a proposal for the plan as it is now (a stale one could lay the thing on a day that filled up since).
     // A date the person set in ToDos comes first: its chip, never a proposal over it.
     const proposed =
-      w.hardDue && !w.todoDate && proposals?.sig === chipSig
+      w.hardDue && !todoAhead(w) && proposals?.sig === chipSig
         ? proposals.days[w.itemKey]
         : undefined;
     if (proposed)
