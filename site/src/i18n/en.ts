@@ -47,7 +47,7 @@ export const en = {
   home: {
     h1: "One thing first.",
     lead: "Nemo is a calm app for what everyday life brings: appointments, tasks, money, lists, passwords. It shows you what to do now. The rest waits.",
-    sub: "For Windows and Android. No account. Your data stays on your device.",
+    sub: "For Windows and Android. No account. Your data lives on your device; only what you set up goes online.",
     now: {
       alt: "Sketch of the “Up now” card: one task, below it the button “Start, 5 min” and the ways out “Later” and “Something else”. Behind it two folded rows saying “Still waiting”. Drawn, not a picture of the app.",
       label: "Up now",

@@ -9,7 +9,7 @@
 
 <h1 align="center">Nemo</h1>
 
-<p align="center">A calm everyday app for Windows and Android: calendar, to-dos, money, passwords and more. Made with ADHD in mind, and your data stays on your device.</p>
+<p align="center">A calm everyday app for Windows and Android: calendar, to-dos, money, passwords and more. Made with ADHD in mind. Your data lives on your device; only what you set up goes online.</p>
 
 <p align="center">
   <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases"><img src="https://img.shields.io/github/v/release/SGNemo/schweizer-taschenmesser?label=release" alt="Latest stable release"></a>

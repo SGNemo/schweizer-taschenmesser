@@ -53,7 +53,7 @@ export const de = {
   home: {
     h1: "Eine Sache zuerst.",
     lead: "Nemo ist eine ruhige App für das, was im Alltag anfällt: Termine, Aufgaben, Geld, Listen, Passwörter. Sie zeigt dir, was jetzt dran ist. Der Rest wartet.",
-    sub: "Für Windows und Android. Ohne Konto. Deine Daten bleiben auf deinem Gerät.",
+    sub: "Für Windows und Android. Ohne Konto. Deine Daten liegen auf deinem Gerät; ins Netz geht nur, was du einrichtest.",
     now: {
       alt: "Skizze der Karte „Jetzt dran“: eine Aufgabe, darunter der Knopf „Anfangen, 5 Min“ und die Wege „Später“ und „Etwas anderes“. Dahinter zwei eingeklappte Zeilen mit „Wartet noch“. Gezeichnet, kein Bild aus der App.",
       label: "Jetzt dran",

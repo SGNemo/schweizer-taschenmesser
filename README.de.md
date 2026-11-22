@@ -9,7 +9,7 @@
 
 <h1 align="center">Nemo</h1>
 
-<p align="center">Eine ruhige Alltags-App für Windows und Android: Kalender, ToDos, Geld, Passwörter und mehr. Mit ADHS im Blick gebaut, und deine Daten bleiben auf deinem Gerät.</p>
+<p align="center">Eine ruhige Alltags-App für Windows und Android: Kalender, ToDos, Geld, Passwörter und mehr. Mit ADHS im Blick gebaut. Deine Daten liegen auf deinem Gerät; ins Netz geht nur, was du einrichtest.</p>
 
 <p align="center">
   <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases"><img src="https://img.shields.io/github/v/release/SGNemo/schweizer-taschenmesser?label=Version" alt="Neueste stabile Version"></a>
