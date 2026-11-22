@@ -35,7 +35,7 @@ export const tLegal = defineBundle(
       },
       sync: {
         title: 'Sync (eigener Server oder Heimnetz)',
-        what: 'Änderungen deiner Einträge und Einstellungen (Sammlung, Eintrags-Id, Feldname, Zeitstempel, Wert). Mit Passwortsatz werden die Werte Ende-zu-Ende verschlüsselt; Sammlung, Id, Feld und Zeitstempel bleiben für den Server lesbar. Zugangsdaten, Schlüssel und lokale Stände werden nie übertragen.',
+        what: 'Änderungen deiner Einträge und Einstellungen (Sammlung, Eintrags-Id, Feldname, Zeitstempel, Wert). Mit Passwortsatz werden die Werte Ende-zu-Ende verschlüsselt; Sammlung, Id, Feld und Zeitstempel bleiben für den Server lesbar. Zugangsdaten, Schlüssel und lokale Stände werden nie übertragen; nur beim Koppeln im Heimnetz geht der Datenschlüssel einmal, verschlüsselt, an das gekoppelte Gerät.',
         to: 'Der Server, dessen Adresse du selbst einträgst und betreibst. Kein Dienst des Betreibers von Nemo. Beim Abgleich im Heimnetz stattdessen direkt deine gekoppelten Geräte im Heimnetz, immer verschlüsselt; der PC meldet sich dafür im Heimnetz, während du ein Gerät koppelst und solange eines gekoppelt ist. Austausch und Fernsteuerung laufen, wenn du sie einschaltest, über denselben Heimnetz-Zugang des PCs (eigene Sitzung).',
         when: 'Nur nach dem Verbinden unter Sync & Backup bzw. nach dem Koppeln im Heimnetz: beim Start, etwa jede Minute, bei Änderungen.',
       },
@@ -285,7 +285,7 @@ export const tLegal = defineBundle(
         },
         sync: {
           title: 'Sync (own server or home network)',
-          what: 'Changes to your entries and settings (collection, entry id, field name, timestamp, value). With a passphrase the values are end-to-end encrypted; collection, id, field and timestamp stay readable for the server. Credentials, keys and local state are never transferred.',
+          what: 'Changes to your entries and settings (collection, entry id, field name, timestamp, value). With a passphrase the values are end-to-end encrypted; collection, id, field and timestamp stay readable for the server. Credentials, keys and local state are never transferred; only when you pair in the home network does the data key go once, encrypted, to the paired device.',
           to: 'The server whose address you enter and run yourself. Not a service run by the maintainer of Nemo. With home-network sync instead straight to your paired devices in the home network, always encrypted; for this the PC announces itself in the home network while you pair a device and as long as one is paired. Device drop and Remote, when you switch them on, go through the PC’s same home-network access (a separate session).',
           when: 'Only after you connect it under Sync & backup, or after pairing in the home network: at start, about every minute, and on changes.',
         },
