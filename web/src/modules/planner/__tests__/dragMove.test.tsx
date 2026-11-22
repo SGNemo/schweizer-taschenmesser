@@ -61,7 +61,7 @@ const pointer = (type: string, target: Element | Window, x: number, kind = 'mous
   fireEvent(
     target,
     Object.assign(
-      new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: 0 }),
+      new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: 0, buttons: 1 }),
       {
         pointerId: 1,
         pointerType: kind,
@@ -140,6 +140,24 @@ describe('dragging a row onto a day', () => {
     act(() => vi.advanceTimersByTime(LONG_PRESS_MS + 10));
     pointer('pointerup', window, 0, 'touch');
     expect(onMenu).toHaveBeenCalledTimes(1);
+    expect(onDrop).not.toHaveBeenCalled();
+  });
+
+  it('a button released outside the window ends the drag: the next move drops nothing', () => {
+    render(<Harness />);
+    pointer('pointerdown', screen.getByText('Saugen'), 0);
+    pointer('pointermove', window, 30);
+    under = screen.getByTestId('wed');
+    // No button pressed any more (`buttons` 0): the drag is over.
+    fireEvent(
+      window,
+      Object.assign(new MouseEvent('pointermove', { bubbles: true, clientX: 40, buttons: 0 }), {
+        pointerId: 1,
+        pointerType: 'mouse',
+        isPrimary: true,
+      }),
+    );
+    pointer('pointerup', window, 40);
     expect(onDrop).not.toHaveBeenCalled();
   });
 

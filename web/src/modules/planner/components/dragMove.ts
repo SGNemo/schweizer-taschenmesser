@@ -19,6 +19,8 @@ export interface DragRow {
   onDrop: (date: string) => void;
   /** `M` on the focused row: the move by keyboard („Verschieben …“). */
   onMoveKey?: () => void;
+  /** False where no day is in sight to drop on (the tab „Noch offen“): `M` only, no drag. */
+  drag?: boolean;
 }
 
 export interface DragState {
@@ -162,7 +164,7 @@ export function useDragMove(rowOf: (unitId: string) => DragRow | undefined) {
       const control = target?.closest('button, a, input, label, [role="checkbox"]');
       if (control && !control.matches('[data-row]')) return;
       const row = lookup.current(unit);
-      if (!row) return;
+      if (!row || row.drag === false) return;
       g = {
         row,
         li,
@@ -186,6 +188,8 @@ export function useDragMove(rowOf: (unitId: string) => DragRow | undefined) {
 
     const onMove = (e: PointerEvent) => {
       if (!g || e.pointerId !== g.pointerId) return;
+      // The button was released where no `pointerup` reached the page (outside the window): the drag is over.
+      if (g.mouse && e.buttons === 0) return end();
       if (!g.dragging) {
         const moved = Math.hypot(e.clientX - g.x0, e.clientY - g.y0);
         if (g.mouse) {
@@ -287,11 +291,14 @@ export function useDragMove(rowOf: (unitId: string) => DragRow | undefined) {
       move();
     };
 
+    // The window lost the focus mid-drag (alt-tab): nothing is dropped.
+    window.addEventListener('blur', end);
     host.addEventListener('pointerdown', onDown);
     host.addEventListener('contextmenu', onContextMenu, true);
     host.addEventListener('keydown', onKey);
     return () => {
       end();
+      window.removeEventListener('blur', end);
       host.removeEventListener('pointerdown', onDown);
       host.removeEventListener('contextmenu', onContextMenu, true);
       host.removeEventListener('keydown', onKey);

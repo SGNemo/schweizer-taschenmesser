@@ -582,7 +582,6 @@ export const setPart = (
     { leadOnly: true },
   );
 
-/** „Verschieben …“: the thing lies on that day from now on. Nothing else moves; it is not „fest“ by that. */
 /**
  * „Verschieben …“, `M` and a drop on a day (package 5): the thing lies on that day and nothing else moves; one undo. A
  * full or kept-free target says so in the toast – the one live message of the move.

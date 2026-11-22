@@ -628,10 +628,23 @@ export default function PlannerPage() {
   // Package 5: the rows that can be dragged onto a day (or moved with `M`), filled while they render; the page's
   // column listens once. A drop is the same move as „Verschieben …“: that thing on that day, nothing else.
   const movers = new Map<string, DragRow>();
+  /** All minutes of a thing on the board's days (a thing in parts moves whole). */
+  const wholeMinutes = (itemKey: string) =>
+    (board?.days ?? [])
+      .flatMap((d) => d.rows)
+      .filter((r) => r.itemKey === itemKey)
+      .reduce((n, r) => n + r.minutes, 0);
   const mover = (
-    row: { unitId: string; title: string; minutes: number; entry?: PlannableEntry },
+    row: {
+      unitId: string;
+      itemKey: string;
+      title: string;
+      minutes: number;
+      entry?: PlannableEntry;
+    },
     menu: readonly RowMenuItem[] | undefined,
     from?: string,
+    drag = true,
   ) => {
     const e = row.entry;
     // As the menu: a row that offers „Verschieben …“ (or the open tab's move button) can be dragged.
@@ -639,8 +652,10 @@ export default function PlannerPage() {
     movers.set(row.unitId, {
       unitId: row.unitId,
       title: row.title,
-      minutes: row.minutes,
+      // A thing in parts moves whole: the target shows all of it.
+      minutes: wholeMinutes(row.itemKey) || row.minutes,
       ...(from ? { from } : {}),
+      drag,
       onDrop: (date) => void moveTo(e, date, titles),
       onMoveKey: () => setChoice({ kind: 'move', entry: e, ...(from ? { on: from } : {}) }),
     });
@@ -722,7 +737,8 @@ export default function PlannerPage() {
         was={row.pinned ? row.date : undefined}
         // Package 3: tick, title, „war Mo“, lock and a move button – no ⋯; two taps to a day, also on the phone.
         menu={[]}
-        draggable={mover(row, undefined, row.date)}
+        // No day is in sight on this tab: `M` and the move button, no drag.
+        draggable={mover(row, undefined, row.date, false)}
         lock={lockOf(row, row.date)}
         onMove={
           row.entry ? () => setChoice({ kind: 'move', entry: row.entry!, on: row.date }) : undefined
@@ -896,17 +912,21 @@ export default function PlannerPage() {
   );
 
   // A row of „Frist vorbei“: the one row form, neutral; it sits on no day, so no tick, no „Später“, no duration.
-  const renderLate = (row: BoardRow) => (
-    <ThingRow
-      key={row.unitId}
-      row={row}
-      reason=""
-      whyOpen={false}
-      dueClock={dueClock}
-      menu={rowMenu(row, undefined, undefined, { late: true })}
-      noDuration
-    />
-  );
+  const renderLate = (row: BoardRow) => {
+    const menu = rowMenu(row, undefined, undefined, { late: true });
+    return (
+      <ThingRow
+        key={row.unitId}
+        row={row}
+        reason=""
+        whyOpen={false}
+        dueClock={dueClock}
+        menu={menu}
+        noDuration
+        draggable={mover(row, menu)}
+      />
+    );
+  };
 
   const waiting = board?.waiting ?? [];
   const late = board?.late ?? [];
