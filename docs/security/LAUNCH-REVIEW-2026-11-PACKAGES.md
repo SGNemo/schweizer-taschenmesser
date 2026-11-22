@@ -4,20 +4,20 @@ Findings and evidence: [LAUNCH-REVIEW-2026-11.md](LAUNCH-REVIEW-2026-11.md). One
 
 | # | Package | Branch | Findings | Blocks | Who merges |
 |---|---|---|---|---|---|
-| 0 | SC1 (no chat) | – | steps of the private note; list "For the maintainer in GitHub" | exe, APK, website | Sven, by hand |
+| 0 | SC1 (no chat) | – | steps of the private note | exe, APK, website | Sven, by hand |
 | 1 | Release pipeline: signing only where it belongs | `ci/security-release-guard` | SC2, SC3, SC4, SC9, SC10, NS4 (and what the private note assigns to it) | exe, APK (condition) | Sven |
 | 2 | "Alle Daten löschen" also wipes the native stores | `fix/security-reset-native` | R1, R2, R3 | exe, APK | Sven |
 | 3 | Downloads and torrent hardening | `fix/security-downloads-hardening` | DL1–DL11 | exe (condition) | – |
 | 4 | Android update: flavour and version | `fix/security-update-auth` | NS2, NS3, S13 (decision) | APK (condition) | Sven |
 | 5 | Vault bridge first instance, overlay host | `fix/security-bridge-first-instance` | X2, X4 | extension, exe (condition) | Sven |
-| 6 | Sync token into the secret store | `fix/security-sync-token-store` | S5 | exe, APK, PWA (condition) | Sven |
+| 6 | Sync token into the secret store | `fix/security-sync-token-store` | S5 | exe, APK (condition; the PWA keeps IndexedDB: accept there) | Sven |
 | 7 | Chat stays with its provider | `fix/security-ai-provider-pin` | AI1 | exe, APK, PWA (condition) | – |
-| 8 | Home network and remote control, small hardening | `fix/security-lan-hardening` | H1, H2, H4, H5, H6, H10, F1, F2, F3, E1–E5 | – | – (H3, H10 rule text: Sven) |
-| 9 | Android: manifest, lock screen, clipboard | `fix/security-android-surface` | NS5, NS6, NS8 (V4) | – | – |
+| 8 | Home network and remote control, small hardening | `fix/security-lan-hardening` | H1, H2, H3 (proposal), H4, H5, H6, H10, F1, F2, F3, E1–E5 | – | – (H3, H10 rule text: Sven) |
+| 9 | Android: manifest, lock screen, clipboard | `fix/security-android-surface` | NS5, NS6, NS8 (V4) | – | Sven (NS8 is in the secret-store plugin) |
 | 10 | Web layer and server lows | `fix/security-web-lows` | R5, R6, R8, M2, M5, M6, Q1, Q2, Q3, B1–B3, PC2, PC3, N9, SC6, SC7; V5 only if not accepted | – | – |
 | 11 | Privacy texts, second pass | `docs/security-privacy-texts-2` | D9, D10 (rest), D11, D13, M7, F5 | – | – |
 
-Not packaged – info items and lows whose recommendation is "accept for 1.0": H7–H9, F4, F6, F7, E6–E9 (review with the exchange file packages), B4–B7, PC4, PC5, A5 (low, accept), A9–A11, MOD1, MOD2, NS9, NS10, Q4, Q5, SC5 (low, accept: not reachable), SC8, SC11, D15, V9, T6–T8, P5 (low, accept). Mediums with recommendation accept: S13, V5.
+Not packaged – info items and lows whose recommendation is "accept for 1.0": H7–H9, F4, F6, F7, E6–E9 (review with the exchange file packages), B4–B7, PC4, PC5, A5 (low, accept), A9–A11, MOD1, MOD2, NS9, NS10, Q4, Q5, SC5 (low, accept: not reachable), SC8, SC11, D15, V9, T6–T8, P5 (low, accept). Mediums with recommendation accept: S13, V5, X4.
 
 ### Prompt – package 1: release pipeline (`ci/security-release-guard`)
 
@@ -106,7 +106,7 @@ Routing: Claude Code · Sicherheit Paket 5 – Tresor-Bridge: erste Pipe-Instanz
 # Aufgabe (unbeaufsichtigt): X2, X4
 Lies docs/security/VAULT-EXTENSION.md, LAUNCH-REVIEW-2026-10-06.md (X2, X4), crates/vault-bridge/src/{ipc,server}.rs, extension/src/content/ui.ts, extension/CLAUDE.md.
 ## Pflichtliste
-- X2: erste Instanz in `bind()` anlegen (`FILE_FLAG_FIRST_PIPE_INSTANCE`), `AddrInUse` nach oben geben, Schleife stoppt statt neu zu versuchen; die App zeigt „belegt“.
+- X2: das Flag ist gesetzt, wird aber vom ersten Fehlversuch verbraucht (`first.swap(false)`), die Schleife in `server.rs` versucht es alle 100 ms ohne Flag neu. Erste Instanz in `bind()` anlegen, `AddrInUse` nach oben geben, Schleife stoppt statt neu zu versuchen; die App zeigt „belegt“.
 - X4: vor jedem Klick prüfen, dass der Host verbunden, sichtbar und nicht überdeckt ist; entfernt → neu anhängen.
 - Bedrohungsmodell in VAULT-EXTENSION.md nachziehen.
 ## Abnahme
@@ -158,7 +158,7 @@ Routing: Claude Code · Sicherheit Paket 8 – Heimnetz und Fernsteuerung: klein
 # Aufgabe (unbeaufsichtigt): H1, H2, H4, H5, H6, F1, F2, F3, E1–E5; H3 und H10 nur als Vorschlag
 Lies den Bericht, RULES „LAN sync“, docs/rules/remote-control.md, docs/design/sync-lan/CONCEPT.md. Noise, Schlüssel und Datenschlüssel nur lesen. Hotspot `crates/lan-sync`: Heads-up zuerst.
 ## Pflichtliste
-- H1: Frist bis zum ersten authentifizierten Frame, Annahmen zählen ins Limit. H2: `open()` nur im WLAN. H4: Gesamtdauer des Kopplungsfensters. H5: Fehler zeigen, Speichern wiederholen. H6: Code am PC eintippen oder nativer Dialog.
+- H1: Frist bis zum ersten authentifizierten Frame, Annahmen zählen ins Limit. H2: `open()` und die mDNS-Suche nur im Heimnetz bzw. WLAN. H4: Gesamtdauer des Kopplungsfensters. H5: Fehler zeigen, Speichern wiederholen. H6: Code am PC eintippen oder nativer Dialog.
 - F1: „Abbrechen“ ist Standardtaste. F2: Gleicher-Hub-Prüfung. F3/NS7: Dateibereich der Seite einengen + Test.
 - E1–E5: Grenzen je Gerät, Limit am Handy, Modul-aus erreicht den nativen Schalter, Ausgang bei Pause, Namensfilter im Dialog.
 - H3: Text und Ablauf „Schlüssel erneuern nach dem Entkoppeln“ als Vorschlag im PR-Text (Sync-Verschlüsselung: Sven entscheidet). H10: mDNS je Schnittstelle binden oder den Regelsatz „nie 0.0.0.0“ auf den TCP-Listener einschränken – beide Wege mit Aufwand, Sven entscheidet (Regeltext).
@@ -181,7 +181,7 @@ Routing: Claude Code · Sicherheit Paket 9 – Android: Sicherung, Sperrbildschi
 ## Abnahme
 Skript- und Vitest-Tests vorher rot; Handtest SEC-13.
 ## Skills
-council. Full stop.
+council. Mergt Sven selbst (NS8). Full stop.
 ```
 
 ### Prompt – package 10: web layer and server lows (`fix/security-web-lows`)

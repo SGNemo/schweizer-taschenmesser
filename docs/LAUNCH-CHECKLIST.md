@@ -27,7 +27,7 @@ Do this on a **fresh Windows VM** and a **real Android device** before a release
 ## Security
 - [ ] Verdict per channel read: [security/LAUNCH-REVIEW-2026-11.md](security/LAUNCH-REVIEW-2026-11.md). No channel with "no" is published; every condition is fixed or accepted with a reason (note it in the release issue).
 - [ ] SC1 closed: every step of the private note is done.
-- [ ] The three fix PRs of the review are merged (`fix/security-web-inputs`, `fix/security-windows-spawn`, `fix/security-privacy-texts`); packages 1–3 of [security/LAUNCH-REVIEW-2026-11-PACKAGES.md](security/LAUNCH-REVIEW-2026-11-PACKAGES.md) are decided.
+- [ ] Per channel: every medium finding listed in its verdict row is merged as a fix (the three fix PRs of the review, packages of [security/LAUNCH-REVIEW-2026-11-PACKAGES.md](security/LAUNCH-REVIEW-2026-11-PACKAGES.md)) or accepted in writing in the release issue.
 - [ ] Hand tests SEC-1 to SEC-14 in [MANUAL-TESTS.md](MANUAL-TESTS.md) are done; deviations are in the release issue.
 
 ## Sign-off
