@@ -69,13 +69,22 @@ export const about: Strings['about'] = {
     warning:
       'This can’t be undone. Make a backup first (Sync & backup) if you still need the data.',
     alsoAll:
-      'Also gone: codes for “Share with partner” and this device’s push reminders on the sync server.',
-    alsoDesktop:
-      'On this PC also: home-network sync (paired devices, remote control, exchange, program list, keys), the list of downloads and torrents (downloaded files stay), the built-in browser’s data, the error log and the browser extension’s registration. The undo list of PC care stays as long as something there can still be taken back – undo changes there first if you don’t want to keep them.',
+      'Also gone: codes for “Share with partner” and, if set up, push reminders on the sync server.',
+    alsoDesktop: 'On this PC also:',
+    alsoDesktopItems: [
+      'Home-network sync, paired devices and their permissions',
+      'List of downloads and torrents (the files stay)',
+      'The built-in browser’s data',
+      'Error log',
+      'The browser extension’s registration',
+    ],
+    pcCare:
+      'Anything “This PC” can still undo is kept. To take a change back, do it first under This PC → History.',
     alsoAndroid:
       'On this phone also: the pairing with the PC and the messages and links received from the PC.',
     models: 'Also delete downloaded AI models',
-    modelsHint: 'The files are large. Without the tick they stay for later.',
+    modelsHint: 'The files are large. If you leave this unticked, they stay.',
+    busy: 'Deleting …',
     confirm: 'Delete for good',
   },
   licenses: 'Licence notices',

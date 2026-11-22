@@ -41,8 +41,12 @@ use zeroize::Zeroizing;
 
 const TICK: Duration = Duration::from_secs(2);
 
+/// After "Alle Daten löschen" no hub starts for this long: a sync round of the page that is about
+/// to reload must not build new keys and a new `lan-sync/` right after the wipe.
+const WIPE_HOLD: Duration = Duration::from_secs(60);
+
 #[derive(Default)]
-pub struct LanSync(Mutex<Option<Running>>);
+pub struct LanSync(Mutex<Option<Running>>, Mutex<Option<std::time::Instant>>);
 
 impl LanSync {
     /// The hub is started (listening or waiting for a network); a poisoned lock counts as running,
@@ -434,6 +438,9 @@ fn with_core<T>(
 #[tauri::command(async)]
 pub fn lan_hub_start(app: AppHandle, state: State<'_, LanSync>) -> Result<StartDto, String> {
     let mut slot = state.0.lock().map_err(|_| "internal")?;
+    if wiped_within(&state.1, std::time::Instant::now()) {
+        return Err("wiped".to_owned());
+    }
     if let Some(r) = slot.as_ref() {
         let dk = r
             .core
@@ -567,13 +574,25 @@ pub(crate) fn wipe_hub(hub: &impl HubWipe, dir: Option<&std::path::Path>) -> Res
     ok.then_some(()).ok_or(())
 }
 
+/// True while a wipe is less than [`WIPE_HOLD`] ago; a poisoned lock counts as wiped.
+fn wiped_within(at: &Mutex<Option<std::time::Instant>>, now: std::time::Instant) -> bool {
+    at.lock().map_or(true, |at| {
+        at.is_some_and(|t| now.saturating_duration_since(t) < WIPE_HOLD)
+    })
+}
+
 pub(crate) struct AppHub<'a>(pub &'a AppHandle);
 
 impl HubWipe for AppHub<'_> {
     fn stop(&self) -> Result<(), ()> {
         use tauri::Manager as _;
+        let state = self.0.state::<LanSync>();
+        // first: a start waiting for the lock (a sync round) must not rebuild the hub afterwards
+        if let Ok(mut at) = state.1.lock() {
+            *at = Some(std::time::Instant::now());
+        }
         // the command itself (also used by "Ausschalten"), so both stop the hub the same way
-        lan_hub_stop(self.0.clone(), self.0.state::<LanSync>()).map_err(|_| ())
+        lan_hub_stop(self.0.clone(), state).map_err(|_| ())
     }
 
     fn delete_key(&self, name: &str) -> Result<(), ()> {
@@ -925,6 +944,20 @@ mod tests {
         let root = temp_root("missing");
         let hub = FakeHub::running();
         assert_eq!(wipe_hub(&hub, Some(&root.join("lan-sync"))), Ok(()));
+    }
+
+    #[test]
+    fn no_hub_starts_for_a_minute_after_a_wipe() {
+        let at = Mutex::new(None);
+        let t0 = std::time::Instant::now();
+        assert!(!wiped_within(&at, t0));
+        *at.lock().unwrap() = Some(t0);
+        assert!(wiped_within(&at, t0 + Duration::from_secs(59)));
+        assert!(!wiped_within(&at, t0 + WIPE_HOLD));
+        // `lan_hub_start` asks before it builds anything, under the hub lock
+        let src = include_str!("lan_sync.rs");
+        let start = &src[src.find("pub fn lan_hub_start(").unwrap()..];
+        assert!(start.find("wiped_within(").unwrap() < start.find("build(&app)").unwrap());
     }
 
     /// The wipe deletes the very entries `build` creates.
