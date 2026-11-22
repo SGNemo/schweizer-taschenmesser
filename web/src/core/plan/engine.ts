@@ -67,7 +67,13 @@ export function plan(input: PlanInput): PlanResult {
   for (;;) {
     const back = new Set(
       result.unplaced
-        .filter((u) => u.reason !== 'after-hard-due' && u.reason !== 'no-day' && had.has(u.itemKey))
+        .filter(
+          (u) =>
+            // A unit placed after its deadline has a day (`date`); one that found none goes back like the rest.
+            !(u.reason === 'after-hard-due' && u.date !== undefined) &&
+            u.reason !== 'no-day' &&
+            had.has(u.itemKey),
+        )
         .map((u) => u.itemKey),
     );
     const next = loose.filter((k) => !back.has(k));

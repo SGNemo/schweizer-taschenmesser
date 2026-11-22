@@ -320,6 +320,8 @@ export async function writeRows(
   inputs: RunInputs,
   repos: PlannerRepos,
   aborted?: () => boolean,
+  /** The things the action named (`loose ∪ touched`): only for them a part that no longer exists is removed. */
+  named?: ReadonlySet<string>,
 ): Promise<number> {
   let n = 0;
   const live = new Set<string>();
@@ -355,7 +357,7 @@ export async function writeRows(
     const key = inputs.prevRows.get(id)!.itemKey;
     // A part that no longer exists (the thing got shorter: three parts became two) goes – the thing itself is
     // listed and its other parts are known to this run.
-    const stalePart = !known.has(id) && knownItems.has(key);
+    const stalePart = !known.has(id) && knownItems.has(key) && named?.has(key) === true;
     if (!inputs.removeKeys.has(key) && !stalePart) continue;
     await repos.assignment.remove(id);
     n++;
@@ -466,7 +468,13 @@ export async function runPlanner(
     settings: inputs.settings,
   });
   if (bail()) return { ran: false, inputs, rowWrites: 0, writeBacks: 0 };
-  const rowWrites = await writeRows(result, inputs, repos, deps.aborted);
+  const rowWrites = await writeRows(
+    result,
+    inputs,
+    repos,
+    deps.aborted,
+    new Set([...loose, ...(opts.touched ?? [])]),
+  );
   const writeBacks = await writeBackPlan(
     result,
     inputs,

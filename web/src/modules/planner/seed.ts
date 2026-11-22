@@ -143,8 +143,9 @@ async function afterSeed(ctx: AfterSeedContext): Promise<{ collection: string; i
   // The test data is laid out once – only the seed's own things are handed to the engine, a person's own plan
   // stays as it is. The seed's pin („Präsentation proben“) becomes „fest“ on its day right away.
   await runBackground({ force: true, reshuffle: true, looseIf: isSeed });
-  await migratePins(today());
-  await runBackground({ force: true });
+  const moved: string[] = [];
+  await migratePins(today(), undefined, moved, isSeed);
+  await runBackground({ force: true, touched: moved });
   // Every row of a seed task – also one the service's own run wrote before this hook (re-registering is harmless),
   // and also a deleted one: on a slow device the service runs between the todos rows and the planner's own rows,
   // plans the task that is meant to stay out, and the run above takes that row away again. Its tombstone is test

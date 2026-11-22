@@ -148,6 +148,25 @@ describe('the plan stays put (`loose`)', () => {
     expect(r.diff.moved).toEqual([]);
   });
 
+  it('also a thing with a hard deadline that finds no room before it keeps its day', () => {
+    const laid = Array.from({ length: 7 }, (_, d) =>
+      ['x', 'y', 'z'].map((k) => [item(`${k}${d}`), addDays(MON, d)] as const),
+    ).flat();
+    const r = plan({
+      today: MON,
+      days: days(),
+      items: [
+        ...laid.map(([i]) => i),
+        item('due', { durationMin: 240, due: { date: addDays(MON, 2), hard: true } }),
+      ],
+      prev: [...laid.map(([i, date]) => on(i.key, date)), on('due', addDays(MON, 4))],
+      loose: ['due'],
+      settings,
+    });
+    expect(where(r).due).toBe(addDays(MON, 4));
+    expect(r.unplaced.filter((u) => u.date === undefined)).toEqual([]);
+  });
+
   it('is deterministic and stable when a proposal is taken in part', () => {
     const items = ['a', 'b', 'c', 'd', 'e', 'f'].map((k, i) => item(k, { createdAt: i }));
     const all = plan({

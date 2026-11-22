@@ -9369,8 +9369,7 @@ export const de = {
       onlyLate: 'Die Woche ist leer. Offen sind nur die Rechnungen unter „Frist vorbei“.',
       onlyLateThings: 'Die Woche ist leer. Offen ist nur, was unter „Frist vorbei“ steht.',
       onlyOpen: 'Diese Woche ist leer. Was von früher offen ist, steht unter „Noch offen“.',
-      noDayNext:
-        'Deine Dinge liegen unter „Noch ohne Tag“. Über ⋯ und „Verschieben …“ legst du eins auf einen Tag.',
+      noDayNext: 'Unter „Noch ohne Tag“ legst du ein Ding mit „Verschieben …“ auf einen Tag.',
     },
     src: {
       task: 'ToDo',
@@ -9505,6 +9504,7 @@ export const de = {
       horizon: 'keine freie Zeit im Planungszeitraum',
       'no-day': 'noch ohne Tag',
       later: (day: string) => `liegt auf ${day}`,
+      laterTitle: 'Liegt weiter voraus',
       'too-long': 'länger als jeder Tag',
       'after-hard-due': 'erst nach der Frist möglich',
     },

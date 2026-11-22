@@ -313,7 +313,8 @@ export function buildBoard(input: BoardInput): Board {
   // things outside the days, saying where it lies.
   const lastShown = days.at(-1)?.date;
   if (lastShown) {
-    const seen = new Set<string>();
+    // A thing in parts with a part on a shown day is seen there: it is not listed a second time.
+    const seen = new Set<string>(days.flatMap((d) => d.rows.map((r) => r.itemKey)));
     for (const a of [...input.assignments].sort((x, y) => x.date.localeCompare(y.date))) {
       if (a.date <= lastShown || seen.has(a.itemKey) || lateDue.has(a.itemKey) || !shown(a))
         continue;

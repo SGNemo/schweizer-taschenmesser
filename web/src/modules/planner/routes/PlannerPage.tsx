@@ -92,9 +92,9 @@ interface Pending {
 /** The days the open rows lie on, for the tab's name: up to three short day names, else „seit Do 12.“-like. */
 function openDays(rows: readonly OpenRow[]): string {
   const dates = [...new Set(rows.map((r) => r.date))].sort();
-  return dates.length <= 3
-    ? dates.map((d) => dayName(d)).join(', ')
-    : t.planner.tabs.since(`${dayName(dates[0]!)} ${formatDay(dates[0]!, 'd.')}`);
+  // Always with the date: „Mo“ alone could be last week's Monday or the coming one.
+  const named = (d: string) => `${dayName(d)} ${formatDay(d, 'd.')}`;
+  return dates.length <= 3 ? dates.map(named).join(', ') : t.planner.tabs.since(named(dates[0]!));
 }
 
 export default function PlannerPage() {
@@ -573,7 +573,10 @@ export default function PlannerPage() {
   const openSeen = useRef(openRows.length);
   useEffect(() => {
     if (tab === 'open' && openRows.length < openSeen.current) {
-      const next = openRef.current?.querySelector<HTMLElement>('[aria-haspopup="menu"]');
+      // The next row's menu; when the list is empty now, the tab itself (the focus never falls to the page).
+      const next =
+        openRef.current?.querySelector<HTMLElement>('[aria-haspopup="menu"]') ??
+        openRef.current?.parentElement?.querySelector<HTMLElement>('nav [aria-current="page"]');
       if (next && !openRef.current?.contains(document.activeElement)) next.focus();
     }
     openSeen.current = openRows.length;
@@ -612,7 +615,7 @@ export default function PlannerPage() {
       )}
     </div>
   );
-  // The tab says that something is there with a quiet dot, never with a count.
+  // The tab says that something is there by naming the days, never with a count.
   const tabs = (
     <Tabs
       label={t.planner.tabs.label}
@@ -691,53 +694,70 @@ export default function PlannerPage() {
   // „Danach“ is folded on the phone and open on the desktop until the user says otherwise (device-local).
   const thenOpen = thenStored ?? !phone;
 
+  // Things laid on a day the board does not show yet have a day – they get their own small group, not „Noch ohne Tag“.
+  const noDay = waiting.filter((w) => w.reason !== 'later');
+  const laidLater = waiting.filter((w) => w.reason === 'later');
+  const waitRows = (list: typeof waiting) => (
+    <ItemList>
+      {list.map((w) => {
+        const reason =
+          w.reason === 'excluded'
+            ? t.planner.row.excludedState
+            : w.reason === 'later'
+              ? t.planner.wait.later(`${dayName(w.date!)} ${formatDay(w.date!, 'd.M.')}`)
+              : explainWait({ reason: w.reason, bumpedBy: w.bumpedBy }, nameOf);
+        return (
+          <WaitRow
+            key={w.unitId}
+            row={w}
+            reason={reason}
+            why={why === w.unitId}
+            menu={rowMenu(w, undefined, reason)}
+          />
+        );
+      })}
+    </ItemList>
+  );
   const waitingBlock =
     waiting.length > 0 ? (
       <div className={styles.waiting}>
         <GroupedList
           listId="planner"
           groups={[
-            {
-              // Folded by default (Q4 a); a new id, so an old „closed“ choice is not read as „open“.
-              id: 'wait',
-              defaultClosed: true,
-              label: t.planner.wait.title,
-              count: waiting.length,
-              detail: t.planner.wait.calm,
-              // The overload figure once the group is open: neutral text, no tone (CONCEPT §7).
-              ...(overflow > 0
-                ? {
-                    action: (
-                      <p className={styles.reason} data-testid="planner-overload">
-                        {overloadText(overflow)}
-                      </p>
-                    ),
-                  }
-                : {}),
-              children: (
-                <ItemList>
-                  {waiting.map((w) => {
-                    const reason =
-                      w.reason === 'excluded'
-                        ? t.planner.row.excludedState
-                        : w.reason === 'later'
-                          ? t.planner.wait.later(
-                              `${dayName(w.date!)} ${formatDay(w.date!, 'd.M.')}`,
-                            )
-                          : explainWait({ reason: w.reason, bumpedBy: w.bumpedBy }, nameOf);
-                    return (
-                      <WaitRow
-                        key={w.unitId}
-                        row={w}
-                        reason={reason}
-                        why={why === w.unitId}
-                        menu={rowMenu(w, undefined, reason)}
-                      />
-                    );
-                  })}
-                </ItemList>
-              ),
-            },
+            ...(noDay.length
+              ? [
+                  {
+                    // Folded by default (Q4 a); a new id, so an old „closed“ choice is not read as „open“.
+                    id: 'wait',
+                    defaultClosed: true,
+                    label: t.planner.wait.title,
+                    count: noDay.length,
+                    detail: t.planner.wait.calm,
+                    // The overload figure once the group is open: neutral text, no tone (CONCEPT §7).
+                    ...(overflow > 0
+                      ? {
+                          action: (
+                            <p className={styles.reason} data-testid="planner-overload">
+                              {overloadText(overflow)}
+                            </p>
+                          ),
+                        }
+                      : {}),
+                    children: waitRows(noDay),
+                  },
+                ]
+              : []),
+            ...(laidLater.length
+              ? [
+                  {
+                    id: 'later',
+                    defaultClosed: true,
+                    label: t.planner.wait.laterTitle,
+                    count: laidLater.length,
+                    children: waitRows(laidLater),
+                  },
+                ]
+              : []),
           ]}
         />
       </div>
@@ -815,7 +835,7 @@ export default function PlannerPage() {
         : nothingPlanned && openCount > 0
           ? // Everything he had lies on passed days: say where it is (the tab), not that nothing is there.
             t.planner.sheet.onlyOpen
-          : nothingPlanned && waiting.length > 0
+          : nothingPlanned && waiting.some((w) => w.reason === 'no-day')
             ? // Nothing lies on a day yet, things wait without one: name the one next step (also beside late
               // money – „only the invoices are open“ would be untrue).
               t.planner.sheet.noDayNext

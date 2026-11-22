@@ -102,7 +102,7 @@ export const planner: Strings['planner'] = {
     onlyLate: 'The week is empty. Only the invoices under “Deadline passed” are open.',
     onlyLateThings: 'The week is empty. Only what stands under “Deadline passed” is open.',
     onlyOpen: 'This week is empty. What is open from earlier is under “Still open”.',
-    noDayNext: 'Your things are under “No day yet”. Use ⋯ and “Move …” to put one on a day.',
+    noDayNext: 'Under “No day yet”, “Move …” puts a thing on a day.',
   },
   src: {
     task: 'To-do',
@@ -237,6 +237,7 @@ export const planner: Strings['planner'] = {
     horizon: 'no free time in the planning horizon',
     'no-day': 'no day yet',
     later: (day: string) => `on ${day}`,
+    laterTitle: 'Further ahead',
     'too-long': 'longer than any day',
     'after-hard-due': 'only possible after the deadline',
   },

@@ -34,9 +34,18 @@ const plain = <T extends object>(row: T): T =>
   ) as T;
 
 /** Pins → locks. Returns the number of rows written (0 on a second pass). */
-export async function migratePins(today: string, database?: PlannerDb): Promise<number> {
+export async function migratePins(
+  today: string,
+  database?: PlannerDb,
+  /** Filled with the item keys whose rows moved to their pinned day: their source has to hear the new day. */
+  moved: string[] = [],
+  /** Narrows the step to some things (the seed: only its own). */
+  only?: (itemKey: string) => boolean,
+): Promise<number> {
   const repos = plannerRepos(database);
-  const items = (await repos.item.active().toArray()).filter((i) => i.pinned);
+  const items = (await repos.item.active().toArray()).filter(
+    (i) => i.pinned && (!only || only(i.id)),
+  );
   if (items.length === 0) return 0;
   const rows = (await repos.assignment.active().toArray()) as (AssignmentRow & { id: string })[];
   let n = 0;
@@ -51,6 +60,7 @@ export async function migratePins(today: string, database?: PlannerDb): Promise<
       // The pin held the whole thing: every part goes to the pinned day (as a move by hand does).
       for (const r of own)
         if (await putRow(repos.assignment, r.id, { ...plain(r), date: pinned, locked: true })) n++;
+      moved.push(item.id);
     } else if (pinned >= today && !item.excluded) {
       const data: AssignmentRow = {
         itemKey: item.id,
@@ -63,6 +73,7 @@ export async function migratePins(today: string, database?: PlannerDb): Promise<
         locked: true,
       };
       if (await putRow(repos.assignment, unitId(item.id, 0), data)) n++;
+      moved.push(item.id);
     }
     const { pinned: _gone, ...rest } = plain(item as PlanItemRow);
     void _gone;
@@ -72,9 +83,11 @@ export async function migratePins(today: string, database?: PlannerDb): Promise<
 }
 
 /** The whole step, as the service runs it once the sync has settled. */
-export async function migrateModel(today: string): Promise<void> {
-  await migratePins(today);
-  if ((await getMeta<number>(MODEL_KEY)) === MODEL) return;
+export async function migrateModel(today: string): Promise<string[]> {
+  const moved: string[] = [];
+  await migratePins(today, undefined, moved);
+  if ((await getMeta<number>(MODEL_KEY)) === MODEL) return moved;
   await setSettings(PLANNER_SCOPE, { autoReplan: false }, DEFAULT_PLANNER_SETTINGS);
   await setMeta(MODEL_KEY, MODEL);
+  return moved;
 }
