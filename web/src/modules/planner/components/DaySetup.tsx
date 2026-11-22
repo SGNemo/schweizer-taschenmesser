@@ -124,10 +124,8 @@ export function DaySetup({
           : [newDayEnd ? s.dayEndSet(dayEndLabel(newDayEnd)) : s.dayEndCleared]),
       ];
       // The same proposal as „Woche vorschlagen“ (package 6): its head, and what stays without a day.
-      const noDay = noDayOf(out.result, (key) => names[key] ?? key).map((n) => ({
-        ...n,
-        tooLong: false,
-      }));
+      // „passt an keinen Tag am Stück“ says why; the sheet offers no split (its typed things have no id yet).
+      const noDay = noDayOf(out.result, (key) => names[key] ?? key);
       setPreview({
         data: {
           lines: [t.planner.preview.head, ...lines],

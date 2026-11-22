@@ -217,7 +217,10 @@ test.describe('planner rethink, counter-scenarios (CONCEPT §7)', () => {
     await ready(page, '/planner');
     const wait2 = page.locator('[data-group="wait"] h2').getByRole('button');
     if ((await wait2.getAttribute('aria-expanded')) !== 'true') await wait2.click();
-    await expect(page.getByTestId('proposal-chip')).toContainText(/^Vorschlag: \w+Übernehmen$/);
+    // The chip is computed after the board has settled (one dry run, queued behind the planner's own run).
+    await expect(page.getByTestId('proposal-chip')).toContainText(/^Vorschlag: \w+Übernehmen$/, {
+      timeout: 15_000,
+    });
     // A chip writes nothing.
     expect(await rowDays(page)).toEqual({});
   });
@@ -240,8 +243,9 @@ test.describe('planner rethink, counter-scenarios on the phone', () => {
     await ready(page, '/planner');
     const taps = new Taps(page);
     const wait = page.locator('[data-group="wait"] h2').getByRole('button');
-    await expect(wait).toBeVisible();
-    if ((await wait.getAttribute('aria-expanded')) !== 'true') await taps.tap(wait);
+    // Folded by default (Q4 a): opening it is the first tap.
+    await expect(wait).toHaveAttribute('aria-expanded', 'false');
+    await taps.tap(wait);
     await taps.tap(page.getByTestId('suggest-week'));
     await taps.tap(page.getByTestId('plan-preview').getByRole('button', { name: 'Übernehmen' }));
     await expect.poll(async () => Object.keys(await rowDays(page)).length).toBe(2);
