@@ -5,6 +5,7 @@
  *   node scripts/keys.mjs updater    Tauri updater key pair (signs Windows updates)
  *   node scripts/keys.mjs updater --dev   second pair for the Dev-Preview channel (never the stable key)
  *   node scripts/keys.mjs android    Android release keystore (signs the APK)
+ *   node scripts/keys.mjs android --dev   own keystore for the Dev-Preview APK (never the release one)
  *   node scripts/keys.mjs secrets    which GitHub secrets to create and how
  *
  * Keys are written to ~/.taschenmesser-keys/ (override with KEYS_DIR) and refuse to go anywhere
@@ -77,19 +78,28 @@ Back the private key and the password up (password manager + offline copy).`);
 
 function android() {
   prepareDir();
-  const keystore = join(dir, 'taschenmesser-release.jks');
+  // The Dev-Preview APK signs with its own keystore (SC2), so the dev pipeline never handles the
+  // production key. Different package id, so the two never update each other anyway.
+  const dev = process.argv.includes('--dev');
+  const name = dev ? 'taschenmesser-dev.jks' : 'taschenmesser-release.jks';
+  const alias = dev ? 'taschenmesser-dev' : 'taschenmesser';
+  const prefix = dev ? 'ANDROID_DEV_' : 'ANDROID_';
+  const keystore = join(dir, name);
   if (existsSync(keystore)) {
     console.error(`${keystore} exists already – not overwriting.`);
     process.exit(1);
   }
-  console.log('Creating the Android release keystore (RSA 4096, valid ~27 years).\n');
+  console.log(
+    `Creating the Android ${dev ? 'Dev-Preview' : 'release'} keystore (RSA 4096, valid ~27 years).\n`,
+  );
   run('keytool', [
     '-genkeypair',
     '-v',
     '-keystore',
     keystore,
     '-alias',
-    'taschenmesser',
+    // the release alias never changes (brand-ids.test.ts pins it)
+    dev ? 'taschenmesser-dev' : 'taschenmesser',
     '-keyalg',
     'RSA',
     '-keysize',
@@ -98,14 +108,14 @@ function android() {
     '10000',
   ]);
   chmodSync(keystore, 0o600);
-  const b64 = join(dir, 'taschenmesser-release.jks.base64');
+  const b64 = join(dir, `${name}.base64`);
   writeFileSync(b64, readFileSync(keystore).toString('base64'), { mode: 0o600 });
   console.log(`
 Done.
   keystore : ${keystore}
-  base64   : ${b64}   → GitHub secret ANDROID_KEYSTORE_BASE64 (file content)
-  alias    : taschenmesser                → GitHub secret ANDROID_KEY_ALIAS
-  passwords: what you just typed         → ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_PASSWORD
+  base64   : ${b64}   → GitHub secret ${prefix}KEYSTORE_BASE64 (file content)
+  alias    : ${alias}                → GitHub secret ${prefix}KEY_ALIAS
+  passwords: what you just typed         → ${prefix}KEYSTORE_PASSWORD, ${prefix}KEY_PASSWORD
 
 !!! NEVER LOSE THE KEYSTORE. Without it, installed apps can no longer be updated.
 !!! Store copies in a password manager and on an offline medium.`);
@@ -122,6 +132,10 @@ function secrets() {
   ANDROID_KEYSTORE_PASSWORD            keystore password
   ANDROID_KEY_ALIAS                    taschenmesser
   ANDROID_KEY_PASSWORD                 key password (often the same as the keystore password)
+  ANDROID_DEV_KEYSTORE_BASE64          content of taschenmesser-dev.jks.base64 (Dev-Preview APK)
+  ANDROID_DEV_KEYSTORE_PASSWORD        its keystore password
+  ANDROID_DEV_KEY_ALIAS                taschenmesser-dev
+  ANDROID_DEV_KEY_PASSWORD             its key password
 
 With the GitHub CLI (from the repository, keys in ${dir}):
 
@@ -132,13 +146,17 @@ With the GitHub CLI (from the repository, keys in ${dir}):
   gh secret set ANDROID_KEYSTORE_BASE64 < "${join(dir, 'taschenmesser-release.jks.base64')}"
   gh secret set ANDROID_KEYSTORE_PASSWORD
   gh secret set ANDROID_KEY_ALIAS --body taschenmesser
-  gh secret set ANDROID_KEY_PASSWORD`);
+  gh secret set ANDROID_KEY_PASSWORD
+  gh secret set ANDROID_DEV_KEYSTORE_BASE64 < "${join(dir, 'taschenmesser-dev.jks.base64')}"
+  gh secret set ANDROID_DEV_KEYSTORE_PASSWORD
+  gh secret set ANDROID_DEV_KEY_ALIAS --body taschenmesser-dev
+  gh secret set ANDROID_DEV_KEY_PASSWORD`);
 }
 
 const commands = { updater, android, secrets };
 const command = commands[process.argv[2]];
 if (!command) {
-  console.error('Usage: keys.mjs updater [--dev] | android | secrets');
+  console.error('Usage: keys.mjs updater [--dev] | android [--dev] | secrets');
   process.exit(2);
 }
 command();
