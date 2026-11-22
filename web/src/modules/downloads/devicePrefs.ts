@@ -55,6 +55,23 @@ export function setDevicePrefs(patch: Partial<DevicePrefs>): void {
   for (const l of listeners) l();
 }
 
+/**
+ * Once, before this device has prefs of its own: a DHT switched off in the old synced settings
+ * stays off (the safe direction). The torrent switch and UPnP are not taken over: they open the
+ * network, and another device may have set them.
+ */
+export function adoptSyncedOnce(row: unknown): void {
+  let stored: string | null = null;
+  try {
+    stored = storage()?.getItem(KEY) ?? null;
+  } catch {
+    return;
+  }
+  if (stored !== null) return;
+  const old = row && typeof row === 'object' ? (row as Record<string, unknown>) : {};
+  setDevicePrefs({ dht: old.torrentDht !== false });
+}
+
 /** Tests: forget the cached value (a test changes local storage directly). */
 export function resetDevicePrefsCache(): void {
   cached = undefined;

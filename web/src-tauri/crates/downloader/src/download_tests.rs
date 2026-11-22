@@ -420,10 +420,19 @@ fn an_edited_job_list_is_checked_on_load() {
         job(2, "ok.bin", "file:///etc/passwd"),
         job(3, "fine.bin", "https://example.org/fine.bin"),
     );
+    // a job whose drive is not plugged in stays (it fails with `io` when it runs)
+    let list = list.replace(
+        "]}",
+        &format!(
+            r#",{}]}}"#,
+            job(4, "later.bin", "https://example.org/later.bin")
+                .replace(&dir, &e.root.join("usb").to_string_lossy().replace('\\', "\\\\"))
+        ),
+    );
     std::fs::write(&e.state, list).unwrap();
     let m = Manager::open(e.state.clone(), Arc::new(|| {}));
     let ids: Vec<u64> = m.snapshot().iter().map(|j| j.id).collect();
-    assert_eq!(ids, [3]);
+    assert_eq!(ids, [3, 4]);
     m.remove(1, true);
     assert!(outside.exists());
     let _ = std::fs::remove_dir_all(&e.root);

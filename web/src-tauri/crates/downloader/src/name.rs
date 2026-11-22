@@ -26,7 +26,11 @@ fn percent_decode(s: &str) -> String {
 /// segment only, no control, format or bidi characters, no characters Windows rejects, no device
 /// names, shortcut types defused, length capped with the extension kept). Never empty.
 pub fn sanitize_file_name(raw: &str) -> String {
-    file_names::clean(raw)
+    match file_names::clean(raw) {
+        // the shared fallback is German ("Datei"); a download keeps its neutral one
+        name if name == file_names::FALLBACK => "download".into(),
+        name => name,
+    }
 }
 
 /// Name from a `Content-Disposition` header (`filename*=UTF-8''…` wins over `filename=`), sanitised.
@@ -92,8 +96,8 @@ mod tests {
             sanitize_file_name("we<ir>d:na?me*.iso"),
             "we_ir_d_na_me_.iso"
         );
-        assert_eq!(sanitize_file_name("  ..  "), "Datei");
-        assert_eq!(sanitize_file_name(""), "Datei");
+        assert_eq!(sanitize_file_name("  ..  "), "download");
+        assert_eq!(sanitize_file_name(""), "download");
         // DL8: device names with a space or a superscript digit, bidi overrides, shortcut types
         assert_eq!(sanitize_file_name("CON .txt"), "_CON.txt");
         assert_eq!(sanitize_file_name("COM¹.log"), "_COM¹.log");

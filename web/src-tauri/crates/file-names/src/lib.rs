@@ -228,6 +228,9 @@ pub fn safe_segment(segment: &str) -> bool {
     !bad_char
         && trim_end(segment).len() == segment.len()
         && !reserved(trim_end(segment.split('.').next().unwrap_or("")))
+        // shortcut types Explorer resolves on sight (`.url`, `.lnk`, `desktop.ini` …): the other
+        // paths defuse them, a name that cannot be renamed is refused
+        && !defused_ext(segment)
 }
 
 /// The `Zone.Identifier` text Windows reads for a file from the internet (zone 3): SmartScreen,
@@ -289,6 +292,9 @@ mod tests {
             "gnp.\u{202E}exe",
             "zero\u{200B}width",
             "tab\there",
+            "Ordner.url",
+            "x.LNK",
+            "desktop.ini",
         ] {
             assert!(!safe_segment(bad), "{bad:?}");
         }

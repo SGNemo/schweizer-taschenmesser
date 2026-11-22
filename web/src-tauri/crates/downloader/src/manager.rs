@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     job::{HashCheck, Job, State},
-    name::{file_name_from_url, sanitize_file_name, unique_name},
+    name::{file_name_from_url, unique_name},
     net, worker,
 };
 
@@ -98,6 +98,10 @@ impl Inner {
         }
     }
 
+    pub(crate) fn forget_credentials(&self, id: u64) {
+        lock(&self.with_credentials).remove(&id);
+    }
+
     /// The address to request: with its credentials when they were given in this run.
     pub(crate) fn request_url(&self, id: u64) -> Option<String> {
         lock(&self.with_credentials).get(&id).cloned()
@@ -168,15 +172,17 @@ impl Inner {
     }
 }
 
-/// A saved job as `add` would have made it, or `None`: an address without credentials that
-/// passes [`net::check_url`], an existing absolute folder, a plain file name that the cleaner
-/// leaves as it is. A saved address with credentials (an older list) loses them.
+/// A saved job as `add` could have made it, or `None`: an address without credentials that
+/// passes [`net::check_url`], an absolute folder (it may be missing for now: a drive not plugged
+/// in; the worker fails such a job with `io`), a file name that is one plain segment. A saved
+/// address with credentials (an older list) loses them.
 fn still_valid(mut job: Job, reach: net::Reach) -> Option<Job> {
     let parsed = url::Url::parse(&job.url).ok()?;
     net::check_url_for(&parsed, reach).ok()?;
     job.url = net::without_credentials(&parsed).to_string();
-    let plain = job.file_name == sanitize_file_name(&job.file_name);
-    (job.dir.is_absolute() && job.dir.is_dir() && plain).then_some(job)
+    let plain = file_names::safe_segment(&job.file_name)
+        && file_names::safe_segment(&format!("{}.part", job.file_name));
+    (job.dir.is_absolute() && plain).then_some(job)
 }
 
 /// The download manager. Cheap to clone; all clones share the jobs.

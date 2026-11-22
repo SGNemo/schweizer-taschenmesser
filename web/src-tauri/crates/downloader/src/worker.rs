@@ -321,8 +321,9 @@ fn download(inner: &Arc<Inner>, id: u64, stop: &Arc<AtomicU8>) -> Outcome {
     }
     // Mark-of-the-Web like a browser download (DL3); a folder without streams (FAT32, a share)
     // keeps the file unmarked.
-    let host = net::without_credentials(&source);
-    let _ = file_names::mark_of_the_web(&final_path, Some(host.as_str()));
+    let _ = file_names::mark_of_the_web(&final_path, Some(&net::host_url(&source)));
+    // the address with its credentials is no longer needed
+    inner.forget_credentials(id);
     inner.update(id, |j| {
         j.file_name = final_name;
         j.state = State::Done;

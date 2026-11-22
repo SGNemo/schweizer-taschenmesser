@@ -55,6 +55,37 @@ pub struct Engine {
     /// Most bytes uploaded per torrent that we have seen (the engine's own counter restarts at zero when a
     /// torrent is paused, which would turn a stopped torrent's ratio into 0).
     uploaded: Arc<Mutex<HashMap<usize, u64>>>,
+    /// Info hashes whose files got the Mark-of-the-Web (kept in `marked.json`), so a file the user
+    /// unblocked is not marked again after a restart.
+    marked: Arc<Mutex<Marked>>,
+}
+
+/// The set behind [`Engine::marked`] and where it is kept.
+struct Marked {
+    file: PathBuf,
+    hashes: HashSet<String>,
+}
+
+impl Marked {
+    fn open(state_dir: &Path) -> Marked {
+        let file = state_dir.join("marked.json");
+        let hashes = std::fs::read(&file)
+            .ok()
+            .and_then(|b| serde_json::from_slice(&b).ok())
+            .unwrap_or_default();
+        Marked { file, hashes }
+    }
+
+    /// `true` the first time a hash is seen (and stores it).
+    fn first(&mut self, hash: &str) -> bool {
+        if !self.hashes.insert(hash.to_owned()) {
+            return false;
+        }
+        if let Ok(json) = serde_json::to_vec(&self.hashes) {
+            let _ = std::fs::write(&self.file, json);
+        }
+        true
+    }
 }
 
 fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
@@ -119,6 +150,7 @@ impl Engine {
             exempt: Arc::default(),
             previews: Arc::default(),
             uploaded: Arc::default(),
+            marked: Arc::new(Mutex::new(Marked::open(&config.state_dir))),
         };
         engine.spawn_seed_watcher();
         Ok(engine)
@@ -245,7 +277,15 @@ impl Engine {
                     ..Default::default()
                 }),
             )
-            .await?;
+            .await;
+        let res = match res {
+            Ok(r) => r,
+            Err(e) => {
+                // nothing was added: the new folder is still empty
+                let _ = std::fs::remove_dir(&target);
+                return Err(e);
+            }
+        };
         match res {
             AddTorrentResponse::Added(id, _) => Ok(id),
             AddTorrentResponse::AlreadyManaged(id, _) => {
@@ -347,6 +387,7 @@ impl Engine {
         let limit_stopped = self.limit_stopped.clone();
         let exempt = self.exempt.clone();
         let uploaded = self.uploaded.clone();
+        let marked = self.marked.clone();
         tokio::spawn(async move {
             loop {
                 tokio::time::sleep(Duration::from_secs(2)).await;
@@ -363,18 +404,16 @@ impl Engine {
                     if !stats.finished || matches!(stats.state, TorrentStatsState::Paused) {
                         continue;
                     }
-                    let since = {
-                        let mut seen = lock(&finished_at);
-                        let first = !seen.contains_key(&id);
-                        let since = *seen.entry(id).or_insert_with(Instant::now);
-                        if first {
-                            // the folder is the torrent's own (see `add`): every file in it came
-                            // from the internet (DL3); a folder without streams stays unmarked
-                            let dir = h.output_folder().to_path_buf();
-                            tokio::task::spawn_blocking(move || mark_folder(&dir, 0));
-                        }
-                        since
-                    };
+                    let since = *lock(&finished_at).entry(id).or_insert_with(Instant::now);
+                    // the torrent's own files (never the rest of its folder), once per torrent (DL3)
+                    if cfg!(windows) && lock(&marked).first(&h.info_hash().as_string()) {
+                        let files = own_files(&h);
+                        tokio::task::spawn_blocking(move || {
+                            for f in files {
+                                let _ = file_names::mark_of_the_web(&f, None);
+                            }
+                        });
+                    }
                     if lock(&exempt).contains(&id) {
                         continue;
                     }
@@ -470,20 +509,21 @@ fn mark_saved_torrents_paused(state_dir: &Path) {
     }
 }
 
-/// Marks every file below `dir` as from the internet (Mark-of-the-Web); does not follow links,
-/// stops 32 levels down.
-fn mark_folder(dir: &Path, depth: usize) {
-    let Ok(entries) = std::fs::read_dir(dir) else {
-        return;
-    };
-    for entry in entries.flatten() {
-        let Ok(kind) = entry.file_type() else { continue };
-        if kind.is_file() {
-            let _ = file_names::mark_of_the_web(&entry.path(), None);
-        } else if kind.is_dir() && depth < 32 {
-            mark_folder(&entry.path(), depth + 1);
-        }
-    }
+/// The files a torrent wrote: its output folder joined with each selected file's path (no
+/// padding files). Only paths that stay below the folder are returned.
+fn own_files(h: &Arc<ManagedTorrent>) -> Vec<PathBuf> {
+    let out = h.output_folder().to_path_buf();
+    let only = h.only_files();
+    h.with_metadata(|m| {
+        m.file_infos
+            .iter()
+            .enumerate()
+            .filter(|(i, f)| !f.attrs.padding && only.as_ref().is_none_or(|o| o.contains(i)))
+            .map(|(_, f)| out.join(&f.relative_filename))
+            .filter(|p| p.starts_with(&out))
+            .collect()
+    })
+    .unwrap_or_default()
 }
 
 /// A torrent name as a single safe folder name (the shared cleaner, DL8); a single file's folder
@@ -530,13 +570,20 @@ fn tracker_allowed(raw: &str) -> bool {
     match url.host() {
         Some(url::Host::Ipv4(ip)) => downloader::net::is_public_ip(ip.into()),
         Some(url::Host::Ipv6(ip)) => downloader::net::is_public_ip(ip.into()),
-        // `udp:` is no special scheme for `url`: its IP hosts come as names
-        Some(url::Host::Domain(d)) => match d.parse::<std::net::IpAddr>() {
-            Ok(ip) => downloader::net::is_public_ip(ip),
-            Err(_) => {
-                let d = d.trim_end_matches('.').to_ascii_lowercase();
-                !(d == "localhost" || d.ends_with(".localhost"))
-            }
+        // `udp:` is no special scheme for `url`: its hosts come as names, and the system resolver
+        // reads `127.1`, `2130706433` or `0x7f.0.0.1` as IPs. Parsed the way an `http` host is,
+        // every such spelling becomes the IP it means.
+        Some(url::Host::Domain(d)) => match url::Url::parse(&format!("http://{d}/")) {
+            Ok(as_http) => match as_http.host() {
+                Some(url::Host::Ipv4(ip)) => downloader::net::is_public_ip(ip.into()),
+                Some(url::Host::Ipv6(ip)) => downloader::net::is_public_ip(ip.into()),
+                Some(url::Host::Domain(name)) => {
+                    let name = name.trim_end_matches('.').to_ascii_lowercase();
+                    !(name == "localhost" || name.ends_with(".localhost"))
+                }
+                None => false,
+            },
+            Err(_) => false,
         },
         None => false,
     }
@@ -598,20 +645,18 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 
-    /// DL3: every file of a finished torrent's folder gets the stream (Windows only).
-    #[cfg(windows)]
+    /// DL3: a torrent's files are marked once; after a restart an unblocked file stays unblocked.
     #[test]
-    fn a_finished_folder_is_marked() {
-        let dir = std::env::temp_dir().join(format!("tt-motw-{}", std::process::id()));
-        std::fs::create_dir_all(dir.join("sub")).unwrap();
-        std::fs::write(dir.join("a.bin"), b"x").unwrap();
-        std::fs::write(dir.join("sub").join("b.bin"), b"x").unwrap();
-        mark_folder(&dir, 0);
-        for f in ["a.bin", "sub/b.bin"] {
-            let mut s = dir.join(f).into_os_string();
-            s.push(":Zone.Identifier");
-            assert!(std::fs::read_to_string(s).unwrap().contains("ZoneId=3"), "{f}");
-        }
+    fn each_torrent_is_marked_once_across_restarts() {
+        let dir = std::env::temp_dir().join(format!("tt-marked-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let mut marked = Marked::open(&dir);
+        assert!(marked.first("abc"));
+        assert!(!marked.first("abc"));
+        assert!(Marked::open(&dir).hashes.contains("abc"), "kept on disk");
+        assert!(!Marked::open(&dir).first("abc"));
+        assert!(Marked::open(&dir).first("def"));
         let _ = std::fs::remove_dir_all(&dir);
     }
 
@@ -622,6 +667,10 @@ mod tests {
         for bad in [
             "http://192.168.178.1/announce",
             "udp://127.0.0.1:6969",
+            "udp://127.1:6969",
+            "udp://2130706433:6969",
+            "udp://0x7f.0.0.1:6969",
+            "udp://[::1]:6969",
             "http://localhost:8080/a",
             "http://[fe80::1]/a",
             "file:///etc/passwd",

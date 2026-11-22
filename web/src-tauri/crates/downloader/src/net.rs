@@ -57,7 +57,20 @@ fn public_v4(ip: Ipv4Addr) -> bool {
 }
 
 fn public_v6(ip: Ipv6Addr) -> bool {
-    let first = ip.segments()[0];
+    let seg = ip.segments();
+    let first = seg[0];
+    let v4 = |hi: u16, lo: u16| Ipv4Addr::new((hi >> 8) as u8, hi as u8, (lo >> 8) as u8, lo as u8);
+    // NAT64 64:ff9b::/96 and 6to4 2002::/16 carry an IPv4 address: that one decides
+    if seg[..6] == [0x64, 0xff9b, 0, 0, 0, 0] {
+        return public_v4(v4(seg[6], seg[7]));
+    }
+    if first == 0x2002 {
+        return public_v4(v4(seg[1], seg[2]));
+    }
+    // ::/96 (IPv4-compatible, deprecated) and fec0::/10 (site-local, deprecated)
+    if seg[..6] == [0; 6] || (first & 0xffc0) == 0xfec0 {
+        return false;
+    }
     !(ip.is_unspecified()
         || ip.is_loopback()
         || ip.is_multicast()
@@ -153,9 +166,19 @@ pub fn without_credentials(url: &Url) -> Url {
     out
 }
 
+/// What the Mark-of-the-Web names as the source: scheme, host and path only (no credentials, no
+/// signed query, no fragment).
+pub fn host_url(url: &Url) -> String {
+    let mut out = without_credentials(url);
+    out.set_query(None);
+    out.set_fragment(None);
+    out.to_string()
+}
+
 /// The system resolver, keeping only public addresses. When it drops every address it sets
-/// `blocked`, so the worker can say "blocked" instead of "not found". The address of a configured
-/// proxy is not filtered (the proxy may well be on this machine).
+/// `blocked`, so the worker can say "blocked" instead of "not found". [`agent`] sets no proxy (an
+/// environment proxy would resolve the target itself, past this filter); a configured one would
+/// not be filtered here.
 #[derive(Debug)]
 pub(crate) struct PublicResolver {
     inner: DefaultResolver,
@@ -260,6 +283,8 @@ pub(crate) fn agent(reach: Reach) -> (ureq::Agent, Arc<AtomicBool>) {
         .timeout_connect(Some(Duration::from_secs(30)))
         .timeout_recv_response(Some(IDLE))
         .max_redirects(0)
+        // a proxy from the environment would see the target name, not this resolver: no proxy
+        .proxy(None)
         .http_status_as_error(false)
         .build();
     let resolver = PublicResolver::new(reach);
@@ -293,6 +318,10 @@ mod tests {
             "fe80::1",
             "fd00::1",
             "::ffff:192.168.0.1",
+            "64:ff9b::c0a8:1",
+            "2002:c0a8:0101::1",
+            "::192.168.0.1",
+            "fec0::1",
         ] {
             assert!(!is_public_ip(bad.parse().unwrap()), "{bad}");
         }

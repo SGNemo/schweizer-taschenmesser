@@ -9,6 +9,7 @@ import { getPlatform, setPlatform } from '@/core/platform';
 import { createFakeTorrent } from '@/core/platform/fakeTorrent';
 import { t } from '@/strings';
 import {
+  adoptSyncedOnce,
   DEVICE_DEFAULTS,
   readDevicePrefs,
   resetDevicePrefsCache,
@@ -50,6 +51,16 @@ describe('downloads device prefs (DL10)', () => {
       folder: '/home/x/Filme',
     });
     expect(Object.keys(localStorage).every((k) => k.startsWith('tm-'))).toBe(true);
+  });
+
+  it('an old synced DHT off stays off; the torrent switch and UPnP are not taken over', () => {
+    adoptSyncedOnce({ torrent: true, torrentDht: false, torrentUpnp: true });
+    resetDevicePrefsCache();
+    expect(readDevicePrefs()).toEqual({ ...DEVICE_DEFAULTS, dht: false });
+    // only once: a later row changes nothing
+    setDevicePrefs({ dht: true });
+    adoptSyncedOnce({ torrentDht: false });
+    expect(readDevicePrefs().dht).toBe(true);
   });
 
   it('a broken stored value falls back to the safe defaults', () => {

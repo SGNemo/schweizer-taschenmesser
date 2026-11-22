@@ -21,7 +21,7 @@ const PREVIEW_TIMEOUT: Duration = Duration::from_secs(90);
 pub struct Torrents {
     engine: Mutex<Option<Arc<Engine>>>,
     watchers: Arc<std::sync::Mutex<Vec<Channel<Vec<TorrentInfo>>>>>,
-    watching: std::sync::atomic::AtomicBool,
+    watching: Arc<std::sync::atomic::AtomicBool>,
 }
 
 #[derive(Deserialize)]
@@ -155,6 +155,14 @@ pub async fn torrent_stop(app: AppHandle, state: State<'_, Torrents>) -> Result<
 /// Shuts the engine down (listener, DHT, trackers) and takes the tray line away.
 async fn stop(app: &AppHandle, state: &Torrents) {
     let engine = state.engine.lock().await.take();
+    stop_engine(app, state, engine).await;
+}
+
+/// Stops a taken engine; the page's watch ends (its channel is dropped) and the tray line goes.
+async fn stop_engine(app: &AppHandle, state: &Torrents, engine: Option<Arc<Engine>>) {
+    if let Ok(mut w) = state.watchers.lock() {
+        w.clear();
+    }
     if let Some(e) = engine {
         e.stop().await;
     }
@@ -162,7 +170,7 @@ async fn stop(app: &AppHandle, state: &Torrents) {
 }
 
 /// "Torrent läuft – beenden" in the tray (DL2). The torrents stay in the list, paused; the
-/// page starts the engine again when it is opened with the torrent part on.
+/// page starts the engine again the next time it becomes visible with the torrent part on.
 pub fn stop_from_tray(app: &AppHandle) {
     let app = app.clone();
     tauri::async_runtime::spawn(async move {
@@ -176,12 +184,16 @@ pub fn stop_if_idle(app: &AppHandle) {
     let app = app.clone();
     tauri::async_runtime::spawn(async move {
         let state = app.state::<Torrents>();
-        let busy = match state.engine.lock().await.as_ref() {
-            Some(engine) => engine.list().iter().any(|t| active(t.state)),
-            None => return,
+        // decided and taken under one lock: an add in between cannot lose its engine
+        let idle = {
+            let mut slot = state.engine.lock().await;
+            match slot.as_ref() {
+                Some(engine) if !engine.list().iter().any(|t| active(t.state)) => slot.take(),
+                _ => None,
+            }
         };
-        if !busy {
-            stop(&app, &state).await;
+        if idle.is_some() {
+            stop_engine(&app, &state, idle).await;
         }
     });
 }
@@ -275,12 +287,18 @@ pub async fn torrent_watch(
         .swap(true, std::sync::atomic::Ordering::SeqCst)
     {
         let watchers = state.watchers.clone();
+        let watching = state.watching.clone();
         tokio::spawn(async move {
             loop {
                 tokio::time::sleep(Duration::from_secs(1)).await;
                 let list = engine.list();
                 let Ok(mut w) = watchers.lock() else { break };
                 w.retain(|c| c.send(list.clone()).is_ok());
+                // nobody watches (the engine stopped, or the page went): end, and let go of it
+                if w.is_empty() {
+                    watching.store(false, std::sync::atomic::Ordering::SeqCst);
+                    break;
+                }
             }
         });
     }

@@ -70,6 +70,19 @@ export function TorrentSection({
   };
   const limitKey = JSON.stringify(limits);
   const { dht, upnp } = device;
+  // The engine can stop while the window is hidden (the tray's „Torrent läuft – beenden“, closing
+  // into the tray when idle): coming back into view starts it again and watches anew.
+  const [epoch, setEpoch] = useState(0);
+  useEffect(() => {
+    if (!device.torrent) return;
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return;
+      resetTorrents();
+      setEpoch((n) => n + 1);
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [device.torrent]);
 
   // The engine starts only after the notice was confirmed; limits apply as soon as they change.
   useEffect(() => {
@@ -89,7 +102,7 @@ export function TorrentSection({
     return () => {
       alive = false;
     };
-  }, [platform, device.torrent, dht, upnp, limitKey]);
+  }, [platform, device.torrent, dht, upnp, limitKey, epoch]);
 
   // Something arrived from outside: once the engine is up, the add dialog opens with it.
   useEffect(() => {

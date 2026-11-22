@@ -41,9 +41,20 @@ fn allowed(dir: &Path, downloads: Option<&Path>, picked: &[PathBuf]) -> Result<P
     let dir = canonical(dir).ok_or("dir")?;
     let is_downloads = downloads.and_then(canonical).is_some_and(|d| d == dir);
     if is_downloads || picked.contains(&dir) {
-        Ok(dir)
+        Ok(PathBuf::from(display_path(&dir)))
     } else {
         Err("dir".into())
+    }
+}
+
+/// A resolved path as people (and librqbit) write it: no `\\?\` prefix on Windows. The
+/// comparison above uses the resolved form.
+fn display_path(p: &Path) -> String {
+    let s = p.to_string_lossy();
+    if let Some(rest) = s.strip_prefix(r"\\?\UNC\") {
+        format!(r"\\{rest}")
+    } else {
+        s.strip_prefix(r"\\?\").unwrap_or(&s).to_string()
     }
 }
 
@@ -203,6 +214,8 @@ pub fn downloads_pick_dir(
     };
     let path = chosen.into_path().map_err(|_| "dir")?;
     let dir = canonical(&path).ok_or("dir")?;
+    // read-modify-write of the list one at a time (two quick picks keep both)
+    let _one_at_a_time = state.gate.lock().unwrap_or_else(|e| e.into_inner());
     let mut list = state.picked(&app);
     list.retain(|p| *p != dir);
     list.push(dir.clone());
@@ -212,7 +225,7 @@ pub fn downloads_pick_dir(
     let json = serde_json::to_vec(&list).map_err(|_| "internal")?;
     std::fs::write(picked_file(&app)?, json).map_err(|_| "io")?;
     *state.picked.lock().unwrap_or_else(|e| e.into_inner()) = Some(list);
-    Ok(Some(dir.to_string_lossy().into_owned()))
+    Ok(Some(display_path(&dir)))
 }
 
 #[tauri::command(async)]
@@ -300,6 +313,22 @@ pub fn downloads_reveal(
 #[cfg(test)]
 mod folder_tests {
     use super::*;
+
+    #[test]
+    fn folders_are_shown_without_the_verbatim_prefix() {
+        assert_eq!(
+            display_path(Path::new(r"\\?\C:\Users\x\Downloads")),
+            r"C:\Users\x\Downloads"
+        );
+        assert_eq!(
+            display_path(Path::new(r"\\?\UNC\nas\share")),
+            r"\\nas\share"
+        );
+        assert_eq!(
+            display_path(Path::new("/home/x/Downloads")),
+            "/home/x/Downloads"
+        );
+    }
 
     /// DL6/DL10: a folder named by the web view (from synced settings, a backup, a script) is
     /// refused unless it is the Downloads folder or one picked in the native dialog here.
