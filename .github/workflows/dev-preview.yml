@@ -240,12 +240,24 @@ jobs:
       - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable branch, toolchain: stable
         with:
           toolchain: stable
+      # The runner image moves to a new MSVC toolset now and then; llama.cpp's CMake build cached under C:/t
+      # keeps the old cl.exe path and fails ("is not a full path to an existing compiler tool"). The toolset
+      # version is part of the cache key, so an image update starts a fresh cache instead.
+      - name: MSVC toolset (part of the Rust cache key)
+        id: msvc
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          v=$(for d in "/c/Program Files/Microsoft Visual Studio"/*/*/VC/Tools/MSVC/*/; do basename "$d"; done | sort -V | tail -n 1)
+          test -n "$v"
+          echo "MSVC toolset: $v"
+          echo "version=$v" >> "$GITHUB_OUTPUT"
       # C:/t is cached as an extra directory (rust-cache does not follow CARGO_TARGET_DIR); own key, because the
       # build now carries the local model (llama.cpp + Vulkan) and the thin-LTO profile below.
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         with:
           workspaces: web/src-tauri
-          shared-key: windows-dev-thin-llm-vk1.4.363.1
+          shared-key: windows-dev-thin-llm-vk1.4.363.1-msvc${{ steps.msvc.outputs.version }}
           cache-targets: false
           cache-directories: C:/t
       - run: npm ci
