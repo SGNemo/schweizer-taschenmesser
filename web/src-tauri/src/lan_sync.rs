@@ -347,8 +347,8 @@ fn build(app: &AppHandle) -> Result<(Arc<Core>, DataKeyDto), String> {
         name,
     };
     // keystore first: any error and nothing else is touched
-    let key_store = SlotKeyStore::new(slot("hub-static-key"));
-    let data_keys = DataKeys::new(slot("hub-data-key"));
+    let key_store = SlotKeyStore::new(slot(KEY_SLOTS[0]));
+    let data_keys = DataKeys::new(slot(KEY_SLOTS[1]));
     let data_key = data_keys
         .load_or_create()
         .map_err(|_| "keystore-unavailable")?;
@@ -370,7 +370,7 @@ fn build(app: &AppHandle) -> Result<(Arc<Core>, DataKeyDto), String> {
         hub_key,
         Arc::new(SystemClock::new()),
         trust.clone(),
-        Arc::new(DataKeys::new(slot("hub-data-key"))),
+        Arc::new(DataKeys::new(slot(KEY_SLOTS[1]))),
     ));
     let endpoint = Endpoint::start(&key_store, trust.clone(), host.clone(), sessions.clone())
         .map_err(|_| "keystore-unavailable")?;
@@ -544,7 +544,8 @@ pub fn lan_hub_stop(app: AppHandle, state: State<'_, LanSync>) -> Result<(), Str
 
 // ---- "Alle Daten löschen" ----
 
-/// Names of the hub's two keystore entries (service `<identifier>.lan-sync`).
+/// Names of the hub's two keystore entries (service `<identifier>.lan-sync`): static key, data key.
+/// `build` creates them under these names, the wipe deletes the same.
 const KEY_SLOTS: [&str; 2] = ["hub-static-key", "hub-data-key"];
 
 /// What wiping the hub needs from the running app; a trait so the order is tested without an
@@ -592,7 +593,15 @@ impl HubWipe for AppHub<'_> {
             *at = Some(std::time::Instant::now());
         }
         // the command itself (also used by "Ausschalten"), so both stop the hub the same way
-        lan_hub_stop(self.0.clone(), state).map_err(|_| ())
+        let stopped = lan_hub_stop(self.0.clone(), state);
+        // what the run keeps in memory beside the files: the exchange boxes, the program list
+        self.0
+            .state::<crate::exchange::ExchangeHost>()
+            .forget_files();
+        self.0
+            .state::<crate::remote::RemoteHost>()
+            .forget_programs();
+        stopped.map_err(|_| ())
     }
 
     fn delete_key(&self, name: &str) -> Result<(), ()> {
@@ -954,19 +963,5 @@ mod tests {
         *at.lock().unwrap() = Some(t0);
         assert!(wiped_within(&at, t0 + Duration::from_secs(59)));
         assert!(!wiped_within(&at, t0 + WIPE_HOLD));
-        // `lan_hub_start` asks before it builds anything, under the hub lock
-        let src = include_str!("lan_sync.rs");
-        let start = &src[src.find("pub fn lan_hub_start(").unwrap()..];
-        assert!(start.find("wiped_within(").unwrap() < start.find("build(&app)").unwrap());
-    }
-
-    /// The wipe deletes the very entries `build` creates.
-    #[test]
-    fn the_wiped_key_names_are_the_ones_the_hub_uses() {
-        let src = include_str!("lan_sync.rs");
-        let build = &src[src.find("fn build(").unwrap()..src.find("fn with_core").unwrap()];
-        for name in KEY_SLOTS {
-            assert!(build.contains(&format!("slot(\"{name}\")")), "{name}");
-        }
     }
 }

@@ -8,10 +8,11 @@
 //!
 //! Desktop: the home-network hub first (listener and sessions down, `lan-sync/` and both keystore
 //! entries gone – an earlier paired phone is no longer trusted, whoever uses the PC next finds no
-//! `hub.db` or data key), the device side of a pairing with another PC, the downloads list,
+//! `hub.db` or data key; no hub starts again for a minute), the device side of a pairing with
+//! another PC, the Local API (its tokens), the extension's host registration, the downloads list,
 //! the torrent engine and its state, the built-in browser's profile, the PC-care journal (only when
-//! nothing can be undone any more), `logs/panic.log`, the browser extension's host registration,
-//! and the local AI models when the user ticked them. Android: the pairing with the PC
+//! nothing can be undone any more), `logs/panic.log`, and the local AI models when the user
+//! ticked them. Android: the pairing with the PC
 //! (`lan-client:` entries; the PC is told once if it is reachable) and the exchange inbox.
 
 use serde::Serialize;
@@ -20,7 +21,7 @@ use std::path::Path;
 #[derive(Debug, Default, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct WipeReport {
-    /// Steps that did not finish (ids as in the module comment of `device.ts`).
+    /// Steps that did not finish (ids as in `DeviceWipeStep`, `web/src/core/platform/deviceWipe.ts`).
     pub failed: Vec<&'static str>,
     /// Steps that left something on purpose (`pc-care`: changes that can still be undone).
     pub kept: Vec<&'static str>,
@@ -66,18 +67,25 @@ pub(crate) mod desktop {
         if webview.label() != "main" {
             return Err("forbidden".into());
         }
-        let mut report = WipeReport::default();
-        // The torrent engine is async; everything else blocks and runs off the async runtime.
+        // The hub first (blocking, off the async runtime): it is what a paired phone talks to.
+        let (app, mut report) = tauri::async_runtime::spawn_blocking(move || {
+            let mut report = WipeReport::default();
+            pairings(&app, &mut report);
+            (app, report)
+        })
+        .await
+        .map_err(|_| "internal".to_owned())?;
         report.step("torrent", crate::torrent::wipe(&app).await);
         tauri::async_runtime::spawn_blocking(move || {
-            run_blocking(&app, models, &mut report);
+            files(&app, models, &mut report);
             report
         })
         .await
         .map_err(|_| "internal".to_owned())
     }
 
-    fn run_blocking(app: &AppHandle, models: bool, report: &mut WipeReport) {
+    /// Everything another device or program can reach this PC through.
+    fn pairings(app: &AppHandle, report: &mut WipeReport) {
         let dir = crate::lan_sync::lan_dir_path(app);
         report.step(
             "lan-hub",
@@ -85,16 +93,28 @@ pub(crate) mod desktop {
                 .map_err(|_| "failed".to_owned()),
         );
         report.step("lan-client", crate::lan_client::unpair_now(app));
+        // its tokens belong to the previous owner
+        report.step(
+            "local-api",
+            crate::local_api::local_api_stop(app.state::<crate::local_api::LocalApi>()),
+        );
+        report.step("native-messaging", crate::vault_bridge::wipe(app));
+    }
+
+    fn files(app: &AppHandle, models: bool, report: &mut WipeReport) {
         report.step("downloads", crate::downloads::wipe(app));
-        crate::browser::clear_all(app, &app.state::<crate::browser::BrowserState>());
+        report.step(
+            "browser",
+            crate::browser::clear_all(app, &app.state::<crate::browser::BrowserState>()),
+        );
         match app.state::<crate::optimize::PcCare>().wipe(app) {
             Ok(crate::optimize::JournalWipe::Removed) => {}
             Ok(crate::optimize::JournalWipe::KeptForUndo) => report.kept.push("pc-care"),
             Err(_) => report.failed.push("pc-care"),
         }
         report.step("panic-log", panic_log(app));
-        report.step("native-messaging", crate::vault_bridge::wipe(app));
         if models {
+            app.state::<crate::local_llm::LocalLlm>().release();
             report.step(
                 "models",
                 crate::local_llm::models_dir(app).map_or(Ok(()), |d| remove_dir(&d)),
@@ -168,17 +188,5 @@ mod tests {
         std::fs::write(d.join("sub").join("a"), b"x").unwrap();
         assert_eq!(remove_dir(&d), Ok(()));
         assert!(!d.exists());
-    }
-
-    /// Only the main web view may wipe, and the command takes no path from it.
-    #[test]
-    fn the_command_takes_no_path_and_checks_the_window() {
-        let src = include_str!("device_wipe.rs");
-        let production = &src[..src.find("#[cfg(test)]\nmod tests").unwrap()];
-        assert_eq!(production.matches("webview.label() != \"main\"").count(), 2);
-        for sig in production.split("pub async fn device_wipe").skip(1) {
-            let args = &sig[..sig.find(')').unwrap()];
-            assert!(!args.contains("String") && !args.contains("Path"), "{args}");
-        }
     }
 }

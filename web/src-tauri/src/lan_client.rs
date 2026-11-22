@@ -118,13 +118,19 @@ fn reset_remote<R: Runtime>(app: &AppHandle<R>) {
     let _ = app;
 }
 
-fn forget<R: Runtime>(app: &AppHandle<R>) {
+/// Forgets hub and key; `false` if a keystore entry could not be removed (a missing one is fine).
+fn forget<R: Runtime>(app: &AppHandle<R>) -> bool {
     reset_remote(app);
+    let mut ok = true;
     for name in [HUB_NAME, KEY_NAME] {
-        let _ = app.secure_store().delete(NameRequest {
-            name: name.to_owned(),
-        });
+        ok &= app
+            .secure_store()
+            .delete(NameRequest {
+                name: name.to_owned(),
+            })
+            .is_ok();
     }
+    ok
 }
 
 fn hex32(text: &str) -> Option<[u8; 32]> {
@@ -364,7 +370,9 @@ pub async fn lan_client_pair<R: Runtime>(
                     let _ = set(&app, KEY_NAME, k);
                     let _ = set(&app, HUB_NAME, h);
                 }
-                _ => forget(&app),
+                _ => {
+                    forget(&app);
+                }
             }
             return Err(e);
         }
@@ -457,8 +465,11 @@ pub(crate) fn unpair_now<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {
     let mut link = state.link.lock().map_err(|_| "internal")?;
     link.close();
     tell_hub_goodbye(app);
-    forget(app);
-    Ok(())
+    if forget(app) {
+        Ok(())
+    } else {
+        Err("keystore".to_owned())
+    }
 }
 
 #[cfg(test)]

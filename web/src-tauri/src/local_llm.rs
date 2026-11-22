@@ -123,6 +123,18 @@ mod real {
         pub fn new() -> Self {
             Self::default()
         }
+
+        /// "Alle Daten löschen": stops a running download and frees a loaded model, so its file
+        /// can be deleted (Windows keeps a mapped file locked). Blocking (joins the worker).
+        pub(crate) fn release(&self) {
+            if let Ok(slot) = self.downloading.lock() {
+                if let Some(flag) = slot.as_ref() {
+                    flag.store(true, Ordering::Relaxed);
+                }
+            }
+            let old = self.loaded.lock().ok().and_then(|mut l| l.take());
+            drop(old);
+        }
     }
 
     #[derive(Serialize)]
@@ -386,6 +398,9 @@ mod real {
         pub fn new() -> Self {
             Self
         }
+
+        /// Nothing is ever loaded without the feature.
+        pub(crate) fn release(&self) {}
     }
 
     #[derive(Serialize)]

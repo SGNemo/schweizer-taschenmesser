@@ -124,6 +124,16 @@ impl ExchangeHost {
         files.clone()
     }
 
+    /// "Alle Daten löschen": inbox and outbox held for the run go, so nothing old is served or
+    /// written back after the wipe.
+    pub(crate) fn forget_files(&self) {
+        let mut files = match self.files.lock() {
+            Ok(f) => f,
+            Err(p) => p.into_inner(),
+        };
+        *files = None;
+    }
+
     fn parts(&self) -> Result<Parts, String> {
         let slot = self.slot.lock().map_err(|_| "internal")?;
         Ok(slot.as_ref().ok_or("not-started")?.clone())

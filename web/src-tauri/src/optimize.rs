@@ -68,11 +68,18 @@ impl PcCare {
         if !path.exists() {
             return Ok(JournalWipe::Removed);
         }
-        let open = self.with(app, |j| Ok(j.views().iter().any(|v| v.can_undo)))?;
+        // one lock for the check and the delete: no change can slip in between
+        let mut slot = self.journal.lock().map_err(|_| "internal")?;
+        if slot.is_none() {
+            let (journal, recovered) = Journal::open(&path).map_err(|e| e.code().to_string())?;
+            *slot = Some(Opened { journal, recovered });
+        }
+        let open = slot
+            .as_ref()
+            .is_some_and(|o| o.journal.views().iter().any(|v| v.can_undo));
         if open {
             return Ok(JournalWipe::KeptForUndo);
         }
-        let mut slot = self.journal.lock().map_err(|_| "internal")?;
         *slot = None;
         crate::device_wipe::remove_file(&path)?;
         Ok(JournalWipe::Removed)

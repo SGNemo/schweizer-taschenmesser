@@ -8,6 +8,8 @@ export type DeviceWipeStep =
   | 'lan-hub'
   | 'lan-client'
   | 'exchange-inbox'
+  | 'local-api'
+  | 'browser'
   | 'downloads'
   | 'torrent'
   | 'pc-care'

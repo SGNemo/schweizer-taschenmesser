@@ -637,12 +637,14 @@ pub fn browser_clear_data(
     state: State<'_, BrowserState>,
 ) -> Result<(), String> {
     ensure_main(&webview)?;
-    clear_all(&app, &state);
+    // Best effort here as before: files may stay locked until the last tab process ends.
+    let _ = clear_all(&app, &state);
     Ok(())
 }
 
 /// The body of `browser_clear_data`, shared with "Alle Daten löschen" (`crate::device_wipe`).
-pub(crate) fn clear_all(app: &AppHandle, state: &BrowserState) {
+/// `Err` if the profile folder could not be removed (cookies and site data were cleared already).
+pub(crate) fn clear_all(app: &AppHandle, state: &BrowserState) -> Result<(), String> {
     let ids: Vec<u32> = state.lock().tabs.keys().copied().collect();
     for id in &ids {
         if let Ok(wv) = tab_webview(app, *id) {
@@ -656,9 +658,7 @@ pub(crate) fn clear_all(app: &AppHandle, state: &BrowserState) {
     }
     state.lock().tabs.clear();
     // Best effort: files may stay locked until the last tab process ends; the data was cleared above.
-    if let Some(dir) = profile_dir(app) {
-        let _ = std::fs::remove_dir_all(dir);
-    }
+    profile_dir(app).map_or(Ok(()), |dir| crate::device_wipe::remove_dir(&dir))
 }
 
 /// Called for every request a tab makes (Windows hook): `true` = stop it. Third-party hosts that were
