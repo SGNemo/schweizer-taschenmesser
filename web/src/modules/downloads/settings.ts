@@ -2,13 +2,10 @@ import { z } from 'zod';
 import type { ModuleSettings } from '@/core/modules/types';
 import { t } from '@/strings';
 
+// Synced: limits only. The torrent switch, DHT, UPnP and the default folder are device-local
+// (`devicePrefs.ts`, security review 2026-11, DL10); old synced values of them are ignored.
 const schema = z.object({
   limitKb: z.number().min(0),
-  folder: z.string(),
-  // BitTorrent part: off until the user switches it on (after the notice).
-  torrent: z.boolean(),
-  torrentDht: z.boolean(),
-  torrentUpnp: z.boolean(),
   torrentUpKb: z.number().min(0),
   torrentDownKb: z.number().min(0),
   seedRatio: z.number().min(0),
@@ -21,10 +18,6 @@ export const settings: ModuleSettings = {
   schema,
   defaults: {
     limitKb: 0,
-    folder: '',
-    torrent: false,
-    torrentDht: true,
-    torrentUpnp: false,
     torrentUpKb: 0,
     torrentDownKb: 0,
     seedRatio: 1,
@@ -37,34 +30,6 @@ export const settings: ModuleSettings = {
         return t.downloads.settings.limitKb;
       },
       type: 'number',
-    },
-    {
-      key: 'folder',
-      get label() {
-        return t.downloads.settings.folder;
-      },
-      type: 'text',
-    },
-    {
-      key: 'torrent',
-      get label() {
-        return t.downloads.settings.torrent;
-      },
-      type: 'boolean',
-    },
-    {
-      key: 'torrentDht',
-      get label() {
-        return t.downloads.settings.torrentDht;
-      },
-      type: 'boolean',
-    },
-    {
-      key: 'torrentUpnp',
-      get label() {
-        return t.downloads.settings.torrentUpnp;
-      },
-      type: 'boolean',
     },
     {
       key: 'torrentUpKb',

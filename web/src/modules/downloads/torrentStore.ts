@@ -5,9 +5,25 @@ import type { TorrentInfo } from '@/core/platform/torrent';
 interface TorrentsState {
   /** `undefined` until the engine delivered the first list. */
   torrents: TorrentInfo[] | undefined;
+  /**
+   * The engine was stopped outside the page (tray, closing into the tray while idle): nothing
+   * starts it again until the user clicks (also after leaving and reopening the page).
+   */
+  stopped: boolean;
 }
 
-export const useTorrents = create<TorrentsState>(() => ({ torrents: undefined }));
+export const useTorrents = create<TorrentsState>(() => ({ torrents: undefined, stopped: false }));
+
+/** Stopped outside the page: the list goes, the engine waits for a click. */
+export function markStopped(): void {
+  resetTorrents();
+  useTorrents.setState({ stopped: true });
+}
+
+/** "Wieder starten", switching on, a changed switch, an opened link: the engine may start. */
+export function clearStopped(): void {
+  useTorrents.setState({ stopped: false });
+}
 
 let watching = false;
 

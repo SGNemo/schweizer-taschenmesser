@@ -523,6 +523,15 @@ pub fn remote_end_label(lang: Lang) -> &'static str {
     }
 }
 
+/// Tray entry while the torrent engine runs (DL2): visible with the window closed, one click stops it.
+pub fn torrent_running_label(lang: Lang) -> &'static str {
+    if german(lang) {
+        "Torrent läuft – beenden"
+    } else {
+        "Torrent running – stop"
+    }
+}
+
 /// Under that entry, not clickable: what the click also does.
 pub fn remote_end_hint(lang: Lang) -> &'static str {
     if german(lang) {

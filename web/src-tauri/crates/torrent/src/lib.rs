@@ -12,3 +12,9 @@ mod types;
 pub use engine::{Engine, EngineConfig, MAX_TORRENT_FILE};
 pub use seed::SeedLimits;
 pub use types::{FileEntry, Preview, Source, TorrentInfo, TorrentState};
+
+// The engine tests seed from files that already exist, which only a test build may do.
+#[cfg(test)]
+extern crate self as torrent;
+#[cfg(test)]
+mod engine_tests;

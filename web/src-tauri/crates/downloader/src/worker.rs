@@ -15,6 +15,7 @@ use crate::{
     job::{HashCheck, State},
     manager::{Inner, REMOVE_DELETE, RUN},
     name::{file_name_from_disposition, unique_name},
+    net,
 };
 
 const CHUNK: usize = 64 * 1024;
@@ -88,28 +89,56 @@ fn download(inner: &Arc<Inner>, id: u64, stop: &Arc<AtomicU8>) -> Outcome {
     if !job.dir.is_dir() {
         return Outcome::Failed("io");
     }
-    let agent: ureq::Agent = ureq::Agent::config_builder()
-        .timeout_global(None)
-        .timeout_connect(Some(Duration::from_secs(30)))
-        .http_status_as_error(false)
-        .build()
-        .into();
+    let (agent, blocked) = net::agent(inner.reach);
+    // The address with its credentials when they were given in this run (the job list has none).
+    let Ok(start) = url::Url::parse(&inner.request_url(id).unwrap_or(job.url.clone())) else {
+        return Outcome::Failed("url");
+    };
+    if let Err(why) = net::check_url_for(&start, inner.reach) {
+        return Outcome::Failed(why.code());
+    }
 
     // Two tries: a 416 (the partial file is longer than the file on the server) restarts from zero.
     let mut attempt = 0;
-    let (response, mut have) = loop {
+    let (response, mut have, source) = loop {
         let part = inner.job(id).map(|j| j.part_path());
         let Some(part) = part else {
             return Outcome::Stopped;
         };
         let have = fs::metadata(&part).map(|m| m.len()).unwrap_or(0);
-        let mut request = agent.get(&job.url);
-        if have > 0 {
-            request = request.header("Range", format!("bytes={have}-"));
-        }
-        let response = match request.call() {
-            Ok(r) => r,
-            Err(_) => return Outcome::Failed("http"),
+        // Redirects one hop at a time, each one checked again (DL4).
+        let mut url = start.clone();
+        let mut hops = 0;
+        let response = loop {
+            let mut request = agent.get(url.as_str());
+            if have > 0 {
+                request = request.header("Range", format!("bytes={have}-"));
+            }
+            let response = match request.call() {
+                Ok(r) => r,
+                Err(_) if blocked.load(Ordering::Relaxed) => return Outcome::Failed("blocked"),
+                Err(_) => return Outcome::Failed("http"),
+            };
+            let status = response.status().as_u16();
+            if !matches!(status, 301 | 302 | 303 | 307 | 308) {
+                break response;
+            }
+            let Some(location) = response
+                .headers()
+                .get("location")
+                .and_then(|v| v.to_str().ok())
+                .map(str::to_owned)
+            else {
+                return Outcome::Failed("http");
+            };
+            if hops >= net::MAX_REDIRECTS {
+                return Outcome::Failed("redirect");
+            }
+            url = match net::next_hop_for(&url, &location, inner.reach) {
+                Ok(next) => next,
+                Err(why) => return Outcome::Failed(why.code()),
+            };
+            hops += 1;
         };
         let status = response.status().as_u16();
         if status == 416 && attempt == 0 {
@@ -120,7 +149,7 @@ fn download(inner: &Arc<Inner>, id: u64, stop: &Arc<AtomicU8>) -> Outcome {
         if !(status == 200 || status == 206) {
             return Outcome::Failed("http");
         }
-        break (response, have);
+        break (response, have, url);
     };
 
     let status = response.status().as_u16();
@@ -286,9 +315,15 @@ fn download(inner: &Arc<Inner>, id: u64, stop: &Arc<AtomicU8>) -> Outcome {
     } else {
         current.file_name.clone()
     };
-    if fs::rename(&part, current.dir.join(&final_name)).is_err() {
+    let final_path = current.dir.join(&final_name);
+    if fs::rename(&part, &final_path).is_err() {
         return Outcome::Failed("io");
     }
+    // Mark-of-the-Web like a browser download (DL3); a folder without streams (FAT32, a share)
+    // keeps the file unmarked.
+    let _ = file_names::mark_of_the_web(&final_path, Some(&net::host_url(&source)));
+    // the address with its credentials is no longer needed
+    inner.forget_credentials(id);
     inner.update(id, |j| {
         j.file_name = final_name;
         j.state = State::Done;

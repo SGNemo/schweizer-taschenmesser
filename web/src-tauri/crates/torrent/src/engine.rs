@@ -21,6 +21,8 @@ use crate::{
 
 /// Size cap for a `.torrent` file the user opens.
 pub const MAX_TORRENT_FILE: usize = 10 * 1024 * 1024;
+/// Most previews kept for a quick add (DL7: the cache is not unbounded).
+const MAX_PREVIEWS: usize = 16;
 
 pub struct EngineConfig {
     /// Where the engine keeps its own state (list of torrents, DHT table).
@@ -53,6 +55,51 @@ pub struct Engine {
     /// Most bytes uploaded per torrent that we have seen (the engine's own counter restarts at zero when a
     /// torrent is paused, which would turn a stopped torrent's ratio into 0).
     uploaded: Arc<Mutex<HashMap<usize, u64>>>,
+    /// Info hashes whose files got the Mark-of-the-Web (kept in `marked.json`), so a file the user
+    /// unblocked is not marked again after a restart.
+    marked: Arc<Mutex<Marked>>,
+}
+
+/// The set behind [`Engine::marked`] and where it is kept.
+struct Marked {
+    file: PathBuf,
+    hashes: HashSet<String>,
+    /// Keys tried in this run: a folder without streams (FAT32, a share) is not retried every pass.
+    tried: HashSet<String>,
+}
+
+impl Marked {
+    fn open(state_dir: &Path) -> Marked {
+        let file = state_dir.join("marked.json");
+        let hashes = std::fs::read(&file)
+            .ok()
+            .and_then(|b| serde_json::from_slice(&b).ok())
+            .unwrap_or_default();
+        Marked {
+            file,
+            hashes,
+            tried: HashSet::new(),
+        }
+    }
+
+    #[cfg(test)]
+    fn contains(&self, key: &str) -> bool {
+        self.hashes.contains(key)
+    }
+
+    /// `true` once per run for a key not marked yet.
+    fn try_now(&mut self, key: &str) -> bool {
+        !self.hashes.contains(key) && self.tried.insert(key.to_owned())
+    }
+
+    /// Records a key (after its files were marked) and keeps the set on disk.
+    fn insert(&mut self, key: String) {
+        if self.hashes.insert(key) {
+            if let Ok(json) = serde_json::to_vec(&self.hashes) {
+                let _ = std::fs::write(&self.file, json);
+            }
+        }
+    }
 }
 
 fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
@@ -70,7 +117,7 @@ fn add_source(source: Source) -> Result<AddTorrent<'static>> {
             if !m.starts_with("magnet:?") {
                 bail!("not-a-magnet");
             }
-            Ok(AddTorrent::Url(m.into()))
+            Ok(AddTorrent::Url(public_trackers_only(&m)?.into()))
         }
         Source::File(bytes) => {
             if bytes.is_empty() || bytes.len() > MAX_TORRENT_FILE {
@@ -117,6 +164,7 @@ impl Engine {
             exempt: Arc::default(),
             previews: Arc::default(),
             uploaded: Arc::default(),
+            marked: Arc::new(Mutex::new(Marked::open(&config.state_dir))),
         };
         engine.spawn_seed_watcher();
         Ok(engine)
@@ -151,7 +199,22 @@ impl Engine {
             )
             .await?;
         match res {
-            AddTorrentResponse::ListOnly(info) => Ok(info),
+            AddTorrentResponse::ListOnly(info) => {
+                // checked before anything is written: names librqbit would take as they are (DL1, DL8)
+                // and trackers it would contact once the torrent is added (DL5)
+                if !paths_safe(&info.info) {
+                    bail!("bad-path");
+                }
+                // librqbit creates every file of a torrent, selected or not: a shortcut file
+                // (`Besuche uns.url`, `desktop.ini` …) cannot be left out, so the torrent is refused
+                if has_shortcut(&info.info) {
+                    bail!("shortcut");
+                }
+                if !trackers_public(&info.torrent_bytes) {
+                    bail!("tracker");
+                }
+                Ok(info)
+            }
             _ => bail!("already-added"),
         }
     }
@@ -171,7 +234,13 @@ impl Engine {
             })
             .collect();
         let hash = info.info_hash.as_string();
-        lock(&self.previews).insert(hash.clone(), info.torrent_bytes.to_vec());
+        {
+            let mut previews = lock(&self.previews);
+            if previews.len() >= MAX_PREVIEWS {
+                previews.clear();
+            }
+            previews.insert(hash.clone(), info.torrent_bytes.to_vec());
+        }
         Ok(Preview {
             info_hash: hash,
             name: info.info.name().map(|n| n.into_owned()).unwrap_or_default(),
@@ -180,8 +249,11 @@ impl Engine {
         })
     }
 
-    /// Adds the torrent below `dir`: a torrent with several files gets its own folder `dir/<name>`, a
-    /// single file lands in `dir`. `files` = the indices to download (`None` = everything).
+    /// Adds the torrent below `dir`, always in a folder of its own that did not exist before
+    /// (`dir/<name>`, `dir/<name> (2)` …; a single file's folder is its name without the
+    /// extension): nothing the user already had is ever overwritten (DL1), and the engine's
+    /// `overwrite` only lets a torrent of ours continue its own files after a restart.
+    /// `files` = the indices to download (`None` = everything).
     pub async fn add(
         &self,
         source: Source,
@@ -205,13 +277,9 @@ impl Engine {
             None => source,
         };
         let info = self.list_only(source.clone(), peers.clone()).await?;
-        let name = folder_name(&info.info.name().map(|n| n.into_owned()).unwrap_or_default());
-        let multi = info.info.iter_file_details().count() > 1;
-        let target = if multi {
-            dir.join(name)
-        } else {
-            dir.to_path_buf()
-        };
+        let raw = info.info.name().map(|n| n.into_owned()).unwrap_or_default();
+        let single = info.info.iter_file_details().count() == 1;
+        let target = new_folder(dir, &folder_name(&raw, single))?;
         let add = match source {
             Source::File(b) => AddTorrent::TorrentFileBytes(b.into()),
             Source::Magnet(_) => AddTorrent::TorrentFileBytes(info.torrent_bytes.clone()),
@@ -228,10 +296,48 @@ impl Engine {
                     ..Default::default()
                 }),
             )
+            .await;
+        let res = match res {
+            Ok(r) => r,
+            Err(e) => {
+                // nothing was added: the new folder is still empty
+                let _ = std::fs::remove_dir(&target);
+                return Err(e);
+            }
+        };
+        match res {
+            AddTorrentResponse::Added(id, _) => Ok(id),
+            AddTorrentResponse::AlreadyManaged(id, _) => {
+                // it keeps its own folder: the new one is still empty
+                let _ = std::fs::remove_dir(&target);
+                Ok(id)
+            }
+            AddTorrentResponse::ListOnly(_) => bail!("internal"),
+        }
+    }
+
+    /// Tests only: adds a torrent whose files are already in `dir` (the seeder of the engine
+    /// tests). The app always goes through [`Engine::add`] and its new folder.
+    #[cfg(test)]
+    pub(crate) async fn seed_from(&self, source: Source, dir: &Path) -> Result<usize> {
+        let add = match add_source(source)? {
+            AddTorrent::TorrentFileBytes(b) => AddTorrent::TorrentFileBytes(b),
+            _ => bail!("file only"),
+        };
+        let res = self
+            .session
+            .add_torrent(
+                add,
+                Some(AddTorrentOptions {
+                    output_folder: Some(dir.join("pack").to_string_lossy().into_owned()),
+                    overwrite: true,
+                    ..Default::default()
+                }),
+            )
             .await?;
         match res {
-            AddTorrentResponse::Added(id, _) | AddTorrentResponse::AlreadyManaged(id, _) => Ok(id),
-            AddTorrentResponse::ListOnly(_) => bail!("internal"),
+            AddTorrentResponse::Added(id, _) => Ok(id),
+            _ => bail!("not added"),
         }
     }
 
@@ -300,6 +406,7 @@ impl Engine {
         let limit_stopped = self.limit_stopped.clone();
         let exempt = self.exempt.clone();
         let uploaded = self.uploaded.clone();
+        let marked = self.marked.clone();
         tokio::spawn(async move {
             loop {
                 tokio::time::sleep(Duration::from_secs(2)).await;
@@ -317,6 +424,29 @@ impl Engine {
                         continue;
                     }
                     let since = *lock(&finished_at).entry(id).or_insert_with(Instant::now);
+                    // the torrent's own files (never the rest of its folder), once per torrent, folder
+                    // and selection (a re-download or a wider selection is marked again) (DL3)
+                    let key = if cfg!(windows) {
+                        Some(mark_key(&h))
+                    } else {
+                        None
+                    };
+                    if let Some(key) = key.filter(|k| lock(&marked).try_now(k)) {
+                        // a file the user deleted is not created again by the stream write
+                        let files: Vec<PathBuf> =
+                            own_files(&h).into_iter().filter(|f| f.is_file()).collect();
+                        let marked = marked.clone();
+                        tokio::task::spawn_blocking(move || {
+                            // every file is tried, also after one failed
+                            let ok = files.iter().fold(true, |ok, f| {
+                                file_names::mark_of_the_web(f, None).is_ok() && ok
+                            });
+                            // a failure is tried again after the next start (once per run)
+                            if ok {
+                                lock(&marked).insert(key);
+                            }
+                        });
+                    }
                     if lock(&exempt).contains(&id) {
                         continue;
                     }
@@ -412,37 +542,299 @@ fn mark_saved_torrents_paused(state_dir: &Path) {
     }
 }
 
-/// A torrent name as a single safe folder name: no separators, no `..`, no Windows-reserved characters.
-fn folder_name(name: &str) -> String {
-    let flat: String = name
-        .chars()
-        .map(|c| {
-            if c.is_control() || matches!(c, '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|') {
-                '_'
-            } else {
-                c
-            }
+/// What [`Marked`] remembers: info hash, output folder and the selection.
+fn mark_key(h: &Arc<ManagedTorrent>) -> String {
+    let only = h
+        .only_files()
+        .map(|o| {
+            o.iter()
+                .map(|i| i.to_string())
+                .collect::<Vec<_>>()
+                .join(",")
         })
-        .collect();
-    let trimmed = flat.trim_matches(|c| c == '.' || c == ' ');
-    if trimmed.is_empty() {
-        "torrent".into()
+        .unwrap_or_default();
+    format!(
+        "{}|{}|{only}",
+        h.info_hash().as_string(),
+        h.output_folder().display()
+    )
+}
+
+/// The files a torrent wrote: its output folder joined with each selected file's path (no
+/// padding files). Only plain relative paths (no `..`, no root) are returned.
+fn own_files(h: &Arc<ManagedTorrent>) -> Vec<PathBuf> {
+    let out = h.output_folder().to_path_buf();
+    let only = h.only_files();
+    h.with_metadata(|m| {
+        m.file_infos
+            .iter()
+            .enumerate()
+            .filter(|(i, f)| !f.attrs.padding && only.as_ref().is_none_or(|o| o.contains(i)))
+            .filter(|(_, f)| {
+                f.relative_filename
+                    .components()
+                    .all(|c| matches!(c, std::path::Component::Normal(_)))
+            })
+            .map(|(_, f)| out.join(&f.relative_filename))
+            .collect()
+    })
+    .unwrap_or_default()
+}
+
+/// A torrent name as a single safe folder name (the shared cleaner, DL8); a single file's folder
+/// drops the extension (`ubuntu.iso` → `ubuntu`).
+fn folder_name(name: &str, single: bool) -> String {
+    let cleaned = file_names::clean(if name.trim().is_empty() {
+        "torrent"
     } else {
-        trimmed.chars().take(120).collect()
+        name
+    });
+    match (single, cleaned.rfind('.')) {
+        (true, Some(dot)) if dot > 0 => file_names::clean(&cleaned[..dot]),
+        _ => cleaned,
     }
+}
+
+/// Creates the first of `name`, `name (2)` … that does not exist yet in `dir` (create-new, so a
+/// race never reuses a folder) and returns it.
+fn new_folder(dir: &Path, name: &str) -> Result<PathBuf> {
+    for candidate in file_names::candidates(name) {
+        let path = dir.join(&candidate);
+        match std::fs::create_dir(&path) {
+            Ok(()) => return Ok(path),
+            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => continue,
+            Err(_) => bail!("dir"),
+        }
+    }
+    bail!("dir")
+}
+
+/// Every path inside the torrent is made of plain names librqbit can take as they are: no drive
+/// letter or stream (`C:x`, `a:b`), no device name, no invisible or bidi character, no `.`/`..`.
+/// librqbit itself refuses only `..` and separators (security review 2026-11, package 3).
+fn paths_safe<B: AsRef<[u8]>>(info: &librqbit::ValidatedTorrentMetaV1Info<B>) -> bool {
+    info.iter_file_details().all(|d| {
+        d.filename
+            .to_vec()
+            .iter()
+            .all(|c| file_names::safe_segment(c))
+    })
+}
+
+/// Whether a file of the torrent is a shortcut type Explorer resolves on sight (DL8).
+fn has_shortcut<B: AsRef<[u8]>>(info: &librqbit::ValidatedTorrentMetaV1Info<B>) -> bool {
+    info.iter_file_details().any(|d| {
+        d.filename
+            .to_vec()
+            .last()
+            .is_some_and(|n| file_names::shortcut(n))
+    })
+}
+
+/// A tracker address librqbit may contact: `http`, `https` or `udp` to a host that is not this PC
+/// or the home network (an IP of it, `localhost`). A host name is not looked up here.
+fn tracker_allowed(raw: &str) -> bool {
+    let Ok(url) = url::Url::parse(raw.trim()) else {
+        return false;
+    };
+    if !matches!(url.scheme(), "http" | "https" | "udp") {
+        return false;
+    }
+    match url.host() {
+        Some(url::Host::Ipv4(ip)) => downloader::net::is_public_ip(ip.into()),
+        Some(url::Host::Ipv6(ip)) => downloader::net::is_public_ip(ip.into()),
+        // `udp:` is no special scheme for `url`: its hosts come as names, and the system resolver
+        // reads `127.1`, `2130706433` or `0x7f.0.0.1` as IPs. Parsed the way an `http` host is,
+        // every such spelling becomes the IP it means.
+        Some(url::Host::Domain(d)) => match url::Url::parse(&format!("http://{d}/")) {
+            Ok(as_http) => match as_http.host() {
+                Some(url::Host::Ipv4(ip)) => downloader::net::is_public_ip(ip.into()),
+                Some(url::Host::Ipv6(ip)) => downloader::net::is_public_ip(ip.into()),
+                Some(url::Host::Domain(name)) => {
+                    let name = name.trim_end_matches('.').to_ascii_lowercase();
+                    !(name == "localhost" || name.ends_with(".localhost"))
+                }
+                None => false,
+            },
+            Err(_) => false,
+        },
+        None => false,
+    }
+}
+
+/// The magnet link without its trackers that are not allowed (the preview contacts the rest).
+fn public_trackers_only(magnet: &str) -> Result<String> {
+    let parsed = url::Url::parse(magnet).map_err(|_| anyhow!("not-a-magnet"))?;
+    let kept: Vec<(String, String)> = parsed
+        .query_pairs()
+        .filter(|(k, v)| k != "tr" || tracker_allowed(v))
+        .map(|(k, v)| (k.into_owned(), v.into_owned()))
+        .collect();
+    let query = url::form_urlencoded::Serializer::new(String::new())
+        .extend_pairs(kept)
+        .finish();
+    Ok(format!("magnet:?{query}"))
+}
+
+/// Whether every tracker a `.torrent` names is allowed. A torrent file cannot be rewritten without
+/// changing what it is, so one with a tracker in the home network is refused as a whole (DL5).
+fn trackers_public(torrent_bytes: &[u8]) -> bool {
+    let Ok(meta) = librqbit::torrent_from_bytes(torrent_bytes) else {
+        return false;
+    };
+    let all_allowed = meta
+        .iter_announce()
+        .all(|t| std::str::from_utf8(t.as_ref()).is_ok_and(tracker_allowed));
+    all_allowed
 }
 
 #[cfg(test)]
 mod tests {
-    use super::folder_name;
+    use super::*;
 
     #[test]
     fn folder_names_are_single_safe_segments() {
-        assert_eq!(folder_name("Linux ISO 12"), "Linux ISO 12");
-        assert_eq!(folder_name("../../etc"), "_.._etc");
-        assert_eq!(folder_name("a/b\\c:d"), "a_b_c_d");
-        assert_eq!(folder_name(".."), "torrent");
-        assert_eq!(folder_name(""), "torrent");
-        assert!(folder_name(&"x".repeat(500)).chars().count() <= 120);
+        assert_eq!(folder_name("Linux ISO 12", false), "Linux ISO 12");
+        assert_eq!(folder_name("../../etc", false), "etc");
+        assert_eq!(folder_name("a/b\\c:d", false), "c_d");
+        assert_eq!(folder_name("..", false), "Datei");
+        assert_eq!(folder_name("", false), "torrent");
+        assert_eq!(folder_name("CON", false), "_CON");
+        assert_eq!(folder_name("ubuntu-24.04.iso", true), "ubuntu-24.04");
+        assert!(folder_name(&"x".repeat(500), false).len() <= file_names::MAX_NAME_BYTES);
+    }
+
+    /// DL1: an existing folder (and so its files) is never used again.
+    #[test]
+    fn each_torrent_gets_a_folder_that_did_not_exist() {
+        let dir = std::env::temp_dir().join(format!("tt-new-folder-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(dir.join("pack")).unwrap();
+        std::fs::write(dir.join("pack").join("a.bin"), b"mine").unwrap();
+        let first = new_folder(&dir, "pack").unwrap();
+        assert_eq!(first, dir.join("pack (2)"));
+        assert_eq!(new_folder(&dir, "pack").unwrap(), dir.join("pack (3)"));
+        assert_eq!(
+            std::fs::read(dir.join("pack").join("a.bin")).unwrap(),
+            b"mine"
+        );
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// DL3: a torrent's files are marked once; after a restart an unblocked file stays unblocked.
+    #[test]
+    fn each_torrent_is_marked_once_across_restarts() {
+        let dir = std::env::temp_dir().join(format!("tt-marked-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let mut marked = Marked::open(&dir);
+        assert!(!marked.contains("abc|/x|"));
+        marked.insert("abc|/x|".into());
+        assert!(Marked::open(&dir).contains("abc|/x|"), "kept on disk");
+        // the same torrent in a new folder (removed and added again) is a new key
+        assert!(!Marked::open(&dir).contains("abc|/x (2)|"));
+        // tried once per run, also when it failed
+        let mut fresh = Marked::open(&dir);
+        assert!(fresh.try_now("def|/y|"));
+        assert!(!fresh.try_now("def|/y|"));
+        assert!(!fresh.try_now("abc|/x|"), "marked already");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// DL8: librqbit writes every file of a torrent, so one with a shortcut file is refused.
+    #[tokio::test]
+    async fn a_torrent_with_a_shortcut_file_is_refused() {
+        let t = torrent_with(&["film.mkv", "Besuche uns.url"], None).await;
+        let meta = librqbit::torrent_from_bytes(&t).unwrap();
+        assert!(has_shortcut(&meta.info.data.validate().unwrap()));
+        let plain = torrent_with(&["film.mkv", "info.txt"], None).await;
+        let meta = librqbit::torrent_from_bytes(&plain).unwrap();
+        assert!(!has_shortcut(&meta.info.data.validate().unwrap()));
+    }
+
+    #[test]
+    fn trackers_in_the_home_network_are_not_contacted() {
+        assert!(tracker_allowed("udp://tracker.example.org:6969/announce"));
+        assert!(tracker_allowed("https://tracker.example.org/announce"));
+        for bad in [
+            "http://192.168.178.1/announce",
+            "udp://127.0.0.1:6969",
+            "udp://127.1:6969",
+            "udp://2130706433:6969",
+            "udp://0x7f.0.0.1:6969",
+            "udp://[::1]:6969",
+            "http://localhost:8080/a",
+            "http://[fe80::1]/a",
+            "file:///etc/passwd",
+            "wss://tracker.example.org",
+            "not a url",
+        ] {
+            assert!(!tracker_allowed(bad), "{bad}");
+        }
+        let magnet = "magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567&dn=x\
+            &tr=udp%3A%2F%2Ftracker.example.org%3A6969&tr=http%3A%2F%2F192.168.0.1%2Fannounce";
+        let kept = public_trackers_only(magnet).unwrap();
+        assert!(kept.contains("tracker.example.org"));
+        assert!(!kept.contains("192.168"));
+        assert!(kept.contains("xt=urn%3Abtih%3A0123456789abcdef0123456789abcdef01234567"));
+    }
+
+    async fn torrent_with(names: &[&str], announce: Option<&str>) -> Vec<u8> {
+        static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+        let n = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let dir = std::env::temp_dir().join(format!("tt-meta-{}-{n}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let pack = dir.join("pack");
+        std::fs::create_dir_all(&pack).unwrap();
+        for n in names {
+            std::fs::write(pack.join(n), b"data").unwrap();
+        }
+        let options = librqbit::CreateTorrentOptions {
+            piece_length: Some(16384),
+            trackers: announce.map(|a| vec![a.to_owned()]).unwrap_or_default(),
+            ..Default::default()
+        };
+        let t = librqbit::create_torrent(
+            &pack,
+            options,
+            &librqbit::spawn_utils::BlockingSpawner::new(1),
+        )
+        .await
+        .unwrap();
+        let _ = std::fs::remove_dir_all(&dir);
+        t.as_bytes().unwrap().to_vec()
+    }
+
+    /// librqbit takes `C:x`, `con.txt` and bidi names as they are: such a torrent is refused.
+    #[tokio::test]
+    async fn unsafe_paths_inside_a_torrent_are_refused() {
+        let ok = torrent_with(&["a.bin", "b.bin"], None).await;
+        let meta = librqbit::torrent_from_bytes(&ok).unwrap();
+        assert!(paths_safe(&meta.info.data.validate().unwrap()));
+        // Windows cannot create such files, so a harmless name of the same byte length is put
+        // into the metainfo instead (librqbit parses it without checking the info hash here)
+        for bad in ["con.txt", "C:evil", "gnp.\u{202E}exe"] {
+            let stand_in = "x".repeat(bad.len());
+            let t = torrent_with(&["a.bin", &stand_in], None).await;
+            let from = format!("{}:{stand_in}", stand_in.len());
+            let to = format!("{}:{bad}", bad.len());
+            let at = t
+                .windows(from.len())
+                .position(|w| w == from.as_bytes())
+                .expect("name in the metainfo");
+            let mut t = t;
+            t[at..at + to.len()].copy_from_slice(to.as_bytes());
+            let meta = librqbit::torrent_from_bytes(&t).unwrap();
+            assert!(!paths_safe(&meta.info.data.validate().unwrap()), "{bad:?}");
+        }
+    }
+
+    #[tokio::test]
+    async fn a_torrent_file_with_a_home_network_tracker_is_refused() {
+        assert!(trackers_public(&torrent_with(&["a.bin"], None).await));
+        let public = torrent_with(&["a.bin"], Some("udp://tracker.example.org:6969")).await;
+        assert!(trackers_public(&public));
+        let home = torrent_with(&["a.bin"], Some("http://192.168.1.1/announce")).await;
+        assert!(!trackers_public(&home));
     }
 }

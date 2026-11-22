@@ -30,14 +30,6 @@ export const tFieldHelp = defineBundle(
     'chat.defaultEngine':
       'Bestimmt, ob neue Chats mit deinen eingerichteten Anbietern oder mit dem lokalen Modell antworten.',
     'downloads.limitKb': 'Begrenzt die Geschwindigkeit aller Downloads; 0 heißt ohne Limit.',
-    'downloads.folder':
-      'Hier landen heruntergeladene Dateien; leer nimmt den Downloads-Ordner des Systems.',
-    'downloads.torrent':
-      'Erlaubt Downloads über BitTorrent. Ohne diesen Schalter bleibt der Torrent-Teil aus.',
-    'downloads.torrentDht':
-      'Findet Teilnehmer ohne zentralen Tracker; nötig für Magnet-Links ohne Tracker.',
-    'downloads.torrentUpnp':
-      'Bittet den Router, den nötigen Port selbst zu öffnen, damit andere dich erreichen.',
     'downloads.torrentUpKb':
       'Begrenzt die Upload-Geschwindigkeit bei Torrents; 0 heißt ohne Limit.',
     'downloads.torrentDownKb':
@@ -84,13 +76,6 @@ export const tFieldHelp = defineBundle(
       'chat.defaultEngine':
         'Decides whether new chats are answered by your providers or by the local model.',
       'downloads.limitKb': 'Limits the speed of all downloads; 0 means no limit.',
-      'downloads.folder': 'Downloaded files end up here; empty uses the system Downloads folder.',
-      'downloads.torrent':
-        'Allows downloads over BitTorrent. Without this switch the torrent part stays off.',
-      'downloads.torrentDht':
-        'Finds peers without a central tracker; needed for magnet links without a tracker.',
-      'downloads.torrentUpnp':
-        'Asks the router to open the needed port itself so others can reach you.',
       'downloads.torrentUpKb': 'Limits the upload speed of torrents; 0 means no limit.',
       'downloads.torrentDownKb': 'Limits the download speed of torrents; 0 means no limit.',
       'downloads.seedRatio':

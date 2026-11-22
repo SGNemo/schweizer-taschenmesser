@@ -33,12 +33,14 @@ import {
   percent,
   type JobFilter,
 } from '../lib/format';
+import { settingsRepo } from '@/core/settings/settings';
+import { adoptSyncedOnce, readDevicePrefs, setDevicePrefs } from '../devicePrefs';
 import { settings, type DownloadsPrefs } from '../settings';
 import { ensureWatching, useJobs } from '../store';
 import { TorrentSection, asTorrentSource, type TorrentIncoming } from './TorrentSection';
 import styles from './DownloadsPage.module.css';
 
-const ERRORS = ['scheme', 'url', 'dir', 'hash'] as const;
+const ERRORS = ['scheme', 'url', 'dir', 'hash', 'blocked'] as const;
 
 export default function DownloadsPage() {
   const platform = getPlatform().downloads;
@@ -56,6 +58,11 @@ export default function DownloadsPage() {
 
   useEffect(() => {
     ensureWatching();
+    // the old synced row, read raw (its torrent keys are no longer in the schema)
+    void settingsRepo
+      .get('module.downloads')
+      .then(adoptSyncedOnce)
+      .catch(() => undefined);
   }, []);
 
   // The speed limit of the setting applies to everything while the page (or the widget) is open.
@@ -179,7 +186,7 @@ export default function DownloadsPage() {
       <AddDialog
         open={adding !== null}
         initialUrl={adding ?? ''}
-        defaultFolder={prefs.folder}
+        defaultFolder={readDevicePrefs().folder}
         onClose={() => setAdding(null)}
       />
       <VerifyDialog job={verifying} onClose={() => setVerifying(null)} />
@@ -399,16 +406,20 @@ function AddDialog({
         {url.trim().toLowerCase().startsWith('http://') ? (
           <p className={styles.sub}>{t.downloads.add.http}</p>
         ) : null}
+        {/* shown only: a folder is chosen in the system dialog, which Nemo remembers (DL6) */}
         <TextField
           label={t.downloads.add.folder}
+          hint={t.downloads.add.folderHelp}
           value={dir}
-          onChange={(e) => setDir(e.target.value)}
+          readOnly
         />
         <div>
           <Button
             onClick={() =>
               void platform.pickDir().then((picked) => {
-                if (picked) setDir(picked);
+                if (!picked) return;
+                setDir(picked);
+                setDevicePrefs({ folder: picked });
               })
             }
           >

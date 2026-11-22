@@ -16,6 +16,7 @@ const COMMANDS: &[&str] = &[
     "torrent_watch",
     "downloads_default_dir",
     "downloads_add",
+    "downloads_pick_dir",
     "downloads_pause",
     "downloads_resume",
     "downloads_remove",

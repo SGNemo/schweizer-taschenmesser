@@ -17,8 +17,6 @@ export const downloads: Strings['downloads'] = {
   },
   settings: {
     limitKb: 'Speed limit for all downloads (KB/s, 0 = unlimited)',
-    folder: 'Download folder (empty = the system Downloads folder)',
-    torrent: 'Switch the BitTorrent part on',
     torrentDht:
       'Find participants through the DHT network (needed for magnet links without a tracker)',
     torrentUpnp: 'Open the port on the router automatically (UPnP)',
@@ -61,6 +59,7 @@ export const downloads: Strings['downloads'] = {
     pick: 'Choose folder',
     hash: 'Checksum (optional, SHA-256 or SHA-512)',
     hashHelp: 'The finished file is compared with it.',
+    folderHelp: 'Change it with “Choose folder”.',
     submit: 'Download',
     cancel: 'Cancel',
     http: 'This address is not encrypted (HTTP).',
@@ -68,7 +67,8 @@ export const downloads: Strings['downloads'] = {
   errors: {
     scheme: 'Only addresses with http:// or https:// work.',
     url: 'That is not a valid address.',
-    dir: 'The folder does not exist.',
+    dir: 'Nemo only saves into folders you picked with “Choose folder”. Pick the folder there.',
+    blocked: 'Nemo does not download from addresses in the home network or on this PC.',
     hash: 'The checksum needs 64 (SHA-256) or 128 (SHA-512) characters from 0–9 and a–f.',
     other: 'That did not work.',
   },
@@ -84,6 +84,12 @@ export const downloads: Strings['downloads'] = {
     io: 'The file could not be written.',
     checksum: 'The checksum does not match. The file was deleted.',
     size: 'The file arrived incomplete.',
+    blocked:
+      'The address leads into the home network or to this PC. Nemo does not download from there. Check the address.',
+    redirect:
+      'The address redirects too often or to an unencrypted address. Check the address or get the file directly from the provider’s site.',
+    url: 'The saved address is not valid.',
+    scheme: 'Only addresses with http:// or https:// work.',
   },
   row: {
     eta: (d: string) => `${d} left`,
@@ -126,10 +132,14 @@ export const downloads: Strings['downloads'] = {
     hint: 'Only for legal content. While you download you upload at the same time.',
     off: {
       title: 'BitTorrent is off',
-      body: 'The torrent part is switched off. A short notice comes first when you switch it on.',
+      body: 'The torrent part is switched off. The switch applies to this PC only; your torrents stay saved. A short notice comes first when you switch it on.',
       turnOn: 'Switch the torrent part on',
     },
     turnOff: 'Switch the torrent part off',
+    deviceOnly:
+      'The torrent switches and the folder apply on this PC only. Changing a switch restarts BitTorrent briefly.',
+    stopped: 'BitTorrent is stopped. Your torrents are saved and come back when it starts.',
+    restart: 'Start again',
     starting: 'Starting …',
     launch: {
       needModule: 'This needs the “Downloads” module.',
@@ -167,7 +177,13 @@ export const downloads: Strings['downloads'] = {
       notMagnet: 'That is not a magnet link.',
       timeout: 'No sources found. Check the link or try again later.',
       alreadyAdded: 'This torrent is already in the list.',
-      dir: 'The folder does not exist.',
+      dir: 'Nemo only saves into folders you picked with “Choose folder”. Pick the folder there.',
+      badPath:
+        'The torrent contains file names that could land somewhere else on Windows. Nemo does not load it.',
+      shortcut:
+        'The torrent contains files such as .url, .lnk or desktop.ini that Windows reads as soon as the folder is shown. Nemo does not load it.',
+      tracker:
+        'The torrent names a tracker in the home network or on this PC. Nemo does not load it.',
       other: 'That did not work.',
     },
     state: {

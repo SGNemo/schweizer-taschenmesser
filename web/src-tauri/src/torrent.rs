@@ -11,7 +11,7 @@ use std::{
 
 use ::torrent::{Engine, EngineConfig, Preview, SeedLimits, Source, TorrentInfo};
 use serde::Deserialize;
-use tauri::{ipc::Channel, AppHandle, Manager as _, State};
+use tauri::{ipc::Channel, AppHandle, Emitter as _, Manager as _, State};
 use tokio::sync::Mutex;
 
 /// A magnet link needs peers to tell us what is inside; give up after this long.
@@ -21,7 +21,13 @@ const PREVIEW_TIMEOUT: Duration = Duration::from_secs(90);
 pub struct Torrents {
     engine: Mutex<Option<Arc<Engine>>>,
     watchers: Arc<std::sync::Mutex<Vec<Channel<Vec<TorrentInfo>>>>>,
-    watching: std::sync::atomic::AtomicBool,
+    /// Set by a stop outside the page (tray, closing into the tray while idle): no configure
+    /// starts the engine again until the page asks with `resume` (a click there).
+    held: std::sync::atomic::AtomicBool,
+    /// Moves with every stop: a watch loop of an older engine ends at its next tick.
+    generation: Arc<std::sync::atomic::AtomicU64>,
+    /// Generation + 1 of the running watch loop (0: none).
+    loop_of: Arc<std::sync::atomic::AtomicU64>,
 }
 
 #[derive(Deserialize)]
@@ -37,6 +43,9 @@ pub struct TorrentSettings {
     seed_ratio: f64,
     /// Minutes, 0 = no limit.
     seed_minutes: u64,
+    /// The user asked for the engine (a click): ends a stop made outside the page.
+    #[serde(default)]
+    resume: bool,
 }
 
 /// What the user handed over: a pasted magnet link, or the path of a `.torrent` file picked in the
@@ -76,6 +85,10 @@ fn code(e: impl std::fmt::Display) -> String {
         "dir",
         "not-found",
         "already-added",
+        "bad-path",
+        "shortcut",
+        "stopped",
+        "tracker",
     ] {
         if msg == known {
             return msg;
@@ -109,7 +122,14 @@ pub async fn torrent_configure(
     state: State<'_, Torrents>,
     settings: TorrentSettings,
 ) -> Result<(), String> {
+    use std::sync::atomic::Ordering::SeqCst;
     let mut slot = state.engine.lock().await;
+    if settings.resume {
+        state.held.store(false, SeqCst);
+    }
+    if slot.is_none() && state.held.load(SeqCst) {
+        return Err("stopped".into());
+    }
     if slot.is_none() {
         let default_dir = app
             .path()
@@ -127,34 +147,96 @@ pub async fn torrent_configure(
         .await
         .map_err(|_| "start".to_string())?;
         *slot = Some(Arc::new(engine));
+        crate::capture::set_torrent_tray(&app, true);
     }
     let engine = slot.clone().ok_or("off")?;
     drop(slot);
-    engine.set_limits(settings.upload_kb * 1024, settings.download_kb * 1024);
+    engine.set_limits(
+        settings.upload_kb.saturating_mul(1024),
+        settings.download_kb.saturating_mul(1024),
+    );
     engine.set_seed_limits(SeedLimits {
         ratio: (settings.seed_ratio > 0.0).then_some(settings.seed_ratio),
-        time: (settings.seed_minutes > 0).then(|| Duration::from_secs(settings.seed_minutes * 60)),
+        time: (settings.seed_minutes > 0)
+            .then(|| Duration::from_secs(settings.seed_minutes.saturating_mul(60))),
     });
     Ok(())
 }
 
 /// Shuts the engine down (the torrent part was switched off). Saved torrents stay in the list.
 #[tauri::command]
-pub async fn torrent_stop(state: State<'_, Torrents>) -> Result<(), String> {
+pub async fn torrent_stop(app: AppHandle, state: State<'_, Torrents>) -> Result<(), String> {
+    stop(&app, &state).await;
+    Ok(())
+}
+
+/// Shuts the engine down (listener, DHT, trackers) and takes the tray line away.
+async fn stop(app: &AppHandle, state: &Torrents) {
     let engine = state.engine.lock().await.take();
+    stop_engine(app, state, engine).await;
+}
+
+/// Stops a taken engine; the page's watch ends (its channel is dropped) and the tray line goes.
+async fn stop_engine(app: &AppHandle, state: &Torrents, engine: Option<Arc<Engine>>) {
+    use std::sync::atomic::Ordering::SeqCst;
+    if let Ok(mut w) = state.watchers.lock() {
+        w.clear();
+    }
+    state.generation.fetch_add(1, SeqCst);
     if let Some(e) = engine {
         e.stop().await;
     }
-    Ok(())
+    crate::capture::set_torrent_tray(app, false);
+}
+
+/// "Torrent läuft – beenden" in the tray (DL2). The torrents stay saved, paused; the page says
+/// "angehalten" and waits for "Wieder starten".
+pub fn stop_from_tray(app: &AppHandle) {
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        let state = app.state::<Torrents>();
+        // held before the stop: a configure in between cannot start a new engine
+        state.held.store(true, std::sync::atomic::Ordering::SeqCst);
+        stop(&app, &state).await;
+        // the page says "angehalten" and waits for a click
+        let _ = app.emit_to("main", "torrent-stopped", ());
+    });
+}
+
+/// The main window went into the tray: with nothing downloading or seeding the engine stops, so
+/// no peer listener stays open unseen (DL2). A running download keeps it (the tray shows it).
+pub fn stop_if_idle(app: &AppHandle) {
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        let state = app.state::<Torrents>();
+        // decided and taken under one lock: an add in between cannot lose its engine
+        let idle = {
+            let mut slot = state.engine.lock().await;
+            match slot.as_ref() {
+                Some(engine) if !engine.list().iter().any(|t| active(t.state)) => {
+                    state.held.store(true, std::sync::atomic::Ordering::SeqCst);
+                    slot.take()
+                }
+                _ => None,
+            }
+        };
+        if idle.is_some() {
+            stop_engine(&app, &state, idle).await;
+            let _ = app.emit_to("main", "torrent-stopped", ());
+        }
+    });
+}
+
+/// Whether a torrent uses the network right now.
+fn active(state: ::torrent::TorrentState) -> bool {
+    use ::torrent::TorrentState as S;
+    matches!(state, S::Starting | S::Downloading | S::Seeding)
 }
 
 /// "Alle Daten löschen": shuts the engine down, then removes `torrent-state/` (the saved torrent
 /// list and resume data; downloaded files stay where the user put them).
 pub(crate) async fn wipe(app: &AppHandle) -> Result<(), String> {
-    let engine = app.state::<Torrents>().engine.lock().await.take();
-    if let Some(e) = engine {
-        e.stop().await;
-    }
+    stop(app, &app.state::<Torrents>()).await;
     crate::device_wipe::remove_dir(&state_dir(app)?)
 }
 
@@ -174,19 +256,19 @@ pub async fn torrent_preview(
 
 #[tauri::command]
 pub async fn torrent_add(
+    app: AppHandle,
     state: State<'_, Torrents>,
     input: SourceIn,
     dir: String,
     files: Option<Vec<usize>>,
 ) -> Result<usize, String> {
+    // the same folder rule as a download (DL6)
+    let dir = app
+        .state::<crate::downloads::Downloads>()
+        .target(&app, &dir)?;
     let engine = state.engine().await?;
     let src = source(input)?;
-    match tokio::time::timeout(
-        PREVIEW_TIMEOUT,
-        engine.add(src, &PathBuf::from(dir), files, vec![]),
-    )
-    .await
-    {
+    match tokio::time::timeout(PREVIEW_TIMEOUT, engine.add(src, &dir, files, vec![])).await {
         Ok(r) => r.map_err(code),
         Err(_) => Err("timeout".into()),
     }
@@ -222,26 +304,48 @@ pub async fn torrent_watch(
     state: State<'_, Torrents>,
     events: Channel<Vec<TorrentInfo>>,
 ) -> Result<(), String> {
+    use std::sync::atomic::Ordering::SeqCst;
+    // read before the engine: a stop in between moves it, and the loop below ends at once
+    let mine = state.generation.load(SeqCst);
     let engine = state.engine().await?;
     let _ = events.send(engine.list());
-    state
-        .watchers
-        .lock()
-        .map_err(|_| "internal".to_string())?
-        .push(events);
-    if !state
-        .watching
-        .swap(true, std::sync::atomic::Ordering::SeqCst)
-    {
+    // one page watches: a new watch replaces the earlier channel
+    *state.watchers.lock().map_err(|_| "internal".to_string())? = vec![events];
+    // one loop per engine generation
+    if state.loop_of.swap(mine + 1, SeqCst) != mine + 1 {
         let watchers = state.watchers.clone();
+        let generation = state.generation.clone();
+        let loop_of = state.loop_of.clone();
         tokio::spawn(async move {
             loop {
                 tokio::time::sleep(Duration::from_secs(1)).await;
+                // the engine this loop watches was stopped: the next watch starts a new loop
+                if generation.load(SeqCst) != mine {
+                    break;
+                }
                 let list = engine.list();
                 let Ok(mut w) = watchers.lock() else { break };
                 w.retain(|c| c.send(list.clone()).is_ok());
+                // nobody watches any more: end, and let go of the engine
+                if w.is_empty() {
+                    let _ = loop_of.compare_exchange(mine + 1, 0, SeqCst, SeqCst);
+                    break;
+                }
             }
         });
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn only_downloading_seeding_or_starting_torrents_keep_the_engine() {
+        use ::torrent::TorrentState as S;
+        assert!(super::active(S::Downloading) && super::active(S::Seeding));
+        assert!(super::active(S::Starting));
+        for idle in [S::Paused, S::Done, S::Error] {
+            assert!(!super::active(idle));
+        }
+    }
 }

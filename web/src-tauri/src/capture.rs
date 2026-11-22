@@ -43,6 +43,8 @@ struct TrayItems {
     remote_end: MenuItem<Wry>,
     /// Not clickable, under it: the device stays paused afterwards.
     remote_hint: MenuItem<Wry>,
+    /// "Torrent läuft – beenden" while the torrent engine runs; native text, like `remote_end`.
+    torrent_stop: MenuItem<Wry>,
 }
 
 /// Everything the tray shows. The page sends labels, tooltip and the "Heute" block; who controls
@@ -55,6 +57,8 @@ struct Tray {
     today: TrayToday,
     /// A device controls this PC right now: its name (plain text, may be empty).
     remote: Option<String>,
+    /// The torrent engine runs (peer listener open): set from Rust (`torrent.rs`) only.
+    torrent: bool,
 }
 
 /// The language of the shell's own texts (tray entry, tooltip, confirmation dialogs): the app's,
@@ -75,6 +79,7 @@ fn lang_of(state: &CaptureState) -> crate::texts::Lang {
 }
 
 const TRAY_REMOTE_END: &str = "remote-end";
+const TRAY_TORRENT_STOP: &str = "torrent-stop";
 
 /// Lines of the tray's "Heute" block; the web app never sends more (`traySnapshot.ts`).
 const TRAY_TODAY_MAX: usize = 5;
@@ -227,6 +232,7 @@ fn tray_today_lines(today: &TrayToday) -> Vec<(usize, String)> {
 enum TrayRow {
     RemoteEnd,
     RemoteHint,
+    TorrentStop,
     Separator,
     Heading(String),
     Today(usize, String),
@@ -239,11 +245,15 @@ enum TrayRow {
 
 /// The whole tray menu as rows: "Fernsteuerung beenden" first while a device controls this PC,
 /// then the "Heute" block (only when it has lines), then capture/open/quit as before.
-fn tray_rows(today: &TrayToday, remote: bool) -> Vec<TrayRow> {
+fn tray_rows(today: &TrayToday, remote: bool, torrent: bool) -> Vec<TrayRow> {
     let mut rows = Vec::new();
     if remote {
         rows.push(TrayRow::RemoteEnd);
         rows.push(TrayRow::RemoteHint);
+        rows.push(TrayRow::Separator);
+    }
+    if torrent {
+        rows.push(TrayRow::TorrentStop);
         rows.push(TrayRow::Separator);
     }
     let lines = tray_today_lines(today);
@@ -270,10 +280,11 @@ fn tray_menu(app: &AppHandle, tray: &Tray) -> tauri::Result<Menu<Wry>> {
     let item = |id: &str, label: &str, enabled: bool| {
         MenuItem::with_id(app, id, label, enabled, None::<&str>)
     };
-    for row in tray_rows(&tray.today, tray.remote.is_some()) {
+    for row in tray_rows(&tray.today, tray.remote.is_some(), tray.torrent) {
         match row {
             TrayRow::RemoteEnd => menu.append(&tray.items.remote_end)?,
             TrayRow::RemoteHint => menu.append(&tray.items.remote_hint)?,
+            TrayRow::TorrentStop => menu.append(&tray.items.torrent_stop)?,
             TrayRow::Separator => menu.append(&PredefinedMenuItem::separator(app)?)?,
             TrayRow::Heading(label) => menu.append(&item("today-heading", &label, false)?)?,
             TrayRow::Today(index, label) => {
@@ -382,6 +393,25 @@ pub fn set_remote_tray(app: &AppHandle, controller: Option<String>) {
     });
 }
 
+/// Whether the torrent engine runs (DL2). Called from Rust only (`torrent.rs`), handed to the
+/// main thread like [`set_remote_tray`].
+pub fn set_torrent_tray(app: &AppHandle, running: bool) {
+    let handle = app.clone();
+    let _ = app.run_on_main_thread(move || {
+        let state = handle.state::<CaptureState>();
+        let Ok(mut slot) = state.tray.lock() else {
+            return;
+        };
+        let Some(tray) = slot.as_mut() else {
+            return;
+        };
+        if tray.torrent != running {
+            tray.torrent = running;
+            apply_tray(&handle, tray);
+        }
+    });
+}
+
 /// A click in the "Heute" block: the main window comes forward (the existing open path) and the
 /// page gets the item id; it navigates or starts the timer itself.
 fn open_tray_item(app: &AppHandle, id: &str) {
@@ -414,6 +444,13 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
             false,
             None::<&str>,
         )?,
+        torrent_stop: MenuItem::with_id(
+            app,
+            TRAY_TORRENT_STOP,
+            crate::texts::torrent_running_label(crate::webview2::system_lang()),
+            true,
+            None::<&str>,
+        )?,
     };
     // No "Heute" block until the web app sends one, and nobody controls this PC yet.
     let state = Tray {
@@ -421,6 +458,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
         tooltip: tooltip.to_owned(),
         today: TrayToday::default(),
         remote: None,
+        torrent: false,
     };
     let menu = tray_menu(app, &state)?;
     let mut tray = TrayIconBuilder::with_id(TRAY_ID)
@@ -432,6 +470,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
             "open" => show_main(app),
             "quit" => app.exit(0),
             TRAY_REMOTE_END => crate::remote::end_from_tray(app),
+            TRAY_TORRENT_STOP => crate::torrent::stop_from_tray(app),
             other => open_tray_item(app, other),
         })
         .on_tray_icon_event(|tray, event| {
@@ -525,6 +564,8 @@ pub fn on_window_event(window: &Window, event: &WindowEvent) {
             {
                 api.prevent_close();
                 let _ = window.hide();
+                // into the tray with nothing downloading or seeding: the peer listener goes (DL2)
+                crate::torrent::stop_if_idle(app);
             } else {
                 // The hidden capture window and the tray icon would keep the process alive with
                 // no main window to show again, so closing the main window has to end the app.
@@ -716,6 +757,10 @@ pub fn desktop_set_tray_labels(app: AppHandle, state: State<'_, CaptureState>, l
             .items
             .remote_hint
             .set_text(crate::texts::remote_end_hint(lang));
+        let _ = tray
+            .items
+            .torrent_stop
+            .set_text(crate::texts::torrent_running_label(lang));
     }
     apply_tray(&app, tray);
 }
@@ -892,15 +937,29 @@ mod tests {
             timer: "Timer".into(),
         };
         for today in [TrayToday::default(), full] {
-            let rows = tray_rows(&today, true);
+            let rows = tray_rows(&today, true, false);
             assert_eq!(
                 rows[..3],
                 [TrayRow::RemoteEnd, TrayRow::RemoteHint, TrayRow::Separator]
             );
             // the rest is exactly the menu without a controller
-            assert_eq!(rows[3..], tray_rows(&today, false)[..]);
-            assert!(!tray_rows(&today, false).contains(&TrayRow::RemoteEnd));
+            assert_eq!(rows[3..], tray_rows(&today, false, false)[..]);
+            assert!(!tray_rows(&today, false, false).contains(&TrayRow::RemoteEnd));
         }
+    }
+
+    /// DL2: while the torrent engine runs the tray says so, whatever the page sent; remote
+    /// control stays first.
+    #[test]
+    fn a_running_torrent_engine_is_visible_in_the_tray() {
+        let today = TrayToday::default();
+        let rows = tray_rows(&today, false, true);
+        assert_eq!(rows[..2], [TrayRow::TorrentStop, TrayRow::Separator]);
+        assert_eq!(rows[2..], tray_rows(&today, false, false)[..]);
+        assert!(!tray_rows(&today, false, false).contains(&TrayRow::TorrentStop));
+        let both = tray_rows(&today, true, true);
+        assert_eq!(both[0], TrayRow::RemoteEnd);
+        assert_eq!(both[3], TrayRow::TorrentStop);
     }
 
     #[test]

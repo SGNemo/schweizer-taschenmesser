@@ -1,14 +1,30 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { requireNotice } from '@/core/legal/notices';
 import { getPlatform } from '@/core/platform';
 import type { TorrentInfo } from '@/core/platform/torrent';
-import { useSettings } from '@/core/settings/settings';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { Button, Dialog, FormActions, Icon, IconButton, ItemList, ItemRow, Progress } from '@/ui';
+import {
+  Button,
+  Dialog,
+  FormActions,
+  Icon,
+  IconButton,
+  ItemList,
+  ItemRow,
+  Progress,
+  Switch,
+} from '@/ui';
+import { useDevicePrefs } from '../devicePrefs';
 import { formatBytes, percent } from '../lib/format';
-import { settings, type DownloadsPrefs } from '../settings';
-import { resetTorrents, useTorrents, watchTorrents } from '../torrentStore';
+import type { DownloadsPrefs } from '../settings';
+import {
+  clearStopped,
+  markStopped,
+  resetTorrents,
+  useTorrents,
+  watchTorrents,
+} from '../torrentStore';
 import { AddTorrentDialog } from './AddTorrentDialog';
 import { DownloadsEmpty } from '../components/DownloadsEmpty';
 import styles from './DownloadsPage.module.css';
@@ -42,9 +58,12 @@ export function TorrentSection({
   onIncomingHandled: () => void;
 }) {
   const platform = getPlatform().torrent;
-  const [, setPrefs] = useSettings('module.downloads', settings.schema, settings.defaults);
+  // on/off, DHT, UPnP and the folder: this PC only (DL10)
+  const [device, setDevice] = useDevicePrefs();
   const torrents = useTorrents((s) => s.torrents);
+  const stopped = useTorrents((s) => s.stopped);
   const [status, setStatus] = useState<Status>('starting');
+  const hintId = useId();
   const [adding, setAdding] = useState(false);
   // What the dialog starts with; it only pre-fills, the user still reviews the files and confirms.
   const [initial, setInitial] = useState<TorrentIncoming | null>(null);
@@ -58,43 +77,75 @@ export function TorrentSection({
     seedMinutes: prefs.seedMinutes,
   };
   const limitKey = JSON.stringify(limits);
-  const { torrentDht: dht, torrentUpnp: upnp } = prefs;
+  const { dht, upnp } = device;
+  // Stopped outside the page (the tray's „Torrent läuft – beenden“, closing into the tray while
+  // idle): the page says so and waits for a click; a deliberate stop is not undone by itself.
+  // a click asked for the engine: the next configure ends a stop made outside the page
+  const resume = useRef(false);
+  useEffect(() => {
+    if (!device.torrent || !platform.onStopped) return;
+    return platform.onStopped(() => {
+      setAdding(false);
+      setStatus('starting');
+      markStopped();
+    });
+  }, [platform, device.torrent]);
 
   // The engine starts only after the notice was confirmed; limits apply as soon as they change.
   useEffect(() => {
-    if (!prefs.torrent || !platform.supported) return;
+    if (!device.torrent || !platform.supported || stopped) return;
     let alive = true;
     void (async () => {
       await requireNotice('downloads-torrent');
       try {
-        await platform.configure({ dht, upnp, ...(JSON.parse(limitKey) as typeof limits) });
+        const asked = resume.current;
+        resume.current = false;
+        await platform.configure({
+          dht,
+          upnp,
+          ...(JSON.parse(limitKey) as typeof limits),
+          resume: asked,
+        });
         if (!alive) return;
         watchTorrents();
         setStatus('ready');
-      } catch {
-        if (alive) setStatus('failed');
+      } catch (e) {
+        if (!alive) return;
+        // stopped in the tray while this page was away: wait for a click
+        if ((e instanceof Error ? e.message : String(e)) === 'stopped') markStopped();
+        else setStatus('failed');
       }
     })();
     return () => {
       alive = false;
     };
-  }, [platform, prefs.torrent, dht, upnp, limitKey]);
+  }, [platform, device.torrent, dht, upnp, limitKey, stopped]);
 
   // Something arrived from outside: once the engine is up, the add dialog opens with it.
   useEffect(() => {
-    if (!incoming || !prefs.torrent || status !== 'ready') return;
+    if (!incoming || !device.torrent) return;
+    // a link the user opened is the wish to use BitTorrent: a stop from the tray ends here
+    if (stopped) {
+      queueMicrotask(() => {
+        setStatus('starting');
+        resume.current = true;
+        clearStopped();
+      });
+      return;
+    }
+    if (status !== 'ready') return;
     queueMicrotask(() => {
       setInitial(incoming);
       setAdding(true);
       onIncomingHandled();
     });
-  }, [incoming, prefs.torrent, status, onIncomingHandled]);
+  }, [incoming, device.torrent, status, stopped, onIncomingHandled]);
 
   const launch = getPlatform().launch;
   useEffect(() => {
-    if (!launch.supported || !prefs.torrent) return;
+    if (!launch.supported || !device.torrent) return;
     void launch.isRegistered().then(setLaunchRegistered, () => undefined);
-  }, [launch, prefs.torrent]);
+  }, [launch, device.torrent]);
 
   async function toggleAssociation() {
     try {
@@ -112,7 +163,7 @@ export function TorrentSection({
 
   if (!platform.supported) return null;
 
-  if (!prefs.torrent) {
+  if (!device.torrent) {
     return (
       // Off: one quiet block (heading, one line, a secondary button) – the page's one filled action stays „Download eintragen“ (U11).
       <section className={styles.torrent}>
@@ -130,14 +181,26 @@ export function TorrentSection({
 
   async function turnOn() {
     await requireNotice('downloads-torrent');
-    setPrefs({ torrent: true });
+    resume.current = true;
+    clearStopped();
+    setDevice({ torrent: true });
   }
 
   async function turnOff() {
     await platform.stop().catch(() => undefined);
     resetTorrents();
     setStatus('starting');
-    setPrefs({ torrent: false });
+    setDevice({ torrent: false });
+  }
+
+  // DHT and UPnP are read when the engine starts: a change restarts it with the new value.
+  async function setNetwork(patch: { dht?: boolean; upnp?: boolean }) {
+    await platform.stop().catch(() => undefined);
+    resetTorrents();
+    setStatus('starting');
+    resume.current = true;
+    clearStopped();
+    setDevice(patch);
   }
 
   return (
@@ -146,12 +209,34 @@ export function TorrentSection({
       <p className={styles.hint}>{t.downloads.torrent.intro}</p>
       <p className={styles.hint}>{t.downloads.torrent.hint}</p>
       <div className={styles.bar}>
-        <Button variant="primary" disabled={status !== 'ready'} onClick={() => setAdding(true)}>
+        <Button
+          variant="primary"
+          disabled={status !== 'ready' || stopped}
+          onClick={() => setAdding(true)}
+        >
           {t.downloads.torrent.add.button}
         </Button>
         <Button onClick={() => void turnOff()}>{t.downloads.torrent.turnOff}</Button>
       </div>
-      {status === 'starting' ? <p role="status">{t.downloads.torrent.starting}</p> : null}
+      {status === 'starting' && !stopped ? (
+        <p role="status">{t.downloads.torrent.starting}</p>
+      ) : null}
+      {stopped ? (
+        <div className={styles.bar}>
+          <p role="status" className={styles.hint}>
+            {t.downloads.torrent.stopped}
+          </p>
+          <Button
+            onClick={() => {
+              setStatus('starting');
+              resume.current = true;
+              clearStopped();
+            }}
+          >
+            {t.downloads.torrent.restart}
+          </Button>
+        </div>
+      ) : null}
       {status === 'failed' ? (
         <p role="alert" className={styles.error}>
           {t.downloads.torrent.startFailed}
@@ -180,10 +265,25 @@ export function TorrentSection({
           </Button>
         </div>
       ) : null}
+      <div role="group" aria-describedby={hintId}>
+        <Switch
+          label={t.downloads.settings.torrentDht}
+          checked={dht}
+          onChange={(on) => void setNetwork({ dht: on })}
+        />
+        <Switch
+          label={t.downloads.settings.torrentUpnp}
+          checked={upnp}
+          onChange={(on) => void setNetwork({ upnp: on })}
+        />
+        <p id={hintId} className={styles.hint}>
+          {t.downloads.torrent.deviceOnly}
+        </p>
+      </div>
       <TorrentIp />
       <AddTorrentDialog
         open={adding}
-        defaultFolder={prefs.folder}
+        defaultFolder={device.folder}
         initial={initial}
         onClose={() => setAdding(false)}
       />

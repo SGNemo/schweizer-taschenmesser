@@ -56,6 +56,11 @@ export interface TorrentSettings {
   seedRatio: number;
   /** Stop seeding this many minutes after the download finished; 0 = no limit. */
   seedMinutes: number;
+  /**
+   * The user asked for the engine (a click). Without it, `configure` rejects with `stopped`
+   * after a stop outside the page (tray, closing into the tray while idle).
+   */
+  resume?: boolean;
 }
 
 export interface TorrentService {
@@ -73,6 +78,11 @@ export interface TorrentService {
   remove(id: number, deleteData: boolean): Promise<void>;
   /** The list now and about once a second. */
   watch(onList: (torrents: TorrentInfo[]) => void): Promise<void>;
+  /**
+   * The engine was stopped outside the page (tray, closing into the tray when idle). Optional so
+   * fakes keep compiling. Returns an unsubscribe function.
+   */
+  onStopped?(callback: () => void): () => void;
   /** System dialog for a `.torrent` file; `null` when cancelled. */
   pickFile(): Promise<string | null>;
 }
