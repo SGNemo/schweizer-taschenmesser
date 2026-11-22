@@ -134,6 +134,109 @@ describe('fetchRemoteImages', () => {
     );
     expect(Object.keys(out)).toEqual(['https://a.example/ok.png']);
     expect(out['https://a.example/ok.png']).toMatch(/^data:image\/png;base64,/);
-    expect(seen[0]).toMatchObject({ referrerPolicy: 'no-referrer', credentials: 'omit' });
+    expect(seen[0]).toMatchObject({
+      referrerPolicy: 'no-referrer',
+      credentials: 'omit',
+      redirect: 'manual',
+    });
+  });
+
+  it('asks only public https hosts: no http, no LAN, loopback or metadata address, no credentials', async () => {
+    const asked: string[] = [];
+    const fetchFn = (async (url: string) => {
+      asked.push(url);
+      return new Response(png, { status: 200, headers: { 'content-type': 'image/png' } });
+    }) as unknown as typeof fetch;
+    const out = await fetchRemoteImages(
+      [
+        'http://a.example/plain.png',
+        'https://192.168.1.1/cgi-bin/reboot',
+        'http://127.0.0.1:8787/x.png',
+        'https://169.254.169.254/latest',
+        'https://router.lan/x.png',
+        'https://fritz.box/x.png',
+        'https://user:pw@a.example/x.png',
+        'https://a.example/ok.png',
+      ],
+      fetchFn,
+    );
+    expect(asked).toEqual(['https://a.example/ok.png']);
+    expect(Object.keys(out)).toEqual(['https://a.example/ok.png']);
+  });
+  it('does not read a body whose declared length is over the limit', async () => {
+    let read = false;
+    const fetchFn = (async () => {
+      const res = new Response(png, {
+        status: 200,
+        headers: { 'content-type': 'image/png', 'content-length': '5000000' },
+      });
+      res.arrayBuffer = () => {
+        read = true;
+        return Promise.resolve(png.buffer);
+      };
+      return res;
+    }) as unknown as typeof fetch;
+    expect(await fetchRemoteImages(['https://a.example/huge.png'], fetchFn)).toEqual({});
+    expect(read).toBe(false);
+  });
+  it('follows a redirect only to another public https address, and only a few times', async () => {
+    const asked: string[] = [];
+    const hops: Record<string, string> = {
+      'https://a.example/moved.png': 'https://cdn.example/real.png',
+      'https://a.example/lan.png': 'http://192.168.1.1/cgi-bin/reboot',
+      'https://a.example/lan2.png': 'https://router.lan/x.png',
+      'https://a.example/loop.png': 'https://a.example/loop.png',
+      'https://a.example/bare.png': '//10.0.0.1/x.png',
+      'https://a.example/cred.png': 'https://user:pw@cdn.example/x.png',
+      'https://a.example/router.png': 'https://fritz.box/x.png',
+      'https://a.example/rel.png': '/real2.png',
+    };
+    const fetchFn = (async (url: string) => {
+      asked.push(url);
+      const to = hops[url];
+      if (to) return new Response(null, { status: 302, headers: { location: to } });
+      return new Response(png, { status: 200, headers: { 'content-type': 'image/png' } });
+    }) as unknown as typeof fetch;
+    const out = await fetchRemoteImages(Object.keys(hops), fetchFn);
+    expect(Object.keys(out)).toEqual(['https://a.example/moved.png', 'https://a.example/rel.png']);
+    expect(asked).toContain('https://a.example/real2.png');
+    for (const never of [
+      'https://10.0.0.1/x.png',
+      'https://user:pw@cdn.example/x.png',
+      'https://fritz.box/x.png',
+    ])
+      expect(asked, never).not.toContain(never);
+    expect(asked).not.toContain('http://192.168.1.1/cgi-bin/reboot');
+    expect(asked).not.toContain('https://router.lan/x.png');
+    expect(asked.filter((u) => u === 'https://a.example/loop.png')).toHaveLength(4);
+  });
+});
+
+describe('sanitizeMailHtml: which remote images are offered', () => {
+  it('offers only public https images; http and home-network sources are withheld and counted as such', () => {
+    const out = sanitizeMailHtml(
+      '<p>x</p><img src="https://a.example/ok.png" width="200" height="100">' +
+        '<img src="http://a.example/plain.png" width="200" height="100">' +
+        '<img src="https://192.168.1.1/cgi-bin/reboot" width="200" height="100">',
+    );
+    expect(out.remoteImages).toEqual(['https://a.example/ok.png']);
+    expect(out.blocked).toBe(1);
+    expect(out.withheld).toBe(2);
+    expect(out.html).not.toContain('192.168.1.1');
+    expect(out.html).not.toContain('plain.png');
+  });
+  it('keeps the description of an image it will not fetch', () => {
+    const out = sanitizeMailHtml(
+      '<img src="http://a.example/logo.png" alt="Stadtwerke Musterstadt">',
+    );
+    expect(out.html).toContain('Stadtwerke Musterstadt');
+    expect(out.html).not.toContain('<img');
+    expect(out.blocked).toBe(0);
+    expect(out.withheld).toBe(1);
+    // two in a row do not run together, and text around them keeps its distance
+    const two = sanitizeMailHtml(
+      'a<img src="http://a.example/1.png" alt="eins"><img src="http://a.example/2.png" alt="zwei">b',
+    );
+    expect(two.html).toContain('a eins  zwei b');
   });
 });

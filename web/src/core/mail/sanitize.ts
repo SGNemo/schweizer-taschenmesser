@@ -8,6 +8,7 @@
  * The result is shown in a sandboxed `<iframe srcdoc>` without scripts (`MailFrame`); this file is the
  * second line of defence, the iframe CSP (`mailDocument`) the third.
  */
+import { isPublicImageUrl } from '@/core/net/publicUrl';
 import DOMPurify from 'dompurify';
 
 export interface SanitizeOptions {
@@ -23,6 +24,8 @@ export interface SanitizeResult {
   remoteImages: string[];
   /** How many of them were withheld. */
   blocked: number;
+  /** Images that are never fetched (plain http, an address in the home network): shown as their description. */
+  withheld: number;
   /** Tracking pixels that were removed. */
   trackers: number;
 }
@@ -71,7 +74,8 @@ const FORBID_ATTR = [
 ];
 
 const SAFE_LINK = /^(https?:|mailto:|tel:)/i;
-const BAD_DECLARATION = /url\s*\(|expression\s*\(|@import|behavior\s*:|-moz-binding|javascript:/i;
+const BAD_DECLARATION =
+  /url\s*\(|image-set\s*\(|expression\s*\(|@import|behavior\s*:|-moz-binding|javascript:/i;
 
 /** Removes every CSS declaration that could load something or run code. */
 export function cleanStyle(style: string): string {
@@ -104,6 +108,7 @@ interface Run {
   options: SanitizeOptions;
   remote: Set<string>;
   blocked: number;
+  withheld: number;
   trackers: number;
 }
 let run: Run | undefined;
@@ -139,7 +144,8 @@ function install(): void {
         else node.remove();
       } else if (/^data:image\//i.test(src)) {
         // already inline
-      } else if (/^https?:\/\//i.test(src)) {
+      } else if (isPublicImageUrl(src)) {
+        // Only what "Bilder laden" can really fetch is offered: a public https address.
         current.remote.add(src);
         const data = current.options.images?.[src];
         if (data) {
@@ -150,7 +156,13 @@ function install(): void {
           node.setAttribute('data-blocked', '1');
         }
       } else {
-        node.remove();
+        // Plain http, an address in the home network or another unusable source: never fetched, so no
+        // button is offered for it. Its description stays as text, so the mail does not look empty.
+        // A source the mail never named as a web address at all (relative, another scheme) is just dropped.
+        if (/^https?:\/\//i.test(src)) current.withheld += 1;
+        const alt = (node.getAttribute('alt') ?? '').trim();
+        if (alt) node.replaceWith(node.ownerDocument.createTextNode(` ${alt} `));
+        else node.remove();
       }
       node.removeAttribute('loading');
     }
@@ -159,7 +171,7 @@ function install(): void {
 
 export function sanitizeMailHtml(html: string, options: SanitizeOptions = {}): SanitizeResult {
   install();
-  run = { options, remote: new Set(), blocked: 0, trackers: 0 };
+  run = { options, remote: new Set(), blocked: 0, withheld: 0, trackers: 0 };
   try {
     const clean = DOMPurify.sanitize(html, {
       FORBID_TAGS,
@@ -172,6 +184,7 @@ export function sanitizeMailHtml(html: string, options: SanitizeOptions = {}): S
       html: String(clean),
       remoteImages: [...run.remote],
       blocked: run.blocked,
+      withheld: run.withheld,
       trackers: run.trackers,
     };
   } finally {
@@ -213,9 +226,52 @@ export function mailDocument(bodyHtml: string): string {
   );
 }
 
+/** At most this many redirects are followed for one image, each to a public https address only. */
+const MAX_IMAGE_REDIRECTS = 3;
+
+/**
+ * One image request that never follows a redirect by itself: every hop is judged again
+ * (`isPublicImageUrl`), so a public address cannot hand the request on to a device in the home network.
+ * With `redirect: 'manual'` the desktop's own fetch hands back the 3xx answer with its `Location` (the
+ * platform translates the option); a browser answers with an opaque response, which simply counts as
+ * "not loaded".
+ */
+async function fetchChecked(
+  fetchFn: typeof fetch,
+  url: string,
+  signal: AbortSignal,
+): Promise<Response | undefined> {
+  let current = url;
+  for (let hop = 0; hop <= MAX_IMAGE_REDIRECTS; hop += 1) {
+    const res = await fetchFn(current, {
+      signal,
+      referrerPolicy: 'no-referrer',
+      credentials: 'omit',
+      redirect: 'manual',
+    });
+    if (res.status < 300 || res.status >= 400) return res;
+    void res.body?.cancel().catch(() => undefined);
+    const location = res.headers.get('location');
+    if (!location) return undefined;
+    let next: string;
+    try {
+      next = new URL(location, current).toString();
+    } catch {
+      return undefined;
+    }
+    if (!isPublicImageUrl(next)) return undefined;
+    current = next;
+  }
+  return undefined;
+}
+
 /**
  * Downloads the images the user allowed (through the platform `fetch`: native, no CORS) and returns them
  * as data URLs. Bounded: at most `max` images of at most `maxBytes` each; failures are skipped.
+ *
+ * The sender chooses these addresses, so only public https hosts are asked (`isPublicImageUrl`): never
+ * plain http, a device in the home network, this computer or a cloud metadata address. A body whose
+ * declared length is over the limit is not read at all, and every redirect is judged by the same rule.
  */
 export async function fetchRemoteImages(
   urls: readonly string[],
@@ -224,17 +280,22 @@ export async function fetchRemoteImages(
 ): Promise<Record<string, string>> {
   const { max = 20, maxBytes = 1_500_000, timeoutMs = 8000 } = opts;
   const out: Record<string, string> = {};
-  for (const url of urls.slice(0, max)) {
+  for (const url of urls.filter(isPublicImageUrl).slice(0, max)) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const res = await fetchFn(url, {
-        signal: controller.signal,
-        referrerPolicy: 'no-referrer',
-        credentials: 'omit',
-      });
+      const res = await fetchChecked(fetchFn, url, controller.signal);
+      if (!res) continue;
       const mime = (res.headers.get('content-type') ?? '').split(';')[0]!.trim().toLowerCase();
-      if (!res.ok || !/^image\/(png|jpe?g|gif|webp|avif|bmp)$/.test(mime)) continue;
+      const declared = Number(res.headers.get('content-length'));
+      if (
+        !res.ok ||
+        !/^image\/(png|jpe?g|gif|webp|avif|bmp)$/.test(mime) ||
+        (Number.isFinite(declared) && declared > maxBytes)
+      ) {
+        void res.body?.cancel().catch(() => undefined); // do not leave the connection open
+        continue;
+      }
       const bytes = new Uint8Array(await res.arrayBuffer());
       if (bytes.length === 0 || bytes.length > maxBytes) continue;
       let binary = '';

@@ -19,6 +19,7 @@ import { MAX_MAIL_BYTES } from '@/core/mail/compose';
 import { DEMO_ACCOUNT, loadThreadBodies, saveBody } from '../cache';
 import { fullWhen, personName, subjectOf } from '../format';
 import { formatAddress } from '@/core/mail/address';
+import { attachmentFileName } from '@/core/mail/fileName';
 import { forwardFields, replyFields, type ComposeFields } from '@/core/mail/reply';
 import { hasFeature, mailDrafts } from '@/core/mail/service';
 import { mailText } from '@/core/mail/prefill';
@@ -76,7 +77,11 @@ function Attachments({ account, message }: { account: MailAccountRef; message: M
     setBusy(id);
     try {
       const data = await mailAttachment(account, message.id, id);
-      const outcome = await getPlatform().saveFile({ fileName, data, mime });
+      const outcome = await getPlatform().saveFile({
+        fileName: attachmentFileName(fileName),
+        data,
+        mime,
+      });
       if (outcome === 'saved') toast(t.mail.view.saved);
     } catch {
       toast(t.mail.view.downloadFailed);
@@ -88,32 +93,36 @@ function Attachments({ account, message }: { account: MailAccountRef; message: M
     <section>
       <p className={styles.meta}>{t.mail.view.attachments}</p>
       <ul className={styles.attachments}>
-        {message.attachments.map((a) => (
-          <li key={a.id} className={styles.attachment}>
-            <span>
-              {a.filename} <span className={styles.meta}>({size(a.size)})</span>
-            </span>
-            <span className={styles.row}>
-              {canPreview(a) ? (
+        {message.attachments.map((a) => {
+          // One clean name for the list, the labels, the preview and the save dialog.
+          const name = attachmentFileName(a.filename);
+          return (
+            <li key={a.id} className={styles.attachment}>
+              <span>
+                {name} <span className={styles.meta}>({size(a.size)})</span>
+              </span>
+              <span className={styles.row}>
+                {canPreview(a) ? (
+                  <Button
+                    variant="ghost"
+                    disabled={busy !== undefined}
+                    aria-label={t.mail.view.preview(name)}
+                    onClick={() => void view(a.id, name, a.mime)}
+                  >
+                    {t.mail.view.previewLabel}
+                  </Button>
+                ) : null}
                 <Button
-                  variant="ghost"
                   disabled={busy !== undefined}
-                  aria-label={t.mail.view.preview(a.filename)}
-                  onClick={() => void view(a.id, a.filename, a.mime)}
+                  aria-label={t.mail.view.download(name)}
+                  onClick={() => void download(a.id, a.filename, a.mime)}
                 >
-                  {t.mail.view.previewLabel}
+                  <Icon name="download" /> {t.mail.view.downloadLabel}
                 </Button>
-              ) : null}
-              <Button
-                disabled={busy !== undefined}
-                aria-label={t.mail.view.download(a.filename)}
-                onClick={() => void download(a.id, a.filename, a.mime)}
-              >
-                <Icon name="download" /> {t.mail.view.downloadLabel}
-              </Button>
-            </span>
-          </li>
-        ))}
+              </span>
+            </li>
+          );
+        })}
       </ul>
       <Dialog
         open={preview !== undefined}
