@@ -92,7 +92,8 @@ describe('the dump', () => {
   it('becomes preview items the way the ToDos source will report them', () => {
     const [team, shower] = previewItems(setupThings('Team bis So\nDuschen', READ), 1000);
     expect(team).toMatchObject({ key: 'new:0', due: { date: SUN, hard: true }, createdAt: 1000 });
-    expect(shower).toMatchObject({ key: 'new:1', priority: 0, splittable: true, createdAt: 1001 });
+    expect(shower).toMatchObject({ key: 'new:1', priority: 0, createdAt: 1001 });
+    expect(shower?.splittable).toBeUndefined();
     expect(shower!.due).toBeUndefined();
   });
 

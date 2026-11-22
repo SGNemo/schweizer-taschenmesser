@@ -157,6 +157,10 @@ test.describe('planner rethink, counter-scenarios (CONCEPT §7)', () => {
     await taps.tap(preview.getByRole('button', { name: 'Übernehmen' }));
     await expect.poll(async () => Object.keys(await rowDays(page)).length).toBe(pile.length);
     expect(taps.n).toBe(2);
+    // The toast says what was done – never the preview's „noch ist nichts verschoben“.
+    const toast = page.getByRole('status').filter({ hasText: 'Vorschlag übernommen' });
+    await expect(toast).toBeVisible();
+    await expect(toast).not.toContainText('noch ist nichts verschoben');
   });
 
   test('„Kopf leer“ with one thing too long for any day: „In Teile aufteilen …“ in the proposal', async ({
@@ -216,5 +220,31 @@ test.describe('planner rethink, counter-scenarios (CONCEPT §7)', () => {
     await expect(page.getByTestId('proposal-chip')).toContainText(/^Vorschlag: \w+Übernehmen$/);
     // A chip writes nothing.
     expect(await rowDays(page)).toEqual({});
+  });
+});
+
+test.describe('planner rethink, counter-scenarios on the phone', () => {
+  test.beforeEach(({ isMobile }) => {
+    test.skip(!isMobile, 'phone');
+  });
+
+  test('„Kopf leer“ on the phone: open „Noch ohne Tag“, „Woche vorschlagen“, „Übernehmen“ – three taps', async ({
+    page,
+  }) => {
+    // The phone keeps its stimulus bound (kopf-leer D): the link stands inside the open group – one tap more than
+    // CONCEPT §7's +2 (named in the PR).
+    await prepare(page, [
+      ['Mails beantworten', 30],
+      ['Bude aufräumen', 60],
+    ]);
+    await ready(page, '/planner');
+    const taps = new Taps(page);
+    const wait = page.locator('[data-group="wait"] h2').getByRole('button');
+    await expect(wait).toBeVisible();
+    if ((await wait.getAttribute('aria-expanded')) !== 'true') await taps.tap(wait);
+    await taps.tap(page.getByTestId('suggest-week'));
+    await taps.tap(page.getByTestId('plan-preview').getByRole('button', { name: 'Übernehmen' }));
+    await expect.poll(async () => Object.keys(await rowDays(page)).length).toBe(2);
+    expect(taps.n).toBe(3);
   });
 });

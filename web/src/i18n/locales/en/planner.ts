@@ -250,6 +250,7 @@ export const planner: Strings['planner'] = {
     part: (part: string) => `${part}, as you chose`,
   },
   wait: {
+    suggestName: 'Suggest a week for everything without a day',
     title: 'No day yet',
     calm: 'None of it has to be today.',
     over: (min: string) => `${min} more to do than there is free time`,
@@ -379,7 +380,7 @@ export const planner: Strings['planner'] = {
     exclude: (title: string) => `${title} not planned`,
     duration: (title: string, min: string) => `${title} takes ${min}`,
     buffer: (pct: number) => `Buffer ${pct} %`,
-    replan: 'Redistributed',
+    replan: 'Suggestion applied',
     reshuffle: 'Reshuffled from scratch',
     split: (title: string) => `${title} in parts`,
   },

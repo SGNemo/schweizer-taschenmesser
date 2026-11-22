@@ -63,9 +63,9 @@ export const plannerSettingsSchema = z.object({
   /**
    * „Neues automatisch vorschlagen“ (package 6, its own key – CONCEPT-MIGRATION §5): things without a deadline also
    * get a chip „Vorschlag: Do“, proposed after every deadline thing. A chip is never written; nothing moves by it.
-   * `catch`: a synced settings row of an older version has no such key.
+   * A stored row of an older version has no such key: the defaults below are merged under it.
    */
-  suggestNew: z.boolean().catch(false),
+  suggestNew: z.boolean(),
   calendarBlocks: z.boolean(),
   allDayBlocks: z.boolean(),
   calendarChips: z.boolean(),

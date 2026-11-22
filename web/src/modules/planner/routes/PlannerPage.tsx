@@ -71,7 +71,7 @@ import { SETUP_DAYS } from '../daySetup';
 import { duesOf, eveningLine } from '../rest';
 import { openLineText, openTabName } from '../openLine';
 import { dayEndLabel, dayEndOf } from '../settings';
-import { PlanPreview, type PreviewData } from '../components/PlanPreview';
+import { noDayOf, PlanPreview, type PreviewData } from '../components/PlanPreview';
 import { WeekCheck } from '../components/WeekCheck';
 import { BOARD_DAYS } from '../calendar';
 import { overloadText } from '../overload';
@@ -349,25 +349,15 @@ export default function PlannerPage() {
             ]
           : opLines(ops, titleOf, data?.today ?? today());
       // What the proposal finds no day for; a thing too long for any day in one piece offers „In Teile aufteilen …“.
-      const noDay = proposal
-        ? [
-            ...new Map(
-              out.result.unplaced
-                .filter((u) => u.k === 0)
-                .map((u) => [
-                  u.itemKey,
-                  {
-                    key: u.itemKey,
-                    title: titleOf(u.itemKey),
-                    tooLong: u.reason === 'too-long' && u.of === 1,
-                  },
-                ]),
-            ).values(),
-          ]
-        : [];
+      const noDay = proposal ? noDayOf(out.result, titleOf) : [];
       setPending({
         ops,
-        lead: rest ? t.planner.rest.done : (lines[0] ?? t.planner.ops.replan),
+        // The head of a proposal is for the preview only: after „Übernehmen“ the toast and the undo say what was done.
+        lead: rest
+          ? t.planner.rest.done
+          : proposal
+            ? t.planner.ops.replan
+            : (lines[0] ?? t.planner.ops.replan),
         ...(rest ? { rest: true } : {}),
         // A sentence the local model read says so above the lines: its reading is checked here, by the user.
         data: {
@@ -1280,7 +1270,7 @@ export default function PlannerPage() {
     }
     return undefined;
   };
-  /** A thing „Woche vorschlagen“ can give a day: listed by a source, not left out, not a part of a thing. */
+  /** A thing „Woche vorschlagen“ can give a day: listed by a source, not left out, not laid on a later day. */
   const proposable = (w: (typeof waiting)[number]) =>
     !!w.entry && w.reason !== 'excluded' && w.reason !== 'later';
   const waitRows = (list: typeof waiting) => (
@@ -1312,6 +1302,7 @@ export default function PlannerPage() {
       type="button"
       className={styles.textLink}
       data-testid="suggest-week"
+      aria-label={t.planner.wait.suggestName}
       onClick={() => void showPreview([{ op: 'replan', reshuffle: false }])}
     >
       {t.planner.head.replan}
@@ -1400,7 +1391,13 @@ export default function PlannerPage() {
           busy={busy}
           onApply={() => void apply()}
           onDiscard={discard}
-          onSplit={(key) => void showPreview([...pending.ops, { op: 'split', key }])}
+          onSplit={(key) =>
+            void showPreview(
+              [...pending.ops, { op: 'split', key }],
+              pending.fromField,
+              pending.local,
+            )
+          }
         />
       ) : null}
     </div>

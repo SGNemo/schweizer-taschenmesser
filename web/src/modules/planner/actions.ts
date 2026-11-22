@@ -838,9 +838,12 @@ export function applyDaySetup(
   titles: Record<string, string>,
   reshuffle = false,
   dayEnd?: string,
+  /** The sheet's proposal lays something (what waited without a day, package 6). */
+  proposes = false,
 ) {
   // Only a day end chosen: the toast says that, not „Eingeplant: …“ (nothing was planned).
-  const onlyDayEnd = dayEnd !== undefined && days.length === 0 && things.length === 0 && !reshuffle;
+  const onlyDayEnd =
+    dayEnd !== undefined && days.length === 0 && things.length === 0 && !reshuffle && !proposes;
   const lead = !onlyDayEnd
     ? t.planner.toast.planned(shown.map(dayName).join(', '))
     : dayEnd

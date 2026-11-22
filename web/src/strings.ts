@@ -9556,6 +9556,7 @@ export const de = {
       part: (part: string) => `${part}, wie gewählt`,
     },
     wait: {
+      suggestName: 'Woche vorschlagen für alles noch ohne Tag',
       title: 'Noch ohne Tag',
       calm: 'Nichts davon muss heute sein.',
       over: (min: string) => `${min} mehr zu tun, als Zeit frei ist`,
@@ -9687,7 +9688,7 @@ export const de = {
       exclude: (title: string) => `${title} nicht planen`,
       duration: (title: string, min: string) => `${title} dauert ${min}`,
       buffer: (pct: number) => `Puffer ${pct} %`,
-      replan: 'Neu verteilt',
+      replan: 'Vorschlag übernommen',
       reshuffle: 'Alles neu gemischt',
       split: (title: string) => `${title} in Teilen`,
     },
