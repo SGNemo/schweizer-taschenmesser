@@ -530,11 +530,11 @@ const SIX = ['Angebot', 'Steuer', 'Keller', 'Blogpost', 'Fahrrad', 'Geschenk'];
 
 /**
  * The starting plan of the entry paths: the six things spread over the days (three on Monday, three on Tuesday)
- * through the page's „Neu verteilen“ – a proposal he takes; not counted, it only sets the scene.
+ * through the page's „Woche vorschlagen“ – a proposal he takes; not counted, it only sets the scene.
  */
 async function spread(page: Page) {
   await page.getByRole('button', { name: 'Weitere Optionen', exact: true }).first().click();
-  await page.getByRole('menuitem', { name: 'Neu verteilen' }).click();
+  await page.getByRole('menuitem', { name: 'Woche vorschlagen' }).click();
   await page.getByRole('button', { name: 'Übernehmen' }).click();
   await expect(page.getByRole('button', { name: 'Übernehmen' })).toBeHidden();
   await expect.poll(async () => Object.keys(await layout(page)).length).toBe(SIX.length);

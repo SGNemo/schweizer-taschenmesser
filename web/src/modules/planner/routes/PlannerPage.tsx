@@ -333,7 +333,38 @@ export default function PlannerPage() {
     try {
       const out = await previewUser(ops);
       const titleOf = (key: string) => titles[key] ?? out.titles[key] ?? key;
-      const lines = rest ? [t.planner.rest.line] : opLines(ops, titleOf, data?.today ?? today());
+      // „Woche vorschlagen“ (package 6): a proposal for the things without a day – its head says nothing moved yet.
+      const proposal =
+        ops.length > 0 && ops.every((o) => (o.op === 'replan' && !o.reshuffle) || o.op === 'split');
+      const lines = rest
+        ? [t.planner.rest.line]
+        : proposal
+          ? [
+              t.planner.preview.head,
+              ...opLines(
+                ops.filter((o) => o.op === 'split'),
+                titleOf,
+                data?.today ?? today(),
+              ),
+            ]
+          : opLines(ops, titleOf, data?.today ?? today());
+      // What the proposal finds no day for; a thing too long for any day in one piece offers „In Teile aufteilen …“.
+      const noDay = proposal
+        ? [
+            ...new Map(
+              out.result.unplaced
+                .filter((u) => u.k === 0)
+                .map((u) => [
+                  u.itemKey,
+                  {
+                    key: u.itemKey,
+                    title: titleOf(u.itemKey),
+                    tooLong: u.reason === 'too-long' && u.of === 1,
+                  },
+                ]),
+            ).values(),
+          ]
+        : [];
       setPending({
         ops,
         lead: rest ? t.planner.rest.done : (lines[0] ?? t.planner.ops.replan),
@@ -345,6 +376,7 @@ export default function PlannerPage() {
           ...(rest ? { noCounts: true } : {}),
           dues: board ? duesOf(board) : {},
           diff: out.result.diff,
+          ...(noDay.length ? { noDay } : {}),
         },
         fromField,
         ...(local ? { local } : {}),
@@ -1153,10 +1185,27 @@ export default function PlannerPage() {
     )
     .map((w) => w.itemKey)
     .sort();
+  // „Neues automatisch vorschlagen“ (package 6): things without a deadline and without a ToDo date get a chip too,
+  // proposed after every deadline thing (a deadline chip's day never changes by the switch).
+  const laterKeys = data?.settings.suggestNew
+    ? waiting
+        .filter(
+          (w) =>
+            w.reason !== 'later' &&
+            w.reason !== 'excluded' &&
+            !w.hardDue &&
+            !w.todoDate &&
+            w.entry &&
+            w.of === 1,
+        )
+        .map((w) => w.itemKey)
+        .sort()
+    : [];
   const chipSig = data
     ? JSON.stringify([
         data.today,
         chipKeys,
+        laterKeys,
         waiting.map((w) => [
           w.itemKey,
           w.hardDue,
@@ -1171,9 +1220,9 @@ export default function PlannerPage() {
     : '';
   const [proposals, setProposals] = useState<{ sig: string; days: Record<string, string> }>();
   useEffect(() => {
-    if (!chipSig || chipKeys.length === 0) return;
+    if (!chipSig || chipKeys.length + laterKeys.length === 0) return;
     let live = true;
-    void proposeUser(chipKeys)
+    void proposeUser(chipKeys, laterKeys)
       .catch(() => ({}))
       .then((days) => {
         if (live) setProposals({ sig: chipSig, days });
@@ -1189,13 +1238,17 @@ export default function PlannerPage() {
     // Only a proposal for the plan as it is now (a stale one could lay the thing on a day that filled up since).
     // A date the person set in ToDos comes first: its chip, never a proposal over it.
     const proposed =
-      w.hardDue && !todoAhead(w) && proposals?.sig === chipSig
+      (w.hardDue ? !todoAhead(w) : laterKeys.includes(w.itemKey)) && proposals?.sig === chipSig
         ? proposals.days[w.itemKey]
         : undefined;
     if (proposed)
       return (
         <span className={styles.hintRow} data-testid="proposal-chip">
-          <span>{t.planner.chips.proposalDue(dayName(proposed), dayName(w.hardDue!))}</span>
+          <span>
+            {w.hardDue
+              ? t.planner.chips.proposalDue(dayName(proposed), dayName(w.hardDue))
+              : t.planner.chips.proposal(dayName(proposed))}
+          </span>
           <button
             type="button"
             className={styles.textLink}
@@ -1227,6 +1280,9 @@ export default function PlannerPage() {
     }
     return undefined;
   };
+  /** A thing „Woche vorschlagen“ can give a day: listed by a source, not left out, not a part of a thing. */
+  const proposable = (w: (typeof waiting)[number]) =>
+    !!w.entry && w.reason !== 'excluded' && w.reason !== 'later';
   const waitRows = (list: typeof waiting) => (
     <ItemList>
       {list.map((w) => {
@@ -1251,9 +1307,25 @@ export default function PlannerPage() {
       })}
     </ItemList>
   );
+  const suggestWeek = (
+    <button
+      type="button"
+      className={styles.textLink}
+      data-testid="suggest-week"
+      onClick={() => void showPreview([{ op: 'replan', reshuffle: false }])}
+    >
+      {t.planner.head.replan}
+    </button>
+  );
   const waitingBlock =
     waiting.length > 0 ? (
       <div className={styles.waiting}>
+        {/* „Woche vorschlagen“ (package 6): reachable with the group folded – a dumped pile is two taps from its days
+            (the link, then „Übernehmen“ in the preview); nothing moves before that. The phone keeps its stimulus
+            budget (`kopf-leer.spec.ts` D): there the link stands inside the open group. */}
+        {!phone && noDay.some(proposable) ? (
+          <p className={styles.waitActions}>{suggestWeek}</p>
+        ) : null}
         <GroupedList
           listId="planner"
           groups={[
@@ -1266,13 +1338,19 @@ export default function PlannerPage() {
                     label: t.planner.wait.title,
                     count: noDay.length,
                     detail: t.planner.wait.calm,
-                    // The overload figure once the group is open: neutral text, no tone (CONCEPT §7).
-                    ...(overflow > 0
+                    // The overload figure once the group is open: neutral text, no tone (CONCEPT §7); on the phone
+                    // „Woche vorschlagen“ beside it.
+                    ...(overflow > 0 || (phone && noDay.some(proposable))
                       ? {
                           action: (
-                            <p className={styles.reason} data-testid="planner-overload">
-                              {overloadText(overflow)}
-                            </p>
+                            <span className={styles.waitActions}>
+                              {overflow > 0 ? (
+                                <p className={styles.reason} data-testid="planner-overload">
+                                  {overloadText(overflow)}
+                                </p>
+                              ) : null}
+                              {phone && noDay.some(proposable) ? suggestWeek : null}
+                            </span>
                           ),
                         }
                       : {}),
@@ -1322,6 +1400,7 @@ export default function PlannerPage() {
           busy={busy}
           onApply={() => void apply()}
           onDiscard={discard}
+          onSplit={(key) => void showPreview([...pending.ops, { op: 'split', key }])}
         />
       ) : null}
     </div>

@@ -221,10 +221,14 @@ export function previewUser(
  * The days of the chips „Vorschlag: Do“: one dry run over the given things, queued like a preview, writing nothing.
  * Switched off: no chips.
  */
-export function proposeUser(keys: readonly string[]): Promise<Record<string, string>> {
+export function proposeUser(
+  keys: readonly string[],
+  /** Things without a deadline („Neues automatisch vorschlagen“): proposed after `keys`. */
+  later: readonly string[] = [],
+): Promise<Record<string, string>> {
   return enqueue(async () => {
     if (await switchedOff()) return {};
-    return proposeDays(await depsNow(false), keys);
+    return proposeDays(await depsNow(false), keys, later);
   });
 }
 

@@ -110,6 +110,8 @@ export function opLine(op: PlanOp, titleOf: (key: string) => string, today: stri
       return o.buffer(op.pct);
     case 'replan':
       return op.reshuffle ? o.reshuffle : o.replan;
+    case 'split':
+      return o.split(titleOf(op.key));
   }
 }
 

@@ -240,7 +240,8 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
       ...(max(e.earliest, userDate) ? { earliest: max(e.earliest, userDate) } : {}),
       // Nothing is cut into sessions by itself any more (planner rethink): a thing is one unit unless its stored
       // rows already are parts from the engine's time.
-      splittable: inParts.has(key),
+      // … or „In Teile aufteilen …“ asked for it (package 6, stored on the item row).
+      splittable: inParts.has(key) || row?.splittable === true,
       ...(row?.excluded ? { excluded: true } : {}),
       ...(row?.part ? { part: row.part } : {}),
       ...(fixed ? { fixed } : {}),
@@ -604,6 +605,12 @@ export function withOps(
       case 'replan':
         reshuffle ||= op.reshuffle;
         break;
+      // „In Teile aufteilen …“ (package 6): the thing may be cut into sessions of its parts.
+      case 'split': {
+        const i = item(op.key);
+        if (i) i.splittable = true;
+        break;
+      }
     }
   }
   return { days, items, settings, reshuffle };
@@ -660,33 +667,48 @@ function boundedItems(
 }
 
 /**
- * The chips „Vorschlag: Do · Frist Fr“ (planner rethink, CONCEPT §2): one dry `plan()` over every thing that gets a
+ * The chips „Vorschlag: Do · Frist Fr“ (planner rethink, CONCEPT §2): a dry `plan()` over every thing that gets a
  * chip, so two chips never claim the same room. What lies stays (a source's dated turn without a row counts on its
  * day); nothing is written, no source hears anything. Item key → the proposed day; a thing without room has none.
+ *
+ * `later` (package 6, „Neues automatisch vorschlagen“): things without a deadline, proposed after every deadline thing
+ * – the deadline things' days are planned first and then lie like everything else, so switching the setting never
+ * changes a deadline chip and the later things only take the room that is left.
  */
 export async function proposeDays(
   deps: RunDeps,
   keys: readonly string[],
+  later: readonly string[] = [],
 ): Promise<Record<string, string>> {
-  if (keys.length === 0) return {};
+  if (keys.length === 0 && later.length === 0) return {};
   const inputs = await buildInputs(deps, plannerRepos(deps.database));
   const laid = new Set([...inputs.prevRows.values()].map((r) => r.itemKey));
-  const loose = keys.filter(
-    (k) => !inputs.lockedKeys.has(k) && !laid.has(k) && !turnKeys(inputs).has(k),
-  );
-  const result = plan({
-    today: deps.today,
-    days: inputs.days,
-    items: inputs.items,
-    // A dated turn shown on its day without a row takes that day's time, as on the board.
-    prev: [...inputs.prev, ...inputs.turns],
-    loose,
-    settings: inputs.settings,
-  });
+  const free = (list: readonly string[]) =>
+    list.filter((k) => !inputs.lockedKeys.has(k) && !laid.has(k) && !turnKeys(inputs).has(k));
+  // A dated turn shown on its day without a row takes that day's time, as on the board.
+  const lying = [...inputs.prev, ...inputs.turns];
   const out: Record<string, string> = {};
-  const wanted = new Set(loose);
-  for (const a of [...result.assignments].sort((x, y) => x.date.localeCompare(y.date)))
-    if (wanted.has(a.itemKey) && out[a.itemKey] === undefined) out[a.itemKey] = a.date;
+  const pass = (loose: readonly string[], prev: typeof lying) => {
+    const result = plan({
+      today: deps.today,
+      days: inputs.days,
+      items: inputs.items,
+      prev,
+      loose,
+      settings: inputs.settings,
+    });
+    const wanted = new Set(loose);
+    const placed = [...result.assignments]
+      .filter((a) => wanted.has(a.itemKey))
+      .sort((x, y) => x.date.localeCompare(y.date));
+    for (const a of placed) if (out[a.itemKey] === undefined) out[a.itemKey] = a.date;
+    return placed;
+  };
+  const first = free(keys);
+  const placed = first.length ? pass(first, lying) : [];
+  const rest = free(later).filter((k) => !first.includes(k));
+  if (rest.length)
+    pass(rest, [...lying, ...placed.map((a) => ({ id: a.id, date: a.date, reason: a.reason }))]);
   return out;
 }
 
@@ -715,7 +737,7 @@ export function looseOf(
   const out = new Set<string>(extra.map((i) => i.key));
   const laid = new Set([...inputs.prevRows.values()].map((r) => r.itemKey));
   for (const op of ops) {
-    if (op.op === 'pin' || op.op === 'earliest') out.add(op.key);
+    if (op.op === 'pin' || op.op === 'earliest' || op.op === 'split') out.add(op.key);
     if (op.op === 'replan')
       for (const i of inputs.items) if (op.reshuffle || !laid.has(i.key)) out.add(i.key);
   }

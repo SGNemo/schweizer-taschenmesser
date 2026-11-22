@@ -1052,6 +1052,10 @@ export function applyOps(
             break;
           case 'replan':
             break;
+          // „In Teile aufteilen …“ (package 6): the thing may be cut into parts from now on – a recorded write.
+          case 'split':
+            await itemPatch(refOf(op.key), { splittable: true });
+            break;
         }
       }
       return { touched };

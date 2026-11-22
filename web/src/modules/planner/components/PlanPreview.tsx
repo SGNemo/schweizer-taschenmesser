@@ -14,6 +14,11 @@ export interface PreviewData {
   /** Item key → its deadline ('YYYY-MM-DD'): a move past it says so (C5, CHECK-1-3). */
   dues?: Readonly<Record<string, string>>;
   diff: PlanDiff;
+  /**
+   * „Woche vorschlagen“ (package 6): the handed-over things the proposal finds no day for – `tooLong` when no day
+   * holds it in one piece, which offers „In Teile aufteilen …“.
+   */
+  noDay?: readonly { key: string; title: string; tooLong: boolean }[];
 }
 
 /** The deadline a move from `from` to `to` crosses, else `undefined` (unit id `<module>:<id>#<k>`). */
@@ -63,6 +68,7 @@ export function PlanPreview({
   onApply,
   onDiscard,
   discardLabel,
+  onSplit,
 }: {
   data: PreviewData;
   nameOf: (unitId: string) => string;
@@ -71,6 +77,8 @@ export function PlanPreview({
   onDiscard: () => void;
   /** „Zurück“ where the preview is a step of a sheet („Tage einteilen“); „Verwerfen“ otherwise. */
   discardLabel?: string;
+  /** „In Teile aufteilen …“ of a thing too long for any day: the proposal again with that thing in parts. */
+  onSplit?: (key: string) => void;
 }) {
   const p = t.planner.preview;
   const moved = data.diff.moved;
@@ -140,6 +148,42 @@ export function PlanPreview({
                     title={nameOf(w.id)}
                     titleFull
                     meta={[p.from(dayName(w.from)), cause(w, nameOf)].filter(Boolean).join(' · ')}
+                  />
+                ))}
+              </ItemList>
+            ),
+          },
+        ]
+      : []),
+    ...(data.noDay?.length
+      ? [
+          {
+            id: 'noDay',
+            label: p.noDay,
+            count: data.noDay.length,
+            countHidden: data.noCounts === true,
+            children: (
+              <ItemList>
+                {data.noDay.map((n) => (
+                  <ItemRow
+                    key={n.key}
+                    title={n.title}
+                    titleFull
+                    meta={n.tooLong ? p.tooLong : undefined}
+                    actions={
+                      n.tooLong && onSplit ? (
+                        <Button
+                          variant="ghost"
+                          aria-label={p.splitName(n.title)}
+                          onClick={() => onSplit(n.key)}
+                          disabled={busy}
+                          data-testid="preview-split"
+                        >
+                          {p.split}
+                        </Button>
+                      ) : undefined
+                    }
+                    controls="always"
                   />
                 ))}
               </ItemList>

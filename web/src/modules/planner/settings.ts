@@ -60,6 +60,12 @@ export const plannerSettingsSchema = z.object({
    * background runs.
    */
   autoReplan: z.boolean(),
+  /**
+   * „Neues automatisch vorschlagen“ (package 6, its own key – CONCEPT-MIGRATION §5): things without a deadline also
+   * get a chip „Vorschlag: Do“, proposed after every deadline thing. A chip is never written; nothing moves by it.
+   * `catch`: a synced settings row of an older version has no such key.
+   */
+  suggestNew: z.boolean().catch(false),
   calendarBlocks: z.boolean(),
   allDayBlocks: z.boolean(),
   calendarChips: z.boolean(),
@@ -85,6 +91,7 @@ export const DEFAULT_PLANNER_SETTINGS: PlannerSettings = {
   maxSessionMin: '90',
   minSessionMin: 25,
   autoReplan: true,
+  suggestNew: false,
   calendarBlocks: true,
   allDayBlocks: false,
   calendarChips: true,
@@ -271,6 +278,16 @@ export const settings: ModuleSettings = {
       },
       get help() {
         return s().calendarBlocksHelp;
+      },
+    },
+    {
+      key: 'suggestNew',
+      type: 'boolean',
+      get label() {
+        return s().suggestNew;
+      },
+      get help() {
+        return s().suggestNewHelp;
       },
     },
     {

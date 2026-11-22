@@ -21,6 +21,7 @@ import { resetUndoJournal, undoDepth, undoLast } from '@/core/undo';
 import { useUiStore } from '@/stores/ui';
 import {
   addBlocker,
+  applyOps,
   addFromField,
   exclude,
   later,
@@ -1060,5 +1061,114 @@ describe('package 5: a drop moves the dropped thing and nothing else', () => {
     const toasts = useUiStore.getState().toasts;
     expect(toasts).toHaveLength(1);
     expect(toasts[0]!.message).toMatch(/mehr geplant als planbar/);
+  });
+});
+
+/**
+ * Package 6: „Woche vorschlagen“, „In Teile aufteilen …“ and „Neues automatisch vorschlagen“. A proposal writes
+ * nothing until „Übernehmen“ (one undo); the setting adds things without a deadline after every deadline thing, so a
+ * deadline chip never changes by it and no two chips claim the same room.
+ */
+describe('package 6: proposals', () => {
+  const deadline = async (id: string, minutes: number, due: string) => {
+    await addTask(id, `Frist ${id}`, minutes);
+    await itemRepo.create(
+      { source: { module: 'todos', id }, order: 0, due: { date: due, hard: true } } as never,
+      { id: key(id) },
+    );
+  };
+
+  it('fixture: „Neues automatisch vorschlagen“ on or off changes no deadline chip; no two chips share a place', async () => {
+    await deadline('d1', 150, FRI);
+    await deadline('d2', 150, FRI);
+    await deadline('d3', 60, WED);
+    for (const [id, min] of [
+      ['n1', 150],
+      ['n2', 120],
+      ['n3', 60],
+      ['n4', 90],
+    ] as const)
+      await addTask(id, `Neu ${id}`, min);
+    await runsSettled();
+    const deadlines = [key('d1'), key('d2'), key('d3')];
+    const off = await proposeUser(deadlines);
+    const on = await proposeUser(deadlines, [key('n1'), key('n2'), key('n3'), key('n4')]);
+    for (const k of deadlines) expect(on[k], k).toBe(off[k]);
+    // Every proposed thing fits its day's free room together with the others proposed there.
+    const board = await boardOn(MON);
+    const minutes: Record<string, number> = {
+      [key('d1')]: 150,
+      [key('d2')]: 150,
+      [key('d3')]: 60,
+      [key('n1')]: 150,
+      [key('n2')]: 120,
+      [key('n3')]: 60,
+      [key('n4')]: 90,
+    };
+    const taken: Record<string, number> = {};
+    for (const [k, date] of Object.entries(on)) taken[date] = (taken[date] ?? 0) + minutes[k]!;
+    for (const [date, min] of Object.entries(taken)) {
+      const day = board.days.find((d) => d.date === date)!;
+      expect(day.planned + min, date).toBeLessThanOrEqual(day.usable);
+    }
+    // The later things take only room that is left: they come after (or beside) every deadline thing.
+    expect(Object.keys(on).filter((k) => k.includes(':n')).length).toBeGreaterThan(0);
+  });
+
+  it('a ToDo date before today: a chip under „Noch ohne Tag“ that counts for no day’s load', async () => {
+    await addTask('old', 'Alt datiert', 90);
+    await taskRepo.update('old', { plannedFor: '2026-11-12' } as never);
+    await runBackground({ force: true });
+    const board = await boardOn(MON);
+    expect(board.waiting.find((w) => w.itemKey === key('old'))?.todoDate).toBe('2026-11-12');
+    expect(board.days.every((d) => d.planned === 0)).toBe(true);
+    expect(board.days.flatMap((d) => d.rows)).toEqual([]);
+  });
+
+  it('„Woche vorschlagen“: the preview writes nothing; „Übernehmen“ lays the things without a day in one undo', async () => {
+    for (const id of ['w1', 'w2', 'w3']) await addTask(id, `Ding ${id}`, 60);
+    await runsSettled();
+    resetUndoJournal();
+    const before = await snapshot();
+    const out = await previewUser([{ op: 'replan', reshuffle: false }]);
+    expect(out.result.diff.added.map((a) => a.id.split('#')[0]).sort()).toEqual(
+      [key('w1'), key('w2'), key('w3')].sort(),
+    );
+    expect(await snapshot()).toEqual(before);
+    expect(await applyOps([{ op: 'replan', reshuffle: false }], 'Woche', {})).toBe(true);
+    await runsSettled();
+    expect(Object.keys(await rowDates()).length).toBe(3);
+    expect(undoDepth()).toBe(1);
+    await undoLast();
+    await runsSettled();
+    expect(await snapshot()).toEqual(before);
+  });
+
+  it('„In Teile aufteilen …“: a thing too long for any day is offered in parts; „Übernehmen“ writes the parts, one undo', async () => {
+    // 400 minutes fit no day in one piece (a weekday holds 192).
+    await addTask('long', 'Keller', 400);
+    await runsSettled();
+    const plain = await previewUser([{ op: 'replan', reshuffle: false }]);
+    expect(plain.result.unplaced.find((u) => u.itemKey === key('long'))?.reason).toBe('too-long');
+    resetUndoJournal();
+    const before = await snapshot();
+    const ops = [
+      { op: 'replan', reshuffle: false } as const,
+      { op: 'split', key: key('long') } as const,
+    ];
+    const split = await previewUser(ops);
+    const parts = split.result.assignments.filter((a) => a.itemKey === key('long'));
+    expect(parts.length).toBeGreaterThan(1);
+    expect(await snapshot()).toEqual(before);
+    expect(await applyOps(ops, 'Woche', {})).toBe(true);
+    await runsSettled();
+    const rows = Object.keys(await rowDates()).filter((id) => id.startsWith(key('long')));
+    expect(rows.length).toBe(parts.length);
+    expect((await itemRepo.get(key('long')))?.splittable).toBe(true);
+    expect(undoDepth()).toBe(1);
+    await undoLast();
+    await runsSettled();
+    expect(await snapshot()).toEqual(before);
+    expect((await itemRepo.get(key('long')))?.splittable).toBeFalsy();
   });
 });

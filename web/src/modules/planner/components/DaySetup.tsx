@@ -91,7 +91,10 @@ export function DaySetup({
     const things = setupThings(text, { available, fitness, place, breaks });
     const ops: PlanOp[] = [
       ...changes.map((c): PlanOp => ({ op: 'available', date: c.date, min: c.min })),
-      ...(reshuffle ? [{ op: 'replan', reshuffle: true } as const] : []),
+      // The last step is the same proposal as „Woche vorschlagen“ (package 6): the typed things and every thing
+      // without a day – what „Übernehmen“ writes (`applyDaySetup` hands over the same). A day that gained time
+      // hands over everything that is not „fest“ (W10).
+      { op: 'replan', reshuffle } as const,
     ];
     setBusy(true);
     try {
