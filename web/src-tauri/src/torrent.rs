@@ -127,6 +127,7 @@ pub async fn torrent_configure(
         .await
         .map_err(|_| "start".to_string())?;
         *slot = Some(Arc::new(engine));
+        crate::capture::set_torrent_tray(&app, true);
     }
     let engine = slot.clone().ok_or("off")?;
     drop(slot);
@@ -144,21 +145,55 @@ pub async fn torrent_configure(
 
 /// Shuts the engine down (the torrent part was switched off). Saved torrents stay in the list.
 #[tauri::command]
-pub async fn torrent_stop(state: State<'_, Torrents>) -> Result<(), String> {
+pub async fn torrent_stop(app: AppHandle, state: State<'_, Torrents>) -> Result<(), String> {
+    stop(&app, &state).await;
+    Ok(())
+}
+
+/// Shuts the engine down (listener, DHT, trackers) and takes the tray line away.
+async fn stop(app: &AppHandle, state: &Torrents) {
     let engine = state.engine.lock().await.take();
     if let Some(e) = engine {
         e.stop().await;
     }
-    Ok(())
+    crate::capture::set_torrent_tray(app, false);
+}
+
+/// "Torrent läuft – beenden" in the tray (DL2). The torrents stay in the list, paused; the
+/// page starts the engine again when it is opened with the torrent part on.
+pub fn stop_from_tray(app: &AppHandle) {
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        stop(&app, &app.state::<Torrents>()).await;
+    });
+}
+
+/// The main window went into the tray: with nothing downloading or seeding the engine stops, so
+/// no peer listener stays open unseen (DL2). A running download keeps it (the tray shows it).
+pub fn stop_if_idle(app: &AppHandle) {
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        let state = app.state::<Torrents>();
+        let busy = match state.engine.lock().await.as_ref() {
+            Some(engine) => engine.list().iter().any(|t| active(t.state)),
+            None => return,
+        };
+        if !busy {
+            stop(&app, &state).await;
+        }
+    });
+}
+
+/// Whether a torrent uses the network right now.
+fn active(state: ::torrent::TorrentState) -> bool {
+    use ::torrent::TorrentState as S;
+    matches!(state, S::Starting | S::Downloading | S::Seeding)
 }
 
 /// "Alle Daten löschen": shuts the engine down, then removes `torrent-state/` (the saved torrent
 /// list and resume data; downloaded files stay where the user put them).
 pub(crate) async fn wipe(app: &AppHandle) -> Result<(), String> {
-    let engine = app.state::<Torrents>().engine.lock().await.take();
-    if let Some(e) = engine {
-        e.stop().await;
-    }
+    stop(app, &app.state::<Torrents>()).await;
     crate::device_wipe::remove_dir(&state_dir(app)?)
 }
 
@@ -248,4 +283,17 @@ pub async fn torrent_watch(
         });
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn only_downloading_seeding_or_starting_torrents_keep_the_engine() {
+        use ::torrent::TorrentState as S;
+        assert!(super::active(S::Downloading) && super::active(S::Seeding));
+        assert!(super::active(S::Starting));
+        for idle in [S::Paused, S::Done, S::Error] {
+            assert!(!super::active(idle));
+        }
+    }
 }

@@ -59,7 +59,11 @@ const manifest: ModuleManifest = {
   layout: 'content',
   order: 195,
   area: 'system',
-  contributions: { onboarding: noOnboarding },
+  contributions: {
+    onboarding: noOnboarding,
+    // switching the module off stops the torrent engine (DL2)
+    services: () => import('./services'),
+  },
 };
 
 export default manifest;
