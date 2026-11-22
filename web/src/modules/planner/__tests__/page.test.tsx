@@ -530,7 +530,8 @@ describe('planner page', () => {
     draw();
     const field = await screen.findByLabelText('Eintragen oder sagen');
     expect(field).toHaveAttribute('placeholder', 'Was steht an?');
-    const examples = screen.getByRole('group', { name: 'Zum Beispiel' });
+    // The examples show once the board is read and the week is empty.
+    const examples = await screen.findByRole('group', { name: 'Zum Beispiel' });
     expect(
       within(examples)
         .getAllByRole('button')

@@ -38,7 +38,6 @@ export type RowChoiceState =
  * Vormittag · Nachmittag · Abend · Ohne (package 4b), or – „Verschieben …“ (R2) – the days of the week. One tap
  * acts and closes; the toast carries the undo.
  */
-/** Without the board's days: the seven days from today, the board's horizon. */
 /** „Verschieben …“ shows four weeks (package 4); ‹ › page by as many. */
 const PICK_DAYS = 28;
 

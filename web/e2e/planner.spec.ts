@@ -1302,6 +1302,16 @@ test.describe('Planer (planner rethink, package 4: more than a week)', () => {
     await expect(monday).not.toContainText(/\d+ Ding/);
     await expect(page.getByTestId('week-2026-11-12')).toHaveAttribute('aria-current', 'date');
     await expect(page.getByTestId('week-2026-12-06')).toBeVisible();
+    // A later cell picks its day; the grid stays where it is (the day does not move under the hand).
+    await page.getByTestId('week-2026-11-26').click();
+    await expect(page.getByTestId('week-2026-11-26')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByTestId('week-2026-11-09')).toBeVisible();
+    await expect(row.getByRole('button', { name: 'Heute' })).toHaveCount(0);
+    // Back in the week view the band shows that day's week.
+    await row.getByRole('button', { name: '4 Wochen' }).click();
+    await expect(row).toContainText(/Do 26\.(?: Nov\.)? – Mi 2\. Dez\./);
+    await row.getByRole('button', { name: 'Heute' }).click();
+    await row.getByRole('button', { name: '4 Wochen' }).click();
     await monday.click();
     await expect(page).toHaveURL(/tab=open/);
     await expect(page.getByTestId('planner-open')).toContainText('Keller');

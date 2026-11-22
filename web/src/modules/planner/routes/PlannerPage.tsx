@@ -123,10 +123,14 @@ const mondayOf = (date: string) => addDaysStr(date, 1 - isoWeekday(date));
 export default function PlannerPage() {
   const [searchParams] = useSearchParams();
   const now = today();
-  // The band's first day (package 4): today, or a later week paged to (`?week=` from the calendar's „Plan“).
+  // The band's first day (package 4): today, or a later week paged to (`?week=` from the calendar's „Plan“, or
+  // the week from today that holds `?day=`, a calendar chip of a later week).
   const [weekStart, setWeekStart] = useState<string>(() => {
-    const asked = searchParams.get('week');
-    return asked && /^\d{4}-\d{2}-\d{2}$/.test(asked) && asked > now ? asked : now;
+    const iso = (v: string | null) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) && v > now ? v : null);
+    const week = iso(searchParams.get('week'));
+    if (week) return week;
+    const day = iso(searchParams.get('day'));
+    return day ? addDaysStr(now, Math.floor(daysBetween(now, day) / SPAN) * SPAN) : now;
   });
   const [grid, setGrid] = useState(false);
   // A new day (the page stayed open over midnight) never leaves the band on a passed start.
@@ -524,7 +528,7 @@ export default function PlannerPage() {
           {
             id: 'grid',
             label: grid ? t.planner.board.weekViewMenu : t.planner.board.gridViewMenu,
-            onSelect: () => setGrid((g) => !g),
+            onSelect: toggleGrid,
           },
         ]
       : []),
@@ -577,7 +581,10 @@ export default function PlannerPage() {
   const biggest = (() => {
     if (!board) return [];
     const sum = new Map<string, { title: string; minutes: number }>();
-    for (const r of [...board.days.slice(0, SPAN).flatMap((d) => d.rows), ...board.waiting]) {
+    const shownWeek = (data?.view ?? board.days)
+      .filter((d) => d.date >= (data?.today ?? now))
+      .slice(0, SPAN);
+    for (const r of [...shownWeek.flatMap((d) => d.rows), ...board.waiting]) {
       const cur = sum.get(r.itemKey) ?? { title: r.title, minutes: 0 };
       cur.minutes += r.minutes;
       sum.set(r.itemKey, cur);
@@ -890,9 +897,15 @@ export default function PlannerPage() {
   // The week from today decides what the page says about itself (four weeks are read for the views, package 4).
   const nothingPlanned =
     board !== undefined && board.days.slice(0, SPAN).every((d) => d.rows.length === 0);
-  // Things on passed days („Noch offen“) are no empty plan: the first-start state would say he has nothing.
+  // Things on passed days („Noch offen“) or in a later week are no empty plan: the first-start state would say
+  // he has nothing.
   const openCount = board?.open.length ?? 0;
-  const boardEmpty = nothingPlanned && waiting.length === 0 && late.length === 0 && openCount === 0;
+  const boardEmpty =
+    nothingPlanned &&
+    !!board?.days.every((d) => d.rows.length === 0) &&
+    waiting.length === 0 &&
+    late.length === 0 &&
+    openCount === 0;
 
   // The day the sheet shows: `?day=` or a tile → the pick stored today on this device → the first day that holds
   // things → today. Once shown it stays (a day does not change under the hand when its last thing is ticked).
@@ -928,11 +941,24 @@ export default function PlannerPage() {
     const day = days?.find((d) => d.date === date);
     if (!day) return;
     setPickedDay(date);
-    // The band follows the picked day (a swipe past its end, a cell of the grid): the week it lies in.
-    if (date < start || date > addDaysStr(start, SPAN - 1))
-      setWeekStart(addDaysStr(data.today, Math.floor(daysBetween(data.today, date) / SPAN) * SPAN));
+    // The band follows the picked day past its end (a swipe): the week it lies in, lined up from the band's start.
+    // The grid stays put – a day does not move under the hand; the band lines up when the week view returns.
+    if (!grid && (date < start || date > addDaysStr(start, SPAN - 1)))
+      setWeekStart(addDaysStr(start, Math.floor(daysBetween(start, date) / SPAN) * SPAN));
     void setMeta(DAY_KEY, { date, on: data.today });
     setStatus(tileName(day, days?.[1]?.date === date));
+  }
+
+  /** „4 Wochen“ on and off; back in the week view the band shows the week of the day picked in the grid. */
+  function toggleGrid() {
+    if (
+      grid &&
+      pickedDay &&
+      pickedDay >= now &&
+      (pickedDay < start || pickedDay > addDaysStr(start, SPAN - 1))
+    )
+      setWeekStart(addDaysStr(now, Math.floor(daysBetween(now, pickedDay) / SPAN) * SPAN));
+    setGrid((g) => !g);
   }
 
   /** ‹ › of the band (a week) or of the grid (four weeks); never before today's week. */
@@ -980,7 +1006,7 @@ export default function PlannerPage() {
             type="button"
             className={`${styles.textLink} ${styles.bandControl}`}
             aria-pressed={grid}
-            onClick={() => setGrid((g) => !g)}
+            onClick={toggleGrid}
             data-testid="grid-switch"
           >
             {t.planner.board.gridView}

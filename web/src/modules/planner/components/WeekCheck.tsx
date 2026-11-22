@@ -33,7 +33,7 @@ export function WeekCheck({
     setTemplate(next);
     if (next === 'work') setValues(days.map((d) => d.defaultMin));
     else if (next === 'vacation') setValues(days.map(() => 0));
-    else if (next === 'sick') setValues(days.map((d, i) => (i === 0 ? 0 : d.availableMin)));
+    else if (next === 'sick') setValues(days.map((d) => (d.isToday ? 0 : d.availableMin)));
   };
   const compact = (min: number) =>
     min === 0 ? t.planner.board.off : formatMinutes(min, { compact: true });
