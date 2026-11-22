@@ -116,6 +116,10 @@ export function parseManifest(xml: string): MergedManifest {
         protectionLevel: attrs['android:protectionLevel'] ?? 'normal',
       });
     }
+    // A permission tree lets the app add permissions at run time, with any protection level.
+    if (tag === 'permission-tree' && stack.at(-1)?.tag === 'manifest') {
+      result.declared.push({ name: attrs['android:name'] ?? '(tree)', protectionLevel: 'tree' });
+    }
     if (tag === 'intent-filter') {
       const owner = stack.at(-1);
       if (owner) owner.filter = true;

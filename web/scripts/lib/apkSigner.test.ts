@@ -46,6 +46,10 @@ describe('APK signer (SC2: the dev APK never carries the release key)', () => {
     ]);
   });
 
+  it('a malformed digest line counts as no signer', () => {
+    expect(checkApkSigner(printed('abcd'), 'dev').map((f) => f.rule)).toEqual(['no-signer']);
+  });
+
   it('no digest at all is a finding', () => {
     expect(checkApkSigner('DOES NOT VERIFY', 'dev').map((f) => f.rule)).toEqual(['no-signer']);
   });

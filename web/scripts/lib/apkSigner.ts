@@ -14,10 +14,15 @@ import type { Finding } from './audit';
 export const STABLE_APK_CERT_SHA256 =
   '8834e6267eb34f076f13bfd4036272a58fb9554a157b92cf010205d9687b3630';
 
+/**
+ * Every certificate digest apksigner prints, including source-stamp and rotated (v3.1) signers: any
+ * extra certificate is meant to fail the release check, since the release key never rotates. A line
+ * that is not a whole SHA-256 is ignored, so a malformed output counts as "no signer".
+ */
 export function signerDigests(printCerts: string): string[] {
-  return [...printCerts.matchAll(/certificate SHA-256 digest:\s*([0-9a-fA-F:]+)/g)].map((m) =>
-    m[1]!.replace(/:/g, '').toLowerCase(),
-  );
+  return [...printCerts.matchAll(/certificate SHA-256 digest:\s*([0-9a-fA-F:]+)/g)]
+    .map((m) => m[1]!.replace(/:/g, '').toLowerCase())
+    .filter((d) => /^[0-9a-f]{64}$/.test(d));
 }
 
 export function checkApkSigner(printCerts: string, channel: 'dev' | 'release'): Finding[] {

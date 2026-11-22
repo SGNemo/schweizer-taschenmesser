@@ -37,6 +37,14 @@ describe('merged APK manifest – declared permissions and test builds', () => {
     expect(rules('')).toEqual(['permission-not-signature']);
   });
 
+  it('a permission tree is never expected', () => {
+    expect(
+      checkMergedManifest(xml('<permission-tree android:name="io.example.tree" />'), allow).map(
+        (f) => f.rule,
+      ),
+    ).toEqual(['permission-not-signature']);
+  });
+
   it('a test-only build fails', () => {
     expect(
       checkMergedManifest(xml('', 'android:testOnly="true"'), allow).map((f) => f.rule),
