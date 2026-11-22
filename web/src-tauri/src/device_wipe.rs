@@ -67,6 +67,12 @@ pub(crate) mod desktop {
         if webview.label() != "main" {
             return Err("forbidden".into());
         }
+        // A step that panics still ends the hub hold (a minute, not the hour of a running wipe).
+        let handle = app.clone();
+        let failed = move || {
+            crate::lan_sync::wipe_finished(&handle);
+            "internal".to_owned()
+        };
         // The hub first (blocking, off the async runtime): it is what a paired phone talks to.
         let (app, mut report) = tauri::async_runtime::spawn_blocking(move || {
             let mut report = WipeReport::default();
@@ -74,7 +80,7 @@ pub(crate) mod desktop {
             (app, report)
         })
         .await
-        .map_err(|_| "internal".to_owned())?;
+        .map_err(|_| failed.clone()())?;
         report.step("torrent", crate::torrent::wipe(&app).await);
         tauri::async_runtime::spawn_blocking(move || {
             files(&app, models, &mut report);
@@ -83,7 +89,7 @@ pub(crate) mod desktop {
             report
         })
         .await
-        .map_err(|_| "internal".to_owned())
+        .map_err(|_| failed())
     }
 
     /// Everything another device or program can reach this PC through.

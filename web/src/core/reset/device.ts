@@ -146,9 +146,14 @@ export async function resetDevice(
         NATIVE_TIMEOUT_MS,
       )
     : undefined;
-  for (const name of names) await secrets.delete(name).catch(() => undefined);
-  // A failing OS call must not stop the reset.
-  for (const name of seals) await biometrics.remove(name).catch(() => undefined);
+  // A failing or hanging OS call must not stop the reset (nor outlast the native hub hold).
+  await withTimeout(
+    (async () => {
+      for (const name of names) await secrets.delete(name).catch(() => undefined);
+      for (const name of seals) await biometrics.remove(name).catch(() => undefined);
+    })(),
+    undefined,
+  );
   await biometrics.remove(BIO_SEAL).catch(() => undefined); // the app lock's seal
 
   if (storage) {
