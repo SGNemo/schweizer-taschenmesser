@@ -199,9 +199,9 @@ export const de = {
     },
     table: { h: "Die Verbindungen", intro: "Außer deiner IP-Adresse und der Anfrage selbst wird dabei nichts übertragen, wenn die Zeile nichts anderes sagt." },
     ai: {
-      h: "Die KI sieht deine Einträge nicht",
+      h: "Was die KI zu sehen bekommt",
       p: [
-        "Der Assistent schickt deine Frage, das Datum und die Feldnamen der eingeschalteten Module. Mehr nicht.",
+        "Der Assistent schickt deine Frage, das Datum und die Feldnamen der eingeschalteten Module, keine Einträge. Im Chat geht der Text des Gesprächs an den Anbieter.",
         "Zwei Ausnahmen löst nur du aus. Du kannst einer Frage Daten eines Moduls mitgeben; die App zeigt vorher genau, was mitgeht. Und über die lokale Import-Schnittstelle kannst du einer KI auf deinem PC Leserechte für einzelne Module geben.",
         "Der Passwort-Tresor ist für KI, Suche und Import unsichtbar.",
       ],

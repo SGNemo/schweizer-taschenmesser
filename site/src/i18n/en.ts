@@ -189,9 +189,9 @@ export const en = {
     },
     table: { h: "The connections", intro: "Apart from your IP address and the request itself nothing is transferred, unless the row says otherwise." },
     ai: {
-      h: "The AI does not see your entries",
+      h: "What the AI gets to see",
       p: [
-        "The assistant sends your question, the date and the field names of the modules you switched on. Nothing more.",
+        "The assistant sends your question, the date and the field names of the modules you switched on, no entries. In the chat, the text of the conversation goes to the provider.",
         "Two exceptions only you can trigger. You can give a question the data of one module; the app shows exactly what goes along first. And through the local import interface you can give an AI on your PC read access to single modules.",
         "The password vault is invisible to AI, search and import.",
       ],
