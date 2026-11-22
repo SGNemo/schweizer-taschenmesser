@@ -32,6 +32,8 @@ struct Shared {
     next_id: AtomicU64,
     pending: Mutex<HashMap<u64, mpsc::Sender<Vec<u8>>>>,
     stopped: AtomicBool,
+    /// Set when another process took the channel while serving (X2); the loop has ended.
+    taken: AtomicBool,
     connections: AtomicUsize,
     forward: Box<Forward>,
 }
@@ -66,6 +68,7 @@ impl Server {
             next_id: AtomicU64::new(1),
             pending: Mutex::new(HashMap::new()),
             stopped: AtomicBool::new(false),
+            taken: AtomicBool::new(false),
             connections: AtomicUsize::new(0),
             forward: Box::new(forward),
         });
@@ -80,6 +83,11 @@ impl Server {
         })
     }
 
+    /// True when the server stopped serving because another process holds the channel.
+    pub fn taken(&self) -> bool {
+        self.shared.taken.load(Ordering::SeqCst)
+    }
+
     pub fn responder(&self) -> Responder {
         Responder(Arc::clone(&self.shared))
     }
@@ -87,8 +95,11 @@ impl Server {
     /// Stops accepting and answers nothing further. Idle connections end with their host.
     pub fn stop(&mut self) {
         self.shared.stopped.store(true, Ordering::SeqCst);
-        // Wake the blocked accept with a throw-away connection.
-        let _ = connect(&self.endpoint);
+        // Wake the blocked accept with a throw-away connection – not when the loop has ended
+        // already (the name may belong to someone else then).
+        if self.thread.as_ref().is_some_and(|t| !t.is_finished()) {
+            let _ = connect(&self.endpoint);
+        }
         if let Some(thread) = self.thread.take() {
             let _ = thread.join();
         }
@@ -109,7 +120,10 @@ fn accept_loop(listener: Listener, shared: Arc<Shared>) {
         let stream = match listener.accept() {
             Ok(stream) => stream,
             // Someone else holds the channel now (X2): stop instead of serving beside it.
-            Err(e) if taken(&e) => break,
+            Err(e) if e.kind() == io::ErrorKind::AddrInUse => {
+                shared.taken.store(true, Ordering::SeqCst);
+                break;
+            }
             Err(_) => {
                 if shared.stopped.load(Ordering::SeqCst) {
                     break;
@@ -136,13 +150,6 @@ fn accept_loop(listener: Listener, shared: Arc<Shared>) {
             shared.connections.fetch_sub(1, Ordering::SeqCst);
         }
     }
-}
-
-fn taken(e: &io::Error) -> bool {
-    matches!(
-        e.kind(),
-        io::ErrorKind::AddrInUse | io::ErrorKind::PermissionDenied
-    )
 }
 
 fn request_id(body: &str) -> String {

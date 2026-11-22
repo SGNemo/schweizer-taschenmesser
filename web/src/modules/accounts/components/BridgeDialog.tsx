@@ -8,11 +8,13 @@ import { t } from '@/strings';
 import { Badge, Button, Dialog, Switch } from '@/ui';
 import {
   bridgeRegistration,
+  checkBridgeTaken,
   disableBridge,
   enableBridge,
   getBridge,
   needsReregistration,
   removeExtension,
+  useBridgeStartError,
 } from '../bridge/control';
 import { usePairingRequest } from '../bridge/pairing';
 import styles from '../accounts.module.css';
@@ -35,8 +37,11 @@ function Body() {
   const [busy, setBusy] = useState(false);
   const enabled = config?.enabled ?? false;
 
+  const startError = useBridgeStartError((s) => s.error);
+
   useEffect(() => {
     if (enabled) void bridgeRegistration().then(setRegistration); // shown only while enabled
+    if (enabled) void checkBridgeTaken();
   }, [enabled]);
 
   async function toggle(on: boolean) {
@@ -78,7 +83,7 @@ function Body() {
         onChange={(on) => void toggle(on)}
       />
       <p role="status" className={styles.notice}>
-        {b.status}: {enabled ? b.statusOn : b.statusOff}
+        {b.status}: {!enabled ? b.statusOff : startError ? b.startErrors[startError] : b.statusOn}
       </p>
       {error ? <p role="alert">{error}</p> : null}
       {enabled && registration ? (

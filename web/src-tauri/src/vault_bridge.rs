@@ -66,6 +66,18 @@ pub fn vault_bridge_start(
     Ok(())
 }
 
+/// `off`, `running`, or `taken` when another process took the channel while the server ran (X2):
+/// the server has stopped serving then, and Settings shows the channel as taken.
+#[tauri::command(async)]
+pub fn vault_bridge_state(state: State<'_, VaultBridge>) -> &'static str {
+    let slot = state.server.lock().unwrap_or_else(|e| e.into_inner());
+    match slot.as_ref() {
+        None => "off",
+        Some(server) if server.taken() => "taken",
+        Some(_) => "running",
+    }
+}
+
 #[tauri::command]
 pub fn vault_bridge_respond(state: State<'_, VaultBridge>, id: u64, body: String) -> bool {
     state
