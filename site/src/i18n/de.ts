@@ -121,7 +121,7 @@ export const de = {
     get: { h: "Ausprobieren", p: "Kostenlos, keine Premium-Stufe." },
   },
   // The ledger "what goes online": `short` rows on the start page, all rows on the data page. Source of every row:
-  // docs/user/security.md ("Externe Dienste ohne Nutzerdaten") and the privacy page; change them together.
+  // docs/user/security.md ("Connections the app opens") and the privacy page; change them together.
   ledger: {
     caption: "Verbindungen, die die App aufbaut",
     head: ["Wann", "Wohin", "Was", "Schalter"],
