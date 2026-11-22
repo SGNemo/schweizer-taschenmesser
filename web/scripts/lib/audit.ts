@@ -214,8 +214,10 @@ export interface AuditCoverage {
   publish: boolean;
   /** Each `--path` with the number of files found under it. */
   paths: readonly { path: string; files: number }[];
-  /** The names from AUDIT_SECRET_ENV with their values (empty in a dry run). */
-  secrets: readonly SecretInput[];
+  /** The names from AUDIT_SECRET_ENV. */
+  secretNames: readonly string[];
+  /** The names among them that have a value (none in a dry run). Never the values themselves. */
+  provided: readonly string[];
   /** Signatures checked against the public key; undefined without `--pubkey-from`. */
   signatures?: number;
 }
@@ -231,16 +233,16 @@ export function coverageFindings(c: AuditCoverage): Finding[] {
   if (c.paths.length === 0) findings.push({ file: '(none)', rule: 'empty-path' });
   for (const p of c.paths) if (p.files === 0) findings.push({ file: p.path, rule: 'empty-path' });
   if (c.publish) {
-    if (c.secrets.length === 0) {
+    if (c.secretNames.length === 0) {
       findings.push({
         file: '(environment)',
         rule: 'secret-not-provided',
         detail: 'AUDIT_SECRET_ENV',
       });
     }
-    for (const s of c.secrets) {
-      if (s.value.trim() === '') {
-        findings.push({ file: '(environment)', rule: 'secret-not-provided', detail: s.name });
+    for (const name of c.secretNames) {
+      if (!c.provided.includes(name)) {
+        findings.push({ file: '(environment)', rule: 'secret-not-provided', detail: name });
       }
     }
     if (c.signatures === 0) {

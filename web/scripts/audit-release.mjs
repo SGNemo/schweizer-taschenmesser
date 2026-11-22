@@ -44,12 +44,13 @@ if (missing.length > 0) {
 const publish = args.includes('--publish');
 const perPath = paths.map((p) => ({ path: p, found: walk(p) }));
 const files = perPath.flatMap((p) => p.found).map((p) => ({ name: p, data: readFileSync(p) }));
-const secrets = (process.env.AUDIT_SECRET_ENV ?? '')
+const secretNames = (process.env.AUDIT_SECRET_ENV ?? '')
   .split(',')
   .map((n) => n.trim())
-  .filter(Boolean)
-  .map((name) => ({ name, value: process.env[name] ?? '' }));
-const configured = secrets.filter((s) => s.value.trim() !== '').map((s) => s.name);
+  .filter(Boolean);
+const secrets = secretNames.map((name) => ({ name, value: process.env[name] ?? '' }));
+// Names only from here on: nothing that holds a value goes into a message.
+const configured = secretNames.filter((name) => (process.env[name] ?? '').trim() !== '');
 
 const findings = auditFiles(files, secrets);
 
@@ -69,7 +70,8 @@ findings.push(
   ...coverageFindings({
     publish,
     paths: perPath.map((p) => ({ path: p.path, files: p.found.length })),
-    secrets,
+    secretNames,
+    provided: configured,
     signatures,
   }),
 );

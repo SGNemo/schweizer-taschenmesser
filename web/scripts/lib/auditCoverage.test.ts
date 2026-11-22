@@ -1,13 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { coverageFindings } from './audit';
 
-const secret = (name: string, value: string) => ({ name, value });
-const KEY = [secret('TAURI_SIGNING_PRIVATE_KEY', 'invented-value-for-the-test')];
+/** AUDIT_SECRET_ENV names and which of them have a value (the coverage check never sees values). */
+const env = (...pairs: [string, boolean][]) => ({
+  secretNames: pairs.map(([n]) => n),
+  provided: pairs.filter(([, has]) => has).map(([n]) => n),
+});
+const KEY = env(['TAURI_SIGNING_PRIVATE_KEY', true]);
 
 describe('audit coverage (SC9): nothing is waved through unseen', () => {
   it('fails on a path without files, also in a dry run', () => {
     expect(
-      coverageFindings({ publish: false, paths: [{ path: '../assets', files: 0 }], secrets: [] }),
+      coverageFindings({ publish: false, paths: [{ path: '../assets', files: 0 }], ...env() }),
     ).toEqual([{ file: '../assets', rule: 'empty-path' }]);
   });
 
@@ -16,7 +20,7 @@ describe('audit coverage (SC9): nothing is waved through unseen', () => {
       coverageFindings({
         publish: false,
         paths: [{ path: 'dist', files: 3 }],
-        secrets: [secret('ANDROID_KEYSTORE_PASSWORD', '')],
+        ...env(['ANDROID_KEYSTORE_PASSWORD', false]),
       }),
     ).toEqual([]);
   });
@@ -26,10 +30,7 @@ describe('audit coverage (SC9): nothing is waved through unseen', () => {
       coverageFindings({
         publish: true,
         paths: [{ path: 'dl', files: 4 }],
-        secrets: [
-          secret('TAURI_SIGNING_PRIVATE_KEY', 'invented-value-for-the-test'),
-          secret('ANDROID_KEYSTORE_PASSWORD', '  '),
-        ],
+        ...env(['TAURI_SIGNING_PRIVATE_KEY', true], ['ANDROID_KEYSTORE_PASSWORD', false]),
       }),
     ).toEqual([
       { file: '(environment)', rule: 'secret-not-provided', detail: 'ANDROID_KEYSTORE_PASSWORD' },
@@ -41,7 +42,7 @@ describe('audit coverage (SC9): nothing is waved through unseen', () => {
       coverageFindings({
         publish: true,
         paths: [{ path: 'dl', files: 4 }],
-        secrets: KEY,
+        ...KEY,
         signatures: 0,
       }),
     ).toEqual([{ file: 'dl', rule: 'no-signature' }]);
@@ -49,24 +50,24 @@ describe('audit coverage (SC9): nothing is waved through unseen', () => {
       coverageFindings({
         publish: true,
         paths: [{ path: 'dl', files: 4 }],
-        secrets: KEY,
+        ...KEY,
         signatures: 1,
       }),
     ).toEqual([]);
     // without --pubkey-from (signatures undefined) nothing is required
-    expect(
-      coverageFindings({ publish: true, paths: [{ path: 'x', files: 1 }], secrets: KEY }),
-    ).toEqual([]);
+    expect(coverageFindings({ publish: true, paths: [{ path: 'x', files: 1 }], ...KEY })).toEqual(
+      [],
+    );
   });
 
   it('publishing with no secret names at all is a finding (an emptied AUDIT_SECRET_ENV)', () => {
     expect(
-      coverageFindings({ publish: true, paths: [{ path: 'dl', files: 4 }], secrets: [] }),
+      coverageFindings({ publish: true, paths: [{ path: 'dl', files: 4 }], ...env() }),
     ).toEqual([{ file: '(environment)', rule: 'secret-not-provided', detail: 'AUDIT_SECRET_ENV' }]);
   });
 
   it('publishing without any path is a finding, not a pass', () => {
-    expect(coverageFindings({ publish: true, paths: [], secrets: KEY })).toEqual([
+    expect(coverageFindings({ publish: true, paths: [], ...KEY })).toEqual([
       { file: '(none)', rule: 'empty-path' },
     ]);
   });
