@@ -106,12 +106,17 @@ impl Drop for Server {
 
 fn accept_loop(listener: Listener, shared: Arc<Shared>) {
     while !shared.stopped.load(Ordering::SeqCst) {
-        let Ok(stream) = listener.accept() else {
-            if shared.stopped.load(Ordering::SeqCst) {
-                break;
+        let stream = match listener.accept() {
+            Ok(stream) => stream,
+            // Someone else holds the channel now (X2): stop instead of serving beside it.
+            Err(e) if taken(&e) => break,
+            Err(_) => {
+                if shared.stopped.load(Ordering::SeqCst) {
+                    break;
+                }
+                std::thread::sleep(Duration::from_millis(100));
+                continue;
             }
-            std::thread::sleep(Duration::from_millis(100));
-            continue;
         };
         if shared.stopped.load(Ordering::SeqCst) {
             break;
@@ -131,6 +136,13 @@ fn accept_loop(listener: Listener, shared: Arc<Shared>) {
             shared.connections.fetch_sub(1, Ordering::SeqCst);
         }
     }
+}
+
+fn taken(e: &io::Error) -> bool {
+    matches!(
+        e.kind(),
+        io::ErrorKind::AddrInUse | io::ErrorKind::PermissionDenied
+    )
 }
 
 fn request_id(body: &str) -> String {

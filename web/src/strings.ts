@@ -6631,12 +6631,12 @@ export const de = {
       errors: {
         'register-failed': 'Die App konnte sich nicht bei den Browsern eintragen.',
         'channel-taken':
-          'Eine andere Nemo-Instanz belegt die Verbindung. Beende sie und versuche es erneut.',
+          'Ein anderes Programm oder eine zweite Nemo-Instanz belegt die Verbindung. Beende es und versuche es erneut.',
         failed: 'Die Verbindung konnte nicht gestartet werden.',
       },
       startErrors: {
         'channel-taken':
-          'Die Verbindung zur Browser-Erweiterung ist von einer anderen Nemo-Instanz belegt.',
+          'Die Verbindung zur Browser-Erweiterung ist von einem anderen Programm oder einer zweiten Nemo-Instanz belegt.',
         failed: 'Die Verbindung zur Browser-Erweiterung konnte nicht gestartet werden.',
       },
     },

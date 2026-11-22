@@ -16,3 +16,4 @@ Part of [features](features.md). Index of areas: [DECISIONS](../DECISIONS.md).
 - **`data-nemo-ignore`** opts a field/form/page out; the web app sets it on `<body>` so the extension never sees the vault's master password.
 - **Strength in the extension = generator entropy** (the value is random, not user-chosen); the app keeps zxcvbn for user-chosen passwords.
 - **Clipboard:** copy in an offscreen document, clear after 30 s only if unchanged (needs `clipboardRead`).
+- **The app owns the pipe name, or it does not serve (X2, 2026-11).** `bind` creates the first instance (`FILE_FLAG_FIRST_PIPE_INSTANCE`) and each `accept` creates the next free instance before handing the connected one out; a held name means `channel-taken`, and an instance that cannot be created mid-run stops the server instead of retrying beside someone else. X4 (overlay covered by the page) accepted for 1.0.

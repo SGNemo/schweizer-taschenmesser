@@ -294,12 +294,13 @@ export const accounts: Strings['accounts'] = {
     connected: 'Extension connected.',
     errors: {
       'register-failed': 'The app couldn’t register with the browsers.',
-      'channel-taken': 'Another Nemo instance is using the connection. Close it and try again.',
+      'channel-taken':
+        'Another program or a second Nemo instance is using the connection. Close it and try again.',
       failed: 'The connection couldn’t be started.',
     },
     startErrors: {
       'channel-taken':
-        'The connection to the browser extension is in use by another Nemo instance.',
+        'The connection to the browser extension is in use by another program or a second Nemo instance.',
       failed: 'The connection to the browser extension couldn’t be started.',
     },
   },

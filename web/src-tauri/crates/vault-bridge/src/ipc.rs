@@ -115,7 +115,7 @@ mod imp {
     use std::fs::{File, OpenOptions};
     use std::os::windows::fs::OpenOptionsExt;
     use std::os::windows::io::FromRawHandle;
-    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::sync::Mutex;
     use std::time::Duration;
     use windows::core::{PCWSTR, PWSTR};
     use windows::Win32::Foundation::{
@@ -141,15 +141,35 @@ mod imp {
     const BUFFER: u32 = 64 * 1024;
     /// ERROR_PIPE_BUSY: every instance is in use right now (the next one is being created).
     const PIPE_BUSY: i32 = 231;
+    /// ERROR_ACCESS_DENIED: what `FILE_FLAG_FIRST_PIPE_INSTANCE` gives when the name exists already.
+    const ACCESS_DENIED: i32 = 5;
     /// `SECURITY_SQOS_PRESENT` and `SECURITY_IDENTIFICATION` (winbase.h). Defined locally so the
     /// flag does not depend on which `windows` crate feature exports them.
     const SECURITY_SQOS_PRESENT: u32 = 0x0010_0000;
     const SECURITY_IDENTIFICATION: u32 = 0x0001_0000;
 
+    /// A pipe instance this process created and has not handed to a client yet.
+    struct Instance(HANDLE);
+
+    // The handle is only ever used by the thread that holds the listener.
+    unsafe impl Send for Instance {}
+
+    impl Drop for Instance {
+        fn drop(&mut self) {
+            unsafe {
+                let _ = CloseHandle(self.0);
+            }
+        }
+    }
+
+    /// Owns the pipe name for as long as it lives (X2): `bind` creates the first instance with
+    /// `FILE_FLAG_FIRST_PIPE_INSTANCE`, and every `accept` creates the next free instance before it
+    /// hands the connected one out, so there is never a moment in which another process could
+    /// create the first instance and be served to the browser host instead of the app.
     pub struct Listener {
         name: Vec<u16>,
         sddl: Vec<u16>,
-        first: AtomicBool,
+        spare: Mutex<Option<Instance>>,
     }
 
     fn wide(s: &str) -> Vec<u16> {
@@ -215,20 +235,49 @@ mod imp {
     }
 
     impl Listener {
+        /// Fails with `AddrInUse` when another process already holds the name.
         pub fn bind(ep: &Endpoint) -> io::Result<Listener> {
             // Only this user, nobody else (the default pipe DACL would let everyone read).
             let sddl = wide(&format!("D:P(A;;GA;;;{})", current_user_sid()?));
-            Ok(Listener {
+            let listener = Listener {
                 name: wide(&ep.0),
                 sddl,
-                first: AtomicBool::new(true),
-            })
+                spare: Mutex::new(None),
+            };
+            let first = listener.create(true)?;
+            *listener.spare.lock().unwrap_or_else(|e| e.into_inner()) = Some(first);
+            Ok(listener)
         }
 
-        /// Creates the next pipe instance and waits for a client. The first instance is created
-        /// with `FILE_FLAG_FIRST_PIPE_INSTANCE`, so a process that squatted the name is detected
-        /// instead of being served.
+        /// Waits for a client on the free instance, then creates the next one before returning.
+        /// Without a free instance (its creation failed earlier) the name may have been free, so
+        /// the new one must be a first instance again: `AddrInUse` when someone else took it.
         pub fn accept(&self) -> io::Result<Stream> {
+            let spare = self.spare.lock().unwrap_or_else(|e| e.into_inner()).take();
+            let instance = match spare {
+                Some(instance) => instance,
+                None => self.create(true)?,
+            };
+            unsafe {
+                if let Err(e) = ConnectNamedPipe(instance.0, None) {
+                    // A client that connected between create and connect is fine.
+                    if e.code() != ERROR_PIPE_CONNECTED.to_hresult() {
+                        return Err(to_io(e)); // `instance` is closed on drop
+                    }
+                }
+            }
+            // The connected instance still holds the name while the next one is created.
+            let next = self.create(false);
+            let handle = instance.0;
+            std::mem::forget(instance); // the stream owns the handle from here
+            let stream = Stream {
+                inner: unsafe { File::from_raw_handle(handle.0) },
+            };
+            *self.spare.lock().unwrap_or_else(|e| e.into_inner()) = next.ok();
+            Ok(stream)
+        }
+
+        fn create(&self, first: bool) -> io::Result<Instance> {
             unsafe {
                 let mut descriptor = PSECURITY_DESCRIPTOR::default();
                 ConvertStringSecurityDescriptorToSecurityDescriptorW(
@@ -244,7 +293,7 @@ mod imp {
                     bInheritHandle: false.into(),
                 };
                 let mut open_mode = PIPE_ACCESS_DUPLEX;
-                if self.first.swap(false, Ordering::SeqCst) {
+                if first {
                     open_mode |= FILE_FLAGS_AND_ATTRIBUTES(FILE_FLAG_FIRST_PIPE_INSTANCE.0);
                 }
                 let handle = CreateNamedPipeW(
@@ -259,18 +308,16 @@ mod imp {
                 );
                 let _ = LocalFree(Some(HLOCAL(descriptor.0)));
                 if handle == INVALID_HANDLE_VALUE {
-                    return Err(io::Error::last_os_error());
-                }
-                if let Err(e) = ConnectNamedPipe(handle, None) {
-                    // A client that connected between create and connect is fine.
-                    if e.code() != ERROR_PIPE_CONNECTED.to_hresult() {
-                        let _ = CloseHandle(handle);
-                        return Err(to_io(e));
+                    let e = io::Error::last_os_error();
+                    if first && e.raw_os_error() == Some(ACCESS_DENIED) {
+                        return Err(io::Error::new(
+                            io::ErrorKind::AddrInUse,
+                            "another process owns the channel",
+                        ));
                     }
+                    return Err(e);
                 }
-                Ok(Stream {
-                    inner: File::from_raw_handle(handle.0),
-                })
+                Ok(Instance(handle))
             }
         }
     }
