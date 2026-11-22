@@ -43,6 +43,9 @@ export interface BoardRow {
   fixed?: { from: string; to: string };
 }
 
+/** A row on a day that has passed („Noch offen“): the row and the day it lies on. */
+export type OpenRow = BoardRow & { date: string };
+
 export interface BoardDay {
   date: string;
   isToday: boolean;
@@ -73,7 +76,9 @@ export interface WaitingRow {
   minutes: number;
   k: number;
   of: number;
-  reason: Unplaced['reason'] | 'excluded';
+  /** `later`: laid on `date`, a day after the board's last one. */
+  reason: Unplaced['reason'] | 'excluded' | 'later';
+  date?: string;
   bumpedBy?: string[];
   entry?: PlannableEntry;
   item?: PlanItemRow;
@@ -87,6 +92,8 @@ export interface Board {
    * in `waiting`. Oldest deadline first. A thing set to „Nicht planen“ is not listed here (it waits, as before).
    */
   late: BoardRow[];
+  /** „Noch offen“: rows on a day before today whose thing is not done, „fest“ first, then by day. */
+  open: OpenRow[];
   /** Open things in the plan today (first sessions). */
   todayCount: number;
 }
@@ -175,6 +182,41 @@ export function buildBoard(input: BoardInput): Board {
         (a.entry?.createdAt ?? 0) - (b.entry?.createdAt ?? 0) ||
         a.itemKey.localeCompare(b.itemKey),
     );
+  // A row is shown while its thing is open (planner rethink: one selector hides, nothing is tidied): a thing that
+  // is done is hidden at once; one that no source lists and the last pass did not know either (its module is off)
+  // is hidden until it is back. The stored row stays either way.
+  const shown = (a: AssignmentRow): boolean => {
+    const entry = entries.get(a.itemKey);
+    return entry ? !entry.done : titles[a.itemKey] !== undefined;
+  };
+  const toRow = (a: AssignmentRow & { id: string }, date: string): BoardRow => {
+    const entry = entries.get(a.itemKey);
+    const item = items.get(a.itemKey);
+    // Fixed on this day by its source (S4); the run stored its time with the row.
+    const fixed = entry && fixedOf(entry)?.date === date && a.from && a.to;
+    return {
+      unitId: a.id,
+      itemKey: a.itemKey,
+      title: titles[a.itemKey] ?? a.itemKey,
+      minutes: a.minutes,
+      k: a.k,
+      of: a.of,
+      reason: a.reason,
+      ...(a.bumpedBy ? { bumpedBy: a.bumpedBy } : {}),
+      ...(a.late ? { late: true } : {}),
+      approx:
+        item?.durationMin === undefined &&
+        entry?.durationMin === undefined &&
+        a.minutes === DEFAULT_MIN,
+      // „fest“: the lock lives on the row (planner rethink), no proposal takes the thing from this day.
+      pinned: a.locked === true,
+      // A deadline marked in the plan, or one the source holds as hard (an invoice, a cancellation).
+      ...(item?.due?.hard ? dueOf(item.due, entry?.due) : entry?.due?.hard ? dueOf(entry.due) : {}),
+      ...(entry ? { entry } : {}),
+      ...(item ? { item } : {}),
+      ...(fixed ? { fixed: { from: a.from!, to: a.to! } } : {}),
+    };
+  };
   const built = planDays({
     today: input.today,
     span: input.span,
@@ -186,39 +228,9 @@ export function buildBoard(input: BoardInput): Board {
   const days: BoardDay[] = built.map(({ date, availableMin, blockers, row, window, ownWindow }) => {
     const cap = capacity({ date, availableMin, blockers }, { bufferShare });
     const rows: BoardRow[] = input.assignments
-      .filter((a) => a.date === date && !lateDue.has(a.itemKey))
+      .filter((a) => a.date === date && !lateDue.has(a.itemKey) && shown(a))
       .sort((a, b) => a.order - b.order)
-      .map((a) => {
-        const entry = entries.get(a.itemKey);
-        const item = items.get(a.itemKey);
-        // Fixed on this day by its source (S4); the run stored its time with the row.
-        const fixed = entry && fixedOf(entry)?.date === date && a.from && a.to;
-        return {
-          unitId: a.id,
-          itemKey: a.itemKey,
-          title: titles[a.itemKey] ?? a.itemKey,
-          minutes: a.minutes,
-          k: a.k,
-          of: a.of,
-          reason: a.reason,
-          ...(a.bumpedBy ? { bumpedBy: a.bumpedBy } : {}),
-          ...(a.late ? { late: true } : {}),
-          approx:
-            item?.durationMin === undefined &&
-            entry?.durationMin === undefined &&
-            a.minutes === DEFAULT_MIN,
-          pinned: item?.pinned === date,
-          // A deadline marked in the plan, or one the source holds as hard (an invoice, a cancellation).
-          ...(item?.due?.hard
-            ? dueOf(item.due, entry?.due)
-            : entry?.due?.hard
-              ? dueOf(entry.due)
-              : {}),
-          ...(entry ? { entry } : {}),
-          ...(item ? { item } : {}),
-          ...(fixed ? { fixed: { from: a.from!, to: a.to! } } : {}),
-        };
-      });
+      .map((a) => toRow(a, date));
     // As the engine counts (`core/plan/engine.ts` rule 2b): a fixed block takes only what no timed blocker covers.
     const fixedRows = rows
       .filter((r) => r.fixed)
@@ -281,7 +293,49 @@ export function buildBoard(input: BoardInput): Board {
       item,
     });
   }
+  // „Noch offen“ (planner rethink): what lies on a day that has passed and is not done. Nothing moved it – the
+  // row is still on its day; things that are „fest“ come first (they need a new day), then by day.
+  const open: OpenRow[] = input.assignments
+    .filter((a) => a.date < input.today && !lateDue.has(a.itemKey) && shown(a))
+    .filter(
+      (a) =>
+        !items.get(a.itemKey)?.excluded &&
+        !(entries.get(a.itemKey) && fixedOf(entries.get(a.itemKey)!)),
+    )
+    .map((a) => ({ ...toRow(a, a.date), date: a.date }))
+    .sort(
+      (a, b) =>
+        Number(b.pinned) - Number(a.pinned) ||
+        a.date.localeCompare(b.date) ||
+        a.unitId.localeCompare(b.unitId),
+    );
+  // A thing laid on a day the board does not show yet (beyond its last day) must not vanish: it is listed with the
+  // things outside the days, saying where it lies.
+  const lastShown = days.at(-1)?.date;
+  if (lastShown) {
+    // A thing in parts with a part on a shown day is seen there: it is not listed a second time.
+    const seen = new Set<string>(days.flatMap((d) => d.rows.map((r) => r.itemKey)));
+    for (const a of [...input.assignments].sort((x, y) => x.date.localeCompare(y.date))) {
+      if (a.date <= lastShown || seen.has(a.itemKey) || lateDue.has(a.itemKey) || !shown(a))
+        continue;
+      const entry = entries.get(a.itemKey);
+      if ((entry && fixedOf(entry)) || items.get(a.itemKey)?.excluded) continue;
+      seen.add(a.itemKey);
+      waiting.push({
+        unitId: a.id,
+        itemKey: a.itemKey,
+        title: titles[a.itemKey] ?? a.itemKey,
+        minutes: a.minutes,
+        k: a.k,
+        of: a.of,
+        reason: 'later',
+        date: a.date,
+        ...(entry ? { entry } : {}),
+        ...(items.get(a.itemKey) ? { item: items.get(a.itemKey) } : {}),
+      });
+    }
+  }
   const todayDay = days[0];
   const todayCount = todayDay ? new Set(todayDay.rows.map((r) => r.itemKey)).size : 0;
-  return { days, waiting, late, todayCount };
+  return { days, waiting, late, open, todayCount };
 }

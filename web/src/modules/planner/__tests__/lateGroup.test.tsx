@@ -10,6 +10,7 @@ import { db } from '@/core/db/db';
 import { createCollectionRepo } from '@/core/db/repo';
 import { getManifest } from '@/core/modules/registry';
 import { setNow } from '@/core/time/now';
+import { useUiStore } from '@/stores/ui';
 import type { PlannableEntry } from '@/core/modules/contributions';
 import type { BoardDay, BoardRow, WaitingRow } from '../board';
 import { capacityWhy } from '../components/capacity';
@@ -201,7 +202,7 @@ describe('the page with late invoices', () => {
     expect(screen.queryByTestId('planner-empty')).toBeNull();
   });
 
-  it('⋯ „Verschieben …“ → a day chip: three taps nail the thing to that day; „Festnageln auf …“ is gone', async () => {
+  it('⋯ „Verschieben …“ → a day chip: three taps lay the thing on that day – not „fest“, nothing else moves; „Festnageln auf …“ is gone', async () => {
     const task = await taskRepo.create({
       listId: 'inbox',
       title: 'Saugen',
@@ -210,7 +211,16 @@ describe('the page with late invoices', () => {
       order: 0,
       estimateMin: 30,
     });
+    const other = await taskRepo.create({
+      listId: 'inbox',
+      title: 'Wischen',
+      done: false,
+      priority: 3,
+      order: 0,
+      estimateMin: 30,
+    });
     await placed(`todos:${task.id}`, '2026-11-16', 0);
+    await placed(`todos:${other.id}`, '2026-11-16', 1);
     draw();
     fireEvent.click((await screen.findAllByRole('button', { name: 'Aktionen für Saugen' }))[0]!);
     const menu = (await screen.findAllByRole('menuitem')).map((m) => m.textContent);
@@ -222,14 +232,23 @@ describe('the page with late invoices', () => {
       within(sheet)
         .getAllByRole('button', { pressed: false })
         .map((b) => b.textContent),
-    ).toEqual(['So 15.', 'Mo 16.', 'Di 17.', 'Mi 18.', 'Do 19.', 'Fr 20.', 'Sa 21.']);
+    ).toEqual(['So 15.', 'Di 17.', 'Mi 18.', 'Do 19.', 'Fr 20.', 'Sa 21.']);
+    // The day the thing lies on is the chosen chip.
+    expect(
+      within(sheet)
+        .getAllByRole('button', { pressed: true })
+        .map((b) => b.textContent),
+    ).toEqual(['Mo 16.']);
     fireEvent.click(within(sheet).getByRole('button', { name: 'Mi 18.' }));
-    await waitFor(async () =>
-      expect((await itemRepo.get(`todos:${task.id}`))?.pinned).toBe('2026-11-18'),
-    );
     await waitFor(async () =>
       expect((await assignmentRepo.get(`todos:${task.id}#0`))?.date).toBe('2026-11-18'),
     );
+    await waitFor(() => expect(useUiStore.getState().toasts.at(-1)?.message).toBe('Liegt auf Mi'));
+    // A move is the row's date and nothing else: no pin, no lock, and the other thing stays where it lies.
+    expect((await itemRepo.get(`todos:${task.id}`))?.pinned).toBeUndefined();
+    expect((await assignmentRepo.get(`todos:${task.id}#0`))?.locked).toBeUndefined();
+    expect((await assignmentRepo.get(`todos:${other.id}#0`))?.date).toBe('2026-11-16');
+    expect(await assignmentRepo.active().count()).toBe(2);
   });
 });
 

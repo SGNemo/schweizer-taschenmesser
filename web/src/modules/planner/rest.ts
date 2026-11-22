@@ -18,7 +18,7 @@ export function restOffered(
   today: Pick<BoardDay, 'date' | 'rows'> | undefined,
 ): boolean {
   if (!eveningWrapUp || !today || new Date(clock).getHours() < EVENING_HOUR) return false;
-  return today.rows.some((r) => r.item?.pinned !== today.date);
+  return today.rows.some((r) => !r.pinned);
 }
 
 /** The head says „Bald ist Tagesende.“ for this many minutes before the day end. */
@@ -55,7 +55,7 @@ export function eveningLine(
   dayEnd: string | undefined,
   today: Pick<BoardDay, 'date' | 'rows'> | undefined,
 ): EveningLine | undefined {
-  const open = !!today && today.rows.some((r) => r.item?.pinned !== today.date);
+  const open = !!today && today.rows.some((r) => !r.pinned);
   if (dayEndNear(eveningWrapUp, clock, dayEnd)) return { kind: 'dayEnd', rest: open };
   return restOffered(eveningWrapUp, clock, today) ? { kind: 'rest' } : undefined;
 }

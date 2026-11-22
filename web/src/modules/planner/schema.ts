@@ -95,6 +95,11 @@ export const assignmentSchema = z.object({
   minutes: z.number().int().min(0),
   order: z.number().int().min(0),
   reason: z.enum(ASSIGNMENT_REASONS),
+  /**
+   * „fest“ (v6, planner rethink): the thing must be on this day. No proposal ever takes it („Rest verteilen“, „Neu
+   * verteilen“); the person may still move it by hand, the lock goes with it. Day and lock live in this one row.
+   */
+  locked: z.boolean().optional(),
   bumpedBy: z.array(z.string()).optional(),
   late: z.boolean().optional(),
   /** Start and end inside the day's window (package 5); missing without a window or when the session does not fit. */

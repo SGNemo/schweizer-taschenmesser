@@ -11,7 +11,7 @@ import type { Unplaced } from '@/core/plan/types';
 import { buildBoard, type BoardInput } from '../board';
 import { plannerHead } from '../head';
 import { lateMoneyDue } from '../late';
-import { assignmentRepo, itemRepo } from '../repo';
+import { assignmentRepo } from '../repo';
 import { buildInputs, runPlanner, type RunDeps } from '../run';
 import { plannerRepos } from '../repo';
 import { duesOf } from '../rest';
@@ -247,8 +247,8 @@ describe('the run: late money is no item of the engine', () => {
     ...over,
   });
 
-  it('places everything but late money, and no day carries its minutes', async () => {
-    const r = await runPlanner(deps());
+  it('„alles auslegen“ places everything but late money, and no day carries its minutes', async () => {
+    const r = await runPlanner(deps(), { force: true, reshuffle: true });
     expect(r.ran).toBe(true);
     const placed = new Set(r.result!.assignments.map((a) => a.itemKey));
     expect([...placed].sort()).toEqual(['invoices:strom', 'todos:saugen', 'todos:steuer']);
@@ -262,6 +262,18 @@ describe('the run: late money is no item of the engine', () => {
     ]);
     // Titles stay known (the preview and „Warum hier?“ name a thing that left).
     expect(r.inputs.titles['invoices:zahnarzt']).toBe('zahnarzt');
+  });
+
+  it('a pass nobody asked for lays nothing; late money is not even „Noch ohne Tag“', async () => {
+    const r = await runPlanner(deps());
+    expect(r.ran).toBe(true);
+    expect(r.result!.assignments).toEqual([]);
+    expect(r.result!.unplaced.map((u) => [u.itemKey, u.reason]).sort()).toEqual([
+      ['invoices:strom', 'no-day'],
+      ['todos:saugen', 'no-day'],
+      ['todos:steuer', 'no-day'],
+    ]);
+    expect(await assignmentRepo.active().count()).toBe(0);
   });
 
   it('drops the rows an earlier run stored for it, once; the next run writes nothing (idempotent)', async () => {
@@ -290,14 +302,18 @@ describe('the run: late money is no item of the engine', () => {
     expect(after.hash).not.toBe(before.hash);
   });
 
-  it('a mark the planner left on such a source is handed back through the write-back, a user’s date is not copied', async () => {
+  it('a mark the planner left on such a source is handed back with the run that takes the thing off the days; a user’s date is not copied', async () => {
     const w = writer();
     const marked = {
       ...lateA,
       plannedFor: MON,
       planMark: { date: MON, order: 0 },
     };
+    // Late money leaves the days by the run's own rule (D7), so the day the planner once wrote goes with it –
+    // the one thing a pass tells a source. The thing that merely has no day hears nothing.
     const r = await runPlanner(deps({ entries: [marked, plain], writer: w }));
+    expect(r.ran).toBe(true);
+    expect(w.onAssign).toHaveBeenCalledTimes(1);
     expect(w.onAssign).toHaveBeenCalledWith('invoices', 'zahnarzt', undefined);
     expect(r.inputs.userDates.has('invoices:zahnarzt')).toBe(false);
     // The second run finds the same input: nothing more is written.
@@ -306,20 +322,33 @@ describe('the run: late money is no item of the engine', () => {
     expect(w.onAssign).not.toHaveBeenCalled();
   });
 
-  it('a pin stored for it places nothing and survives: it holds again once the deadline is moved ahead', async () => {
-    await itemRepo.upsert('invoices:zahnarzt', {
-      source: { module: 'invoices', id: 'zahnarzt' },
-      pinned: TUE,
-      order: 0,
-    });
+  it('a row that is „fest“ holds no late money: it goes with the run, and with the deadline moved ahead the thing has no day until it is laid', async () => {
+    const { id, ...row } = assignment(lateA, TUE, 0);
+    await assignmentRepo.upsert(id, { ...row, locked: true });
     const late = await runPlanner(deps({ entries: [lateA, plain] }));
     expect(late.result!.assignments.some((a) => a.itemKey === 'invoices:zahnarzt')).toBe(false);
-    expect((await itemRepo.get('invoices:zahnarzt'))?.pinned).toBe(TUE);
+    expect(late.result!.unplaced.some((u) => u.itemKey === 'invoices:zahnarzt')).toBe(false);
+    expect(late.rowWrites).toBe(1);
+    expect(await assignmentRepo.get(id)).toBeUndefined();
+    // The deadline is moved ahead: the thing is an item again, but nobody laid it – no run does that by itself.
     const friday = { ...lateA, due: { date: '2026-11-20', hard: true } };
     const ahead = await runPlanner(deps({ entries: [friday, plain] }));
-    expect(ahead.result!.assignments.find((a) => a.itemKey === 'invoices:zahnarzt')?.date).toBe(
-      TUE,
-    );
+    expect(ahead.ran).toBe(true);
+    expect(ahead.result!.assignments).toEqual([]);
+    expect(ahead.result!.unplaced.map((u) => [u.itemKey, u.reason]).sort()).toEqual([
+      ['invoices:zahnarzt', 'no-day'],
+      ['todos:saugen', 'no-day'],
+    ]);
+    // Handed to the engine it gets a day before its deadline; the other thing still has none.
+    const laid = await runPlanner(deps({ entries: [friday, plain] }), {
+      force: true,
+      loose: ['invoices:zahnarzt'],
+    });
+    const day = laid.result!.assignments.find((a) => a.itemKey === 'invoices:zahnarzt')?.date;
+    expect(day).toBeDefined();
+    expect(day! <= '2026-11-20').toBe(true);
+    expect(laid.result!.assignments).toHaveLength(1);
+    expect((await assignmentRepo.get(id))?.locked).toBeUndefined();
   });
 });
 

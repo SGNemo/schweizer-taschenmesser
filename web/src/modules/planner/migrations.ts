@@ -11,10 +11,14 @@ import type { ModuleManifest } from '@/core/modules/types';
  * reads as before; the plan places by day either way, so no row is rewritten.
  * v5: optional item field `skipped` (the day of a passed training let go, `passed.ts`). Lossless: an old row has
  * none and the run never reads it, so no row is rewritten.
+ * v6 (planner rethink): optional assignment field `locked` („fest“ lives on the placement row). Lossless: an old row
+ * has none. The pins of before become locks in `migrateModel.ts` (it reads two collections and the clock, so it
+ * is no per-record step).
  */
 export const migrations: ModuleManifest['migrations'] = {
   2: async () => {},
   3: async () => {},
   4: async () => {},
   5: async () => {},
+  6: async () => {},
 };

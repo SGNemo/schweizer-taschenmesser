@@ -17,6 +17,8 @@ Not stored in this file: `npm run chats:sync` prints the list from GitHub (`chat
 
 **Handtests:** alle in [MANUAL-TESTS.md](MANUAL-TESTS.md), eine Liste je Gerät; im PR #704 die Liste „möglicherweise veraltet“ bestätigen.
 
+**Sicherheitskontrolle:** Urteil und Blocker in [LAUNCH-REVIEW-2026-11](security/LAUNCH-REVIEW-2026-11.md); SC1 zuerst (private Notiz).
+
 **Entscheidungen** (Empfehlung in Klammern):
 
 1. Übersicht ohne Daten springt je Laden um 0,18: hinnehmen oder Raster erst nach allen Karten packen? ([qa/round-6](qa/round-6/STATUS.md))
@@ -33,7 +35,7 @@ Not stored in this file: `npm run chats:sync` prints the list from GitHub (`chat
 
 **Handgriffe:**
 
-- PRs: #1027 zwei Ratschen-Treffer (`checkModules`, geschützt) freigeben (ja; Ernte H25); #606 mergen, wenn grün; #542 vor dem Launch entscheiden (Dev-Preview- und Dev-Keystore-Teil offen; Repo-Secrets bis dahin unverändert).
+- PRs: #1035 Ratschen-Treffer `a11y.spec.ts` freigeben; #1027 zwei Ratschen-Treffer (`checkModules`, geschützt) freigeben (ja; Ernte H25); #606 mergen, wenn grün; #542 vor dem Launch entscheiden (Dev-Preview- und Dev-Keystore-Teil offen; Repo-Secrets bis dahin unverändert).
 - `ci.yml`-Patch aus #653 einspielen (`GITHUB_TOKEN` nur am Ratschen-Schritt statt im Job-`env` von `stimulus-budget`).
 - Dezember: `nemo-merge` (`meta/agents-v3/nemo-merge.json`) anlegen, Probelauf `ratchet.mjs --pr` mit Wegwerf-PR, Treffer von #640/#642 ansehen (`decisions/meta.md`).
 - Agenten v3.1: `ant apply` der sieben, `--prune` der 16 alten, dann `claude-lock.json` committen ([SETUP](meta/agents-v3/SETUP.md) §2a).

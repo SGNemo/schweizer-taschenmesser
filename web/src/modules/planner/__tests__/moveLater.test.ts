@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 /**
  * Planner hub P08 and P09: a thing moves to the day the user named.
- * – „schieb X auf Mi“ (a pin on a later day): the preview shows the move, „Übernehmen“ puts the thing on
+ * – „schieb X auf Mi“ (a move to a later day): the preview shows the move, „Übernehmen“ lays the thing on
  *   Wednesday, one undo restores everything.
  * – „Später“ on a thing of a day that is not today moves it off that day.
+ * The plan stays put: each of them moves the row of the named thing only, and neither makes it „fest“.
  */
 import { afterEach, beforeEach, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
@@ -13,7 +14,7 @@ import { getManifest } from '@/core/modules/registry';
 import { parseInstruction } from '@/core/plan/instructions';
 import { setNow } from '@/core/time/now';
 import { useUiStore } from '@/stores/ui';
-import { applyOps, later } from '../actions';
+import { applyOps, later, setLocked } from '../actions';
 import manifest from '../manifest';
 import { assignmentRepo, itemRepo } from '../repo';
 import { previewUser, runsSettled, runUser, setManifestsForTests } from '../services';
@@ -62,7 +63,8 @@ beforeEach(async () => {
       { listId: 'inbox', done: false, priority: 0, order: 0, title, estimateMin: 30 },
       { id },
     );
-  await runUser('plan', async () => undefined);
+  // The week is laid out once („alles neu mischen“); from here on only the named thing moves.
+  await runUser('plan', async () => undefined, { reshuffle: true });
   await runsSettled();
 });
 afterEach(() => {
@@ -87,7 +89,7 @@ async function snapshot() {
       .map((r) => [r.id, r.pinned] as const)
       .sort((a, b) => a[0].localeCompare(b[0])),
     rows: (await assignmentRepo.active().toArray())
-      .map((r) => [r.id, r.date, r.reason] as const)
+      .map((r) => [r.id, r.date, r.reason, r.locked === true] as const)
       .sort((a, b) => a[0].localeCompare(b[0])),
   };
 }
@@ -114,6 +116,10 @@ it('„schieb Wohnung saugen auf Mi“: the preview shows the move, the thing is
   await runsSettled();
   expect(await dayOf('p1')).toBe(WED);
   expect(await dayOf('p2')).toBe(MON);
+  // A move is no lock and no pin: the row has the day, nothing else holds the thing there.
+  expect((await assignmentRepo.get('todos:p1#0'))?.locked).toBeUndefined();
+  expect((await itemRepo.get('todos:p1'))?.pinned).toBeUndefined();
+  expect(await taskRepo.get('p1')).toMatchObject({ plannedFor: WED, planMark: { date: WED } });
 
   useUiStore.getState().toasts.at(-1)!.action!.run();
   await expect.poll(async () => snapshot(), { timeout: 3000 }).toEqual(before);
@@ -131,16 +137,23 @@ it('„Später“ on a thing of tomorrow moves it off that day; one undo restore
   await expect.poll(async () => snapshot(), { timeout: 3000 }).toEqual(before);
 });
 
-it('„Später“ on a nailed thing lifts the pin and moves it; one undo brings pin and day back', async () => {
+it('„Später“ on a thing that is „fest“ moves its row to the next day and keeps the lock; one undo brings the day back', async () => {
   expect(await applyOps([{ op: 'pin', key: 'todos:p2', date: WED }], 'x', {})).toBe(true);
+  expect(await setLocked(STEUER, true, {})).toBe(true);
   await runsSettled();
   expect(await dayOf('p2')).toBe(WED);
   const before = await snapshot();
-  expect(before.pins).toEqual([['todos:p2', WED]]);
+  expect(before.pins).toEqual([]);
+  expect(before.rows).toEqual([
+    ['todos:p1#0', MON, 'new', false],
+    ['todos:p2#0', WED, 'new', true],
+  ]);
   expect(await later(STEUER, {})).toBe(true);
   await runsSettled();
   expect(await dayOf('p2')).toBe('2026-11-19');
-  expect((await itemRepo.get('todos:p2'))?.pinned).toBeUndefined();
+  expect((await assignmentRepo.get('todos:p2#0'))?.locked).toBe(true);
+  // Nothing else changed its day.
+  expect(await dayOf('p1')).toBe(MON);
 
   useUiStore.getState().toasts.at(-1)!.action!.run();
   await expect.poll(async () => snapshot(), { timeout: 3000 }).toEqual(before);
@@ -155,4 +168,5 @@ it('„Später“ on a thing of today still means tomorrow', async () => {
   expect(await later(STEUER, {})).toBe(true);
   await runsSettled();
   expect(await dayOf('p2')).toBe(TUE);
+  expect(await dayOf('p1')).toBe(MON);
 });

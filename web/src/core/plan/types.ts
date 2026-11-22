@@ -116,7 +116,8 @@ export type PlaceReason =
 export type MoveReason =
   'bumped' | 'after-part' | 'capacity' | 'carried' | 'pulled' | 'pinned' | 'done';
 
-export type WaitReason = 'horizon' | 'too-long' | 'after-hard-due';
+/** `no-day`: the thing has no placement and nobody asked for one („Noch ohne Tag“). */
+export type WaitReason = 'horizon' | 'too-long' | 'after-hard-due' | 'no-day';
 
 export interface Assignment {
   /** Unit id `<itemKey>#<k>`. */
@@ -179,6 +180,15 @@ export interface PlanInput {
   days: PlanDay[];
   items: PlanItem[];
   prev?: PrevAssignment[];
+  /**
+   * The plan stays put (docs/design/planner-rethink/CONCEPT.md §2): with `loose` given, the engine is a proposer.
+   * Every unit that is **not** loose and has a previous day is set on that day first, whatever the room (the day
+   * may be overbooked); one whose day lies outside the planned days (passed, or beyond the horizon) is left
+   * alone (`kept`); one without a previous day gets none (`no-day`). Only the units of the item keys named here
+   * are placed or moved by the rules – their previous day is then no claim, only the base of the diff.
+   * Missing = the former behaviour (every item may move); no caller outside the tests uses that.
+   */
+  loose?: readonly string[];
   settings?: Partial<PlanSettings>;
 }
 
@@ -191,4 +201,6 @@ export interface PlanResult {
   overflowMin: number;
   demandMin: number;
   usableMin: number;
+  /** With `loose`: unit ids whose stored day lies outside the planned days – untouched, to be kept as they are. */
+  kept?: string[];
 }

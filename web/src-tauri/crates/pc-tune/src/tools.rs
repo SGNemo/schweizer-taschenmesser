@@ -80,6 +80,22 @@ impl Tool {
     }
 }
 
+/// Full path of one of Windows' own programs (`taskmgr.exe` in `System32`, …), asked from Windows.
+/// For callers that start such a program themselves: never by bare name, see [`Tool::open`].
+/// `program` is a plain file name (no folder parts). `None` on other systems and when Windows does
+/// not name the folder.
+pub fn system_program(home: Home, program: &str) -> Option<std::path::PathBuf> {
+    #[cfg(windows)]
+    {
+        imp::dir_of(home).map(|dir| dir.join(program))
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = (home, program);
+        None
+    }
+}
+
 /// The two folders Windows' own tools live in.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Home {
@@ -148,6 +164,12 @@ mod imp {
     mod tests {
         use super::*;
         use crate::tools::Tool;
+
+        #[test]
+        fn the_task_manager_is_found_in_system32() {
+            let path = crate::tools::system_program(Home::System32, "taskmgr.exe").expect("folder");
+            assert!(path.is_absolute() && path.is_file(), "{}", path.display());
+        }
 
         #[test]
         fn every_tool_exists_at_its_full_path() {

@@ -11,8 +11,8 @@ import {
   markDue,
   sourceAbilities,
   type SourceAbility,
+  setLocked,
   unmarkDue,
-  unpin,
 } from '../actions';
 import type { BoardRow, WaitingRow } from '../board';
 import { beginPlanFocus, planFocusPath } from '../focus';
@@ -60,7 +60,7 @@ export function useRowMenu(ctx: {
     row: BoardRow | WaitingRow,
     date?: string,
     reason?: string,
-    opts: { tick?: boolean; late?: boolean } = {},
+    opts: { tick?: boolean; late?: boolean; open?: boolean } = {},
   ): RowMenuItem[] => {
     const e = row.entry;
     if (!e || !ctx.today) return [];
@@ -101,7 +101,9 @@ export function useRowMenu(ctx: {
         { id: 'open', label: t.planner.row.open, onSelect: () => void navigate(e.to) },
       ];
     const day = date ?? ctx.today;
-    const pinned = row.item?.pinned !== undefined;
+    const pinned = 'pinned' in row && row.pinned;
+    // A row on a passed day („Noch offen“) is not made „fest“ there – it needs a new day first.
+    const laid = 'pinned' in row && !opts.open;
     const hard = row.item?.due?.hard === true;
     // A deadline the source holds (invoice, cancellation) is not the planner's to lift or set.
     const sourceHard = e.due?.hard === true;
@@ -111,7 +113,7 @@ export function useRowMenu(ctx: {
       ...(abilities.canDone(e.moduleId) && !opts.tick
         ? [{ id: 'done', label: t.planner.row.done, onSelect: () => void markDone(e, titles) }]
         : []),
-      // „Verschieben …“ (R2): day chips; the chosen day is where the thing stays (the one place that nails).
+      // „Verschieben …“: day chips; the thing lies on the chosen day from then on, nothing else moves.
       ...(excluded
         ? []
         : [
@@ -123,7 +125,6 @@ export function useRowMenu(ctx: {
                   kind: 'move',
                   entry: e,
                   ...(date ? { on: date } : {}),
-                  ...(row.item?.pinned ? { pinned: row.item.pinned } : {}),
                 }),
             },
           ]),
@@ -165,10 +166,24 @@ export function useRowMenu(ctx: {
       ...(excluded
         ? [{ id: 'include', label: t.planner.row.include, onSelect: () => void include(e, titles) }]
         : [
-            // Nailing is „Verschieben …“ (also onto the day the thing is on); here only the way back.
+            // „fest“: the thing must be on this day – no proposal takes it (the one-tap lock comes with package 2).
             ...(pinned
-              ? [{ id: 'unpin', label: t.planner.row.unpin, onSelect: () => void unpin(e, titles) }]
-              : []),
+              ? [
+                  {
+                    id: 'unpin',
+                    label: t.planner.row.unpin,
+                    onSelect: () => void setLocked(e, false, titles),
+                  },
+                ]
+              : laid
+                ? [
+                    {
+                      id: 'pin',
+                      label: t.planner.row.pin,
+                      onSelect: () => void setLocked(e, true, titles),
+                    },
+                  ]
+                : []),
             {
               id: 'exclude',
               label: t.planner.row.exclude,

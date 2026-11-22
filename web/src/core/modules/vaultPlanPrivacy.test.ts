@@ -73,7 +73,8 @@ describe('a document name never reaches the planner’s outward surfaces', () =>
         planLimit: 3,
         settled: true,
       },
-      { force: true },
+      // „Alles auslegen“: a run lays nothing by itself, and the rows are one of the surfaces checked here.
+      { force: true, reshuffle: true },
     );
     expect(run.ran).toBe(true);
     const rows = await assignmentRepo.active().toArray();

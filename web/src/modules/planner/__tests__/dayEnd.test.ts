@@ -11,11 +11,10 @@ import { DEFAULT_PLANNER_SETTINGS, dayEndOf, plannerSettingsSchema } from '../se
 const SAT = '2026-11-14';
 const at = (hhmm: string, date = SAT) => new Date(`${date}T${hhmm}:00`).getTime();
 type Day = Pick<BoardDay, 'date' | 'rows'>;
-const day = (rows: { pinned?: string }[]): Day => ({
+/** `pinned` = the row is „fest“ (the lock on the assignment row, as the board reads it). */
+const day = (rows: { pinned?: boolean }[]): Day => ({
   date: SAT,
-  rows: rows.map((r) => ({
-    item: r.pinned ? { pinned: r.pinned } : undefined,
-  })) as BoardDay['rows'],
+  rows: rows.map((r) => ({ pinned: r.pinned === true })) as BoardDay['rows'],
 });
 const open = day([{}]);
 const empty = day([]);
@@ -48,10 +47,15 @@ describe('eveningLine', () => {
   it('near the day end: the sentence, with the link while today holds something open', () => {
     expect(eveningLine(true, at('22:45'), '23:00', open)).toEqual({ kind: 'dayEnd', rest: true });
     expect(eveningLine(true, at('22:45'), '23:00', empty)).toEqual({ kind: 'dayEnd', rest: false });
-    // A thing nailed to today stays, so it alone is nothing to move.
-    expect(eveningLine(true, at('22:45'), '23:00', day([{ pinned: SAT }]))).toEqual({
+    // A thing that is „fest“ today stays, so it alone is nothing to move …
+    expect(eveningLine(true, at('22:45'), '23:00', day([{ pinned: true }]))).toEqual({
       kind: 'dayEnd',
       rest: false,
+    });
+    // … next to one that is not, the link is there.
+    expect(eveningLine(true, at('22:45'), '23:00', day([{ pinned: true }, {}]))).toEqual({
+      kind: 'dayEnd',
+      rest: true,
     });
     expect(eveningLine(true, at('22:45'), '23:00', undefined)).toEqual({
       kind: 'dayEnd',
@@ -65,6 +69,7 @@ describe('eveningLine', () => {
     expect(eveningLine(true, at('21:00'), undefined, open)).toEqual({ kind: 'rest' });
     expect(eveningLine(true, at('16:59'), undefined, open)).toBeUndefined();
     expect(eveningLine(true, at('21:00'), undefined, empty)).toBeUndefined();
+    expect(eveningLine(true, at('21:00'), undefined, day([{ pinned: true }]))).toBeUndefined();
   });
 
   it('an early day end shows before 17:00 too', () => {

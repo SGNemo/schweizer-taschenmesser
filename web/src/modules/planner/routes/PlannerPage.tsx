@@ -3,7 +3,7 @@ import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { getMeta, setMeta } from '@/core/db/metaKv';
 import { getLang } from '@/core/i18n/lang';
-import { explainAssignment, explainWait } from '@/core/plan/explain';
+import { dayName, explainAssignment, explainWait } from '@/core/plan/explain';
 import {
   isRestSentence,
   restToTomorrow,
@@ -24,6 +24,7 @@ import {
   GroupedList,
   ItemList,
   PageHeader,
+  Tabs,
   PHONE_QUERY,
   RowMenu,
   type RowMenuItem,
@@ -35,7 +36,7 @@ import { useHeroTargets } from '@/core/shell/heroContext';
 import { usePageAction } from '@/core/shell/pageAction';
 import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
 import { addFromField, applyOps, later, markDone } from '../actions';
-import type { BoardDay, BoardRow } from '../board';
+import type { BoardDay, BoardRow, OpenRow } from '../board';
 import { Capture } from '../components/Capture';
 import { CaptureDialog } from '../components/CaptureDialog';
 import { useAbilities, useRowMenu } from '../components/rowMenu';
@@ -86,6 +87,14 @@ interface Pending {
   local?: { sentence: string; rules: Instruction };
   /** „Rest verteilen“: one calm sentence above the moves and in the toast, never a count of what was left. */
   rest?: boolean;
+}
+
+/** The days the open rows lie on, for the tab's name: up to three short day names, else „seit Do 12.“-like. */
+function openDays(rows: readonly OpenRow[]): string {
+  const dates = [...new Set(rows.map((r) => r.date))].sort();
+  // Always with the date: „Mo“ alone could be last week's Monday or the coming one.
+  const named = (d: string) => `${dayName(d)} ${formatDay(d, 'd.')}`;
+  return dates.length <= 3 ? dates.map(named).join(', ') : t.planner.tabs.since(named(dates[0]!));
 }
 
 export default function PlannerPage() {
@@ -394,7 +403,8 @@ export default function PlannerPage() {
       }
     }
     setText('');
-    const ok = await addFromField(value, titles);
+    // On „Noch offen“ no day is on the sheet: the new thing lies on today (the toast names the day).
+    const ok = await addFromField(value, titles, tab === 'open' ? undefined : shownDate);
     // Nothing happened (the planner was switched off meanwhile): the text comes back.
     if (!ok) {
       setText((cur) => cur || value);
@@ -530,6 +540,110 @@ export default function PlannerPage() {
     );
   };
 
+  // „Noch offen“ (planner rethink): the rows of days that have passed. Nothing moved them; from here the person
+  // puts them on a day again („Verschieben …“ first in the row's ⋯). Things that are „fest“ come first.
+  const tab = params.get('tab') === 'open' ? 'open' : 'plan';
+  const openRows = data?.board.open ?? [];
+  const renderOpen = (row: OpenRow) => {
+    const tick = !!row.entry && canDone(row.entry.moduleId);
+    return (
+      <ThingRow
+        key={row.unitId}
+        row={row}
+        reason=""
+        whyOpen={false}
+        dueClock={dueClock}
+        // Under its day's head the row need not repeat the day; among the fixed things (several days) it says it.
+        was={row.pinned ? row.date : undefined}
+        menu={rowMenu(row, undefined, undefined, { tick, open: true })}
+        onDone={tick ? () => done(row) : undefined}
+        onLater={
+          row.entry && canAssign(row.entry.moduleId)
+            ? () => void later(row.entry!, titles)
+            : undefined
+        }
+      />
+    );
+  };
+  const openDates = [...new Set(openRows.filter((r) => !r.pinned).map((r) => r.date))].sort();
+  const openFixed = openRows.filter((r) => r.pinned);
+  // A row that was moved leaves this list: the focus goes to the next row's menu (or stays on the tabs), so
+  // putting several things back one after another keeps its place.
+  const openRef = useRef<HTMLDivElement>(null);
+  const openSeen = useRef(openRows.length);
+  useEffect(() => {
+    if (tab === 'open' && openRows.length < openSeen.current) {
+      // The next row's menu; when the list is empty now, the tab itself (the focus never falls to the page).
+      const next =
+        openRef.current?.querySelector<HTMLElement>('[aria-haspopup="menu"]') ??
+        openRef.current?.parentElement?.querySelector<HTMLElement>('nav [aria-current="page"]');
+      if (next && !openRef.current?.contains(document.activeElement)) next.focus();
+    }
+    openSeen.current = openRows.length;
+  }, [tab, openRows.length]);
+  const openBlock = (
+    <div data-testid="planner-open" ref={openRef}>
+      {openRows.length === 0 ? (
+        <p className={styles.reason}>{t.planner.open.empty}</p>
+      ) : (
+        <GroupedList
+          listId="planner-open"
+          groups={[
+            ...(openFixed.length
+              ? [
+                  {
+                    id: 'fixed',
+                    label: t.planner.open.fixedGroup,
+                    count: openFixed.length,
+                    countHidden: true,
+                    children: <ItemList>{openFixed.map(renderOpen)}</ItemList>,
+                  },
+                ]
+              : []),
+            ...openDates.map((date) => {
+              const rows = openRows.filter((r) => !r.pinned && r.date === date);
+              return {
+                id: date,
+                label: `${dayName(date)} ${formatDay(date, 'd.')}`,
+                count: rows.length,
+                countHidden: true,
+                children: <ItemList>{rows.map(renderOpen)}</ItemList>,
+              };
+            }),
+          ]}
+        />
+      )}
+    </div>
+  );
+  // The tab says that something is there by naming the days, never with a count.
+  const tabs = (
+    <Tabs
+      label={t.planner.tabs.label}
+      value={tab}
+      options={[
+        { value: 'plan', label: t.planner.tabs.plan },
+        {
+          value: 'open',
+          // That something is there is said in words – the days, never a count and no bare dot.
+          label: openRows.length
+            ? t.planner.tabs.openFrom(openDays(openRows))
+            : t.planner.tabs.open,
+        },
+      ]}
+      onChange={(next) =>
+        setParams(
+          (p) => {
+            const q = new URLSearchParams(p);
+            if (next === 'open') q.set('tab', 'open');
+            else q.delete('tab');
+            return q;
+          },
+          { replace: true },
+        )
+      }
+    />
+  );
+
   // A row of „Frist vorbei“: the one row form, neutral; it sits on no day, so no tick, no „Später“, no duration.
   const renderLate = (row: BoardRow) => (
     <ThingRow
@@ -547,7 +661,9 @@ export default function PlannerPage() {
   const late = board?.late ?? [];
   const overflow = data?.last?.today === data?.today ? (data?.last?.overflowMin ?? 0) : 0;
   const nothingPlanned = board !== undefined && board.days.every((d) => d.rows.length === 0);
-  const boardEmpty = nothingPlanned && waiting.length === 0 && late.length === 0;
+  // Things on passed days („Noch offen“) are no empty plan: the first-start state would say he has nothing.
+  const openCount = board?.open.length ?? 0;
+  const boardEmpty = nothingPlanned && waiting.length === 0 && late.length === 0 && openCount === 0;
 
   // The day the sheet shows: `?day=` or a tile → the pick stored today on this device → the first day that holds
   // things → today. Once shown it stays (a day does not change under the hand when its last thing is ticked).
@@ -578,49 +694,70 @@ export default function PlannerPage() {
   // „Danach“ is folded on the phone and open on the desktop until the user says otherwise (device-local).
   const thenOpen = thenStored ?? !phone;
 
+  // Things laid on a day the board does not show yet have a day – they get their own small group, not „Noch ohne Tag“.
+  const noDay = waiting.filter((w) => w.reason !== 'later');
+  const laidLater = waiting.filter((w) => w.reason === 'later');
+  const waitRows = (list: typeof waiting) => (
+    <ItemList>
+      {list.map((w) => {
+        const reason =
+          w.reason === 'excluded'
+            ? t.planner.row.excludedState
+            : w.reason === 'later'
+              ? t.planner.wait.later(`${dayName(w.date!)} ${formatDay(w.date!, 'd.M.')}`)
+              : explainWait({ reason: w.reason, bumpedBy: w.bumpedBy }, nameOf);
+        return (
+          <WaitRow
+            key={w.unitId}
+            row={w}
+            reason={reason}
+            why={why === w.unitId}
+            menu={rowMenu(w, undefined, reason)}
+          />
+        );
+      })}
+    </ItemList>
+  );
   const waitingBlock =
     waiting.length > 0 ? (
       <div className={styles.waiting}>
         <GroupedList
           listId="planner"
           groups={[
-            {
-              // Folded by default (Q4 a); a new id, so an old „closed“ choice is not read as „open“.
-              id: 'wait',
-              defaultClosed: true,
-              label: t.planner.wait.title,
-              count: waiting.length,
-              detail: t.planner.wait.calm,
-              // The overload figure once the group is open: neutral text, no tone (CONCEPT §7).
-              ...(overflow > 0
-                ? {
-                    action: (
-                      <p className={styles.reason} data-testid="planner-overload">
-                        {overloadText(overflow)}
-                      </p>
-                    ),
-                  }
-                : {}),
-              children: (
-                <ItemList>
-                  {waiting.map((w) => {
-                    const reason =
-                      w.reason === 'excluded'
-                        ? t.planner.row.excludedState
-                        : explainWait({ reason: w.reason, bumpedBy: w.bumpedBy }, nameOf);
-                    return (
-                      <WaitRow
-                        key={w.unitId}
-                        row={w}
-                        reason={reason}
-                        why={why === w.unitId}
-                        menu={rowMenu(w, undefined, reason)}
-                      />
-                    );
-                  })}
-                </ItemList>
-              ),
-            },
+            ...(noDay.length
+              ? [
+                  {
+                    // Folded by default (Q4 a); a new id, so an old „closed“ choice is not read as „open“.
+                    id: 'wait',
+                    defaultClosed: true,
+                    label: t.planner.wait.title,
+                    count: noDay.length,
+                    detail: t.planner.wait.calm,
+                    // The overload figure once the group is open: neutral text, no tone (CONCEPT §7).
+                    ...(overflow > 0
+                      ? {
+                          action: (
+                            <p className={styles.reason} data-testid="planner-overload">
+                              {overloadText(overflow)}
+                            </p>
+                          ),
+                        }
+                      : {}),
+                    children: waitRows(noDay),
+                  },
+                ]
+              : []),
+            ...(laidLater.length
+              ? [
+                  {
+                    id: 'later',
+                    defaultClosed: true,
+                    label: t.planner.wait.laterTitle,
+                    count: laidLater.length,
+                    children: waitRows(laidLater),
+                  },
+                ]
+              : []),
           ]}
         />
       </div>
@@ -695,11 +832,18 @@ export default function PlannerPage() {
     <p className={styles.emptyDay} data-testid="planner-empty-day">
       {shownDay?.isToday && firstFull
         ? t.planner.sheet.dayOffNext(formatDay(firstFull.date, 'EEEE'))
-        : nothingPlanned && late.length > 0
-          ? late.every((r) => r.entry?.kind === 'invoice')
-            ? t.planner.sheet.onlyLate
-            : t.planner.sheet.onlyLateThings
-          : t.planner.sheet.emptyDay}
+        : nothingPlanned && openCount > 0
+          ? // Everything he had lies on passed days: say where it is (the tab), not that nothing is there.
+            t.planner.sheet.onlyOpen
+          : nothingPlanned && waiting.some((w) => w.reason === 'no-day')
+            ? // Nothing lies on a day yet, things wait without one: name the one next step (also beside late
+              // money – „only the invoices are open“ would be untrue).
+              t.planner.sheet.noDayNext
+            : nothingPlanned && late.length > 0
+              ? late.every((r) => r.entry?.kind === 'invoice')
+                ? t.planner.sheet.onlyLate
+                : t.planner.sheet.onlyLateThings
+              : t.planner.sheet.emptyDay}
     </p>
   );
 
@@ -759,7 +903,11 @@ export default function PlannerPage() {
           {phone ? null : capture(false)}
           {phone ? null : answer}
 
-          {showWeekLink ? (
+          {/* The tabs are there while something is open from earlier (or that tab is shown): an empty „Noch
+              offen“ is no control worth a row – on the phone it would push the field under the bottom bar. */}
+          {openRows.length > 0 || tab === 'open' ? tabs : null}
+
+          {showWeekLink && tab !== 'open' ? (
             <p className={styles.weekLink} data-testid="week-check-link">
               <button type="button" className={styles.textLink} onClick={() => setChecking(true)}>
                 {t.planner.weekLink.label}
@@ -773,52 +921,64 @@ export default function PlannerPage() {
             </p>
           ) : null}
 
-          {days ? (
-            <WeekBand days={days} picked={shownDate} onPick={pick} />
+          {tab === 'open' ? (
+            openBlock
           ) : (
-            <div className={styles.bandPending} aria-hidden="true" />
+            <>
+              {days ? (
+                <WeekBand days={days} picked={shownDate} onPick={pick} />
+              ) : (
+                <div className={styles.bandPending} aria-hidden="true" />
+              )}
+
+              {!wide ? <LateRow rows={late} renderRow={renderLate} /> : null}
+
+              {shownDay && days ? (
+                <DayPage
+                  key={shownDay.date}
+                  day={shownDay}
+                  tomorrow={days[1]?.date === shownDay.date}
+                  renderRow={(row, next) => renderRow(row, shownDay, next)}
+                  onEditDay={() => setSheetDate(shownDay.date)}
+                  thenOpen={thenOpen}
+                  onThenToggle={(open) =>
+                    void setMeta(phone ? THEN_NARROW_KEY : THEN_WIDE_KEY, open)
+                  }
+                  empty={emptySheet}
+                  onRest={shownDay.isToday ? () => void showRest() : undefined}
+                  // On the phone the page's ⋯ stands in the sheet's head and holds „Tage einteilen“: said once.
+                  onSetup={phone ? undefined : () => setSettingUp(true)}
+                  headEnd={phone ? pageMenuButton : undefined}
+                  dayEnd={
+                    data && dayEndOf(data.settings)
+                      ? dayEndLabel(dayEndOf(data.settings)!)
+                      : undefined
+                  }
+                  onSwipe={
+                    phone
+                      ? (dir) => {
+                          const at = days.findIndex((d) => d.date === shownDay.date);
+                          const to = days[at + dir];
+                          if (to) pick(to.date);
+                        }
+                      : undefined
+                  }
+                />
+              ) : (
+                <DayPageLoading />
+              )}
+
+              {/* A training whose day passed unlogged: asked once, quietly, under today's sheet only. */}
+              {shownDay?.isToday && data ? (
+                <PassedTrainings today={data.today} titles={titles} />
+              ) : null}
+            </>
           )}
-
-          {!wide ? <LateRow rows={late} renderRow={renderLate} /> : null}
-
-          {shownDay && days ? (
-            <DayPage
-              key={shownDay.date}
-              day={shownDay}
-              tomorrow={days[1]?.date === shownDay.date}
-              renderRow={(row, next) => renderRow(row, shownDay, next)}
-              onEditDay={() => setSheetDate(shownDay.date)}
-              thenOpen={thenOpen}
-              onThenToggle={(open) => void setMeta(phone ? THEN_NARROW_KEY : THEN_WIDE_KEY, open)}
-              empty={emptySheet}
-              onRest={shownDay.isToday ? () => void showRest() : undefined}
-              // On the phone the page's ⋯ stands in the sheet's head and holds „Tage einteilen“: said once.
-              onSetup={phone ? undefined : () => setSettingUp(true)}
-              headEnd={phone ? pageMenuButton : undefined}
-              dayEnd={
-                data && dayEndOf(data.settings) ? dayEndLabel(dayEndOf(data.settings)!) : undefined
-              }
-              onSwipe={
-                phone
-                  ? (dir) => {
-                      const at = days.findIndex((d) => d.date === shownDay.date);
-                      const to = days[at + dir];
-                      if (to) pick(to.date);
-                    }
-                  : undefined
-              }
-            />
-          ) : (
-            <DayPageLoading />
-          )}
-
-          {/* A training whose day passed unlogged: asked once, quietly, under today's sheet only. */}
-          {shownDay?.isToday && data ? (
-            <PassedTrainings today={data.today} titles={titles} />
-          ) : null}
 
           {/* Not wide: the context follows the sheet in the one column. */}
-          {!wide && hasContext ? <aside aria-label={t.planner.ctx.label}>{context}</aside> : null}
+          {!wide && hasContext && tab !== 'open' ? (
+            <aside aria-label={t.planner.ctx.label}>{context}</aside>
+          ) : null}
 
           {/* Phone: the first screen is band and sheet; the plus of the bottom bar opens the field as a sheet.
               The field also stays where it was before R1, as the page's last row: without it every entry on

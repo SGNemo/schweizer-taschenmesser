@@ -45,6 +45,7 @@ import {
   type RunDeps,
   type RunOutcome,
 } from './run';
+import { ensureAutoReplanOff } from './migrateModel';
 import { getPlannerSettings } from './prefs';
 import { REST_PATH } from './rest';
 
@@ -109,13 +110,21 @@ async function switchedOff(): Promise<boolean> {
 
 /**
  * A background run: serialised, not undoable, skipped while nothing changed or the module is off.
- * `force` (the seed's first run) plans even when nothing changed and `autoReplan` is off.
+ * `force` (the seed's first run) runs even when nothing changed; `reshuffle` lays the seed's things out once.
  */
-export function runBackground(opts: { force?: boolean } = {}): Promise<RunOutcome | undefined> {
+export function runBackground(
+  opts: {
+    force?: boolean;
+    reshuffle?: boolean;
+    looseIf?: (itemKey: string) => boolean;
+    touched?: readonly string[];
+  } = {},
+): Promise<RunOutcome | undefined> {
   return enqueue(async () => {
     if ((suspended && !opts.force) || (await switchedOff())) return undefined;
     const deps = await depsNow(true);
-    if (!deps.settings.autoReplan && !opts.force) return undefined;
+    // For the sake of a device still on the old version (once per app start, no read of its own unless needed).
+    await ensureAutoReplanOff(deps.settings).catch(logError('planner.migrate'));
     return runPlanner(deps, opts);
   });
 }
@@ -139,6 +148,16 @@ export function resumeRuns(): void {
   if (!stopped) void runBackground().catch(logError('planner.run'));
 }
 
+/**
+ * What a user action names (docs/design/planner-rethink): the things it hands to the engine (`loose`), the things
+ * it laid itself (`touched`: their source hears the day) and the ops of an applied sentence. Everything else stays.
+ */
+export interface RunScope {
+  loose?: readonly string[];
+  touched?: readonly string[];
+  ops?: readonly PlanOp[];
+}
+
 export interface UserRun {
   outcome: RunOutcome;
   entry?: UndoEntry;
@@ -150,19 +169,24 @@ export interface UserRun {
  */
 export function runUser(
   label: string,
-  act: () => Promise<void>,
-  opts: { reshuffle?: boolean } = {},
+  act: () => Promise<void | RunScope>,
+  opts: { reshuffle?: boolean } & RunScope = {},
 ): Promise<UserRun> {
-  // A removal of test data in flight ends first – waited for outside the queue, so `suspendRuns`
-  // (which awaits the queue) and a queued action can never wait for each other.
   return resumed.then(() =>
     enqueue(async () => {
       if (await switchedOff()) throw new PlannerOffError();
       const { result, entry } = await undoable(
         label,
         async () => {
-          await act();
-          return runPlanner(await depsNow(false), { force: true, ...opts });
+          // What the action names is only known once it has run (a new thing has no id before).
+          const scope = (await act()) ?? {};
+          return runPlanner(await depsNow(false), {
+            force: true,
+            ...(opts.reshuffle ? { reshuffle: true } : {}),
+            loose: [...(opts.loose ?? []), ...(scope.loose ?? [])],
+            touched: [...(opts.touched ?? []), ...(scope.touched ?? [])],
+            ops: [...(opts.ops ?? []), ...(scope.ops ?? [])],
+          });
         },
         MODULE_ID,
       );
@@ -256,7 +280,8 @@ export default function start(): () => void {
     clearTimeout(timer);
     timer = setTimeout(() => void runBackground().catch(logError('planner.run')), 50);
   };
-  // The day changes while the app is open: yesterday's leftovers must be carried without a write.
+  // The day changes while the app is open: the pass refreshes what the board reads (nothing is moved – what lay
+  // on yesterday is „Noch offen“ now).
   const armMidnight = () => {
     clearTimeout(midnight);
     midnight = setTimeout(() => {

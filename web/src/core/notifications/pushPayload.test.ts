@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fallbackPayload } from './pushPayload';
+import { asPayload, fallbackPayload } from './pushPayload';
 
 describe('fallback push body', () => {
   it('follows the device language among the active ones (German, English)', () => {
@@ -12,5 +12,26 @@ describe('fallback push body', () => {
     expect(fallbackPayload(['es-ES']).body).toBe('Reminder');
     expect(fallbackPayload(['fr-FR', 'de']).body).toBe('Erinnerung');
     expect(fallbackPayload(['pt-BR']).body).toBe('Reminder');
+  });
+});
+
+describe('push payload link', () => {
+  it('keeps a path inside the app', () => {
+    expect(asPayload({ title: 'x', url: '/todos?open=1' })?.url).toBe('/todos?open=1');
+    expect(asPayload({ title: 'x', url: '/' })?.url).toBe('/');
+  });
+  it('drops anything that could leave the app: other origins, schemes, protocol-relative forms', () => {
+    for (const url of [
+      '//evil.example/login',
+      '/\\evil.example/login',
+      '/\t/evil.example',
+      '/\n/evil.example',
+      '/..//evil.example',
+      '/.//evil.example',
+      'https://evil.example/',
+      'javascript:alert(1)',
+      'todos',
+    ])
+      expect(asPayload({ title: 'x', url })?.url, url).toBeUndefined();
   });
 });

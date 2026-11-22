@@ -4,6 +4,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
+import { getMeta } from '@/core/db/metaKv';
 import { createCollectionRepo } from '@/core/db/repo';
 import { bus } from '@/core/events';
 import { plannedDay } from '@/core/entitylinks';
@@ -14,8 +15,16 @@ import { setNow } from '@/core/time/now';
 import { undoLast } from '@/core/undo';
 import { useUiStore } from '@/stores/ui';
 import { addRequested, exclude, unrequest } from '../actions';
+import { buildBoard } from '../board';
 import { assignmentRepo, itemRepo, plannerRepos } from '../repo';
-import { buildInputs, requestedIds, runPlanner, type RunDeps } from '../run';
+import {
+  buildInputs,
+  LAST_RUN_KEY,
+  requestedIds,
+  runPlanner,
+  type LastRun,
+  type RunDeps,
+} from '../run';
 import start, { runsSettled, setManifestsForTests } from '../services';
 import { DEFAULT_PLANNER_SETTINGS, PLANNER_SCOPE } from '../settings';
 
@@ -164,6 +173,9 @@ describe('plan.requested with ref', () => {
     expect(await planned()).toEqual([]);
   });
 
+  // This and the three marked tests below fail on feat/plan-stays-put (reported): a run takes the rows of an
+  // excluded thing away only while its source still lists it (`run.ts buildInputs` fills `removeKeys` from the
+  // entries) – a list asked in by ref is no longer listed once it is excluded, so its row stays stored.
   it('„Nicht planen“ takes the list out; asking again brings it back', async () => {
     await request();
     const [entry] = (await buildInputs(deps(), plannerRepos())).entries;
@@ -176,12 +188,43 @@ describe('plan.requested with ref', () => {
     expect(await planned()).toHaveLength(1);
   });
 
-  it('the row leaves the plan when the last entry is ticked, by a background run', async () => {
+  it('the last entry ticked: the board hides the list, the row stays stored; with a new entry it is back on its day', async () => {
     await request();
+    // Laid on Wednesday, so „its day“ is not just today.
+    await assignmentRepo.update(`${KEY}#0`, { date: '2026-11-18' });
     for (const i of await entryRepo.active().toArray())
       await entryRepo.update(i.id, { done: true });
-    await runPlanner(deps());
-    expect(await planned()).toEqual([]);
+    const pass = await runPlanner(deps());
+    expect(pass.ran).toBe(true);
+    // A background run tidies nothing: the row is stored as it was.
+    expect(pass.rowWrites).toBe(0);
+    expect((await planned()).map((a) => a.date)).toEqual(['2026-11-18']);
+    const shown = async () => {
+      const inputs = await buildInputs(deps(), plannerRepos());
+      const last = await getMeta<LastRun>(LAST_RUN_KEY);
+      const board = buildBoard({
+        today: TODAY,
+        span: 7,
+        settings: deps().settings,
+        dayRows: [],
+        itemRows: await itemRepo.active().toArray(),
+        assignments: await assignmentRepo.active().toArray(),
+        entries: inputs.entries,
+        calendar: [],
+        unplaced: last?.unplaced ?? [],
+        titles: { ...last?.titles },
+      });
+      return [
+        ...board.days.flatMap((d) => d.rows.map((r) => [d.date, r.itemKey])),
+        ...board.waiting.map((r) => ['waiting', r.itemKey]),
+        ...board.open.map((r) => ['open', r.itemKey]),
+      ];
+    };
+    expect(await shown()).toEqual([]);
+    await entryRepo.create({ listId: SHOP, name: 'Salz', done: false, order: 0 });
+    expect((await runPlanner(deps())).rowWrites).toBe(0);
+    expect((await planned()).map((a) => a.date)).toEqual(['2026-11-18']);
+    expect(await shown()).toEqual([['2026-11-18', KEY]]);
   });
 
   it('a hard due of the request is kept on the item row', async () => {
@@ -229,6 +272,7 @@ describe('plan.requested with ref', () => {
 describe('plan.unrequested („Nicht mehr planen“)', () => {
   const unplan = () => unrequest({ title: 'Einkauf', ref: { module: 'lists', id: SHOP } });
 
+  // (fails, see „Nicht planen“ above)
   it('ends the request: the item row is excluded, the list leaves the plan; one undo brings it back', async () => {
     await request();
     useUiStore.setState({ toasts: [] });
@@ -244,6 +288,7 @@ describe('plan.unrequested („Nicht mehr planen“)', () => {
     expect(await planned()).toHaveLength(1);
   });
 
+  // (fails, see „Nicht planen“ above)
   it('an emptied list no longer returns with its next entry once the request ended', async () => {
     await request();
     for (const i of await entryRepo.active().toArray())
@@ -261,6 +306,7 @@ describe('plan.unrequested („Nicht mehr planen“)', () => {
     expect(await itemRepo.active().toArray()).toEqual([]);
   });
 
+  // (fails, see „Nicht planen“ above)
   it('over the bus: the service ends the request', async () => {
     await request();
     const stop = start();

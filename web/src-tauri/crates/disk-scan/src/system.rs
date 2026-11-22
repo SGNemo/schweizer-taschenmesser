@@ -202,7 +202,14 @@ mod imp {
         use std::os::windows::process::CommandExt;
         let s = path.to_string_lossy();
         let s = s.strip_prefix(r"\\?\").unwrap_or(&s);
-        std::process::Command::new("explorer.exe")
+        // The Explorer of the Windows folder, by full path: a bare name would be looked up next to
+        // the app's own exe first, where anyone could have put a file of that name.
+        let explorer = known(&FOLDERID_Windows)
+            .map(|dir| Path::new(&dir).join("explorer.exe"))
+            .ok_or_else(|| {
+                std::io::Error::new(std::io::ErrorKind::NotFound, "no windows folder")
+            })?;
+        std::process::Command::new(explorer)
             .raw_arg(format!("/select,\"{s}\""))
             .spawn()
             .map(|_| ())

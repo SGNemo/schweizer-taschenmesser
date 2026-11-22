@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useLang } from '@/core/i18n/lang';
 import { useSearchParams } from 'react-router';
 import { collator } from '@/core/i18n/format';
+import { safeHttpUrl } from '@/core/io/feed';
 import { getPlatform } from '@/core/platform';
 import { today } from '@/core/time/now';
 import { buildOpml } from '@/importers/opml/parse';
@@ -237,7 +238,7 @@ export default function MainPage() {
                     key={feed.id}
                     title={feed.title}
                     meta={hostOf(feed.url)}
-                    href={feed.siteUrl || feed.url}
+                    href={safeHttpUrl(feed.siteUrl, feed.url) ?? feed.url}
                     menuLabel={s.rowMenu(feed.title)}
                     menu={[
                       {
