@@ -2,15 +2,22 @@
 type: security
 area: mail
 breaking: false
-de: Bilder in Mails kommen nur noch von sicheren Internet-Adressen, nie von Heimnetz-Adressen, die in der Mail stehen; andere Bilder werden nicht mehr gezeigt.
-en: Images in mails now only come from secure internet addresses, never from home-network addresses written in the mail; other images are no longer shown.
+de: Bilder aus dem Internet lädt die Mail-Ansicht nur noch über verschlüsselte Adressen (https) und nie aus dem Heimnetz; andere bleiben weg, ihr Bildtext steht dann da.
+en: The email view loads pictures from the internet only over encrypted addresses (https) and never from the home network; others stay out, their description is shown instead.
 ---
 ---
 type: security
 area: mail
 breaking: false
-de: Anhänge werden unter ihrem reinen Dateinamen zum Speichern angeboten.
-en: Attachments are offered for saving under their plain file name.
+de: Anhänge zeigen und speichern ihren Namen ohne versteckte Zeichen, die eine falsche Dateiendung vortäuschen könnten.
+en: Attachments show and save their name without hidden characters that could fake a file ending.
+---
+---
+type: security
+area: calendar
+breaking: false
+de: Kalender-Abos und Feeds von Adressen im Heimnetz (etwa fritz.box) ruft die Windows-App nicht mehr ab.
+en: The Windows app no longer fetches calendar subscriptions and feeds from home-network addresses (such as fritz.box).
 ---
 ---
 type: security
@@ -23,6 +30,6 @@ en: The error log now also hides user folder names with spaces and network drive
 type: security
 area: app
 breaking: false
-de: Ein Tipp auf eine Erinnerung öffnet nur noch Seiten in Nemo.
-en: Tapping a reminder only ever opens pages inside Nemo.
+de: Ein Tippen auf eine Benachrichtigung öffnet nur noch Seiten in Nemo.
+en: Tapping a notification only ever opens pages inside Nemo.
 ---

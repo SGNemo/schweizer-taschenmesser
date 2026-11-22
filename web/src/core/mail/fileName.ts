@@ -1,15 +1,22 @@
 /**
  * The name a mail attachment is offered under in the save dialog. The sender chooses the original, so
- * it is made one plain file name: path separators become "_" (a name with folders would preselect a
- * foreign folder; "Rechnung 03/2024.pdf" stays readable), without
+ * it is made one plain file name: path separators and colons become "-" (a name with folders would
+ * preselect a foreign folder; "Rechnung 03/2024.pdf" stays readable as "Rechnung 03-2024.pdf"), without
  * control or text-direction characters (they can hide the real ending) and without the characters
  * Windows forbids. The user still sees the name and the ending in the dialog and decides there.
  */
 const MAX_LENGTH = 150;
 const FALLBACK = 'attachment';
-/** Control characters, zero-width and direction marks, line and paragraph separators. */
-// eslint-disable-next-line no-control-regex
-const HIDDEN = /[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2060-\u2069\ufeff]/g;
+/**
+ * Control characters, soft hyphen, direction marks, line and paragraph separators, annotation marks. The
+ * joiners U+200C/U+200D stay: emoji sequences and several scripts need them, and they hide no ending.
+ */
+/* eslint-disable no-control-regex */
+const HIDDEN =
+  /[\u0000-\u001f\u007f-\u009f\u00ad\u061c\u180e\u200b\u200e\u200f\u2028-\u202e\u2060-\u2069\ufeff\ufff9-\ufffb]/g;
+/* eslint-enable no-control-regex */
+/** Half of a surrogate pair on its own (the desktop cannot pass such a name on). */
+const LONE_SURROGATE = /(?<![\ud800-\udbff])[\udc00-\udfff]|[\ud800-\udbff](?![\udc00-\udfff])/g;
 
 /** Without leading and trailing spaces and dots (Windows drops them silently); a loop, no backtracking. */
 function trimEdges(name: string): string {
@@ -22,13 +29,15 @@ function trimEdges(name: string): string {
 }
 
 export function attachmentFileName(name: string): string {
-  // The sender decides the length too: look only at the end, where the file name is.
   const clean = trimEdges(
-    Array.from(name)
+    // The sender decides the length too: only the end counts, cut on whole characters.
+    Array.from(name.slice(-4096))
       .slice(-1024)
       .join('')
+      .replace(LONE_SURROGATE, '')
       .replace(HIDDEN, '')
-      .replace(/[<>:"|?*\\/]/g, '_'),
+      .replace(/[\\/:]/g, '-')
+      .replace(/[<>"|?*]/g, '_'),
   );
   if (!clean) return FALLBACK;
   const chars = Array.from(clean); // code points, so a cut never splits an emoji

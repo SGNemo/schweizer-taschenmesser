@@ -26,4 +26,18 @@ describe('scrub: Windows user folders and network paths', () => {
     expect(out).not.toContain('Musterfrau');
     expect(out).toContain('Caused by: x');
   });
+
+  it('hides a user folder with spaces on a network share', () => {
+    const out = sanitize('open \\\\fileserver\\users$\\Erika Musterfrau\\Documents\\x.txt failed');
+    expect(out).not.toContain('Musterfrau');
+    expect(out).not.toContain('fileserver');
+    expect(out).toContain('failed');
+  });
+
+  it('stays fast on a very long line', () => {
+    const started = performance.now();
+    scrub(`C:\\Users\\${'a '.repeat(100_000)}`);
+    scrub(`\\\\nas\\share\\${'a '.repeat(100_000)}`);
+    expect(performance.now() - started).toBeLessThan(2000);
+  });
 });

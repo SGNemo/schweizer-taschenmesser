@@ -46,9 +46,15 @@ export function scrub(text: string): string {
         }
       })
       .replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g, '[mail]')
-      // A Windows user folder may contain spaces ("Erika Musterfrau"): take that part whole, then the rest up to a space.
+      // A Windows user folder may contain spaces ("Erika Musterfrau"): that part is taken whole, up to the next
+      // backslash, the end of the line or 64 characters; then the rest up to a space. When no backslash
+      // follows, a few words after the name go too: rather too much hidden than a name left over.
       .replace(/[A-Za-z]:\\(?:Users\\[^\\\r\n"']{1,64}?(?=\\|[\r\n]|$))?[^\s"']*/gi, '[path]')
-      .replace(/\\\\[^\s"'\\]+(?:\\[^\s"']*)?/g, '[path]')
+      // Network paths: machine, share and the folder after it (often a person's name) the same way.
+      .replace(
+        /\\\\[^\s"'\\]+(?:\\[^\s"'\\]+(?:\\[^\\\r\n"']{1,64}?(?=\\|[\r\n]|$))?)?[^\s"']*/g,
+        '[path]',
+      )
       .replace(/\/(home|Users|root)\/[^\s/"']+(\/[^\s"']*)?/g, '/$1/[user]')
       .replace(/\b\d{1,3}(?:\.\d{1,3}){3}\b/g, '[ip]')
       .replace(/\b(?:[0-9a-fA-F]{1,4}:){3,7}[0-9a-fA-F]{1,4}\b/g, '[ip]')

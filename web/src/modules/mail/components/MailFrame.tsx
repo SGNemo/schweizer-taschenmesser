@@ -81,9 +81,11 @@ export function MailFrame({
 
   return (
     <div className={styles.frameBox}>
-      {result.blocked > 0 || result.trackers > 0 ? (
+      {result.blocked > 0 || result.withheld > 0 || result.trackers > 0 ? (
         <div className={styles.imageBar} role="status">
-          {result.blocked > 0 ? <span>{t.mail.view.blockedImages(result.blocked)}</span> : null}
+          {result.blocked + result.withheld > 0 ? (
+            <span>{t.mail.view.blockedImages(result.blocked + result.withheld)}</span>
+          ) : null}
           {result.trackers > 0 ? <span>{t.mail.view.trackers(result.trackers)}</span> : null}
           {result.blocked > 0 ? (
             <Button disabled={loadingImages} onClick={() => void loadImages()}>

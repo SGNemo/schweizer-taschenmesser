@@ -5,16 +5,19 @@ describe('attachmentFileName', () => {
   it('keeps an ordinary name', () => {
     expect(attachmentFileName('Rechnung 2026-11.pdf')).toBe('Rechnung 2026-11.pdf');
   });
-  it('never keeps a path: separators become "_", so a sender cannot preselect a folder', () => {
-    expect(attachmentFileName('..\\..\\Start Menu\\x.lnk')).toBe('_.._Start Menu_x.lnk');
-    expect(attachmentFileName('/etc/cron.d/job')).toBe('_etc_cron.d_job');
-    expect(attachmentFileName('C:\\Users\\Public\\a.txt')).toBe('C__Users_Public_a.txt');
-    expect(attachmentFileName('Rechnung 03/2024.pdf')).toBe('Rechnung 03_2024.pdf');
+  it('never keeps a path: separators and colons become "-", so a sender cannot preselect a folder', () => {
+    expect(attachmentFileName('..\\..\\Start Menu\\x.lnk')).toBe('-..-Start Menu-x.lnk');
+    expect(attachmentFileName('/etc/cron.d/job')).toBe('-etc-cron.d-job');
+    expect(attachmentFileName('C:\\Users\\Public\\a.txt')).toBe('C--Users-Public-a.txt');
+    expect(attachmentFileName('Rechnung 03/2024.pdf')).toBe('Rechnung 03-2024.pdf');
+    expect(attachmentFileName('Termin 10:30.ics')).toBe('Termin 10-30.ics');
   });
   it('removes control and direction characters and characters Windows forbids', () => {
     expect(attachmentFileName('rech\u202Efdp.exe')).toBe('rechfdp.exe');
     expect(attachmentFileName('a\u0000b\r\n.txt')).toBe('ab.txt');
-    expect(attachmentFileName('a<b>:"c"|?*.txt')).toBe('a_b___c____.txt');
+    expect(attachmentFileName('a<b>:"c"|?*.txt')).toBe('a_b_-_c____.txt');
+    expect(attachmentFileName('x\u061cfdp.exe')).toBe('xfdp.exe');
+    expect(attachmentFileName('x\ud83d.pdf')).toBe('x.pdf');
   });
   it('never returns an empty, dot-only or overlong name', () => {
     expect(attachmentFileName('')).toBe('attachment');
@@ -29,6 +32,12 @@ describe('attachmentFileName', () => {
     expect(attachmentFileName(`a.pdf${'.'.repeat(200_000)}`)).toBe('attachment');
     expect(attachmentFileName(' '.repeat(200_000))).toBe('attachment');
     expect(performance.now() - started).toBeLessThan(2000);
+  });
+  it('keeps umlauts and joined emoji as they are', () => {
+    expect(attachmentFileName('Übersicht März.pdf')).toBe('Übersicht März.pdf');
+    expect(attachmentFileName('\ud83d\udc69\u200d\ud83d\udcbb Notizen.pdf')).toBe(
+      '\ud83d\udc69\u200d\ud83d\udcbb Notizen.pdf',
+    );
   });
   it('cuts on whole characters and leaves no space before the ending', () => {
     const name = attachmentFileName(`${'😀'.repeat(200)} .pdf`);

@@ -138,7 +138,6 @@ describe('fetchRemoteImages', () => {
       referrerPolicy: 'no-referrer',
       credentials: 'omit',
       redirect: 'manual',
-      maxRedirections: 0,
     });
   });
 
@@ -210,6 +209,7 @@ describe('sanitizeMailHtml: which remote images are offered', () => {
     );
     expect(out.remoteImages).toEqual(['https://a.example/ok.png']);
     expect(out.blocked).toBe(1);
+    expect(out.withheld).toBe(2);
     expect(out.html).not.toContain('192.168.1.1');
     expect(out.html).not.toContain('plain.png');
   });
@@ -220,5 +220,11 @@ describe('sanitizeMailHtml: which remote images are offered', () => {
     expect(out.html).toContain('Stadtwerke Musterstadt');
     expect(out.html).not.toContain('<img');
     expect(out.blocked).toBe(0);
+    expect(out.withheld).toBe(1);
+    // two in a row do not run together, and text around them keeps its distance
+    const two = sanitizeMailHtml(
+      'a<img src="http://a.example/1.png" alt="eins"><img src="http://a.example/2.png" alt="zwei">b',
+    );
+    expect(two.html).toContain('a eins  zwei b');
   });
 });

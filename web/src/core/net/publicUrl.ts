@@ -37,7 +37,7 @@ function privateV4(host: string): boolean {
 
 /** `host` comes from `URL.hostname` (lower case, IPv6 in brackets, IPv4 in dotted form). */
 export function isPublicHost(host: string): boolean {
-  const h = host.toLowerCase().replace(/\.$/, '');
+  const h = host.toLowerCase().replace(/\.+$/, '');
   if (!h || h.startsWith('[')) return false; // IPv6 literals are never a calendar service
   if (privateV4(h)) return false;
   if (/^[\d.]+$/.test(h)) return /^(\d{1,3}\.){3}\d{1,3}$/.test(h); // odd numeric forms are refused

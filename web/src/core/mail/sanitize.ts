@@ -24,6 +24,8 @@ export interface SanitizeResult {
   remoteImages: string[];
   /** How many of them were withheld. */
   blocked: number;
+  /** Images that are never fetched (plain http, an address in the home network): shown as their description. */
+  withheld: number;
   /** Tracking pixels that were removed. */
   trackers: number;
 }
@@ -72,7 +74,8 @@ const FORBID_ATTR = [
 ];
 
 const SAFE_LINK = /^(https?:|mailto:|tel:)/i;
-const BAD_DECLARATION = /url\s*\(|expression\s*\(|@import|behavior\s*:|-moz-binding|javascript:/i;
+const BAD_DECLARATION =
+  /url\s*\(|image-set\s*\(|expression\s*\(|@import|behavior\s*:|-moz-binding|javascript:/i;
 
 /** Removes every CSS declaration that could load something or run code. */
 export function cleanStyle(style: string): string {
@@ -105,6 +108,7 @@ interface Run {
   options: SanitizeOptions;
   remote: Set<string>;
   blocked: number;
+  withheld: number;
   trackers: number;
 }
 let run: Run | undefined;
@@ -154,8 +158,10 @@ function install(): void {
       } else {
         // Plain http, an address in the home network or another unusable source: never fetched, so no
         // button is offered for it. Its description stays as text, so the mail does not look empty.
+        // A source the mail never named as a web address at all (relative, another scheme) is just dropped.
+        if (/^https?:\/\//i.test(src)) current.withheld += 1;
         const alt = (node.getAttribute('alt') ?? '').trim();
-        if (alt) node.replaceWith(node.ownerDocument.createTextNode(alt));
+        if (alt) node.replaceWith(node.ownerDocument.createTextNode(` ${alt} `));
         else node.remove();
       }
       node.removeAttribute('loading');
@@ -165,7 +171,7 @@ function install(): void {
 
 export function sanitizeMailHtml(html: string, options: SanitizeOptions = {}): SanitizeResult {
   install();
-  run = { options, remote: new Set(), blocked: 0, trackers: 0 };
+  run = { options, remote: new Set(), blocked: 0, withheld: 0, trackers: 0 };
   try {
     const clean = DOMPurify.sanitize(html, {
       FORBID_TAGS,
@@ -178,6 +184,7 @@ export function sanitizeMailHtml(html: string, options: SanitizeOptions = {}): S
       html: String(clean),
       remoteImages: [...run.remote],
       blocked: run.blocked,
+      withheld: run.withheld,
       trackers: run.trackers,
     };
   } finally {
@@ -225,8 +232,9 @@ const MAX_IMAGE_REDIRECTS = 3;
 /**
  * One image request that never follows a redirect by itself: every hop is judged again
  * (`isPublicHttpsUrl`), so a public address cannot hand the request on to a device in the home network.
- * The desktop's own fetch obeys `maxRedirections: 0` and hands back the 3xx answer with its `Location`;
- * a browser answers `redirect: 'manual'` with an opaque response, which simply counts as "not loaded".
+ * With `redirect: 'manual'` the desktop's own fetch hands back the 3xx answer with its `Location` (the
+ * platform translates the option); a browser answers with an opaque response, which simply counts as
+ * "not loaded".
  */
 async function fetchChecked(
   fetchFn: typeof fetch,
@@ -240,8 +248,7 @@ async function fetchChecked(
       referrerPolicy: 'no-referrer',
       credentials: 'omit',
       redirect: 'manual',
-      maxRedirections: 0,
-    } as RequestInit);
+    });
     if (res.status < 300 || res.status >= 400) return res;
     void res.body?.cancel().catch(() => undefined);
     const location = res.headers.get('location');

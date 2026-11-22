@@ -3,6 +3,7 @@
  * import `@tauri-apps/*` (ESLint). Keep each capability small and mockable.
  */
 import { loggedFetch } from '@/core/net/netlog';
+import { nativeInit } from './redirect';
 import { getVersion } from '@tauri-apps/api/app';
 import { invoke } from '@tauri-apps/api/core';
 import { clear, readText, writeText } from '@tauri-apps/plugin-clipboard-manager';
@@ -153,7 +154,7 @@ const inAppData = { baseDir: BaseDirectory.AppData } as const;
 export async function createTauriPlatform(): Promise<PlatformService> {
   const kind = detectKind();
   const fetchFn: typeof fetch = loggedFetch((input, init) =>
-    nativeFetch(input as string | URL | Request, init),
+    nativeFetch(input as string | URL | Request, nativeInit(init)),
   );
   return {
     kind,

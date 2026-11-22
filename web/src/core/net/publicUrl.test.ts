@@ -29,6 +29,8 @@ describe('publicUrl', () => {
   it('treats home-router and home-network names as local', () => {
     for (const host of ['fritz.box', 'nas.fritz.box', 'printer.home.arpa', 'pc.localdomain'])
       expect(isPublicHttpsUrl(`https://${host}/x.png`), host).toBe(false);
+    expect(isPublicHost('fritz.box..')).toBe(false);
+    expect(isPublicHost('localhost..')).toBe(false);
     expect(isPublicHttpsUrl('https://example.org/x.png')).toBe(true);
   });
 });
