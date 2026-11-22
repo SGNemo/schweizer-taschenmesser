@@ -731,3 +731,10 @@ section.sheet .headEnd button[aria-expanded='true'] {
   cursor: grabbing;
   user-select: none;
 }
+/* „Noch ohne Tag“ open (package 6): the overload figure and „Woche vorschlagen“ side by side, wrapping on the phone. */
+.waitActions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+}

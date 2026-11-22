@@ -28,7 +28,9 @@ export type PlanOp =
   /** Run again: calm (`reshuffle: false`, the previous plan stays where it can) or from scratch (`prev = []`). */
   | { op: 'replan'; reshuffle: boolean }
   /** Share of the free time never planned, in percent (a setting). */
-  | { op: 'buffer'; pct: number };
+  | { op: 'buffer'; pct: number }
+  /** „In Teile aufteilen …“ (a proposal's offer): the thing may be cut into sessions. */
+  | { op: 'split'; key: string };
 
 /** A thing of the plan the sentence may name. */
 export interface InstructionItem {

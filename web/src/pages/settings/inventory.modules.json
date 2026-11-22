@@ -572,6 +572,11 @@
         "label": "Termine blocken Zeit",
         "default": true
       },
+      "suggestNew": {
+        "type": "boolean",
+        "label": "Neues automatisch vorschlagen",
+        "default": false
+      },
       "calendarChips": {
         "type": "boolean",
         "label": "Plan im Kalender zeigen",

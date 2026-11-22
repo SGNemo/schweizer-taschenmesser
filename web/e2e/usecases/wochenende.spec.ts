@@ -505,10 +505,10 @@ test('B Kopf leeren: zwölf Dinge auf einmal', async ({ page, isMobile }, info) 
   // „Zocken“ afterwards. Finding the row's day stays; the facts name both days.
   const gaming = tasks.find((x) => /^Zocken/.test(x.title)) as { id: string } | undefined;
   expect(gaming).toBeTruthy();
-  // The row needs a day first: the person takes the page's proposal (⋯ → „Neu verteilen“ → „Übernehmen“; not
+  // The row needs a day first: the person takes the page's proposal (⋯ → „Woche vorschlagen“ → „Übernehmen“; not
   // counted like the rest of this check – what Saturday (2 h) and the next days make of it).
   await page.getByRole('button', { name: 'Weitere Optionen', exact: true }).first().click();
-  await page.getByRole('menuitem', { name: 'Neu verteilen' }).click();
+  await page.getByRole('menuitem', { name: 'Woche vorschlagen' }).click();
   await page.getByTestId('plan-preview').getByRole('button', { name: 'Übernehmen' }).click();
   await expect(page.getByTestId('plan-preview')).toHaveCount(0);
   await expect(page.getByTestId('planner-head')).toBeVisible();

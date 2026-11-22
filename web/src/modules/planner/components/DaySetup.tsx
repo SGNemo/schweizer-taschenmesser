@@ -27,7 +27,7 @@ import {
 import { opLines } from '../say';
 import { PlannerOffError, previewUser } from '../services';
 import { dayEndLabel, dayEndOf } from '../settings';
-import { PlanPreview, type PreviewData } from './PlanPreview';
+import { noDayOf, PlanPreview, type PreviewData } from './PlanPreview';
 import { compact } from './capacity';
 import styles from '../routes/planner.module.css';
 
@@ -91,7 +91,10 @@ export function DaySetup({
     const things = setupThings(text, { available, fitness, place, breaks });
     const ops: PlanOp[] = [
       ...changes.map((c): PlanOp => ({ op: 'available', date: c.date, min: c.min })),
-      ...(reshuffle ? [{ op: 'replan', reshuffle: true } as const] : []),
+      // The last step is the same proposal as „Woche vorschlagen“ (package 6): the typed things and every thing
+      // without a day – what „Übernehmen“ writes (`applyDaySetup` hands over the same). A day that gained time
+      // hands over everything that is not „fest“ (W10).
+      { op: 'replan', reshuffle } as const,
     ];
     setBusy(true);
     try {
@@ -110,7 +113,7 @@ export function DaySetup({
             : []),
         // A break says its own day and length, like its toast – never a sum.
         ...breaks.map((b) => t.planner.toast.asBreak(b.label, dayName(b.date), compact(b.min))),
-        // The day lines only: „Neu verteilt“ would say what the moves below already show.
+        // The day lines only: „Vorschlag übernommen“ would say what the moves below already show.
         ...opLines(
           ops.filter((o) => o.op !== 'replan'),
           (key) => names[key] ?? key,
@@ -120,7 +123,17 @@ export function DaySetup({
           ? []
           : [newDayEnd ? s.dayEndSet(dayEndLabel(newDayEnd)) : s.dayEndCleared]),
       ];
-      setPreview({ data: { lines, diff: out.result.diff }, things });
+      // The same proposal as „Woche vorschlagen“ (package 6): its head, and what stays without a day.
+      // „passt an keinen Tag am Stück“ says why; the sheet offers no split (its typed things have no id yet).
+      const noDay = noDayOf(out.result, (key) => names[key] ?? key);
+      setPreview({
+        data: {
+          lines: [t.planner.preview.head, ...lines],
+          diff: out.result.diff,
+          ...(noDay.length ? { noDay } : {}),
+        },
+        things,
+      });
       setStep(3);
     } catch (e) {
       if (!(e instanceof PlannerOffError)) throw e;
@@ -133,11 +146,14 @@ export function DaySetup({
   async function apply() {
     if (!preview) return;
     // Nothing typed and no day changed: nothing to enter, no toast that says otherwise.
+    // … and the proposal lays nothing (it now also takes what waited without a day: package 6).
+    const proposes = preview.data.diff.added.length + preview.data.diff.moved.length > 0;
     if (
       preview.things.length === 0 &&
       changes.length === 0 &&
       !reshuffle &&
-      newDayEnd === undefined
+      newDayEnd === undefined &&
+      !proposes
     ) {
       onClose();
       return;
@@ -151,6 +167,7 @@ export function DaySetup({
         titles,
         reshuffle,
         newDayEnd,
+        proposes,
       );
       if (ok) {
         setText('');

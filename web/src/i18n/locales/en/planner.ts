@@ -39,6 +39,9 @@ export const planner: Strings['planner'] = {
       autoReplanHelp: 'Off: the plan only changes when you do something in the planner.',
       calendarBlocks: 'Appointments block time',
       calendarBlocksHelp: 'Timed appointments take their length off the day; reminders never do.',
+      suggestNew: 'Suggest a day for new things',
+      suggestNewHelp:
+        'What you enter in the planner sits on the day you look at. New things from other areas have no day unless they are dated there; with a deadline they get a suggestion. On: also without one. Nothing ever moves by itself.',
       calendarChips: 'Show the plan in the calendar',
       calendarChipsHelp:
         'One entry per day with the planned time; it leads to the planner. Off: the calendar shows appointments only.',
@@ -56,7 +59,7 @@ export const planner: Strings['planner'] = {
     over: (min: string) => `${min} more than fits`,
     first: (title: string) => `Today: ${title}. That's enough for today.`,
     menu: 'More options',
-    replan: 'Redistribute',
+    replan: 'Suggest a week',
     ctxToday: (n: number) => `today · ${n === 1 ? '1 thing' : `${n} things`}`,
     ctxNext: (day: string, tomorrow: boolean) =>
       tomorrow ? `tomorrow, ${day} · today is free` : `${day} · today is free`,
@@ -247,6 +250,7 @@ export const planner: Strings['planner'] = {
     part: (part: string) => `${part}, as you chose`,
   },
   wait: {
+    suggestName: 'Suggest a week for everything without a day',
     title: 'No day yet',
     calm: 'None of it has to be today.',
     over: (min: string) => `${min} more to do than there is free time`,
@@ -360,6 +364,11 @@ export const planner: Strings['planner'] = {
     nothing: 'Nothing in the plan changes.',
     apply: 'Apply',
     discard: 'Discard',
+    noDay: 'Stays without a day',
+    head: 'A suggestion – nothing has moved yet.',
+    tooLong: 'fits no day in one piece',
+    split: 'Split into parts …',
+    splitName: (title: string) => `Split into parts: ${title}`,
   },
   ops: {
     block: (day: string, label: string, from: string, to: string) =>
@@ -371,8 +380,9 @@ export const planner: Strings['planner'] = {
     exclude: (title: string) => `${title} not planned`,
     duration: (title: string, min: string) => `${title} takes ${min}`,
     buffer: (pct: number) => `Buffer ${pct} %`,
-    replan: 'Redistributed',
+    replan: 'Suggestion applied',
     reshuffle: 'Reshuffled from scratch',
+    split: (title: string) => `${title} in parts`,
   },
   weekLink: {
     label: 'Times of this week · 2 steps',
@@ -419,6 +429,7 @@ export const planner: Strings['planner'] = {
     eventsFill: 'Appointments on this day already fill this time.',
   },
   chips: {
+    proposal: (day: string) => `Suggestion: ${day}`,
     proposalDue: (day: string, due: string) => `Suggestion: ${day} · due ${due}`,
     take: 'Apply',
     takeName: (title: string, day: string) => `Apply: ${title} on ${day}`,

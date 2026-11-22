@@ -9341,6 +9341,9 @@ export const de = {
         autoReplanHelp: 'Aus: der Plan ändert sich nur, wenn du im Planer etwas tust.',
         calendarBlocks: 'Termine blocken Zeit',
         calendarBlocksHelp: 'Termine mit Uhrzeit nehmen dem Tag ihre Dauer weg; Erinnerungen nie.',
+        suggestNew: 'Neues automatisch vorschlagen',
+        suggestNewHelp:
+          'Was du im Planer einträgst, liegt auf dem Tag, den du ansiehst. Neues aus anderen Bereichen liegt ohne Tag, außer es hat dort schon einen Termin; mit Frist bekommt es einen Vorschlag. An: auch ohne Frist. Verschoben wird nie von selbst.',
         calendarChips: 'Plan im Kalender zeigen',
         calendarChipsHelp:
           'Ein Eintrag je Tag mit der geplanten Zeit; er führt zum Planer. Aus: der Kalender zeigt nur Termine.',
@@ -9358,7 +9361,8 @@ export const de = {
       over: (min: string) => `${min} mehr als planbar`,
       first: (title: string) => `Heute: ${title}. Das reicht für heute.`,
       menu: 'Weitere Optionen',
-      replan: 'Neu verteilen',
+      // Package 6 (CONCEPT-COPY): the proposal for the things without a day – „Neu verteilen“ sounded like moving.
+      replan: 'Woche vorschlagen',
       ctxToday: (n: number) => `heute · ${n === 1 ? '1 Ding' : `${n} Dinge`}`,
       ctxNext: (day: string, tomorrow: boolean) =>
         tomorrow ? `morgen, ${day} · heute ist frei` : `${day} · heute ist frei`,
@@ -9552,6 +9556,7 @@ export const de = {
       part: (part: string) => `${part}, wie gewählt`,
     },
     wait: {
+      suggestName: 'Woche vorschlagen für alles noch ohne Tag',
       title: 'Noch ohne Tag',
       calm: 'Nichts davon muss heute sein.',
       over: (min: string) => `${min} mehr zu tun, als Zeit frei ist`,
@@ -9666,6 +9671,12 @@ export const de = {
       nothing: 'Am Plan ändert sich nichts.',
       apply: 'Übernehmen',
       discard: 'Verwerfen',
+      // Package 6: what a proposal finds no day for, and the offer for a thing too long for any day.
+      head: 'Vorschlag – noch ist nichts verschoben.',
+      noDay: 'Bleibt ohne Tag',
+      tooLong: 'passt an keinen Tag am Stück',
+      split: 'In Teile aufteilen …',
+      splitName: (title: string) => `In Teile aufteilen: ${title}`,
     },
     ops: {
       block: (day: string, label: string, from: string, to: string) =>
@@ -9677,8 +9688,9 @@ export const de = {
       exclude: (title: string) => `${title} nicht planen`,
       duration: (title: string, min: string) => `${title} dauert ${min}`,
       buffer: (pct: number) => `Puffer ${pct} %`,
-      replan: 'Neu verteilt',
+      replan: 'Vorschlag übernommen',
       reshuffle: 'Alles neu gemischt',
+      split: (title: string) => `${title} in Teilen`,
     },
     weekLink: {
       label: 'Zeiten dieser Woche · 2 Schritte',
@@ -9726,6 +9738,7 @@ export const de = {
       eventsFill: 'Termine an diesem Tag füllen diese Zeit schon.',
     },
     chips: {
+      proposal: (day: string) => `Vorschlag: ${day}`,
       proposalDue: (day: string, due: string) => `Vorschlag: ${day} · Frist ${due}`,
       take: 'Übernehmen',
       takeName: (title: string, day: string) => `Übernehmen: ${title} auf ${day}`,

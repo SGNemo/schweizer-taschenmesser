@@ -1,5 +1,5 @@
 import { dayName } from '@/core/plan/explain';
-import type { MoveReason, PlanDiff } from '@/core/plan/types';
+import type { MoveReason, PlanDiff, PlanResult } from '@/core/plan/types';
 import { t } from '@/strings';
 import { Button, GroupedList, ItemList, ItemRow, type GroupedListGroup } from '@/ui';
 import styles from '../routes/planner.module.css';
@@ -14,6 +14,34 @@ export interface PreviewData {
   /** Item key → its deadline ('YYYY-MM-DD'): a move past it says so (C5, CHECK-1-3). */
   dues?: Readonly<Record<string, string>>;
   diff: PlanDiff;
+  /**
+   * „Woche vorschlagen“ (package 6): the handed-over things the proposal finds no day for – `tooLong` when no day
+   * holds it in one piece, which offers „In Teile aufteilen …“.
+   */
+  noDay?: readonly { key: string; title: string; tooLong: boolean }[];
+}
+
+/**
+ * What a proposal finds no day for (package 6): every thing with a unit that stays without a day – a unit placed
+ * after its deadline has a day and is not listed. `tooLong`: a whole thing no day holds in one piece, which offers
+ * „In Teile aufteilen …“.
+ */
+export function noDayOf(
+  result: Pick<PlanResult, 'unplaced' | 'assignments'>,
+  titleOf: (key: string) => string,
+): NonNullable<PreviewData['noDay']> {
+  const placed = new Set(result.assignments.map((a) => a.id));
+  const out = new Map<string, { key: string; title: string; tooLong: boolean }>();
+  for (const u of result.unplaced) {
+    if (u.date !== undefined || placed.has(u.id)) continue;
+    const seen = out.get(u.itemKey);
+    out.set(u.itemKey, {
+      key: u.itemKey,
+      title: titleOf(u.itemKey),
+      tooLong: (seen?.tooLong ?? false) || (u.reason === 'too-long' && u.of === 1),
+    });
+  }
+  return [...out.values()];
 }
 
 /** The deadline a move from `from` to `to` crosses, else `undefined` (unit id `<module>:<id>#<k>`). */
@@ -63,6 +91,7 @@ export function PlanPreview({
   onApply,
   onDiscard,
   discardLabel,
+  onSplit,
 }: {
   data: PreviewData;
   nameOf: (unitId: string) => string;
@@ -71,6 +100,8 @@ export function PlanPreview({
   onDiscard: () => void;
   /** „Zurück“ where the preview is a step of a sheet („Tage einteilen“); „Verwerfen“ otherwise. */
   discardLabel?: string;
+  /** „In Teile aufteilen …“ of a thing too long for any day: the proposal again with that thing in parts. */
+  onSplit?: (key: string) => void;
 }) {
   const p = t.planner.preview;
   const moved = data.diff.moved;
@@ -140,6 +171,42 @@ export function PlanPreview({
                     title={nameOf(w.id)}
                     titleFull
                     meta={[p.from(dayName(w.from)), cause(w, nameOf)].filter(Boolean).join(' · ')}
+                  />
+                ))}
+              </ItemList>
+            ),
+          },
+        ]
+      : []),
+    ...(data.noDay?.length
+      ? [
+          {
+            id: 'noDay',
+            label: p.noDay,
+            count: data.noDay.length,
+            countHidden: data.noCounts === true,
+            children: (
+              <ItemList>
+                {data.noDay.map((n) => (
+                  <ItemRow
+                    key={n.key}
+                    title={n.title}
+                    titleFull
+                    meta={n.tooLong ? p.tooLong : undefined}
+                    actions={
+                      n.tooLong && onSplit ? (
+                        <Button
+                          variant="ghost"
+                          aria-label={p.splitName(n.title)}
+                          onClick={() => onSplit(n.key)}
+                          disabled={busy}
+                          data-testid="preview-split"
+                        >
+                          {p.split}
+                        </Button>
+                      ) : undefined
+                    }
+                    controls="always"
                   />
                 ))}
               </ItemList>

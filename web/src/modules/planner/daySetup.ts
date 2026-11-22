@@ -93,7 +93,8 @@ export function previewItems(things: readonly SetupThing[], at: number): PlanIte
       priority: (f.priority ?? 0) as PlanItem['priority'],
       ...(due ? { due: { date: due, hard: !!th.hardDue } } : {}),
       ...(f.startDate ? { earliest: f.startDate } : {}),
-      splittable: true,
+      // As the stored thing will be read: nothing is cut into parts by itself (planner rethink) – the preview of
+      // „Tage einteilen“ shows what „Übernehmen“ writes.
       createdAt: at + i,
     };
   });
