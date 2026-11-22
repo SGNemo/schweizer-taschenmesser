@@ -7,7 +7,8 @@
  *
  *  - pin = the date of one of the thing's rows → that row is „fest“;
  *  - pin today or later, no row there (it lay beyond the horizon, or the thing waited) → the thing lies on the
- *    pinned day, „fest“ – a day the person fixed explicitly; the old engine only ignored it while it was far away;
+ *    pinned day (all its parts), „fest“ – a day the person fixed explicitly; the old engine only ignored it while
+ *    it was far away; a thing set to „Nicht planen“ gets no row;
  *  - pin before today, row elsewhere → the row stays where the person sees it, not „fest“;
  *  - the pin is cleared in every case.
  *
@@ -46,21 +47,22 @@ export async function migratePins(today: string, database?: PlannerDb): Promise<
     if (there.length > 0) {
       for (const r of there)
         if (await putRow(repos.assignment, r.id, { ...plain(r), locked: true })) n++;
-    } else if (pinned >= today) {
-      const first = own[0];
-      const data: AssignmentRow = first
-        ? { ...plain(first), date: pinned, locked: true }
-        : {
-            itemKey: item.id,
-            k: 0,
-            of: 1,
-            date: pinned,
-            minutes: item.durationMin ?? DEFAULT_MIN,
-            order: 0,
-            reason: 'pinned',
-            locked: true,
-          };
-      if (await putRow(repos.assignment, first?.id ?? unitId(item.id, 0), data)) n++;
+    } else if (pinned >= today && own.length > 0) {
+      // The pin held the whole thing: every part goes to the pinned day (as a move by hand does).
+      for (const r of own)
+        if (await putRow(repos.assignment, r.id, { ...plain(r), date: pinned, locked: true })) n++;
+    } else if (pinned >= today && !item.excluded) {
+      const data: AssignmentRow = {
+        itemKey: item.id,
+        k: 0,
+        of: 1,
+        date: pinned,
+        minutes: item.durationMin ?? DEFAULT_MIN,
+        order: 0,
+        reason: 'pinned',
+        locked: true,
+      };
+      if (await putRow(repos.assignment, unitId(item.id, 0), data)) n++;
     }
     const { pinned: _gone, ...rest } = plain(item as PlanItemRow);
     void _gone;

@@ -222,9 +222,8 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
       priority: (row?.priority ?? e.priority ?? 0) as PlanItem['priority'],
       ...(due ? { due } : {}),
       // The user's own date is a lower bound – also while the sync gate keeps it in memory only.
-      ...(max(e.earliest, userDate ?? row?.earliest)
-        ? { earliest: max(e.earliest, userDate ?? row?.earliest) }
-        : {}),
+      // (The planner's old copy `row.earliest` is no longer read: nothing keeps it in step any more.)
+      ...(max(e.earliest, userDate) ? { earliest: max(e.earliest, userDate) } : {}),
       // Nothing is cut into sessions by itself any more (planner rethink): a thing is one unit unless its stored
       // rows already are parts from the engine's time.
       splittable: inParts.has(key),
@@ -324,6 +323,13 @@ export async function writeRows(
 ): Promise<number> {
   let n = 0;
   const live = new Set<string>();
+  // Every unit this run knows of (placed, waiting, left alone) and the things they belong to.
+  const known = new Set([
+    ...result.assignments.map((a) => a.id),
+    ...result.unplaced.map((u) => u.id),
+    ...(result.kept ?? []),
+  ]);
+  const knownItems = new Set([...result.assignments, ...result.unplaced].map((u) => u.itemKey));
   for (const a of result.assignments) {
     if (aborted?.()) return n;
     live.add(a.id);
@@ -346,7 +352,11 @@ export async function writeRows(
   for (const id of inputs.prevRows.keys()) {
     if (aborted?.()) return n;
     if (live.has(id)) continue;
-    if (!inputs.removeKeys.has(inputs.prevRows.get(id)!.itemKey)) continue;
+    const key = inputs.prevRows.get(id)!.itemKey;
+    // A part that no longer exists (the thing got shorter: three parts became two) goes – the thing itself is
+    // listed and its other parts are known to this run.
+    const stalePart = !known.has(id) && knownItems.has(key);
+    if (!inputs.removeKeys.has(key) && !stalePart) continue;
     await repos.assignment.remove(id);
     n++;
   }
@@ -426,6 +436,8 @@ export async function runPlanner(
     touched?: readonly string[];
     /** The ops of a sentence or sheet that was applied: what they hand over is read like in the preview (`looseOf`). */
     ops?: readonly PlanOp[];
+    /** Narrows what is handed over (the seed: only its own things). */
+    looseIf?: (itemKey: string) => boolean;
   } = {},
 ): Promise<RunOutcome> {
   const repos = plannerRepos(deps.database);
@@ -437,9 +449,14 @@ export async function runPlanner(
   const bail = () => deps.aborted?.() === true;
   if (bail()) return { ran: false, inputs, rowWrites: 0, writeBacks: 0 };
   // What lies stays (docs/design/planner-rethink): the engine only gets the things the action handed over.
-  const loose = opts.reshuffle
-    ? looseAll(inputs)
-    : [...new Set([...(opts.loose ?? []), ...looseOf(inputs, opts.ops ?? [])])];
+  // A thing the action laid itself (`touched`) is never handed over in the same breath – it stays where it was
+  // laid, also in a reshuffle.
+  const laidNow = new Set(opts.touched ?? []);
+  const loose = (
+    opts.reshuffle
+      ? looseAll(inputs)
+      : [...new Set([...(opts.loose ?? []), ...looseOf(inputs, opts.ops ?? [])])]
+  ).filter((k) => !laidNow.has(k) && (!opts.looseIf || opts.looseIf(k)));
   const result = plan({
     today: deps.today,
     days: inputs.days,

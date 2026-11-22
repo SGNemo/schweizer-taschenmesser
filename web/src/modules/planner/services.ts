@@ -113,7 +113,7 @@ async function switchedOff(): Promise<boolean> {
  * `force` (the seed's first run) runs even when nothing changed; `reshuffle` lays the seed's things out once.
  */
 export function runBackground(
-  opts: { force?: boolean; reshuffle?: boolean } = {},
+  opts: { force?: boolean; reshuffle?: boolean; looseIf?: (itemKey: string) => boolean } = {},
 ): Promise<RunOutcome | undefined> {
   return enqueue(async () => {
     if ((suspended && !opts.force) || (await switchedOff())) return undefined;

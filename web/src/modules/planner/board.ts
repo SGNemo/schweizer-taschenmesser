@@ -76,7 +76,9 @@ export interface WaitingRow {
   minutes: number;
   k: number;
   of: number;
-  reason: Unplaced['reason'] | 'excluded';
+  /** `later`: laid on `date`, a day after the board's last one. */
+  reason: Unplaced['reason'] | 'excluded' | 'later';
+  date?: string;
   bumpedBy?: string[];
   entry?: PlannableEntry;
   item?: PlanItemRow;
@@ -307,6 +309,31 @@ export function buildBoard(input: BoardInput): Board {
         a.date.localeCompare(b.date) ||
         a.unitId.localeCompare(b.unitId),
     );
+  // A thing laid on a day the board does not show yet (beyond its last day) must not vanish: it is listed with the
+  // things outside the days, saying where it lies.
+  const lastShown = days.at(-1)?.date;
+  if (lastShown) {
+    const seen = new Set<string>();
+    for (const a of [...input.assignments].sort((x, y) => x.date.localeCompare(y.date))) {
+      if (a.date <= lastShown || seen.has(a.itemKey) || lateDue.has(a.itemKey) || !shown(a))
+        continue;
+      const entry = entries.get(a.itemKey);
+      if ((entry && fixedOf(entry)) || items.get(a.itemKey)?.excluded) continue;
+      seen.add(a.itemKey);
+      waiting.push({
+        unitId: a.id,
+        itemKey: a.itemKey,
+        title: titles[a.itemKey] ?? a.itemKey,
+        minutes: a.minutes,
+        k: a.k,
+        of: a.of,
+        reason: 'later',
+        date: a.date,
+        ...(entry ? { entry } : {}),
+        ...(items.get(a.itemKey) ? { item: items.get(a.itemKey) } : {}),
+      });
+    }
+  }
   const todayDay = days[0];
   const todayCount = todayDay ? new Set(todayDay.rows.map((r) => r.itemKey)).size : 0;
   return { days, waiting, late, open, todayCount };

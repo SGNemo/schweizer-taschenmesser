@@ -9368,6 +9368,9 @@ export const de = {
       emptyDay: 'Für diesen Tag ist nichts geplant.',
       onlyLate: 'Die Woche ist leer. Offen sind nur die Rechnungen unter „Frist vorbei“.',
       onlyLateThings: 'Die Woche ist leer. Offen ist nur, was unter „Frist vorbei“ steht.',
+      onlyOpen: 'Diese Woche ist leer. Was von früher offen ist, steht unter „Noch offen“.',
+      noDayNext:
+        'Deine Dinge liegen unter „Noch ohne Tag“. Über ⋯ und „Verschieben …“ legst du eins auf einen Tag.',
     },
     src: {
       task: 'ToDo',
@@ -9501,6 +9504,7 @@ export const de = {
       over: (min: string) => `${min} mehr zu tun, als Zeit frei ist`,
       horizon: 'keine freie Zeit im Planungszeitraum',
       'no-day': 'noch ohne Tag',
+      later: (day: string) => `liegt auf ${day}`,
       'too-long': 'länger als jeder Tag',
       'after-hard-due': 'erst nach der Frist möglich',
     },
@@ -9508,7 +9512,8 @@ export const de = {
       label: 'Ansicht',
       plan: 'Plan',
       open: 'Noch offen',
-      openFrom: (days: string) => `Noch offen: Dinge von ${days}`,
+      openFrom: (days: string) => `Noch offen · ${days}`,
+      since: (day: string) => `seit ${day}`,
     },
     open: {
       empty: 'Nichts offen von früher.',
@@ -9522,7 +9527,7 @@ export const de = {
       more: (n: number) => `${n} mehr`,
       done: 'Erledigt',
       later: 'Später',
-      pinned: 'Fest an diesem Tag',
+      pinned: (day: string) => `Fest am ${day}`,
       unpinned: 'Nicht mehr fest',
       laid: (day: string) => `Liegt auf ${day}`,
       excluded: 'Nicht im Plan',

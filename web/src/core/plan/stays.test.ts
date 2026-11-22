@@ -129,6 +129,25 @@ describe('the plan stays put (`loose`)', () => {
     ]);
   });
 
+  it('a handed-over thing the rules find no room for keeps the day it had – one thing, one place', () => {
+    // A full week: every day holds three hours (12 minutes left). „rest“ lies on Monday and is handed over
+    // with „not before tomorrow“ – no other day has room for its hour.
+    const laid = Array.from({ length: 7 }, (_, d) =>
+      ['x', 'y', 'z'].map((k) => [item(`${k}${d}`), addDays(MON, d)] as const),
+    ).flat();
+    const r = plan({
+      today: MON,
+      days: days(),
+      items: [...laid.map(([i]) => i), item('rest', { earliest: addDays(MON, 1) })],
+      prev: [...laid.map(([i, date]) => on(i.key, date)), on('rest', MON)],
+      loose: ['rest'],
+      settings,
+    });
+    expect(where(r).rest).toBe(MON);
+    expect(r.unplaced).toEqual([]);
+    expect(r.diff.moved).toEqual([]);
+  });
+
   it('is deterministic and stable when a proposal is taken in part', () => {
     const items = ['a', 'b', 'c', 'd', 'e', 'f'].map((k, i) => item(k, { createdAt: i }));
     const all = plan({

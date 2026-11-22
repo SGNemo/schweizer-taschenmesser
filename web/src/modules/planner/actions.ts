@@ -385,9 +385,8 @@ export async function markDone(
 }
 
 /**
- * „Später“: the thing's own date becomes the day after the one it is planned on, never before tomorrow (an
- * earliest day, never a pin) – so it leaves its day whichever day that is; a pin on the thing is lifted in the
- * same undoable step. False for a source without a date.
+ * „Später“: the thing's row moves to the day after the one it lies on, never before tomorrow. Nothing else moves and
+ * „fest“ stays with it. False for a source without a date.
  */
 export async function later(e: PlannableEntry, titles: Record<string, string>): Promise<boolean> {
   const s = await source(e.moduleId);
@@ -490,10 +489,16 @@ export const moveTo = (e: PlannableEntry, date: string, titles: Record<string, s
   act(t.planner.row.move, t.planner.toast.laid(dayName(date)), titles, () => layOn(e, date));
 
 /** „Fest an diesem Tag“ / „Nicht mehr fest“: the lock on the thing's rows. No proposal takes a thing that is fest. */
-export const setLocked = (e: PlannableEntry, locked: boolean, titles: Record<string, string>) =>
-  act(
+export async function setLocked(
+  e: PlannableEntry,
+  locked: boolean,
+  titles: Record<string, string>,
+): Promise<boolean> {
+  // The toast names the day the thing lies on („Fest am Mi“).
+  const on = (await rowsOf(itemKeyOf(e.moduleId, e.id))).map((r) => r.date).sort()[0];
+  return act(
     locked ? t.planner.row.pin : t.planner.row.unpin,
-    locked ? t.planner.toast.pinned : t.planner.toast.unpinned,
+    locked ? t.planner.toast.pinned(dayName(on ?? today())) : t.planner.toast.unpinned,
     titles,
     async () => {
       for (const r of await rowsOf(itemKeyOf(e.moduleId, e.id))) {
@@ -503,6 +508,7 @@ export const setLocked = (e: PlannableEntry, locked: boolean, titles: Record<str
       }
     },
   );
+}
 
 export const exclude = (e: PlannableEntry, titles: Record<string, string>) =>
   act(t.planner.row.exclude, t.planner.toast.excluded, titles, () =>

@@ -234,7 +234,7 @@ const cases: Case[] = [
     named: ['p3'],
     did: async () => {
       expect((await assignmentRepo.get(`${key('p3')}#0`))?.locked).toBe(true);
-      expect(useUiStore.getState().toasts.at(-1)?.message).toBe('Fest an diesem Tag');
+      expect(useUiStore.getState().toasts.at(-1)?.message).toBe('Fest am Di');
     },
   },
   {

@@ -57,6 +57,27 @@ const tierOfReason = (reason: string): number =>
   reason === 'pinned' ? 0 : reason.startsWith('deadline') ? 1 : 2;
 
 export function plan(input: PlanInput): PlanResult {
+  let result = planOnce(input);
+  if (input.loose === undefined) return result;
+  // One thing has one place: a handed-over thing the rules found no room for keeps the day it had (it is taken
+  // back out of `loose`, so the stay rule sets it there) – it must not lie on its old day and wait as well.
+  // Every round takes at least one item out, so this ends.
+  let loose = [...input.loose];
+  const had = new Set((input.prev ?? []).map((a) => a.id.slice(0, a.id.lastIndexOf('#'))));
+  for (;;) {
+    const back = new Set(
+      result.unplaced
+        .filter((u) => u.reason !== 'after-hard-due' && u.reason !== 'no-day' && had.has(u.itemKey))
+        .map((u) => u.itemKey),
+    );
+    const next = loose.filter((k) => !back.has(k));
+    if (next.length === loose.length) return result;
+    loose = next;
+    result = planOnce({ ...input, loose });
+  }
+}
+
+function planOnce(input: PlanInput): PlanResult {
   const s: PlanSettings = { ...DEFAULT_PLAN_SETTINGS, ...input.settings };
   const today = input.today;
   const last = addDays(today, s.horizonDays - 1);

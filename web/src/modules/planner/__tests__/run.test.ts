@@ -748,7 +748,7 @@ describe('council round 1', () => {
     await runsSettled();
   });
 
-  it('the seed’s first run registers only its own rows: nothing of the seed in the outbox, „entfernen“ keeps a person’s task, day and marks', async () => {
+  it('the seed’s first run lays out only its own things: nothing of the seed in the outbox, a person’s task, day and dates are left alone, also by „entfernen“', async () => {
     const { applySeed, removeSeed } = await import('@/core/seed/dev');
     await db.table('_seeds').clear();
     await modulesRow('todos', true);
@@ -766,24 +766,30 @@ describe('council round 1', () => {
       prepareApp: true,
     });
     expect(await assignmentRepo.active().count()).toBeGreaterThan(1);
-    // Only the real task's write-back and rows may be queued for sync.
+    // The seed hands only its own things to the engine: the person's task gets no row and no date, and nothing
+    // of the seed is queued for sync.
     const queued = (await db.table('_outbox').toArray()) as { collection: string; id: string }[];
-    expect(queued.length).toBeGreaterThan(0);
     expect(queued.every((o) => o.id === real.id || o.id.startsWith(`todos:${real.id}`))).toBe(true);
+    expect(
+      (await assignmentRepo.active().toArray()).some((a) => a.itemKey === `todos:${real.id}`),
+    ).toBe(false);
+    expect((await stored(real.id))!.plannedFor).toBeUndefined();
+    // The seed's pinned thing is „fest“ on its day right away (no app start needed).
+    expect((await assignmentRepo.active().toArray()).some((a) => a.locked)).toBe(true);
     // The real day row was neither overwritten nor registered.
     expect(await dayRepo.get(TODAY)).toMatchObject({ availableMin: 90 });
     expect(await db.table('_seeds').get(`planner_day|${TODAY}`)).toBeUndefined();
     await removeSeed(db, [todos, calendar, manifest]);
     await runsSettled();
-    // The real task keeps its day (nothing moves forward by itself) and its mark.
+    // The real task is as it was: no day, no mark.
     const kept = (await stored(real.id))!;
     expect(kept.title).toBe('Echt');
-    expect((kept.planMark as { date?: string } | undefined)?.date).toBe(kept.plannedFor);
+    expect(kept.plannedFor).toBeUndefined();
+    expect(kept.planMark).toBeUndefined();
     expect(await dayRepo.get(TODAY)).toMatchObject({ availableMin: 90 });
     const tasks = await db.table('todos_task').toArray();
     expect(tasks.map((x) => (x as { id: string }).id)).toEqual([real.id]);
-    const rows = (await assignmentRepo.active().toArray()).map((a) => a.itemKey);
-    expect(rows).toEqual([`todos:${real.id}`]);
+    expect(await assignmentRepo.active().count()).toBe(0);
     expect(await db.table('planner_item').count()).toBe(0);
   });
 

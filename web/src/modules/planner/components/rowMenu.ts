@@ -60,7 +60,7 @@ export function useRowMenu(ctx: {
     row: BoardRow | WaitingRow,
     date?: string,
     reason?: string,
-    opts: { tick?: boolean; late?: boolean } = {},
+    opts: { tick?: boolean; late?: boolean; open?: boolean } = {},
   ): RowMenuItem[] => {
     const e = row.entry;
     if (!e || !ctx.today) return [];
@@ -102,7 +102,8 @@ export function useRowMenu(ctx: {
       ];
     const day = date ?? ctx.today;
     const pinned = 'pinned' in row && row.pinned;
-    const laid = 'pinned' in row;
+    // A row on a passed day („Noch offen“) is not made „fest“ there – it needs a new day first.
+    const laid = 'pinned' in row && !opts.open;
     const hard = row.item?.due?.hard === true;
     // A deadline the source holds (invoice, cancellation) is not the planner's to lift or set.
     const sourceHard = e.due?.hard === true;

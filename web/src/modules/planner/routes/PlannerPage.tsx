@@ -89,6 +89,14 @@ interface Pending {
   rest?: boolean;
 }
 
+/** The days the open rows lie on, for the tab's name: up to three short day names, else „seit Do 12.“-like. */
+function openDays(rows: readonly OpenRow[]): string {
+  const dates = [...new Set(rows.map((r) => r.date))].sort();
+  return dates.length <= 3
+    ? dates.map((d) => dayName(d)).join(', ')
+    : t.planner.tabs.since(`${dayName(dates[0]!)} ${formatDay(dates[0]!, 'd.')}`);
+}
+
 export default function PlannerPage() {
   const data = useBoard(SPAN);
   // Planner hub R1 (layout `split`): field, week band and the picked day's sheet in the main column; on a wide page
@@ -395,7 +403,8 @@ export default function PlannerPage() {
       }
     }
     setText('');
-    const ok = await addFromField(value, titles, shownDate);
+    // On „Noch offen“ no day is on the sheet: the new thing lies on today (the toast names the day).
+    const ok = await addFromField(value, titles, tab === 'open' ? undefined : shownDate);
     // Nothing happened (the planner was switched off meanwhile): the text comes back.
     if (!ok) {
       setText((cur) => cur || value);
@@ -544,8 +553,9 @@ export default function PlannerPage() {
         reason=""
         whyOpen={false}
         dueClock={dueClock}
-        was={row.date}
-        menu={rowMenu(row, undefined, undefined, { tick })}
+        // Under its day's head the row need not repeat the day; among the fixed things (several days) it says it.
+        was={row.pinned ? row.date : undefined}
+        menu={rowMenu(row, undefined, undefined, { tick, open: true })}
         onDone={tick ? () => done(row) : undefined}
         onLater={
           row.entry && canAssign(row.entry.moduleId)
@@ -557,8 +567,19 @@ export default function PlannerPage() {
   };
   const openDates = [...new Set(openRows.filter((r) => !r.pinned).map((r) => r.date))].sort();
   const openFixed = openRows.filter((r) => r.pinned);
+  // A row that was moved leaves this list: the focus goes to the next row's menu (or stays on the tabs), so
+  // putting several things back one after another keeps its place.
+  const openRef = useRef<HTMLDivElement>(null);
+  const openSeen = useRef(openRows.length);
+  useEffect(() => {
+    if (tab === 'open' && openRows.length < openSeen.current) {
+      const next = openRef.current?.querySelector<HTMLElement>('[aria-haspopup="menu"]');
+      if (next && !openRef.current?.contains(document.activeElement)) next.focus();
+    }
+    openSeen.current = openRows.length;
+  }, [tab, openRows.length]);
   const openBlock = (
-    <div data-testid="planner-open">
+    <div data-testid="planner-open" ref={openRef}>
       {openRows.length === 0 ? (
         <p className={styles.reason}>{t.planner.open.empty}</p>
       ) : (
@@ -600,7 +621,10 @@ export default function PlannerPage() {
         { value: 'plan', label: t.planner.tabs.plan },
         {
           value: 'open',
-          label: openRows.length ? `${t.planner.tabs.open} •` : t.planner.tabs.open,
+          // That something is there is said in words – the days, never a count and no bare dot.
+          label: openRows.length
+            ? t.planner.tabs.openFrom(openDays(openRows))
+            : t.planner.tabs.open,
         },
       ]}
       onChange={(next) =>
@@ -634,7 +658,9 @@ export default function PlannerPage() {
   const late = board?.late ?? [];
   const overflow = data?.last?.today === data?.today ? (data?.last?.overflowMin ?? 0) : 0;
   const nothingPlanned = board !== undefined && board.days.every((d) => d.rows.length === 0);
-  const boardEmpty = nothingPlanned && waiting.length === 0 && late.length === 0;
+  // Things on passed days („Noch offen“) are no empty plan: the first-start state would say he has nothing.
+  const openCount = board?.open.length ?? 0;
+  const boardEmpty = nothingPlanned && waiting.length === 0 && late.length === 0 && openCount === 0;
 
   // The day the sheet shows: `?day=` or a tile → the pick stored today on this device → the first day that holds
   // things → today. Once shown it stays (a day does not change under the hand when its last thing is ticked).
@@ -694,7 +720,11 @@ export default function PlannerPage() {
                     const reason =
                       w.reason === 'excluded'
                         ? t.planner.row.excludedState
-                        : explainWait({ reason: w.reason, bumpedBy: w.bumpedBy }, nameOf);
+                        : w.reason === 'later'
+                          ? t.planner.wait.later(
+                              `${dayName(w.date!)} ${formatDay(w.date!, 'd.M.')}`,
+                            )
+                          : explainWait({ reason: w.reason, bumpedBy: w.bumpedBy }, nameOf);
                     return (
                       <WaitRow
                         key={w.unitId}
@@ -782,11 +812,17 @@ export default function PlannerPage() {
     <p className={styles.emptyDay} data-testid="planner-empty-day">
       {shownDay?.isToday && firstFull
         ? t.planner.sheet.dayOffNext(formatDay(firstFull.date, 'EEEE'))
-        : nothingPlanned && late.length > 0
-          ? late.every((r) => r.entry?.kind === 'invoice')
-            ? t.planner.sheet.onlyLate
-            : t.planner.sheet.onlyLateThings
-          : t.planner.sheet.emptyDay}
+        : nothingPlanned && openCount > 0
+          ? // Everything he had lies on passed days: say where it is (the tab), not that nothing is there.
+            t.planner.sheet.onlyOpen
+          : nothingPlanned && late.length > 0
+            ? late.every((r) => r.entry?.kind === 'invoice')
+              ? t.planner.sheet.onlyLate
+              : t.planner.sheet.onlyLateThings
+            : nothingPlanned && waiting.length > 0
+              ? // Nothing lies on a day yet, things wait without one: name the one next step.
+                t.planner.sheet.noDayNext
+              : t.planner.sheet.emptyDay}
     </p>
   );
 
@@ -848,7 +884,7 @@ export default function PlannerPage() {
 
           {tabs}
 
-          {showWeekLink ? (
+          {showWeekLink && tab !== 'open' ? (
             <p className={styles.weekLink} data-testid="week-check-link">
               <button type="button" className={styles.textLink} onClick={() => setChecking(true)}>
                 {t.planner.weekLink.label}
@@ -917,7 +953,9 @@ export default function PlannerPage() {
           )}
 
           {/* Not wide: the context follows the sheet in the one column. */}
-          {!wide && hasContext ? <aside aria-label={t.planner.ctx.label}>{context}</aside> : null}
+          {!wide && hasContext && tab !== 'open' ? (
+            <aside aria-label={t.planner.ctx.label}>{context}</aside>
+          ) : null}
 
           {/* Phone: the first screen is band and sheet; the plus of the bottom bar opens the field as a sheet.
               The field also stays where it was before R1, as the page's last row: without it every entry on

@@ -1,5 +1,7 @@
 import type { AfterSeedContext, SeedContext, SeedModule, SeedRows } from '@/core/seed/types';
 import { assignmentRepo, itemKeyOf, itemRepo } from './repo';
+import { today } from '@/core/time/now';
+import { migratePins } from './migrateModel';
 import { resumeRuns, runBackground, suspendRuns } from './services';
 
 /**
@@ -138,8 +140,11 @@ async function afterSeed(ctx: AfterSeedContext): Promise<{ collection: string; i
       if (seedKeys.has(key.slice(0, i))) return true;
     return false;
   };
-  // The test data is laid out once (every thing handed to the engine); afterwards it stays like any plan.
-  await runBackground({ force: true, reshuffle: true });
+  // The test data is laid out once – only the seed's own things are handed to the engine, a person's own plan
+  // stays as it is. The seed's pin („Präsentation proben“) becomes „fest“ on its day right away.
+  await runBackground({ force: true, reshuffle: true, looseIf: isSeed });
+  await migratePins(today());
+  await runBackground({ force: true });
   // Every row of a seed task – also one the service's own run wrote before this hook (re-registering is harmless),
   // and also a deleted one: on a slow device the service runs between the todos rows and the planner's own rows,
   // plans the task that is meant to stay out, and the run above takes that row away again. Its tombstone is test
