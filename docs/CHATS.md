@@ -32,11 +32,10 @@ Not stored in this file: `npm run chats:sync` prints the list from GitHub (`chat
 9. Planer-Zentrale ([planner-hub](design/planner-hub/README.md)): läuft ohne Stopp durch; ansehen: Richtung A und die zwei zurückgenommenen Entscheidungen D2/D3 (Mockups im PR-Text von #922), Reiz-Budget der Planer-Ansichten für R1. (so lassen)
 10. Austausch Handy ↔ PC ([CONCEPT §11](design/device-exchange/CONCEPT.md)): Handy holt erst beim Öffnen? (ja, v1) · nur Heimnetz? (ja) · Name „Austausch“? (ja) · Regelzeile (Paket R) mergen.
 11. „Werte ausblenden“ (DESIGN-CHECK K2): nur Kopfzahl + Zeile darunter (so gebaut, #752) oder alle Beträge der Geld-Seiten und Karten? (alle Geld-Karten, Wunsch aus Budgets; eigener kleiner PR)
-12. Planer neu gedacht ([planner-rethink](design/planner-rethink/README.md)): beantwortet, Pakete 1–7 in [PACKAGES](design/planner-rethink/PACKAGES.md); ansehen: Reiter „Noch offen“ nach Paket 3, Handy und PC gemeinsam aktualisieren. (so lassen)
 
 **Handgriffe:**
 
-- PRs: #1027 zwei Ratschen-Treffer (`checkModules`, geschützt) freigeben (ja; Ernte H25); #606 mergen, wenn grün; #542 vor dem Launch entscheiden (Dev-Preview- und Dev-Keystore-Teil offen; Repo-Secrets bis dahin unverändert).
+- PRs: #1035 (Planer Paket 1) einen Ratschen-Treffer freigeben (`e2e/a11y.spec.ts`, eine Zeile mehr; Label `stimulus-raise`), Handy und PC gemeinsam aktualisieren; #1027 zwei Ratschen-Treffer (`checkModules`, geschützt) freigeben (ja; Ernte H25); #606 mergen, wenn grün; #542 vor dem Launch entscheiden (Dev-Preview- und Dev-Keystore-Teil offen; Repo-Secrets bis dahin unverändert).
 - `ci.yml`-Patch aus #653 einspielen (`GITHUB_TOKEN` nur am Ratschen-Schritt statt im Job-`env` von `stimulus-budget`).
 - Dezember: `nemo-merge` (`meta/agents-v3/nemo-merge.json`) anlegen, Probelauf `ratchet.mjs --pr` mit Wegwerf-PR, Treffer von #640/#642 ansehen (`decisions/meta.md`).
 - Agenten v3.1: `ant apply` der sieben, `--prune` der 16 alten, dann `claude-lock.json` committen ([SETUP](meta/agents-v3/SETUP.md) §2a).
