@@ -44,16 +44,17 @@ if (missing.length > 0) {
 const publish = args.includes('--publish');
 const perPath = paths.map((p) => ({ path: p, found: walk(p) }));
 const files = perPath.flatMap((p) => p.found).map((p) => ({ name: p, data: readFileSync(p) }));
-const secrets = (process.env.AUDIT_SECRET_ENV ?? '')
+// Name/value pairs the audit searches for (values only ever compared, never printed).
+const searchFor = (process.env.AUDIT_SECRET_ENV ?? '')
   .split(',')
   .map((n) => n.trim())
   .filter(Boolean)
   .map((name) => ({ name, value: process.env[name] ?? '' }));
 // Names only from here on: nothing that holds a value goes into a message.
-const listed = secrets.map((s) => s.name);
-const configured = secrets.filter((s) => s.value.trim() !== '').map((s) => s.name);
+const listed = searchFor.map((s) => s.name);
+const configured = searchFor.filter((s) => s.value.trim() !== '').map((s) => s.name);
 
-const findings = auditFiles(files, secrets);
+const findings = auditFiles(files, searchFor);
 
 const confPath = values('--pubkey-from')[0];
 let signatures;
