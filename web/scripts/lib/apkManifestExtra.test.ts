@@ -26,6 +26,17 @@ describe('merged APK manifest – declared permissions and test builds', () => {
     ]);
   });
 
+  it('a raw protection level is read as flags; a missing one means normal', () => {
+    const rules = (attr: string) =>
+      checkMergedManifest(xml(`<permission android:name="io.example.P" ${attr} />`), allow).map(
+        (f) => f.rule,
+      );
+    expect(rules('android:protectionLevel="0x2"')).toEqual([]);
+    expect(rules('android:protectionLevel="0x12"')).toEqual([]); // signature|privileged
+    expect(rules('android:protectionLevel="0x1"')).toEqual(['permission-not-signature']);
+    expect(rules('')).toEqual(['permission-not-signature']);
+  });
+
   it('a test-only build fails', () => {
     expect(
       checkMergedManifest(xml('', 'android:testOnly="true"'), allow).map((f) => f.rule),

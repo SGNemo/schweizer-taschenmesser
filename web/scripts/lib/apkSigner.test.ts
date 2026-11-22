@@ -30,6 +30,22 @@ describe('APK signer (SC2: the dev APK never carries the release key)', () => {
     ]);
   });
 
+  it('a second signer next to the release key is not a release signature', () => {
+    expect(
+      checkApkSigner(
+        printed(STABLE_APK_CERT_SHA256) + printed(DEV).replace(/Signer #1/g, 'Signer #2'),
+        'release',
+      ).map((f) => f.rule),
+    ).toEqual(['release-apk-wrong-key']);
+  });
+
+  it('colons and upper case in the digest are read the same', () => {
+    const colons = STABLE_APK_CERT_SHA256.toUpperCase().replace(/(..)(?!$)/g, '$1:');
+    expect(checkApkSigner(printed(colons), 'dev').map((f) => f.rule)).toEqual([
+      'dev-apk-signed-with-release-key',
+    ]);
+  });
+
   it('no digest at all is a finding', () => {
     expect(checkApkSigner('DOES NOT VERIFY', 'dev').map((f) => f.rule)).toEqual(['no-signer']);
   });
