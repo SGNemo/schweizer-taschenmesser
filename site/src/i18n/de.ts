@@ -110,7 +110,7 @@ export const de = {
     },
     data: {
       h: "Und es bleibt bei dir",
-      lead: "Kein Konto, kein Nemo-Server. Was die App trotzdem ins Netz schickt, steht hier. Nichts davon geht an das Projekt. Deine Einträge verlassen das Gerät nur, wenn du es selbst auslöst: per Sync zu deinem eigenen Server oder als Daten, die du einer KI-Frage mitgibst.",
+      lead: "Kein Konto, kein Nemo-Server. Was die App trotzdem ins Netz schickt, steht hier. Nichts davon geht an das Projekt. Deine Einträge verlassen das Gerät nur, wenn du es selbst einrichtest oder auslöst: per Sync zu deinem eigenen Server oder deinen Geräten im Heimnetz, als Push-Erinnerung über deinen Server, oder als Daten, die du einer KI-Frage mitgibst.",
       link: "Alle Verbindungen, und wie du nachprüfst",
     },
     inside: {
@@ -132,12 +132,13 @@ export const de = {
       { short: false, when: "Klick auf „Öffentliche IP abfragen“", where: "api.ipify.org", what: "Die Anfrage.", off: "Nur auf Klick" },
       { short: false, when: "Lokales KI-Modell laden", where: "huggingface.co", what: "Der Download. Die Prüfsumme wird kontrolliert.", off: "Nur nach deiner Bestätigung" },
       { short: false, when: "Feeds und Kalender-Abos", where: "Die Adressen, die du einträgst", what: "Der Abruf der Adresse.", off: "Aus, bis du eine einträgst" },
-      { short: false, when: "Google und Spotify", where: "Google, Spotify (auch deren Bildserver für Cover)", what: "Google: Kalender lesen; mit dem Modul Mail deine E-Mails lesen und, wenn du es erlaubst, senden und aufräumen. Spotify: was gerade läuft, deine Playlists und Bibliothek, Steuerbefehle.", off: "Aus, bis du die Verbindung einrichtest" },
-      { short: false, when: "Karten: Karte ansehen, Ort suchen, Route berechnen", where: "OpenStreetMap (Kacheln, Nominatim, Routing, Overpass), transitous.org", what: "Der Kartenausschnitt, dein Suchbegriff, Start und Ziel der Route.", off: "Nur im Modul Karten, auf deine Eingabe" },
-      { short: false, when: "Eingebauter Browser (Windows)", where: "Die Seiten, die du öffnest; Suche: DuckDuckGo oder deine Wahl", what: "Was jeder Browser sendet: die Adresse, Cookies der Seite, dein Suchbegriff.", off: "Aus, bis du das Modul einschaltest" },
+      { short: false, when: "Google", where: "Google; bei „Bilder laden“ in einer Mail die Bildserver des Absenders", what: "Kalender lesen. Beim Import und im Modul Mail deine E-Mails lesen und, wenn du es erlaubst, senden und aufräumen.", off: "Aus, bis du die Verbindung einrichtest" },
+      { short: false, when: "Spotify", where: "Spotify (auch dessen Bildserver für Cover)", what: "Was gerade läuft, deine Playlists und Bibliothek, Steuerbefehle und was du per Klick änderst.", off: "Aus, bis du die Verbindung einrichtest" },
+      { short: false, when: "Karten: Karte ansehen, Ort suchen, Route berechnen", where: "OpenStreetMap und darauf aufbauende freie Dienste (Ortssuche, Routen, Orte in der Nähe), transitous.org", what: "Der Kartenausschnitt, dein Suchbegriff, Start und Ziel der Route.", off: "Nur im Modul Karten, auf deine Eingabe" },
+      { short: false, when: "Eingebauter Browser (Windows und Android)", where: "Die Seiten, die du öffnest; Suche: DuckDuckGo oder deine Wahl", what: "Was jeder Browser sendet: die Adresse, Cookies der Seite, dein Suchbegriff.", off: "Aus, bis du das Modul einschaltest" },
       { short: false, when: "Downloads und Torrent (Windows)", where: "Der Server der Datei; bei Torrent andere Teilnehmer, Tracker und das DHT-Netz", what: "Die Adresse der Datei. Bei Torrent deine IP-Adresse und was du lädst; geladene Teile werden zugleich angeboten.", off: "Nur auf Klick; Torrent ist aus, bis du es einschaltest" },
       { short: false, when: "Erinnerungen als Push (Browser-App)", where: "Dein eigener Server, dann der Push-Dienst deines Browsers", what: "Titel und Text der Erinnerung, verschlüsselt, wenn dein Sync verschlüsselt ist.", off: "Aus, bis du es einschaltest" },
-      { short: false, when: "Heimnetz: Abgleich, Austausch, Fernsteuerung", where: "Deine eigenen gekoppelten Geräte im selben WLAN", what: "Deine Daten, verschlüsselt, direkt von Gerät zu Gerät. Der PC meldet sich dafür im eigenen WLAN.", off: "Aus, bis du Geräte koppelst" },
+      { short: false, when: "Heimnetz: Abgleich, Austausch, Fernsteuerung", where: "Deine eigenen gekoppelten Geräte im selben WLAN", what: "Deine Daten, verschlüsselt, direkt von Gerät zu Gerät. Der PC meldet sich dafür im eigenen WLAN.", off: "Aus, bis du den Abgleich im Heimnetz einschaltest" },
       { short: true, when: "KI-Assistent", where: "Anbieter deiner Wahl", what: "Deine Frage, das Datum, die Feldnamen der Module.", off: "Aus, bis du einen Schlüssel hinterlegst" },
       { short: true, when: "Sync", where: "Dein eigener Server", what: "Deine Daten, auf Wunsch Ende-zu-Ende verschlüsselt.", off: "Aus, bis du ihn einrichtest" },
     ],
@@ -179,9 +180,9 @@ export const de = {
   // Page /daten (components/DataPage.astro).
   dataPage: {
     title: "Was ins Netz geht",
-    description: "Jede Verbindung, die Nemo aufbaut, mit Ziel, Inhalt und Schalter. Deine Einträge bleiben auf deinem Gerät.",
+    description: "Die Verbindungen, die Nemo aufbaut, mit Ziel, Inhalt und Schalter. Deine Einträge bleiben bei dir.",
     h1: "Was ins Netz geht.",
-    lead: "Deine Einträge bleiben auf deinem Gerät. Hier steht jede Verbindung, die Nemo aufbaut, und wo du sie abschaltest.",
+    lead: "Deine Einträge bleiben bei dir: auf deinem Gerät, deinen eigenen Geräten oder deinem eigenen Server. Hier stehen die Verbindungen, die Nemo aufbaut, und wo du sie abschaltest. Die vollständige Liste mit allen Einzelheiten steht in der App unter Einstellungen → Über Nemo → Rechtliches.",
     schema: {
       alt: "Schema: Innerhalb einer Linie mit der Aufschrift „Bei dir“ stehen dein PC, dein Handy und, gestrichelt, dein eigener Server. Außerhalb, unter „Internet“, stehen Update-Abfrage, Wetter und KI, jede mit dem Hinweis, wie sie ausgeschaltet ist oder wird.",
       inside: "Bei dir",

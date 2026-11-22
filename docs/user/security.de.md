@@ -11,9 +11,9 @@
 - **Downloads sind signiert:** Der Update-Inhalt ist mit dem Update-Schlüssel des Projekts signiert und wird vor dem Einspielen geprüft; die APK ist mit dem Projekt-Keystore signiert. Ein Windows-Code-Signing-Zertifikat gibt es nicht (SmartScreen-Hinweis beim ersten Start). Die App fragt einmal täglich bei GitHub nach Updates (beim Start und beim Wechsel in den Vordergrund); GitHub sieht dabei deine IP-Adresse. Abschaltbar unter Einstellungen → Updates.
 - **Keine Telemetrie, keine Werbung.**
 
-### Externe Dienste ohne Nutzerdaten
+### Verbindungen, die die App aufbaut
 
-Diese Verbindungen baut die App nur in den genannten Fällen auf; außer deiner IP-Adresse und der Anfrage selbst wird nichts übertragen:
+Diese Verbindungen baut die App nur in den genannten Fällen auf. Wo eine Zeile nichts anderes nennt, werden nur deine IP-Adresse und die Anfrage selbst übertragen:
 
 - **GitHub** – täglicher Update-Check (abschaltbar) und Download von Updates.
 - **frankfurter.dev** (Kurse der EZB) – beim Öffnen des Währungsrechners.
@@ -21,10 +21,11 @@ Diese Verbindungen baut die App nur in den genannten Fällen auf; außer deiner 
 - **api.ipify.org** – nur auf Klick auf „Öffentliche IP abfragen“ (Dieser PC → System).
 - **huggingface.co** – Download des lokalen KI-Modells, erst nach deiner Bestätigung (Prüfsumme wird kontrolliert).
 - **Feed- und Kalender-Adressen**, die du abonniert hast – in der App direkt, im Browser über den Proxy deines eigenen Sync-Servers.
-- **Google** und **Spotify** – nur mit einer von dir eingerichteten Verbindung (Google: Kalender; mit dem Modul Mail deine E-Mails samt Text und Anhängen, Senden und Aufräumen nur mit den Zusatzrechten. Spotify: was gerade läuft, deine Playlists und Bibliothek, Steuerbefehle; Titel und Interpret bleiben auf diesem Gerät); **KI-Anbieter** – nur mit einem von dir hinterlegten Schlüssel.
-- **Karten** (OpenStreetMap: Kacheln, Nominatim, Routing, Overpass; transitous.org) – nur im Modul Karten: der Kartenausschnitt, dein Suchbegriff, Start und Ziel einer Route.
-- **Eingebauter Browser, Downloads, Torrent** (Windows, jeweils aus, bis du sie einschaltest) – die Seiten und Dateien, die du anforderst; Torrent zeigt deine IP-Adresse anderen Teilnehmern, Trackern und dem DHT-Netz und bietet geladene Teile zugleich an.
-- **Heimnetz** – Abgleich, Austausch und Fernsteuerung zwischen deinen eigenen gekoppelten Geräten im selben WLAN, verschlüsselt, ohne Server; der PC meldet sich dafür im eigenen WLAN.
+- **Google** und **Spotify** – nur mit einer von dir eingerichteten Verbindung (Google: Kalender; beim Import von Rechnungen und im Modul Mail deine E-Mails – die Liste sowie Text und Anhänge der Mails, die du öffnest; Senden und Aufräumen nur, wenn du „E-Mails senden“ oder „E-Mails verwalten“ einschaltest; „Bilder laden“ in einer Mail ruft die Bildadressen ab, die der Absender gewählt hat. Spotify: was gerade läuft, deine Playlists und Bibliothek, Steuerbefehle und was du per Klick änderst; Titel und Interpret bleiben auf diesem Gerät); **KI-Anbieter** – nur mit einem von dir hinterlegten Schlüssel.
+- **Karten** (OpenStreetMap und darauf aufbauende freie Dienste für Ortssuche, Routen und Orte in der Nähe; transitous.org) – nur im Modul Karten: der Kartenausschnitt, dein Suchbegriff, Start und Ziel einer Route.
+- **Eingebauter Browser** (Windows und Android, aus, bis du das Modul einschaltest), **Downloads** (Windows, nur auf deinen Klick) und **Torrent** (Windows, aus, bis du es einschaltest) – die Seiten und Dateien, die du anforderst; Torrent zeigt deine IP-Adresse anderen Teilnehmern, Trackern und dem DHT-Netz und bietet geladene Teile zugleich an.
+- **Heimnetz** – Abgleich, Austausch und Fernsteuerung zwischen deinen eigenen gekoppelten Geräten im selben WLAN, verschlüsselt, ohne Server; der PC meldet sich dafür im eigenen WLAN, sobald du den Abgleich im Heimnetz einschaltest.
+- **Erinnerungen als Push** (Browser-App, aus, bis du es einschaltest) – Titel und Text deiner Erinnerungen gehen an deinen eigenen Sync-Server und von dort an den Push-Dienst deines Browsers; verschlüsselt, wenn dein Sync verschlüsselt ist.
 
 ### Sync-Server absichern
 

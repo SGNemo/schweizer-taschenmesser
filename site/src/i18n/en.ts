@@ -104,7 +104,7 @@ export const en = {
     },
     data: {
       h: "And it stays with you",
-      lead: "No account, no Nemo server. What the app still sends online is listed here. None of it goes to the project. Your entries leave the device only when you trigger it yourself: through sync to your own server, or as data you give an AI question.",
+      lead: "No account, no Nemo server. What the app still sends online is listed here. None of it goes to the project. Your entries leave the device only when you set it up or trigger it yourself: through sync to your own server or your devices in the home network, as a push reminder through your server, or as data you give an AI question.",
       link: "Every connection, and how to check",
     },
     inside: {
@@ -124,12 +124,13 @@ export const en = {
       { short: false, when: "Clicking “Look up public IP”", where: "api.ipify.org", what: "The request.", off: "Only on click" },
       { short: false, when: "Loading the local AI model", where: "huggingface.co", what: "The download. The checksum is verified.", off: "Only after you confirm" },
       { short: false, when: "Feeds and calendar subscriptions", where: "The addresses you enter", what: "Fetching the address.", off: "Off until you enter one" },
-      { short: false, when: "Google and Spotify", where: "Google, Spotify (including their image servers for covers)", what: "Google: reading the calendar; with the Mail module reading your emails and, if you allow it, sending and tidying up. Spotify: what is playing, your playlists and library, play controls.", off: "Off until you set up the connection" },
-      { short: false, when: "Maps: viewing the map, searching a place, planning a route", where: "OpenStreetMap (tiles, Nominatim, routing, Overpass), transitous.org", what: "The map section, your search text, start and destination of the route.", off: "Only in the Maps module, when you ask" },
-      { short: false, when: "Built-in browser (Windows)", where: "The pages you open; search: DuckDuckGo or your choice", what: "What every browser sends: the address, the page's cookies, your search text.", off: "Off until you switch the module on" },
+      { short: false, when: "Google", where: "Google; with “Load images” in a mail the sender’s image servers", what: "Reading the calendar. During import and in the Mail module reading your emails and, if you allow it, sending and tidying up.", off: "Off until you set up the connection" },
+      { short: false, when: "Spotify", where: "Spotify (and its image servers for covers)", what: "What is playing, your playlists and library, play controls and what you change with a click.", off: "Off until you set up the connection" },
+      { short: false, when: "Maps: viewing the map, searching a place, planning a route", where: "OpenStreetMap and free services built on it (place search, routes, places nearby), transitous.org", what: "The map section, your search text, start and destination of the route.", off: "Only in the Maps module, when you ask" },
+      { short: false, when: "Built-in browser (Windows and Android)", where: "The pages you open; search: DuckDuckGo or your choice", what: "What every browser sends: the address, the page's cookies, your search text.", off: "Off until you switch the module on" },
       { short: false, when: "Downloads and torrent (Windows)", where: "The file's server; with torrent other peers, trackers and the DHT network", what: "The file's address. With torrent your IP address and what you load; loaded parts are offered to others at the same time.", off: "Only on click; torrent is off until you switch it on" },
       { short: false, when: "Reminders as push (browser app)", where: "Your own server, then your browser's push service", what: "Title and text of the reminder, encrypted when your sync is encrypted.", off: "Off until you switch it on" },
-      { short: false, when: "Home network: sync, exchange, remote control", where: "Your own paired devices in the same Wi-Fi", what: "Your data, encrypted, straight from device to device. For this the PC announces itself in your own Wi-Fi.", off: "Off until you pair devices" },
+      { short: false, when: "Home network: sync, exchange, remote control", where: "Your own paired devices in the same Wi-Fi", what: "Your data, encrypted, straight from device to device. For this the PC announces itself in your own Wi-Fi.", off: "Off until you switch on home-network sync" },
       { short: true, when: "AI assistant", where: "A provider you choose", what: "Your question, the date, the field names of the modules.", off: "Off until you store a key" },
       { short: true, when: "Sync", where: "Your own server", what: "Your data, end-to-end encrypted if you want.", off: "Off until you set it up" },
     ],
@@ -169,9 +170,9 @@ export const en = {
   },
   dataPage: {
     title: "What goes online",
-    description: "Every connection Nemo makes, with destination, content and switch. Your entries stay on your device.",
+    description: "The connections Nemo makes, with destination, content and switch. Your entries stay with you.",
     h1: "What goes online.",
-    lead: "Your entries stay on your device. Here is every connection Nemo makes, and where you switch it off.",
+    lead: "Your entries stay with you: on your device, your own devices or your own server. Here are the connections Nemo makes, and where you switch them off. The full list with every detail is in the app under Settings → About Nemo → Legal.",
     schema: {
       alt: "Diagram: inside a line labelled “With you” are your PC, your phone and, dashed, your own server. Outside, under “Internet”, are update check, weather and AI, each with a note on how it is or gets switched off.",
       inside: "With you",

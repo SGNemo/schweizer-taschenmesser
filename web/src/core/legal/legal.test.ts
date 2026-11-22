@@ -54,8 +54,10 @@ describe('data flows', () => {
     const en = JSON.stringify(dataFlows(tLegal.en).find((f) => f.id === 'google'));
     expect(en).not.toContain('never the content');
     expect(en).toContain('text and attachments');
-    expect(JSON.stringify(tLegal.de)).not.toContain('Köpfe von E-Mails');
-    expect(JSON.stringify(tLegal.en)).not.toContain('email headers');
+    // the import in the setup assistant reads mail lines without the Mail module: both uses are named
+    expect(text('google')).toContain('Import von Rechnungen und Abos');
+    expect(text('google')).toContain('Modul „Mail“');
+    expect(text('sync')).toContain('Heimnetz');
     expect(text('ai-cloud')).toContain('Nie deine Einträge');
     expect(text('update')).toContain('Automatisch nach Updates suchen');
   });

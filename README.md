@@ -170,8 +170,8 @@ More detail, including the browser (PWA) and moving from another app: [Installat
 ## Privacy in short
 
 - **Stored locally.** Data lives in your device’s database. No account, no Nemo cloud service.
-- **Sync is optional.** Only through a server you run yourself (Docker or Node), end-to-end encrypted if you want.
-- **Only what you set up leaves the device.** Update check (GitHub, can be switched off), AI providers, Google and Spotify connections, calendar subscriptions, maps (tiles, place search, routes), weather (only with a chosen place), feed previews (on click), currency rates, downloads, model download. What is sent and when: in the app under Settings → About Nemo → Legal and in [DATA-FLOWS](docs/legal/DATA-FLOWS.md).
+- **Sync is optional.** Through a server you run yourself (Docker or Node), end-to-end encrypted if you want, or in your home network straight between your paired devices.
+- **Only what you set up leaves the device.** Update check (GitHub, on by default, can be switched off), AI providers, Google and Spotify connections, calendar subscriptions, maps (tiles, place search, routes), weather (only with a chosen place), feed previews (on click), currency rates, the built-in browser, downloads and torrent, push reminders through your own server, home-network sync, model download. What is sent and when: in the app under Settings → About Nemo → Legal and in [DATA-FLOWS](docs/legal/DATA-FLOWS.md).
 - **Never your data to AI.** The assistant only sends your question, the date and field names, never entries. The only exceptions are ones you trigger yourself: attaching a module’s data in the chat (with a preview) or granting an AI read access through the local interface. The password vault (Argon2id, AES-256, one-time codes) is completely invisible to AI, search and import.
 - **Signed updates.** Every update is checked against the project’s key before it is applied. Details: [Security](docs/user/security.md).
 

@@ -11,9 +11,9 @@
 - **Downloads are signed:** the update payload is signed with the project's update key and checked before it is applied; the APK is signed with the project keystore. There is no Windows code-signing certificate (SmartScreen notice on first start). The app asks GitHub for updates once a day (on start and when it returns to the foreground); GitHub sees your IP address. Switch it off under Settings → Updates.
 - **No telemetry, no ads.**
 
-### External services without user data
+### Connections the app opens
 
-The app opens these connections only in the cases named; apart from your IP address and the request itself nothing is transmitted:
+The app opens these connections only in the cases named. Where a line names nothing else, only your IP address and the request itself are transmitted:
 
 - **GitHub** – daily update check (can be switched off) and update downloads.
 - **frankfurter.dev** (ECB rates) – when the currency converter is opened.
@@ -21,10 +21,11 @@ The app opens these connections only in the cases named; apart from your IP addr
 - **api.ipify.org** – only on clicking "Öffentliche IP abfragen" (Dieser PC → System).
 - **huggingface.co** – download of the local AI model, only after your confirmation (checksum verified).
 - **Feed and calendar addresses** you subscribed to – directly in the app, in the browser through the proxy of your own sync server.
-- **Google** and **Spotify** – only with a connection you set up (Google: calendar; with the Mail module your emails including text and attachments, sending and tidying up only with the extra permissions. Spotify: what is playing, your playlists and library, play controls; title and artist stay on this device); **AI providers** – only with a key you stored.
-- **Maps** (OpenStreetMap tiles, Nominatim, routing, Overpass; transitous.org) – only in the Maps module: the map section, your search text, start and destination of a route.
-- **Built-in browser, downloads, torrent** (Windows, each off until you switch it on) – the pages and files you ask for; torrent shows your IP address to other peers, trackers and the DHT network and offers loaded parts to others.
-- **Home network** – sync, exchange and remote control between your own paired devices in the same Wi-Fi, encrypted, without any server; the PC announces itself in your own Wi-Fi for this.
+- **Google** and **Spotify** – only with a connection you set up (Google: calendar; during the import of bills and in the Mail module your emails – the list, and text and attachments of the mails you open; sending and tidying up only if you switch on “Send mail” or “Manage mail”; “Load images” in a mail fetches the image addresses the sender chose. Spotify: what is playing, your playlists and library, play controls and what you change with a click; title and artist stay on this device); **AI providers** – only with a key you stored.
+- **Maps** (OpenStreetMap and free services built on it for place search, routes and places nearby; transitous.org) – only in the Maps module: the map section, your search text, start and destination of a route.
+- **Built-in browser** (Windows and Android, off until you switch the module on), **downloads** (Windows, only on your click) and **torrent** (Windows, off until you switch it on) – the pages and files you ask for; torrent shows your IP address to other peers, trackers and the DHT network and offers loaded parts to others.
+- **Home network** – sync, exchange and remote control between your own paired devices in the same Wi-Fi, encrypted, without any server; the PC announces itself in your own Wi-Fi once you switch on home-network sync.
+- **Reminders as push** (browser app, off until you switch it on) – title and text of your reminders go to your own sync server and from there to your browser's push service; encrypted when your sync is encrypted.
 
 ### Securing the sync server
 
