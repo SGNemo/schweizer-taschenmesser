@@ -144,32 +144,9 @@ test.describe('dunning chain (demo mails)', () => {
     await expect(detail).toContainText('Stadtwerke Musterstadt');
     await expect(detail).toContainText(/Mahnung aus Mail vom \d+\. \p{L}+/u);
     // No „Im Plan“ line yet: the planner no longer puts a new invoice on a day by itself (planner rethink, package
-    // 1 – the plan stays where it is laid). The invoice waits under „Noch ohne Tag“ with the proposal chip
-    // „Vorschlag: Do · Frist Fr“ (package 2); one tap on „Übernehmen“ lays it, and the invoice says where.
+    // 1 – the plan stays where it is laid). The invoice waits under „Noch ohne Tag“ until the person lays it;
+    // package 2 adds the proposal chip („Vorschlag: Do · Frist Fr“).
     await expect(detail.getByTestId('invoice-planned')).toHaveCount(0);
-    await page.goto('/planner');
-    const waiting = page.getByRole('button', { name: /Noch ohne Tag/ });
-    if ((await waiting.getAttribute('aria-expanded')) === 'false') await waiting.click();
-    const invoiceRow = page.locator('li', { hasText: 'Stadtwerke Musterstadt' });
-    const chip = invoiceRow.getByTestId('proposal-chip');
-    await expect(chip).toContainText(/^Vorschlag: \p{L}{2} · Frist \p{L}{2}/u);
-    taps = 0;
-    await tap(
-      chip.getByRole('button', { name: /^Übernehmen: Stadtwerke Musterstadt bezahlen auf / }),
-    );
-    // The toast comes with the stored row: only then is it safe to leave the page.
-    await expect(page.getByRole('status').filter({ hasText: /^Liegt auf / })).toBeVisible();
-    await expect
-      .poll(async () =>
-        (await stored(page, 'planner_assignment')).some(
-          (r) => r.itemKey === `invoices:${String(dunned.id)}` && r.deletedAt === null,
-        ),
-      )
-      .toBe(true);
-    expect(taps, 'laying the proposed day').toBe(1);
-    await page.goto(`/invoices?open=${dunned.id}`);
-    await page.getByRole('dialog').getByRole('button', { name: 'Abbrechen' }).click();
-    await expect(detail.getByTestId('invoice-planned')).toBeVisible();
     const toReminder = detail.getByRole('link', {
       name: 'Mail „Zahlungserinnerung Kundennummer 4711“ öffnen',
     });

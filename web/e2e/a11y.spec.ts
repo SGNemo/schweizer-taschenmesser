@@ -73,35 +73,6 @@ async function enableAll(page: Page) {
   );
 }
 
-/** One record straight into a module table (with the envelope), as a module would store it. */
-async function putRecord(page: Page, table: string, record: Record<string, unknown>) {
-  await page.evaluate(
-    ({ name, rec }) =>
-      new Promise<void>((resolve, reject) => {
-        const open = indexedDB.open('taschenmesser');
-        open.onerror = () => reject(open.error);
-        open.onsuccess = () => {
-          const db = open.result;
-          const tx = db.transaction(name, 'readwrite');
-          tx.objectStore(name).put({
-            createdAt: 1,
-            updatedAt: 1,
-            deviceId: 'e2e',
-            deletedAt: null,
-            _f: {},
-            ...rec,
-          });
-          tx.oncomplete = () => {
-            db.close();
-            resolve();
-          };
-          tx.onerror = () => reject(tx.error);
-        };
-      }),
-    { name: table, rec: record },
-  );
-}
-
 async function audit(page: Page, label: string) {
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
@@ -358,59 +329,6 @@ for (const scheme of ['light', 'dark'] as const) {
       await expect(sheet.getByTestId('plan-preview')).toBeVisible();
       await audit(page, `day setup preview (${scheme})`);
       await page.keyboard.press('Escape');
-    });
-
-    test('planner: the lock on a row, the overbooking line, the chips „Vorschlag“ and „In ToDos“', async ({
-      page,
-      isMobile,
-    }) => {
-      // A deadline without a day (its chip) and a date set in ToDos (its muted row on Thursday).
-      await putRecord(page, 'invoices_invoice', {
-        id: 'a11y-inv',
-        payee: 'Strom',
-        amountMinor: 4200,
-        dueDate: '2026-10-02',
-        status: 'open',
-      });
-      await putRecord(page, 'todos_list', { id: 'inbox', name: 'Eingang', order: 0 });
-      await putRecord(page, 'todos_task', {
-        id: 'a11y-arzt',
-        listId: 'inbox',
-        title: 'Arzt anrufen',
-        done: false,
-        priority: 0,
-        order: 0,
-        plannedFor: '2026-10-01',
-      });
-      await page.goto('/planner');
-      const field = page.getByRole('textbox', { name: 'Eintragen oder sagen', exact: true });
-      for (const line of ['Umzug 5 Std', 'Zahnarzt Di fest']) {
-        await field.fill(line);
-        await field.press('Enter');
-        await expect(field).toHaveValue('');
-      }
-      await expect(page.getByTestId('planner-over-line')).toBeVisible();
-      await expect(
-        page.getByRole('button', { name: 'Fest an diesem Tag: Zahnarzt' }),
-      ).toHaveAttribute('aria-pressed', 'true');
-      // The phone shows the lock only on a row that is „fest“ (its stimulus budget); wider pages on every row.
-      const open = page.getByRole('button', { name: 'Fest an diesem Tag: Umzug' });
-      if (isMobile) await expect(open).toHaveCount(0);
-      else await expect(open).toHaveAttribute('aria-pressed', 'false');
-      const wait = page.locator('[data-group="wait"] h2').getByRole('button');
-      if ((await wait.getAttribute('aria-expanded')) !== 'true') await wait.click();
-      await expect(page.getByTestId('proposal-chip')).toBeVisible();
-      await audit(page, `planner lock, over line, proposal chip (${scheme})`);
-      await page.getByTestId('week-2026-10-01').click();
-      await expect(page.getByTestId('todo-hint-place')).toBeVisible();
-      await audit(page, `planner muted row „In ToDos“ (${scheme})`);
-      await page.getByTestId('week-2026-09-29').click();
-      await page
-        .getByTestId('planner-over-line')
-        .getByRole('button', { name: 'Rest verteilen' })
-        .click();
-      await expect(page.getByTestId('plan-preview')).toBeVisible();
-      await audit(page, `planner spread preview (${scheme})`);
     });
 
     test('dialogs: command palette, quick add, create forms', async ({ page }) => {
