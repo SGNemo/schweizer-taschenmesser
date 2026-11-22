@@ -444,17 +444,21 @@ pub async fn lan_client_request<R: Runtime>(
 /// hub and key. If the PC was not reachable it keeps listing this device until it is unpaired there.
 #[tauri::command]
 pub async fn lan_client_unpair<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        let state = app.state::<LanClient>();
-        // held throughout, so no request reopens a session in between
-        let mut link = state.link.lock().map_err(|_| "internal")?;
-        link.close();
-        tell_hub_goodbye(&app);
-        forget(&app);
-        Ok(())
-    })
-    .await
-    .map_err(|_| "internal".to_owned())?
+    tauri::async_runtime::spawn_blocking(move || unpair_now(&app))
+        .await
+        .map_err(|_| "internal".to_owned())?
+}
+
+/// The body of `lan_client_unpair`, shared with "Alle Daten löschen" (`crate::device_wipe`);
+/// blocking. A device that was never paired only has nothing to forget.
+pub(crate) fn unpair_now<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {
+    let state = app.state::<LanClient>();
+    // held throughout, so no request reopens a session in between
+    let mut link = state.link.lock().map_err(|_| "internal")?;
+    link.close();
+    tell_hub_goodbye(app);
+    forget(app);
+    Ok(())
 }
 
 #[cfg(test)]

@@ -51,7 +51,33 @@ fn journal_path(app: &AppHandle) -> Result<PathBuf, String> {
         .map_err(|_| "internal".to_string())
 }
 
+/// What "Alle Daten löschen" did with the PC-care journal.
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) enum JournalWipe {
+    Removed,
+    /// At least one change can still be undone: the journal is the only way back, so it stays.
+    KeptForUndo,
+}
+
 impl PcCare {
+    /// "Alle Daten löschen": removes the journal only when nothing in it can be undone any more
+    /// (it holds the old system values, no personal data; deleting it would make the PC's
+    /// changes permanent). An unreadable journal is left alone (error).
+    pub(crate) fn wipe(&self, app: &AppHandle) -> Result<JournalWipe, String> {
+        let path = journal_path(app)?;
+        if !path.exists() {
+            return Ok(JournalWipe::Removed);
+        }
+        let open = self.with(app, |j| Ok(j.views().iter().any(|v| v.can_undo)))?;
+        if open {
+            return Ok(JournalWipe::KeptForUndo);
+        }
+        let mut slot = self.journal.lock().map_err(|_| "internal")?;
+        *slot = None;
+        crate::device_wipe::remove_file(&path)?;
+        Ok(JournalWipe::Removed)
+    }
+
     /// Runs `f` with the journal of this machine.
     pub fn with<T>(
         &self,

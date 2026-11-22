@@ -637,23 +637,28 @@ pub fn browser_clear_data(
     state: State<'_, BrowserState>,
 ) -> Result<(), String> {
     ensure_main(&webview)?;
+    clear_all(&app, &state);
+    Ok(())
+}
+
+/// The body of `browser_clear_data`, shared with "Alle Daten löschen" (`crate::device_wipe`).
+pub(crate) fn clear_all(app: &AppHandle, state: &BrowserState) {
     let ids: Vec<u32> = state.lock().tabs.keys().copied().collect();
     for id in &ids {
-        if let Ok(wv) = tab_webview(&app, *id) {
+        if let Ok(wv) = tab_webview(app, *id) {
             let _ = wv.clear_all_browsing_data();
         }
     }
     for id in ids {
-        if let Ok(wv) = tab_webview(&app, id) {
+        if let Ok(wv) = tab_webview(app, id) {
             let _ = wv.close();
         }
     }
     state.lock().tabs.clear();
     // Best effort: files may stay locked until the last tab process ends; the data was cleared above.
-    if let Some(dir) = profile_dir(&app) {
+    if let Some(dir) = profile_dir(app) {
         let _ = std::fs::remove_dir_all(dir);
     }
-    Ok(())
 }
 
 /// Called for every request a tab makes (Windows hook): `true` = stop it. Third-party hosts that were

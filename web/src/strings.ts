@@ -96,6 +96,14 @@ export const de = {
       dialogTitle: 'Alle Daten auf diesem Gerät löschen?',
       warning:
         'Das lässt sich nicht rückgängig machen. Lege vorher ein Backup an (Sync & Backup), wenn du die Daten noch brauchst.',
+      alsoAll:
+        'Ebenfalls weg: Codes für „Mit Partner teilen“ und die Push-Erinnerungen dieses Geräts beim Sync-Server.',
+      alsoDesktop:
+        'Auf diesem PC außerdem: Heimnetz-Sync (gekoppelte Geräte, Fernsteuerung, Austausch, Programmliste, Schlüssel), die Liste der Downloads und Torrents (heruntergeladene Dateien bleiben), die Daten des eingebauten Browsers, das Fehlerprotokoll und die Anmeldung der Browser-Erweiterung. Die Rückgängig-Liste der PC-Pflege bleibt, solange sich dort noch etwas zurücknehmen lässt – nimm Änderungen vorher dort zurück, wenn du sie nicht behalten willst.',
+      alsoAndroid:
+        'Auf diesem Handy außerdem: die Kopplung mit dem PC und die vom PC empfangenen Nachrichten und Links.',
+      models: 'Auch heruntergeladene KI-Modelle löschen',
+      modelsHint: 'Die Dateien sind groß. Ohne Haken bleiben sie für später.',
       confirm: 'Endgültig löschen',
     },
     licenses: 'Lizenzhinweise',

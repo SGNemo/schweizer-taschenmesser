@@ -51,6 +51,7 @@ import { createShare } from './share';
 import { createLocalModel } from './localModel';
 import { createBrowser } from './browser';
 import { createCustomTabs } from './customTabs';
+import { createDeviceWipe } from './deviceWipe';
 import { createLaunch } from './launch';
 import { createDownloads } from './downloads';
 import { createTorrent } from './torrent';
@@ -226,6 +227,7 @@ export async function createTauriPlatform(): Promise<PlatformService> {
     exchange: createExchange(kind === 'desktop' ? 'pc' : kind === 'android' ? 'phone' : null),
     lanClient: createLanClient(kind === 'android' || kind === 'desktop'),
     lanWatch: createLanWatch(kind === 'android'),
+    deviceWipe: createDeviceWipe(kind === 'android' || kind === 'desktop'),
     disk: createDisk(kind === 'desktop'),
     system: createSystem(kind === 'desktop'),
     browser: createBrowser(kind === 'desktop'),

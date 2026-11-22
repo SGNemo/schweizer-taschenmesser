@@ -10,6 +10,7 @@ mod browser;
 mod browser_win;
 #[cfg(desktop)]
 mod capture;
+mod device_wipe;
 #[cfg(desktop)]
 mod disk;
 #[cfg(desktop)]
@@ -247,6 +248,7 @@ pub fn run() {
             lan_client::lan_client_pair_cancel,
             lan_client::lan_client_request,
             lan_client::lan_client_unpair,
+            device_wipe::desktop::device_wipe,
             local_api::local_api_start,
             local_api::local_api_stop,
             local_api::local_api_set_tokens,
@@ -330,6 +332,7 @@ pub fn run() {
         lan_client::lan_client_pair_cancel,
         lan_client::lan_client_request,
         lan_client::lan_client_unpair,
+        device_wipe::mobile::device_wipe,
         remote_client::remote_client_open,
         remote_client::remote_client_send,
         remote_client::remote_client_text,

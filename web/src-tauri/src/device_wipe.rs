@@ -1,0 +1,184 @@
+//! "Alle Daten auf diesem Gerät löschen", native part: what the app keeps outside the web view's
+//! database. The web app calls `device_wipe` once, before it deletes its database
+//! (`web/src/core/reset/device.ts`); only the `main` web view may call it, and it takes no path:
+//! every folder comes from the app's own data folder.
+//!
+//! Every step runs even when an earlier one failed; the answer names the steps that failed (and
+//! what was kept on purpose), never a path or a value.
+//!
+//! Desktop: the home-network hub first (listener and sessions down, `lan-sync/` and both keystore
+//! entries gone – an earlier paired phone is no longer trusted, whoever uses the PC next finds no
+//! `hub.db` or data key), the device side of a pairing with another PC, the downloads list,
+//! the torrent engine and its state, the built-in browser's profile, the PC-care journal (only when
+//! nothing can be undone any more), `logs/panic.log`, the browser extension's host registration,
+//! and the local AI models when the user ticked them. Android: the pairing with the PC
+//! (`lan-client:` entries; the PC is told once if it is reachable) and the exchange inbox.
+
+use serde::Serialize;
+use std::path::Path;
+
+#[derive(Debug, Default, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct WipeReport {
+    /// Steps that did not finish (ids as in the module comment of `device.ts`).
+    pub failed: Vec<&'static str>,
+    /// Steps that left something on purpose (`pc-care`: changes that can still be undone).
+    pub kept: Vec<&'static str>,
+}
+
+impl WipeReport {
+    fn step(&mut self, id: &'static str, result: Result<(), String>) {
+        if result.is_err() {
+            self.failed.push(id);
+        }
+    }
+}
+
+/// Removes a file; one that is not there counts as removed.
+pub(crate) fn remove_file(path: &Path) -> Result<(), String> {
+    match std::fs::remove_file(path) {
+        Ok(()) => Ok(()),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(_) => Err("io".to_owned()),
+    }
+}
+
+/// Removes a folder with everything in it; one that is not there counts as removed.
+pub(crate) fn remove_dir(path: &Path) -> Result<(), String> {
+    match std::fs::remove_dir_all(path) {
+        Ok(()) => Ok(()),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(_) => Err("io".to_owned()),
+    }
+}
+
+#[cfg(desktop)]
+pub(crate) mod desktop {
+    use super::*;
+    use tauri::{AppHandle, Manager as _, Webview};
+
+    #[tauri::command]
+    pub async fn device_wipe(
+        app: AppHandle,
+        webview: Webview,
+        models: bool,
+    ) -> Result<WipeReport, String> {
+        if webview.label() != "main" {
+            return Err("forbidden".into());
+        }
+        let mut report = WipeReport::default();
+        // The torrent engine is async; everything else blocks and runs off the async runtime.
+        report.step("torrent", crate::torrent::wipe(&app).await);
+        tauri::async_runtime::spawn_blocking(move || {
+            run_blocking(&app, models, &mut report);
+            report
+        })
+        .await
+        .map_err(|_| "internal".to_owned())
+    }
+
+    fn run_blocking(app: &AppHandle, models: bool, report: &mut WipeReport) {
+        let dir = crate::lan_sync::lan_dir_path(app);
+        report.step(
+            "lan-hub",
+            crate::lan_sync::wipe_hub(&crate::lan_sync::AppHub(app), dir.as_deref())
+                .map_err(|_| "failed".to_owned()),
+        );
+        report.step("lan-client", crate::lan_client::unpair_now(app));
+        report.step("downloads", crate::downloads::wipe(app));
+        crate::browser::clear_all(app, &app.state::<crate::browser::BrowserState>());
+        match app.state::<crate::optimize::PcCare>().wipe(app) {
+            Ok(crate::optimize::JournalWipe::Removed) => {}
+            Ok(crate::optimize::JournalWipe::KeptForUndo) => report.kept.push("pc-care"),
+            Err(_) => report.failed.push("pc-care"),
+        }
+        report.step("panic-log", panic_log(app));
+        report.step("native-messaging", crate::vault_bridge::wipe(app));
+        if models {
+            report.step(
+                "models",
+                crate::local_llm::models_dir(app).map_or(Ok(()), |d| remove_dir(&d)),
+            );
+        }
+    }
+
+    fn panic_log(app: &AppHandle) -> Result<(), String> {
+        let Some(dir) = crate::capture::app_data_folder(app) else {
+            return Ok(());
+        };
+        let logs = dir.join("logs");
+        remove_file(&logs.join("panic.log"))?;
+        remove_file(&logs.join("panic.log.1"))
+    }
+}
+
+// The steps are compiled in tests too, so the phone's part is type-checked on every desktop CI run;
+// the command itself exists only on the phone (one `device_wipe` per build).
+#[cfg(any(mobile, test))]
+#[cfg_attr(test, allow(dead_code))]
+pub(crate) mod mobile {
+    use super::*;
+    use tauri::{AppHandle, Runtime};
+
+    #[cfg(mobile)]
+    #[tauri::command]
+    pub async fn device_wipe<R: Runtime>(
+        app: AppHandle<R>,
+        webview: tauri::Webview<R>,
+        models: bool,
+    ) -> Result<WipeReport, String> {
+        let _ = models; // no local models on the phone
+        if webview.label() != "main" {
+            return Err("forbidden".into());
+        }
+        tauri::async_runtime::spawn_blocking(move || steps(&app))
+            .await
+            .map_err(|_| "internal".to_owned())
+    }
+
+    /// Blocking: the pairing with the PC (told once if reachable), then the exchange inbox.
+    pub(crate) fn steps<R: Runtime>(app: &AppHandle<R>) -> WipeReport {
+        let mut report = WipeReport::default();
+        report.step("lan-client", crate::lan_client::unpair_now(app));
+        report.step("exchange-inbox", crate::exchange_client::wipe(app));
+        report
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_failed_step_is_named_and_the_rest_still_counts() {
+        let mut r = WipeReport::default();
+        r.step("lan-hub", Err("x".into()));
+        r.step("downloads", Ok(()));
+        r.step("panic-log", Err("x".into()));
+        assert_eq!(r.failed, ["lan-hub", "panic-log"]);
+    }
+
+    #[test]
+    fn missing_files_and_folders_count_as_removed() {
+        let d = std::env::temp_dir().join(format!("nemo-device-wipe-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&d);
+        assert_eq!(remove_dir(&d), Ok(()));
+        assert_eq!(remove_file(&d.join("x.json")), Ok(()));
+        std::fs::create_dir_all(d.join("sub")).unwrap();
+        std::fs::write(d.join("sub").join("a"), b"x").unwrap();
+        assert_eq!(remove_dir(&d), Ok(()));
+        assert!(!d.exists());
+    }
+
+    /// Only the main web view may wipe, and the command takes no path from it.
+    #[test]
+    fn the_command_takes_no_path_and_checks_the_window() {
+        let src = include_str!("device_wipe.rs");
+        let production = &src[..src.find("#[cfg(test)]\nmod tests").unwrap()];
+        assert_eq!(production.matches("webview.label() != \"main\"").count(), 2);
+        for sig in production.split("pub async fn device_wipe").skip(1) {
+            let args = &sig[..sig.find(')').unwrap()];
+            assert!(!args.contains("String") && !args.contains("Path"), "{args}");
+        }
+    }
+}

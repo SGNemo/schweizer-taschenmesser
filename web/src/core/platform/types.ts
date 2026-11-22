@@ -5,6 +5,7 @@ import type { DiskService } from './disk';
 import type { LocalModelService } from './localModel';
 import type { BrowserService } from './browser';
 import type { CustomTabsService } from './customTabs';
+import type { DeviceWipeService } from './deviceWipe';
 import type { LaunchService } from './launch';
 import type { DownloadsService } from './downloads';
 import type { TorrentService } from './torrent';
@@ -791,6 +792,8 @@ export interface PlatformService {
   exchange: ExchangeService;
   /** Home-network sync, device side (Android). */
   lanClient: LanClientService;
+  /** Native part of "Alle Daten löschen" (desktop and Android). */
+  deviceWipe: DeviceWipeService;
   /** Wi-Fi available/lost for home-network sync (Android). */
   lanWatch: LanWatchService;
   /** Drive overview and read-only scans for the disk module (desktop only). */

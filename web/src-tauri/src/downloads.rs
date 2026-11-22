@@ -75,6 +75,21 @@ impl Downloads {
     }
 }
 
+/// "Alle Daten löschen": takes every job out of the list (the files already written stay where
+/// the user put them) and removes `downloads.json`.
+pub(crate) fn wipe(app: &AppHandle) -> Result<(), String> {
+    let state = app.state::<Downloads>();
+    {
+        let _one_at_a_time = state.gate.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some(m) = state.manager.get() {
+            for job in m.snapshot() {
+                m.remove(job.id, false);
+            }
+        }
+    }
+    crate::device_wipe::remove_file(&state_file(app)?)
+}
+
 fn add_error(e: AddError) -> String {
     e.code().to_string()
 }

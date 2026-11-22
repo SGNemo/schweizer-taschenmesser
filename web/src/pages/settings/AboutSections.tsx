@@ -26,6 +26,7 @@ import {
   SettingRow,
   SettingsGroup,
   DoubleConfirmDialog,
+  Checkbox,
 } from '@/ui';
 import { SupporterBadge } from '@/layout/SupporterBadge';
 import styles from './settings.module.css';
@@ -282,6 +283,8 @@ export function DiagnosticsSection() {
 /** Irreversible: removes all local data. Typed confirmation, nothing happens before it. */
 export function DeviceResetSection() {
   const [open, setOpen] = useState(false);
+  const [models, setModels] = useState(false);
+  const { kind, localModel } = getPlatform();
   return (
     <SettingsGroup id="device-reset" title={a.reset.title}>
       <DangerZone on="page">
@@ -296,9 +299,20 @@ export function DeviceResetSection() {
         onClose={() => setOpen(false)}
         title={a.reset.dialogTitle}
         confirmLabel={a.reset.confirm}
-        onConfirm={() => resetDevice()}
+        onConfirm={async () => void (await resetDevice(undefined, { models }))}
       >
         <p>{a.reset.warning}</p>
+        <p>{a.reset.alsoAll}</p>
+        {kind === 'desktop' && <p>{a.reset.alsoDesktop}</p>}
+        {kind === 'android' && <p>{a.reset.alsoAndroid}</p>}
+        {kind === 'desktop' && localModel.supported && (
+          <Checkbox
+            label={a.reset.models}
+            description={a.reset.modelsHint}
+            checked={models}
+            onChange={(e) => setModels(e.target.checked)}
+          />
+        )}
       </DoubleConfirmDialog>
     </SettingsGroup>
   );

@@ -150,9 +150,7 @@ fn unix_ms() -> u64 {
 }
 
 fn lan_dir(app: &AppHandle) -> Result<PathBuf, String> {
-    let dir = crate::capture::app_data_folder(app)
-        .ok_or("no-data-dir")?
-        .join("lan-sync");
+    let dir = lan_dir_path(app).ok_or("no-data-dir")?;
     std::fs::create_dir_all(&dir).map_err(|_| "no-data-dir")?;
     Ok(dir)
 }
@@ -537,6 +535,62 @@ pub fn lan_hub_stop(app: AppHandle, state: State<'_, LanSync>) -> Result<(), Str
     Ok(())
 }
 
+// ---- "Alle Daten löschen" ----
+
+/// Names of the hub's two keystore entries (service `<identifier>.lan-sync`).
+const KEY_SLOTS: [&str; 2] = ["hub-static-key", "hub-data-key"];
+
+/// What wiping the hub needs from the running app; a trait so the order is tested without an
+/// `AppHandle` (the real one is [`AppHub`]).
+pub(crate) trait HubWipe {
+    /// Listener down, every session (sync, input, exchange) closed, the PC's controls detached.
+    fn stop(&self) -> Result<(), ()>;
+    /// Removes one keystore entry; an entry that is not there counts as removed.
+    fn delete_key(&self, name: &str) -> Result<(), ()>;
+}
+
+/// Stops the hub, then removes both keystore entries and the whole `lan-sync/` folder (trust list,
+/// `hub.db`, home network, port, remote-control and exchange grants, program list, exchange
+/// boxes). Every step runs even when an earlier one failed; `Err` if any did. Takes no path from
+/// the web view: `dir` comes from the app's own data folder.
+pub(crate) fn wipe_hub(hub: &impl HubWipe, dir: Option<&std::path::Path>) -> Result<(), ()> {
+    let mut ok = hub.stop().is_ok();
+    for name in KEY_SLOTS {
+        ok &= hub.delete_key(name).is_ok();
+    }
+    if let Some(dir) = dir {
+        ok &= match std::fs::remove_dir_all(dir) {
+            Ok(()) => true,
+            Err(e) => e.kind() == std::io::ErrorKind::NotFound,
+        };
+    }
+    ok.then_some(()).ok_or(())
+}
+
+pub(crate) struct AppHub<'a>(pub &'a AppHandle);
+
+impl HubWipe for AppHub<'_> {
+    fn stop(&self) -> Result<(), ()> {
+        use tauri::Manager as _;
+        // the command itself (also used by "Ausschalten"), so both stop the hub the same way
+        lan_hub_stop(self.0.clone(), self.0.state::<LanSync>()).map_err(|_| ())
+    }
+
+    fn delete_key(&self, name: &str) -> Result<(), ()> {
+        let entry = keyring::Entry::new(&format!("{}.lan-sync", self.0.config().identifier), name)
+            .map_err(|_| ())?;
+        match entry.delete_credential() {
+            Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
+            Err(_) => Err(()),
+        }
+    }
+}
+
+/// The hub's folder, without creating it.
+pub(crate) fn lan_dir_path(app: &AppHandle) -> Option<PathBuf> {
+    crate::capture::app_data_folder(app).map(|d| d.join("lan-sync"))
+}
+
 #[tauri::command(async)]
 pub fn lan_hub_status(state: State<'_, LanSync>) -> StatusDto {
     match state.0.lock() {
@@ -757,5 +811,129 @@ mod tests {
             iface("192.168.1.20", true, NetCategory::Private, "home"),
         ]));
         assert_eq!(s.current_network_id().as_deref(), Some("home"));
+    }
+
+    /// A hub as the wipe sees it: a listener flag, a keystore and a log of the calls.
+    struct FakeHub {
+        listening: std::cell::Cell<bool>,
+        keys: std::cell::RefCell<Vec<String>>,
+        calls: std::cell::RefCell<Vec<String>>,
+        stop_fails: bool,
+        key_fails: bool,
+    }
+
+    impl FakeHub {
+        fn running() -> Self {
+            FakeHub {
+                listening: true.into(),
+                keys: KEY_SLOTS
+                    .iter()
+                    .map(|k| k.to_string())
+                    .collect::<Vec<_>>()
+                    .into(),
+                calls: Vec::new().into(),
+                stop_fails: false,
+                key_fails: false,
+            }
+        }
+    }
+
+    impl HubWipe for FakeHub {
+        fn stop(&self) -> Result<(), ()> {
+            self.calls.borrow_mut().push("stop".into());
+            if self.stop_fails {
+                return Err(());
+            }
+            self.listening.set(false);
+            Ok(())
+        }
+        fn delete_key(&self, name: &str) -> Result<(), ()> {
+            self.calls.borrow_mut().push(format!("key:{name}"));
+            if self.key_fails {
+                return Err(());
+            }
+            self.keys.borrow_mut().retain(|k| k != name);
+            Ok(())
+        }
+    }
+
+    fn temp_root(name: &str) -> PathBuf {
+        let d = std::env::temp_dir().join(format!("nemo-wipe-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&d);
+        std::fs::create_dir_all(&d).unwrap();
+        d
+    }
+
+    fn hub_folder(name: &str) -> PathBuf {
+        let root = temp_root(name);
+        let dir = root.join("lan-sync");
+        std::fs::create_dir_all(dir.join("exchange")).unwrap();
+        for f in [
+            "trust.json",
+            "hub.db",
+            "home.json",
+            "port",
+            "remote.json",
+            "remote-programs.json",
+        ] {
+            std::fs::write(dir.join(f), b"x").unwrap();
+        }
+        std::fs::write(dir.join("exchange").join("inbox.json"), b"x").unwrap();
+        dir
+    }
+
+    #[test]
+    fn the_wipe_stops_the_listener_first_then_removes_keys_and_folder() {
+        let dir = hub_folder("order");
+        let hub = FakeHub::running();
+        assert_eq!(wipe_hub(&hub, Some(&dir)), Ok(()));
+        assert!(!hub.listening.get(), "nothing listens after the wipe");
+        assert!(hub.keys.borrow().is_empty(), "both keystore entries gone");
+        assert!(
+            !dir.exists(),
+            "trust list, hub.db, grants and exchange gone"
+        );
+        assert_eq!(
+            hub.calls.borrow().as_slice(),
+            ["stop", "key:hub-static-key", "key:hub-data-key"]
+        );
+    }
+
+    #[test]
+    fn a_failing_step_does_not_stop_the_others() {
+        let dir = hub_folder("stop-fails");
+        let hub = FakeHub {
+            stop_fails: true,
+            ..FakeHub::running()
+        };
+        assert_eq!(wipe_hub(&hub, Some(&dir)), Err(()));
+        assert!(hub.keys.borrow().is_empty());
+        assert!(!dir.exists());
+
+        let dir = hub_folder("key-fails");
+        let hub = FakeHub {
+            key_fails: true,
+            ..FakeHub::running()
+        };
+        assert_eq!(wipe_hub(&hub, Some(&dir)), Err(()));
+        assert!(!hub.listening.get());
+        assert!(!dir.exists());
+    }
+
+    #[test]
+    fn a_missing_folder_is_no_error() {
+        let root = temp_root("missing");
+        let hub = FakeHub::running();
+        assert_eq!(wipe_hub(&hub, Some(&root.join("lan-sync"))), Ok(()));
+    }
+
+    /// The wipe deletes the very entries `build` creates.
+    #[test]
+    fn the_wiped_key_names_are_the_ones_the_hub_uses() {
+        let src = include_str!("lan_sync.rs");
+        let build = &src[src.find("fn build(").unwrap()..src.find("fn with_core").unwrap()];
+        for name in KEY_SLOTS {
+            assert!(build.contains(&format!("slot(\"{name}\")")), "{name}");
+        }
     }
 }
