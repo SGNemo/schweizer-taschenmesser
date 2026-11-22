@@ -5931,7 +5931,10 @@ dependencies = [
  "librqbit",
  "serde",
  "serde_json",
+ "taschenmesser-downloader",
+ "taschenmesser-file-names",
  "tokio",
+ "url",
 ]
 
 [[package]]

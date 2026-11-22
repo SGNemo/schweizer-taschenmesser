@@ -17,3 +17,7 @@ serde = { version = "1", features = ["derive"] }
 tokio = { version = "1", features = ["rt-multi-thread", "time", "sync", "macros"] }
 anyhow = "1"
 serde_json = "1"
+url = "2"
+# Shared name rules (DL8) and the public-address rule of the HTTP downloader (DL5).
+taschenmesser-file-names = { path = "../file-names" }
+taschenmesser-downloader = { path = "../downloader" }

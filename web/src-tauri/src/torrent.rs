@@ -130,10 +130,14 @@ pub async fn torrent_configure(
     }
     let engine = slot.clone().ok_or("off")?;
     drop(slot);
-    engine.set_limits(settings.upload_kb * 1024, settings.download_kb * 1024);
+    engine.set_limits(
+        settings.upload_kb.saturating_mul(1024),
+        settings.download_kb.saturating_mul(1024),
+    );
     engine.set_seed_limits(SeedLimits {
         ratio: (settings.seed_ratio > 0.0).then_some(settings.seed_ratio),
-        time: (settings.seed_minutes > 0).then(|| Duration::from_secs(settings.seed_minutes * 60)),
+        time: (settings.seed_minutes > 0)
+            .then(|| Duration::from_secs(settings.seed_minutes.saturating_mul(60))),
     });
     Ok(())
 }

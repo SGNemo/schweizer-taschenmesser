@@ -119,7 +119,7 @@ async fn seeder(env: &Env) -> (Engine, Vec<u8>, SocketAddr) {
     let seed_dir = env.dir("seed-files");
     let file = make_pack(&seed_dir).await;
     let e = engine(env, "seeder").await;
-    e.add(Source::File(file.clone()), &seed_dir, None, vec![])
+    e.seed_from(Source::File(file.clone()), &seed_dir)
         .await
         .unwrap();
     let end = Instant::now() + Duration::from_secs(40);
@@ -339,4 +339,26 @@ async fn only_magnets_and_torrent_files_are_accepted() {
         .add(Source::File(vec![1]), Path::new("relative"), None, vec![])
         .await
         .is_err());
+}
+
+/// DL1: a torrent never writes into a folder that was already there, so a file of the user's with
+/// the same name stays as it was.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn an_existing_file_of_the_same_name_is_never_overwritten() {
+    if no_ipv6() {
+        return;
+    }
+    let env = Env::new("no-overwrite");
+    let (_seed, file, addr) = seeder(&env).await;
+    let leech = engine(&env, "leech").await;
+    let out = env.dir("out");
+    std::fs::create_dir_all(out.join("pack")).unwrap();
+    std::fs::write(out.join("pack/a.bin"), b"meine Datei").unwrap();
+    leech
+        .add(Source::File(file), &out, None, vec![addr])
+        .await
+        .unwrap();
+    until("download done", || one(&leech).progress_bytes >= TOTAL).await;
+    file_is(&out.join("pack (2)/a.bin"), bytes(A, 1)).await;
+    assert_eq!(std::fs::read(out.join("pack/a.bin")).unwrap(), b"meine Datei");
 }
