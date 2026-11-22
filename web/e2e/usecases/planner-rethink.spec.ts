@@ -395,15 +395,20 @@ function reached(name: string, figures: Figures, phone: boolean) {
     const got = figures[k];
     if (typeof want === 'string') expect(got, `${name}: ${k} = Ziel`).toBe(want);
     else {
-      // A count may not grow beyond the better of its target and its last measured value.
-      const bound = Math.min(...[want, was].filter((v): v is number => typeof v === 'number'));
+      // A count may not grow beyond the better of its target and its last measured value – a named phone deviation
+      // (PHONE_TARGET) is its own bound.
+      const deviation = phone ? PHONE_TARGET[name]?.[k] : undefined;
+      const bound =
+        typeof deviation === 'number'
+          ? deviation
+          : Math.min(...[want, was].filter((v): v is number => typeof v === 'number'));
       if (Number.isFinite(bound))
         expect(got, `${name}: ${k} ≤ ${bound}`).toBeLessThanOrEqual(bound);
     }
   }
 }
 
-/** Package 7: measured light and dark (`SCHEME=dark`), on the desktop with the mouse and on the phone by touch. */
+/** Package 7: measured light and dark (`SCHEME=dark`), on the desktop and on the phone. */
 const SCHEME = process.env.SCHEME === 'dark' ? 'dark' : 'light';
 
 test.beforeEach(async ({ page }) => {
