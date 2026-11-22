@@ -31,15 +31,26 @@ export interface ManifestAllowList {
  */
 export const APK_ALLOW_LIST: ManifestAllowList = {
   permissions: [
-    'android.permission.INTERNET', // sync, AI providers, downloads of updates
+    'android.permission.INTERNET', // sync, AI providers, update checks
     'android.permission.CAMERA', // QR scanning (androidManifest.ts withCamera)
     'android.permission.ACCESS_NETWORK_STATE', // home-network sync: Wi-Fi callback (withLanWatch)
     'android.permission.CHANGE_WIFI_MULTICAST_STATE', // home-network sync: hub search
     'android.permission.REQUEST_INSTALL_PACKAGES', // plugins/apk-installer: in-app update
-    'android.permission.USE_BIOMETRIC', // plugins/secure-store: biometric unlock
+    'android.permission.RECEIVE_BOOT_COMPLETED', // tauri-plugin-notification: reminders after a restart
+    'android.permission.WAKE_LOCK', // tauri-plugin-notification: deliver a scheduled reminder
     'android.permission.POST_NOTIFICATIONS', // reminders
+    'android.permission.USE_BIOMETRIC', // plugins/secure-store: biometric unlock
+    'android.permission.USE_FINGERPRINT', // androidx.biometric, for Android versions before 9
+    // androidx.core: signature-level permission of the app itself for its non-exported receivers
+    'io.github.sgnemo.taschenmesser.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION',
   ],
-  exported: [],
+  exported: [
+    'io.github.sgnemo.taschenmesser.MainActivity', // launcher, share target, nemo:// links
+    // Quick Settings tile "Erfassen"; only the system can bind it
+    'io.github.sgnemo.taschenmesser.shareintent.CaptureTileService (android.permission.BIND_QUICK_SETTINGS_TILE)',
+    // androidx.profileinstaller; only shell/adb (DUMP) can send to it
+    'androidx.profileinstaller.ProfileInstallReceiver (android.permission.DUMP)',
+  ],
 };
 
 /** Never acceptable, whatever the list says: home-network sync must not read the Wi-Fi name. */
