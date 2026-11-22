@@ -246,7 +246,7 @@ export const planner: Strings['planner'] = {
     plan: 'Plan',
     open: 'Still open',
     openFrom: (days: string) => `Still open: things from ${days}`,
-    since: (day: string) => `since ${day}`,
+    openSince: (day: string) => `Still open: things since ${day}`,
   },
   open: {
     empty: 'Nothing open from earlier.',

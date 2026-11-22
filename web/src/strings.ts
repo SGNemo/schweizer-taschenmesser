@@ -9533,7 +9533,7 @@ export const de = {
       plan: 'Plan',
       open: 'Noch offen',
       openFrom: (days: string) => `Noch offen: Dinge von ${days}`,
-      since: (day: string) => `seit ${day}`,
+      openSince: (day: string) => `Noch offen: Dinge seit ${day}`,
     },
     open: {
       empty: 'Nichts offen von früher.',

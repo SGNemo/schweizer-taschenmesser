@@ -64,7 +64,7 @@ import { DaySheet } from '../components/DaySheet';
 import { RowChoice, type RowChoiceState } from '../components/RowChoice';
 import { SETUP_DAYS } from '../daySetup';
 import { duesOf, eveningLine } from '../rest';
-import { openLineText } from '../openLine';
+import { openLineText, openTabName } from '../openLine';
 import { dayEndLabel, dayEndOf } from '../settings';
 import { PlanPreview, type PreviewData } from '../components/PlanPreview';
 import { WeekCheck } from '../components/WeekCheck';
@@ -108,14 +108,6 @@ interface Pending {
    * „Verteilen …“ of the tab „Noch offen“ (its things that are not „fest“, today first).
    */
   spread?: { date: string; loose: string[]; fixed: number; open?: true };
-}
-
-/** The days the open rows lie on, for the tab's name: up to three short day names, else „seit Do 12.“-like. */
-function openDays(rows: readonly OpenRow[]): string {
-  const dates = [...new Set(rows.map((r) => r.date))].sort();
-  // Always with the date: „Mo“ alone could be last week's Monday or the coming one.
-  const named = (d: string) => `${dayName(d)} ${formatDay(d, 'd.')}`;
-  return dates.length <= 3 ? dates.map(named).join(', ') : t.planner.tabs.since(named(dates[0]!));
 }
 
 export default function PlannerPage() {
@@ -650,6 +642,12 @@ export default function PlannerPage() {
   // puts them on a day again („Verschieben …“ first in the row's ⋯). Things that are „fest“ come first.
   const tab = params.get('tab') === 'open' ? 'open' : 'plan';
   const openRows = data?.board.open ?? [];
+  // The selection belongs to the tab and its rows: leaving the tab, or the tab emptying (a sync, an undo), ends it
+  // (adjusting state during render).
+  if ((tab !== 'open' || (data && openRows.length === 0)) && (selecting || selected.size > 0)) {
+    setSelecting(false);
+    setSelected(new Set());
+  }
   const renderOpen = (row: OpenRow) => {
     const tick = !!row.entry && canDone(row.entry.moduleId);
     return (
@@ -726,7 +724,12 @@ export default function PlannerPage() {
         {t.planner.open.selectGroupShort}
       </button>
     ) : undefined;
-  const openEntries = (rows: readonly OpenRow[]) => rows.flatMap((r) => (r.entry ? [r.entry] : []));
+  // One entry per thing (a thing in parts has several rows; it moves whole).
+  const openEntries = (rows: readonly OpenRow[]) => [
+    ...new Map(rows.flatMap((r) => (r.entry ? [[r.itemKey, r.entry] as const] : []))).values(),
+  ];
+  // Only rows still in the tab count (a row that left by a sync or an undo is no part of the choice).
+  const chosen = openRows.filter((r) => selected.has(r.unitId));
   const endSelection = () => {
     setSelecting(false);
     setSelected(new Set());
@@ -736,10 +739,10 @@ export default function PlannerPage() {
       {openRows.length === 0 ? (
         <p className={styles.reason}>{t.planner.open.empty}</p>
       ) : selecting ? (
-        <SelectionBar count={selected.size} onCancel={endSelection}>
+        <SelectionBar count={new Set(chosen.map((r) => r.itemKey)).size} onCancel={endSelection}>
           <Button
             onClick={() => {
-              const rows = openRows.filter((r) => selected.has(r.unitId));
+              const rows = chosen;
               setChoice({ kind: 'moveMany', entries: openEntries(rows), onDone: endSelection });
             }}
           >
@@ -760,7 +763,7 @@ export default function PlannerPage() {
         </div>
       )}
       {/* The selection's count lives in its bar; while nothing is chosen yet the bar is not there – the cancel is. */}
-      {selecting && selected.size === 0 ? (
+      {selecting && chosen.length === 0 ? (
         <p className={styles.openActions}>
           <Button variant="ghost" onClick={endSelection}>
             {t.actions.cancel}
@@ -813,9 +816,7 @@ export default function PlannerPage() {
           value: 'open',
           // That something is there: a quiet dot, never a count; the name says it in words („… Dinge von Mo, Di“).
           label: t.planner.tabs.open,
-          ...(openRows.length
-            ? { mark: true, name: t.planner.tabs.openFrom(openDays(openRows)) }
-            : {}),
+          ...(openRows.length ? { mark: true, name: openTabName(openRows) } : {}),
         },
       ]}
       onChange={(next) =>
@@ -1216,7 +1217,16 @@ export default function PlannerPage() {
                   <button
                     type="button"
                     className={styles.textLink}
-                    onClick={() => setParams({ tab: 'open' }, { replace: true })}
+                    onClick={() =>
+                      setParams(
+                        (p) => {
+                          const q = new URLSearchParams(p);
+                          q.set('tab', 'open');
+                          return q;
+                        },
+                        { replace: true },
+                      )
+                    }
                   >
                     {t.planner.open.show}
                   </button>

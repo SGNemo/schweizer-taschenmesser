@@ -13,3 +13,15 @@ export function openLineText(rows: readonly { date: string }[]): string {
   const first = dates[0]!;
   return t.planner.open.lineSince(`${dayName(first)}, ${formatDay(first, 'd.')}`);
 }
+
+/**
+ * The accessible name of the tab „Noch offen“ while it holds something: „Noch offen: Dinge von Mo 16., Di 17.“ – up to
+ * three days with their date (a bare „Mo“ could be last week's or the coming one); more: „Noch offen: Dinge seit Do 12.“
+ */
+export function openTabName(rows: readonly { date: string }[]): string {
+  const dates = [...new Set(rows.map((r) => r.date))].sort();
+  const named = (d: string) => `${dayName(d)} ${formatDay(d, 'd.')}`;
+  return dates.length <= 3
+    ? t.planner.tabs.openFrom(dates.map(named).join(', '))
+    : t.planner.tabs.openSince(named(dates[0]!));
+}
