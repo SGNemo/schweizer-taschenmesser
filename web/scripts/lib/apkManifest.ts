@@ -1,0 +1,138 @@
+/**
+ * Check of the merged manifest inside the built APK (NS4): what Android really installs, after Gradle
+ * merged the app manifest with every library and plugin manifest. `scripts/android-manifest.mjs` only
+ * edits the app's own manifest before the build; this check reads the result (`apkanalyzer manifest
+ * print`) and compares it with an allow-list kept here, so a new permission or exported component from
+ * a dependency update fails the build until someone reviews it and adds it.
+ * Erasable TypeScript, used by `../apk-manifest-check.mjs` and its unit test.
+ */
+import type { Finding } from './audit';
+
+export interface MergedManifest {
+  permissions: string[];
+  /** Attributes of `<application>`. */
+  application: Record<string, string>;
+  /** Components another app can start or bind (explicitly exported, or with an intent filter and no `exported`). */
+  exported: string[];
+}
+
+export interface ManifestAllowList {
+  permissions: readonly string[];
+  exported: readonly string[];
+}
+
+/**
+ * Reviewed 2026-11 from the release APK's merged manifest (dry run of `release.yml`). Adding an entry
+ * is a security review: say in the PR why the app needs it.
+ */
+export const APK_ALLOW_LIST: ManifestAllowList = {
+  permissions: [
+    'android.permission.INTERNET', // sync, AI providers, downloads of updates
+    'android.permission.CAMERA', // QR scanning (androidManifest.ts withCamera)
+    'android.permission.ACCESS_NETWORK_STATE', // home-network sync: Wi-Fi callback (withLanWatch)
+    'android.permission.CHANGE_WIFI_MULTICAST_STATE', // home-network sync: hub search
+    'android.permission.REQUEST_INSTALL_PACKAGES', // plugins/apk-installer: in-app update
+    'android.permission.USE_BIOMETRIC', // plugins/secure-store: biometric unlock
+    'android.permission.POST_NOTIFICATIONS', // reminders
+  ],
+  exported: [],
+};
+
+/** Never acceptable, whatever the list says: home-network sync must not read the Wi-Fi name. */
+const NEVER = /^android\.permission\.ACCESS_(FINE|COARSE|BACKGROUND)_LOCATION$/;
+
+const COMPONENTS = new Set(['activity', 'activity-alias', 'service', 'receiver', 'provider']);
+const PERMISSION_TAGS = new Set([
+  'uses-permission',
+  'uses-permission-sdk-23',
+  'uses-permission-sdk-m',
+]);
+
+function attributes(raw: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const m of raw.matchAll(/([\w:.-]+)\s*=\s*"([^"]*)"/g)) out[m[1]!] = m[2]!;
+  return out;
+}
+
+/** A small reader for the machine-written XML `apkanalyzer` prints; throws when it is not a manifest. */
+export function parseManifest(xml: string): MergedManifest {
+  const result: MergedManifest = { permissions: [], application: {}, exported: [] };
+  const stack: { tag: string; attrs: Record<string, string>; filter: boolean }[] = [];
+  let sawManifest = false;
+  let sawApplication = false;
+  const close = (el: { tag: string; attrs: Record<string, string>; filter: boolean }) => {
+    if (!COMPONENTS.has(el.tag) || stack.at(-1)?.tag !== 'application') return;
+    const exported = el.attrs['android:exported'];
+    if (exported === 'true' || (exported === undefined && el.filter)) {
+      result.exported.push(el.attrs['android:name'] ?? '(unnamed)');
+    }
+  };
+  for (const m of xml.matchAll(/<(\/?)([A-Za-z][\w.-]*)((?:[^>"]|"[^"]*")*?)(\/?)>/g)) {
+    const [, closing, tag, raw, selfClosing] = m as unknown as [
+      string,
+      string,
+      string,
+      string,
+      string,
+    ];
+    if (closing) {
+      const el = stack.pop();
+      if (!el || el.tag !== tag) throw new Error(`unbalanced </${tag}>`);
+      close(el);
+      continue;
+    }
+    const attrs = attributes(raw);
+    if (tag === 'manifest') sawManifest = true;
+    if (tag === 'application' && stack.at(-1)?.tag === 'manifest') {
+      sawApplication = true;
+      result.application = attrs;
+    }
+    if (PERMISSION_TAGS.has(tag) && stack.at(-1)?.tag === 'manifest' && attrs['android:name']) {
+      result.permissions.push(attrs['android:name']);
+    }
+    if (tag === 'intent-filter') {
+      const owner = stack.at(-1);
+      if (owner) owner.filter = true;
+    }
+    const el = { tag, attrs, filter: false };
+    if (selfClosing) close(el);
+    else stack.push(el);
+  }
+  if (!sawManifest || !sawApplication || stack.length > 0)
+    throw new Error('not a complete manifest');
+  return result;
+}
+
+const FILE = 'AndroidManifest.xml';
+
+export function checkMergedManifest(
+  xml: string,
+  allow: ManifestAllowList = APK_ALLOW_LIST,
+): Finding[] {
+  let m: MergedManifest;
+  try {
+    m = parseManifest(xml);
+  } catch {
+    return [{ file: FILE, rule: 'manifest-unreadable' }];
+  }
+  const findings: Finding[] = [];
+  for (const p of new Set(m.permissions)) {
+    if (NEVER.test(p) || !allow.permissions.includes(p)) {
+      findings.push({ file: FILE, rule: 'permission-not-allowed', detail: p });
+    }
+  }
+  for (const c of m.exported) {
+    if (!allow.exported.includes(c))
+      findings.push({ file: FILE, rule: 'exported-not-allowed', detail: c });
+  }
+  const app = m.application;
+  if (app['android:allowBackup'] !== 'false') findings.push({ file: FILE, rule: 'backup-allowed' });
+  if (app['android:usesCleartextTraffic'] === 'true')
+    findings.push({ file: FILE, rule: 'cleartext-allowed' });
+  if (app['android:debuggable'] === 'true') findings.push({ file: FILE, rule: 'debuggable' });
+  // A network security config can allow cleartext per domain; none is expected.
+  if (app['android:networkSecurityConfig'] !== undefined) {
+    findings.push({ file: FILE, rule: 'network-security-config' });
+  }
+  return findings;
+}

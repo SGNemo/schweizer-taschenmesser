@@ -70,9 +70,6 @@ jobs:
       tag: ${{ steps.meta.outputs.tag }}
       prerelease: ${{ steps.meta.outputs.prerelease }}
       publish: ${{ steps.meta.outputs.publish }}
-      updater_key: ${{ steps.keys.outputs.updater }}
-      android_key: ${{ steps.keys.outputs.android }}
-      missing_secrets: ${{ steps.keys.outputs.missing }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -132,7 +129,9 @@ jobs:
             node scripts/check-legal.mjs
           fi
 
+      # Dry runs never read the signing secrets (SC3): code merged to develop runs in them.
       - name: Which signing keys are configured
+        if: steps.meta.outputs.publish == 'true'
         id: keys
         env:
           TAURI_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -150,8 +149,6 @@ jobs:
           [ -n "$ANDROID_KS_PASSWORD" ] || missing+=(ANDROID_KEYSTORE_PASSWORD)
           [ -n "$ANDROID_ALIAS" ] || missing+=(ANDROID_KEY_ALIAS)
           [ -n "$ANDROID_ALIAS_PASSWORD" ] || missing+=(ANDROID_KEY_PASSWORD)
-          echo "updater=$([ -n "$TAURI_KEY" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
-          echo "android=$([ -n "$ANDROID_KS" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
           echo "missing=${missing[*]:-}" >> "$GITHUB_OUTPUT"
 
       - name: Published releases must be signed (all six secrets present)
@@ -197,10 +194,12 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # A publishing build restores no cache (SC4): a cache written by a dry run of other code must not
+      # reach a signed release. Dry runs keep their caches.
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+          cache: ${{ needs.prepare.outputs.publish != 'true' && 'npm' || '' }}
           cache-dependency-path: web/package-lock.json
       - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable branch, toolchain: stable
         with:
@@ -221,13 +220,13 @@ jobs:
       # derive its target directory from that variable (it kept saving the empty src-tauri/target: 476 of
       # 476 crates were rebuilt on every run, 19 min), so C:/t is cached as an extra directory and the
       # unused default target is skipped. The registry and cargo bin are still cached as before.
+      # A release (tag / manual run with version) neither restores nor writes it (SC4): a full rebuild.
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+        if: needs.prepare.outputs.publish != 'true'
         with:
           workspaces: web/src-tauri
           shared-key: windows-release-vk1.4.363.1-msvc${{ steps.msvc.outputs.version }}
           cache-targets: false
-          # A release (tag / manual run with version) reads the cache but never writes it.
-          save-if: ${{ needs.prepare.outputs.publish != 'true' }}
           cache-directories: C:/t
       - run: npm ci
       # Built-in local model (llama.cpp, Vulkan + CPU in one exe). cmake and LLVM (bindgen) are on the
@@ -262,21 +261,18 @@ jobs:
           mkdir -p src-tauri/target/release
           cp C:/t/release/taschenmesser.exe src-tauri/target/release/taschenmesser.exe
 
+      # Only a published release is signed, and only its steps see the key (SC3): dry-run artifacts
+      # (every develop push touching the shell) never carry a valid release signature.
       - name: Sign with the updater key
+        if: needs.prepare.outputs.publish == 'true'
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          PUBLISH: ${{ needs.prepare.outputs.publish }}
-          UPDATER_KEY: ${{ needs.prepare.outputs.updater_key }}
-        run: |
-          set -euo pipefail
-          # Only a published release is signed: dry-run artifacts (every develop push touching the
-          # shell) must not carry a valid release signature.
-          if [ "$PUBLISH" = "true" ] && [ "$UPDATER_KEY" = "true" ]; then
-            npx tauri signer sign src-tauri/target/release/taschenmesser.exe
-          else
-            echo "::warning::Dry run or no updater signing key: the portable executable is UNSIGNED."
-          fi
+        run: npx tauri signer sign src-tauri/target/release/taschenmesser.exe
+
+      - name: Unsigned executable (dry run)
+        if: needs.prepare.outputs.publish != 'true'
+        run: echo "::warning::Dry run - the portable executable is UNSIGNED (dry runs never sign)."
 
       - name: Collect assets under their stable names
         run: |
@@ -306,16 +302,20 @@ jobs:
 
       - name: Audit – no secrets in the executable or what goes into it
         env:
+          # The secret values reach the audit only when publishing (SC3); a dry run holds no key that
+          # could have leaked into its artifacts, and the pattern rules still run. --publish makes a
+          # missing value fail instead of silently searching for nothing.
           AUDIT_SECRET_ENV: TAURI_SIGNING_PRIVATE_KEY,TAURI_SIGNING_PRIVATE_KEY_PASSWORD,ANDROID_KEYSTORE_BASE64,ANDROID_KEYSTORE_PASSWORD,ANDROID_KEY_PASSWORD
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ needs.prepare.outputs.publish == 'true' && secrets.TAURI_SIGNING_PRIVATE_KEY || '' }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ needs.prepare.outputs.publish == 'true' && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD || '' }}
+          ANDROID_KEYSTORE_BASE64: ${{ needs.prepare.outputs.publish == 'true' && secrets.ANDROID_KEYSTORE_BASE64 || '' }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ needs.prepare.outputs.publish == 'true' && secrets.ANDROID_KEYSTORE_PASSWORD || '' }}
+          ANDROID_KEY_PASSWORD: ${{ needs.prepare.outputs.publish == 'true' && secrets.ANDROID_KEY_PASSWORD || '' }}
+          PUBLISH_FLAG: ${{ needs.prepare.outputs.publish == 'true' && '--publish' || '' }}
         run: |
           set -euo pipefail
           EXE=src-tauri/target/release/taschenmesser.exe
-          node scripts/audit-release.mjs --path dist --path ../assets --path "$EXE" --pubkey-from src-tauri/tauri.conf.json
+          node scripts/audit-release.mjs --path dist --path ../assets --path "$EXE" --pubkey-from src-tauri/tauri.conf.json $PUBLISH_FLAG
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -333,25 +333,25 @@ jobs:
         working-directory: web
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # No cache restore in a publishing build (SC4), as in the Windows job.
       - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
           distribution: temurin
           java-version: 17
-          cache: gradle
+          cache: ${{ needs.prepare.outputs.publish != 'true' && 'gradle' || '' }}
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+          cache: ${{ needs.prepare.outputs.publish != 'true' && 'npm' || '' }}
           cache-dependency-path: web/package-lock.json
       - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable branch, toolchain: stable
         with:
           toolchain: stable
           targets: aarch64-linux-android,armv7-linux-androideabi
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+        if: needs.prepare.outputs.publish != 'true'
         with:
           workspaces: web/src-tauri
-          # A release reads the cache but never writes it.
-          save-if: ${{ needs.prepare.outputs.publish != 'true' }}
       - run: npm ci
 
       - name: Android SDK and NDK
@@ -388,8 +388,9 @@ jobs:
           echo "path=$APK" >> "$GITHUB_OUTPUT"
           ls -l "$APK"
 
+      # Only a published release is signed (SC3); prepare already failed it when a key is missing.
       - name: Sign
-        if: needs.prepare.outputs.android_key == 'true'
+        if: needs.prepare.outputs.publish == 'true'
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -407,25 +408,38 @@ jobs:
             node scripts/android-sign.mjs "${{ steps.apk.outputs.path }}" ../assets/Nemo.apk
           (cd ../assets && sha256sum Nemo.apk > Nemo.apk.sha256 && cat Nemo.apk.sha256)
 
-      - name: Unsigned APK (dry run without keystore)
-        if: needs.prepare.outputs.android_key != 'true'
+      - name: Unsigned APK (dry run)
+        if: needs.prepare.outputs.publish != 'true'
         run: |
           set -euo pipefail
-          echo "::warning::No Android keystore configured: the APK is UNSIGNED and cannot be installed."
+          echo "::warning::Dry run - the APK is UNSIGNED and cannot be installed (dry runs never sign)."
           mkdir -p ../assets
           cp "${{ steps.apk.outputs.path }}" ../assets/Nemo-unsigned.apk
 
-      - name: Audit – no secrets in the APK or what goes into it
-        env:
-          AUDIT_SECRET_ENV: TAURI_SIGNING_PRIVATE_KEY,TAURI_SIGNING_PRIVATE_KEY_PASSWORD,ANDROID_KEYSTORE_BASE64,ANDROID_KEYSTORE_PASSWORD,ANDROID_KEY_PASSWORD
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      # What Android really installs (NS4): the merged manifest of the APK that goes out, against the
+      # allow-list in scripts/lib/apkManifest.ts (permissions, exported components, no cleartext, no backup).
+      - name: Merged manifest of the APK (allow-list)
         run: |
           set -euo pipefail
-          node scripts/audit-release.mjs --path dist --path ../assets
+          APK="$(ls ../assets/*.apk)"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/apkanalyzer" manifest print "$APK" > "$RUNNER_TEMP/merged-manifest.xml"
+          node scripts/apk-manifest-check.mjs "$RUNNER_TEMP/merged-manifest.xml"
+
+      - name: Audit – no secrets in the APK or what goes into it
+        env:
+          # The secret values reach the audit only when publishing (SC3); a dry run holds no key that
+          # could have leaked into its artifacts, and the pattern rules still run. --publish makes a
+          # missing value fail instead of silently searching for nothing.
+          AUDIT_SECRET_ENV: TAURI_SIGNING_PRIVATE_KEY,TAURI_SIGNING_PRIVATE_KEY_PASSWORD,ANDROID_KEYSTORE_BASE64,ANDROID_KEYSTORE_PASSWORD,ANDROID_KEY_PASSWORD
+          TAURI_SIGNING_PRIVATE_KEY: ${{ needs.prepare.outputs.publish == 'true' && secrets.TAURI_SIGNING_PRIVATE_KEY || '' }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ needs.prepare.outputs.publish == 'true' && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD || '' }}
+          ANDROID_KEYSTORE_BASE64: ${{ needs.prepare.outputs.publish == 'true' && secrets.ANDROID_KEYSTORE_BASE64 || '' }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ needs.prepare.outputs.publish == 'true' && secrets.ANDROID_KEYSTORE_PASSWORD || '' }}
+          ANDROID_KEY_PASSWORD: ${{ needs.prepare.outputs.publish == 'true' && secrets.ANDROID_KEY_PASSWORD || '' }}
+          PUBLISH_FLAG: ${{ needs.prepare.outputs.publish == 'true' && '--publish' || '' }}
+        run: |
+          set -euo pipefail
+          node scripts/audit-release.mjs --path dist --path ../assets $PUBLISH_FLAG
 
       - name: Make sure no keystore file is left on the runner
         if: always()
@@ -463,7 +477,7 @@ jobs:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: node web/scripts/audit-release.mjs --path dl --pubkey-from web/src-tauri/tauri.conf.json
+        run: node web/scripts/audit-release.mjs --path dl --pubkey-from web/src-tauri/tauri.conf.json --publish
 
       - name: Updater manifest (latest.json)
         run: |
@@ -539,7 +553,7 @@ jobs:
           {
             echo "## Dry run – nothing was published"
             echo
-            echo "Version \`${{ needs.prepare.outputs.version }}\`, updater key: **${{ needs.prepare.outputs.updater_key }}**, Android keystore: **${{ needs.prepare.outputs.android_key }}**, missing secrets: **${{ needs.prepare.outputs.missing_secrets || 'none' }}**"
+            echo "Version \`${{ needs.prepare.outputs.version }}\`. Dry runs neither read nor use the signing keys: the artifacts are unsigned."
             echo
             echo '```'
             ls -l dl

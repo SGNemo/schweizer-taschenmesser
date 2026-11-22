@@ -2,15 +2,17 @@
 /**
  * Fails when something secret is about to be published or embedded:
  *
- *   node scripts/audit-release.mjs --path <file-or-dir> [--path …] [--pubkey-from src-tauri/tauri.conf.json]
+ *   node scripts/audit-release.mjs --path <file-or-dir> [--path …] [--pubkey-from src-tauri/tauri.conf.json] [--publish]
  *
  * Secrets are taken from the environment variables named in AUDIT_SECRET_ENV (comma separated); their
  * values are searched for in every file (also inside APK/JAR/ZIP containers). Only variable names are
  * ever printed. With --pubkey-from, every *.sig found must carry the key id of that public key.
+ * A path without files always fails. With --publish (a run that uploads), every name in
+ * AUDIT_SECRET_ENV must have a value and --pubkey-from must find at least one signature.
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { auditFiles, checkSignatures } from './lib/audit.ts';
+import { auditFiles, checkSignatures, coverageFindings } from './lib/audit.ts';
 
 const args = process.argv.slice(2);
 const values = (flag) => args.flatMap((a, i) => (a === flag ? [args[i + 1]] : []));
@@ -39,7 +41,9 @@ if (missing.length > 0) {
   process.exit(2);
 }
 
-const files = paths.flatMap((p) => walk(p)).map((p) => ({ name: p, data: readFileSync(p) }));
+const publish = args.includes('--publish');
+const perPath = paths.map((p) => ({ path: p, found: walk(p) }));
+const files = perPath.flatMap((p) => p.found).map((p) => ({ name: p, data: readFileSync(p) }));
 const secrets = (process.env.AUDIT_SECRET_ENV ?? '')
   .split(',')
   .map((n) => n.trim())
@@ -50,17 +54,28 @@ const configured = secrets.filter((s) => s.value.trim() !== '').map((s) => s.nam
 const findings = auditFiles(files, secrets);
 
 const confPath = values('--pubkey-from')[0];
+let signatures;
 if (confPath) {
   const pubkey = JSON.parse(readFileSync(confPath, 'utf8')).plugins?.updater?.pubkey ?? '';
   const sigs = files
     .filter((f) => f.name.endsWith('.sig'))
     .map((f) => ({ name: f.name, content: f.data.toString('utf8') }));
   findings.push(...checkSignatures(sigs, pubkey));
+  signatures = sigs.length;
   console.log(`Checked ${sigs.length} updater signature(s) against the public key in ${confPath}.`);
 }
 
+findings.push(
+  ...coverageFindings({
+    publish,
+    paths: perPath.map((p) => ({ path: p.path, files: p.found.length })),
+    secrets,
+    signatures,
+  }),
+);
+
 console.log(
-  `Audited ${files.length} file(s); searched for ${configured.length} secret value(s) (${configured.join(', ') || 'none configured'}).`,
+  `Audited ${files.length} file(s); searched for ${configured.length} secret value(s) (${configured.join(', ') || 'none configured'})${publish ? ', publishing' : ', dry run'}.`,
 );
 if (findings.length > 0) {
   for (const f of findings) {

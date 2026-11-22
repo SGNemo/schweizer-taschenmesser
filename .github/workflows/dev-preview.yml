@@ -68,7 +68,9 @@ concurrency:
 env:
   NODE_VERSION: 26
   NDK_VERSION: '27.2.12479018'
-  AUDIT_SECRET_ENV: TAURI_SIGNING_PRIVATE_KEY,TAURI_SIGNING_PRIVATE_KEY_PASSWORD,TAURI_DEV_SIGNING_PRIVATE_KEY,TAURI_DEV_SIGNING_PRIVATE_KEY_PASSWORD,ANDROID_KEYSTORE_BASE64,ANDROID_KEYSTORE_PASSWORD,ANDROID_KEY_PASSWORD
+  # The names the audit steps fill (with the dev values). The two TAURI_DEV_* names used to be listed
+  # here too but were never set, so their search was silently empty; --publish now fails on that.
+  AUDIT_SECRET_ENV: TAURI_SIGNING_PRIVATE_KEY,TAURI_SIGNING_PRIVATE_KEY_PASSWORD,ANDROID_KEYSTORE_BASE64,ANDROID_KEYSTORE_PASSWORD,ANDROID_KEY_PASSWORD
 
 jobs:
   secret-scan:
@@ -154,26 +156,27 @@ jobs:
 
       # A preview must be installable: no unsigned builds, not even as artifacts. The dev channel has its
       # own updater key (TAURI_DEV_SIGNING_PRIVATE_KEY, public part in tauri.dev.conf.json): a stable
-      # installation never accepts a preview binary and vice versa.
+      # installation never accepts a preview binary and vice versa. The dev APK has its own keystore too
+      # (ANDROID_DEV_*, SC2): this workflow never handles the production APK key.
       - name: All six signing secrets must be present
         env:
           TAURI_KEY: ${{ secrets.TAURI_DEV_SIGNING_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_DEV_SIGNING_PRIVATE_KEY_PASSWORD }}
-          ANDROID_KS: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KS_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_ALIAS_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KS: ${{ secrets.ANDROID_DEV_KEYSTORE_BASE64 }}
+          ANDROID_KS_PASSWORD: ${{ secrets.ANDROID_DEV_KEYSTORE_PASSWORD }}
+          ANDROID_ALIAS: ${{ secrets.ANDROID_DEV_KEY_ALIAS }}
+          ANDROID_ALIAS_PASSWORD: ${{ secrets.ANDROID_DEV_KEY_PASSWORD }}
         run: |
           set -euo pipefail
           missing=()
           [ -n "$TAURI_KEY" ] || missing+=(TAURI_DEV_SIGNING_PRIVATE_KEY)
           [ -n "$TAURI_KEY_PASSWORD" ] || missing+=(TAURI_DEV_SIGNING_PRIVATE_KEY_PASSWORD)
-          [ -n "$ANDROID_KS" ] || missing+=(ANDROID_KEYSTORE_BASE64)
-          [ -n "$ANDROID_KS_PASSWORD" ] || missing+=(ANDROID_KEYSTORE_PASSWORD)
-          [ -n "$ANDROID_ALIAS" ] || missing+=(ANDROID_KEY_ALIAS)
-          [ -n "$ANDROID_ALIAS_PASSWORD" ] || missing+=(ANDROID_KEY_PASSWORD)
+          [ -n "$ANDROID_KS" ] || missing+=(ANDROID_DEV_KEYSTORE_BASE64)
+          [ -n "$ANDROID_KS_PASSWORD" ] || missing+=(ANDROID_DEV_KEYSTORE_PASSWORD)
+          [ -n "$ANDROID_ALIAS" ] || missing+=(ANDROID_DEV_KEY_ALIAS)
+          [ -n "$ANDROID_ALIAS_PASSWORD" ] || missing+=(ANDROID_DEV_KEY_PASSWORD)
           if [ "${#missing[@]}" -gt 0 ]; then
-            echo "::error::Missing GitHub secrets: ${missing[*]}. Nothing was built or published."
+            echo "::error::Missing GitHub secrets: ${missing[*]}. Nothing was built or published. The dev APK has its own keystore: 'node scripts/keys.mjs android --dev', then 'node scripts/keys.mjs secrets' (docs/howto/release-deps.md → Dev-Preview keys)."
             exit 1
           fi
 
@@ -184,7 +187,7 @@ jobs:
           STABLE="$(node -e "const c=require('./src-tauri/tauri.conf.json');console.log(c.plugins.updater.pubkey)")"
           DEV="$(node -e "const c=require('./src-tauri/tauri.dev.conf.json');console.log(c.plugins?.updater?.pubkey ?? '')")"
           if [ -z "$DEV" ]; then
-            echo "::error::plugins.updater.pubkey is missing in web/src-tauri/tauri.dev.conf.json. Create the dev key pair with 'node scripts/keys.mjs updater --dev' (docs/howto/release-deps.md → Dev-Preview key)."
+            echo "::error::plugins.updater.pubkey is missing in web/src-tauri/tauri.dev.conf.json. Create the dev key pair with 'node scripts/keys.mjs updater --dev' (docs/howto/release-deps.md → Dev-Preview keys)."
             exit 1
           fi
           if [ "$DEV" = "$STABLE" ]; then
@@ -335,13 +338,13 @@ jobs:
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_DEV_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_DEV_SIGNING_PRIVATE_KEY_PASSWORD }}
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_DEV_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_DEV_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_DEV_KEY_PASSWORD }}
         run: |
           set -euo pipefail
           EXE=src-tauri/target/release/taschenmesser.exe
-          node scripts/audit-release.mjs --path dist --path ../assets --path "$EXE" --pubkey-from src-tauri/tauri.dev.conf.json
+          node scripts/audit-release.mjs --path dist --path ../assets --path "$EXE" --pubkey-from src-tauri/tauri.dev.conf.json --publish
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -422,10 +425,10 @@ jobs:
 
       - name: Sign
         env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_DEV_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_DEV_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_DEV_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_DEV_KEY_PASSWORD }}
         run: |
           set -euo pipefail
           mkdir -p ../assets
@@ -449,12 +452,12 @@ jobs:
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_DEV_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_DEV_SIGNING_PRIVATE_KEY_PASSWORD }}
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_DEV_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_DEV_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_DEV_KEY_PASSWORD }}
         run: |
           set -euo pipefail
-          node scripts/audit-release.mjs --path dist --path ../assets
+          node scripts/audit-release.mjs --path dist --path ../assets --publish
 
       - name: Make sure no keystore file is left on the runner
         if: always()
@@ -494,10 +497,10 @@ jobs:
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_DEV_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_DEV_SIGNING_PRIVATE_KEY_PASSWORD }}
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: node web/scripts/audit-release.mjs --path dl --pubkey-from web/src-tauri/tauri.dev.conf.json
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_DEV_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_DEV_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_DEV_KEY_PASSWORD }}
+        run: node web/scripts/audit-release.mjs --path dl --pubkey-from web/src-tauri/tauri.dev.conf.json --publish
 
       - name: Updater manifest (dev-latest.json) and verification
         run: |
