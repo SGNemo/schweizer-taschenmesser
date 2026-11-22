@@ -34,10 +34,24 @@ const STORE_KEY = 'tm-diag-errors';
 const entries: LogEntry[] = [];
 const lines: LogLine[] = [];
 
-/** Removes URLs (kept: origin), IP addresses, long token-like runs, e-mail addresses and user paths. */
+/**
+ * A value right after a secret-like label (`password=…`, `"apiKey": "…"`, `Authorization: Basic …`,
+ * `client_secret: …`, `PIN=…`) or a bearer token, of any length: the 24-character token rule below
+ * misses short passwords and PINs.
+ */
+const LABELLED_SECRET =
+  /\b([\w-]*?(?:password|passwort|passwd|pwd|secret|token|api[_-]?key|authorization|auth|pin))(["']?\s*[:=]\s*["']?)(?:(?:bearer|basic)\s+)?[^\s"'&,;}]+/gi;
+const BEARER = /\b(bearer)\s+[^\s"'&,;}]+/gi;
+
+/**
+ * Removes labelled secret values, bearer tokens, URLs (kept: origin), IP addresses, long token-like
+ * runs, e-mail addresses and user paths.
+ */
 export function scrub(text: string): string {
   return (
     text
+      .replace(LABELLED_SECRET, '$1$2[secret]')
+      .replace(BEARER, '$1 [secret]')
       .replace(/https?:\/\/[^\s"'<>)]+/g, (url) => {
         try {
           return new URL(url).origin;
