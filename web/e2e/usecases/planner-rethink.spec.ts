@@ -22,7 +22,7 @@ import { ready } from '../helpers';
  * `IST`), on the desktop and the phone, light (`SCHEME=dark`: dark). The table lands in `test-results/usecase-planner-rethink.md`, the facts next
  * to it.
  *
- *   npx playwright test e2e/usecases/planner-rethink.spec.ts --project=desktop-chrome --trace off
+ *   npx playwright test e2e/usecases/planner-rethink.spec.ts --trace off   (desktop and phone; SCHEME=dark: dark)
  */
 
 const OUT = 'test-results/usecase-planner-rethink';
@@ -37,7 +37,7 @@ const IN_THREE_WEEKS = day(21);
 
 type Figures = Record<string, number | string>;
 
-/** The measured state; a path fails when the planner behaves differently (then re-measure and say why). */
+/** The last measured state: with `TARGET` it bounds every count (a path that gets worse fails; re-measure and say why). */
 const IST: Record<string, Figures> = {
   'U1 Woche legen, zwei Tage verpassen, zurücklegen': {
     // Package 5 (2026-11-22): 31 → 11 – „Noch ohne Tag“ open once, then one drag per thing onto its day's tile.
@@ -381,21 +381,26 @@ function record(info: TestInfo, name: string, figures: Figures, facts: unknown) 
   info.annotations.push({ type: 'usecase', description: `${name}: ${JSON.stringify(figures)}` });
   console.log(name, JSON.stringify(figures));
   // MEASURE=1 only measures. Package 7: the rebuild is asserted against `TARGET` – a count (taps, unasked or
-  // collateral moves) may be at most its target, a word must match; a figure without a target may never grow
-  // beyond its last measured `IST` (nothing is loosened).
+  // collateral moves) may be at most the better of its target and its last measured `IST`, a word must match
+  // (nothing is loosened).
   if (process.env.MEASURE !== '1') reached(name, figures, !!info.project.use.isMobile);
 }
 
 function reached(name: string, figures: Figures, phone: boolean) {
-  const target = { ...TARGET[name], ...(phone ? PHONE_TARGET[name] : {}) };
-  for (const [k, want] of Object.entries(target)) {
+  const target: Figures = { ...TARGET[name], ...(phone ? PHONE_TARGET[name] : {}) };
+  const ist: Figures = { ...IST[name], ...(phone ? PHONE_IST[name] : {}) };
+  for (const k of new Set([...Object.keys(target), ...Object.keys(ist)])) {
+    const want = target[k];
+    const was = ist[k];
     const got = figures[k];
-    if (typeof want === 'number') expect(got, `${name}: ${k} ≤ Ziel`).toBeLessThanOrEqual(want);
-    else expect(got, `${name}: ${k} = Ziel`).toBe(want);
+    if (typeof want === 'string') expect(got, `${name}: ${k} = Ziel`).toBe(want);
+    else {
+      // A count may not grow beyond the better of its target and its last measured value.
+      const bound = Math.min(...[want, was].filter((v): v is number => typeof v === 'number'));
+      if (Number.isFinite(bound))
+        expect(got, `${name}: ${k} ≤ ${bound}`).toBeLessThanOrEqual(bound);
+    }
   }
-  for (const [k, was] of Object.entries({ ...IST[name], ...(phone ? PHONE_IST[name] : {}) }))
-    if (!(k in target) && typeof was === 'number')
-      expect(figures[k], `${name}: ${k} ≤ Ist`).toBeLessThanOrEqual(was);
 }
 
 /** Package 7: measured light and dark (`SCHEME=dark`), on the desktop with the mouse and on the phone by touch. */

@@ -24,7 +24,7 @@ Branch `design/planner-rethink`, 2026-11-21. The maintainer's brief: the planner
 
 ## Answers (2026-11-21) – decisions in [decisions/plan-rethink.md](../../decisions/plan-rethink.md)
 
-1. **Missed things:** the maintainer's own idea – a tab **„Noch offen“** in the planner; from there he spreads them again. Things that were fest land there too, marked, so he places them first ([CONCEPT](CONCEPT.md) §3). The mockups still show the group on today's sheet that was proposed.
+1. **Missed things:** the maintainer's own idea – a tab **„Noch offen“** in the planner; from there he spreads them again. Things that were fest land there too, marked, so he places them first ([CONCEPT](CONCEPT.md) §3). The mockups (pictures in the PR text of the design round; files removed, `git show 48dae5711:docs/design/planner-rethink/mockups/a.html`) still show the group on today's sheet that was proposed.
 2. **Sources with a deadline:** „Noch ohne Tag“ with the chip „Vorschlag: Do · Frist Fr“.
 3. **Standard view:** one week with paging; „4 Wochen“ as a switch.
 4. **Direction:** A „Blatt und Band“.
