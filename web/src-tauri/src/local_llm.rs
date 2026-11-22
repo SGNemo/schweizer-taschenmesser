@@ -124,13 +124,28 @@ mod real {
             Self::default()
         }
 
-        /// "Alle Daten löschen": stops a running download and frees a loaded model, so its file
-        /// can be deleted (Windows keeps a mapped file locked). Blocking (joins the worker).
+        /// "Alle Daten löschen": cancels a running download and waits (at most 5 s) until it has
+        /// let go of its file, then frees a loaded model, so the folder can be deleted (Windows
+        /// keeps open and mapped files locked). Blocking (joins the worker).
         pub(crate) fn release(&self) {
-            if let Ok(slot) = self.downloading.lock() {
+            // a running generation holds the worker (and so the mapped model) too
+            if let Ok(slot) = self.generating.lock() {
                 if let Some(flag) = slot.as_ref() {
                     flag.store(true, Ordering::Relaxed);
                 }
+            }
+            let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+            loop {
+                let running = match self.downloading.lock() {
+                    Ok(slot) => slot
+                        .as_ref()
+                        .map(|flag| flag.store(true, Ordering::Relaxed)),
+                    Err(_) => None,
+                };
+                if running.is_none() || std::time::Instant::now() >= deadline {
+                    break;
+                }
+                std::thread::sleep(std::time::Duration::from_millis(50));
             }
             let old = self.loaded.lock().ok().and_then(|mut l| l.take());
             drop(old);

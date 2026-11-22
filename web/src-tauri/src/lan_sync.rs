@@ -43,7 +43,7 @@ const TICK: Duration = Duration::from_secs(2);
 
 /// After "Alle Daten löschen" no hub starts for this long: a sync round of the page that is about
 /// to reload must not build new keys and a new `lan-sync/` right after the wipe.
-const WIPE_HOLD: Duration = Duration::from_secs(60);
+const WIPE_HOLD: Duration = Duration::from_secs(15);
 
 #[derive(Default)]
 pub struct LanSync(Mutex<Option<Running>>, Mutex<Option<std::time::Instant>>);
@@ -555,6 +555,9 @@ pub(crate) trait HubWipe {
     fn stop(&self) -> Result<(), ()>;
     /// Removes one keystore entry; an entry that is not there counts as removed.
     fn delete_key(&self, name: &str) -> Result<(), ()>;
+    /// Drops what the run keeps in memory beside the files (exchange boxes, program list); last,
+    /// so nothing reopened from the old files in between stays cached.
+    fn forget_run_state(&self);
 }
 
 /// Stops the hub, then removes both keystore entries and the whole `lan-sync/` folder (trust list,
@@ -572,6 +575,7 @@ pub(crate) fn wipe_hub(hub: &impl HubWipe, dir: Option<&std::path::Path>) -> Res
             Err(e) => e.kind() == std::io::ErrorKind::NotFound,
         };
     }
+    hub.forget_run_state();
     ok.then_some(()).ok_or(())
 }
 
@@ -593,15 +597,17 @@ impl HubWipe for AppHub<'_> {
             *at = Some(std::time::Instant::now());
         }
         // the command itself (also used by "Ausschalten"), so both stop the hub the same way
-        let stopped = lan_hub_stop(self.0.clone(), state);
-        // what the run keeps in memory beside the files: the exchange boxes, the program list
+        lan_hub_stop(self.0.clone(), state).map_err(|_| ())
+    }
+
+    fn forget_run_state(&self) {
+        use tauri::Manager as _;
         self.0
             .state::<crate::exchange::ExchangeHost>()
             .forget_files();
         self.0
             .state::<crate::remote::RemoteHost>()
             .forget_programs();
-        stopped.map_err(|_| ())
     }
 
     fn delete_key(&self, name: &str) -> Result<(), ()> {
@@ -883,6 +889,9 @@ mod tests {
             self.keys.borrow_mut().retain(|k| k != name);
             Ok(())
         }
+        fn forget_run_state(&self) {
+            self.calls.borrow_mut().push("forget".into());
+        }
     }
 
     fn temp_root(name: &str) -> PathBuf {
@@ -923,7 +932,7 @@ mod tests {
         );
         assert_eq!(
             hub.calls.borrow().as_slice(),
-            ["stop", "key:hub-static-key", "key:hub-data-key"]
+            ["stop", "key:hub-static-key", "key:hub-data-key", "forget"]
         );
     }
 
@@ -956,12 +965,12 @@ mod tests {
     }
 
     #[test]
-    fn no_hub_starts_for_a_minute_after_a_wipe() {
+    fn no_hub_starts_right_after_a_wipe() {
         let at = Mutex::new(None);
         let t0 = std::time::Instant::now();
         assert!(!wiped_within(&at, t0));
         *at.lock().unwrap() = Some(t0);
-        assert!(wiped_within(&at, t0 + Duration::from_secs(59)));
+        assert!(wiped_within(&at, t0 + Duration::from_secs(14)));
         assert!(!wiped_within(&at, t0 + WIPE_HOLD));
     }
 }

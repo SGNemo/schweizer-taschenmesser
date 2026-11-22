@@ -190,7 +190,8 @@ export interface LanHubDevice {
 /**
  * Desktop only (Windows listens; elsewhere the hub stays off): the home-network sync hub of
  * `src-tauri/crates/lan-sync`. Every call rejects with a short code (`not-started`, `client-paired`,
- * `keystore-unavailable`, `busy`, `wrong-code`, …). Never logs, never stores the key in the web app
+ * `keystore-unavailable`, `busy`, `wrong-code`, `wiped` = a start within 15 s after „Alle Daten
+ * löschen“, …). Never logs, never stores the key in the web app
  * beyond the non-extractable `CryptoKey` the sync service imports.
  */
 export interface LanHubService {

@@ -96,11 +96,13 @@ export interface ResetOptions {
 
 /** A step that does not answer in this time is left behind (an unreachable server, a stuck OS call). */
 const STEP_TIMEOUT_MS = 10_000;
+/** The native part does several things in a row (hub, pairing goodbye, torrent, browser, models). */
+const NATIVE_TIMEOUT_MS = 30_000;
 
-function withTimeout<T>(p: Promise<T>, fallback: T): Promise<T> {
+function withTimeout<T>(p: Promise<T>, fallback: T, ms = STEP_TIMEOUT_MS): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<T>((resolve) => {
-    timer = setTimeout(() => resolve(fallback), STEP_TIMEOUT_MS);
+    timer = setTimeout(() => resolve(fallback), ms);
   });
   return Promise.race([p.catch(() => fallback), timeout]).finally(() => clearTimeout(timer));
 }
@@ -138,10 +140,11 @@ export async function resetDevice(
   // Native files and keys (hub, pairings, downloads …) before the database: nothing paired with
   // this device may outlive the reset.
   const report = native.supported
-    ? await withTimeout<DeviceWipeReport>(native.wipe({ models: options.models === true }), {
-        failed: ['native'],
-        kept: [],
-      })
+    ? await withTimeout<DeviceWipeReport>(
+        native.wipe({ models: options.models === true }),
+        { failed: ['native'], kept: [] },
+        NATIVE_TIMEOUT_MS,
+      )
     : undefined;
   for (const name of names) await secrets.delete(name).catch(() => undefined);
   // A failing OS call must not stop the reset.

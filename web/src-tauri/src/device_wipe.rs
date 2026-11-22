@@ -8,7 +8,7 @@
 //!
 //! Desktop: the home-network hub first (listener and sessions down, `lan-sync/` and both keystore
 //! entries gone – an earlier paired phone is no longer trusted, whoever uses the PC next finds no
-//! `hub.db` or data key; no hub starts again for a minute), the device side of a pairing with
+//! `hub.db` or data key; no hub starts again for 15 s), the device side of a pairing with
 //! another PC, the Local API (its tokens), the extension's host registration, the downloads list,
 //! the torrent engine and its state, the built-in browser's profile, the PC-care journal (only when
 //! nothing can be undone any more), `logs/panic.log`, and the local AI models when the user
@@ -103,10 +103,7 @@ pub(crate) mod desktop {
 
     fn files(app: &AppHandle, models: bool, report: &mut WipeReport) {
         report.step("downloads", crate::downloads::wipe(app));
-        report.step(
-            "browser",
-            crate::browser::clear_all(app, &app.state::<crate::browser::BrowserState>()),
-        );
+        report.step("browser", browser(app));
         match app.state::<crate::optimize::PcCare>().wipe(app) {
             Ok(crate::optimize::JournalWipe::Removed) => {}
             Ok(crate::optimize::JournalWipe::KeptForUndo) => report.kept.push("pc-care"),
@@ -120,6 +117,21 @@ pub(crate) mod desktop {
                 crate::local_llm::models_dir(app).map_or(Ok(()), |d| remove_dir(&d)),
             );
         }
+    }
+
+    /// The tabs' processes let go of the profile files a moment after the tabs closed (WebView2
+    /// clears asynchronously): try again for up to 3 s.
+    fn browser(app: &AppHandle) -> Result<(), String> {
+        let state = app.state::<crate::browser::BrowserState>();
+        let mut result = crate::browser::clear_all(app, &state);
+        for _ in 0..10 {
+            if result.is_ok() {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(300));
+            result = crate::browser::clear_all(app, &state);
+        }
+        result
     }
 
     fn panic_log(app: &AppHandle) -> Result<(), String> {
