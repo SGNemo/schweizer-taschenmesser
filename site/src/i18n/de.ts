@@ -110,8 +110,8 @@ export const de = {
     },
     data: {
       h: "Und es bleibt bei dir",
-      lead: "Kein Konto, kein Nemo-Server. Was die App trotzdem ins Netz schickt, steht hier. Nichts davon geht an das Projekt. Deine Einträge verlassen das Gerät nur, wenn du es selbst einrichtest oder auslöst: per Sync zu deinem eigenen Server oder deinen Geräten im Heimnetz, als Push-Erinnerung über deinen Server, oder als Daten, die du einer KI-Frage mitgibst.",
-      link: "Alle Verbindungen, und wie du nachprüfst",
+      lead: "Kein Konto, kein Nemo-Server. Was die App trotzdem ins Netz schickt, steht hier. Nichts davon geht an das Projekt. Deine Einträge verlassen das Gerät nur, wenn du es selbst einrichtest oder auslöst; die Liste nennt die Fälle.",
+      link: "Die Verbindungen, und wie du nachprüfst",
     },
     inside: {
       h: "Du schaltest ein, was du brauchst",
@@ -132,13 +132,13 @@ export const de = {
       { short: false, when: "Klick auf „Öffentliche IP abfragen“", where: "api.ipify.org", what: "Die Anfrage.", off: "Nur auf Klick" },
       { short: false, when: "Lokales KI-Modell laden", where: "huggingface.co", what: "Der Download. Die Prüfsumme wird kontrolliert.", off: "Nur nach deiner Bestätigung" },
       { short: false, when: "Feeds und Kalender-Abos", where: "Die Adressen, die du einträgst", what: "Der Abruf der Adresse.", off: "Aus, bis du eine einträgst" },
-      { short: false, when: "Google", where: "Google; bei „Bilder laden“ in einer Mail die Bildserver des Absenders", what: "Kalender lesen. Beim Import und im Modul Mail deine E-Mails lesen und, wenn du es erlaubst, senden und aufräumen.", off: "Aus, bis du die Verbindung einrichtest" },
-      { short: false, when: "Spotify", where: "Spotify (auch dessen Bildserver für Cover)", what: "Was gerade läuft, deine Playlists und Bibliothek, Steuerbefehle und was du per Klick änderst.", off: "Aus, bis du die Verbindung einrichtest" },
-      { short: false, when: "Karten: Karte ansehen, Ort suchen, Route berechnen", where: "OpenStreetMap und darauf aufbauende freie Dienste (Ortssuche, Routen, Orte in der Nähe), transitous.org", what: "Der Kartenausschnitt, dein Suchbegriff, Start und Ziel der Route.", off: "Nur im Modul Karten, auf deine Eingabe" },
+      { short: false, when: "Google, wenn verbunden", where: "Google; bei „Bilder laden“ oder „Immer laden“ in einer Mail die Bildserver des Absenders", what: "Kalender lesen. Beim Import und im Modul E-Mail deine E-Mails lesen und, wenn du es erlaubst, senden und aufräumen.", off: "Aus, bis du die Verbindung einrichtest" },
+      { short: false, when: "Spotify, wenn verbunden", where: "Spotify (auch dessen Bildserver für Cover)", what: "Was gerade läuft, deine Playlists und Bibliothek, Steuerbefehle und was du per Klick änderst.", off: "Aus, bis du die Verbindung einrichtest" },
+      { short: false, when: "Karten: Karte ansehen, Ort suchen, Route berechnen", where: "OpenStreetMap und darauf aufbauende freie Dienste (Ortssuche, Routen, Orte in der Nähe), Transitous", what: "Der Kartenausschnitt, dein Suchbegriff, Start und Ziel der Route.", off: "Aus, bis du das Modul einschaltest" },
       { short: false, when: "Eingebauter Browser (Windows und Android)", where: "Die Seiten, die du öffnest; Suche: DuckDuckGo oder deine Wahl", what: "Was jeder Browser sendet: die Adresse, Cookies der Seite, dein Suchbegriff.", off: "Aus, bis du das Modul einschaltest" },
-      { short: false, when: "Downloads und Torrent (Windows)", where: "Der Server der Datei; bei Torrent andere Teilnehmer, Tracker und das DHT-Netz", what: "Die Adresse der Datei. Bei Torrent deine IP-Adresse und was du lädst; geladene Teile werden zugleich angeboten.", off: "Nur auf Klick; Torrent ist aus, bis du es einschaltest" },
+      { short: false, when: "Downloads und Torrent (Windows)", where: "Der Server der Datei; bei Torrent die anderen Nutzer des Torrent-Netzes", what: "Die Adresse der Datei. Bei Torrent sehen andere Nutzer des Torrent-Netzes deine IP-Adresse und was du lädst; geladene Teile werden zugleich angeboten.", off: "Nur auf Klick; Torrent ist aus, bis du es einschaltest" },
       { short: false, when: "Erinnerungen als Push (Browser-App)", where: "Dein eigener Server, dann der Push-Dienst deines Browsers", what: "Titel und Text der Erinnerung, verschlüsselt, wenn dein Sync verschlüsselt ist.", off: "Aus, bis du es einschaltest" },
-      { short: false, when: "Heimnetz: Abgleich, Austausch, Fernsteuerung", where: "Deine eigenen gekoppelten Geräte im selben WLAN", what: "Deine Daten, verschlüsselt, direkt von Gerät zu Gerät. Der PC meldet sich dafür im eigenen WLAN.", off: "Aus, bis du den Abgleich im Heimnetz einschaltest" },
+      { short: false, when: "Heimnetz: Abgleich, Austausch, Fernsteuerung", where: "Deine eigenen gekoppelten Geräte im Heimnetz", what: "Deine Daten, verschlüsselt, direkt von Gerät zu Gerät. Der PC meldet sich dafür im Heimnetz, während du koppelst und solange ein Gerät gekoppelt ist.", off: "Aus, bis du Geräte koppelst" },
       { short: true, when: "KI-Assistent", where: "Anbieter deiner Wahl", what: "Deine Frage, das Datum, die Feldnamen der Module.", off: "Aus, bis du einen Schlüssel hinterlegst" },
       { short: true, when: "Sync", where: "Dein eigener Server", what: "Deine Daten, auf Wunsch Ende-zu-Ende verschlüsselt.", off: "Aus, bis du ihn einrichtest" },
     ],
@@ -180,9 +180,9 @@ export const de = {
   // Page /daten (components/DataPage.astro).
   dataPage: {
     title: "Was ins Netz geht",
-    description: "Die Verbindungen, die Nemo aufbaut, mit Ziel, Inhalt und Schalter. Deine Einträge bleiben bei dir.",
+    description: "Die Verbindungen, die Nemo aufbaut, mit Ziel, Inhalt und Schalter.",
     h1: "Was ins Netz geht.",
-    lead: "Deine Einträge bleiben bei dir: auf deinem Gerät, deinen eigenen Geräten oder deinem eigenen Server. Hier stehen die Verbindungen, die Nemo aufbaut, und wo du sie abschaltest. Die vollständige Liste mit allen Einzelheiten steht in der App unter Einstellungen → Über Nemo → Rechtliches.",
+    lead: "Deine Einträge verlassen das Gerät nur, wenn du es selbst einrichtest oder auslöst. Hier stehen die Verbindungen, die Nemo aufbaut, und wo du sie abschaltest. Alle Einzelheiten stehen in der App unter Einstellungen → Über Nemo → Rechtliches.",
     schema: {
       alt: "Schema: Innerhalb einer Linie mit der Aufschrift „Bei dir“ stehen dein PC, dein Handy und, gestrichelt, dein eigener Server. Außerhalb, unter „Internet“, stehen Update-Abfrage, Wetter und KI, jede mit dem Hinweis, wie sie ausgeschaltet ist oder wird.",
       inside: "Bei dir",
@@ -197,7 +197,7 @@ export const de = {
         ["KI", "aus, bis du sie einschaltest"],
       ],
     },
-    table: { h: "Jede Verbindung", intro: "Außer deiner IP-Adresse und der Anfrage selbst wird dabei nichts übertragen, wenn die Zeile nichts anderes sagt." },
+    table: { h: "Die Verbindungen", intro: "Außer deiner IP-Adresse und der Anfrage selbst wird dabei nichts übertragen, wenn die Zeile nichts anderes sagt." },
     ai: {
       h: "Die KI sieht deine Einträge nicht",
       p: [

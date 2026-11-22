@@ -48,15 +48,13 @@ describe('data flows', () => {
       'whether the last message is yours (on this device only)',
     );
     // Mail reads whole messages (gmail.readonly) and can write with the extra permissions: the notice says so.
-    expect(text('google')).not.toContain('nie der Inhalt');
-    expect(text('google')).toContain('Text und Anhänge');
+    expect(text('google')).toContain('Text der Mails, die du öffnest');
     expect(text('google')).toContain('gmail.modify und gmail.send');
     const en = JSON.stringify(dataFlows(tLegal.en).find((f) => f.id === 'google'));
-    expect(en).not.toContain('never the content');
-    expect(en).toContain('text and attachments');
+    expect(en).toContain('the text of the mails you open');
     // the import in the setup assistant reads mail lines without the Mail module: both uses are named
-    expect(text('google')).toContain('Import von Rechnungen und Abos');
-    expect(text('google')).toContain('Modul „Mail“');
+    expect(text('google')).toContain('E-Mail beim Import');
+    expect(text('google')).toContain('Modul „E-Mail“');
     expect(text('sync')).toContain('Heimnetz');
     expect(text('ai-cloud')).toContain('Nie deine Einträge');
     expect(text('update')).toContain('Automatisch nach Updates suchen');
