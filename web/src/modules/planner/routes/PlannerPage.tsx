@@ -206,7 +206,10 @@ export default function PlannerPage() {
    * fixed ones stay and are named („1 bleibt: fest“).
    */
   async function showSpread(day: BoardDay) {
-    const free = day.rows.filter((r) => !r.pinned && !r.fixed && !r.derived && r.entry);
+    // A thing in parts stays out: its other parts lie on other days the action does not name.
+    const free = day.rows.filter(
+      (r) => !r.pinned && !r.fixed && !r.derived && r.entry && r.of === 1,
+    );
     const loose = [...new Set(free.map((r) => r.itemKey))];
     const fixed = new Set(day.rows.filter((r) => r.pinned).map((r) => r.itemKey)).size;
     setAsk(undefined);
@@ -614,12 +617,9 @@ export default function PlannerPage() {
         dueClock={dueClock}
         // Under its day's head the row need not repeat the day; among the fixed things (several days) it says it.
         was={row.pinned ? row.date : undefined}
-        menu={rowMenu(row, undefined, undefined, {
-          tick,
-          open: true,
-          lockInMenu: lockHidden(row),
-        })}
-        lock={lockHidden(row) ? undefined : lockOf(row, row.date)}
+        menu={rowMenu(row, undefined, undefined, { tick, open: true })}
+        // A passed day is not made „fest“ (it needs a new day first); a thing that is „fest“ can be let go here.
+        lock={row.pinned ? lockOf(row, row.date) : undefined}
         onDone={tick ? () => done(row) : undefined}
         onLater={
           row.entry && canAssign(row.entry.moduleId)
@@ -778,9 +778,11 @@ export default function PlannerPage() {
   useEffect(() => {
     if (!chipSig || chipKeys.length === 0) return;
     let live = true;
-    void proposeUser(chipKeys).then((days) => {
-      if (live) setProposals({ sig: chipSig, days });
-    });
+    void proposeUser(chipKeys)
+      .catch(() => ({}))
+      .then((days) => {
+        if (live) setProposals({ sig: chipSig, days });
+      });
     return () => {
       live = false;
     };
@@ -789,7 +791,9 @@ export default function PlannerPage() {
   const chipOf = (w: (typeof waiting)[number]) => {
     const e = w.entry;
     if (!e) return undefined;
-    const proposed = w.hardDue ? proposals?.days[w.itemKey] : undefined;
+    // Only a proposal for the plan as it is now (a stale one could lay the thing on a day that filled up since).
+    const proposed =
+      w.hardDue && proposals?.sig === chipSig ? proposals.days[w.itemKey] : undefined;
     if (proposed)
       return (
         <span className={styles.hintRow} data-testid="proposal-chip">
@@ -1078,7 +1082,7 @@ export default function PlannerPage() {
                   onSpread={() => void showSpread(shownDay)}
                   hints={
                     shownDay.hints?.length ? (
-                      <ItemList label={t.planner.chips.place}>
+                      <ItemList label={t.planner.chips.todoList}>
                         {shownDay.hints.map((h) => (
                           <TodoHintRow
                             key={h.itemKey}

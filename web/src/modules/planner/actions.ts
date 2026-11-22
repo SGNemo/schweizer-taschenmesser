@@ -9,7 +9,7 @@ import { formatMinutes } from '@/core/i18n/format';
 import { getLang } from '@/core/i18n/lang';
 import { plannableSource, type PlannableEntry } from '@/core/modules/contributions';
 import { availableManifests } from '@/core/modules/available';
-import { capacity } from '@/core/plan/capacity';
+import { capacity, fixedCharges } from '@/core/plan/capacity';
 import { addDays } from '@/core/plan/dates';
 import { dayName, partWord } from '@/core/plan/explain';
 import { DEFAULT_MIN, type DayPart } from '@/core/plan/types';
@@ -345,11 +345,11 @@ export async function addFromField(
   const lock = de && !reading.isBreak ? extractLock(text, day) : undefined;
   if (lock) {
     const locked = read(lock.text);
-    const on =
-      lock.date ??
-      (!locked.hardDue && locked.fields.date && locked.fields.date >= day
-        ? locked.fields.date
-        : undefined);
+    // A deadline is no day: „Steuer bis Fr fest“ keeps its deadline and locks nothing.
+    const on = locked.hardDue
+      ? undefined
+      : (lock.date ??
+        (locked.fields.date && locked.fields.date >= day ? locked.fields.date : undefined));
     // Only next to a day: „Bin fest“ stays a title.
     if (on) {
       reading = locked;
@@ -416,7 +416,9 @@ export async function addFromField(
       return scope;
     },
     // A deadline or a part says its own fact; otherwise a full or kept-free day says so in the one line.
-    hardDue || (part && !fixedOn) ? {} : { leadAfter: (run) => dayNote(target, run, lead) },
+    hardDue || (part && !fixedOn)
+      ? {}
+      : { leadAfter: (run) => dayNote(target, run, fixedOn ? lead : undefined) },
   );
 }
 
@@ -425,26 +427,39 @@ export async function addFromField(
  * planbar.“ / „Do ist frei gehalten. Liegt trotzdem dort.“ – a fact, no tone; undefined on an ordinary day (the lead
  * stays). Counted as the board counts: the open things' rows of that day and the dated turns shown there.
  */
-async function dayNote(date: string, run: UserRun, lead: string): Promise<string | undefined> {
+async function dayNote(
+  date: string,
+  run: UserRun,
+  /** The lead to keep („Zahnarzt liegt auf Do · fest“); without one the plain „Liegt auf Mo.“ form is used. */
+  keep: string | undefined,
+): Promise<string | undefined> {
   const inputs = run.outcome.inputs;
   const plan = inputs.days.find((d) => d.date === date);
   if (!plan) return undefined;
   if (plan.availableMin === 0) return t.planner.toast.keptFree(dayName(date));
-  const open = new Map(
-    inputs.entries.filter((e) => !e.done).map((e) => [itemKeyOf(e.moduleId, e.id), e]),
+  const open = new Set(
+    inputs.entries.filter((e) => !e.done).map((e) => itemKeyOf(e.moduleId, e.id)),
   );
   const rows = ((await assignmentRepo.active().toArray()) as AssignmentRow[]).filter(
-    (r) => r.date === date && open.has(r.itemKey) && !inputs.removeKeys.has(r.itemKey) && !r.from,
+    (r) => r.date === date && open.has(r.itemKey) && !inputs.removeKeys.has(r.itemKey),
   );
-  const laid = new Set(rows.map((r) => r.itemKey));
-  const turns = [...open]
-    .filter(([key, e]) => e.day === date && !e.fixed && !laid.has(key))
-    .reduce((n, [, e]) => n + (e.durationMin ?? DEFAULT_MIN), 0);
-  const planned = rows.reduce((n, r) => n + r.minutes, 0) + turns;
+  // As the board counts: a fixed block only what no timed blocker covers, a dated turn on its day.
+  const timed = rows.filter((r) => r.from && r.to);
+  const charges = fixedCharges(
+    timed.map((r) => ({ minutes: r.minutes, from: r.from, to: r.to })),
+    plan.blockers,
+  );
+  const turns = inputs.turns.filter((x) => x.date === date);
+  const turnMin = turns.reduce((n, x) => {
+    const item = inputs.items.find((i) => `${i.key}#0` === x.id);
+    return n + (item?.durationMin ?? DEFAULT_MIN);
+  }, 0);
+  const planned =
+    rows.filter((r) => !(r.from && r.to)).reduce((n, r) => n + r.minutes, 0) +
+    charges.reduce((n, c) => n + c, 0) +
+    turnMin;
   if (planned <= capacity(plan, inputs.settings).usable) return undefined;
-  return lead.startsWith(t.planner.toast.laid(dayName(date)))
-    ? t.planner.toast.laidOver(dayName(date))
-    : `${lead}\n${t.planner.toast.overNow}`;
+  return keep ? `${keep}\n${t.planner.toast.overNow}` : t.planner.toast.laidOver(dayName(date));
 }
 
 /** „Erledigt“: only for a source that takes it back (an invoice or a cancellation does not: false, nothing happens). */
@@ -614,6 +629,8 @@ export async function setLocked(
 ): Promise<boolean> {
   // The toast names the day the thing lies on („Fest am Mi“).
   const on = (await rowsOf(itemKeyOf(e.moduleId, e.id))).map((r) => r.date).sort()[0] ?? shownOn;
+  // Nothing lies anywhere: nothing to lock, no toast, no undo entry.
+  if (on === undefined) return false;
   return act(
     locked ? t.planner.row.pin : t.planner.row.unpin,
     locked ? t.planner.toast.pinned(dayName(on ?? today())) : t.planner.toast.unpinned,

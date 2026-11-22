@@ -28,7 +28,7 @@ import {
   type RequestedIds,
 } from '@/core/modules/contributions';
 import { isPlannerOwned, type CalendarItem, type ModuleManifest } from '@/core/modules/types';
-import { fixedOf, planDays } from './days';
+import { fixedOf, planDays, turnDayOf } from './days';
 import { lateMoneyDue } from './late';
 import { migratePins } from './migrateModel';
 import { itemKeyOf, plannerRepos, putRow, type PlannerDb, type PlannerRepos } from './repo';
@@ -87,6 +87,11 @@ export interface RunInputs {
   userDates: Map<string, string>;
   /** Items with a row that is „fest“: no proposal takes them. */
   lockedKeys: Set<string>;
+  /**
+   * A source's dated turns without a row (`PlannableItem.day`, `turnDayOf`): handed to the engine as where they lie, so
+   * every proposal counts their time on that day as the board does. Never written as rows (`writeRows`).
+   */
+  turns: PrevAssignment[];
   /** Items whose rows a run takes away: „Nicht planen“ and late money. Nothing else is ever removed by a run. */
   removeKeys: Set<string>;
   settings: PlanSettings;
@@ -193,6 +198,8 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
   const lockedKeys = new Set([...prevRows.values()].filter((r) => r.locked).map((r) => r.itemKey));
   // Rows the run itself may take away: of a thing the person took out („Nicht planen“) and of late money (D7).
   const removeKeys = new Set<string>();
+  const laidKeys = new Set([...prevRows.values()].map((r) => r.itemKey));
+  const turns: PrevAssignment[] = [];
   const userDates = new Map<string, string>();
   const titles: Record<string, string> = {};
   const items: PlanItem[] = [];
@@ -209,6 +216,12 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
       continue;
     }
     if (row?.excluded) removeKeys.add(key);
+    const turn = turnDayOf(e, {
+      laid: laidKeys.has(key),
+      excluded: row?.excluded === true,
+      late: false,
+    });
+    if (turn) turns.push({ id: `${key}#0`, date: turn, reason: 'kept' });
     const userDate = e.plannedFor && !isPlannerOwned(e) ? e.plannedFor : undefined;
     if (userDate) userDates.set(key, userDate);
     const dueAny = row?.due?.hard ? row.due : (e.due ?? row?.due);
@@ -273,6 +286,7 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
     itemRows,
     userDates,
     lockedKeys,
+    turns,
     removeKeys,
     settings,
     hash,
@@ -333,16 +347,23 @@ export async function writeRows(
     ...(result.kept ?? []),
   ]);
   const knownItems = new Set([...result.assignments, ...result.unplaced].map((u) => u.itemKey));
+  // A dated turn without a row is where its source says; it gets a row only from an action that lays it.
+  const turnIds = new Set(inputs.turns.map((x) => x.id));
+  // Nor does it take a place in its day's order: the rows after it keep the positions they had.
+  const turnAt = result.assignments.filter((a) => turnIds.has(a.id) && !inputs.prevRows.has(a.id));
+  const orderOf = (a: { date: string; order: number }) =>
+    a.order - turnAt.filter((x) => x.date === a.date && x.order < a.order).length;
   for (const a of result.assignments) {
     if (aborted?.()) return n;
     live.add(a.id);
+    if (turnIds.has(a.id) && !inputs.prevRows.has(a.id)) continue;
     const data: AssignmentRow = {
       itemKey: a.itemKey,
       k: a.k,
       of: a.of,
       date: a.date,
       minutes: a.minutes,
-      order: a.order,
+      order: orderOf(a),
       reason: a.reason,
       // „fest“ belongs to the row and survives every run; a thing a proposal moved was never locked.
       ...(inputs.prevRows.get(a.id)?.locked ? { locked: true } : {}),
@@ -474,12 +495,14 @@ export async function runPlanner(
     opts.reshuffle
       ? looseAll(inputs)
       : [...new Set([...(opts.loose ?? []), ...looseOf(inputs, opts.ops ?? [])])]
-  ).filter((k) => !laidNow.has(k) && (!opts.looseIf || opts.looseIf(k)));
+  ).filter(
+    (k) => !laidNow.has(k) && !turnKeys(inputs).has(k) && (!opts.looseIf || opts.looseIf(k)),
+  );
   const result = plan({
     today: deps.today,
     days: inputs.days,
     items: boundedItems(inputs.items, loose, opts.notBefore),
-    prev: inputs.prev,
+    prev: [...inputs.prev, ...inputs.turns],
     loose,
     settings: inputs.settings,
   });
@@ -599,17 +622,23 @@ export async function previewPlanner(
 ): Promise<PreviewOutcome> {
   const inputs = await buildInputs(deps, plannerRepos(deps.database));
   const next = withOps({ ...inputs, items: [...inputs.items, ...extra] }, ops);
-  const loose = [...new Set([...looseOf(inputs, ops, extra), ...(spread?.loose ?? [])])];
+  const loose = [...new Set([...looseOf(inputs, ops, extra), ...(spread?.loose ?? [])])].filter(
+    (k) => !turnKeys(inputs).has(k),
+  );
   const result = plan({
     today: deps.today,
     days: next.days,
     items: boundedItems(next.items, loose, spread?.notBefore),
-    prev: inputs.prev,
+    prev: [...inputs.prev, ...inputs.turns],
     loose,
     settings: next.settings,
   });
   return { result, titles: inputs.titles, prev: inputs.prev };
 }
+
+/** A dated turn lies where its source says: no proposal moves it (moving it by hand writes its row). */
+const turnKeys = (inputs: Pick<RunInputs, 'turns'>) =>
+  new Set(inputs.turns.map((x) => x.id.slice(0, x.id.lastIndexOf('#'))));
 
 /** The handed-over items may go nowhere before `notBefore` (a day's spread keeps its things on that day or later). */
 function boundedItems(
@@ -638,19 +667,13 @@ export async function proposeDays(
   if (keys.length === 0) return {};
   const inputs = await buildInputs(deps, plannerRepos(deps.database));
   const laid = new Set([...inputs.prevRows.values()].map((r) => r.itemKey));
-  // A dated turn shown on its day without a row takes that day's time, as on the board.
-  const turns: PrevAssignment[] = inputs.entries.flatMap((e) => {
-    const key = itemKeyOf(e.moduleId, e.id);
-    return e.day && !e.done && !e.fixed && !laid.has(key)
-      ? [{ id: `${key}#0`, date: e.day, reason: 'kept' as const }]
-      : [];
-  });
   const loose = keys.filter((k) => !inputs.lockedKeys.has(k) && !laid.has(k));
   const result = plan({
     today: deps.today,
     days: inputs.days,
     items: inputs.items,
-    prev: [...inputs.prev, ...turns],
+    // A dated turn shown on its day without a row takes that day's time, as on the board.
+    prev: [...inputs.prev, ...inputs.turns],
     loose,
     settings: inputs.settings,
   });

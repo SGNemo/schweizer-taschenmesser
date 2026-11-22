@@ -8,7 +8,7 @@ import { isPlannerOwned, type CalendarItem } from '@/core/modules/types';
 import { capacity, fixedCharges } from '@/core/plan/capacity';
 import { cmp } from '@/core/plan/dates';
 import { DEFAULT_MIN, type PlaceReason, type Unplaced } from '@/core/plan/types';
-import { fixedOf, planDays, type DayBlocker } from './days';
+import { fixedOf, planDays, turnDayOf, type DayBlocker } from './days';
 import { lateMoneyDue } from './late';
 import { itemKeyOf } from './repo';
 import type { AssignmentRow, PlanDayRow, PlanItemRow } from './schema';
@@ -247,14 +247,11 @@ export function buildBoard(input: BoardInput): Board {
   const lastDate = addDaysIso(input.today, input.span - 1);
   /** A source's dated turn (`day`) without a row, not fixed (a fixed block has its row), still open. */
   const turnDay = (key: string, e: PlannableEntry): string | undefined =>
-    e.day &&
-    !e.done &&
-    !rowDates.has(key) &&
-    !fixedOf(e) &&
-    !lateDue.has(key) &&
-    !items.get(key)?.excluded
-      ? e.day
-      : undefined;
+    turnDayOf(e, {
+      laid: rowDates.has(key),
+      excluded: items.get(key)?.excluded === true,
+      late: lateDue.has(key),
+    });
   /** A date the person set in ToDos that the plan does not hold (`isPlannerOwned` false, no row on it). */
   const todoDay = (key: string, e: PlannableEntry): string | undefined =>
     e.plannedFor &&

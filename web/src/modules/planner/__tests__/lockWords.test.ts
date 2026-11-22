@@ -17,6 +17,9 @@ describe('extractLock', () => {
     ['Bin fest', { text: 'Bin' }],
     // „so“ in lower case is a word, not Sunday.
     ['Mach das so fest', { text: 'Mach das so' }],
+    // A weekday after a deadline word is the deadline, no day: nothing is read as the lock's day.
+    ['Steuer bis Fr fest', { text: 'Steuer bis Fr' }],
+    ['Rechnung zahlen Frist Do!', { text: 'Rechnung zahlen Frist Do' }],
   ])('%s', (line, out) => {
     expect(extractLock(line, MON)).toEqual(out);
   });

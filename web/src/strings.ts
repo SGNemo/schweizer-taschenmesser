@@ -9655,16 +9655,16 @@ export const de = {
       eventsFill: 'Termine an diesem Tag füllen diese Zeit schon.',
     },
     chips: {
-      proposal: (day: string) => `Vorschlag: ${day}`,
       proposalDue: (day: string, due: string) => `Vorschlag: ${day} · Frist ${due}`,
       take: 'Übernehmen',
       takeName: (title: string, day: string) => `Übernehmen: ${title} auf ${day}`,
       inTodos: (day: string) => `In ToDos: ${day}`,
       place: 'Hierher legen',
+      todoList: 'In ToDos',
       placeName: (title: string, day: string) => `Hierher legen: ${title} auf ${day}`,
     },
     spread: {
-      line: 'Was an diesem Tag nicht fest ist, geht auf diesen oder die nächsten Tage.',
+      line: 'Was nicht fest ist, geht auf diesen oder spätere Tage.',
       done: 'Verteilt.',
       fixed: (n: number) => (n === 1 ? '1 bleibt: fest' : `${n} bleiben: fest`),
     },

@@ -1152,9 +1152,7 @@ test.describe('Planer (planner rethink, package 2: lock words, overbooking, chip
     await expect(toast(page)).toContainText('Fest am Mo');
     await over.getByRole('button', { name: 'Rest verteilen' }).click();
     const preview = page.getByTestId('plan-preview');
-    await expect(preview).toContainText(
-      'Was an diesem Tag nicht fest ist, geht auf diesen oder die nächsten Tage.',
-    );
+    await expect(preview).toContainText('Was nicht fest ist, geht auf diesen oder spätere Tage.');
     await expect(preview).toContainText('1 bleibt: fest');
     await expect(today(page)).toContainText('Umzug');
     await preview.getByRole('button', { name: 'Übernehmen' }).click();

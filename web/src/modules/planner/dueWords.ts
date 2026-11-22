@@ -137,6 +137,7 @@ export function readFieldWithPart(
  */
 const LOCK_WORD = /(?:\s+(?:fest|lock)|\s*!)\s*$/iu;
 // Capitalised only, as the parser reads a bare short weekday (C03): „mach das so fest“ is no Sunday.
+const DUE_BEFORE = /(?<![\p{L}\d])(?:bis|frist|spätestens)\s*$/iu;
 const SHORT_BEFORE = /(?<![\p{L}\d])(Mo|Di|Mi|Do|Fr|Sa|So)\.?\s*$/u;
 
 export interface LockPhrase {
@@ -153,6 +154,8 @@ export function extractLock(text: string, today: string): LockPhrase | undefined
   // „!!“ or a line that is nothing but the word: no lock word, the text stays as it is.
   if (!rest || rest.endsWith('!')) return undefined;
   const day = SHORT_BEFORE.exec(rest);
+  // „Steuer bis Fr fest“: that weekday is a deadline, no day – the line stays as it is (a deadline is no lock).
+  if (day && DUE_BEFORE.test(rest.slice(0, day.index))) return { text: rest };
   if (day) {
     const stripped = rest.slice(0, day.index).trimEnd();
     if (stripped)

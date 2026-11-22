@@ -3,8 +3,8 @@ type: added
 area: planner
 breaking: false
 highlight: true
-de: Planer: Ein Tipp aufs Schloss macht ein Ding fest an seinem Tag; „Zahnarzt Do fest“ oder „Zahnarzt Do!“ im Feld legt es gleich fest dorthin.
-en: Planner: one tap on the lock keeps a thing on its day; typing “Zahnarzt Do fest” or “Zahnarzt Do!” lays it there fixed right away.
+de: Planer: Ein Tipp aufs Schloss macht ein Ding fest an seinem Tag (Handy: im ⋯-Menü); „Zahnarzt Do fest“ oder „Zahnarzt Do!“ im Feld legt es gleich fest dorthin.
+en: Planner: one tap on the lock keeps a thing on its day (phone: in the ⋯ menu); with German input, “Zahnarzt Do fest” or “Zahnarzt Do!” lays it there fixed.
 ---
 ---
 type: added
@@ -17,6 +17,6 @@ en: Planner: things with a deadline get a suggestion under “No day yet” (“
 type: changed
 area: planner
 breaking: false
-de: Planer: Ein voller Tag sagt ruhig „2 h 10 mehr als planbar“ und bietet „Rest verteilen“ für genau diesen Tag an; Festes bleibt liegen. Trainings und Routinen stehen an ihrem Tag.
-en: Planner: a full day calmly says “2 h 10 more than fits” and offers “Spread the rest” for that day; fixed things stay. Trainings and routines show on their day.
+de: Planer: Ein voller Tag sagt ruhig „2 h 10 mehr als planbar“ und bietet „Rest verteilen“ für genau diesen Tag an; Festes bleibt liegen. Trainings und Routinen stehen jetzt an ihrem Tag im Planer.
+en: Planner: a full day calmly says “2 h 10 more than fits” and offers “Spread the rest” for that day; fixed things stay. Trainings and routines now show on their day in the planner.
 ---

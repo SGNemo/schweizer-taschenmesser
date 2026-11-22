@@ -353,6 +353,17 @@ const cases: Case[] = [
     },
   },
   {
+    name: 'addFromField with a lock word after a deadline („Steuer bis Fr fest“): the deadline stays, nothing is fest',
+    run: () => addFromField('Steuer bis Fr fest', {}, TUE),
+    named: ['new'],
+    to: TUE,
+    did: async () => {
+      expect((await assignmentRepo.active().toArray()).some((r) => r.locked)).toBe(false);
+      const task = (await taskRepo.active().toArray()).find((x) => !(x.id in LAID))!;
+      expect((await itemRepo.get(key(task.id)))?.due).toMatchObject({ date: FRI, hard: true });
+    },
+  },
+  {
     name: 'addFromField with the `p` prefix keeps its pin („p Zahnarzt Donnerstag“, ANALYSIS R13)',
     run: () => addFromField('p Zahnarzt Donnerstag', {}, TUE),
     named: ['new'],
@@ -830,5 +841,49 @@ describe('package 2: a proposal that finds no room says so after „Übernehmen�
     // Nothing was written, so there is nothing to undo (and the toast offers no undo).
     expect(undoDepth()).toBe(0);
     expect(useUiStore.getState().toasts.at(-1)?.action).toBeUndefined();
+  });
+});
+
+describe('package 2: a dated turn takes its day for every proposal and is never written', () => {
+  beforeEach(layFour);
+
+  it('a background run writes no row for it; a chip does not claim its time; a reshuffle does not move it', async () => {
+    const turns = {
+      id: 'routines',
+      contributions: {
+        plannable: async () => ({
+          default: {
+            list: async () => [
+              {
+                id: 'bad',
+                kind: 'routine',
+                title: 'Bad putzen',
+                to: '/routines',
+                durationMin: 150,
+                day: TUE,
+              },
+            ],
+          },
+        }),
+      },
+    } as unknown as ModuleManifest;
+    setManifestsForTests(async () => [todos, turns]);
+    const before = await rowDates();
+    const pass = await runBackground({ force: true });
+    expect(pass!.rowWrites).toBe(0);
+    expect(await rowDates()).toEqual(before);
+    expect(pass!.inputs.turns).toEqual([{ id: 'routines:bad#0', date: TUE, reason: 'kept' }]);
+    // Tuesday holds p3 (30) and the turn (150) of its 192 minutes: a 60-minute deadline thing is not offered Tuesday.
+    await addTask('d1', 'Frist d1', 60);
+    await itemRepo.create(
+      { source: { module: 'todos', id: 'd1' }, order: 0, due: { date: FRI, hard: true } } as never,
+      { id: key('d1') },
+    );
+    const offered = (await proposeUser([key('d1')]))[key('d1')];
+    expect(offered).toBe(MON);
+    const preview = await previewUser([{ op: 'replan', reshuffle: true }]);
+    expect(preview.result.assignments.find((a) => a.itemKey === 'routines:bad')?.date).toBe(TUE);
+    await runsSettled();
+    expect(await assignmentRepo.get('routines:bad#0')).toBeUndefined();
   });
 });

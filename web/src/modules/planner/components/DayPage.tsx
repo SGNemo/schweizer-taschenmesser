@@ -334,7 +334,8 @@ export function DayPage({
 
       {hasRows && (onRest || onSetup) ? (
         <div className={styles.sheetFoot}>
-          {hasRows && onRest ? (
+          {/* An overbooked day offers „Rest verteilen“ once: on its line above (that day's things that are not fest). */}
+          {hasRows && onRest && !(state === 'over' && onSpread) ? (
             <span data-testid="rest-link">
               <button type="button" className={styles.textLink} onClick={onRest}>
                 {t.planner.rest.link}

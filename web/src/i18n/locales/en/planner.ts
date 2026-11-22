@@ -387,16 +387,16 @@ export const planner: Strings['planner'] = {
     eventsFill: 'Appointments on this day already fill this time.',
   },
   chips: {
-    proposal: (day: string) => `Suggestion: ${day}`,
     proposalDue: (day: string, due: string) => `Suggestion: ${day} · due ${due}`,
     take: 'Apply',
     takeName: (title: string, day: string) => `Apply: ${title} on ${day}`,
     inTodos: (day: string) => `In To-dos: ${day}`,
     place: 'Place here',
+    todoList: 'In To-dos',
     placeName: (title: string, day: string) => `Place here: ${title} on ${day}`,
   },
   spread: {
-    line: 'What is not fixed on this day goes to this day or the next ones.',
+    line: 'What is not fixed goes to this day or later ones.',
     done: 'Spread.',
     fixed: (n: number) => (n === 1 ? '1 stays: fixed' : `${n} stay: fixed`),
   },
