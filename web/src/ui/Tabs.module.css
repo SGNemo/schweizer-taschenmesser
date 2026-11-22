@@ -54,3 +54,12 @@
   height: 2px;
   background: var(--accent);
 }
+
+/* „There is something here“ – a quiet dot after the label, never a count; the tab's name says it in words. */
+.mark {
+  width: 0.375rem;
+  height: 0.375rem;
+  margin-left: var(--space-1);
+  border-radius: 50%;
+  background: currentColor;
+}

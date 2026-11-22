@@ -102,6 +102,7 @@
     "streaks": true,
     "weekReview": true,
     "weekCheck": false,
+    "openLine": true,
     "eveningWrapUp": true
   },
   "_settings scope weather": {

@@ -86,6 +86,8 @@ export const focusSettingsSchema = z.object({
   weekReview: z.boolean(),
   /** Planner: on Mondays one quiet text link „Woche prüfen“ in the planner's head (dismissable per week). */
   weekCheck: z.boolean(),
+  /** Planner: one quiet line on today's sheet while something of a passed day is still open („Noch offen“). */
+  openLine: z.boolean(),
   /** In the evening: "Tag abschließen" moves what is left to tomorrow. */
   eveningWrapUp: z.boolean(),
   /**
@@ -132,6 +134,7 @@ export const DEFAULT_FOCUS: FocusSettings = {
   streaks: false,
   weekReview: false,
   weekCheck: false,
+  openLine: true,
   eveningWrapUp: true,
   restReminder: false,
 };

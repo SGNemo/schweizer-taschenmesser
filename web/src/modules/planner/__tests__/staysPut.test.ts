@@ -25,11 +25,15 @@ import {
   exclude,
   later,
   markDone,
+  allToday,
   layHere,
+  moveMany,
   moveTo,
   setAvailable,
   setLocked,
   spreadDay,
+  spreadOpen,
+  takeOff,
 } from '../actions';
 import { buildBoard } from '../board';
 import manifest from '../manifest';
@@ -193,7 +197,14 @@ interface Case {
   did: () => Promise<void>;
   /** State the case needs besides the four laid things (written before the snapshot, no undo entry). */
   prep?: () => Promise<void>;
+  /** The named things land on this day or a later one (a proposal picks the day). */
+  toAtLeast?: string;
 }
+
+/** Package 3: Wednesday morning – Monday's and Tuesday's things are „Noch offen“. */
+const onWednesday = async () => {
+  setNow(() => at(WED, 8).getTime());
+};
 
 /** Package 2: the proposal a chip showed (read in `prep`, taken by the case). */
 let proposed: string | undefined;
@@ -433,6 +444,55 @@ const cases: Case[] = [
       expect(lastToast()).toBe('Verteilt.\n1 bleibt: fest');
     },
   },
+  // Package 3 (planner rethink): the tab „Noch offen“ in one move – each action names its things, one undo.
+  {
+    name: '„Alle auf heute“ of the tab „Noch offen“',
+    prep: onWednesday,
+    run: async () => allToday([await entryOf('p1'), await entryOf('p2'), await entryOf('p3')], {}),
+    named: ['p1', 'p2', 'p3'],
+    to: WED,
+    did: async () => {
+      expect(lastToast()).toBe('Alles liegt auf heute.');
+      expect((await boardOn(WED)).open).toEqual([]);
+    },
+  },
+  {
+    name: '„Auf einen Tag …“ of a selection (two things onto Friday)',
+    prep: onWednesday,
+    run: async () => moveMany([await entryOf('p1'), await entryOf('p2')], FRI, {}),
+    named: ['p1', 'p2'],
+    to: FRI,
+    did: async () => {
+      expect(lastToast()).toBe('2 Dinge liegen auf Fr');
+      expect((await boardOn(WED)).open.map((r) => r.itemKey)).toEqual([key('p3')]);
+    },
+  },
+  {
+    name: '„Verteilen …“ of the tab „Noch offen“: the open things go to today or later, the fixed one stays',
+    prep: async () => {
+      await onWednesday();
+      await lockRow('p2');
+    },
+    run: () => spreadOpen([key('p1'), key('p2'), key('p3')], 0, {}),
+    named: ['p1', 'p3'],
+    toAtLeast: WED,
+    did: async () => {
+      expect(await assignmentRepo.get(`${key('p2')}#0`)).toMatchObject({ date: MON, locked: true });
+      expect(lastToast()).toBe('Verteilt.\n1 bleibt: fest');
+    },
+  },
+  {
+    name: "„Vom Tag nehmen“: the thing is „Noch ohne Tag“ again, its ToDo loses the planner's date",
+    prep: onWednesday,
+    run: async () => takeOff(await entryOf('p1'), {}),
+    named: ['p1'],
+    to: null,
+    did: async () => {
+      expect(lastToast()).toBe('Ding p1 ist jetzt ohne Tag');
+      const task = (await taskRepo.get('p1')) as { plannedFor?: string; planMark?: unknown };
+      expect(task.planMark).toBeUndefined();
+    },
+  },
 ];
 
 describe.each(cases)('$name', (c) => {
@@ -465,6 +525,7 @@ describe.each(cases)('$name', (c) => {
     for (const k of keys) {
       const id = `${k}#0`;
       if (to() === null) expect(after[id]).toBeUndefined();
+      else if (c.toAtLeast) expect(after[id]! >= c.toAtLeast, `${id} on ${after[id]}`).toBe(true);
       else expect(after[id]).toBe(to() ?? before[id]);
     }
     await did();

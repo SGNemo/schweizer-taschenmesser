@@ -18,6 +18,7 @@ import { today } from '@/core/time/now';
 import { t } from '@/strings';
 import {
   Button,
+  SelectionBar,
   EmptyState,
   Icon,
   IconButton,
@@ -35,7 +36,18 @@ import {
 import { useHeroTargets } from '@/core/shell/heroContext';
 import { usePageAction } from '@/core/shell/pageAction';
 import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
-import { addFromField, applyOps, layHere, later, markDone, setLocked, spreadDay } from '../actions';
+import {
+  addFromField,
+  allToday,
+  applyOps,
+  layHere,
+  later,
+  markDone,
+  setLocked,
+  spreadDay,
+  spreadOpen,
+  takeOff,
+} from '../actions';
 import type { BoardDay, BoardRow, OpenRow } from '../board';
 import { Capture } from '../components/Capture';
 import { CaptureDialog } from '../components/CaptureDialog';
@@ -52,6 +64,7 @@ import { DaySheet } from '../components/DaySheet';
 import { RowChoice, type RowChoiceState } from '../components/RowChoice';
 import { SETUP_DAYS } from '../daySetup';
 import { duesOf, eveningLine } from '../rest';
+import { openLineText, openTabName } from '../openLine';
 import { dayEndLabel, dayEndOf } from '../settings';
 import { PlanPreview, type PreviewData } from '../components/PlanPreview';
 import { WeekCheck } from '../components/WeekCheck';
@@ -63,6 +76,9 @@ import { PlannerOffError, previewUser, proposeUser } from '../services';
 import { useBoard } from '../useBoard';
 import { useUiStore } from '@/stores/ui';
 import styles from './planner.module.css';
+
+/** A thing open this many days gets the quiet offer „Vom Tag nehmen“ (CONCEPT §3). */
+const TAKE_OFF_AFTER = 14;
 
 /** Days on the board: a rolling week from today (the widget starts there too). */
 const SPAN = BOARD_DAYS;
@@ -87,16 +103,11 @@ interface Pending {
   local?: { sentence: string; rules: Instruction };
   /** „Rest verteilen“: one calm sentence above the moves and in the toast, never a count of what was left. */
   rest?: boolean;
-  /** „Rest verteilen“ of one overbooked day: its things that are not „fest“, nothing before that day. */
-  spread?: { date: string; loose: string[]; fixed: number };
-}
-
-/** The days the open rows lie on, for the tab's name: up to three short day names, else „seit Do 12.“-like. */
-function openDays(rows: readonly OpenRow[]): string {
-  const dates = [...new Set(rows.map((r) => r.date))].sort();
-  // Always with the date: „Mo“ alone could be last week's Monday or the coming one.
-  const named = (d: string) => `${dayName(d)} ${formatDay(d, 'd.')}`;
-  return dates.length <= 3 ? dates.map(named).join(', ') : t.planner.tabs.since(named(dates[0]!));
+  /**
+   * „Rest verteilen“ of one overbooked day (its things that are not „fest“, nothing before that day), or – `open` –
+   * „Verteilen …“ of the tab „Noch offen“ (its things that are not „fest“, today first).
+   */
+  spread?: { date: string; loose: string[]; fixed: number; open?: true };
 }
 
 export default function PlannerPage() {
@@ -163,6 +174,9 @@ export default function PlannerPage() {
 
   // The open choice behind „Als Pause …“ / „Dauer …“ of a row.
   const [choice, setChoice] = useState<RowChoiceState>();
+  // „Auswählen“ in the tab „Noch offen“ (package 3): the chosen rows, one day for all of them.
+  const [selecting, setSelecting] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(() => new Set());
   const abilities = useAbilities();
   const { canDone, canAssign } = abilities;
 
@@ -206,9 +220,18 @@ export default function PlannerPage() {
    * fixed ones stay and are named („1 bleibt: fest“).
    */
   async function showSpread(day: BoardDay) {
-    const free = day.rows.filter(movable);
+    return previewSpread(day.rows, day.date, false);
+  }
+
+  /** „Verteilen …“ of the tab „Noch offen“: its things that are not „fest“, today first – as a preview. */
+  function showSpreadOpen() {
+    return previewSpread(data?.board.open ?? [], data?.today ?? today(), true);
+  }
+
+  async function previewSpread(rows: readonly BoardRow[], from: string, open: boolean) {
+    const free = rows.filter(movable);
     const loose = [...new Set(free.map((r) => r.itemKey))];
-    const fixed = new Set(day.rows.filter((r) => r.pinned).map((r) => r.itemKey)).size;
+    const fixed = new Set(rows.filter((r) => r.pinned).map((r) => r.itemKey)).size;
     setAsk(undefined);
     if (loose.length === 0) {
       setPending(undefined);
@@ -217,13 +240,16 @@ export default function PlannerPage() {
     }
     setSayLine(undefined);
     try {
-      const out = await previewUser([], [], { loose, notBefore: day.date });
+      const out = await previewUser([], [], { loose, notBefore: from });
       setPending({
         ops: [],
         lead: t.planner.spread.done,
-        spread: { date: day.date, loose, fixed },
+        spread: { date: from, loose, fixed, ...(open ? { open: true as const } : {}) },
         data: {
-          lines: [t.planner.spread.line, ...(fixed > 0 ? [t.planner.spread.fixed(fixed)] : [])],
+          lines: [
+            open ? t.planner.open.spreadLine : t.planner.spread.line,
+            ...(fixed > 0 ? [t.planner.spread.fixed(fixed)] : []),
+          ],
           noCounts: true,
           dues: board ? duesOf(board) : {},
           diff: out.result.diff,
@@ -317,7 +343,9 @@ export default function PlannerPage() {
     if (!pending) return;
     setBusy(true);
     try {
-      if (pending.spread)
+      if (pending.spread?.open)
+        await spreadOpen(pending.spread.loose, pending.spread.fixed, titles);
+      else if (pending.spread)
         await spreadDay(pending.spread.date, pending.spread.loose, pending.spread.fixed, titles);
       else await applyOps(pending.ops, pending.lead, titles, pending.rest === true);
       if (pending.fromField) setText('');
@@ -614,6 +642,12 @@ export default function PlannerPage() {
   // puts them on a day again („Verschieben …“ first in the row's ⋯). Things that are „fest“ come first.
   const tab = params.get('tab') === 'open' ? 'open' : 'plan';
   const openRows = data?.board.open ?? [];
+  // The selection belongs to the tab and its rows: leaving the tab, or the tab emptying (a sync, an undo), ends it
+  // (adjusting state during render).
+  if ((tab !== 'open' || (data && openRows.length === 0)) && (selecting || selected.size > 0)) {
+    setSelecting(false);
+    setSelected(new Set());
+  }
   const renderOpen = (row: OpenRow) => {
     const tick = !!row.entry && canDone(row.entry.moduleId);
     return (
@@ -625,9 +659,32 @@ export default function PlannerPage() {
         dueClock={dueClock}
         // Under its day's head the row need not repeat the day; among the fixed things (several days) it says it.
         was={row.pinned ? row.date : undefined}
-        menu={rowMenu(row, undefined, undefined, { tick, open: true })}
-        // A passed day is not made „fest“ (it needs a new day first); a thing that is „fest“ can be let go here.
-        lock={row.pinned ? lockOf(row, row.date) : undefined}
+        // Package 3: tick, title, „war Mo“, lock and a move button – no ⋯; two taps to a day, also on the phone.
+        menu={[]}
+        lock={lockOf(row, row.date)}
+        onMove={
+          row.entry ? () => setChoice({ kind: 'move', entry: row.entry!, on: row.date }) : undefined
+        }
+        // Open for more than 14 days: the quiet offer to let it go back to „Noch ohne Tag“.
+        onTakeOff={
+          row.entry && data && row.date < addDaysStr(data.today, -TAKE_OFF_AFTER)
+            ? () => void takeOff(row.entry!, titles)
+            : undefined
+        }
+        select={
+          selecting
+            ? {
+                selected: selected.has(row.unitId),
+                onChange: (on) =>
+                  setSelected((cur) => {
+                    const next = new Set(cur);
+                    if (on) next.add(row.unitId);
+                    else next.delete(row.unitId);
+                    return next;
+                  }),
+              }
+            : undefined
+        }
         onDone={tick ? () => done(row) : undefined}
         onLater={
           row.entry && canAssign(row.entry.moduleId)
@@ -645,19 +702,75 @@ export default function PlannerPage() {
   const openSeen = useRef(openRows.length);
   useEffect(() => {
     if (tab === 'open' && openRows.length < openSeen.current) {
-      // The next row's menu; when the list is empty now, the tab itself (the focus never falls to the page).
+      // The next row's move button; when the list is empty now, the tab itself (the focus never falls to the page).
       const next =
-        openRef.current?.querySelector<HTMLElement>('[aria-haspopup="menu"]') ??
+        openRef.current?.querySelector<HTMLElement>('[data-row-move]') ??
         openRef.current?.parentElement?.querySelector<HTMLElement>('nav [aria-current="page"]');
       if (next && !openRef.current?.contains(document.activeElement)) next.focus();
     }
     openSeen.current = openRows.length;
   }, [tab, openRows.length]);
+  /** The rows a group's „Alle“ selects (in the selection only). */
+  const selectAll = (rows: readonly OpenRow[]) =>
+    setSelected((cur) => new Set([...cur, ...rows.map((r) => r.unitId)]));
+  const groupAction = (rows: readonly OpenRow[], label: string) =>
+    selecting ? (
+      <button
+        type="button"
+        className={styles.textLink}
+        aria-label={t.planner.open.selectGroup(label)}
+        onClick={() => selectAll(rows)}
+      >
+        {t.planner.open.selectGroupShort}
+      </button>
+    ) : undefined;
+  // One entry per thing (a thing in parts has several rows; it moves whole).
+  const openEntries = (rows: readonly OpenRow[]) => [
+    ...new Map(rows.flatMap((r) => (r.entry ? [[r.itemKey, r.entry] as const] : []))).values(),
+  ];
+  // Only rows still in the tab count (a row that left by a sync or an undo is no part of the choice).
+  const chosen = openRows.filter((r) => selected.has(r.unitId));
+  const endSelection = () => {
+    setSelecting(false);
+    setSelected(new Set());
+  };
   const openBlock = (
     <div data-testid="planner-open" ref={openRef}>
       {openRows.length === 0 ? (
         <p className={styles.reason}>{t.planner.open.empty}</p>
+      ) : selecting ? (
+        <SelectionBar count={new Set(chosen.map((r) => r.itemKey)).size} onCancel={endSelection}>
+          <Button
+            onClick={() => {
+              const rows = chosen;
+              setChoice({ kind: 'moveMany', entries: openEntries(rows), onDone: endSelection });
+            }}
+          >
+            {t.planner.open.moveSelected}
+          </Button>
+        </SelectionBar>
       ) : (
+        <div className={styles.openActions} data-testid="open-actions">
+          <Button onClick={() => void allToday(openEntries(openRows), titles)}>
+            {t.planner.open.allToday}
+          </Button>
+          <Button variant="ghost" onClick={() => void showSpreadOpen()}>
+            {t.planner.open.spread}
+          </Button>
+          <Button variant="ghost" onClick={() => setSelecting(true)}>
+            {t.planner.open.select}
+          </Button>
+        </div>
+      )}
+      {/* The selection's count lives in its bar; while nothing is chosen yet the bar is not there – the cancel is. */}
+      {selecting && chosen.length === 0 ? (
+        <p className={styles.openActions}>
+          <Button variant="ghost" onClick={endSelection}>
+            {t.actions.cancel}
+          </Button>
+        </p>
+      ) : null}
+      {openRows.length === 0 ? null : (
         <GroupedList
           listId="planner-open"
           groups={[
@@ -668,17 +781,22 @@ export default function PlannerPage() {
                     label: t.planner.open.fixedGroup,
                     count: openFixed.length,
                     countHidden: true,
+                    ...(selecting
+                      ? { action: groupAction(openFixed, t.planner.open.fixedGroup) }
+                      : {}),
                     children: <ItemList>{openFixed.map(renderOpen)}</ItemList>,
                   },
                 ]
               : []),
             ...openDates.map((date) => {
               const rows = openRows.filter((r) => !r.pinned && r.date === date);
+              const label = `${dayName(date)} ${formatDay(date, 'd.')}`;
               return {
                 id: date,
-                label: `${dayName(date)} ${formatDay(date, 'd.')}`,
+                label,
                 count: rows.length,
                 countHidden: true,
+                ...(selecting ? { action: groupAction(rows, label) } : {}),
                 children: <ItemList>{rows.map(renderOpen)}</ItemList>,
               };
             }),
@@ -696,10 +814,9 @@ export default function PlannerPage() {
         { value: 'plan', label: t.planner.tabs.plan },
         {
           value: 'open',
-          // That something is there is said in words – the days, never a count and no bare dot.
-          label: openRows.length
-            ? t.planner.tabs.openFrom(openDays(openRows))
-            : t.planner.tabs.open,
+          // That something is there: a quiet dot, never a count; the name says it in words („… Dinge von Mo, Di“).
+          label: t.planner.tabs.open,
+          ...(openRows.length ? { mark: true, name: openTabName(openRows) } : {}),
         },
       ]}
       onChange={(next) =>
@@ -991,8 +1108,9 @@ export default function PlannerPage() {
     <p className={styles.emptyDay} data-testid="planner-empty-day">
       {shownDay?.isToday && firstFull
         ? t.planner.sheet.dayOffNext(formatDay(firstFull.date, 'EEEE'))
-        : nothingPlanned && openCount > 0
-          ? // Everything he had lies on passed days: say where it is (the tab), not that nothing is there.
+        : nothingPlanned && openCount > 0 && !(shownDay?.isToday && focus.openLine)
+          ? // Everything he had lies on passed days: say where it is (the tab), not that nothing is there – unless
+            // the line over today's sheet says it already.
             t.planner.sheet.onlyOpen
           : nothingPlanned && waiting.some((w) => w.reason === 'no-day')
             ? // Nothing lies on a day yet, things wait without one: name the one next step (also beside late
@@ -1091,6 +1209,29 @@ export default function PlannerPage() {
               )}
 
               {!wide ? <LateRow rows={late} renderRow={renderLate} /> : null}
+
+              {/* „Von Mo, Di ist noch etwas offen.“ – one calm line over today's sheet, never a count (CONCEPT §3). */}
+              {shownDay?.isToday && openRows.length > 0 && focus.openLine ? (
+                <p className={styles.openLine} data-testid="open-line">
+                  <span>{openLineText(openRows)}</span>
+                  <button
+                    type="button"
+                    className={styles.textLink}
+                    onClick={() =>
+                      setParams(
+                        (p) => {
+                          const q = new URLSearchParams(p);
+                          q.set('tab', 'open');
+                          return q;
+                        },
+                        { replace: true },
+                      )
+                    }
+                  >
+                    {t.planner.open.show}
+                  </button>
+                </p>
+              ) : null}
 
               {shownDay && days ? (
                 <DayPage
