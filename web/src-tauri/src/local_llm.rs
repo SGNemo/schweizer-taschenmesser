@@ -124,25 +124,25 @@ mod real {
             Self::default()
         }
 
-        /// "Alle Daten löschen": cancels a running download and waits (at most 5 s) until it has
-        /// let go of its file, then frees a loaded model, so the folder can be deleted (Windows
-        /// keeps open and mapped files locked). Blocking (joins the worker).
+        /// "Alle Daten löschen": cancels a running download and generation and waits (at most
+        /// 5 s) until both have let go, then frees a loaded model, so the folder can be deleted
+        /// (Windows keeps open and mapped files locked). Best effort: a download stuck in a read
+        /// or a generation just starting can keep the folder; the step then reports a failure.
         pub(crate) fn release(&self) {
-            // a running generation holds the worker (and so the mapped model) too
-            if let Ok(slot) = self.generating.lock() {
-                if let Some(flag) = slot.as_ref() {
-                    flag.store(true, Ordering::Relaxed);
-                }
-            }
             let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
             loop {
-                let running = match self.downloading.lock() {
-                    Ok(slot) => slot
-                        .as_ref()
-                        .map(|flag| flag.store(true, Ordering::Relaxed)),
-                    Err(_) => None,
-                };
-                if running.is_none() || std::time::Instant::now() >= deadline {
+                // a download holds its file, a generation its own handle on the model
+                let busy = [&self.downloading, &self.generating]
+                    .iter()
+                    .filter(|slot| match slot.lock() {
+                        Ok(slot) => slot
+                            .as_ref()
+                            .map(|flag| flag.store(true, Ordering::Relaxed))
+                            .is_some(),
+                        Err(_) => false,
+                    })
+                    .count();
+                if busy == 0 || std::time::Instant::now() >= deadline {
                     break;
                 }
                 std::thread::sleep(std::time::Duration::from_millis(50));

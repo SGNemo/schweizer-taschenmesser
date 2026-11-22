@@ -41,10 +41,13 @@ use zeroize::Zeroizing;
 
 const TICK: Duration = Duration::from_secs(2);
 
-/// After "Alle Daten löschen" no hub starts for this long: a sync round of the page that is about
-/// to reload must not build new keys and a new `lan-sync/` right after the wipe.
-const WIPE_HOLD: Duration = Duration::from_secs(15);
+/// "Alle Daten löschen": no hub starts while the wipe runs ([`WIPE_RUNNING`], an upper bound in
+/// case it never reports its end) and for [`WIPE_HOLD`] after it ended – a sync round of the page
+/// that still has its database until the reload must not build new keys and a new `lan-sync/`.
+const WIPE_RUNNING: Duration = Duration::from_secs(3600);
+const WIPE_HOLD: Duration = Duration::from_secs(60);
 
+/// The hub, and until when no hub may start (set by the wipe).
 #[derive(Default)]
 pub struct LanSync(Mutex<Option<Running>>, Mutex<Option<std::time::Instant>>);
 
@@ -438,7 +441,7 @@ fn with_core<T>(
 #[tauri::command(async)]
 pub fn lan_hub_start(app: AppHandle, state: State<'_, LanSync>) -> Result<StartDto, String> {
     let mut slot = state.0.lock().map_err(|_| "internal")?;
-    if wiped_within(&state.1, std::time::Instant::now()) {
+    if held(&state.1, std::time::Instant::now()) {
         return Err("wiped".to_owned());
     }
     if let Some(r) = slot.as_ref() {
@@ -579,11 +582,25 @@ pub(crate) fn wipe_hub(hub: &impl HubWipe, dir: Option<&std::path::Path>) -> Res
     ok.then_some(()).ok_or(())
 }
 
-/// True while a wipe is less than [`WIPE_HOLD`] ago; a poisoned lock counts as wiped.
-fn wiped_within(at: &Mutex<Option<std::time::Instant>>, now: std::time::Instant) -> bool {
-    at.lock().map_or(true, |at| {
-        at.is_some_and(|t| now.saturating_duration_since(t) < WIPE_HOLD)
-    })
+/// True while no hub may start; a poisoned lock counts as held.
+fn held(until: &Mutex<Option<std::time::Instant>>, now: std::time::Instant) -> bool {
+    until
+        .lock()
+        .map_or(true, |until| until.is_some_and(|t| now < t))
+}
+
+fn hold_until(until: &Mutex<Option<std::time::Instant>>, t: std::time::Instant) {
+    let mut slot = until.lock().unwrap_or_else(|e| e.into_inner());
+    *slot = Some(t);
+}
+
+/// End of the wipe (`crate::device_wipe`): the hold now lasts [`WIPE_HOLD`] from here.
+pub(crate) fn wipe_finished(app: &AppHandle) {
+    use tauri::Manager as _;
+    hold_until(
+        &app.state::<LanSync>().1,
+        std::time::Instant::now() + WIPE_HOLD,
+    );
 }
 
 pub(crate) struct AppHub<'a>(pub &'a AppHandle);
@@ -593,9 +610,7 @@ impl HubWipe for AppHub<'_> {
         use tauri::Manager as _;
         let state = self.0.state::<LanSync>();
         // first: a start waiting for the lock (a sync round) must not rebuild the hub afterwards
-        if let Ok(mut at) = state.1.lock() {
-            *at = Some(std::time::Instant::now());
-        }
+        hold_until(&state.1, std::time::Instant::now() + WIPE_RUNNING);
         // the command itself (also used by "Ausschalten"), so both stop the hub the same way
         lan_hub_stop(self.0.clone(), state).map_err(|_| ())
     }
@@ -965,12 +980,18 @@ mod tests {
     }
 
     #[test]
-    fn no_hub_starts_right_after_a_wipe() {
-        let at = Mutex::new(None);
+    fn no_hub_starts_while_the_wipe_runs_and_a_minute_after() {
+        let until = Mutex::new(None);
         let t0 = std::time::Instant::now();
-        assert!(!wiped_within(&at, t0));
-        *at.lock().unwrap() = Some(t0);
-        assert!(wiped_within(&at, t0 + Duration::from_secs(14)));
-        assert!(!wiped_within(&at, t0 + WIPE_HOLD));
+        assert!(!held(&until, t0));
+        hold_until(&until, t0 + WIPE_RUNNING); // the wipe started
+        assert!(
+            held(&until, t0 + Duration::from_secs(300)),
+            "a slow wipe still holds"
+        );
+        let end = t0 + Duration::from_secs(40);
+        hold_until(&until, end + WIPE_HOLD); // the wipe ended
+        assert!(held(&until, end + Duration::from_secs(59)));
+        assert!(!held(&until, end + WIPE_HOLD));
     }
 }

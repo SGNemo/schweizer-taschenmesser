@@ -8,7 +8,7 @@
 //!
 //! Desktop: the home-network hub first (listener and sessions down, `lan-sync/` and both keystore
 //! entries gone – an earlier paired phone is no longer trusted, whoever uses the PC next finds no
-//! `hub.db` or data key; no hub starts again for 15 s), the device side of a pairing with
+//! `hub.db` or data key; no hub starts until a minute after the wipe), the device side of a pairing with
 //! another PC, the Local API (its tokens), the extension's host registration, the downloads list,
 //! the torrent engine and its state, the built-in browser's profile, the PC-care journal (only when
 //! nothing can be undone any more), `logs/panic.log`, and the local AI models when the user
@@ -78,6 +78,8 @@ pub(crate) mod desktop {
         report.step("torrent", crate::torrent::wipe(&app).await);
         tauri::async_runtime::spawn_blocking(move || {
             files(&app, models, &mut report);
+            // the page deletes its database next: no hub for another minute from here
+            crate::lan_sync::wipe_finished(&app);
             report
         })
         .await
