@@ -815,13 +815,14 @@ export default function PlannerPage() {
         : nothingPlanned && openCount > 0
           ? // Everything he had lies on passed days: say where it is (the tab), not that nothing is there.
             t.planner.sheet.onlyOpen
-          : nothingPlanned && late.length > 0
-            ? late.every((r) => r.entry?.kind === 'invoice')
-              ? t.planner.sheet.onlyLate
-              : t.planner.sheet.onlyLateThings
-            : nothingPlanned && waiting.length > 0
-              ? // Nothing lies on a day yet, things wait without one: name the one next step.
-                t.planner.sheet.noDayNext
+          : nothingPlanned && waiting.length > 0
+            ? // Nothing lies on a day yet, things wait without one: name the one next step (also beside late
+              // money – „only the invoices are open“ would be untrue).
+              t.planner.sheet.noDayNext
+            : nothingPlanned && late.length > 0
+              ? late.every((r) => r.entry?.kind === 'invoice')
+                ? t.planner.sheet.onlyLate
+                : t.planner.sheet.onlyLateThings
               : t.planner.sheet.emptyDay}
     </p>
   );
@@ -882,7 +883,9 @@ export default function PlannerPage() {
           {phone ? null : capture(false)}
           {phone ? null : answer}
 
-          {tabs}
+          {/* The tabs are there while something is open from earlier (or that tab is shown): an empty „Noch
+              offen“ is no control worth a row – on the phone it would push the field under the bottom bar. */}
+          {openRows.length > 0 || tab === 'open' ? tabs : null}
 
           {showWeekLink && tab !== 'open' ? (
             <p className={styles.weekLink} data-testid="week-check-link">

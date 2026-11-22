@@ -9678,7 +9678,7 @@ export const de = {
       done: {
         work: 'Arbeitswoche eingetragen – die übliche Zeit je Tag.',
         vacation: 'Urlaub eingetragen – alles wartet ruhig.',
-        sick: 'Ruh dich aus – der Plan rückt ruhig weiter.',
+        sick: 'Ruh dich aus – der Plan bleibt, wie er liegt.',
       },
     },
     /** A row's links and its main action (planner hub K1b, CONCEPT-COPY „Chips“, „Lead actions“). */

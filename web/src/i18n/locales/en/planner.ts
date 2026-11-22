@@ -409,7 +409,7 @@ export const planner: Strings['planner'] = {
     done: {
       work: 'Work week set – the usual time each day.',
       vacation: 'Holiday set – everything waits calmly.',
-      sick: 'Rest up – the plan moves along calmly.',
+      sick: 'Rest up – the plan stays as it lies.',
     },
   },
   links: {

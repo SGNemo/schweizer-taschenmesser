@@ -467,7 +467,7 @@ test.describe('Planer (week board, package 1)', () => {
     await keller.getByRole('button', { name: 'Aktionen für Keller' }).click();
     await expect(page.getByRole('menuitem', { name: 'Nicht mehr fest' })).toHaveCount(0);
     await page.getByRole('menuitem', { name: 'Fest an diesem Tag' }).click();
-    await expect(toast(page)).toContainText('Fest an diesem Tag');
+    await expect(toast(page)).toContainText('Fest am ');
     await expect(keller).toContainText('fest');
     // „Später“ moves the row to the next day; the lock stays with it.
     await keller.getByRole('button', { name: 'Aktionen für Keller' }).click();
@@ -506,10 +506,9 @@ test.describe('Planer (week board, package 1)', () => {
     await day(page, '2026-11-12');
     await enter(page, 'Angebot 45min');
     await expect(toast(page)).toContainText('Liegt auf Do');
-    // Nothing is listed while no day has passed: the tab carries no dot.
+    // Nothing is listed while no day has passed: there are no tabs yet (an empty „Noch offen“ is no control).
     const tabs = page.getByRole('navigation', { name: 'Ansicht' });
-    await expect(tabs).toContainText('Noch offen');
-    await expect(tabs).not.toContainText('•');
+    await expect(tabs).toHaveCount(0);
     /** Minutes of each stored row → its day (the two things differ in their minutes). */
     const laid = async () =>
       Object.fromEntries(
@@ -527,14 +526,14 @@ test.describe('Planer (week board, package 1)', () => {
     );
     await expect(page.locator('main')).not.toContainText('Keller');
     expect(await laid()).toEqual({ '60 min': '2026-11-09', '45 min': '2026-11-12' });
-    // It is listed under „Noch offen“ (the tab shows the quiet dot), its row says which day it was.
-    await expect(tabs).toContainText('Noch offen •');
-    await tabs.getByText('Noch offen •').click();
+    // It is listed under „Noch offen“ (the tab names the day, never a count), under the head of its day.
+    await expect(tabs).toContainText('Noch offen · Mo');
+    await tabs.getByText('Noch offen · Mo').click();
     await expect(page).toHaveURL(/tab=open/);
     const open = page.getByTestId('planner-open');
     await expect(open.locator('li')).toHaveCount(1);
     await expect(open.locator('li')).toContainText('Keller');
-    await expect(open.locator('li')).toContainText('war Mo');
+    await expect(open).toContainText('Mo 9.');
     await expect(open).not.toContainText('Angebot');
     // „Verschieben …“ from there puts it on a day; the other thing stays where it lies.
     await open.getByRole('button', { name: 'Aktionen für Keller' }).click();
@@ -545,7 +544,7 @@ test.describe('Planer (week board, package 1)', () => {
       .click();
     await expect(toast(page)).toContainText('Liegt auf Fr');
     await expect(open).toContainText('Nichts offen von früher.');
-    await expect(tabs).not.toContainText('•');
+    await expect(tabs).not.toContainText('·');
     expect(await laid()).toEqual({ '60 min': '2026-11-13', '45 min': '2026-11-12' });
     await ready(page, '/planner');
     await expect(await day(page, '2026-11-13')).toContainText('Keller');
@@ -999,7 +998,7 @@ test.describe('Planer (time windows, templates – package 5)', () => {
       .getByRole('button', { name: 'Krank' })
       .click();
     await dialog.getByRole('button', { name: 'Passt so' }).click();
-    await expect(page.getByText('Ruh dich aus – der Plan rückt ruhig weiter.')).toBeVisible();
+    await expect(page.getByText('Ruh dich aus – der Plan bleibt, wie er liegt.')).toBeVisible();
     // Today is free; the template changes the days only – the thing stays on its day (nothing is spread unasked).
     await expect(page.getByTestId('week-2026-11-09')).toHaveAccessibleName(
       /Montag, 9\. November: frei/,

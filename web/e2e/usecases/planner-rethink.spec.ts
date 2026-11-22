@@ -366,12 +366,24 @@ test('U1 Woche legen, zwei Tage verpassen, zurücklegen', async ({ page }, info)
       .filter({ hasText: title })
       .first();
     await row.waitFor({ timeout: 5000 }).catch(() => undefined);
+    // The trace of its day: the row's own words („war Mo“ among the fixed things) or the head of its group
+    // („Mo 16.“) – read as the nearest heading above the row.
     traces[title] = (await row.count())
-      ? (await row.innerText()).replace(/\s+/g, ' ')
+      ? await row.evaluate((li) => {
+          let head = '';
+          for (let el = li.parentElement; el && !head; el = el.parentElement)
+            head =
+              (
+                el.querySelector(
+                  ':scope > * h2, :scope > * h3, :scope > h2, :scope > h3',
+                ) as HTMLElement | null
+              )?.innerText ?? '';
+          return `${head} · ${(li as HTMLElement).innerText}`.replace(/\s+/g, ' ');
+        })
       : '(nicht gefunden)';
   }
   const untraceable = missed.filter(
-    (k) => !/verpasst|weiter von|war (Mo|Di)|Montag|Dienstag/i.test(traces[k]!),
+    (k) => !/war (Mo|Di)|\b(Mo|Di) 1[67]\.|Montag|Dienstag/.test(traces[k]!),
   );
   await new Hand(page).tab(false);
 

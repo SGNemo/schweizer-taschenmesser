@@ -261,7 +261,7 @@ describe('actions', () => {
     await runsSettled();
     expect(await dayRepo.get(TODAY)).toMatchObject({ availableMin: 0 });
     expect(useUiStore.getState().toasts.at(-1)?.message).toBe(
-      'Ruh dich aus – der Plan rückt ruhig weiter.',
+      'Ruh dich aus – der Plan bleibt, wie er liegt.',
     );
     await confirmWeek(
       [
