@@ -26,4 +26,9 @@ describe('publicUrl', () => {
       expect(isPublicHost(h), h).toBe(false);
     expect(isPublicHttpsUrl('http://cal.example.test/x')).toBe(false);
   });
+  it('treats home-router and home-network names as local', () => {
+    for (const host of ['fritz.box', 'nas.fritz.box', 'printer.home.arpa', 'pc.localdomain'])
+      expect(isPublicHttpsUrl(`https://${host}/x.png`), host).toBe(false);
+    expect(isPublicHttpsUrl('https://example.org/x.png')).toBe(true);
+  });
 });

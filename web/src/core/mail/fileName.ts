@@ -24,8 +24,9 @@ function trimEdges(name: string): string {
 export function attachmentFileName(name: string): string {
   // The sender decides the length too: look only at the end, where the file name is.
   const clean = trimEdges(
-    name
+    Array.from(name)
       .slice(-1024)
+      .join('')
       .replace(HIDDEN, '')
       .replace(/[<>:"|?*\\/]/g, '_'),
   );

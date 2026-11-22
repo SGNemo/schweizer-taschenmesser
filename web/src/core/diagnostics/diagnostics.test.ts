@@ -14,6 +14,7 @@ import {
   MAX_STACK_FRAMES,
   recordError,
   sanitize,
+  scrub,
 } from './errorLog';
 import { createRepo } from '@/core/db/repo';
 import { tableName } from '@/core/db/schema';
@@ -56,6 +57,7 @@ describe('sanitize', () => {
   });
   it('hides a user folder with spaces at the very end of a message too', () => {
     const out = sanitize('cannot open C:\\Users\\Erika Musterfrau');
+    expect(scrub('open C:\\Users\\Erika Musterfrau\nCaused by: x')).not.toContain('Musterfrau');
     expect(out).not.toContain('Musterfrau');
     expect(out).toContain('cannot open');
   });

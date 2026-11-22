@@ -137,7 +137,7 @@ describe('fetchRemoteImages', () => {
     expect(seen[0]).toMatchObject({
       referrerPolicy: 'no-referrer',
       credentials: 'omit',
-      redirect: 'error',
+      redirect: 'manual',
       maxRedirections: 0,
     });
   });
@@ -179,13 +179,25 @@ describe('fetchRemoteImages', () => {
     expect(await fetchRemoteImages(['https://a.example/huge.png'], fetchFn)).toEqual({});
     expect(read).toBe(false);
   });
-  it('skips an answer that is a redirect (the desktop fetch hands back the 3xx)', async () => {
-    const fetchFn = (async () =>
-      new Response(null, {
-        status: 302,
-        headers: { location: 'http://192.168.1.1/cgi-bin/reboot' },
-      })) as unknown as typeof fetch;
-    expect(await fetchRemoteImages(['https://a.example/moved.png'], fetchFn)).toEqual({});
+  it('follows a redirect only to another public https address, and only a few times', async () => {
+    const asked: string[] = [];
+    const hops: Record<string, string> = {
+      'https://a.example/moved.png': 'https://cdn.example/real.png',
+      'https://a.example/lan.png': 'http://192.168.1.1/cgi-bin/reboot',
+      'https://a.example/lan2.png': 'https://router.lan/x.png',
+      'https://a.example/loop.png': 'https://a.example/loop.png',
+    };
+    const fetchFn = (async (url: string) => {
+      asked.push(url);
+      const to = hops[url];
+      if (to) return new Response(null, { status: 302, headers: { location: to } });
+      return new Response(png, { status: 200, headers: { 'content-type': 'image/png' } });
+    }) as unknown as typeof fetch;
+    const out = await fetchRemoteImages(Object.keys(hops), fetchFn);
+    expect(Object.keys(out)).toEqual(['https://a.example/moved.png']);
+    expect(asked).not.toContain('http://192.168.1.1/cgi-bin/reboot');
+    expect(asked).not.toContain('https://router.lan/x.png');
+    expect(asked.filter((u) => u === 'https://a.example/loop.png')).toHaveLength(4);
   });
 });
 
@@ -200,5 +212,13 @@ describe('sanitizeMailHtml: which remote images are offered', () => {
     expect(out.blocked).toBe(1);
     expect(out.html).not.toContain('192.168.1.1');
     expect(out.html).not.toContain('plain.png');
+  });
+  it('keeps the description of an image it will not fetch', () => {
+    const out = sanitizeMailHtml(
+      '<img src="http://a.example/logo.png" alt="Stadtwerke Musterstadt">',
+    );
+    expect(out.html).toContain('Stadtwerke Musterstadt');
+    expect(out.html).not.toContain('<img');
+    expect(out.blocked).toBe(0);
   });
 });

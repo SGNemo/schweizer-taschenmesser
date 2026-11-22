@@ -1,11 +1,23 @@
 /**
- * What counts as a public feed address on the client. The sync server's proxy applies the same idea
+ * What counts as a public address on the client (feeds, calendar subscriptions, images in mails). The sync server's proxy applies the same idea
  * after DNS resolution (`server/src/proxy.ts`); the app cannot resolve names, so it only judges the
  * text: https, no credentials, and a host that is not loopback, private, link-local (cloud
  * metadata) or a local-only name. A host name that *resolves* to a private address is stopped by
  * the proxy in the browser; on the desktop it is a known limit (see `docs/security`).
  */
-const LOCAL_SUFFIXES = ['.local', '.localhost', '.internal', '.lan', '.home', '.corp', '.intranet'];
+const LOCAL_SUFFIXES = [
+  '.local',
+  '.localhost',
+  '.localdomain',
+  '.internal',
+  '.lan',
+  '.home',
+  '.home.arpa',
+  '.corp',
+  '.intranet',
+  // the default name of a widespread home router
+  '.fritz.box',
+];
 
 function privateV4(host: string): boolean {
   const m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(host);
@@ -30,7 +42,7 @@ export function isPublicHost(host: string): boolean {
   if (privateV4(h)) return false;
   if (/^[\d.]+$/.test(h)) return /^(\d{1,3}\.){3}\d{1,3}$/.test(h); // odd numeric forms are refused
   if (!h.includes('.')) return false; // "localhost", "nas", …
-  return !LOCAL_SUFFIXES.some((s) => h.endsWith(s));
+  return !LOCAL_SUFFIXES.some((s) => h.endsWith(s) || h === s.slice(1));
 }
 
 export function isPublicHttpsUrl(input: string): boolean {

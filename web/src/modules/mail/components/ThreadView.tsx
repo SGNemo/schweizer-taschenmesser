@@ -96,14 +96,14 @@ function Attachments({ account, message }: { account: MailAccountRef; message: M
         {message.attachments.map((a) => (
           <li key={a.id} className={styles.attachment}>
             <span>
-              {a.filename} <span className={styles.meta}>({size(a.size)})</span>
+              {attachmentFileName(a.filename)} <span className={styles.meta}>({size(a.size)})</span>
             </span>
             <span className={styles.row}>
               {canPreview(a) ? (
                 <Button
                   variant="ghost"
                   disabled={busy !== undefined}
-                  aria-label={t.mail.view.preview(a.filename)}
+                  aria-label={t.mail.view.preview(attachmentFileName(a.filename))}
                   onClick={() => void view(a.id, a.filename, a.mime)}
                 >
                   {t.mail.view.previewLabel}
@@ -111,7 +111,7 @@ function Attachments({ account, message }: { account: MailAccountRef; message: M
               ) : null}
               <Button
                 disabled={busy !== undefined}
-                aria-label={t.mail.view.download(a.filename)}
+                aria-label={t.mail.view.download(attachmentFileName(a.filename))}
                 onClick={() => void download(a.id, a.filename, a.mime)}
               >
                 <Icon name="download" /> {t.mail.view.downloadLabel}

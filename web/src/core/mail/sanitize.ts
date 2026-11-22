@@ -141,8 +141,7 @@ function install(): void {
       } else if (/^data:image\//i.test(src)) {
         // already inline
       } else if (isPublicHttpsUrl(src)) {
-        // Only what "Bilder laden" can really fetch is offered: a public https address. Plain http and
-        // addresses in the home network are dropped like any other unusable source (no dead button).
+        // Only what "Bilder laden" can really fetch is offered: a public https address.
         current.remote.add(src);
         const data = current.options.images?.[src];
         if (data) {
@@ -153,7 +152,11 @@ function install(): void {
           node.setAttribute('data-blocked', '1');
         }
       } else {
-        node.remove();
+        // Plain http, an address in the home network or another unusable source: never fetched, so no
+        // button is offered for it. Its description stays as text, so the mail does not look empty.
+        const alt = (node.getAttribute('alt') ?? '').trim();
+        if (alt) node.replaceWith(node.ownerDocument.createTextNode(alt));
+        else node.remove();
       }
       node.removeAttribute('loading');
     }
@@ -216,13 +219,52 @@ export function mailDocument(bodyHtml: string): string {
   );
 }
 
+/** At most this many redirects are followed for one image, each to a public https address only. */
+const MAX_IMAGE_REDIRECTS = 3;
+
+/**
+ * One image request that never follows a redirect by itself: every hop is judged again
+ * (`isPublicHttpsUrl`), so a public address cannot hand the request on to a device in the home network.
+ * The desktop's own fetch obeys `maxRedirections: 0` and hands back the 3xx answer with its `Location`;
+ * a browser answers `redirect: 'manual'` with an opaque response, which simply counts as "not loaded".
+ */
+async function fetchChecked(
+  fetchFn: typeof fetch,
+  url: string,
+  signal: AbortSignal,
+): Promise<Response | undefined> {
+  let current = url;
+  for (let hop = 0; hop <= MAX_IMAGE_REDIRECTS; hop += 1) {
+    const res = await fetchFn(current, {
+      signal,
+      referrerPolicy: 'no-referrer',
+      credentials: 'omit',
+      redirect: 'manual',
+      maxRedirections: 0,
+    } as RequestInit);
+    if (res.status < 300 || res.status >= 400) return res;
+    void res.body?.cancel().catch(() => undefined);
+    const location = res.headers.get('location');
+    if (!location) return undefined;
+    let next: string;
+    try {
+      next = new URL(location, current).toString();
+    } catch {
+      return undefined;
+    }
+    if (!isPublicHttpsUrl(next)) return undefined;
+    current = next;
+  }
+  return undefined;
+}
+
 /**
  * Downloads the images the user allowed (through the platform `fetch`: native, no CORS) and returns them
  * as data URLs. Bounded: at most `max` images of at most `maxBytes` each; failures are skipped.
  *
  * The sender chooses these addresses, so only public https hosts are asked (`isPublicHttpsUrl`): never
  * plain http, a device in the home network, this computer or a cloud metadata address. A body whose
- * declared length is over the limit is not read at all, and a redirect is never followed.
+ * declared length is over the limit is not read at all, and every redirect is judged by the same rule.
  */
 export async function fetchRemoteImages(
   urls: readonly string[],
@@ -235,19 +277,18 @@ export async function fetchRemoteImages(
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      // No redirects: the address the sender wrote was judged, a second one would not be. The browser
-      // obeys `redirect`, the desktop's own fetch `maxRedirections` (it then hands back the 3xx answer).
-      const res = await fetchFn(url, {
-        signal: controller.signal,
-        referrerPolicy: 'no-referrer',
-        credentials: 'omit',
-        redirect: 'error',
-        maxRedirections: 0,
-      } as RequestInit);
+      const res = await fetchChecked(fetchFn, url, controller.signal);
+      if (!res) continue;
       const mime = (res.headers.get('content-type') ?? '').split(';')[0]!.trim().toLowerCase();
-      if (!res.ok || !/^image\/(png|jpe?g|gif|webp|avif|bmp)$/.test(mime)) continue;
       const declared = Number(res.headers.get('content-length'));
-      if (Number.isFinite(declared) && declared > maxBytes) continue;
+      if (
+        !res.ok ||
+        !/^image\/(png|jpe?g|gif|webp|avif|bmp)$/.test(mime) ||
+        (Number.isFinite(declared) && declared > maxBytes)
+      ) {
+        void res.body?.cancel().catch(() => undefined); // do not leave the connection open
+        continue;
+      }
       const bytes = new Uint8Array(await res.arrayBuffer());
       if (bytes.length === 0 || bytes.length > maxBytes) continue;
       let binary = '';
