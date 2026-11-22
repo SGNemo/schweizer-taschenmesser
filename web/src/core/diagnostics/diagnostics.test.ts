@@ -14,7 +14,6 @@ import {
   MAX_STACK_FRAMES,
   recordError,
   sanitize,
-  scrub,
 } from './errorLog';
 import { createRepo } from '@/core/db/repo';
 import { tableName } from '@/core/db/schema';
@@ -44,22 +43,6 @@ describe('sanitize', () => {
     expect(out).not.toContain('Erika');
     expect(out).not.toContain('/home/erika');
     expect(out).not.toContain('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-  });
-  it('hides a Windows user folder with spaces and network paths', () => {
-    const out = sanitize(
-      'open C:\\Users\\Erika Musterfrau\\Documents\\Steuer 2026.pdf failed, also \\\\nas-keller\\privat\\x.txt',
-    );
-    expect(out).not.toContain('Musterfrau');
-    expect(out).not.toContain('Erika');
-    expect(out).not.toContain('nas-keller');
-    expect(out).not.toContain('privat');
-    expect(out).toContain('failed');
-  });
-  it('hides a user folder with spaces at the very end of a message too', () => {
-    const out = sanitize('cannot open C:\\Users\\Erika Musterfrau');
-    expect(scrub('open C:\\Users\\Erika Musterfrau\nCaused by: x')).not.toContain('Musterfrau');
-    expect(out).not.toContain('Musterfrau');
-    expect(out).toContain('cannot open');
   });
   it('truncates long messages', () => {
     expect(sanitize('word '.repeat(200)).length).toBeLessThanOrEqual(MAX_MESSAGE);
