@@ -549,12 +549,21 @@ pub fn apply_undo(
         if let Undo::Reg {
             key,
             name,
-            written: Some(written),
-            ..
+            previous,
+            written,
         } = step
         {
-            if reg.get(key, name)?.as_ref() != Some(written) {
-                return Err(RegError::ChangedElsewhere);
+            // PC2: only a value of the shape that belongs there is ever put back
+            if previous
+                .as_ref()
+                .is_some_and(|p| !crate::reg::restorable(key, name, p))
+            {
+                return Err(RegError::KeyNotAllowed);
+            }
+            if let Some(written) = written {
+                if reg.get(key, name)?.as_ref() != Some(written) {
+                    return Err(RegError::ChangedElsewhere);
+                }
             }
         }
     }
@@ -599,6 +608,52 @@ mod tests {
         if let Some(dir) = path.parent() {
             let _ = std::fs::remove_dir_all(dir);
         }
+    }
+
+    // PC2 (launch review 2026-11): a hand-edited journal decided which bytes an undo writes. An undo
+    // now only puts back a value of the shape Windows itself keeps at that place; anything else is
+    // refused before a single value is touched.
+    #[test]
+    fn an_undo_never_writes_a_value_that_does_not_belong_there() {
+        let reg = MemRegistry::new();
+        let startup = r"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run";
+        let adv = r"Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo";
+        let forged = [
+            (startup, "App", Value::binary(&[0x41; 4096])),
+            (startup, "App", Value::Sz("cmd /c evil".into())),
+            (adv, "Enabled", Value::Sz("x".repeat(200))),
+            (adv, "Enabled", Value::binary(&[0; 65])),
+        ];
+        for (key, name, previous) in forged {
+            let steps = [Undo::Reg {
+                key: key.into(),
+                name: name.into(),
+                previous: Some(previous.clone()),
+                written: None,
+            }];
+            assert_eq!(
+                apply_undo(&reg, &steps, |_, _, _| Ok(())),
+                Err(RegError::KeyNotAllowed),
+                "{previous:?}"
+            );
+            assert_eq!(reg.get(key, name), Ok(None), "nothing written");
+        }
+        // the shapes Windows keeps there are put back
+        let ok = [
+            Undo::Reg {
+                key: startup.into(),
+                name: "App".into(),
+                previous: Some(Value::binary(&[2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])),
+                written: None,
+            },
+            Undo::Reg {
+                key: adv.into(),
+                name: "Enabled".into(),
+                previous: Some(Value::Dword(1)),
+                written: None,
+            },
+        ];
+        assert_eq!(apply_undo(&reg, &ok, |_, _, _| Ok(())), Ok(()));
     }
 
     /// Switches `name` to `to` the way a real change does: read the old value, journal, write.

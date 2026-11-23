@@ -91,6 +91,36 @@ const source: PlannableSource = {
     );
     return tasks.map(itemOf);
   },
+  // „Kleiner machen …“: the task keeps its id, list, links and place in the plan under the first step's title; the rest
+  // is a new top-level task of the old title with the same list, priority, estimate, deadline (and its reminder), tags,
+  // links, person and series – the series goes with the rest, so a tick on the step never makes next week's turn the
+  // step. No date; checklist, note and subtasks stay with the original; not „Irgendwann“ (the planner decides that).
+  async onSplitOff(id, todayTitle) {
+    const task = await taskRepo.get(id);
+    const title = todayTitle.trim();
+    if (!task || task.done || !title || title === task.title) return undefined;
+    const rest = await taskRepo.create({
+      listId: task.listId,
+      title: task.title,
+      done: false,
+      priority: task.priority,
+      order: task.order,
+      ...(task.estimateMin !== undefined ? { estimateMin: task.estimateMin } : {}),
+      ...(task.dueDate ? { dueDate: task.dueDate } : {}),
+      ...(task.dueDate && task.dueTime ? { dueTime: task.dueTime } : {}),
+      ...(task.dueDate && task.dueTime && task.dueRemind ? { dueRemind: true } : {}),
+      ...(task.recurrence ? { recurrence: task.recurrence } : {}),
+      ...(task.tags?.length ? { tags: [...task.tags] } : {}),
+      ...(task.links?.length ? { links: task.links.map((l) => ({ ...l })) } : {}),
+      ...(task.personId ? { personId: task.personId } : {}),
+    });
+    await taskRepo.update(id, {
+      title,
+      ...(task.recurrence ? { recurrence: undefined } : {}),
+      ...(task.dueRemind ? { dueRemind: undefined } : {}),
+    });
+    return rest.id;
+  },
   async onLater(id, later) {
     const task = await taskRepo.get(id);
     if (!task || task.done || !!task.someday === later) return;

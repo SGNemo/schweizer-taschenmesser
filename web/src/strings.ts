@@ -8805,6 +8805,7 @@ export const de = {
         'Noch keine Lesezeichen. Öffne eine Adresse und tippe auf den Stern, um sie zu speichern.',
     },
     popupBlocked: 'Ein Pop-up wurde blockiert.',
+    unfiltered: 'Der Werbeblocker läuft in diesem Tab nicht. Schließ den Tab und öffne ihn neu.',
     download: {
       offer: (name: string) => `Die Seite bietet „${name}“ zum Download an.`,
       toManager: 'Im Download-Manager öffnen',
@@ -9638,6 +9639,20 @@ export const de = {
       open: 'Noch offen',
       openFrom: (days: string) => `Noch offen: Dinge von ${days}`,
       openSince: (day: string) => `Noch offen: Dinge seit ${day}`,
+    },
+    smaller: {
+      menu: 'Kleiner machen …',
+      title: (title: string) => `Kleiner machen: ${title}`,
+      field: 'Heute nur',
+      hint: 'Der erste Schritt bleibt hier. Der Rest wird ein eigenes Ding.',
+      same: 'Das ist schon der ganze Schritt.',
+      rest: 'Der Rest',
+      week: 'Diese Woche, ohne Tag',
+      later: 'Nächste Wochen',
+      apply: 'Kleiner machen',
+      done: (title: string, where: string) => `Heute nur: ${title} · Rest: ${where}`,
+      doneWeek: 'diese Woche',
+      doneLater: 'nächste Wochen',
     },
     keep: {
       menu: 'Nur das hier …',

@@ -318,6 +318,8 @@ export interface SourceAbility {
   estimate: boolean;
   /** „Nächste Wochen“ (`onLater`). */
   later: boolean;
+  /** „Kleiner machen …“ (`onSplitOff`). */
+  split: boolean;
 }
 
 /** Which sources take a tick or „Später“ back (an invoice or a cancellation does not: that stays in its module). */
@@ -333,6 +335,7 @@ export async function sourceAbilities(): Promise<Record<string, SourceAbility>> 
           remove: !!s.onRemove,
           estimate: !!s.onEstimate,
           later: !!s.onLater,
+          split: !!s.onSplitOff,
         };
     }),
   );
@@ -920,6 +923,38 @@ export function applyPaste(
       return { touched };
     },
     { leadOnly: true },
+  );
+}
+
+/**
+ * „Kleiner machen …“ (use case „Tag kippt“, P1): the thing becomes its first step – same id, so it keeps its day, lock
+ * and order in the plan – and the rest becomes a new thing of the old title, „Noch ohne Tag“ or „Nächste Wochen“.
+ * The titles are the source's (`onSplitOff`), never the planner's. One action, one undo.
+ */
+export async function makeSmaller(
+  e: PlannableEntry,
+  todayTitle: string,
+  rest: 'week' | 'later',
+  titles: Record<string, string>,
+): Promise<boolean> {
+  const s = await source(e.moduleId);
+  const step = todayTitle.trim();
+  if (!s?.onSplitOff || !step || step === e.title.trim()) return false;
+  const m = t.planner.smaller;
+  let split = false;
+  return act(
+    m.menu,
+    m.done(short(step), rest === 'later' ? m.doneLater : m.doneWeek),
+    titles,
+    async () => {
+      const id = await s.onSplitOff!(e.id, step);
+      split = !!id;
+      if (!id) return { touched: [] };
+      if (rest === 'later') await s.onLater?.(id, true);
+      return { touched: [itemKeyOf(e.moduleId, e.id), itemKeyOf(e.moduleId, id)] };
+    },
+    // Done or gone meanwhile: nothing was split, the toast says so instead of the step.
+    { leadOnly: true, leadAfter: async () => (split ? undefined : t.planner.preview.nothing) },
   );
 }
 

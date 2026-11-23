@@ -11,7 +11,7 @@ use std::{
     sync::Mutex,
 };
 
-use browser_filter::{classify, Blocker, Rule, Verdict};
+use browser_filter::{classify, is_app_host, Blocker, Rule, Verdict};
 use serde::{Deserialize, Serialize};
 use tauri::{
     ipc::Channel,
@@ -24,14 +24,43 @@ const MAIN: &str = "main";
 #[derive(Clone, Serialize)]
 #[serde(tag = "event", rename_all = "camelCase")]
 pub enum Event {
-    Url { tab: u32, url: String },
-    Title { tab: u32, title: String },
-    Loading { tab: u32, loading: bool },
-    HttpHeld { tab: u32, url: String },
-    PopupBlocked { tab: u32, url: String },
-    Download { tab: u32, url: String },
-    Blocked { tab: u32, host: String },
-    Seen { tab: u32, host: String },
+    Url {
+        tab: u32,
+        url: String,
+    },
+    Title {
+        tab: u32,
+        title: String,
+    },
+    Loading {
+        tab: u32,
+        loading: bool,
+    },
+    HttpHeld {
+        tab: u32,
+        url: String,
+    },
+    PopupBlocked {
+        tab: u32,
+        url: String,
+    },
+    Download {
+        tab: u32,
+        url: String,
+    },
+    Blocked {
+        tab: u32,
+        host: String,
+    },
+    Seen {
+        tab: u32,
+        host: String,
+    },
+    /// The request filter could not be installed: the tab works, but nothing is blocked (B3).
+    #[cfg_attr(not(windows), allow(dead_code))]
+    Unfiltered {
+        tab: u32,
+    },
 }
 
 #[derive(Deserialize, Clone, Copy)]
@@ -116,7 +145,7 @@ impl BrowserState {
         self.0.lock().unwrap_or_else(|e| e.into_inner())
     }
 
-    fn emit(&self, tab: u32, event: Event) {
+    pub(crate) fn emit(&self, tab: u32, event: Event) {
         let channel = self.lock().tabs.get(&tab).map(|t| t.events.clone());
         if let Some(c) = channel {
             let _ = c.send(event);
@@ -220,7 +249,17 @@ pub fn browser_open(
     let a_title = app.clone();
     let a_pop = app.clone();
     let a_dl = app.clone();
-    let mut builder = WebviewBuilder::new(label(tab), WebviewUrl::External(start))
+    // B3 (launch review 2026-11): on Windows the tab opens empty and only goes to its address once
+    // the request filter is in place (`browser_win::hook` queues before the `navigate` below), so no
+    // first request slips past it.
+    #[cfg(windows)]
+    let (first, then) = (
+        parse("about:blank")?,
+        Some(start).filter(|s| s.as_str() != "about:blank"),
+    );
+    #[cfg(not(windows))]
+    let (first, then): (Url, Option<Url>) = (start, None);
+    let mut builder = WebviewBuilder::new(label(tab), WebviewUrl::External(first))
         .on_navigation(move |u| {
             let state = a_nav.state::<BrowserState>();
             let (allow, event) = {
@@ -354,6 +393,10 @@ pub fn browser_open(
         Ok(wv) => {
             #[cfg(windows)]
             crate::browser_win::hook(&app, &wv, tab);
+            if let Some(url) = then {
+                // The tab stays (empty, ready): the page can go to the address again.
+                let _ = wv.navigate(url);
+            }
             if (options.zoom - 1.0).abs() > f64::EPSILON {
                 let _ = wv.set_zoom(options.zoom);
             }
@@ -661,6 +704,21 @@ pub(crate) fn clear_all(app: &AppHandle, state: &BrowserState) -> Result<(), Str
     profile_dir(app).map_or(Ok(()), |dir| crate::device_wipe::remove_dir(&dir))
 }
 
+/// Third-party hosts a tab reports at most (B1, launch review 2026-11): a page that requests from
+/// ever new host names must not grow the set or flood the main window with events.
+pub(crate) const MAX_SEEN_HOSTS: usize = 200;
+
+/// `true` the first time `host` is seen in this tab, while the tab is below [`MAX_SEEN_HOSTS`].
+fn note_seen(seen: &mut HashSet<String>, host: &str) -> bool {
+    seen.len() < MAX_SEEN_HOSTS && seen.insert(host.to_string())
+}
+
+/// Whether a page's request is stopped: the blocker's rules, and (B2) always the app's own hosts,
+/// also as a subresource or frame of a page.
+fn request_blocked(blocker: &Blocker, url: &Url, page: Option<&Url>) -> bool {
+    is_app_host(url) || blocker.blocks(url, page)
+}
+
 /// Called for every request a tab makes (Windows hook): `true` = stop it. Third-party hosts that were
 /// not stopped are reported once as `Seen`, so the page can offer "Blocken" for them.
 #[cfg_attr(not(windows), allow(dead_code))]
@@ -669,7 +727,7 @@ pub(crate) fn decide_request(app: &AppHandle, tab: u32, url: &Url) -> bool {
     let (block, new_host) = {
         let mut g = state.lock();
         let page = g.tabs.get(&tab).and_then(|t| t.page.clone());
-        let block = g.blocker.blocks(url, page.as_ref());
+        let block = request_blocked(&g.blocker, url, page.as_ref());
         let host = url.host_str().map(str::to_ascii_lowercase);
         let third = match (&host, page.as_ref().and_then(|p| p.host_str())) {
             (Some(h), Some(p)) => h != &p.to_ascii_lowercase(),
@@ -679,7 +737,7 @@ pub(crate) fn decide_request(app: &AppHandle, tab: u32, url: &Url) -> bool {
             host.filter(|h| {
                 g.tabs
                     .get_mut(&tab)
-                    .is_some_and(|t| t.seen.insert(h.clone()))
+                    .is_some_and(|t| note_seen(&mut t.seen, h))
             })
         } else {
             None
@@ -703,6 +761,36 @@ pub(crate) fn decide_request(app: &AppHandle, tab: u32, url: &Url) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_page_never_reaches_the_apps_own_hosts() {
+        let page = Url::parse("https://page.example/").unwrap();
+        let off = Blocker::new(false);
+        for u in [
+            "http://ipc.localhost/x",
+            "https://tauri.localhost/",
+            "http://ipc.localhost.",
+        ] {
+            let url = Url::parse(u).unwrap();
+            assert!(request_blocked(&off, &url, Some(&page)), "{u}");
+        }
+        let other = Url::parse("https://cdn.example/app.js").unwrap();
+        assert!(!request_blocked(&off, &other, Some(&page)));
+    }
+
+    #[test]
+    fn a_page_cannot_grow_the_seen_hosts_without_end() {
+        let mut seen = HashSet::new();
+        let reported = (0..10_000)
+            .filter(|i| note_seen(&mut seen, &format!("h{i}.example")))
+            .count();
+        assert_eq!(reported, MAX_SEEN_HOSTS);
+        assert_eq!(seen.len(), MAX_SEEN_HOSTS);
+        assert!(
+            !note_seen(&mut seen, "h1.example"),
+            "a host is reported once"
+        );
+    }
 
     fn inner_with(tabs: &[(u32, u64, bool)]) -> Inner {
         let mut inner = Inner {

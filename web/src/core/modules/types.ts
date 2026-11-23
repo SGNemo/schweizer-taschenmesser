@@ -702,6 +702,13 @@ export interface PlannableSource {
    */
   listLater?(): Promise<PlannableItem[]>;
   /**
+   * „Kleiner machen …“ (use case „Tag kippt“, P1): the thing becomes its first step (`todayTitle`, same id, same day
+   * and lock in the plan) and the rest becomes a new thing of the old title, without a day. Returns the new thing's id,
+   * or `undefined` when there was nothing to split (gone or done meanwhile). Called inside the planner's undoable
+   * action only; the planner never edits a source's title itself.
+   */
+  onSplitOff?(id: string, todayTitle: string): Promise<string | undefined>;
+  /**
    * The planner turned the thing into something that is no task any more („Als Pause …“: a blocker of its day):
    * the source removes it (soft delete, never a purge) and returns the function that brings it back as it was (and
    * takes back what the removal created itself, e.g. the next instance of a series), or

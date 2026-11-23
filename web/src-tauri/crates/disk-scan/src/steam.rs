@@ -12,6 +12,8 @@ use std::path::{Path, PathBuf};
 /// Steam's files are small; anything bigger is not what we expect and is skipped.
 const MAX_MANIFEST_BYTES: u64 = 1 << 20;
 const MAX_LOCALCONFIG_BYTES: u64 = 64 << 20;
+/// Steam's files nest a handful of levels; deeper is damaged or crafted and is not recursed into.
+const MAX_VDF_DEPTH: usize = 64;
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -135,7 +137,24 @@ fn tokens(text: &str) -> Vec<Token> {
 /// Parses a VDF text into one object of its top-level entries. Tolerant: whatever cannot be read
 /// ends the object it is in, so a damaged file yields what came before the damage.
 pub(crate) fn parse_vdf(text: &str) -> Vdf {
-    fn object(tokens: &[Token], pos: &mut usize) -> Vdf {
+    /// Skips one object without recursion (its opening brace already read): nesting beyond
+    /// [`MAX_VDF_DEPTH`] is read flat and dropped (PC3, launch review 2026-11).
+    fn skip(tokens: &[Token], pos: &mut usize) {
+        let mut depth = 1usize;
+        while *pos < tokens.len() && depth > 0 {
+            match tokens[*pos] {
+                Token::Open => depth += 1,
+                Token::Close => depth -= 1,
+                Token::Text(_) => {}
+            }
+            *pos += 1;
+        }
+    }
+    fn object(tokens: &[Token], pos: &mut usize, depth: usize) -> Vdf {
+        if depth > MAX_VDF_DEPTH {
+            skip(tokens, pos);
+            return Vdf::Obj(Vec::new());
+        }
         let mut items = Vec::new();
         while *pos < tokens.len() {
             match &tokens[*pos] {
@@ -146,14 +165,14 @@ pub(crate) fn parse_vdf(text: &str) -> Vdf {
                 Token::Open => {
                     // A brace without a key: read and drop it.
                     *pos += 1;
-                    object(tokens, pos);
+                    object(tokens, pos, depth + 1);
                 }
                 Token::Text(key) => {
                     *pos += 1;
                     match tokens.get(*pos) {
                         Some(Token::Open) => {
                             *pos += 1;
-                            items.push((key.clone(), object(tokens, pos)));
+                            items.push((key.clone(), object(tokens, pos, depth + 1)));
                         }
                         Some(Token::Text(value)) => {
                             *pos += 1;
@@ -167,7 +186,7 @@ pub(crate) fn parse_vdf(text: &str) -> Vdf {
         Vdf::Obj(items)
     }
     let t = tokens(text);
-    object(&t, &mut 0)
+    object(&t, &mut 0, 0)
 }
 
 fn read_small(path: &Path, max: u64) -> Option<String> {
@@ -355,6 +374,19 @@ pub fn steam_games(tree: &Tree, steam_roots: &[PathBuf]) -> Vec<SteamGame> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // PC3 (launch review 2026-11): a damaged or crafted file with deep nesting crashed the scan
+    // (stack overflow). Nesting beyond what Steam writes is read flat and dropped.
+    #[test]
+    fn deep_nesting_does_not_crash_and_keeps_what_came_before() {
+        let deep = format!("\"keep\" \"1\"\n{}", "\"a\" {".repeat(200_000));
+        let Vdf::Obj(items) = parse_vdf(&deep) else {
+            panic!("an object")
+        };
+        assert_eq!(items[0], ("keep".to_owned(), Vdf::Str("1".to_owned())));
+        let unbalanced = "{".repeat(200_000);
+        assert!(matches!(parse_vdf(&unbalanced), Vdf::Obj(_)));
+    }
 
     #[test]
     fn parses_nested_values_comments_escapes_and_conditions() {

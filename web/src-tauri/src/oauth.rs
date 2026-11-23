@@ -107,11 +107,19 @@ fn respond(stream: &mut TcpStream, status: &str, lang: Lang, message: &str) {
     let _ = stream.flush();
 }
 
+/// The whole request must arrive within this time (M5): a connection that trickles bytes cannot
+/// hold a reading slot for longer.
+const READ_DEADLINE: Duration = Duration::from_secs(5);
+
 fn read_request(stream: &mut TcpStream) -> String {
-    let _ = stream.set_read_timeout(Some(Duration::from_secs(5)));
+    let deadline = Instant::now() + READ_DEADLINE;
     let mut buf = [0u8; 8192];
     let mut len = 0;
     while len < buf.len() {
+        let left = deadline.saturating_duration_since(Instant::now());
+        if left.is_zero() || stream.set_read_timeout(Some(left)).is_err() {
+            break;
+        }
         match stream.read(&mut buf[len..]) {
             Ok(0) | Err(_) => break,
             Ok(n) => {
@@ -165,6 +173,10 @@ pub fn oauth_listen_start(
     replace_listener(&state.0, preferred_port)
 }
 
+/// Connections read at the same time (M5, launch review 2026-11): each is read on its own thread,
+/// so a local program that connects and sends nothing cannot hold up the browser's redirect.
+const MAX_OPEN_READS: usize = 64;
+
 fn wait_for_callback(
     listener: TcpListener,
     expected_state: &str,
@@ -174,35 +186,52 @@ fn wait_for_callback(
         .set_nonblocking(true)
         .map_err(|e| format!("listen-failed: {e}"))?;
     let deadline = Instant::now() + timeout;
+    let (tx, rx) = std::sync::mpsc::channel::<(TcpStream, String)>();
+    let open = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
     loop {
         if Instant::now() >= deadline {
             return Err("timeout".into());
         }
+        let mut idle = true;
         match listener.accept() {
             Ok((mut stream, _)) => {
+                idle = false;
                 let _ = stream.set_nonblocking(false);
-                let request = read_request(&mut stream);
-                // The page is shown in the browser: its Accept-Language picks the text.
-                let lang = accept_language_of(&request);
-                let (page_ok, page_fail) = oauth_page(lang);
-                match classify(&request, expected_state) {
-                    Callback::Code(code) => {
-                        respond(&mut stream, "200 OK", lang, page_ok);
-                        return Ok(code);
-                    }
-                    Callback::Denied(error) => {
-                        respond(&mut stream, "200 OK", lang, page_fail);
-                        return Err(format!("denied: {error}"));
-                    }
-                    Callback::WrongState | Callback::Other => {
-                        respond(&mut stream, "404 Not Found", lang, page_fail);
-                    }
+                if open.fetch_add(1, std::sync::atomic::Ordering::SeqCst) < MAX_OPEN_READS {
+                    let (tx, open) = (tx.clone(), open.clone());
+                    std::thread::spawn(move || {
+                        let request = read_request(&mut stream);
+                        open.fetch_sub(1, std::sync::atomic::Ordering::SeqCst);
+                        let _ = tx.send((stream, request));
+                    });
+                } else {
+                    open.fetch_sub(1, std::sync::atomic::Ordering::SeqCst);
                 }
             }
-            Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
-                std::thread::sleep(Duration::from_millis(50));
-            }
+            Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {}
             Err(e) => return Err(format!("listen-failed: {e}")),
+        }
+        while let Ok((mut stream, request)) = rx.try_recv() {
+            idle = false;
+            // The page is shown in the browser: its Accept-Language picks the text.
+            let lang = accept_language_of(&request);
+            let (page_ok, page_fail) = oauth_page(lang);
+            match classify(&request, expected_state) {
+                Callback::Code(code) => {
+                    respond(&mut stream, "200 OK", lang, page_ok);
+                    return Ok(code);
+                }
+                Callback::Denied(error) => {
+                    respond(&mut stream, "200 OK", lang, page_fail);
+                    return Err(format!("denied: {error}"));
+                }
+                Callback::WrongState | Callback::Other => {
+                    respond(&mut stream, "404 Not Found", lang, page_fail);
+                }
+            }
+        }
+        if idle {
+            std::thread::sleep(Duration::from_millis(50));
         }
     }
 }
@@ -276,6 +305,29 @@ mod tests {
     fn decodes_percent_escapes_and_plus() {
         assert_eq!(percent_decode("a%20b+c%2"), "a b c%2");
         assert_eq!(percent_decode("%zz"), "%zz");
+    }
+
+    #[test]
+    fn a_silent_connection_does_not_hold_up_the_redirect() {
+        let listener = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let started = Instant::now();
+        let handle =
+            std::thread::spawn(move || wait_for_callback(listener, "st1", Duration::from_secs(4)));
+        // Another local program connects and sends nothing (M5).
+        let _silent: Vec<TcpStream> = (0..20)
+            .map(|_| TcpStream::connect((Ipv4Addr::LOCALHOST, port)).unwrap())
+            .collect();
+        std::thread::sleep(Duration::from_millis(200));
+        let mut real = TcpStream::connect((Ipv4Addr::LOCALHOST, port)).unwrap();
+        real.write_all(b"GET /callback?code=c1&state=st1 HTTP/1.1\r\n\r\n")
+            .unwrap();
+        assert_eq!(handle.join().unwrap(), Ok("c1".to_string()));
+        assert!(
+            started.elapsed() < Duration::from_secs(3),
+            "{:?}",
+            started.elapsed()
+        );
     }
 
     #[test]
