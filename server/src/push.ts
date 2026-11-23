@@ -6,6 +6,9 @@
 import { createECDH } from 'node:crypto';
 import webpush from 'web-push';
 import type { ScheduledPush, Store } from './store.js';
+import { lookup as dnsLookup } from 'node:dns';
+import { Agent } from 'node:https';
+import { isBlockedAddress } from './proxy.js';
 
 export interface VapidKeys {
   publicKey: string;
@@ -54,8 +57,44 @@ export interface PushSender {
   send(target: PushTarget, body: string): Promise<void>;
 }
 
+type LookupAddress = { address: string; family: number };
+type LookupCallback = (
+  err: NodeJS.ErrnoException | null,
+  address?: string | LookupAddress[],
+  family?: number,
+) => void;
+type LookupFn = (host: string, options: object, callback: LookupCallback) => void;
+
+/**
+ * R8 (launch review 2026-11): the endpoint was checked for private addresses only when it was
+ * stored, so a name that resolves differently later (DNS rebinding) reached the home network at
+ * send time. This lookup sits in the push agent's connection: every answer must be public, or the
+ * connection is not made. (An IP literal never gets here; it was checked when it was stored.)
+ */
+export function publicOnlyLookup(lookup: LookupFn = dnsLookup as unknown as LookupFn) {
+  return (host: string, options: { all?: boolean } | undefined, callback: LookupCallback) => {
+    lookup(host, { ...(options ?? {}), all: true }, (err, addresses) => {
+      if (err) return callback(err);
+      const list = (addresses ?? []) as LookupAddress[];
+      if (list.length === 0 || list.some((a) => isBlockedAddress(a.address))) {
+        return callback(Object.assign(new Error('blocked-address'), { code: 'EBLOCKED' }));
+      }
+      if (options?.all) return callback(null, list);
+      return callback(null, list[0]!.address, list[0]!.family);
+    });
+  };
+}
+
+const pushAgent = new Agent({ lookup: publicOnlyLookup() as never });
+
 export function requestOptions(keys: VapidKeys, subject: string): webpush.RequestOptions {
-  return { vapidDetails: { subject, ...keys }, TTL: 60 * 60, urgency: 'normal', timeout: 10_000 };
+  return {
+    vapidDetails: { subject, ...keys },
+    TTL: 60 * 60,
+    urgency: 'normal',
+    timeout: 10_000,
+    agent: pushAgent,
+  };
 }
 
 export function createWebPushSender(keys: VapidKeys, subject: string): PushSender {
