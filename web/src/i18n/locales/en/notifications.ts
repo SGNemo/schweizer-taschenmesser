@@ -14,7 +14,7 @@ export const notifications: Strings['notifications'] = {
     'Reminders appear as notifications while Nemo is running, also in the background or the system tray. If the app is quit they don’t arrive; what fell due meanwhile shows in the bell at the next start.',
   lockScreen: 'Show content on the lock screen',
   lockScreenHint:
-    'Off: when the phone is locked you only see that there is a reminder, not its text. Applies to this device only.',
+    'Off: on a locked phone Nemo’s notifications do not appear – they still sound and are there after unlocking. On: Android shows them the way you set up its lock screen. Applies to this device only.',
   enable: 'Turn on notifications',
   granted: 'On',
   denied: 'Blocked – please allow them for this site in your browser settings.',

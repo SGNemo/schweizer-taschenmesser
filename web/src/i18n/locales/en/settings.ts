@@ -40,7 +40,7 @@ export const settings: Strings['settings'] = {
     modules: ['Library', 'Enable module', 'Import'],
     tools: ['Toolbar', 'Order'],
     persona: ['Persona', 'Disposable mail', 'Fake data', 'Sign-up', 'Test data'],
-    notifications: ['Push', 'Permission', 'Reminder'],
+    notifications: ['Push', 'Permission', 'Reminder', 'Lock screen'],
     'browser-extension': ['Brave', 'Chrome', 'Autofill'],
     sync: ['Server', 'Token', 'Devices', 'End-to-end', 'Passphrase'],
     backup: ['Export', 'Import', 'Backup', 'Restore', 'Automatic'],

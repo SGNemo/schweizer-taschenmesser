@@ -7,7 +7,7 @@ import { loggedFetch } from '@/core/net/netlog';
 import { checkRedirect, nativeInit } from './redirect';
 import { getVersion } from '@tauri-apps/api/app';
 import { invoke } from '@tauri-apps/api/core';
-import { clear, readText, writeText } from '@tauri-apps/plugin-clipboard-manager';
+import { clear, readText, writeSecret, writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { save } from '@tauri-apps/plugin-dialog';
 import {
   BaseDirectory,
@@ -102,14 +102,14 @@ async function createNotifications(kind: PlatformKind): Promise<NotificationServ
       // Android needs a monochrome status-bar icon (`res/drawable/ic_notification`, rendered by
       // gen-icons); the launcher icon would appear as a white square. Desktop uses the app icon.
       // "Stumm" on Android: the low-importance channel shows it without sound.
-      if (kind === 'android' && quiet) await ensureQuietChannel();
+      const quietId = kind === 'android' && quiet ? await ensureQuietChannel() : undefined;
       sendNotification(
         kind === 'android'
           ? {
               title,
               body,
               ...ANDROID_ICON,
-              ...(quiet ? { channelId: QUIET_CHANNEL } : {}),
+              ...(quietId ? { channelId: quietId } : {}),
               visibility: lockScreenVisibility(),
             }
           : { title, body },
@@ -124,23 +124,39 @@ async function createNotifications(kind: PlatformKind): Promise<NotificationServ
 /** Small icon + accent tint for Android notifications (drawable name, see `scripts/gen-icons.mjs`). */
 const ANDROID_ICON = { icon: 'ic_notification', iconColor: '#b5430c' } as const;
 
-/** Android channel without sound for "Stumm" (created once; the plugin ignores a repeat). */
+/**
+ * Android channels without sound for "Stumm" (each created once; the plugin ignores a repeat). A
+ * channel's lock-screen setting overrides the notice's and cannot change after creation, so there
+ * are two (NS6): `nemo-quiet` (private, created by earlier versions) for "content on the lock
+ * screen" and `nemo-quiet-hidden` (secret) for the default.
+ */
 const QUIET_CHANNEL = 'nemo-quiet';
-let quietChannel: Promise<void> | undefined;
-function ensureQuietChannel(): Promise<void> {
-  quietChannel ??= createChannel({
-    id: QUIET_CHANNEL,
-    name: tComfort.get().mute.channel,
-    importance: Importance.Low,
-    vibration: false,
-  }).catch(() => undefined);
-  return quietChannel;
+const QUIET_HIDDEN_CHANNEL = 'nemo-quiet-hidden';
+const quietChannels = new Map<string, Promise<void>>();
+function quietChannel(): string {
+  return lockScreenVisibility() === -1 ? QUIET_HIDDEN_CHANNEL : QUIET_CHANNEL;
+}
+async function ensureQuietChannel(): Promise<string> {
+  const id = quietChannel();
+  if (!quietChannels.has(id))
+    quietChannels.set(
+      id,
+      createChannel({
+        id,
+        name: tComfort.get().mute.channel,
+        importance: Importance.Low,
+        vibration: false,
+        visibility: id === QUIET_HIDDEN_CHANNEL ? -1 : 0,
+      }).catch(() => undefined),
+    );
+  await quietChannels.get(id);
+  return id;
 }
 
 /** Replaces the pending OS notifications with `items`. */
 async function scheduleUpcoming(items: ScheduledNotification[]): Promise<void> {
   const wanted = new Map(items.map((n) => [notificationId(n.key), n]));
-  if (items.some((n) => n.quiet)) await ensureQuietChannel();
+  const quietId = items.some((n) => n.quiet) ? await ensureQuietChannel() : undefined;
   const stale = (await pending()).map((p) => p.id).filter((id) => !wanted.has(id));
   if (stale.length > 0) await cancel(stale);
   for (const [id, n] of wanted) {
@@ -152,7 +168,7 @@ async function scheduleUpcoming(items: ScheduledNotification[]): Promise<void> {
       schedule: Schedule.at(new Date(n.at), false, true),
       extra: { url: n.url ?? '/' },
       ...ANDROID_ICON,
-      ...(n.quiet ? { channelId: QUIET_CHANNEL } : {}),
+      ...(n.quiet && quietId ? { channelId: quietId } : {}),
       // NS6: content hidden on the lock screen unless this phone allows it
       visibility: lockScreenVisibility(),
     });
@@ -188,7 +204,8 @@ export async function createTauriPlatform(): Promise<PlatformService> {
     clipboard: {
       writeText: (text) => writeText(text),
       ...sensitiveClipboard({
-        write: (text) => writeText(text),
+        // NS8: marked sensitive (Android: no preview; Windows: not in history or cloud clipboard)
+        write: (text) => writeSecret(text),
         read: () => readText().catch(() => undefined),
         clear: () => clear(),
       }),

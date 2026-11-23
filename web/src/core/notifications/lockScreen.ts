@@ -1,16 +1,18 @@
 /**
  * NS6 (launch review 2026-11): what an Android notification shows on the lock screen. Off by
- * default: the notice is "private", so a locked phone shows that there is a reminder, not its title
- * or text. The switch belongs to this phone (localStorage, never synced): one device may lie on a
- * desk at home, another in an office.
+ * default: the notice is "secret" – a locked phone shows nothing of it (it still sounds; it is there
+ * after unlocking). "Private" would not be enough: Android only hides a private notice's text when
+ * the user chose "hide sensitive content", and its default shows everything. On: "private", so
+ * Android's own lock-screen setting decides. The switch belongs to this phone (localStorage, never
+ * synced): one device may lie on a desk at home, another in an office.
  */
 import { useSyncExternalStore } from 'react';
 
 const KEY = 'tm-lock-screen-content';
 const EVENT = 'tm-lock-screen-content-changed';
 
-/** Android's `NotificationCompat` visibility: 0 = private (content hidden when locked), 1 = public. */
-export type LockScreenVisibility = 0 | 1;
+/** Android's `NotificationCompat` visibility: -1 = secret (not on the lock screen), 0 = private. */
+export type LockScreenVisibility = -1 | 0;
 
 export function lockScreenContent(): boolean {
   try {
@@ -30,7 +32,13 @@ export function setLockScreenContent(on: boolean): void {
   window.dispatchEvent(new Event(EVENT));
 }
 
-export const lockScreenVisibility = (): LockScreenVisibility => (lockScreenContent() ? 1 : 0);
+export const lockScreenVisibility = (): LockScreenVisibility => (lockScreenContent() ? 0 : -1);
+
+/** Called when the switch changes on this device (the scheduled alarms are rebuilt with it). */
+export function onLockScreenContentChange(fn: () => void): () => void {
+  window.addEventListener(EVENT, fn);
+  return () => window.removeEventListener(EVENT, fn);
+}
 
 function subscribe(onChange: () => void): () => void {
   window.addEventListener(EVENT, onChange);

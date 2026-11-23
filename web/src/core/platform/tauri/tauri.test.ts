@@ -4,6 +4,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   getVersion: vi.fn(async () => '1.2.3'),
   writeText: vi.fn(async (_t: string) => undefined),
+  writeSecret: vi.fn(async (_t: string) => undefined),
+  createChannel: vi.fn(async (_c: unknown) => undefined),
   readText: vi.fn(async () => 'clip'),
   clear: vi.fn(async () => undefined),
   save: vi.fn(async (_o: unknown): Promise<string | null> => '/tmp/out.json'),
@@ -23,6 +25,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@tauri-apps/api/app', () => ({ getVersion: mocks.getVersion }));
 vi.mock('@tauri-apps/plugin-clipboard-manager', () => ({
   writeText: mocks.writeText,
+  writeSecret: mocks.writeSecret,
   readText: mocks.readText,
   clear: mocks.clear,
 }));
@@ -39,6 +42,8 @@ vi.mock('@tauri-apps/plugin-notification', () => ({
   isPermissionGranted: mocks.isPermissionGranted,
   requestPermission: mocks.requestPermission,
   sendNotification: mocks.sendNotification,
+  createChannel: mocks.createChannel,
+  Importance: { Low: 2 },
   pending: mocks.pending,
   cancel: mocks.cancel,
   Schedule: {
@@ -156,7 +161,7 @@ describe('tauri platform', () => {
       extra: { url: '/reminders' },
       icon: 'ic_notification',
       iconColor: '#b5430c',
-      visibility: 0,
+      visibility: -1,
     });
   });
 
@@ -169,29 +174,49 @@ describe('tauri platform', () => {
       body: 'heute',
       icon: 'ic_notification',
       iconColor: '#b5430c',
-      visibility: 0,
+      visibility: -1,
     });
   });
 
-  it('NS6: on the lock screen the content is hidden unless this device allows it', async () => {
-    // launch review 2026-11: reminder titles showed on the lock screen; now "private" (Android
-    // shows that there is a notice, not its text) until the device-local switch is on
+  it('NS6: a locked phone shows nothing of a notice unless this device allows it', async () => {
+    // launch review 2026-11: "private" alone shows the text under Android's default setting, so the
+    // default is "secret"; the switch makes it "private" (Android's own setting decides then)
     vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mozilla/5.0 (Linux; Android 14)');
     const p = await createTauriPlatform();
     try {
+      await p.notifications.show({ title: 'Arzt', body: '9 Uhr', tag: 'k' });
+      expect(mocks.sendNotification).toHaveBeenLastCalledWith(
+        expect.objectContaining({ visibility: -1 }),
+      );
       setLockScreenContent(true);
       await p.notifications.show({ title: 'Arzt', body: '9 Uhr', tag: 'k' });
       expect(mocks.sendNotification).toHaveBeenLastCalledWith(
-        expect.objectContaining({ visibility: 1 }),
+        expect.objectContaining({ visibility: 0 }),
       );
       await p.notifications.scheduleUpcoming!([{ key: 'r', at: 1_800_000_000_000, title: 'Arzt' }]);
       expect(mocks.sendNotification).toHaveBeenLastCalledWith(
-        expect.objectContaining({ visibility: 1 }),
-      );
-      setLockScreenContent(false);
-      await p.notifications.show({ title: 'Arzt', body: '9 Uhr', tag: 'k' });
-      expect(mocks.sendNotification).toHaveBeenLastCalledWith(
         expect.objectContaining({ visibility: 0 }),
+      );
+    } finally {
+      setLockScreenContent(false);
+    }
+  });
+
+  it('NS6: a quiet notice uses a channel that hides it, unless the content may show', async () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mozilla/5.0 (Linux; Android 14)');
+    const p = await createTauriPlatform();
+    try {
+      await p.notifications.show({ title: 'Arzt', body: '9 Uhr', tag: 'k', quiet: true });
+      expect(mocks.createChannel).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'nemo-quiet-hidden', visibility: -1 }),
+      );
+      expect(mocks.sendNotification).toHaveBeenLastCalledWith(
+        expect.objectContaining({ channelId: 'nemo-quiet-hidden', visibility: -1 }),
+      );
+      setLockScreenContent(true);
+      await p.notifications.show({ title: 'Arzt', body: '9 Uhr', tag: 'k', quiet: true });
+      expect(mocks.sendNotification).toHaveBeenLastCalledWith(
+        expect.objectContaining({ channelId: 'nemo-quiet', visibility: 0 }),
       );
     } finally {
       setLockScreenContent(false);
@@ -213,7 +238,10 @@ describe('tauri platform', () => {
       const p = await createTauriPlatform();
       mocks.readText.mockResolvedValue('secret');
       await p.clipboard.writeSensitive('secret', 30_000);
-      expect(mocks.writeText).toHaveBeenCalledWith('secret');
+      // NS8 (launch review 2026-11): a secret goes in marked sensitive (Android hides the preview,
+      // Windows keeps it out of the clipboard history), never as plain text
+      expect(mocks.writeSecret).toHaveBeenCalledWith('secret');
+      expect(mocks.writeText).not.toHaveBeenCalled();
       await vi.advanceTimersByTimeAsync(30_001);
       expect(mocks.clear).toHaveBeenCalledTimes(1);
     } finally {
