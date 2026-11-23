@@ -384,7 +384,7 @@ export const de = {
       modules: ['Bibliothek', 'Modul aktivieren', 'Importieren'],
       tools: ['Werkzeugleiste', 'Reihenfolge'],
       persona: ['Persona', 'Wegwerf-Mail', 'Fake-Daten', 'Anmeldung', 'Testdaten'],
-      notifications: ['Push', 'Erlaubnis', 'Erinnerung'],
+      notifications: ['Push', 'Erlaubnis', 'Erinnerung', 'Sperrbildschirm'],
       'browser-extension': ['Brave', 'Chrome', 'Autofill'],
       sync: ['Server', 'Token', 'Geräte', 'Ende-zu-Ende', 'Passwortsatz', 'Passphrase'],
       backup: ['Export', 'Import', 'Sicherung', 'Wiederherstellen', 'Automatisch'],
@@ -2833,6 +2833,11 @@ export const de = {
       'Auf Android plant die App Erinnerungen beim System ein, damit sie auch bei geschlossener App kommen. Das klappt, wenn Nemo Benachrichtigungen und „Wecker & Erinnerungen“ darf und der Akku nicht eingeschränkt ist (Einstellungen → Apps → Nemo).',
     introDesktop:
       'Erinnerungen erscheinen als Benachrichtigung, solange Nemo läuft, auch im Hintergrund oder im Infobereich. Ist die App beendet, kommen sie nicht; was in der Zwischenzeit fällig wurde, siehst du beim nächsten Start in der Glocke.',
+    lockScreen: 'Inhalt auf dem Sperrbildschirm zeigen',
+    channelHidden: 'Benachrichtigungen (Sperrbildschirm verborgen)',
+    channelQuietHidden: 'Ruhe (Sperrbildschirm verborgen)',
+    lockScreenHint:
+      'Aus (ab Android 8): Auf dem gesperrten Handy erscheinen Nemo-Benachrichtigungen nicht – sie klingen trotzdem (außer bei „Ruhe“ und im Spielmodus) und stehen nach dem Entsperren in der Benachrichtigungsleiste. An: Android zeigt sie so, wie du es für den Sperrbildschirm eingestellt hast. Gilt nur für dieses Gerät.',
     enable: 'Benachrichtigungen aktivieren',
     granted: 'Aktiviert',
     denied: 'Blockiert – bitte in den Browser-Einstellungen für diese Seite erlauben.',

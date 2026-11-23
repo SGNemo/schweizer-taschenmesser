@@ -1,6 +1,7 @@
 import { liveQuery } from 'dexie';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
 import { onGameModeChange } from './gameMode';
+import { onLockScreenContentChange } from './lockScreen';
 import { onMuteChange } from './mute';
 
 const INTERVAL_MS = 10 * 60 * 1000;
@@ -26,6 +27,9 @@ export function startScheduleTriggers(
   const stopMute = onMuteChange(run);
   // Game mode switched on or off: the quiet channel applies to the schedule from now on.
   const stopGame = onGameModeChange(run);
+  // NS6: the lock-screen switch changed – scheduled alarms keep their channel, so rebuild them on the
+  // matching one.
+  const stopLock = onLockScreenContentChange(run);
 
   const later = () => {
     clearTimeout(debounce);
@@ -58,6 +62,7 @@ export function startScheduleTriggers(
     document.removeEventListener('visibilitychange', onVisible);
     stopMute();
     stopGame();
+    stopLock();
     subscription.unsubscribe();
   };
 }
