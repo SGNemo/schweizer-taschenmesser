@@ -443,8 +443,8 @@ fn quote(c: char) -> bool {
 /// A claimed device name as one line of plain text for a native dialog or tooltip: no control or
 /// invisible characters, no quotation marks (the name must not be able to close the quotes around
 /// it or turn the sentence after it around), capped. May be empty. Also the names of the PC's
-/// program list.
-fn plain(name: &str) -> String {
+/// program list, and of device exchange (E5).
+pub(crate) fn plain(name: &str) -> String {
     let flat: String = name
         .chars()
         .filter(|c| !invisible(*c))

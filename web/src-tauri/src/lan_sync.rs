@@ -36,7 +36,7 @@ use std::sync::mpsc::{self, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Manager as _, State};
 use zeroize::Zeroizing;
 
 const TICK: Duration = Duration::from_secs(2);
@@ -681,14 +681,32 @@ pub fn lan_pair_open(state: State<'_, LanSync>) -> Result<(), String> {
     })
 }
 
-/// The user confirmed the code shown on the PC. The sealed data-key frame goes only to the
-/// connection of that attempt, and the device is trusted only if that write succeeded.
+/// "Koppeln" on the page. H6: the page cannot confirm by itself – Rust asks in a native question
+/// (name and code of the waiting attempt, cancel is the default) and confirms with its own copy
+/// of the code. The sealed data-key frame goes only to the connection of that attempt, and the
+/// device is trusted only if that write succeeded.
 #[tauri::command(async)]
 pub fn lan_pair_confirm(
+    app: AppHandle,
     state: State<'_, LanSync>,
     attempt: u64,
-    code: String,
 ) -> Result<(), String> {
+    let waiting = |state: &State<'_, LanSync>| {
+        with_core(state, |core, _| {
+            let live = core.live.lock().map_err(|_| "internal")?;
+            Ok(live.pending.clone().filter(|p| p.attempt == attempt))
+        })
+    };
+    let pending = waiting(&state)?.ok_or("not-awaiting")?;
+    if !asked_to_pair(&app, &pending) {
+        return Err("cancelled".to_owned());
+    }
+    // the attempt may have ended (or another begun) while the question was on screen
+    let still = waiting(&state)?.ok_or("not-awaiting")?;
+    if still.code != pending.code {
+        return Err("not-awaiting".to_owned());
+    }
+    let code = pending.code;
     with_core(&state, |core, wake| {
         // the hub lock is not held while the frame is written: take the handle, let go, then confirm
         let deliverer = core
@@ -718,6 +736,27 @@ pub fn lan_pair_confirm(
         })?;
         Ok(())
     })
+}
+
+/// The native pairing question; true only for the exact "pair" button.
+fn asked_to_pair(app: &AppHandle, pending: &Pending) -> bool {
+    use tauri_plugin_dialog::{DialogExt as _, MessageDialogKind};
+    let lang = crate::capture::native_lang(app);
+    let (title, allow, cancel) = crate::texts::pair_dialog(lang);
+    let name = match crate::remote::plain(&pending.name) {
+        n if n.is_empty() => crate::texts::exchange_unnamed(lang).to_owned(),
+        n => n,
+    };
+    let mut dialog = app
+        .dialog()
+        .message(crate::texts::pair_question(lang, &name, &pending.code))
+        .title(title)
+        .kind(MessageDialogKind::Info)
+        .buttons(crate::native_ask::buttons(allow, cancel));
+    if let Some(window) = app.get_webview_window("main") {
+        dialog = dialog.parent(&window);
+    }
+    crate::native_ask::allowed(&dialog.blocking_show_with_result(), allow)
 }
 
 #[tauri::command(async)]

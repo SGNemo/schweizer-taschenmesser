@@ -40,7 +40,7 @@ export function createLanHub(supported: boolean): LanHubService {
     stop: () => call<void>('lan_hub_stop'),
     status: () => call<LanHubStatus>('lan_hub_status'),
     pairOpen: () => call<void>('lan_pair_open'),
-    pairConfirm: (attempt, code) => call<void>('lan_pair_confirm', { attempt, code }),
+    pairConfirm: (attempt) => call<void>('lan_pair_confirm', { attempt }),
     pairCancel: () => call<void>('lan_pair_cancel'),
     devices: () => call<LanHubDevice[]>('lan_devices'),
     revoke: (id) => call<boolean>('lan_revoke', { id }),

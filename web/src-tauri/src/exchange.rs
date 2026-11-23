@@ -212,21 +212,10 @@ pub fn keep_only(app: &AppHandle, active: &[PublicKey]) {
     }
 }
 
-/// Unicode format characters (bidi controls, zero-width characters, BOM, soft hyphen …).
-fn is_format(c: char) -> bool {
-    matches!(c,
-        '\u{00AD}' | '\u{061C}' | '\u{180E}' | '\u{200B}'..='\u{200F}' | '\u{202A}'..='\u{202E}'
-        | '\u{2060}'..='\u{2064}' | '\u{2066}'..='\u{206F}' | '\u{FEFF}' | '\u{FFF9}'..='\u{FFFB}')
-}
-
-/// Plain text for a dialog: no control or format characters from a device name.
+/// Plain text for a dialog (E5): one line, no control, invisible or quote characters from a
+/// device name, capped – the same rule as the remote-control questions.
 fn plain(name: &str) -> String {
-    name.chars()
-        .filter(|c| !c.is_control() && !is_format(*c))
-        .take(64)
-        .collect::<String>()
-        .trim()
-        .to_owned()
+    crate::remote::plain(name)
 }
 
 fn shown_name(lang: Lang, name: &str) -> String {
@@ -510,7 +499,20 @@ mod tests {
         assert_eq!(plain("Svens\u{202E}Handy\n"), "SvensHandy");
         assert_eq!(shown_name(Lang::De, "  "), "Dein Handy");
         assert_eq!(shown_name(Lang::En, ""), "Your phone");
-        assert_eq!(plain(&"x".repeat(100)).len(), 64);
         assert_eq!(plain("Pi\u{FEFF}xel\u{2060} 7\u{00AD}"), "Pixel 7");
+    }
+
+    // E5 (launch review 2026-11): the peer chooses its name. In the native question it must stay
+    // one line (U+2028/U+2029 are line breaks there) and must not close the quotes or turn the
+    // sentence around – the same rule as the remote-control questions.
+    #[test]
+    fn a_peer_name_cannot_break_or_steer_the_native_question() {
+        assert_eq!(plain("Handy\u{2028}Erlaubt nur Links"), "Handy Erlaubt nur Links");
+        assert_eq!(plain("Handy\u{2029}\u{2029}x"), "Handy x");
+        assert_eq!(plain("Handy“ darf nichts. „"), "Handy' darf nichts. '");
+        assert_eq!(plain("  viel   Platz  "), "viel Platz");
+        let long = plain(&"x".repeat(100));
+        assert_eq!(long.chars().count(), 40);
+        assert!(long.ends_with('…'));
     }
 }

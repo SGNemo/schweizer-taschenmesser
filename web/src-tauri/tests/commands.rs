@@ -1228,3 +1228,27 @@ fn the_page_file_scope_is_the_backup_folder_only() {
     let recovery = read("../src/core/db/recovery.ts");
     assert!(recovery.contains("platform.files.write(`backups/${fileName}`"));
 }
+
+/// H6 (launch review 2026-11): the page cannot confirm a pairing by itself. `lan_pair_confirm`
+/// takes no code from the page; Rust shows the name and the code of the waiting attempt in a
+/// native question (cancel is the default) and confirms with its own copy of the code.
+#[test]
+fn a_pairing_is_confirmed_in_a_native_question_with_rust_s_own_code() {
+    let lan = source("lan_sync.rs");
+    let at = lan.find("pub fn lan_pair_confirm(").expect("command");
+    let body = &lan[at..];
+    let body = &body[..body.find("\n}\n").unwrap()];
+    let head = &body[..body.find('{').unwrap()];
+    assert!(!head.contains("code"), "the page hands over no code: {head}");
+    let ask = body.find("asked_to_pair(&app").expect("a native question");
+    let helper = &lan[lan.find("fn asked_to_pair(").expect("helper")..];
+    let helper = &helper[..helper.find("\n}\n").unwrap()];
+    assert!(helper.contains("crate::native_ask::buttons(allow, cancel)"));
+    assert!(helper.contains("crate::native_ask::allowed(&dialog.blocking_show_with_result(), allow)"));
+    let confirm = body.find(".confirm_deliver(").expect("the confirm");
+    assert!(ask < confirm, "asked before the confirm");
+    assert!(
+        body[..confirm].contains("pending"),
+        "the code comes from the waiting attempt Rust holds"
+    );
+}

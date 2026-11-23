@@ -78,6 +78,9 @@ pub struct FileTrustStore {
     mem: MemoryTrustStore,
     /// Serialises "change memory, then write the file".
     io: Mutex<()>,
+    /// The last write failed: memory is ahead of the file (H5). A revoke is then written again on
+    /// the next try instead of reporting "nothing changed".
+    unsaved: std::sync::atomic::AtomicBool,
 }
 
 /// Writes and flushes to disk before the caller renames the file into place.
@@ -158,10 +161,19 @@ impl FileTrustStore {
             path: path.to_owned(),
             mem,
             io: Mutex::new(()),
+            unsaved: std::sync::atomic::AtomicBool::new(false),
         })
     }
 
+    /// Writes the list and remembers whether memory is now ahead of the file.
     fn persist(&self) -> Result<(), TrustError> {
+        let result = self.write_list();
+        self.unsaved
+            .store(result.is_err(), std::sync::atomic::Ordering::SeqCst);
+        result
+    }
+
+    fn write_list(&self) -> Result<(), TrustError> {
         let list = FileList {
             v: 1,
             devices: self
@@ -220,7 +232,8 @@ impl TrustStore for FileTrustStore {
     fn revoke(&self, key: &PublicKey) -> Result<bool, TrustError> {
         let _g = self.io.lock().map_err(|_| TrustError::Storage)?;
         let changed = self.mem.revoke(key)?;
-        if changed {
+        // H5: an earlier write failed, so the revocation may only be in memory: write it again
+        if changed || self.unsaved.load(std::sync::atomic::Ordering::SeqCst) {
             self.persist()?;
         }
         Ok(changed)
@@ -356,6 +369,30 @@ mod tests {
             s.find_by_key(&dev(1).key).unwrap().revoked,
             "towards closed"
         );
+        std::fs::remove_dir_all(d).ok();
+    }
+
+    // H5 (launch review 2026-11): a revoke that could not be written is not "done". Asking again
+    // must write it again (and say so while it still fails); otherwise the device is trusted
+    // again after a restart while the page believes it is gone.
+    #[test]
+    fn a_revoke_that_could_not_be_written_is_written_on_the_next_try() {
+        let d = dir("revoke-retry");
+        let path = d.join("trust.json");
+        let s = FileTrustStore::open(&path).unwrap();
+        s.add(dev(1)).unwrap();
+        let blocker = d.join("trust.json.tmp");
+        std::fs::create_dir_all(&blocker).unwrap();
+        assert_eq!(s.revoke(&dev(1).key), Err(TrustError::Storage));
+        assert_eq!(
+            s.revoke(&dev(1).key),
+            Err(TrustError::Storage),
+            "still not on disk: not reported as done"
+        );
+        std::fs::remove_dir_all(&blocker).unwrap();
+        assert_eq!(s.revoke(&dev(1).key), Ok(false), "written now");
+        let again = FileTrustStore::open(&path).unwrap();
+        assert!(again.find_by_key(&dev(1).key).unwrap().revoked, "survives a restart");
         std::fs::remove_dir_all(d).ok();
     }
 

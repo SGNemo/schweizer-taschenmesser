@@ -46,6 +46,8 @@ export function LanHubSection({ tinted = true }: { tinted?: boolean }) {
   const [failure, setFailure] = useState<string>();
   const [note, setNote] = useState<string>();
   const [unpair, setUnpair] = useState<LanHubDevice>();
+  // H5: an unpairing that could not be saved, to try again
+  const [unpairAgain, setUnpairAgain] = useState<LanHubDevice>();
   const [askRenew, setAskRenew] = useState(false);
   const [askHome, setAskHome] = useState(false);
   // "Mit einem anderen PC koppeln": this PC pairs as a client with another hub PC (webcam)
@@ -105,15 +107,21 @@ export function LanHubSection({ tinted = true }: { tinted?: boolean }) {
     }
   }
 
-  async function confirmUnpair() {
-    const device = unpair;
+  async function confirmUnpair(device = unpair) {
     setUnpair(undefined);
+    setUnpairAgain(undefined);
     if (!device) return;
-    const changed = await hub.revoke(device.id).catch(() => false);
-    if (changed) {
-      setNote(l.unpaired(device.name));
-      setDevices(await hub.devices().catch(() => devices));
+    let changed: boolean;
+    try {
+      changed = await hub.revoke(device.id);
+    } catch {
+      // H5: not saved – it holds only until the next restart; say so and offer the next step
+      setNote(l.unpairFailed(device.name));
+      setUnpairAgain(device);
+      return;
     }
+    setNote(changed || unpairAgain ? l.unpaired(device.name) : undefined);
+    setDevices(await hub.devices().catch(() => devices));
   }
 
   async function confirmRenew() {
@@ -255,6 +263,11 @@ export function LanHubSection({ tinted = true }: { tinted?: boolean }) {
         <p role="status" className={styles.muted} data-testid="lan-note">
           {note}
         </p>
+      ) : null}
+      {unpairAgain ? (
+        <Actions>
+          <Button onClick={() => void confirmUnpair(unpairAgain)}>{l.unpairRetry}</Button>
+        </Actions>
       ) : null}
 
       <Step title={l.devices}>
@@ -420,6 +433,10 @@ function PairDialog({
     }
   }
 
+  // H4: the hub closes a window after its lifetime; once it was open, closed means "ended"
+  const [seenOpen, setSeenOpen] = useState(false);
+  if (open && status?.pairingOpen && !seenOpen) setSeenOpen(true);
+  if (!open && seenOpen) setSeenOpen(false);
   const qr = status?.qr ?? undefined;
   const drawn = useMemo(() => (qr ? qrPath(makeQr(qr)) : undefined), [qr]);
   const pending = status?.pending ?? undefined;
@@ -433,15 +450,23 @@ function PairDialog({
     if (!pending) return;
     setError(undefined);
     try {
-      await hub.pairConfirm(pending.attempt, pending.code);
+      await hub.pairConfirm(pending.attempt);
       setPaired(pending.name);
       void syncNow();
     } catch (e) {
       const code = e instanceof Error ? e.message : '';
+      // "Abbrechen" in the native question: the request stays, nothing to say
+      if (code === 'cancelled') return;
       setError(
         code === 'wrong-code' ? l.wrongCode : code === 'expired' ? l.pairExpired : l.pairLost,
       );
     }
+  }
+
+  async function again() {
+    setSeenOpen(false);
+    setError(undefined);
+    await hub.pairOpen().catch(() => undefined);
   }
 
   async function reject() {
@@ -508,6 +533,15 @@ function PairDialog({
                 {l.pairConfirm}
               </Button>
               <Button onClick={() => void reject()}>{t.actions.cancel}</Button>
+            </Actions>
+          </>
+        ) : seenOpen && status?.pairingOpen === false ? (
+          <>
+            <p data-testid="lan-pair-closed">{l.pairClosed}</p>
+            <Actions>
+              <Button variant="primary" onClick={() => void again()}>
+                {l.pairNewCode}
+              </Button>
             </Actions>
           </>
         ) : status?.reason === 'public-network' && !drawn ? (

@@ -80,6 +80,9 @@ export const tLanSync = defineBundle(
       `${name} lösen? Es gleicht erst wieder ab, wenn du es neu koppelst.`,
     unpairConfirm: 'Lösen',
     unpaired: (name: string) => `${name} kann nicht mehr abgleichen.`,
+    unpairFailed: (name: string) =>
+      `Das Lösen von ${name} ließ sich nicht speichern. Bis zum nächsten Neustart gleicht ${name} nicht ab, danach wieder. Versuche es noch einmal.`,
+    unpairRetry: 'Noch einmal lösen',
     more: 'Weitere Einstellungen',
     renewKey: 'Schlüssel erneuern',
     renewKeyAsk:
@@ -98,12 +101,16 @@ export const tLanSync = defineBundle(
     firewall:
       'Windows fragt beim ersten Mal, ob Nemo im Heimnetz erreichbar sein darf – wähle „Zulassen“.',
     pairAsk: (name: string, code: string) => `${name} koppeln? Code ${code}`,
-    pairCheck: (name: string) => `Steht derselbe Code auf ${name}? Wenn nicht: Abbrechen.`,
+    pairCheck: (name: string) =>
+      `Steht derselbe Code auf ${name}? Wenn nicht: Abbrechen. Nach „Koppeln“ fragt Windows noch einmal in einem eigenen Fenster.`,
     pairConfirm: 'Koppeln',
     paired: (name: string) => `${name} ist gekoppelt.`,
     wrongCode: 'Der Code passt nicht. Brich ab und koppel noch einmal.',
     pairExpired: 'Die Anfrage ist abgelaufen. Zeig den Code noch einmal.',
     pairLost: 'Das Gerät ist nicht mehr verbunden. Zeig den Code noch einmal.',
+    pairClosed:
+      'Das Koppeln wurde nach 10 Minuten beendet, damit der PC nicht länger als nötig zuhört.',
+    pairNewCode: 'Neuen Code zeigen',
     keepRunning: 'Damit dein Handy abgleichen kann, wenn du heimkommst:',
     autostart: 'Mit Windows starten',
     tray: 'Im Tray weiterlaufen',
@@ -240,6 +247,9 @@ export const tLanSync = defineBundle(
         `Unpair ${name}? It will only sync again after you pair it again.`,
       unpairConfirm: 'Unpair',
       unpaired: (name: string) => `${name} can no longer sync.`,
+      unpairFailed: (name: string) =>
+        `Unpairing ${name} could not be saved. Until the next restart ${name} does not sync, after that it does again. Try once more.`,
+      unpairRetry: 'Unpair again',
       more: 'More settings',
       renewKey: 'Renew key',
       renewKeyAsk:
@@ -257,12 +267,15 @@ export const tLanSync = defineBundle(
       firewall:
         'The first time, Windows asks whether Nemo may be reachable on your home network – choose “Allow”.',
       pairAsk: (name: string, code: string) => `Pair ${name}? Code ${code}`,
-      pairCheck: (name: string) => `Does ${name} show the same code? If not: cancel.`,
+      pairCheck: (name: string) =>
+        `Does ${name} show the same code? If not: cancel. After “Pair”, Windows asks once more in its own window.`,
       pairConfirm: 'Pair',
       paired: (name: string) => `${name} is paired.`,
       wrongCode: 'The code does not match. Cancel and pair again.',
       pairExpired: 'The request has expired. Show the code again.',
       pairLost: 'The device is no longer connected. Show the code again.',
+      pairClosed: 'Pairing ended after 10 minutes so the PC does not listen longer than needed.',
+      pairNewCode: 'Show a new code',
       keepRunning: 'So your phone can sync when you get home:',
       autostart: 'Start with Windows',
       tray: 'Keep running in the tray',

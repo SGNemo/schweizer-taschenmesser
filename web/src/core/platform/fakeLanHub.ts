@@ -118,10 +118,10 @@ export function createFakeLanHubParts() {
       pairingOpen = true;
       attempt += 1;
     },
-    pairConfirm: async (a, code) => {
+    // the native question (H6) is answered "Koppeln" in the fake
+    pairConfirm: async (a) => {
       needRunning();
       if (!pending || pending.attempt !== a) throw new Error('not-awaiting');
-      if (pending.code !== code) throw new Error('wrong-code');
       devices.push({
         id: `dev${devices.length + 1}`.padEnd(64, '0'),
         name: pending.name,
