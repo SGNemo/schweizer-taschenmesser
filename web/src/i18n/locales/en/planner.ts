@@ -367,7 +367,7 @@ export const planner: Strings['planner'] = {
     laterHint: 'Not crossed out – just for later.',
     missingLater: 'Keep these for the coming weeks too',
     apply: 'Apply',
-    nothing: 'Everything is already like this.',
+    nothing: 'Everything is already in place.',
     done: 'Plan applied.',
     doneLater: 'Plan applied – what is for later is under “The coming weeks”.',
     readFailed: 'The plan could not be read just now. Nothing was applied.',

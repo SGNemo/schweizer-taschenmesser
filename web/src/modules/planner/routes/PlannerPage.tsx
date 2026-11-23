@@ -1143,7 +1143,10 @@ export default function PlannerPage() {
         c.whatDays,
         c.whatMinutes,
         ...(input.days.some((d) => d.fixed.length) ? [c.whatFixed] : []),
-        ...(input.goal && text.includes(t.planner.goal.line(input.goal)) ? [c.whatGoal] : []),
+        // The goal line is the text's first line when it went in.
+        ...(input.goal && text.startsWith(`${t.planner.goal.line(input.goal)}\n`)
+          ? [c.whatGoal]
+          : []),
       ]);
       toast(c.done(`${dayName(to)} ${formatDay(to, 'd.M.')}`, what));
     } catch {

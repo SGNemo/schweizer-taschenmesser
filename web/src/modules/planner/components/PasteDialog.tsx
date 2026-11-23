@@ -162,7 +162,6 @@ export function PasteDialog({
       const lines = now.lines.filter((l) => ids.has(l.id) && ticked(l));
       const seen = new Set(toLater.map((k) => k.key));
       const later = now.missing.filter((k) => seen.has(k.key) && !k.locked && k.canLater);
-      // Written – or nothing was left to write (a sync or a goal outside the view had it already): done either way.
       // Nothing left to write (a sync or another tab did it): say so, then close.
       if (!(await applyPaste(lines, later, titles, goal)))
         useUiStore.getState().toast(t.planner.paste.nothing);
