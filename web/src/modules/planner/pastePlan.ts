@@ -358,11 +358,6 @@ const samePlace = (a: Place, b: Place): boolean =>
   a.kind === b.kind && (a.kind !== 'day' || (b.kind === 'day' && a.date === b.date));
 
 /**
- * The pasted plan against what the plan holds: the same title (`sameTitle`) is the same thing – it moves, nothing is
- * doubled. A thing pasted without a heading keeps its place; a new one has no day. A passed day becomes today or no
- * day (`past`). A source that keeps nothing for later gets „ohne Tag“ instead of „Nächste Wochen“. Pure.
- */
-/**
  * The days a pasted goal line belongs to (P2): the days the paste names under its headings – a passed day only when
  * the preview's question says „Auf heute“ (then today), else it is left out. Not the days a known thing keeps by
  * itself. Today when the paste names no day.
@@ -377,6 +372,11 @@ export function goalDays(plan: PastedPlan, today: string, past: 'today' | 'none'
   return days.size ? [...days].sort() : [today];
 }
 
+/**
+ * The pasted plan against what the plan holds: the same title (`sameTitle`) is the same thing – it moves, nothing is
+ * doubled. A thing pasted without a heading keeps its place; a new one has no day. A passed day becomes today or no
+ * day (`past`). A source that keeps nothing for later gets „ohne Tag“ instead of „Nächste Wochen“. Pure.
+ */
 export function matchPaste(
   plan: PastedPlan,
   known: readonly Known[],
