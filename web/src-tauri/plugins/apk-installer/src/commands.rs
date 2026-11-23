@@ -13,7 +13,8 @@ pub(crate) async fn download<R: Runtime>(
     request: DownloadRequest,
 ) -> Result<DownloadResponse> {
     // Checked here, before any platform code: only release APKs of this repository, digest required.
-    validate::check_download(&request.url, request.sha256.as_deref())
+    let dev = validate::is_dev_identifier(&app.config().identifier);
+    validate::check_download_for(&request.url, request.sha256.as_deref(), dev)
         .map_err(Error::InvalidRequest)?;
     app.apk_installer().download(request)
 }
