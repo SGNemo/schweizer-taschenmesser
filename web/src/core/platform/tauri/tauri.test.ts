@@ -218,6 +218,27 @@ describe('tauri platform', () => {
     }
   });
 
+  it('ids the plugin lists as pending are cancelled, unless the own list says they already fired', async () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mozilla/5.0 (Linux; Android 14)');
+    try {
+      setNow(() => 1_700_000_120_000);
+      localStorage.setItem(
+        ALARM_IDS_KEY,
+        JSON.stringify([[notificationId('fired'), 1_700_000_060_000]]),
+      );
+      mocks.pending.mockResolvedValue([
+        { id: notificationId('onlyPending') },
+        { id: notificationId('fired') },
+      ]);
+      const p = await createTauriPlatform();
+      await p.notifications.scheduleUpcoming!([]);
+      expect(mocks.cancel).toHaveBeenCalledWith([notificationId('onlyPending')]);
+    } finally {
+      setNow();
+      mocks.pending.mockResolvedValue([]);
+    }
+  });
+
   it('a list from an older version (ids only) still cancels its deleted reminders', async () => {
     vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mozilla/5.0 (Linux; Android 14)');
     localStorage.setItem(ALARM_IDS_KEY, JSON.stringify([notificationId('old')]));

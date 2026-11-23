@@ -170,7 +170,7 @@ async function channelFor(quiet: boolean): Promise<string | undefined> {
 }
 
 /**
- * Device-local list of the alarm ids Nemo handed to Android (localStorage, never synced). Needed
+ * Device-local list of the alarm ids Nemo handed to Android and their fire times (localStorage, never synced). Needed
  * because tauri-plugin-notification 2.7.0 does not store notices scheduled via `sendNotification`,
  * so `pending()` misses them; `cancel(ids)` still stops their alarms
  * (docs/features/android-scheduled-reminders.md).
