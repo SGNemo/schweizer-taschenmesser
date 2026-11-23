@@ -693,6 +693,7 @@ export interface PlannableSource {
   /**
    * „Nächste Wochen“ (use case „Tag kippt“): the person keeps the thing for later – open, not crossed out, out of
    * `list` until `later` is false again (ToDos: „Irgendwann“). Called inside the planner's undoable action only.
+   * Comes with `listLater` (the planner uses neither without the other).
    */
   onLater?(id: string, later: boolean): Promise<void>;
   /**

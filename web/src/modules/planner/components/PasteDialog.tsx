@@ -44,7 +44,13 @@ function detailOf(line: PasteLine): string {
             : p.fromWeek;
   return [
     what,
-    line.known?.locked ? p.fixed : undefined,
+    line.known?.fixed
+      ? p.fixedTime
+      : line.known?.locked
+        ? offByDefault(line)
+          ? p.fixedMove
+          : p.fixed
+        : undefined,
     // The effort is read for a new thing only (a known one keeps its own).
     line.change === 'new' && line.minutes
       ? p.minutes(formatMinutes(line.minutes, { compact: true }))
@@ -127,11 +133,17 @@ export function PasteDialog({
     setBusy(true);
     setFailed(false);
     try {
-      // Read the plan again right before writing: what a sync or another tab changed meanwhile counts.
-      const now = matchPaste(plan, await pasteKnown(), day, past);
+      // Read the plan again right before writing: what a sync or another tab changed meanwhile counts – a thing that
+      // became „fest“ is left out unless he ticked it, a missing thing goes to later only if it still is one he saw.
+      const fresh = await pasteKnown();
+      const now = matchPaste(plan, fresh, day, past);
       const ids = new Set(chosen.map((l) => l.id));
-      const lines = now.lines.filter((l) => ids.has(l.id));
-      if (await applyPaste(lines, toLater, titles)) onClose();
+      const lines = now.lines.filter((l) => ids.has(l.id) && ticked(l));
+      const seen = new Set(toLater.map((k) => k.key));
+      const later = now.missing.filter((k) => seen.has(k.key) && !k.locked && k.canLater);
+      if (await applyPaste(lines, later, titles)) onClose();
+      // Nothing left to write (a sync did it): the preview shows the plan as it is now.
+      else setKnown(fresh);
     } catch {
       setFailed(true);
     } finally {
@@ -150,7 +162,9 @@ export function PasteDialog({
           : text.trim() && plan.things.length === 0
             ? p.empty
             : preview && plan.things.length > 0 && writes === 0
-              ? p.nothing
+              ? preview.lines.some((l) => l.change !== 'same') || movable.length > 0
+                ? p.nothingTicked
+                : p.nothing
               : '';
 
   const footer = (
@@ -176,10 +190,14 @@ export function PasteDialog({
           hint={p.hint}
           value={text}
           rows={initial ? 4 : 8}
-          onChange={(e) => setText(e.target.value)}
+          onChange={(e) => {
+            setText(e.target.value);
+            setFailed(false);
+          }}
           data-autofocus={initial ? undefined : true}
         />
-        <p className={styles.note} role="status">
+        {/* Mounted always (a live region inserted with its text is often not read out); empty, it takes no room. */}
+        <p className={status ? styles.note : 'sr-only'} role="status">
           {status}
         </p>
         {plan.format === 'text' && plan.skipped > 0 && plan.things.length > 0 ? (
