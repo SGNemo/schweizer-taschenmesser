@@ -1,0 +1,124 @@
+<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>01 – Teilen in den Planer</title><link rel="stylesheet" href="mock.css">
+<p class="label" style="margin-top:0">Hand-off 01 · Teilen → Planer · eine Handy-Fläche (412 zählt); bei 1920 stehen die Zustände nebeneinander</p>
+
+<div class="grid three">
+<div>
+<p class="label">a · Link geteilt · „In den Planer“ vorgewählt</p>
+<div class="frame">
+<div><h1>Teilen</h1><p class="meta">Wohin soll der geteilte Inhalt?</p></div>
+<div class="card"><h2 style="margin-bottom:6px">Geteilt</h2><p class="ttl">Fahrradträger für die Anhängerkupplung</p><p class="host">example.org</p><p class="meta">Landet unter „Noch ohne Tag“.</p></div>
+<h2>Wohin?</h2>
+<div class="radios"><span class="radio on">In den Planer</span><span class="radio">Merkliste</span><span class="radio">Notiz</span><span class="radio">ToDo</span><span class="radio">Liste</span></div>
+<h2>Tag</h2>
+<div><span class="seg"><span class="on">ohne Tag</span><span>Heute</span><span>Morgen</span></span></div>
+<span class="btn p wide">Ablegen</span>
+</div>
+</div>
+
+<div>
+<p class="label">b · Text aus mehreren Zeilen · zu lang, gekürzt</p>
+<div class="frame">
+<div><h1>Teilen</h1><p class="meta">Wohin soll der geteilte Inhalt?</p></div>
+<div class="card"><h2 style="margin-bottom:6px">Geteilt</h2><p class="ttl">Ideen für den Balkon im Frühjahr</p><p class="meta">Landet unter „Noch ohne Tag“.</p></div>
+<p class="note" style="margin-top:0">Gekürzt auf 4 000 Zeichen.</p>
+<h2>Wohin?</h2>
+<div class="radios"><span class="radio on">In den Planer</span><span class="radio">Merkliste</span><span class="radio">Notiz</span><span class="radio">ToDo</span><span class="radio">Liste</span></div>
+<h2>Tag</h2>
+<div><span class="seg"><span>ohne Tag</span><span class="on">Heute</span><span>Morgen</span></span></div>
+<span class="btn p wide">Ablegen</span>
+</div>
+</div>
+
+<div>
+<p class="label">c · nach „Ablegen“ · die Seite zeigt den gespeicherten Zustand und bleibt, bis er tippt</p>
+<div class="frame">
+<div><h1>Teilen</h1><p class="meta">Wohin soll der geteilte Inhalt?</p></div>
+<div class="card"><h2 style="margin-bottom:6px">Geteilt</h2><p class="ttl">Fahrradträger für die Anhängerkupplung</p><p class="host">example.org</p></div>
+<p role="status" style="font-size:16px;font-weight:600">Abgelegt.</p>
+<div class="foot" style="justify-content:flex-start;margin-top:0"><span class="btn q" style="padding-left:0">Rückgängig</span><span class="sp"></span><span class="btn p">Fertig</span></div>
+<p class="note" style="margin-top:0">„Fertig“: Android kehrt zur teilenden App zurück, die PWA öffnet den Planer.</p>
+</div>
+<p class="label">c · danach im Planer · „Noch ohne Tag“, neue Zeile oben, Hinweis S4</p>
+<div class="frame">
+<div class="card">
+<div class="dayh"><h2>Noch ohne Tag</h2><span>4 Dinge</span></div>
+<div class="row"><span class="lead"><span class="tick"></span></span><span class="t"><span class="ti">Fahrradträger für die Anhängerkupplung</span><span class="chips"><span class="chip">Im Browser öffnen · example.org</span></span></span><span class="m">30 Min</span><span class="dots"></span></div>
+<div class="row"><span class="lead"><span class="tick"></span></span><span class="t"><span class="ti">Paket abholen</span></span><span class="m">15 Min</span><span class="dots"></span></div>
+<div class="row"><span class="lead"><span class="tick"></span></span><span class="t"><span class="ti">Altglas wegbringen</span></span><span class="m">15 Min</span><span class="dots"></span></div>
+<div class="row"><span class="lead"><span class="gl note"></span></span><span class="t"><span class="ti">Idee: Regal im Flur</span></span><span class="m">30 Min</span><span class="dots"></span></div>
+</div>
+<div class="toast" role="status"><span>Liegt im Planer unter „Noch ohne Tag“.</span><u>Ansehen</u><u>Rückgängig</u></div>
+</div>
+</div>
+
+<div>
+<p class="label">d · Planer ausgeschaltet · die Seite wie heute (Knopfliste)</p>
+<div class="frame">
+<div><h1>Teilen</h1><p class="meta">Wohin soll der geteilte Inhalt?</p></div>
+<div class="card"><h2 style="margin-bottom:6px">Geteilt</h2><p class="clamp" style="overflow-wrap:anywhere">Fahrradträger für die Anhängerkupplung<br>https://example.org/fahrradtraeger</p></div>
+<div class="card"><h2 style="margin-bottom:8px">Vorschlag</h2><div class="add"><div class="field">Fahrradträger für die Anhängerkupplung</div><span class="btn p">Speichern</span></div></div>
+<h2>oder im Modul öffnen</h2>
+<div class="card"><div class="row"><span class="lead"><span class="gl"></span></span><span class="t plain"><span class="ti" style="color:var(--accent)">In die Merkliste</span></span></div></div>
+<div class="card"><div class="row"><span class="lead"><span class="gl note"></span></span><span class="t plain"><span class="ti" style="color:var(--accent)">Als Notiz</span></span></div></div>
+<div class="card"><div class="row"><span class="lead"><span class="tick"></span></span><span class="t plain"><span class="ti" style="color:var(--accent)">Als ToDo</span></span></div></div>
+<div class="card"><div class="row"><span class="lead"><span class="gl list"></span></span><span class="t plain"><span class="ti" style="color:var(--accent)">Auf eine Liste</span></span></div></div>
+<p class="note" style="margin-top:0">Genau die heutige Seite, gekürzt gezeichnet: ohne Planer kein neues Ziel, keine Tagwahl, kein „Ablegen“.</p>
+</div>
+</div>
+
+<div>
+<p class="label">e · Speichern fehlgeschlagen · Karte und Wahl bleiben</p>
+<div class="frame">
+<div><h1>Teilen</h1><p class="meta">Wohin soll der geteilte Inhalt?</p></div>
+<div class="card"><h2 style="margin-bottom:6px">Geteilt</h2><p class="ttl">Fahrradträger für die Anhängerkupplung</p><p class="host">example.org</p><p class="meta">Landet unter „Noch ohne Tag“.</p></div>
+<h2>Wohin?</h2>
+<div class="radios"><span class="radio on">In den Planer</span><span class="radio">Merkliste</span><span class="radio">Notiz</span><span class="radio">ToDo</span><span class="radio">Liste</span></div>
+<h2>Tag</h2>
+<div><span class="seg"><span class="on">ohne Tag</span><span>Heute</span><span>Morgen</span></span></div>
+<span class="btn p wide">Ablegen</span>
+<p class="err" role="alert">Nicht gespeichert. Noch einmal?</p>
+</div>
+</div>
+
+<div>
+<p class="label">f · nichts angekommen (wie heute)</p>
+<div class="frame">
+<div><h1>Teilen</h1><p class="meta">Wohin soll der geteilte Inhalt?</p></div>
+<div class="card"><p>Es wurde nichts geteilt. Nutze „Teilen“ in einer anderen App und wähle Nemo.</p></div>
+</div>
+<p class="label">Speichern läuft · Knopf beschäftigt</p>
+<div class="frame">
+<span class="btn p wide busy" aria-busy="true">Ablegen</span>
+</div>
+</div>
+</div>
+
+<p class="label">g · viele · „Noch ohne Tag“ mit 20 Zeilen, die geteilte steht oben</p>
+<div class="grid" style="margin-top:20px">
+<div class="card">
+<div class="dayh"><h2>Noch ohne Tag</h2><span>20 Dinge</span></div>
+<div class="row"><span class="lead"><span class="tick"></span></span><span class="t"><span class="ti">Fahrradträger für die Anhängerkupplung</span><span class="chips"><span class="chip">Im Browser öffnen · example.org</span></span></span><span class="m">30 Min</span><span class="dots"></span></div>
+<div class="row"><span class="lead"><span class="gl eur"></span></span><span class="t"><span class="ti">Rechnung Stadtwerke</span><span class="meta">Stadtwerke · 80,00 €</span><span class="chips"><span class="chip sug">Vorschlag: Do · Frist Fr</span></span></span><span class="m">15 Min</span><span class="dots"></span></div>
+<div class="row"><span class="lead"><span class="tick"></span></span><span class="t"><span class="ti">Paket abholen</span></span><span class="m">15 Min</span><span class="dots"></span></div>
+<div class="row"><span class="lead"><span class="tick"></span></span><span class="t"><span class="ti">Altglas wegbringen</span></span><span class="m">15 Min</span><span class="dots"></span></div>
+<div class="row"><span class="lead"><span class="gl mail"></span></span><span class="t"><span class="ti">Vermieter antworten wegen Nebenkosten</span><span class="meta">Mail: Nebenkosten 2025</span></span><span class="m">15 Min</span><span class="dots"></span></div>
+<div class="row"><span class="lead"><span class="tick"></span></span><span class="t"><span class="ti">Bargeld holen</span></span><span class="m">15 Min</span><span class="dots"></span></div>
+<div class="row"><span class="lead"><span class="gl list"></span></span><span class="t"><span class="ti">Drogerie</span><span class="meta">3 Dinge</span></span><span class="m">30 Min</span><span class="dots"></span></div>
+<div class="row"><span class="lead"><span class="gl note"></span></span><span class="t"><span class="ti">Idee: Regal im Flur</span></span><span class="m">30 Min</span><span class="dots"></span></div>
+<div class="row"><span class="lead"><span class="tick"></span></span><span class="t"><span class="ti">Umzugskartons besorgen</span></span><span class="m">30 Min</span><span class="dots"></span></div>
+<div class="row"><span class="lead"><span class="tick"></span></span><span class="t"><span class="ti">Nachsendeauftrag stellen</span></span><span class="m">15 Min</span><span class="dots"></span></div>
+</div>
+<div class="card">
+<div class="row"><span class="lead"><span class="tick"></span></span><span class="t"><span class="ti">Kaution klären</span></span><span class="m">30 Min</span><span class="dots"></span></div>
+<div class="row"><span class="lead"><span class="tick"></span></span><span class="t"><span class="ti">Internet ummelden</span></span><span class="m">15 Min</span><span class="dots"></span></div>
+<div class="row"><span class="lead"><span class="tick"></span></span><span class="t"><span class="ti">Sperrmüll anmelden</span></span><span class="m">15 Min</span><span class="dots"></span></div>
+<div class="row"><span class="lead"><span class="gl eur"></span></span><span class="t"><span class="ti">Rechnung Umzugswagen</span><span class="meta">140,00 €</span></span><span class="m">15 Min</span><span class="dots"></span></div>
+<div class="row"><span class="lead"><span class="tick"></span></span><span class="t"><span class="ti">Belege für die Steuer sortieren</span></span><span class="m">1 h</span><span class="dots"></span></div>
+<div class="row"><span class="lead"><span class="tick"></span></span><span class="t"><span class="ti">Geschenk für Oma aussuchen</span></span><span class="m">30 Min</span><span class="dots"></span></div>
+<div class="row"><span class="lead"><span class="tick"></span></span><span class="t"><span class="ti">Fahrrad aufpumpen</span></span><span class="m">15 Min</span><span class="dots"></span></div>
+<div class="row"><span class="lead"><span class="tick"></span></span><span class="t"><span class="ti">Winterjacke waschen</span></span><span class="m">30 Min</span><span class="dots"></span></div>
+<div class="row"><span class="lead"><span class="tick"></span></span><span class="t"><span class="ti">Balkonpflanzen reinholen</span></span><span class="m">15 Min</span><span class="dots"></span></div>
+<div class="row"><span class="lead"><span class="tick"></span></span><span class="t"><span class="ti">Kalender fürs neue Jahr kaufen</span></span><span class="m">15 Min</span><span class="dots"></span></div>
+</div>
+</div>
+<p class="note">Die neue Zeile steht oben, sonst ändert sich an „Noch ohne Tag“ nichts. Bei 1920 laufen die 20 Zeilen in zwei Spalten nur, damit das Bild nicht zu lang wird; gebaut ist es die rechte Spalte des Planers.</p>
