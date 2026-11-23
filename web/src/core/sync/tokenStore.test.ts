@@ -228,11 +228,14 @@ describe('sync token – edge cases (council round 1)', () => {
 
   it('a move that is still running cannot bring back a connection that was just removed', async () => {
     const secrets = store('os-keystore');
+    let entered!: () => void;
+    const inSet = new Promise<void>((r) => (entered = r));
     let release!: () => void;
-    const slow = new Promise<void>((r) => (release = r));
+    const gate = new Promise<void>((r) => (release = r));
     const plainSet = secrets.set;
     secrets.set = async (n, v) => {
-      await slow;
+      entered();
+      await gate;
       return plainSet(n, v);
     };
     setPlatform({ ...getPlatform(), secrets });
@@ -241,10 +244,52 @@ describe('sync token – edge cases (council round 1)', () => {
       value: { kind: 'selfHosted', url: 'https://sync.example', token: TOKEN },
     });
     const loading = loadSyncConfig(db);
+    await inSet; // the move is now inside the keystore write
     const removing = disconnect(deps);
+    await new Promise((r) => setTimeout(r, 20)); // give a lock-free disconnect time to finish first
     release();
     await Promise.all([loading, removing]);
     expect(await record()).toBeUndefined();
     expect(secrets.map.has(SYNC_TOKEN_SECRET)).toBe(false);
+  });
+
+  it('replacing a server connection with the home network removes the token; a home-network save alone does not touch the store', async () => {
+    const secrets = store('os-keystore');
+    const deleted: string[] = [];
+    const plainDelete = secrets.delete;
+    secrets.delete = async (n) => {
+      deleted.push(n);
+      return plainDelete(n);
+    };
+    setPlatform({ ...getPlatform(), secrets });
+    server = new MemoryServer();
+    server.token = TOKEN;
+    await connect({ url: 'https://sync.example', token: TOKEN, encrypt: false }, deps);
+    const { saveSyncConfigForTest } = await import('./service');
+    const key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, [
+      'encrypt',
+      'decrypt',
+    ]);
+    await saveSyncConfigForTest(db, { kind: 'lanHub', key, keyVersion: 1 });
+    expect(deleted).toEqual([SYNC_TOKEN_SECRET]);
+    expect(secrets.map.has(SYNC_TOKEN_SECRET)).toBe(false);
+    await saveSyncConfigForTest(db, { kind: 'lanHub', key, keyVersion: 2 });
+    expect(deleted).toEqual([SYNC_TOKEN_SECRET]);
+  });
+
+  it('the new error has a text in both languages', async () => {
+    const { t } = await import('@/strings');
+    expect(t.sync.errors['token-missing']).toBeTruthy();
+  });
+
+  it('no request with an empty token: push, the feed proxy and the device list get no server', async () => {
+    const secrets = store('os-keystore');
+    setPlatform({ ...getPlatform(), secrets });
+    await db.table('_secrets').put({
+      key: 'syncConfig',
+      value: { kind: 'selfHosted', url: 'https://sync.example', token: '' },
+    });
+    const { loadServerConfig } = await import('./service');
+    expect(await loadServerConfig(db)).toBeUndefined();
   });
 });
