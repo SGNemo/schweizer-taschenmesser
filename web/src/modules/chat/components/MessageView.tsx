@@ -73,7 +73,23 @@ export function MessageView({
       <div className={styles.msgHead}>
         <strong>{user ? c.you : c.assistant}</strong>
         {!user && message.stage ? (
-          <Badge tone="neutral">{message.stage === 'local' ? c.stageLocal : c.stageCloud}</Badge>
+          <Badge tone="neutral">
+            {message.stage === 'local' ? (
+              c.stageLocal
+            ) : message.providerLabel && message.providerLabel.length > 24 ? (
+              // Shortened on screen; the full name stays readable for screen readers and on hover.
+              <span title={c.stageCloudBy(message.providerLabel)}>
+                <span aria-hidden="true">
+                  {c.stageCloudBy(`${message.providerLabel.slice(0, 23)}…`)}
+                </span>
+                <span className="sr-only">{c.stageCloudBy(message.providerLabel)}</span>
+              </span>
+            ) : message.providerLabel ? (
+              c.stageCloudBy(message.providerLabel)
+            ) : (
+              c.stageCloud
+            )}
+          </Badge>
         ) : null}
         {user && message.context ? <Badge tone="neutral">{c.context.attached}</Badge> : null}
         <span className={styles.msgActions}>
