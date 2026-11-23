@@ -729,7 +729,8 @@ pub fn lan_pair_confirm(
     waiting(&state)?.ok_or("not-awaiting")?;
     let code = pending.code;
     with_core(&state, |core, wake| {
-        // every step after the question on the hub that was asked
+        // every step after the question on the hub that was asked (the check before guarded
+        // the ticket, this one the delivery)
         if !Arc::ptr_eq(core, &asked) {
             return Err("changed".to_owned());
         }
