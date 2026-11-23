@@ -194,7 +194,7 @@ export function SyncSection() {
                       if (r === 'token-missing')
                         useUiStore.getState().toast(t.sync.signOutTokenMissing);
                     })
-                    .catch(() => useUiStore.getState().toast(t.sync.errors.unknown ?? ''))
+                    .catch(() => useUiStore.getState().toast(t.sync.signOutFailed))
                 }
               >
                 {t.sync.signOut}
