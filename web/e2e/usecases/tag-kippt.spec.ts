@@ -37,6 +37,7 @@ const IST: Record<string, Figures> = {
     copyTaps: 2,
     allThings: 'ja',
     roundTripChanges: 0,
+    goalKept: 'ja',
     lost: 0,
   },
   // „Nur das hier …“ (feat/nur-das-hier): tick what stays, the rest in one move; the start line on top.
@@ -89,6 +90,7 @@ const TARGET: Record<string, Figures> = {
     copyTaps: 2,
     allThings: 'ja',
     roundTripChanges: 0,
+    goalKept: 'ja',
     lost: 0,
   },
   'T1 Samstag 16:00 – ab jetzt neu': {
@@ -842,12 +844,35 @@ test('T4 Plan von außen übernehmen', async ({ page }, info) => {
 test('T5 Plan als Text kopieren und zurück', async ({ page, context }, info) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await prepare(page, `${SA}T20:00:00`);
+  // A goal on Saturday only: the copy leaves it out (Sunday has none), so pasting back puts it nowhere else.
+  await page.evaluate(
+    ({ base, SA }) =>
+      new Promise<void>((resolve, reject) => {
+        const open = indexedDB.open('taschenmesser');
+        open.onsuccess = () => {
+          const tx = open.result.transaction('planner_day', 'readwrite');
+          tx.objectStore('planner_day').put({
+            ...base,
+            id: SA,
+            date: SA,
+            blockers: [],
+            note: 'Wohnung frei bekommen',
+          });
+          tx.oncomplete = () => {
+            open.result.close();
+            resolve();
+          };
+          tx.onerror = () => reject(tx.error);
+        };
+      }),
+    { base, SA },
+  );
   await planner(page);
   const before = await settled(page);
   const hand = new Hand(page);
   await hand.tap(page.getByRole('button', { name: 'Weitere Optionen', exact: true }).first());
   await hand.tap(page.getByRole('menuitem', { name: 'Plan als Text kopieren' }));
-  await expect(page.getByText('Plan kopiert.', { exact: false })).toBeVisible();
+  await expect(page.getByText(/^Plan bis .* kopiert/)).toBeVisible();
   const text = await page.evaluate(() => navigator.clipboard.readText());
   const allThings = ALL.every((title) => text.includes(`- ${title}`)) ? 'ja' : 'nein';
   // Pasted back unchanged: the preview says nothing changes; „Übernehmen“ stays off.
@@ -865,6 +890,12 @@ test('T5 Plan als Text kopieren und zurück', async ({ page, context }, info) =>
   await expect(dialog.getByRole('button', { name: 'Übernehmen', exact: true })).toBeDisabled();
   await page.keyboard.press('Escape');
   const after = await settled(page);
+  const notes = await rows<{ date: string; note?: string }>(page, 'planner_day');
+  const goalKept =
+    notes.find((d) => d.date === SA)?.note === 'Wohnung frei bekommen' &&
+    !notes.some((d) => d.date !== SA && d.note)
+      ? 'ja'
+      : 'nein';
   record(
     info,
     'T5 Plan als Text kopieren und zurück',
@@ -872,6 +903,7 @@ test('T5 Plan als Text kopieren und zurück', async ({ page, context }, info) =>
       copyTaps: hand.taps,
       allThings,
       roundTripChanges: unasked(before, after, []),
+      goalKept,
       lost: await lost(page),
     },
     { text },

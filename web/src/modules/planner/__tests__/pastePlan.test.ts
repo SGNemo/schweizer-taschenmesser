@@ -11,6 +11,7 @@ import { setNow } from '@/core/time/now';
 import { resetUndoJournal, undoDepth, undoLast } from '@/core/undo';
 import { useUiStore } from '@/stores/ui';
 import { applyPaste, pasteKnown, setGoal } from '../actions';
+import { copyInput } from '../copyPlan';
 import manifest from '../manifest';
 import {
   goalDays,
@@ -287,6 +288,7 @@ describe('planAsText (P3)', () => {
     week: 'Diese Woche, ohne Tag',
     later: 'Nächste Wochen',
     minutes: (m: number) => `${m} Min`,
+    fixed: (title: string, from: string, to: string) => `(${from}–${to} ${title})`,
   };
   const plan = {
     goal: 'Wohnung frei bekommen',
@@ -324,11 +326,11 @@ describe('planAsText (P3)', () => {
       [
         'Ziel: Wohnung frei bekommen',
         '',
-        'Sa 28.11.',
+        'Sa 28.11.:',
         '- Wäsche waschen (30 Min)',
         '- Pfand sammeln (15 Min)',
         '',
-        'So 29.11.',
+        'So 29.11.:',
         '- Bad putzen',
         '',
         'Diese Woche, ohne Tag:',
@@ -339,6 +341,83 @@ describe('planAsText (P3)', () => {
       ].join('\n'),
     );
     expect(planAsText({ days: [], week: [], later: [] }, words)).toBe('');
+  });
+});
+
+describe('copyInput + planAsText (P3, council round 1)', () => {
+  const de = {
+    goal: (g: string) => `Ziel: ${g}`,
+    day: (d: string) =>
+      `${['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][new Date(`${d}T12:00:00`).getDay()]} ${Number(d.slice(8))}.${Number(d.slice(5, 7))}.`,
+    week: 'Diese Woche, ohne Tag',
+    later: 'Nächste Wochen',
+    minutes: (m: number) => `${m} Min`,
+    fixed: (title: string, from: string, to: string) => `(${from}–${to} ${title})`,
+  };
+  const en = {
+    ...de,
+    goal: (g: string) => `Goal: ${g}`,
+    day: (d: string) =>
+      `${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date(`${d}T12:00:00`).getDay()]} ${Number(d.slice(8))}.${Number(d.slice(5, 7))}.`,
+    week: 'This week, no day yet',
+    later: 'Next weeks',
+  };
+  const entry = {} as never;
+  const row = (itemKey: string, title: string, minutes: number, extra = {}) =>
+    ({ itemKey, title, minutes, approx: false, entry, ...extra }) as never;
+
+  it('titles the reader would change are quoted and read back as they are; blocks are remarks', () => {
+    const tricky = ['30 Min joggen', '10:00 Ärztin anrufen', 'Später:', 'Ziel: Ruhe', 'Wäsche'];
+    const input = copyInput(
+      [
+        {
+          date: SA,
+          rows: [
+            ...tricky.map((x, i) => row(`todos:${i}`, x, 20)),
+            row('fitness:t', 'Training', 90, { fixed: { from: '18:00', to: '19:30' } }),
+          ],
+        },
+      ],
+      [],
+      [],
+      { from: SA, to: SO },
+    );
+    for (const words of [de, en]) {
+      const text = planAsText(input, words);
+      expect(text).toContain('(18:00–19:30 Training)');
+      const back = readPastedPlan(text, SA);
+      expect(back.goal).toBeUndefined();
+      expect(back.things.map((x) => [x.title, x.when, x.minutes])).toEqual(
+        tricky.map((x) => [x, { kind: 'day', date: SA }, 20]),
+      );
+    }
+  });
+
+  it('the goal goes only when every day with things has it; left-out and guessed things stay out', () => {
+    const day = (date: string, note: string | undefined, ...rows: never[]) => ({
+      date,
+      rows,
+      ...(note ? { row: { date, blockers: [], note } } : {}),
+    });
+    const weekend = [
+      day(SA, 'Wohnung frei', row('todos:a', 'Wäsche', 30)),
+      day(SO, 'Wohnung frei', row('todos:b', 'Bad', 30, { approx: true })),
+    ];
+    expect(copyInput(weekend, [], [], { from: SA, to: SO }).goal).toBe('Wohnung frei');
+    const withMonday = [...weekend, day(MO, undefined, row('todos:c', 'Mail', 15))];
+    expect(copyInput(withMonday, [], [], { from: SA, to: MO }).goal).toBeUndefined();
+    const out = copyInput(
+      weekend,
+      [
+        { itemKey: 'todos:x', title: 'Nicht im Plan', minutes: 30, reason: 'excluded', entry },
+        { itemKey: 'todos:y', title: 'Ohne Tag', minutes: 30, reason: 'kept', entry },
+      ] as never,
+      [{ title: 'Später' }],
+      { from: SA, to: SO },
+    );
+    expect(out.days[1]!.things).toEqual([{ title: 'Bad' }]);
+    expect(out.week).toEqual([{ title: 'Ohne Tag' }]);
+    expect(out.later).toEqual([{ title: 'Später' }]);
   });
 });
 

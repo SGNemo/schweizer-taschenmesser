@@ -9636,10 +9636,10 @@ export const de = {
     },
     copy: {
       menu: 'Plan als Text kopieren',
-      done: 'Plan kopiert. Nur Titel, Tage und Minuten.',
-      failed: 'Kopieren hat gerade nicht geklappt.',
+      done: (until: string) => `Plan bis ${until} kopiert – Titel, Tage, Minuten und Ziel.`,
+      failed: 'Kopieren hat gerade nicht geklappt. Versuch es gleich noch einmal.',
       empty: 'Im Plan steht noch nichts zum Kopieren.',
-      goal: (goal: string) => `Ziel: ${goal}`,
+      fixed: (title: string, from: string, to: string) => `(${from}–${to} ${title})`,
       week: 'Diese Woche, ohne Tag',
       later: 'Nächste Wochen',
       minutes: (min: number) => `${min} Min`,

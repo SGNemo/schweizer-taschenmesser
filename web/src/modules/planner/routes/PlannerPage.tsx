@@ -77,6 +77,7 @@ import { firstDayWithRows, plannerHead } from '../head';
 import { DaySetup } from '../components/DaySetup';
 import { DaySheet } from '../components/DaySheet';
 import { PasteDialog } from '../components/PasteDialog';
+import { copyInput } from '../copyPlan';
 import { looksLikePlan, planAsText } from '../pastePlan';
 import { RowChoice, type RowChoiceState } from '../components/RowChoice';
 import { SETUP_DAYS } from '../daySetup';
@@ -1112,36 +1113,21 @@ export default function PlannerPage() {
     );
   };
   /**
-   * „Plan als Text kopieren“ (use case „Tag kippt“, P3): the plan from today on as text „Plan einfügen“ reads back –
-   * the days in view with their things (a thing once, on its first day), „Noch ohne Tag“, „Nächste Wochen“ and the
-   * goal. Appointments and blocks stay out. Nothing is sent anywhere: the text goes to the clipboard on his tap.
+   * „Plan als Text kopieren“ (use case „Tag kippt“, P3): the days he looks at, from today, as text „Plan einfügen“ reads
+   * back (`copyInput` decides what goes in). Nothing is sent anywhere: the text goes to the clipboard on his tap.
    */
   async function copyPlan() {
     const c = t.planner.copy;
     const toast = useUiStore.getState().toast;
     const from = data?.today ?? today();
-    const seen = new Set<string>();
-    const thing = (r: { itemKey: string; title: string; minutes?: number }) => {
-      if (seen.has(r.itemKey)) return [];
-      seen.add(r.itemKey);
-      return [{ title: r.title, ...(r.minutes ? { minutes: r.minutes } : {}) }];
-    };
-    const inView = (board?.days ?? []).filter((d) => d.date >= from);
+    // The days he looks at: the week band, or the grid's four weeks – from today on.
+    const to = bandDays?.at(-1)?.date ?? board?.days.at(-1)?.date ?? from;
     const text = planAsText(
+      copyInput(board?.days ?? [], board?.waiting ?? [], laterList ?? [], { from, to }),
       {
-        ...(inView.find((d) => d.row?.note)?.row?.note
-          ? { goal: inView.find((d) => d.row?.note)!.row!.note! }
-          : {}),
-        days: inView.map((d) => ({
-          date: d.date,
-          things: d.rows.filter((r) => r.entry && !r.fixed).flatMap(thing),
-        })),
-        week: (board?.waiting ?? []).filter((w) => w.reason !== 'later').flatMap(thing),
-        later: (laterList ?? []).map((e) => ({ title: e.title })),
-      },
-      {
-        goal: c.goal,
+        goal: t.planner.goal.line,
         day: (date) => `${dayName(date)} ${formatDay(date, 'd.M.')}`,
+        fixed: c.fixed,
         week: c.week,
         later: c.later,
         minutes: c.minutes,
@@ -1153,7 +1139,7 @@ export default function PlannerPage() {
     }
     try {
       await getPlatform().clipboard.writeText(text);
-      toast(c.done);
+      toast(c.done(`${dayName(to)} ${formatDay(to, 'd.M.')}`));
     } catch {
       toast(c.failed);
     }

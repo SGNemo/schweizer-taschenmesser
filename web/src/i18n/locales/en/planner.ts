@@ -273,10 +273,10 @@ export const planner: Strings['planner'] = {
   },
   copy: {
     menu: 'Copy the plan as text',
-    done: 'Plan copied. Titles, days and minutes only.',
-    failed: 'Copying did not work just now.',
+    done: (until: string) => `Plan up to ${until} copied – titles, days, minutes and goal.`,
+    failed: 'Copying did not work just now. Try again in a moment.',
     empty: 'There is nothing in the plan to copy yet.',
-    goal: (goal: string) => `Goal: ${goal}`,
+    fixed: (title: string, from: string, to: string) => `(${from}–${to} ${title})`,
     week: 'This week, no day yet',
     later: 'Next weeks',
     minutes: (min: number) => `${min} min`,

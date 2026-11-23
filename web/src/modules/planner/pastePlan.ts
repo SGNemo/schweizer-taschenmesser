@@ -291,13 +291,18 @@ function readText(text: string, today: string): PastedPlan {
     // A task list („- [ ] …“): the box goes, a ticked one („[x]“) is done and stays out.
     const body = line.replace(BULLET_RE, '');
     if (DONE_RE.test(line) || DONE_RE.test(body)) continue;
+    // A line in brackets is a remark („(18:00–19:30 Training)“ of a copied plan): not a thing.
+    if (!bullet && /^\(.*\)$/.test(line)) continue;
     // Prose of the chat („Hier ist dein neuer Plan.“): a sentence that ends in a stop and is not a bullet.
     if (!bullet && (/[.!?]$/.test(withoutSymbols(line)) || line.length > MAX_TITLE)) {
       skipped++;
       continue;
     }
-    const { rest, minutes } = readDuration(body.replace(/^\[ ?\]\s*/, ''));
-    const title = clean(rest);
+    const item = body.replace(/^\[ ?\]\s*/, '');
+    // A title in „…“ is taken as it is (a copied title the reader would otherwise change); the effort follows it.
+    const quoted = /^„([^“]{1,160})“\s*(.*)$/.exec(item);
+    const { rest, minutes } = readDuration(quoted ? quoted[2]! : item);
+    const title = quoted ? quoted[1]!.replace(/\s+/g, ' ').trim() : clean(rest);
     if (!title) continue;
     things.push({ title, when, ...(minutes ? { minutes } : {}) });
   }
@@ -437,6 +442,18 @@ export function matchPaste(
   return { lines, missing, hasPast };
 }
 
+/**
+ * A title as the reader will read it back: plain when it comes back unchanged, else in „…“ (a title holding an effort
+ * „30 Min joggen“, a clock time, a heading word or „Ziel:“ would otherwise be changed – and become a second thing).
+ */
+function readsBack(title: string): string {
+  const plain = title.replace(/\s+/g, ' ').trim();
+  const back = readText(`- ${plain}`, '2000-01-01').things;
+  const same =
+    back.length === 1 && back[0]!.title === plain && !back[0]!.minutes && !/[„“]/.test(plain);
+  return same ? plain : `„${plain.replace(/[„“]/g, '"')}“`;
+}
+
 /** One thing in the copied plan: its title and, when known, its minutes. Nothing else ever leaves (P3). */
 export interface CopyThing {
   title: string;
@@ -447,6 +464,8 @@ export interface CopyThing {
 export interface CopyWords {
   goal: (goal: string) => string;
   day: (date: string) => string;
+  /** A timed block of the day as a remark the reader skips: „(18:00–19:30 Training)“. */
+  fixed: (title: string, from: string, to: string) => string;
   week: string;
   later: string;
   minutes: (min: number) => string;
@@ -461,18 +480,29 @@ export interface CopyWords {
 export function planAsText(
   plan: {
     goal?: string;
-    days: readonly { date: string; things: readonly CopyThing[] }[];
+    days: readonly {
+      date: string;
+      things: readonly CopyThing[];
+      fixed?: readonly { title: string; from: string; to: string }[];
+    }[];
     week: readonly CopyThing[];
     later: readonly CopyThing[];
   },
   words: CopyWords,
 ): string {
   const line = (x: CopyThing) =>
-    `- ${x.title.replace(/\s+/g, ' ').trim()}${x.minutes ? ` (${words.minutes(x.minutes)})` : ''}`;
+    `- ${readsBack(x.title)}${x.minutes ? ` (${words.minutes(x.minutes)})` : ''}`;
   const blocks: string[] = [];
   if (plan.goal) blocks.push(words.goal(plan.goal));
   for (const d of plan.days)
-    if (d.things.length) blocks.push([words.day(d.date), ...d.things.map(line)].join('\n'));
+    if (d.things.length || d.fixed?.length)
+      blocks.push(
+        [
+          `${words.day(d.date)}:`,
+          ...(d.fixed ?? []).map((f) => words.fixed(f.title, f.from, f.to)),
+          ...d.things.map(line),
+        ].join('\n'),
+      );
   if (plan.week.length) blocks.push([`${words.week}:`, ...plan.week.map(line)].join('\n'));
   if (plan.later.length) blocks.push([`${words.later}:`, ...plan.later.map(line)].join('\n'));
   return blocks.join('\n\n');

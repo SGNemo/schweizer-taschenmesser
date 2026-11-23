@@ -829,8 +829,10 @@ export async function pasteKnown(): Promise<Known[]> {
   const first = new Map<string, string>();
   const locked = new Set<string>();
   for (const r of (await assignmentRepo.active().toArray()) as AssignmentRow[]) {
+    // A thing's place is its first row from today on (a part still open yesterday does not count), else its earliest.
     const had = first.get(r.itemKey);
-    if (!had || r.date < had) first.set(r.itemKey, r.date);
+    const better = !had || (r.date >= day ? had < day || r.date < had : had < day && r.date < had);
+    if (better) first.set(r.itemKey, r.date);
     if (r.locked) locked.add(r.itemKey);
   }
   const out: Known[] = [];
