@@ -55,7 +55,8 @@ vi.mock('@tauri-apps/plugin-notification', () => ({
 vi.mock('@tauri-apps/plugin-opener', () => ({ openUrl: mocks.openUrl }));
 
 import { setLockScreenContent } from '@/core/notifications/lockScreen';
-import { createTauriPlatform, notificationId } from './index';
+import { setNow } from '@/core/time/now';
+import { ALARM_IDS_KEY, createTauriPlatform, notificationId } from './index';
 
 beforeEach(() => {
   vi.restoreAllMocks(); // spies such as the faked user agent
@@ -194,6 +195,56 @@ describe('tauri platform', () => {
       await createTauriPlatform()
     ).notifications.scheduleUpcoming!([]);
     expect(mocks.cancel).toHaveBeenCalledWith([notificationId('rem:1')]);
+  });
+
+  it('never cancels a reminder that already fired: that would take it out of the shade unread', async () => {
+    // `cancel(id)` in the plugin also dismisses a shown notice with that id. A reminder that fired
+    // leaves the upcoming list, so it must not count as "deleted".
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mozilla/5.0 (Linux; Android 14)');
+    const p = await createTauriPlatform();
+    try {
+      setNow(() => 1_700_000_000_000);
+      await p.notifications.scheduleUpcoming!([
+        { key: 'soon', at: 1_700_000_060_000, title: 'Gleich' },
+        { key: 'later', at: 1_700_000_900_000, title: 'Später' },
+      ]);
+      // "soon" fired a minute later and left the list; "later" was deleted in Nemo
+      setNow(() => 1_700_000_120_000);
+      mocks.cancel.mockClear();
+      await p.notifications.scheduleUpcoming!([]);
+      expect(mocks.cancel).toHaveBeenCalledWith([notificationId('later')]);
+    } finally {
+      setNow();
+    }
+  });
+
+  it('ids the plugin lists as pending are cancelled, unless the own list says they already fired', async () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mozilla/5.0 (Linux; Android 14)');
+    try {
+      setNow(() => 1_700_000_120_000);
+      localStorage.setItem(
+        ALARM_IDS_KEY,
+        JSON.stringify([[notificationId('fired'), 1_700_000_060_000]]),
+      );
+      mocks.pending.mockResolvedValue([
+        { id: notificationId('onlyPending') },
+        { id: notificationId('fired') },
+      ]);
+      const p = await createTauriPlatform();
+      await p.notifications.scheduleUpcoming!([]);
+      expect(mocks.cancel).toHaveBeenCalledWith([notificationId('onlyPending')]);
+    } finally {
+      setNow();
+      mocks.pending.mockResolvedValue([]);
+    }
+  });
+
+  it('a list from an older version (ids only) still cancels its deleted reminders', async () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mozilla/5.0 (Linux; Android 14)');
+    localStorage.setItem(ALARM_IDS_KEY, JSON.stringify([notificationId('old')]));
+    const p = await createTauriPlatform();
+    await p.notifications.scheduleUpcoming!([]);
+    expect(mocks.cancel).toHaveBeenCalledWith([notificationId('old')]);
   });
 
   it('still schedules when the plugin cannot list pending notices', async () => {
