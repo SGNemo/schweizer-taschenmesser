@@ -255,13 +255,13 @@ fn blocking_commands_never_run_on_the_main_thread() {
     );
     assert_eq!(downloads.matches("#[tauri::command]").count(), 1);
     assert!(downloads.contains("#[tauri::command]\npub fn downloads_default_dir("));
-    // Both builds of the three registration commands (Windows and elsewhere), plus start and stop.
+    // Both builds of the three registration commands (Windows and elsewhere), plus start, stop and state.
     let bridge = source("vault_bridge.rs");
     assert_eq!(
         bridge
             .matches("#[tauri::command(async)]\npub fn vault_bridge_")
             .count(),
-        8
+        9
     );
     assert_eq!(bridge.matches("#[tauri::command]").count(), 1);
     assert!(bridge.contains("#[tauri::command]\npub fn vault_bridge_respond("));

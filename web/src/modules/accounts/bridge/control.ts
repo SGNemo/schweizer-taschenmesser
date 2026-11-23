@@ -4,6 +4,7 @@
  * Only the desktop app has a `vaultBridge`; everywhere else every function here is a no-op.
  */
 import { randomInt } from '@nemo/vault-core';
+import { create } from 'zustand';
 import { getPlatform } from '@/core/platform';
 import type { VaultBridgeRegistration, VaultBridgeStartError } from '@/core/platform';
 import { getSettings } from '@/core/settings/settings';
@@ -84,11 +85,30 @@ export function resetBridge(deps?: Partial<BridgeDeps>): BridgeHandler {
 
 const bridgeService = () => getPlatform().vaultBridge;
 
+/**
+ * Why the switched-on bridge is not serving right now: set by a failed start at app start (a toast
+ * alone disappears) or when Settings finds the channel taken while running (X2); cleared by a
+ * successful start or by switching off.
+ */
+export const useBridgeStartError = create<{ error: VaultBridgeStartError | null }>(() => ({
+  error: null,
+}));
+
 /** Starts the pipe server; the handler answers everything it relays. */
 export async function startBridge(): Promise<VaultBridgeStartError | null> {
   const service = bridgeService();
   if (!service.supported) return null;
-  return service.start((req) => getBridge().handle(req.body));
+  const error = await service.start((req) => getBridge().handle(req.body));
+  useBridgeStartError.setState({ error });
+  return error;
+}
+
+/** Asks the shell whether the running server lost the channel to another program (X2). */
+export async function checkBridgeTaken(): Promise<void> {
+  const service = bridgeService();
+  if (!service.supported || !service.state) return;
+  const state = await service.state().catch(() => null);
+  if (state === 'taken') useBridgeStartError.setState({ error: 'channel-taken' });
 }
 
 export async function stopBridge(): Promise<void> {
@@ -117,6 +137,7 @@ export async function enableBridge(): Promise<EnableResult> {
 /** Settings switch off: stop listening, end sessions, remove the browser registration. */
 export async function disableBridge(): Promise<void> {
   await stopBridge();
+  useBridgeStartError.setState({ error: null });
   await setBridgeEnabled(false);
   const service = bridgeService();
   if (service.supported) await service.unregister().catch(() => undefined);

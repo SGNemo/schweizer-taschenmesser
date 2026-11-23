@@ -142,6 +142,7 @@ const COMMANDS: &[&str] = &[
     "vault_bridge_start",
     "vault_bridge_respond",
     "vault_bridge_stop",
+    "vault_bridge_state",
     "vault_bridge_register",
     "vault_bridge_status",
     "vault_bridge_unregister",

@@ -645,6 +645,11 @@ export interface VaultBridgeService {
     onRequest: (req: VaultBridgeRequest) => Promise<string>,
   ): Promise<VaultBridgeStartError | null>;
   stop(): Promise<void>;
+  /**
+   * `taken`: another program took the channel while the server ran, which has stopped serving
+   * (X2). Optional: platforms without it never report `taken`.
+   */
+  state?(): Promise<'off' | 'running' | 'taken'>;
   /** Writes the host manifest and the browser registry entries (rejects when that fails). */
   register(): Promise<VaultBridgeRegistration>;
   unregister(): Promise<void>;
