@@ -24,7 +24,7 @@ ItemRow  [lead] [title-button · meta · chips] [minutes] [lock] [⋯]     (clos
 | --- | --- | --- |
 | default | `detail` line if any; links as `PanelLine`s with their chip word | X2 |
 | ToDos | note: first 3 lines, `--text-sm`, clamp; checklist as tick lines (X14) | X2 |
-| Listen | section heads (caps) + open items as tick lines, max 8, then X8 „n weitere“ (a button that shows 8 more) | „Fertig eingekauft“ when none is open (the module's existing step) · X2 |
+| Listen | section heads (caps) + open items as tick lines, max 8, then X19 „n weitere“ (a button that shows 8 more) | X8 „Fertig eingekauft“ when none is open (the module's existing step) · X2 |
 | Merkliste | title, host as text | X13 (ghost) · X2 |
 | Rechnungen | nothing the row already says (amount and deadline are in its meta); a reminder line if dunned; then `PayStep`'s form as **one line** (today `PayStep` is a `Dialog` wrapper whose inner form is not exported: the invoices module exports that form as a non-dialog variant and its panel mounts it), with its own controls as built: label „Bezahlt am“ · `DayField` (default today) · label „Betrag“ · amount field prefilled (10 ch wide) – no chips; the two labels are visible, `--text-meta`, `--text-3` | X9 „Bezahlt“ (secondary) · X2 |
 | Abos | name · price / period; X16 „Kündigen bis Do 10. Dez.“; after a tap on „Gekündigt am …“: `DayField` (default today) and the foot's button becomes „Vermerken“ | X10 „Gekündigt am …“ (secondary) · „Läuft weiter“ (ghost) · X2 |
@@ -45,7 +45,7 @@ Per [00-common](00-common.md). On 412 the `PayStep` stacks: day field, amount, b
 - The open row is ticked from the lead: the compartment closes with the row.
 - The open row moves to another day (drag, `M`): it stays open on the new day.
 - A sync round changes the thing while open: the panel re-reads (live query); a field he is typing in (amount) is never overwritten; no extra notice is added – the module's own form rules apply.
-- A long list (60 items): 8 + „52 weitere“, each tap shows 8 more; no inner scroll.
+- A long list (60 items): 8 + X19 „52 weitere“, each tap shows 8 more; no inner scroll.
 - „Werte ausblenden“: amounts are placeholders in panel and toast.
 - Print / copy: „Plan als Text kopieren“ never contains panel content (`copyInput` test grows by one case).
 

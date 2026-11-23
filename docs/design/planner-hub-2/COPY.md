@@ -25,7 +25,7 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 | X5 | Auf diesem Gerät nicht verfügbar. | Not available on this device. |
 | X6 (mail, phone) | Mails beantwortest du am PC. | Answer mail on your computer. |
 | X7 | Das hat nicht geklappt. Es ist nichts verändert. | That did not work. Nothing was changed. |
-| X8 (lists) | {n} weitere · Fertig eingekauft | {n} more · Done shopping |
+| X8 (lists) | Fertig eingekauft | Done shopping |
 | X9 (invoices: two labels, the button) | Bezahlt am · Betrag · Bezahlt | Paid on · Amount · Paid |
 | X10 (subscriptions: two buttons, then the confirm) | Gekündigt am … · Läuft weiter · Vermerken | Cancelled on … · Keep it · Save |
 | X11 (subscriptions, toast) | Als gekündigt vermerkt. / Läuft weiter, Frist erledigt. | Noted as cancelled. / Kept, deadline settled. |
@@ -35,6 +35,7 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 | X15 (setting + hint) | Zeilen aufklappen · „Ein Tipp auf den Titel zeigt das Ding im Planer. Aus: der Titel öffnet es in seinem Modul.“ | Expand rows · “A tap on the title shows the thing in the planner. Off: the title opens it in its module.” |
 | X16 (subscriptions) | Kündigen bis {Do 10. Dez.} | Cancel by {Thu 10 Dec} |
 | X18 (meta of a passed deadline, as FOCUS-WORDING) | Frist war {So} | was due {Sun} |
+| X19 (a capped list: lists panel, pile part, bundle panel, steps) | {n} weitere | {n} more |
 
 ## 2 · collective rows
 
@@ -66,23 +67,22 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 | B4 (focus, eyebrow) | {Haushalt} · Schritt {k} von {n} | {Household} · step {k} of {n} |
 | B5 | Fertig · weiter | Done · next |
 | B6 | Überspringen | Skip |
-| B7 | Pause · Fortsetzen | Pause · Resume |
+| B7 (while paused the built `t.focus.mode.resume`, as built) | Pause · Weiter | Pause · Resume |
 | B10 (after a skip, last step; „Jetzt“ walks the skipped steps again, „Später“ returns to the plan with them open) | {n} übersprungen. Jetzt oder später? · Jetzt · Später | {n} skipped. Now or later? · Now · Later |
 | B11 (selection bar) | Bündeln … | Bundle … |
 | B12 (dialog; cancel = the shared „Abbrechen“) | Ein Name für das Bündel · Bündeln | A name for the bundle · Bundle |
 | B13 (toast) | {n} Dinge sind jetzt „{Wohnung}“. · Rückgängig | {n} things are now in “{Flat}”. · Undo |
 | B14 (panel ⋯) | Auflösen · Als Routine speichern · Umbenennen … | Unbundle · Save as routine · Rename … |
 | B15 (toast) | Aufgelöst. Die Dinge liegen wieder einzeln auf {Mo}. · Rückgängig | Unbundled. The things are back on {Mon} one by one. · Undo |
-| B16 (toast) | Routine „{Haushalt}“ angelegt. · Ansehen · Rückgängig | Routine “{Household}” created. · View · Undo |
+| B16 (toast after the lookup confirms the new routine; „Ansehen“ opens `/routines`) | Routine „{Haushalt}“ angelegt. · Ansehen · Rückgängig | Routine “{Household}” created. · View · Undo |
 | B17 (step gone) | Gibt es nicht mehr | No longer exists |
 | B18 (module off) | {Modul} ist ausgeschaltet – „Los“ lässt diesen Schritt aus. | {module} is switched off – “Go” skips this step. |
 | B19 (key hint under the buttons, not on touch; the corner's „Verlassen“ is as built, `t.focus.mode.leave`) | Enter: fertig · S: überspringen · P: Pause · Esc: zum Plan | Enter: done · S: skip · P: pause · Esc: to the plan |
 | B20 (line ⋯) | Aus dem Bündel nehmen | Take out of the bundle |
 | B21 (line ⋯, phone) | Nach oben · Nach unten | Move up · Move down |
-| B22 (clock, name) | Läuft seit {n} Minuten | Running for {n} minutes |
 | B23 (the filled button on the last step: finishes it, ticks the carrying thing, returns to the plan with the thing's toast) | Fertig | Done |
 | B24 (the announced step change, polite live region) | Schritt {k} von {n}: {Schritt} | Step {k} of {n}: {step} |
-| B25 (toast when a routine of that name exists; nothing written) | Die Routine „{Haushalt}“ gibt es schon. · Ansehen | The routine “{Household}” already exists. · View |
+| B25 (toast when the lookup finds a routine of that name before emitting; nothing is emitted; „Ansehen“ opens `/routines`) | Die Routine „{Haushalt}“ gibt es schon. · Ansehen | The routine “{Household}” already exists. · View |
 | B26 (quiet toast in „Los“ after a step) | Schritt erledigt. · Rückgängig | Step done. · Undo |
 
 ## 1 · share · 3 · kinds in the field
@@ -97,13 +97,17 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 | S9 | Fertig | Done |
 | S14 (page once the saved ToDo is gone – its own „Rückgängig“ or the toast's; replaces S8, the buttons go) | Zurückgenommen. | Taken back. |
 | S16 (second line under the form, only while the type is `plan`, for a shared http/https address ≤ 2 048 characters) | Der Link wird mit abgelegt: {host} | The link is saved with it: {host} |
+| S19 (in S16's place, for an address without http/https or over 2 048 characters, only while the type is `plan`) | Dieser Link wird nicht mit abgelegt. | This link is not saved with it. |
 | K1 (preview) | Wird: {Rechnung} · {Stadtwerke} · {80,00 €} · {Frist Fr 4. Dez.} | Becomes: {invoice} · {Stadtwerke} · {€80.00} · {due Fri 4 Dec} |
 | K2 (kinds) | Rechnung · Einkaufsliste · Termin · Notiz · Merkliste · Aufgabe mit Schritten | invoice · shopping list · appointment · note · bookmark · task with steps |
 | K3 | Als Aufgabe eintragen | Enter as a task |
 | K4 (toasts) | Rechnung angelegt, liegt unter „Noch ohne Tag“. / Steht auf der Einkaufsliste. / Termin eingetragen. / Notiz angelegt. · In den Plan / Auf der Merkliste. · In den Plan / Aufgabe mit {n} Schritten angelegt, liegt auf {Mo}. — each „· Rückgängig“ | Invoice created, under “No day yet”. / On the shopping list. / Appointment entered. / Note created. · Add to plan / Bookmarked. · Add to plan / Task with {n} steps created, on {Mon}. — each “· Undo” |
 | K5 (setting + hint) | Arten im Feld erkennen · „Zeigt vor dem Eintragen, was aus der Zeile wird. Ohne die Zeile wird es eine Aufgabe.“ | Recognise kinds in the field · “Shows what the line becomes before you enter it. Without that line it becomes a task.” |
 | K6 (more names in K1, after three) | + {n} | + {n} |
-| K7 (the field's toast for a plain ToDo with a lead chip) | Liegt auf {Mi}, vor {Friseur}. | On {Wed}, before {hairdresser}. |
+| K7 (the field's toast for a plain ToDo with an A2 chip „vor“) | Liegt auf {Mi}, vor {Friseur}. | On {Wed}, before {hairdresser}. |
+| K7b (the same with an A2 chip „nach“) | Liegt auf {Mi}, nach {Friseur}. | On {Wed}, after {hairdresser}. |
+| K8 (the field's toast for a ToDo with only T11) | Liegt auf {Mo}, in „{Umzug}“. | On {Mon}, in “{Moving house}”. |
+| K9 (end of the toast for a thing made while a topic filter is on that does not take T11; „Alles zeigen“ ends the filter) | Nicht im Thema „{Umzug}“ · Alles zeigen | Not in topic “{Moving house}” · Show everything |
 
 ## 9 · appointment · 11 · topic · struck: 7 · waiting, 8 · duration, 6 · places
 

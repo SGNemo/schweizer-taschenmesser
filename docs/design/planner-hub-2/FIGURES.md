@@ -174,7 +174,7 @@ The tables list only flows the package changes. Values are d / p where they diff
 | 4a | D1 | **taps 15**, **perThing 9**, switches 10, marks 5 / 5, trips 0 |
 | 4a | C1 | create 12, **work 8**, **taps 20**, **perThing 7**, switches 4 / 5, nextStepOnly nein |
 | 4b | B | rowsBefore 5, **taps 28 / 16**, **perThing 21 / 13**, switches 3, done 5, rowsAfter 0, replySwitches 1 / – |
-| 4c | B | as 4b; replySwitches 0 |
+| 4c | B | after 4b: as 4b; before it: as IST; `replySwitches` 0 |
 | 2 | B | rowsBefore 2 / 1, taps 17 / 10, perThing 12 / 8, switches 0, done 9 / 5, rowsAfter 0, mails 4 / –, replySwitches 0 / – |
 | 5a | C1 | create 11 / 10, work 7, taps 18 / 17, **perThing 7**, switches 2, nextStepOnly ja |
 | 5b | C2 | rows 1, **create 14 / 13**, work 6, **perThing 7**, switches 2, oneRow ja |

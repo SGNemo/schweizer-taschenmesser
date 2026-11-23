@@ -45,7 +45,7 @@ No new token, no new colour, no new icon family. Glyphs come from `ui/icons.tsx`
 
 ## States every surface has
 
-loading (shared `Skeleton`, 2 lines, no spinner) · empty (one sentence, one next step) · many (cap + „n weitere“; never a scroll box inside a row) · error (X7 in the place where he acted, `role="alert"`; what he typed stays) · module off (the part is not drawn, or X5 where he asked for it).
+loading (shared `Skeleton`, 2 lines, no spinner) · empty (one sentence, one next step) · many (cap + X19 „n weitere“; never a scroll box inside a row) · error (X7 in the place where he acted, `role="alert"`; what he typed stays) · module off (the part is not drawn, or X5 where he asked for it).
 
 ## Breakpoints
 
