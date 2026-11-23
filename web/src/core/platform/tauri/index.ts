@@ -4,6 +4,7 @@
  */
 import { lockScreenVisibility } from '@/core/notifications/lockScreen';
 import { loggedFetch } from '@/core/net/netlog';
+import { now } from '@/core/time/now';
 import { checkRedirect, nativeInit } from './redirect';
 import { getVersion } from '@tauri-apps/api/app';
 import { invoke } from '@tauri-apps/api/core';
@@ -176,18 +177,27 @@ async function channelFor(quiet: boolean): Promise<string | undefined> {
  */
 export const ALARM_IDS_KEY = 'tm-native-alarm-ids';
 
-function readAlarmIds(): number[] {
+/** An alarm Nemo handed to Android: its id and when it fires (absent in lists of older versions). */
+type AlarmEntry = [id: number, at?: number];
+
+function readAlarms(): AlarmEntry[] {
   try {
     const parsed: unknown = JSON.parse(localStorage.getItem(ALARM_IDS_KEY) ?? '[]');
-    return Array.isArray(parsed) ? parsed.filter((id): id is number => Number.isInteger(id)) : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.flatMap((e): AlarmEntry[] => {
+      if (Number.isInteger(e)) return [[e as number]]; // older list: ids only
+      if (Array.isArray(e) && Number.isInteger(e[0]))
+        return [[e[0] as number, typeof e[1] === 'number' ? e[1] : undefined]];
+      return [];
+    });
   } catch {
     return [];
   }
 }
 
-function writeAlarmIds(ids: Iterable<number>): void {
+function writeAlarms(entries: Iterable<AlarmEntry>): void {
   try {
-    localStorage.setItem(ALARM_IDS_KEY, JSON.stringify([...ids]));
+    localStorage.setItem(ALARM_IDS_KEY, JSON.stringify([...entries]));
   } catch {
     // storage full or blocked: the next run cancels by the plugin's list only
   }
@@ -202,11 +212,18 @@ async function scheduleUpcoming(items: ScheduledNotification[]): Promise<void> {
     (list) => list.map((p) => p.id),
     () => [] as number[],
   );
-  const known = new Set([...readAlarmIds(), ...listed]);
-  const stale = [...known].filter((id) => !wanted.has(id));
+  // The plugin's `cancel(id)` also dismisses a shown notice with that id: an alarm whose time has
+  // passed already fired and is only gone from `items` because it is no longer upcoming, so it is
+  // never cancelled (it would vanish from the shade unread). Entries of older lists carry no time.
+  const at = now();
+  const known = new Map<number, number | undefined>(readAlarms());
+  for (const id of listed) if (!known.has(id)) known.set(id, undefined);
+  const stale = [...known]
+    .filter(([id, when]) => !wanted.has(id) && (when === undefined || when > at))
+    .map(([id]) => id);
   if (stale.length > 0) await cancel(stale);
   // Recorded before scheduling, so an interrupted run still cancels them next time.
-  writeAlarmIds(wanted.keys());
+  writeAlarms([...wanted].map(([id, n]): AlarmEntry => [id, n.at]));
   for (const [id, n] of wanted) {
     // Same id = replaces the earlier entry; `allowWhileIdle` lets it fire in Doze mode.
     sendNotification({

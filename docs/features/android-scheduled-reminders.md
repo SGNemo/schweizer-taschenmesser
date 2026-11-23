@@ -12,6 +12,7 @@ Found in the security package 9 review (#1081). Code: `web/src/core/platform/tau
 ## Fix in Nemo (no fork)
 
 - Nemo keeps its own list of the alarm ids it handed to Android (localStorage `tm-native-alarm-ids`, device-local, ids only – hashes of the notification keys, no text). Stale = (own list ∪ `pending()`) minus wanted → `cancel`. The list is written after the cancel and before scheduling, so an interrupted run still cancels next time.
+- Only alarms still in the future are cancelled: the plugin's `cancel(id)` also dismisses a shown notice with that id, and a reminder that already fired leaves the upcoming list – cancelling it would take it out of the shade unread. The list stores `[id, at]`; entries of the first version (ids only) are still cancelled once.
 - `pending()` failing no longer stops scheduling.
 - Reboot: Android drops all alarms on reboot and the plugin restores none. `startNativeSchedule` already reschedules on app start, every 10 minutes and when the app becomes visible. **Known limit:** after a reboot, reminders fire only once Nemo has been opened again.
 
