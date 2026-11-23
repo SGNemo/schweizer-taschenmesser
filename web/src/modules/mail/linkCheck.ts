@@ -13,6 +13,9 @@ const DOMAIN_IN_TEXT = /(?:https?:\/\/)?((?:[a-z0-9-]+\.)+[a-z]{2,})/gi;
 const FILE_ENDING =
   /\.(pdf|docx?|xlsx?|pptx?|odt|ods|txt|csv|zip|rar|7z|jpe?g|png|gif|webp|heic|svg|mp3|mp4|mov|ics|vcf|eml|xml|json|html?)$/i;
 
+/** Longer link texts are not scanned (pattern cost) but asked about. */
+const MAX_LINK_TEXT = 2000;
+
 const bare = (host: string) => host.toLowerCase().replace(/^www\./, '');
 const sameSite = (a: string, b: string) => a === b || a.endsWith(`.${b}`) || b.endsWith(`.${a}`);
 
@@ -26,11 +29,11 @@ export function linkDecision(text: string, href: string): LinkDecision {
     return { none: true };
   }
   const real = bare(host);
-  // every domain the text names counts: hidden text can put the real one first, padding can push
-  // it far back (council). Bounded for the pattern's cost: start and end of the collapsed text.
+  // every domain the text names counts: hidden text can put the real one first or hide it in the
+  // middle (council). A link text longer than any real one is asked about without scanning.
   const flat = text.replace(/\s+/g, ' ').trim();
-  const scanned = flat.length <= 500 ? flat : `${flat.slice(0, 250)} ${flat.slice(-250)}`;
-  for (const m of scanned.matchAll(DOMAIN_IN_TEXT)) {
+  if (flat.length > MAX_LINK_TEXT) return { ask: href, host };
+  for (const m of flat.matchAll(DOMAIN_IN_TEXT)) {
     const named = m[1]!;
     if (!m[0].includes('://') && FILE_ENDING.test(named)) continue;
     if (!sameSite(real, bare(named))) return { ask: href, host };

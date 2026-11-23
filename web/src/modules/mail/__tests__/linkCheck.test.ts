@@ -41,6 +41,20 @@ describe('linkDecision', () => {
     expect(linkDecision(text, 'https://evil.test/')).toMatchObject({ host: 'evil.test' });
   });
 
+  it('hidden padding on both sides does not hide the named site', () => {
+    const pad = 'x '.repeat(200);
+    expect(linkDecision(`${pad}paypal.com ${pad}`, 'https://evil.test/')).toMatchObject({
+      host: 'evil.test',
+    });
+  });
+
+  it('a link text longer than any real one is asked about', () => {
+    expect(linkDecision('a '.repeat(1500), 'https://evil.test/')).toEqual({
+      ask: 'https://evil.test/',
+      host: 'evil.test',
+    });
+  });
+
   it('a file name in the text is not a site', () => {
     for (const text of ['Rechnung_2026.pdf', 'bericht.docx herunterladen', 'Foto.JPG']) {
       expect(linkDecision(text, 'https://files.sender.example/d/1')).toEqual({
