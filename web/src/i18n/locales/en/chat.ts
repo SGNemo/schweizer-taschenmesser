@@ -23,11 +23,36 @@ export const chat: Strings['chat'] = {
   assistant: 'Assistant',
   stageLocal: 'Local · free',
   stageCloud: 'Cloud',
+  stageCloudBy: (provider: string) => `Cloud · ${provider}`,
+  provider: {
+    paused: (name?: string) =>
+      `${name ?? 'This chat’s provider'} can’t be reached right now. The chat won’t switch to another one by itself.`,
+    limit: (name?: string) =>
+      `Your limit for ${name ?? 'this chat’s provider'} has been reached. The chat won’t switch to another one by itself.`,
+    missing: (name?: string) =>
+      name
+        ? `${name} isn’t set up on this device, or is set up differently. Choose yourself which provider this chat should go to.`
+        : 'This older chat doesn’t record which provider has it. Choose once where it should go.',
+    pick: 'Choose a provider',
+    pickTitle: 'Choose a provider for this chat',
+    pickConfirm: 'Choose and send',
+    pickNone: 'No provider is set up yet.',
+    openSettings: 'Set up AI provider',
+    choose: 'Choose another provider',
+    chooseTitle: 'Change the provider for this chat',
+    chooseBody:
+      'The whole history of this chat then goes to the chosen provider, including data you attached. The chat stays there afterwards.',
+    chooseField: 'Provider',
+    mayTrain: (name: string) => `${name} (may use inputs for training)`,
+    chooseNone: 'No other provider is set up.',
+    chooseConfirm: 'Switch and send',
+  },
   engine: 'Answers with',
   engineLocal: 'Local model',
   engineRouter: 'My providers',
   engineHintLocal: 'Runs only on this device, offline, at no cost.',
-  engineHintRouter: 'The text of this chat goes to your chosen provider.',
+  engineHintRouter:
+    'The text of this chat goes to your chosen provider. A chat stays with the provider that got it first.',
   systemPrompt: 'Custom instruction for this chat',
   systemPromptHint: 'For example: “Answer briefly and in simple sentences.”',
   rename: 'Rename',

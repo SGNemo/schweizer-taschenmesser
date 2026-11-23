@@ -1,7 +1,13 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { loadAiConfig, createRouterProvider } from '@/core/ai/config';
+import {
+  createRouterProvider,
+  loadAiConfig,
+  providerRef,
+  routerEntries,
+  useAiConfig,
+} from '@/core/ai/config';
 import { useLocalModel } from '@/core/ai/local/state';
 import { downloadTextFile } from '@/core/backup/download';
 import { availableManifests } from '@/core/modules/available';
@@ -17,6 +23,7 @@ import { Button, Checkbox, Dialog, Icon, IconButton, SelectField, TextArea, Text
 import { buildContext, contextModules } from '../context';
 import {
   addQuestion,
+  chooseProvider,
   deleteThread,
   dropLastAnswer,
   editQuestion,
@@ -46,6 +53,8 @@ export function ThreadView({ threadId, onBack }: { threadId: string; onBack: () 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [renaming, setRenaming] = useState<string>();
+  const [choosing, setChoosing] = useState<ProviderOption[]>();
+  const aiConfig = useAiConfig();
   const controller = useRef<AbortController | undefined>(undefined);
 
   useEffect(() => () => controller.current?.abort(), []);
@@ -94,6 +103,42 @@ export function ThreadView({ threadId, onBack }: { threadId: string; onBack: () 
       return;
     }
     await ask(question);
+  }
+
+  const providerName =
+    aiConfig?.providers.find((p) => p.id === thread.providerId)?.label ||
+    thread.providerLabel ||
+    undefined;
+  // Errors that come from the provider the chat is pinned to: the way out is an explicit choice.
+  const fromProvider =
+    !!error &&
+    thread.engine === 'router' &&
+    !['ai-off', 'no-engine', 'local-unavailable', 'no-thread', 'aborted'].includes(error.code) &&
+    (!!thread.providerId || error.code === 'provider-paused');
+  const paused = error?.code === 'provider-paused' ? error.detail : undefined;
+  // Retrying cannot help while the provider is missing or the user's own limit holds.
+  const canRetry = paused !== 'not-set-up' && paused !== 'limit';
+  const choose = thread.providerId ? c.provider.choose : c.provider.pick;
+
+  /** Only providers the router would really use (usable, key present), minus the current one. */
+  async function openChooser() {
+    const entries = await routerEntries(await loadAiConfig());
+    setChoosing(
+      entries
+        .map(({ entry }) => ({
+          id: entry.id,
+          label: entry.label || entry.id,
+          ref: providerRef(entry),
+          mayTrain: entry.mayTrainOnInputs,
+        }))
+        .filter(
+          (o) =>
+            !(
+              o.id === thread!.providerId &&
+              (thread!.providerRef === undefined || o.ref === thread!.providerRef)
+            ),
+        ),
+    );
   }
 
   const last = messages[messages.length - 1];
@@ -182,8 +227,25 @@ export function ThreadView({ threadId, onBack }: { threadId: string; onBack: () 
         ) : null}
         {error ? (
           <div className={styles.error} role="alert" data-testid="chat-error">
-            <span>{c.errors[error.code] ?? c.errors.fallback}</span>
-            <Button onClick={() => void reply()}>{c.retry}</Button>
+            <span>
+              {paused === 'not-set-up'
+                ? c.provider.missing(providerName)
+                : paused === 'limit'
+                  ? c.provider.limit(providerName)
+                  : paused !== undefined
+                    ? c.provider.paused(providerName)
+                    : (c.errors[error.code] ?? c.errors.fallback)}
+            </span>
+            {fromProvider ? (
+              <Button
+                variant={error.code === 'provider-paused' ? 'primary' : undefined}
+                onClick={() => void openChooser()}
+                data-testid="chat-choose-provider"
+              >
+                {choose}
+              </Button>
+            ) : null}
+            {canRetry ? <Button onClick={() => void reply()}>{c.retry}</Button> : null}
           </div>
         ) : null}
         {awaitingReply && !error ? <Button onClick={() => void reply()}>{c.retry}</Button> : null}
@@ -290,6 +352,23 @@ export function ThreadView({ threadId, onBack }: { threadId: string; onBack: () 
         </Dialog>
       ) : null}
 
+      {choosing ? (
+        <ChooseProvider
+          options={choosing}
+          title={thread.providerId ? c.provider.chooseTitle : c.provider.pickTitle}
+          confirm={thread.providerId ? c.provider.chooseConfirm : c.provider.pickConfirm}
+          none={thread.providerId ? c.provider.chooseNone : c.provider.pickNone}
+          onOpenSettings={() => void navigate(settingsPath('ki', 'ai'))}
+          onClose={() => setChoosing(undefined)}
+          onChoose={(picked) => {
+            setChoosing(undefined);
+            chooseProvider(threadId, picked).then(reply, () =>
+              setError({ code: 'invalid-response' }),
+            );
+          }}
+        />
+      ) : null}
+
       {settingsOpen ? (
         <ThreadSettings thread={thread} onClose={() => setSettingsOpen(false)} />
       ) : null}
@@ -314,6 +393,80 @@ export function ThreadView({ threadId, onBack }: { threadId: string; onBack: () 
         <p>{c.deleteBody}</p>
       </Dialog>
     </section>
+  );
+}
+
+interface ProviderOption {
+  id: string;
+  label: string;
+  ref: string;
+  mayTrain: boolean;
+}
+
+/** "Anderen Anbieter wählen": only an explicit choice moves a chat (and its history) elsewhere. */
+function ChooseProvider({
+  options,
+  title,
+  confirm,
+  none,
+  onOpenSettings,
+  onClose,
+  onChoose,
+}: {
+  options: ProviderOption[];
+  title: string;
+  confirm: string;
+  none: string;
+  onOpenSettings: () => void;
+  onClose: () => void;
+  onChoose: (picked: ProviderOption) => void;
+}) {
+  const [picked, setPicked] = useState(options[0]?.id ?? '');
+  const choice = options.find((o) => o.id === picked);
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      title={title}
+      footer={
+        <>
+          <Button onClick={onClose}>{c.cancel}</Button>
+          {options.length === 0 ? (
+            <Button variant="primary" onClick={onOpenSettings}>
+              {c.provider.openSettings}
+            </Button>
+          ) : null}
+          {choice ? (
+            <Button
+              variant="primary"
+              onClick={() => onChoose(choice)}
+              data-testid="chat-choose-confirm"
+            >
+              {confirm}
+            </Button>
+          ) : null}
+        </>
+      }
+    >
+      {options.length === 0 ? (
+        <p>{none}</p>
+      ) : (
+        <div className={styles.facts}>
+          <p>{c.provider.chooseBody}</p>
+          <SelectField
+            label={c.provider.chooseField}
+            value={picked}
+            onChange={(e) => setPicked(e.target.value)}
+          >
+            {options.map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.mayTrain ? c.provider.mayTrain(o.label) : o.label}
+              </option>
+            ))}
+          </SelectField>
+        </div>
+      )}
+    </Dialog>
   );
 }
 
