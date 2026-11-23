@@ -2,9 +2,20 @@ import type { MailAddress } from './types';
 
 /** `"Name" <a@b>`, `Name <a@b>` or a bare address. */
 export function parseAddress(raw: string): MailAddress {
-  const m = /^\s*"?([^"<]*?)"?\s*<([^>]+)>\s*$/.exec(raw);
-  if (m) return { name: m[1]!.trim() || undefined, email: m[2]!.trim() };
-  return { email: raw.trim() };
+  // Linear on purpose (Q1, launch review 2026-11): the regular expression this replaced backtracked
+  // cubically on a header with many leading tabs.
+  const text = raw.trim();
+  const open = text.indexOf('<');
+  if (open >= 0 && text.endsWith('>')) {
+    const email = text.slice(open + 1, -1).trim();
+    let name = text.slice(0, open).trim();
+    if (name.startsWith('"')) name = name.slice(1);
+    if (name.endsWith('"')) name = name.slice(0, -1);
+    if (email && !email.includes('>') && !name.includes('"')) {
+      return { name: name.trim() || undefined, email };
+    }
+  }
+  return { email: text };
 }
 
 /** Splits a header list on commas that are not inside quotes or angle brackets. */

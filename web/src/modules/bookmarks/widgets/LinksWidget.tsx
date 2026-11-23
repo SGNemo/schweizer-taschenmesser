@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
 import { TileGrid } from '@/ui';
-import { groupLinks } from '../logic';
+import { groupLinks, linkOf } from '../logic';
 import { itemRepo } from '../repo';
 import styles from './LinksWidget.module.css';
 
@@ -27,7 +27,10 @@ export default function LinksWidget() {
           entries={(links ?? []).map((l) => ({
             key: l.id,
             label: l.title,
-            onOpen: () => void getPlatform().app.openUrl(l.url!),
+            onOpen: () => {
+              const url = linkOf(l.url);
+              if (url) void getPlatform().app.openUrl(url);
+            },
           }))}
         />
       </div>

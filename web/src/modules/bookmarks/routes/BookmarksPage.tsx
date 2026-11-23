@@ -31,6 +31,7 @@ import {
   groupLinks,
   GROUPINGS,
   hostOf,
+  linkOf,
   normalizeUrl,
   tagCounts,
   type Filter,
@@ -334,7 +335,9 @@ export default function BookmarksPage() {
                     title={i.title}
                     meta={hostOf(i.url)}
                     onOpen={
-                      i.url ? () => void getPlatform().app.openUrl(i.url!) : () => setTarget(i)
+                      linkOf(i.url)
+                        ? () => void getPlatform().app.openUrl(linkOf(i.url)!)
+                        : () => setTarget(i)
                     }
                     menu={bookmarkMenu(i, { edit: setTarget, read })}
                   />
