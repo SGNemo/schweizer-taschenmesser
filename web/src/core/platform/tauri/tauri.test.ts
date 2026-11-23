@@ -4,6 +4,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   getVersion: vi.fn(async () => '1.2.3'),
   writeText: vi.fn(async (_t: string) => undefined),
+  writeSecret: vi.fn(async (_t: string) => undefined),
+  createChannel: vi.fn(async (_c: unknown) => undefined),
   readText: vi.fn(async () => 'clip'),
   clear: vi.fn(async () => undefined),
   save: vi.fn(async (_o: unknown): Promise<string | null> => '/tmp/out.json'),
@@ -23,6 +25,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@tauri-apps/api/app', () => ({ getVersion: mocks.getVersion }));
 vi.mock('@tauri-apps/plugin-clipboard-manager', () => ({
   writeText: mocks.writeText,
+  writeSecret: mocks.writeSecret,
   readText: mocks.readText,
   clear: mocks.clear,
 }));
@@ -39,6 +42,8 @@ vi.mock('@tauri-apps/plugin-notification', () => ({
   isPermissionGranted: mocks.isPermissionGranted,
   requestPermission: mocks.requestPermission,
   sendNotification: mocks.sendNotification,
+  createChannel: mocks.createChannel,
+  Importance: { Low: 2, Default: 3 },
   pending: mocks.pending,
   cancel: mocks.cancel,
   Schedule: {
@@ -49,6 +54,7 @@ vi.mock('@tauri-apps/plugin-notification', () => ({
 }));
 vi.mock('@tauri-apps/plugin-opener', () => ({ openUrl: mocks.openUrl }));
 
+import { setLockScreenContent } from '@/core/notifications/lockScreen';
 import { createTauriPlatform, notificationId } from './index';
 
 beforeEach(() => {
@@ -144,6 +150,10 @@ describe('tauri platform', () => {
       { key: 'inv:2', at: 1_800_000_100_000, title: 'Rechnung' },
     ]);
     expect(mocks.cancel).toHaveBeenCalledWith([111, 222]);
+    // NS6: the first Android notice creates the channel that hides it on the lock screen
+    expect(mocks.createChannel).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'nemo-hidden', visibility: -1, importance: 3 }),
+    );
     expect(mocks.sendNotification).toHaveBeenCalledTimes(2);
     expect(mocks.sendNotification).toHaveBeenCalledWith({
       id: keep,
@@ -155,6 +165,7 @@ describe('tauri platform', () => {
       extra: { url: '/reminders' },
       icon: 'ic_notification',
       iconColor: '#b5430c',
+      channelId: 'nemo-hidden',
     });
   });
 
@@ -167,7 +178,55 @@ describe('tauri platform', () => {
       body: 'heute',
       icon: 'ic_notification',
       iconColor: '#b5430c',
+      channelId: 'nemo-hidden',
     });
+  });
+
+  it('NS6: by default every notice goes through a channel that hides it on the lock screen', async () => {
+    // launch review 2026-11: a notice's own `visibility` is dropped by the plugin's Rust layer, so
+    // the channel decides; "secret" channels by default, the plugin's default channel when allowed
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mozilla/5.0 (Linux; Android 14)');
+    const p = await createTauriPlatform();
+    try {
+      await p.notifications.show({ title: 'Arzt', body: '9 Uhr', tag: 'k' });
+      expect(mocks.sendNotification).toHaveBeenLastCalledWith(
+        expect.objectContaining({ channelId: 'nemo-hidden' }),
+      );
+      setLockScreenContent(true);
+      await p.notifications.show({ title: 'Arzt', body: '9 Uhr', tag: 'k' });
+      expect(mocks.sendNotification.mock.lastCall?.[0]).not.toHaveProperty('channelId');
+      await p.notifications.scheduleUpcoming!([{ key: 'r', at: 1_800_000_000_000, title: 'Arzt' }]);
+      expect(mocks.sendNotification.mock.lastCall?.[0]).not.toHaveProperty('channelId');
+    } finally {
+      setLockScreenContent(false);
+    }
+  });
+
+  it('NS6: a quiet notice uses a channel that hides it, unless the content may show', async () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mozilla/5.0 (Linux; Android 14)');
+    const p = await createTauriPlatform();
+    try {
+      await p.notifications.show({ title: 'Arzt', body: '9 Uhr', tag: 'k', quiet: true });
+      expect(mocks.createChannel).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'nemo-quiet-hidden', visibility: -1 }),
+      );
+      expect(mocks.sendNotification).toHaveBeenLastCalledWith(
+        expect.objectContaining({ channelId: 'nemo-quiet-hidden' }),
+      );
+      await p.notifications.scheduleUpcoming!([
+        { key: 'a', at: 1_800_000_000_000, title: 'A' },
+        { key: 'b', at: 1_800_000_000_000, title: 'B', quiet: true },
+      ]);
+      const sent = mocks.sendNotification.mock.calls.slice(-2).map((c) => c[0].channelId);
+      expect(sent).toEqual(['nemo-hidden', 'nemo-quiet-hidden']);
+      setLockScreenContent(true);
+      await p.notifications.show({ title: 'Arzt', body: '9 Uhr', tag: 'k', quiet: true });
+      expect(mocks.sendNotification).toHaveBeenLastCalledWith(
+        expect.objectContaining({ channelId: 'nemo-quiet' }),
+      );
+    } finally {
+      setLockScreenContent(false);
+    }
   });
 
   it('derives stable, distinct 31-bit ids', () => {
@@ -185,7 +244,10 @@ describe('tauri platform', () => {
       const p = await createTauriPlatform();
       mocks.readText.mockResolvedValue('secret');
       await p.clipboard.writeSensitive('secret', 30_000);
-      expect(mocks.writeText).toHaveBeenCalledWith('secret');
+      // NS8 (launch review 2026-11): a secret goes in marked sensitive (Android hides the preview,
+      // Windows keeps it out of the clipboard history), never as plain text
+      expect(mocks.writeSecret).toHaveBeenCalledWith('secret');
+      expect(mocks.writeText).not.toHaveBeenCalled();
       await vi.advanceTimersByTimeAsync(30_001);
       expect(mocks.clear).toHaveBeenCalledTimes(1);
     } finally {

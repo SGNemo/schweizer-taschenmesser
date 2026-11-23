@@ -129,6 +129,23 @@ describe('gmailProvider.threads', () => {
     expect(page.threads[1]!.labelIds).toEqual(expect.arrayContaining(['SENT', 'INBOX']));
   });
 
+  it('reads „has an attachment“ from the message type of the metadata (multipart/mixed, not related)', async () => {
+    const files = metaThread('t6', 'Unterlagen', false);
+    (files.messages[0]!.payload as { mimeType?: string }).mimeType = 'multipart/mixed';
+    const inline = metaThread('t7', 'Bild', false);
+    (inline.messages[1]!.payload as { mimeType?: string }).mimeType = 'multipart/related';
+    const { ctx } = mock((url) =>
+      url.pathname.endsWith('/threads')
+        ? json({ threads: [{ id: 't6' }, { id: 't7' }] })
+        : json(url.pathname.endsWith('t6') ? files : inline),
+    );
+    const page = await gmailProvider.threads(ctx, {});
+    expect(page.threads.map((t) => [t.id, t.hasAttachment])).toEqual([
+      ['t6', true],
+      ['t7', false],
+    ]);
+  });
+
   it('asks for List-Unsubscribe and Precedence and keeps only the derived „personal“ flag', async () => {
     const bulk = metaThread('t3', 'Newsletter', false);
     bulk.messages[1]!.payload.headers.push(hdr('List-Unsubscribe', '<mailto:out@example.org>'));

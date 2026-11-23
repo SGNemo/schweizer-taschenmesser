@@ -14,6 +14,8 @@ export interface MailboxState {
   hasMore: boolean;
   loadMore: () => void;
   reload: () => void;
+  /** Bumped by `reload` (the search on this device runs again with it). */
+  tick: number;
 }
 
 const codeOf = (e: unknown): MailErrorCode =>
@@ -63,7 +65,7 @@ export function useMailbox(
     const set = (patch: Partial<Loaded>) =>
       alive && setState((old) => ({ ...(old.req === req ? old : fresh(req)), ...patch }));
     void (async () => {
-      const cached = q ? [] : await loadThreads(account.key, { labelId });
+      const cached = q ? [] : await loadThreads(account.key, { labelId, limit: 200 });
       set({ threads: cached });
       if (account.key === DEMO_ACCOUNT) return set({ loading: false });
       try {
@@ -123,5 +125,6 @@ export function useMailbox(
     hasMore: current.next !== undefined,
     loadMore,
     reload: () => setTick((n) => n + 1),
+    tick,
   };
 }

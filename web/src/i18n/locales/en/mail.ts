@@ -1,3 +1,4 @@
+import { formatNumber } from '@/core/i18n/format';
 import type { Strings } from '@/strings';
 
 export const mail: Strings['mail'] = {
@@ -131,9 +132,8 @@ export const mail: Strings['mail'] = {
     loading: 'Loading mail …',
     more: 'Load more',
     searchLabel: 'Search',
-    searchPlaceholder: 'Search, e.g. from:name has:attachment',
-    searchHint:
-      'Gmail search syntax applies: from:, to:, subject:, has:attachment, newer_than:7d, label:…',
+    searchPlaceholder: 'Sender, subject, text or attachment',
+    searchHint: 'Searches this device first, then the mailbox.',
     searchEnd: 'End search',
     account: 'Account',
     accountN: (n: number) => `Account ${n}`,
@@ -379,6 +379,7 @@ export const mail: Strings['mail'] = {
       'has:attachment': 'With attachment',
       'is:starred': 'Starred',
       'older_than:1y': 'Older than a year',
+      'newer_than:7d': 'Last 7 days',
     } as Record<string, string>,
     save: 'Remember search',
     forgetThis: 'Stop remembering',
@@ -387,6 +388,22 @@ export const mail: Strings['mail'] = {
     savedDone: 'Search remembered. It now sits with the folders.',
     forgotten: 'Search no longer remembered.',
     forget: (q: string) => `Remove remembered search “${q}”`,
+    onDevice: 'On this device',
+    onDeviceDetail: (n: number) =>
+      n === 1 ? '1 saved mail searched' : `${formatNumber(n)} saved mails searched`,
+    onDeviceSearching: 'Searching …',
+    onDeviceMore: (n: number) => `Show ${formatNumber(n)} more`,
+    onDeviceNone: 'Nothing about this on this device.',
+    onDeviceNoneDemo: 'Nothing found. Try another word or part of one.',
+    onDeviceOnly: (part: string) => `Only the mailbox can answer “${part}”.`,
+    onDeviceOnlyDemo: (part: string) => `“${part}” needs a connected Gmail.`,
+    inMailbox: 'In the mailbox',
+    inMailboxLoading: 'Searching the mailbox …',
+    inMailboxNone: 'Nothing more about this in the mailbox.',
+    inMailboxError: 'The mailbox could not be searched just now – see above.',
+    inMailboxOffline: 'The mailbox cannot be reached right now. Above is what this device holds.',
+    inFile: 'Attachment',
+    inText: 'In the text',
   },
   batch: {
     select: 'Select',

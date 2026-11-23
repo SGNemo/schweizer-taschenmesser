@@ -2,11 +2,12 @@
  * Native (Tauri 2) implementation of `PlatformService`. This directory is the only place that may
  * import `@tauri-apps/*` (ESLint). Keep each capability small and mockable.
  */
+import { lockScreenVisibility } from '@/core/notifications/lockScreen';
 import { loggedFetch } from '@/core/net/netlog';
 import { checkRedirect, nativeInit } from './redirect';
 import { getVersion } from '@tauri-apps/api/app';
 import { invoke } from '@tauri-apps/api/core';
-import { clear, readText, writeText } from '@tauri-apps/plugin-clipboard-manager';
+import { clear, readText, writeSecret, writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { save } from '@tauri-apps/plugin-dialog';
 import {
   BaseDirectory,
@@ -28,6 +29,7 @@ import {
   sendNotification,
 } from '@tauri-apps/plugin-notification';
 import { openUrl } from '@tauri-apps/plugin-opener';
+import { t } from '@/strings';
 import { tComfort } from '@/strings.comfort';
 import type {
   NotificationPermissionState,
@@ -101,10 +103,10 @@ async function createNotifications(kind: PlatformKind): Promise<NotificationServ
       // Android needs a monochrome status-bar icon (`res/drawable/ic_notification`, rendered by
       // gen-icons); the launcher icon would appear as a white square. Desktop uses the app icon.
       // "Stumm" on Android: the low-importance channel shows it without sound.
-      if (kind === 'android' && quiet) await ensureQuietChannel();
+      const channelId = kind === 'android' ? await channelFor(quiet === true) : undefined;
       sendNotification(
         kind === 'android'
-          ? { title, body, ...ANDROID_ICON, ...(quiet ? { channelId: QUIET_CHANNEL } : {}) }
+          ? { title, body, ...ANDROID_ICON, ...(channelId ? { channelId } : {}) }
           : { title, body },
       );
     },
@@ -117,23 +119,60 @@ async function createNotifications(kind: PlatformKind): Promise<NotificationServ
 /** Small icon + accent tint for Android notifications (drawable name, see `scripts/gen-icons.mjs`). */
 const ANDROID_ICON = { icon: 'ic_notification', iconColor: '#b5430c' } as const;
 
-/** Android channel without sound for "Stumm" (created once; the plugin ignores a repeat). */
+/**
+ * Android channels (each created once; the plugin ignores a repeat). NS6 (launch review 2026-11):
+ * what a locked phone shows is decided by the channel. A notice's own `visibility` never reaches
+ * Android: the plugin's Rust `NotificationData` has no such field and drops it. A channel's
+ * lock-screen setting overrides the notice and cannot change after creation, so:
+ *  - default (switch off): `nemo-hidden` / `nemo-quiet-hidden`, both "secret" (nothing on the lock
+ *    screen; in the notification shade after unlocking);
+ *  - "Inhalt auf dem Sperrbildschirm zeigen": the plugin's own `default` channel (no override,
+ *    Android's lock-screen setting decides) / `nemo-quiet` (private, created by earlier versions).
+ * Created channels play the sound as a notification; the plugin's `default` channel as an alarm,
+ * so under Do Not Disturb the two may differ.
+ */
 const QUIET_CHANNEL = 'nemo-quiet';
-let quietChannel: Promise<void> | undefined;
-function ensureQuietChannel(): Promise<void> {
-  quietChannel ??= createChannel({
-    id: QUIET_CHANNEL,
-    name: tComfort.get().mute.channel,
-    importance: Importance.Low,
-    vibration: false,
-  }).catch(() => undefined);
-  return quietChannel;
+const QUIET_HIDDEN_CHANNEL = 'nemo-quiet-hidden';
+const HIDDEN_CHANNEL = 'nemo-hidden';
+const channels = new Map<string, Promise<void>>();
+
+/** The channel for a notice now: `undefined` = the plugin's default channel. */
+async function channelFor(quiet: boolean): Promise<string | undefined> {
+  const hidden = lockScreenVisibility() === -1;
+  const id = quiet
+    ? hidden
+      ? QUIET_HIDDEN_CHANNEL
+      : QUIET_CHANNEL
+    : hidden
+      ? HIDDEN_CHANNEL
+      : undefined;
+  if (!id) return undefined;
+  if (!channels.has(id))
+    channels.set(
+      id,
+      createChannel({
+        id,
+        name:
+          id === QUIET_CHANNEL
+            ? tComfort.get().mute.channel
+            : id === QUIET_HIDDEN_CHANNEL
+              ? t.notifications.channelQuietHidden
+              : t.notifications.channelHidden,
+        importance: quiet ? Importance.Low : Importance.Default,
+        // no new stimulus: like the plugin's default channel, it does not vibrate (FOCUS-GUIDELINES)
+        vibration: false,
+        visibility: hidden ? -1 : 0,
+      }).catch(() => undefined),
+    );
+  await channels.get(id);
+  return id;
 }
 
 /** Replaces the pending OS notifications with `items`. */
 async function scheduleUpcoming(items: ScheduledNotification[]): Promise<void> {
   const wanted = new Map(items.map((n) => [notificationId(n.key), n]));
-  if (items.some((n) => n.quiet)) await ensureQuietChannel();
+  const normalId = await channelFor(false);
+  const quietId = items.some((n) => n.quiet) ? await channelFor(true) : normalId;
   const stale = (await pending()).map((p) => p.id).filter((id) => !wanted.has(id));
   if (stale.length > 0) await cancel(stale);
   for (const [id, n] of wanted) {
@@ -145,7 +184,8 @@ async function scheduleUpcoming(items: ScheduledNotification[]): Promise<void> {
       schedule: Schedule.at(new Date(n.at), false, true),
       extra: { url: n.url ?? '/' },
       ...ANDROID_ICON,
-      ...(n.quiet ? { channelId: QUIET_CHANNEL } : {}),
+      // NS6: the channel decides what a locked phone shows (see `channelFor`)
+      ...((n.quiet ? quietId : normalId) ? { channelId: n.quiet ? quietId : normalId } : {}),
     });
   }
 }
@@ -179,7 +219,8 @@ export async function createTauriPlatform(): Promise<PlatformService> {
     clipboard: {
       writeText: (text) => writeText(text),
       ...sensitiveClipboard({
-        write: (text) => writeText(text),
+        // NS8: marked sensitive (Android: no preview; Windows: not in history or cloud clipboard)
+        write: (text) => writeSecret(text),
         read: () => readText().catch(() => undefined),
         clear: () => clear(),
       }),

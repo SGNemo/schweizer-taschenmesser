@@ -168,10 +168,10 @@ No critical finding. One high finding (SC1). The Dev-Preview that friends alread
 | NS2 | low | Updater manifest version is unsigned: an older validly signed exe can be served as newer (rollback) | `src/update.rs:146-163`, `src/portable.rs:91-103` | M, Sven merges · **fixed (#1080)**: before the portable swap the version is read from the signed payload's own version block; an older one is refused (`version-not-newer`) |
 | NS3 | low | The APK installer's URL check is not flavour-aware: a stable app may fetch the dev APK (installs as a second app after confirmation) | `plugins/apk-installer/src/validate.rs:6-36` | S · **fixed (#1080)**: the installer check knows the build's channel; the stable app refuses `dev-preview` assets |
 | NS4 | low | Only the pre-merge manifest is asserted (`allowBackup="false"`); cleartext is printed, the merged manifest of the shipped APK (permissions, exported components) never checked | `web/scripts/lib/androidManifest.ts:20-33`, `.github/workflows/release.yml:354-357` | S, **fixed (#1050)** |
-| NS5 | low | No `dataExtractionRules`: device-to-device transfer can copy the database | `web/scripts/lib/androidManifest.ts:20-33` | S |
-| NS6 | low | Notifications set no visibility: reminder titles show on the lock screen unless the OS hides them | `core/platform/tauri/index.ts:103-107,139-147` | S |
+| NS5 | low | No `dataExtractionRules`: device-to-device transfer can copy the database | `web/scripts/lib/androidManifest.ts:20-33` | S · **proposal (#1081)**: ready code in the PR text (`web/scripts/**` is protected; alternative: a small plugin whose library manifest sets `dataExtractionRules`) |
+| NS6 | low | Notifications set no visibility: reminder titles show on the lock screen unless the OS hides them | `core/platform/tauri/index.ts:103-107,139-147` | S · **fixed (#1081)** (Android 8+): every Android notice goes through a channel whose lock-screen setting is "secret" (a notice's own visibility is dropped by the plugin's Rust layer); a device-local switch moves them to channels where Android's own setting decides |
 | NS7 | low | = F3; on Android `exchange/inbox.json` is inside the page's file scope | `capabilities/default.json:59-70`, `src/exchange_client.rs:91-97` | S · **fixed (#1068)** |
-| NS8 | low | = old V4: Android clipboard without the sensitive flag | `core/platform/tauri/index.ts:175-182` | S |
+| NS8 | low | = old V4: Android clipboard without the sensitive flag | `core/platform/tauri/index.ts:175-182` | S · **fixed (#1081)**: secrets go to the clipboard through the plugin's `writeSecret` (Android: sensitive flag; Windows: not in history or cloud clipboard; Linux/macOS only a hint) |
 | NS9, NS10 | info | `disk_scan_start` takes any root (read-only); 29 desktop grants duplicated for all platforms; stale capability description | `src/disk.rs:146-155`, `capabilities/default.json:8-36` | – |
 
 **Web layer, server, reset, diagnostics (part C).**
@@ -242,7 +242,7 @@ No regression. Verified at the code, not from the old status table.
 | S5 | **fixed in the apps (#1057)**, PWA accepted (medium) | table above |
 | V1 | fixed for the vault seal; the same gap is new for LAN keys (R1) | `core/reset/device.test.ts:67` |
 | V2, V3, V6–V8, V11 | fixed | `plugins/secure-store/src/desktop/sealed.rs`, `core/crypto/crypto.test.ts:125-141` |
-| V4 | **open** (low, = NS8) | `core/platform/tauri/index.ts:175-181` |
+| V4 | **fixed (#1081)** (= NS8) | `core/platform/tauri/index.ts:175-181` |
 | V5 | partly (residual, table above) | – |
 | V9 | unchanged (info): no rollback protection for vault ciphertext | – |
 | V10 | by decision: vault CSV export is not neutralised | `modules/accounts/csv.ts:33` |
