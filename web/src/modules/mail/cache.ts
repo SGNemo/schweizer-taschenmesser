@@ -82,10 +82,10 @@ export async function loadThreads(
   accountKey: string,
   opts: { labelId?: string; limit?: number } = {},
 ): Promise<CachedThreadView[]> {
-  const rows = await threadRepo
-    .active()
-    .filter((r) => r.accountKey === accountKey)
-    .toArray();
+  // Through the account index: the other accounts' rows are never read.
+  const rows = (await threadRepo.table.where('accountKey').equals(accountKey).toArray()).filter(
+    (r) => r.deletedAt === null,
+  );
   rows.sort((a, b) => b.sortKey - a.sortKey);
   // The key is only fetched for a sealed row: it exists by then, so this stays a plain read (this
   // function also runs inside a Dexie live query, where creating the key would be a forbidden write).

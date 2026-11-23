@@ -207,7 +207,8 @@ export const heldIndexes = (): number => built.size;
 
 /**
  * Changes with every write through `cache.ts` (generation) and with rows added or removed elsewhere (seed rows,
- * a reset): counts only, never a full read of the sealed rows.
+ * a reset): counts only, never a full read of the sealed rows. A label change written by a second window of
+ * the app is seen after this window's next own write or reload (the generation lives per window).
  */
 async function signatureOf(accountKey: string): Promise<string> {
   const [threads, bodies] = await Promise.all([
@@ -340,8 +341,9 @@ function excerpt(plain: string, word: string): string {
   const found = folded.indexOf(word);
   if (found < 0) return flat.slice(0, 90);
   const at = map[found]!;
+  const last = map[found + word.length - 1]! + 1;
   const start = Math.max(0, at - 30);
-  const end = Math.min(flat.length, at + word.length + 60);
+  const end = Math.min(flat.length, last + 60);
   return `${start > 0 ? '… ' : ''}${flat.slice(start, end)}${end < flat.length ? ' …' : ''}`;
 }
 
@@ -388,8 +390,12 @@ export async function searchLocal(accountKey: string, query: string): Promise<Lo
   const hits: LocalHit[] = [];
   const fuzzy = new Set<string>();
   for (const d of docs) {
-    const h = matches(d, q, fuzzy);
-    if (h) hits.push(h);
+    // Name words found with a typo count for marking only when their mail is a hit.
+    const near = new Set<string>();
+    const h = matches(d, q, near);
+    if (!h) continue;
+    hits.push(h);
+    for (const w of near) fuzzy.add(w);
   }
   return { hits, terms: [...terms, ...fuzzy], unsupported: [], searched: docs.length };
 }

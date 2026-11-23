@@ -63,7 +63,7 @@ describe('mail never reaches a model', () => {
     const offenders: string[] = [];
     for (const f of files(SRC)) {
       if (f.includes(join('modules', 'mail'))) continue;
-      if (/modules\/mail\/(searchIndex|searchMemory|useLocalSearch)/.test(readFileSync(f, 'utf8')))
+      if (/(^|\/)mail\/(searchIndex|searchMemory|useLocalSearch)/m.test(readFileSync(f, 'utf8')))
         offenders.push(f);
     }
     expect(offenders).toEqual([]);

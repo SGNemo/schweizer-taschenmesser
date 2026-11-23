@@ -83,7 +83,7 @@ Point at a mail's row and the button “Add to plan” appears (“As to-do” w
 
 ## Finding mail (Windows app)
 
-One search field looks at sender, subject, text and attachment names. The hits **on this device** come first and work offline too (the mails the app has already listed or opened; a small typo in a name is forgiven); below, **in the mailbox** lists what Gmail finds on top. Matching words are marked. Chips narrow the search (unread, with attachment, this week, starred, older than a year). The search and its index stay on this device: not synced, not in a backup, never sent to an AI, and deleting the mail cache deletes them too.
+One search field looks at sender, subject, text and attachment names. The hits **on this device** come first and work offline too (the mails the app has already listed or opened; a small typo in a name is forgiven); below, **in the mailbox** lists what Gmail finds on top. Matching words are marked. Chips narrow the search (unread, with attachment, last 7 days, starred, older than a year). The search and its index stay on this device: not synced, not in a backup, never sent to an AI, and deleting the mail cache deletes them too.
 
 ## Importing a bank statement
 

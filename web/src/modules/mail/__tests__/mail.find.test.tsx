@@ -299,3 +299,39 @@ describe('search: on this device and in the mailbox', () => {
     expect(await screen.findByText(/kann nur das Postfach beantworten/)).toBeInTheDocument();
   });
 });
+
+describe('search: the device part', () => {
+  it('„Persönlich“ does not narrow a search (an invoice is not from a person) and its chip steps aside', async () => {
+    const { saveThreads } = await import('../cache');
+    await saveThreads('google', [{ ...summary('t-bill', 'Rechnung Wasser'), personal: false }], {
+      list: true,
+    });
+    mocks.threads.mockResolvedValue({ threads: [] });
+    page('/mail?personal=1&q=wasser');
+    expect(await screen.findByText('Wasser', { selector: 'mark' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Persönlich' })).toBeNull();
+  });
+
+  it('shows 50 hits at first and the next ones on request; the count names all of them', async () => {
+    const { saveThreads } = await import('../cache');
+    await saveThreads(
+      'google',
+      Array.from({ length: 120 }, (_, i) => ({
+        ...summary(`t${i}`, `Rechnung ${i}`),
+        date: Date.now() - i * 60_000,
+      })),
+      { list: true },
+    );
+    mocks.threads.mockResolvedValue({ threads: [] });
+    const user = userEvent.setup();
+    page('/mail?q=rechnung');
+    const device = (await screen.findByRole('heading', { name: /Auf diesem Gerät/ })).closest(
+      'section',
+    )!;
+    await waitFor(() => expect(device.querySelectorAll('[data-thread-id]')).toHaveLength(50));
+    expect(within(device).getByLabelText(/120/)).toBeInTheDocument();
+    await user.click(within(device).getByRole('button', { name: '50 weitere zeigen' }));
+    await waitFor(() => expect(device.querySelectorAll('[data-thread-id]')).toHaveLength(100));
+    expect(within(device).getByRole('button', { name: '20 weitere zeigen' })).toBeInTheDocument();
+  });
+});

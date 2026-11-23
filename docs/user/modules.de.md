@@ -83,7 +83,7 @@ Zeigst du auf die Zeile einer Mail, erscheint der Knopf „In den Plan“ („Al
 
 ## Mails finden (Windows-App)
 
-Ein Suchfeld schaut in Absender, Betreff, Text und Anhangsnamen. Die Treffer **auf diesem Gerät** kommen zuerst und gehen auch ohne Netz (die Mails, die die App schon gelistet oder geöffnet hat; ein kleiner Tippfehler im Namen wird verziehen); darunter zeigt **im Postfach**, was Gmail zusätzlich findet. Gefundene Wörter sind markiert. Chips grenzen ein (ungelesen, mit Anhang, diese Woche, mit Stern, älter als ein Jahr). Suche und Index bleiben auf diesem Gerät: nicht im Sync, nicht im Backup, nie bei einer KI, und „Mail-Cache löschen“ löscht sie mit.
+Ein Suchfeld schaut in Absender, Betreff, Text und Anhangsnamen. Die Treffer **auf diesem Gerät** kommen zuerst und gehen auch ohne Netz (die Mails, die die App schon gelistet oder geöffnet hat; ein kleiner Tippfehler im Namen wird verziehen); darunter zeigt **im Postfach**, was Gmail zusätzlich findet. Gefundene Wörter sind markiert. Chips grenzen ein (ungelesen, mit Anhang, letzte 7 Tage, mit Stern, älter als ein Jahr). Suche und Index bleiben auf diesem Gerät: nicht im Sync, nicht im Backup, nie bei einer KI, und „Mail-Cache löschen“ löscht sie mit.
 
 ## Kontoauszug importieren
 

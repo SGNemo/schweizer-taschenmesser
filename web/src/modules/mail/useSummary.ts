@@ -43,7 +43,8 @@ export function useMailSummary(): MailSummary | undefined {
     void refresh();
   }, []);
   return useLiveQuery(async () => {
-    const keys = new Set((await threadRepo.active().toArray()).map((r) => r.accountKey));
+    // The account keys straight from the index (no row is read for them).
+    const keys = new Set((await threadRepo.table.orderBy('accountKey').uniqueKeys()).map(String));
     const real = [...keys].filter((k) => k !== DEMO_ACCOUNT);
     const accounts = real.length > 0 ? real : keys.has(DEMO_ACCOUNT) ? [DEMO_ACCOUNT] : [];
     const all = (

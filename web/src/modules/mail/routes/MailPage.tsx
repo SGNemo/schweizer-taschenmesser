@@ -98,6 +98,8 @@ interface ListSection {
   note?: string;
   /** More hits than shown: a quiet button shows the next ones. */
   more?: { count: number; onShow: () => void };
+  /** All hits of the part when only some are shown. */
+  total?: number;
 }
 
 function ThreadList({
@@ -247,8 +249,8 @@ function ThreadList({
         groups={sections.map((sec) => ({
           id: sec.id,
           label: sec.label,
-          count: sec.threads.length,
-          countHidden: sec.threads.length === 0,
+          count: sec.total ?? sec.threads.length,
+          countHidden: (sec.total ?? sec.threads.length) === 0,
           detail: sec.detail,
           children: (
             <>
@@ -309,9 +311,10 @@ export default function MailPage() {
   const live = useLiveQuery(() => listMailAccounts(), []);
   const demoCount = useLiveQuery(
     () =>
-      threadRepo
-        .active()
-        .filter((r) => r.accountKey === DEMO_ACCOUNT)
+      threadRepo.table
+        .where('accountKey')
+        .equals(DEMO_ACCOUNT)
+        .filter((r) => r.deletedAt === null)
         .count(),
     [],
   );
@@ -364,13 +367,18 @@ export default function MailPage() {
     // A thread both parts know shows the mailbox's fresh copy (labels, unread) in the device part.
     const fresh = new Map(box.threads.map((th) => [th.id, th]));
     return [
-      ...(local?.hits.map((h) => fresh.get(h.thread.id) ?? h.thread) ?? []),
+      ...(local?.hits.map((h) => {
+        const f = fresh.get(h.thread.id);
+        // The index knows attachments from opened mails that Gmail's list does not report.
+        return f ? { ...f, hasAttachment: f.hasAttachment || h.thread.hasAttachment } : h.thread;
+      }) ?? []),
       ...box.threads.filter((th) => !localIds.has(th.id)),
     ];
   }, [searching, local, localIds, box.threads]);
   // The device part shows 50 hits at first (a broad word can match hundreds); „N weitere zeigen“ adds more.
-  const [deviceLimit, setDeviceLimit] = useState({ q: query, n: DEVICE_PAGE });
-  if (deviceLimit.q !== query) setDeviceLimit({ q: query, n: DEVICE_PAGE });
+  const limitKey = `${account?.key}|${query}`;
+  const [deviceLimit, setDeviceLimit] = useState({ q: limitKey, n: DEVICE_PAGE });
+  if (deviceLimit.q !== limitKey) setDeviceLimit({ q: limitKey, n: DEVICE_PAGE });
   const hitLines = useMemo(() => {
     const m = new Map<string, HitLine>();
     for (const h of local?.hits ?? []) if (h.line) m.set(h.thread.id, h.line);
@@ -684,17 +692,20 @@ export default function MailPage() {
           ? t.mail.find.onDeviceDetail(local.searched)
           : undefined,
       threads: here,
+      total: local ? Math.max(here.length, local.hits.length) : undefined,
       more:
         local && local.hits.length > here.length
           ? {
               count: Math.min(DEVICE_PAGE, local.hits.length - here.length),
-              onShow: () => setDeviceLimit({ q: query, n: deviceLimit.n + DEVICE_PAGE }),
+              onShow: () => setDeviceLimit({ q: limitKey, n: deviceLimit.n + DEVICE_PAGE }),
             }
           : undefined,
       note: !local
         ? t.mail.find.onDeviceSearching
         : local.unsupported.length > 0
-          ? t.mail.find.onDeviceOnly(local.unsupported[0]!)
+          ? demo
+            ? t.mail.find.onDeviceOnlyDemo(local.unsupported[0]!)
+            : t.mail.find.onDeviceOnly(local.unsupported[0]!)
           : here.length === 0
             ? demo
               ? t.mail.find.onDeviceNoneDemo
@@ -711,9 +722,11 @@ export default function MailPage() {
           ? t.mail.find.inMailboxOffline
           : box.loading && there.length === 0
             ? t.mail.find.inMailboxLoading
-            : there.length === 0 && !box.error
-              ? t.mail.find.inMailboxNone
-              : undefined,
+            : there.length === 0 && box.error
+              ? t.mail.find.inMailboxError
+              : there.length === 0
+                ? t.mail.find.inMailboxNone
+                : undefined,
     };
     return [device, mailbox];
   };
