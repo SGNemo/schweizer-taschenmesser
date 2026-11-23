@@ -123,19 +123,13 @@ export function ThingRow({
 
   const duration = row.approx ? t.planner.row.approx(compact(row.minutes)) : compact(row.minutes);
   const facts: ReactNode[] = [];
-  // The source's icon stands once: in the meta beside its word, or in the lead slot when that has no control.
-  const iconLead = !done && !action;
-  if (source)
-    facts.push(
-      <span className={styles.source}>
-        {iconLead ? null : <Icon name={source.icon} size={16} />}
-        {source.word}
-      </span>,
-    );
+  // Direction A: the row is one line – title, chips, minutes, lock, ⋯. The source is no fact of the meta any more (the
+  // row's name and its lead say it); the meta holds only what is particular to this thing (a deadline, „war Mo“ …).
   // A fixed block (S4, a training at 18:00): its time alone – „fest“ means the lock only (CONCEPT-COPY, R12).
   if (row.fixed) facts.push(<span>{`${row.fixed.from}–${row.fixed.to}`}</span>);
   // Without the lock control (a row of „Frist vorbei“) the state is said in the meta; with it, the control says it.
-  else if (row.pinned && !lock) facts.push(<span>{t.planner.row.fixed}</span>);
+  else if (row.pinned && !lock)
+    facts.push(<span className={styles.chipFest}>{t.planner.row.fixed}</span>);
   if (was) facts.push(<span>{t.planner.open.was(dayName(was))}</span>);
   if (entry?.detail)
     facts.push(
@@ -196,25 +190,49 @@ export function ThingRow({
       }
       onOpen={entry ? () => void navigate(entry.to) : undefined}
       meta={
-        <span className={styles.meta}>
-          {facts.map((fact, i) => (
-            <Fragment key={i}>
-              {i > 0 ? <span aria-hidden="true">·</span> : null}
-              {fact}
-            </Fragment>
-          ))}
-          {/* Phone: the duration closes the meta line, so the title has the row's width (the end slot is hidden). */}
-          {noDuration ? null : (
-            <span className={styles.metaDuration}>
-              {facts.length > 0 ? <span aria-hidden="true">· </span> : null}
-              {duration}
+        facts.length === 0 && !whyOpen ? (
+          // Only the phone shows the minutes in the meta (its end slot is hidden).
+          noDuration ? undefined : (
+            <span className={`${styles.meta} ${styles.metaPhoneOnly}`}>
+              {row.pinned && lock && !row.fixed ? (
+                <span className={`${styles.chipFest} ${styles.metaDuration}`}>
+                  {t.planner.row.fixed}
+                </span>
+              ) : null}
+              <span className={styles.metaDuration}>{duration}</span>
             </span>
-          )}
-          {whyOpen ? <span className={styles.reason}>{reason}</span> : null}
-        </span>
+          )
+        ) : (
+          <span className={styles.meta}>
+            {facts.map((fact, i) => (
+              <Fragment key={i}>
+                {i > 0 ? <span aria-hidden="true">·</span> : null}
+                {fact}
+              </Fragment>
+            ))}
+            {/* Phone: the duration closes the meta line, so the title has the row's width (the end slot is hidden). */}
+            {noDuration ? null : (
+              <span className={styles.metaDuration}>
+                {facts.length > 0 ? <span aria-hidden="true">· </span> : null}
+                {duration}
+              </span>
+            )}
+            {whyOpen ? <span className={styles.reason}>{reason}</span> : null}
+          </span>
+        )
       }
       below={links.length > 0 ? <LinkChips views={links} /> : undefined}
-      end={noDuration ? undefined : <span className={styles.duration}>{duration}</span>}
+      end={
+        noDuration ? undefined : (
+          <span className={styles.endFacts}>
+            {/* „fest“ as a pill before the minutes (direction A); the lock control beside it says it too. */}
+            {row.pinned && lock && !row.fixed ? (
+              <span className={styles.chipFest}>{t.planner.row.fixed}</span>
+            ) : null}
+            <span className={styles.duration}>{duration}</span>
+          </span>
+        )
+      }
       selectable={select ? true : undefined}
       selected={select?.selected}
       onSelectChange={select ? (on) => select.onChange(on) : undefined}
@@ -241,9 +259,8 @@ export function ThingRow({
                 data-testid="row-lock"
                 onClick={lock.onToggle}
               >
+                {/* The state in a word stands as the pill „fest“ before the minutes, never in colour alone. */}
                 <Icon name={lock.locked ? 'lock' : 'unlock'} size={16} />
-                {/* The state in a word beside the symbol, never in colour alone. */}
-                {lock.locked ? <span aria-hidden="true">{t.planner.row.fixed}</span> : null}
               </button>
             ) : null}
             {onMove && !select ? (
@@ -337,9 +354,27 @@ export function TodoHintRow({
 }) {
   return (
     <ItemRow
-      recessed
+      className={styles.hintMuted}
+      // Direction A: a muted row with a dashed circle – a thing the ToDos date here, not laid by the plan.
+      lead={
+        <span className={styles.lead} aria-hidden="true">
+          <span className={styles.dashedTick} />
+        </span>
+      }
       title={<span className={styles.thingTitle}>{title}</span>}
-      meta={<span className={styles.meta}>{t.planner.chips.inTodos(dayName(date))}</span>}
+      // The phone hides the end slot: there the chip stands in the meta line.
+      meta={
+        <span className={`${styles.meta} ${styles.metaPhoneOnly}`}>
+          <span className={`${styles.chipHint} ${styles.metaDuration}`}>
+            {t.planner.chips.inTodos(dayName(date))}
+          </span>
+        </span>
+      }
+      end={
+        <span className={styles.endFacts}>
+          <span className={styles.chipHint}>{t.planner.chips.inTodos(dayName(date))}</span>
+        </span>
+      }
       controls="always"
       actions={
         <button

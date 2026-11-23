@@ -49,43 +49,23 @@
   outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
-.wide {
+.face {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
   min-width: 0;
 }
-.top {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0 var(--space-2);
-  min-width: 0;
-}
 .day {
-  font-size: var(--text-md);
-  font-weight: var(--weight-semibold);
-  font-variant-numeric: var(--font-num);
-  white-space: nowrap;
-}
-.count,
-.state {
-  color: var(--text-3);
   font-size: var(--text-meta);
+  font-weight: var(--weight-semibold);
   font-variant-numeric: var(--font-num);
   white-space: nowrap;
 }
 .state {
   color: var(--text-muted);
-}
-/* The wide form's day may wrap between words („Heute ·“ above „Di 29.“): a tile at the narrow end of the wide form
-   is too slim for the whole line, and a day must never run past its tile. */
-.wide .day {
-  white-space: normal;
-}
-.compact {
-  display: none;
+  font-size: var(--text-meta);
+  font-variant-numeric: var(--font-num);
+  white-space: nowrap;
 }
 .bar {
   position: absolute;
@@ -94,36 +74,48 @@
   bottom: var(--space-2);
   pointer-events: none;
 }
-/* Compact: weekday and number, the free time (or one state word), the bar. Words never break inside themselves;
-   at a large text size the number drops under the weekday, a long state („40 Min mehr“) breaks between words. */
+/* Direction A: ‹ and › stand at the band's ends, as tall as a tile. */
+.paged {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--space-2);
+  align-items: stretch;
+}
+.nav {
+  height: auto;
+  min-height: 100%;
+  background: var(--surface-raised);
+}
+/* Narrow (a phone, a slim column): weekday and number above the fact, centred; a long fact breaks between words. */
 @container band (max-width: 44rem) {
   .band {
+    gap: var(--space-1);
+  }
+  .paged {
     gap: var(--space-1);
   }
   .tile {
     --tile-pad: var(--space-2);
   }
-  /* No side padding: the centred free time („37 Min“) needs the tile's whole width on a phone. */
   .pick {
     padding-inline: 0;
     text-align: center;
   }
-  .wide {
-    display: none;
+  .face {
+    align-items: center;
   }
-  .compact {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    column-gap: 0.25em;
-    min-width: 0;
-  }
-  .compact .day {
-    font-size: var(--text-meta);
-  }
-  .compact .state {
-    flex-basis: 100%;
+  .state {
     white-space: normal;
+  }
+  .nav {
+    width: var(--space-6);
+    min-width: var(--space-6);
+  }
+  /* „Mo“ above „16“: the narrow tile never breaks inside a word. */
+  .day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 }
 
@@ -135,4 +127,9 @@
 .tile[data-drop-over] .pick {
   outline: 2px dashed var(--focus);
   outline-offset: -2px;
+}
+/* An overbooked day (direction A): its fact and bar in the warning ink – a fact, said in words too („+ 2 h 10 mehr“). */
+.tile[data-over] .state {
+  color: var(--warning-ink);
+  font-weight: var(--weight-semibold);
 }

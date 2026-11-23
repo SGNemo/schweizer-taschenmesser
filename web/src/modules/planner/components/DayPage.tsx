@@ -1,7 +1,7 @@
 import { Fragment, type ReactNode, type TouchEvent, useId, useRef, useState } from 'react';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Card, Icon, ItemList, ItemRow, Progress, SkeletonRows } from '@/ui';
+import { Card, Icon, ItemList, ItemRow, SkeletonRows } from '@/ui';
 import type { BoardBlocker, BoardDay, BoardRow } from '../board';
 import { capacityLabel, capacityState, capacityWhy, compact } from './capacity';
 import { sourceOf } from './ThingRow';
@@ -102,6 +102,8 @@ export function DayPage({
   dayEnd,
   onSpread,
   hints,
+  top,
+  foot,
 }: {
   day: BoardDay;
   /** The day after today: its title says „Morgen“. */
@@ -126,6 +128,10 @@ export function DayPage({
   onSpread?: () => void;
   /** The muted rows „In ToDos: Do · Hierher legen“ of this day (never counted). */
   hints?: ReactNode;
+  /** Inside the card, above the day's head (direction A: „Von Mo, Di ist noch etwas offen.“). */
+  top?: ReactNode;
+  /** Inside the card, under the day's rows (direction A: „Noch ohne Tag“ and its things). */
+  foot?: ReactNode;
 }) {
   const id = useId();
   const [all, setAll] = useState(false);
@@ -181,6 +187,7 @@ export function DayPage({
       onTouchStart={onSwipe ? onTouchStart : undefined}
       onTouchEnd={onSwipe ? onTouchEnd : undefined}
     >
+      {top}
       <div className={styles.sheetHead}>
         <h2 id={`${id}-title`} className={styles.sheetTitle}>
           {dayTitle(day, tomorrow)}
@@ -212,18 +219,7 @@ export function DayPage({
             </button>
           )}
         </span>
-        {!day.off ? (
-          <div className={styles.sheetBar}>
-            <Progress
-              value={day.planned}
-              max={Math.max(day.usable, 1)}
-              label={t.planner.board.load(compact(day.planned), compact(day.usable))}
-              valueText={capacityLabel(day)}
-              over={state === 'over' ? 'hatch' : undefined}
-              outline
-            />
-          </div>
-        ) : null}
+        {/* Direction A: no bar on the sheet – the band's tile carries the day's load as a bar. */}
         {!day.off ? (
           <p
             id={`${id}-why`}
@@ -270,7 +266,6 @@ export function DayPage({
 
       {hasRows ? (
         <>
-          <h3 className={`${styles.groupHead} ${styles.groupFirst}`}>{t.planner.sheet.first}</h3>
           <ItemList label={t.planner.sheet.first}>
             {first.map((row, i) => renderRow(row, i === 0))}
           </ItemList>
@@ -331,6 +326,7 @@ export function DayPage({
       ) : null}
 
       {hints}
+      {foot}
 
       {hasRows && (onRest || onSetup) ? (
         <div className={styles.sheetFoot}>
