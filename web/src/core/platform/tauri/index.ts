@@ -178,14 +178,14 @@ async function channelFor(quiet: boolean): Promise<string | undefined> {
 export const ALARM_IDS_KEY = 'tm-native-alarm-ids';
 
 /** An alarm Nemo handed to Android: its id and when it fires (absent in lists of older versions). */
-type AlarmEntry = [id: number, at?: number];
+type AlarmEntry = [id: number, at: number | undefined];
 
 function readAlarms(): AlarmEntry[] {
   try {
     const parsed: unknown = JSON.parse(localStorage.getItem(ALARM_IDS_KEY) ?? '[]');
     if (!Array.isArray(parsed)) return [];
     return parsed.flatMap((e): AlarmEntry[] => {
-      if (Number.isInteger(e)) return [[e as number]]; // older list: ids only
+      if (Number.isInteger(e)) return [[e as number, undefined]]; // older list: ids only
       if (Array.isArray(e) && Number.isInteger(e[0]))
         return [[e[0] as number, typeof e[1] === 'number' ? e[1] : undefined]];
       return [];
