@@ -318,6 +318,7 @@ export const planner: Strings['planner'] = {
     menu: 'Only this …',
     hint: 'Tick what stays today.',
     all: 'Everything stays today.',
+    fromSentence: 'Ticked what stays. With “Only this” you choose where the rest goes.',
     apply: 'Only this',
     title: (n: number) => (n === 1 ? 'The rest: 1 thing' : `The rest: ${n} things`),
     line: 'Nothing of it is gone. You decide where it goes.',

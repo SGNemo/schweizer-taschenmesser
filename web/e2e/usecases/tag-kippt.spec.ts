@@ -32,6 +32,8 @@ type Figures = Record<string, number | string>;
  * T4 by the ToDos' JSON import plus „Hierher legen“ – a moved or postponed thing comes back as a second ToDo.
  */
 const IST: Record<string, Figures> = {
+  // P4: the sentence „heute nur …“ in the field ticks what stays; „Nur das hier“ and the choice do the rest.
+  'T6 Satz „heute nur …“': { taps: 3, perThing: 0, ticked: 4, unasked: 0 },
   // P3 „Plan als Text kopieren“ (feat/plan-kopieren): ⋯ · the entry; pasted back unchanged, nothing changes.
   'T5 Plan als Text kopieren und zurück': {
     copyTaps: 2,
@@ -85,6 +87,8 @@ const IST: Record<string, Figures> = {
 
 /** What the target picture asks (TARGET.md §1). */
 const TARGET: Record<string, Figures> = {
+  // P4: the sentence „heute nur …“ in the field ticks what stays; „Nur das hier“ and the choice do the rest.
+  'T6 Satz „heute nur …“': { taps: 3, perThing: 0, ticked: 4, unasked: 0 },
   // P3 „Plan als Text kopieren“ (feat/plan-kopieren): ⋯ · the entry; pasted back unchanged, nothing changes.
   'T5 Plan als Text kopieren und zurück': {
     copyTaps: 2,
@@ -444,11 +448,9 @@ async function laterInTodos(hand: Hand, page: Page, titles: readonly string[]) {
       .filter({ has: page.getByRole('button', { name: title, exact: true }) })
       .first();
     await hand.tap(card.getByRole('button', { name: 'Weitere Optionen' }), true);
-    // The board's menu can sit under the next card (it intercepts the pointer – K13): the item is pressed directly.
+    // K13 was not reproducible in isolation (12 cards, 9 moves, no interception): a plain tap.
     const item = page.getByRole('menuitem', { name: 'Verschieben nach Irgendwann' });
-    hand.taps += 1;
-    hand.perThing += 1;
-    await item.dispatchEvent('click');
+    await hand.tap(item, true);
     await expect(item).toHaveCount(0);
   }
   // The board writes after the menu closes: wait until every one is stored as „Irgendwann“.
@@ -908,4 +910,32 @@ test('T5 Plan als Text kopieren und zurück', async ({ page, context }, info) =>
     },
     { text },
   );
+});
+
+test('T6 Satz „heute nur …“', async ({ page }, info) => {
+  await prepare(page, `${SA}T16:00:00`);
+  await planner(page);
+  const before = await settled(page);
+  const hand = new Hand(page);
+  const field = page.locator('main form input[type="text"], main form input:not([type])').first();
+  await hand.fill(field, 'heute nur Pfand wegbringen, Wäsche, Küche und Flur');
+  await field.press('Enter');
+  const sheet = page.getByTestId(`day-${SA}`);
+  await expect(page.getByTestId('day-keep')).toBeVisible();
+  const ticked = await sheet.getByRole('checkbox', { checked: true }).count();
+  await hand.tap(page.getByRole('button', { name: 'Nur das hier', exact: true }));
+  const dialog = page.getByRole('dialog', { name: /^Der Rest/ });
+  await hand.tap(dialog.getByRole('button', { name: /^Morgen/ }));
+  await expect(dialog).toHaveCount(0);
+  const after = await settled(page);
+  const keep = ['Pfand wegbringen', 'Wäsche waschen', 'Küche aufräumen', 'Flur saugen'];
+  const rest = SATURDAY.filter((x) => !keep.includes(x));
+  record(
+    info,
+    'T6 Satz „heute nur …“',
+    { taps: hand.taps, perThing: hand.perThing, ticked, unasked: unasked(before, after, rest) },
+    { before, after },
+  );
+  for (const title of rest) expect(after[title]).toBe(SO);
+  for (const title of keep) expect(after[title]).toBe(SA);
 });

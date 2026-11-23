@@ -59,6 +59,7 @@ import {
 } from '../actions';
 import { beginPlanFocus, planFocusPath } from '../focus';
 import { useLater } from '../useLater';
+import { readKeepSentence } from '../keepSentence';
 import type { PlannableEntry } from '@/core/modules/contributions';
 import type { BoardDay, BoardRow, OpenRow } from '../board';
 import { Capture } from '../components/Capture';
@@ -492,6 +493,19 @@ export default function PlannerPage() {
     setPending(undefined);
     setAsk(undefined);
     setSayLine(undefined);
+    // „heute nur A, B und C“ (P4): opens „Nur das hier …“ on the shown day with those things ticked – nothing moves
+    // before he picks where the rest goes. A name that fits no or several things: the field reads it as before.
+    if (getLang() === 'de' && tab === 'plan' && shownDay) {
+      const keep = readKeepSentence(value, shownDay.rows.filter(canMove));
+      if (keep?.length) {
+        setDayChosen(new Set(keep));
+        setKeeping(true);
+        setDayPicking(shownDay.date);
+        setText('');
+        setSayLine(t.planner.keep.fromSentence);
+        return;
+      }
+    }
     // Instructions first – German only, like the quick-capture parser; elsewhere the ⋯ actions do the same.
     if (getLang() === 'de') {
       // While the board loads the sentence still reads its days; things are matched once it is there.
