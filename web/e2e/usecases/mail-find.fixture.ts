@@ -239,13 +239,7 @@ export function buildMailbox(): FixtureMail[] {
 
   // Task 4 „wartet auf eine Antwort von mir": personal, not newsletter, newest message not mine, within 30 days.
   for (const m of out)
-    if (
-      m.personal &&
-      !m.lastFromMe &&
-      m.daysAgo <= 30 &&
-      m.from.email.endsWith('example.org') &&
-      /\?/.test(m.text)
-    )
+    if (m.personal && !m.lastFromMe && m.daysAgo <= 30 && /\?/.test(m.text))
       TARGETS.waiting.push(m.id);
   // Task 5 „diese Woche neu und wichtig": the last 7 days, unread, not a newsletter, from a person or an office.
   for (const m of out)
