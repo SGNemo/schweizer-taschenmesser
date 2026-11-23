@@ -4,7 +4,7 @@ Reviewed commit: `develop` at `7ef17176` (merge of #1033). Baseline of the previ
 
 Threat model: attacker with the device (locked/unlocked), with the sync server, in the same Wi-Fi/LAN, with a paired or formerly paired device, a malicious website (extension, import API, browser module), a malicious file (backup, import, feed, mail HTML, received file, torrent, download), a malicious supporter code, a compromised release, a second local Windows user.
 
-Follow-ups: prompts for everything not fixed here in [LAUNCH-REVIEW-2026-11-PACKAGES.md](LAUNCH-REVIEW-2026-11-PACKAGES.md); hand tests `SEC-…` in [../MANUAL-TESTS.md](../MANUAL-TESTS.md).
+Follow-ups: packages 1–11 are merged (2026-11-23; the packages file was deleted then, see git history); each row names its fix PR, what stays open is marked "open", "proposal" or "accept". Hand tests `SEC-…` in [../MANUAL-TESTS.md](../MANUAL-TESTS.md).
 
 ## Verdict per channel
 
