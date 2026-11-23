@@ -227,11 +227,15 @@ fn shown_name(lang: Lang, name: &str) -> String {
     }
 }
 
-fn confirmed(app: &AppHandle, lang: Lang, names: &str) -> bool {
+fn confirmed(app: &AppHandle, lang: Lang, names: &str, extra: Option<&str>) -> bool {
     let (title, allow, cancel) = texts::exchange_dialog(lang);
+    let question = match extra {
+        Some(line) => format!("{}\n\n{line}", texts::exchange_question(lang, names)),
+        None => texts::exchange_question(lang, names),
+    };
     let mut dialog = app
         .dialog()
-        .message(texts::exchange_question(lang, names))
+        .message(question)
         .title(title)
         .kind(MessageDialogKind::Info)
         .buttons(crate::native_ask::buttons(allow, cancel));
@@ -426,7 +430,7 @@ pub fn exchange_set_enabled(
         .map(|d| shown_name(lang, &d.name))
         .collect();
     if !granted.is_empty() {
-        ask(&app, &state, &parts, lang, &granted.join(", "))?;
+        ask(&app, &state, &parts, lang, &granted.join(", "), None)?;
     }
     parts
         .exchange
@@ -454,7 +458,16 @@ pub fn exchange_set_device(
     let old = parts.exchange.grant_of(&key);
     if grant.widens(&old) {
         let lang = crate::capture::native_lang(&app);
-        ask(&app, &state, &parts, lang, &shown_name(lang, &device.name))?;
+        // E5: the name is the peer's choice; the last contact tells two "Svens Handy" apart
+        let seen = texts::remote_last_contact(lang, device.last_seen, unix_ms() / 1000);
+        ask(
+            &app,
+            &state,
+            &parts,
+            lang,
+            &shown_name(lang, &device.name),
+            Some(&seen),
+        )?;
         // answered for another state? (changed at the PC while the question was on screen)
         if parts.exchange.grant_of(&key) != old {
             return Err("changed".to_owned());
@@ -481,6 +494,7 @@ fn ask(
     parts: &Parts,
     lang: Lang,
     names: &str,
+    extra: Option<&str>,
 ) -> Result<(), String> {
     // The ticket comes first: a mouse/keyboard session opened at any moment from here on –
     // before the question, while it is on screen (and closed again), or still open – refuses.
@@ -489,7 +503,7 @@ fn ask(
         return Err("busy-controlled".to_owned());
     }
     let _asking = Asking::take(&state.asking)?;
-    if !confirmed(app, lang, names) {
+    if !confirmed(app, lang, names, extra) {
         return Err("cancelled".to_owned());
     }
     parts
