@@ -81,12 +81,15 @@ section.sheet {
   align-items: center;
   gap: 0 var(--space-3);
   padding: 0 var(--sheet-inset);
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: baseline;
 }
 .sheetTitle {
   margin: 0;
   font-size: var(--text-xl);
   font-weight: var(--weight-semibold);
   overflow-wrap: break-word;
+  font-size: var(--text-md);
 }
 .cardHead {
   margin: 0;
@@ -255,6 +258,11 @@ section.lateFold {
   padding: 0 var(--sheet-inset);
   color: var(--text-muted);
   font-size: var(--text-meta);
+  margin: var(--space-2) var(--sheet-inset);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--warning-soft);
+  color: var(--warning-ink);
 }
 /* The lock („fest“) on a row: one tap, the word beside the symbol when set; quiet, no colour carries the state. */
 .lock {
@@ -534,6 +542,10 @@ section.sheet .headEnd button[aria-expanded='true'] {
 }
 .waiting {
   min-width: 0;
+  position: relative;
+  margin-top: var(--space-2);
+  padding-top: var(--space-1);
+  border-top: 1px solid var(--border);
 }
 
 .sheetRow {
@@ -745,13 +757,6 @@ section.sheet .headEnd button[aria-expanded='true'] {
 
 /* ---- Direction A (the look of mockup A, 2026-11-23) ---------------------------------------------------------- */
 /* The sheet's head on one line: the day, then its time in small, muted (the day's „Warum?“ stays that button). */
-.sheetHead {
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: baseline;
-}
-.sheetTitle {
-  font-size: var(--text-md);
-}
 .sheetHead .capacityLine {
   grid-column: 2;
   grid-row: 1;
@@ -783,38 +788,16 @@ section.sheet .headEnd button[aria-expanded='true'] {
   border-radius: 50%;
 }
 /* An overbooked day: the warm box with its line and „Rest verteilen“ (direction A). */
-.overLine {
-  margin: var(--space-2) var(--sheet-inset);
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
-  background: var(--warning-soft);
-  color: var(--warning-ink);
-}
 .overLine .textLink {
   color: inherit;
 }
 /* „Noch ohne Tag“ inside the day's card (direction A): a line above it, „Woche vorschlagen“ on its header's line. */
-.waiting {
-  position: relative;
-  margin-top: var(--space-2);
-  padding-top: var(--space-1);
-  border-top: 1px solid var(--border);
-}
 .waitSuggest {
   position: absolute;
   top: var(--space-2);
   right: var(--sheet-inset);
   z-index: 1;
   margin: 0;
-}
-/* „Noch ohne Tag“ inside the day's card (direction A): a line above it, „Woche vorschlagen“ on its header's line. */
-.waiting {
-  position: relative;
-  margin-top: var(--space-2);
-  padding-top: var(--space-1);
-  border-top: 1px solid var(--border);
-}
-.waitSuggest {
   position: absolute;
   top: var(--space-2);
   right: var(--sheet-inset);

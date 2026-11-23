@@ -131,7 +131,7 @@ describe('lead slot', () => {
     expect(screen.getByTestId('where')).toHaveTextContent('/planner');
   });
 
-  it('without tick and action the slot shows the source icon, and the meta names the source once', () => {
+  it('without tick and action the slot shows the source icon; the row names no source word (direction A)', () => {
     const { container } = draw(row({ ...invoice, links: [], action: undefined }));
     const li = container.querySelector('li')!;
     // One glyph for the source (in the lead), not two.
@@ -139,7 +139,7 @@ describe('lead slot', () => {
     const lead = li.firstElementChild!.firstElementChild!;
     expect(lead.querySelector('svg')).not.toBeNull();
     expect(svgs.length).toBe(2); // the lead's icon and the ⋯ glyph
-    expect(li).toHaveTextContent('Rechnung');
+    expect(li).not.toHaveTextContent('Rechnung');
   });
 });
 
