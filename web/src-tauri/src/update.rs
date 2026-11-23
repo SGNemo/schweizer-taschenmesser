@@ -223,6 +223,9 @@ fn install_portable(app: &AppHandle, update: &Update, bytes: &[u8]) -> Result<()
         .ok_or("no updater public key configured")?;
     portable::verify_payload(bytes, &update.signature, pubkey)
         .map_err(|e| format!("signature-invalid: {e}"))?;
+    // NS2: never back to an older version, whatever the manifest says
+    portable::not_older(bytes, &app.package_info().version.to_string())
+        .map_err(|e| e.to_string())?;
 
     let exe = std::env::current_exe().map_err(|e| format!("swap-failed: {e}"))?;
     portable::swap(&RealFs, &exe, bytes).map_err(|e| e.to_string())?;
