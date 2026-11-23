@@ -9,3 +9,10 @@ import { t } from '@/strings';
 export function disconnectText(def: Pick<ConnectorDef, 'oauth'>): string {
   return def.oauth?.revokeUrl ? t.connectors.disconnectBody : t.connectors.disconnectBodyNoRevoke;
 }
+
+/** The dialog's buttons: keep/delete imported events only for a connector that imports some. */
+export function disconnectChoices(
+  def: Pick<ConnectorDef, 'calendar'>,
+): ('keep' | 'delete' | 'plain')[] {
+  return def.calendar ? ['keep', 'delete'] : ['plain'];
+}
