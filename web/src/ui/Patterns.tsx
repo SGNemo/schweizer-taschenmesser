@@ -295,6 +295,7 @@ export function ItemRow({
   menu,
   menuLabel,
   selectable,
+  selectName,
   selected,
   current,
   onSelectChange,
@@ -331,6 +332,8 @@ export function ItemRow({
   menuLabel?: string;
   /** Shows a checkbox on the left; `onSelectChange` also reports a Shift-click for ranges. */
   selectable?: boolean;
+  /** The plain name of the row for its selection box, when `title` is not plain text (a button, a link). */
+  selectName?: string;
   selected?: boolean;
   /**
    * Master–detail: this row's entry is the one shown in the detail panel (`aria-current` on the row's button; a
@@ -446,7 +449,13 @@ export function ItemRow({
       <div className={styles.row} style={swipe.style} {...swipe.bind}>
         {selectable ? (
           <Checkbox
-            label={typeof title === 'string' ? t.ui.selectRowNamed(title) : t.ui.selectRow}
+            label={
+              typeof title === 'string'
+                ? t.ui.selectRowNamed(title)
+                : selectName
+                  ? t.ui.selectRowNamed(selectName)
+                  : t.ui.selectRow
+            }
             labelHidden
             checked={!!selected}
             onChange={() => undefined}

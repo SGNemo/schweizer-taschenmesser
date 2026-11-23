@@ -231,6 +231,8 @@ export function ThingRow({
         )
       }
       selectable={select ? true : undefined}
+      // K11 (use case „Tag kippt“): the box says which thing it ticks – the title here is a button.
+      selectName={select ? row.title : undefined}
       selected={select?.selected}
       onSelectChange={select ? (on) => select.onChange(on) : undefined}
       actions={
