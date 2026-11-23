@@ -218,8 +218,10 @@ function TaskRow({
         ...(onEdit
           ? [{ id: 'edit', label: t.actions.edit, onSelect: () => onEdit(task) } as RowMenuItem]
           : []),
+        // „Auf heute“ stays the first entry (UI audit click path, `seed/plan-area.seed.spec.ts`); the plan's two follow.
+        ...(task.done ? [] : todayItem),
         ...planItem,
-        ...(task.done ? [] : [...todayItem, laterItem, ...dueMenu]),
+        ...(task.done ? [] : [laterItem, ...dueMenu]),
         ...(task.done ? [] : prioMenu),
         {
           id: 'duplicate',
