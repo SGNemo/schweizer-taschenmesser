@@ -691,6 +691,17 @@ export interface PlannableSource {
   /** The estimate was edited in the plan. */
   onEstimate?(id: string, minutes: number): Promise<void>;
   /**
+   * „Nächste Wochen“ (use case „Tag kippt“): the person keeps the thing for later – open, not crossed out, out of
+   * `list` until `later` is false again (ToDos: „Irgendwann“). Called inside the planner's undoable action only.
+   * Comes with `listLater` (the planner uses neither without the other).
+   */
+  onLater?(id: string, later: boolean): Promise<void>;
+  /**
+   * The open things kept for later by `onLater` (same shape as `list`): the planner names them and recognises them.
+   * Read by the planner's own surfaces only – never an export, data-API or AI path.
+   */
+  listLater?(): Promise<PlannableItem[]>;
+  /**
    * The planner turned the thing into something that is no task any more („Als Pause …“: a blocker of its day):
    * the source removes it (soft delete, never a purge) and returns the function that brings it back as it was (and
    * takes back what the removal created itself, e.g. the next instance of a series), or

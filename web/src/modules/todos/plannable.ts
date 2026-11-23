@@ -11,7 +11,7 @@ import { nextInstanceId } from './logic';
 import { restorePatch } from './planMark';
 import { createNextInstance, deleteTask, setDone, taskRepo } from './repo';
 import type { PlanMark, Task } from './schema';
-import { isPlannerOwned } from './views';
+import { isPlannerOwned, movePatch } from './views';
 
 export const TASK_KIND = 'task';
 
@@ -57,29 +57,45 @@ export function assignPatch(
   return same ? {} : { plannedFor: date, planMark: mark };
 }
 
+/** The planner's view of one open top-level task. */
+const itemOf = (t: Task & { id: string; createdAt: number }): PlannableItem => ({
+  id: t.id,
+  kind: TASK_KIND,
+  title: t.title,
+  to: `/todos?open=${t.id}`,
+  ...(t.estimateMin !== undefined ? { durationMin: t.estimateMin } : {}),
+  priority: t.priority as 0 | 1 | 2 | 3,
+  ...(t.dueDate
+    ? { due: { date: t.dueDate, hard: false, ...(t.dueTime ? { time: t.dueTime } : {}) } }
+    : {}),
+  ...(t.startDate ? { earliest: t.startDate } : {}),
+  ...(t.plannedFor ? { plannedFor: t.plannedFor } : {}),
+  ...(t.planMark ? { planMark: t.planMark } : {}),
+  ...(t.personId ? { personId: t.personId } : {}),
+  // Every link travels (`links`); `link` stays the first one for readers of before the link contract.
+  ...(t.links?.[0] ? { link: t.links[0], links: t.links.map(fromLegacy) } : {}),
+  createdAt: t.createdAt,
+});
+
 const source: PlannableSource = {
   async list() {
     const tasks = (await taskRepo.active().toArray()).filter(
       (t) => !t.done && !t.someday && !t.parentId,
     );
-    return tasks.map((t): PlannableItem => ({
-      id: t.id,
-      kind: TASK_KIND,
-      title: t.title,
-      to: `/todos?open=${t.id}`,
-      ...(t.estimateMin !== undefined ? { durationMin: t.estimateMin } : {}),
-      priority: t.priority as 0 | 1 | 2 | 3,
-      ...(t.dueDate
-        ? { due: { date: t.dueDate, hard: false, ...(t.dueTime ? { time: t.dueTime } : {}) } }
-        : {}),
-      ...(t.startDate ? { earliest: t.startDate } : {}),
-      ...(t.plannedFor ? { plannedFor: t.plannedFor } : {}),
-      ...(t.planMark ? { planMark: t.planMark } : {}),
-      ...(t.personId ? { personId: t.personId } : {}),
-      // Every link travels (`links`); `link` stays the first one for readers of before the link contract.
-      ...(t.links?.[0] ? { link: t.links[0], links: t.links.map(fromLegacy) } : {}),
-      createdAt: t.createdAt,
-    }));
+    return tasks.map(itemOf);
+  },
+  // „Nächste Wochen“ in the planner is „Irgendwann“ here: open, not crossed out, out of the plan's listing.
+  async listLater() {
+    const tasks = (await taskRepo.active().toArray()).filter(
+      (t) => !t.done && t.someday && !t.parentId,
+    );
+    return tasks.map(itemOf);
+  },
+  async onLater(id, later) {
+    const task = await taskRepo.get(id);
+    if (!task || task.done || !!task.someday === later) return;
+    // To later: the same patch as the board's „Irgendwann“ column (the date goes, the thing stays). Back: only the flag.
+    await taskRepo.update(id, later ? movePatch(task, 'someday', today()) : { someday: undefined });
   },
   async onAssign(id, date, order) {
     const task = await taskRepo.get(id);

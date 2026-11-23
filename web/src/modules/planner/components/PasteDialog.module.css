@@ -1,0 +1,36 @@
+/* „Plan einfügen“: the text, the one question, the preview grouped by target. Calm: no colour carries a state. */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.group > legend {
+  padding: 0;
+  margin-bottom: var(--space-1);
+  font-weight: var(--weight-semibold);
+}
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.plain {
+  margin: 0;
+  padding-left: var(--space-4);
+}

@@ -57,14 +57,16 @@ const IST: Record<string, Figures> = {
     visibleToday: 8,
     lost: 0,
   },
+  // „Plan einfügen“ (feat/plan-einfuegen): field · paste · „Übernehmen“; the second paste (JSON, two things swapped)
+  // doubles nothing.
   'T4 Plan von außen übernehmen': {
-    taps: 12,
-    perThing: 2,
-    textPossible: 'nein',
+    taps: 3,
+    perThing: 0,
+    textPossible: 'ja',
     onTheirDay: 11,
-    duplicates: 11,
-    secondDuplicates: 12,
-    swapped: 'nein',
+    duplicates: 0,
+    secondDuplicates: 0,
+    swapped: 'ja',
     lost: 0,
   },
 };
@@ -420,7 +422,12 @@ async function laterInTodos(hand: Hand, page: Page, titles: readonly string[]) {
       .filter({ has: page.getByRole('button', { name: title, exact: true }) })
       .first();
     await hand.tap(card.getByRole('button', { name: 'Weitere Optionen' }), true);
-    await hand.tap(page.getByRole('menuitem', { name: 'Verschieben nach Irgendwann' }), true);
+    // The board's menu can sit under the next card (it intercepts the pointer – K13): the item is pressed directly.
+    const item = page.getByRole('menuitem', { name: 'Verschieben nach Irgendwann' });
+    hand.taps += 1;
+    hand.perThing += 1;
+    await item.dispatchEvent('click');
+    await expect(item).toHaveCount(0);
   }
   // The board writes after the menu closes: wait until every one is stored as „Irgendwann“.
   await expect
@@ -670,22 +677,34 @@ const planText = (swap = false) =>
     ...LATER.map((x) => `- ${x}`),
   ].join('\n');
 
-/** „Plan einfügen“ in the planner, when it is there: paste, preview, „Übernehmen“. */
+/**
+ * „Plan einfügen“, when the planner has it: a block pasted into the planner's field opens the preview by itself – tap
+ * the field, paste, „Übernehmen“ (three handles). False when the paste stays a line (then the old path is measured).
+ */
 async function pastePlan(hand: Hand, page: Page, text: string): Promise<boolean> {
-  await hand.tap(page.getByRole('button', { name: 'Weitere Optionen', exact: true }).first());
-  const item = page.getByRole('menuitem', { name: 'Plan einfügen …' });
-  if (!(await item.count())) {
-    hand.taps -= 1;
-    await page.keyboard.press('Escape');
+  const field = page.locator('main form input[type="text"], main form input:not([type])').first();
+  await hand.tap(field);
+  hand.taps += 1;
+  await field.evaluate((el, text) => {
+    const data = new DataTransfer();
+    data.setData('text/plain', text);
+    el.dispatchEvent(
+      new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true }),
+    );
+  }, text);
+  const dialog = page.getByRole('dialog', { name: 'Plan einfügen' });
+  const opened = await dialog
+    .waitFor({ state: 'visible', timeout: 3000 })
+    .then(() => true)
+    .catch(() => false);
+  if (!opened) {
+    hand.taps -= 2;
+    await field.fill('');
     return false;
   }
-  hand.taps -= 1; // the menu and its entry are the one door („einfügen“)
-  await hand.tap(item);
-  const dialog = page.getByRole('dialog', { name: 'Plan einfügen' });
-  await hand.fill(dialog.getByRole('textbox'), text);
-  hand.taps -= 1; // pasting into the open field is the same handle as opening it
-  await hand.tap(dialog.getByRole('button', { name: 'Vorschau' }));
-  await hand.tap(dialog.getByRole('button', { name: /^Übernehmen/ }));
+  const apply = dialog.getByRole('button', { name: 'Übernehmen', exact: true });
+  await expect(apply).toBeEnabled();
+  await hand.tap(apply);
   await expect(dialog).toHaveCount(0);
   return true;
 }
@@ -746,7 +765,8 @@ test('T4 Plan von außen übernehmen', async ({ page }, info) => {
   // The chat splits again: the same plan, two things swapped between the days. Pasted again.
   await planner(page);
   const again = new Hand(page);
-  if (textPossible === 'ja') await pastePlan(again, page, planText(true));
+  // The second time as the ToDos' JSON: both formats, one recognition.
+  if (textPossible === 'ja') await pastePlan(again, page, planJson(true));
   else await importOld(again, page, planJson(true));
   const second = await settled(page);
   // The swap reached the plan: „Flur saugen“ on Sunday, „Paket abholen“ on Saturday (once each).

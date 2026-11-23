@@ -19,6 +19,7 @@ export function Capture({
   labelHidden,
   examples: withExamples = true,
   formRef,
+  onPastePlan,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -34,6 +35,11 @@ export function Capture({
   /** `false`: the field without its example chips (the phone's last row; the plus's sheet carries them). */
   examples?: boolean;
   formRef?: Ref<HTMLFormElement>;
+  /**
+   * „Plan einfügen“ (use case „Tag kippt“): a pasted block of lines or JSON is a plan, not one entry – the page opens
+   * its preview with the text instead of squeezing it into one line. True when it took the text.
+   */
+  onPastePlan?: (text: string) => boolean;
 }) {
   const examples = Object.values(t.planner.add.examples);
   const errorId = useId();
@@ -53,6 +59,10 @@ export function Capture({
             placeholder={t.planner.add.placeholder}
             value={value}
             onChange={(e) => onChange(e.target.value)}
+            onPaste={(e) => {
+              const pasted = e.clipboardData.getData('text');
+              if (onPastePlan?.(pasted)) e.preventDefault();
+            }}
             readOnly={reading}
             // The message stands under the whole row (S09: „Eintragen“ lines up with the input, not with a line
             // under it), so the field points to it instead of using its own error line.
