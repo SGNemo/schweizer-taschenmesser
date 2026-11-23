@@ -291,18 +291,21 @@ function readText(text: string, today: string): PastedPlan {
     // A task list („- [ ] …“): the box goes, a ticked one („[x]“) is done and stays out.
     const body = line.replace(BULLET_RE, '');
     if (DONE_RE.test(line) || DONE_RE.test(body)) continue;
-    // A line in brackets is a remark („(18:00–19:30 Training)“ of a copied plan): not a thing.
-    if (!bullet && /^\(.*\)$/.test(line)) continue;
+    // A line in brackets is a remark („(18:00–19:30 Training)“ of a copied plan, also when a chat bullets it).
+    if (/^\(.*\)$/.test(line.replace(BULLET_RE, ''))) continue;
     // Prose of the chat („Hier ist dein neuer Plan.“): a sentence that ends in a stop and is not a bullet.
     if (!bullet && (/[.!?]$/.test(withoutSymbols(line)) || line.length > MAX_TITLE)) {
       skipped++;
       continue;
     }
     const item = body.replace(/^\[ ?\]\s*/, '');
-    // A title in „…“ is taken as it is (a copied title the reader would otherwise change); the effort follows it.
-    const quoted = /^„([^“]{1,160})“\s*(.*)$/.exec(item);
-    const { rest, minutes } = readDuration(quoted ? quoted[2]! : item);
-    const title = quoted ? quoted[1]!.replace(/\s+/g, ' ').trim() : clean(rest);
+    // A title in quotes is taken as it is (a copied title the reader would otherwise change); the effort follows it.
+    // „…“ is what the copy writes; a chat may turn it into “…”, "…" or «…».
+    const quoted =
+      /^(?:„([^“”]{1,160})[“”]|“([^”]{1,160})”|"([^"]{1,160})"|«([^»]{1,160})»)\s*(.*)$/.exec(item);
+    const literal = quoted ? (quoted[1] ?? quoted[2] ?? quoted[3] ?? quoted[4])! : undefined;
+    const { rest, minutes } = readDuration(quoted ? quoted[5]! : item);
+    const title = literal !== undefined ? literal.replace(/\s+/g, ' ').trim() : clean(rest);
     if (!title) continue;
     things.push({ title, when, ...(minutes ? { minutes } : {}) });
   }
@@ -473,9 +476,9 @@ export interface CopyWords {
 
 /**
  * „Plan als Text kopieren“ (use case „Tag kippt“, P3): the plan from today on in exactly the format „Plan einfügen“
- * reads – an optional goal line, one heading per day with its things, then „Diese Woche, ohne Tag“ and „Nächste
- * Wochen“. Titles, minutes, days and the goal only: no ids, notes, links, blocker labels or appointments. Pure; the
- * page puts it on the clipboard only when he taps.
+ * reads – an optional goal line, one heading per day with its fixed times as remarks and its things, then „Diese
+ * Woche, ohne Tag“ and „Nächste Wochen“. Titles, minutes, days, fixed times and the goal only: no ids, other notes,
+ * links, blocker labels or calendar appointments. Pure; the page puts it on the clipboard only when he taps.
  */
 export function planAsText(
   plan: {
@@ -493,13 +496,17 @@ export function planAsText(
   const line = (x: CopyThing) =>
     `- ${readsBack(x.title)}${x.minutes ? ` (${words.minutes(x.minutes)})` : ''}`;
   const blocks: string[] = [];
-  if (plan.goal) blocks.push(words.goal(plan.goal));
+  // The goal only when it reads back as it is (a goal the reader would change would be rewritten on every day).
+  if (plan.goal && readText(words.goal(plan.goal), '2000-01-01').goal === plan.goal)
+    blocks.push(words.goal(plan.goal));
   for (const d of plan.days)
     if (d.things.length || d.fixed?.length)
       blocks.push(
         [
           `${words.day(d.date)}:`,
-          ...(d.fixed ?? []).map((f) => words.fixed(f.title, f.from, f.to)),
+          ...(d.fixed ?? []).map((f) =>
+            words.fixed(f.title.replace(/\s+/g, ' ').trim(), f.from, f.to),
+          ),
           ...d.things.map(line),
         ].join('\n'),
       );

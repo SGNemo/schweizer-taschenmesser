@@ -1122,24 +1122,30 @@ export default function PlannerPage() {
     const from = data?.today ?? today();
     // The days he looks at: the week band, or the grid's four weeks – from today on.
     const to = bandDays?.at(-1)?.date ?? board?.days.at(-1)?.date ?? from;
-    const text = planAsText(
-      copyInput(board?.days ?? [], board?.waiting ?? [], laterList ?? [], { from, to }),
-      {
-        goal: t.planner.goal.line,
-        day: (date) => `${dayName(date)} ${formatDay(date, 'd.M.')}`,
-        fixed: c.fixed,
-        week: c.week,
-        later: c.later,
-        minutes: c.minutes,
-      },
-    );
+    const input = copyInput(board?.days ?? [], board?.waiting ?? [], laterList ?? [], { from, to });
+    const text = planAsText(input, {
+      goal: t.planner.goal.line,
+      day: (date) => `${dayName(date)} ${formatDay(date, 'd.M.')}`,
+      fixed: c.fixed,
+      week: c.week,
+      later: c.later,
+      minutes: c.minutes,
+    });
     if (!text.trim()) {
       toast(c.empty);
       return;
     }
     try {
       await getPlatform().clipboard.writeText(text);
-      toast(c.done(`${dayName(to)} ${formatDay(to, 'd.M.')}`));
+      // The toast says what is in the text: titles, days, minutes – and fixed times and the goal when they went too.
+      const what = c.list([
+        c.whatTitles,
+        c.whatDays,
+        c.whatMinutes,
+        ...(input.days.some((d) => d.fixed.length) ? [c.whatFixed] : []),
+        ...(input.goal && text.includes(t.planner.goal.line(input.goal)) ? [c.whatGoal] : []),
+      ]);
+      toast(c.done(`${dayName(to)} ${formatDay(to, 'd.M.')}`, what));
     } catch {
       toast(c.failed);
     }

@@ -393,6 +393,47 @@ describe('copyInput + planAsText (P3, council round 1)', () => {
     }
   });
 
+  it("round 2: a chat's other quotes are read literally, a bulleted remark is no thing, a goal that would change stays out", () => {
+    const back = readPastedPlan(
+      'Samstag:\n- “30 Min joggen” (20 Min)\n- "Ziel: Ruhe"\n- «Später:»\n- (18:00–19:30 Training)',
+      SA,
+    );
+    expect(back.goal).toBeUndefined();
+    expect(back.things.map((x) => [x.title, x.minutes])).toEqual([
+      ['30 Min joggen', 20],
+      ['Ziel: Ruhe', undefined],
+      ['Später:', undefined],
+    ]);
+    const days = [{ date: SA, things: [{ title: 'Wäsche' }] }];
+    for (const goal of ['Mail_an_Chef', '**Ruhe**'])
+      expect(planAsText({ goal, days, week: [], later: [] }, de)).not.toContain('Ziel:');
+    expect(planAsText({ goal: 'Wohnung frei', days, week: [], later: [] }, de)).toContain(
+      'Ziel: Wohnung frei',
+    );
+  });
+
+  it('a day with only fixed times does not count for the goal (goalDays names days with things)', () => {
+    const out = copyInput(
+      [
+        {
+          date: SA,
+          rows: [row('todos:a', 'Wäsche', 30)],
+          row: { date: SA, blockers: [], note: 'Ruhe' },
+        },
+        {
+          date: SO,
+          rows: [row('fitness:t', 'Training', 60, { fixed: { from: '10:00', to: '11:00' } })],
+          row: { date: SO, blockers: [], note: 'Anderes' },
+        },
+      ] as never,
+      [],
+      [],
+      { from: SA, to: SO },
+    );
+    expect(out.goal).toBe('Ruhe');
+    expect(out.days[1]!.fixed).toEqual([{ title: 'Training', from: '10:00', to: '11:00' }]);
+  });
+
   it('the goal goes only when every day with things has it; left-out and guessed things stay out', () => {
     const day = (date: string, note: string | undefined, ...rows: never[]) => ({
       date,
