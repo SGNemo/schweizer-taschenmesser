@@ -35,6 +35,7 @@ export function useAbilities() {
     // Shown only once the source is known to take them (a missing ability hides, never offers in vain).
     canRemove: (moduleId: string) => abilities?.[moduleId]?.remove === true,
     canEstimate: (moduleId: string) => abilities?.[moduleId]?.estimate === true,
+    canLater: (moduleId: string) => abilities?.[moduleId]?.later === true,
   };
 }
 

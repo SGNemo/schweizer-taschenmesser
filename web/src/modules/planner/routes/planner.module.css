@@ -888,3 +888,40 @@ section.sheet .headEnd button[aria-expanded='true'] {
   font-variant-numeric: var(--font-num);
   white-space: nowrap;
 }
+
+/* „Nur das hier“ (use case „Tag kippt“): the three places for the rest, one per row, full width. */
+.restChoices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.restChoices > button {
+  justify-content: flex-start;
+  min-height: var(--touch);
+}
+/* The day's starting point after „Nur das hier“: one quiet line on top of the sheet. */
+.startPoint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+}
+.startPoint strong {
+  font-weight: var(--weight-semibold);
+}
+.laterList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.laterList li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: var(--touch);
+}

@@ -4,6 +4,7 @@
  * reached only through the contract (`plannableSource`), never by import.
  */
 import { recordWrite } from '@/core/db/recorder';
+import { setMeta } from '@/core/db/metaKv';
 import { randomId } from '@/core/db/util';
 import { formatMinutes } from '@/core/i18n/format';
 import { getLang } from '@/core/i18n/lang';
@@ -251,6 +252,8 @@ export interface SourceAbility {
   remove: boolean;
   /** „Dauer …“. */
   estimate: boolean;
+  /** „Nächste Wochen“ (`onLater`). */
+  later: boolean;
 }
 
 /** Which sources take a tick or „Später“ back (an invoice or a cancellation does not: that stays in its module). */
@@ -265,6 +268,7 @@ export async function sourceAbilities(): Promise<Record<string, SourceAbility>> 
           assign: !!s.onAssign,
           remove: !!s.onRemove,
           estimate: !!s.onEstimate,
+          later: !!s.onLater,
         };
     }),
   );
@@ -836,6 +840,84 @@ export function applyPaste(
     { leadOnly: true },
   );
 }
+
+/** Where „Nur das hier …“ sends the rest: the next day, „Noch ohne Tag“ or „Nächste Wochen“. */
+export type RestTarget = 'next' | 'week' | 'later';
+
+/** The thing „Nur das hier“ named as the day's starting point (device-local, one at a time). */
+export const START_KEY = 'planner.start';
+export interface StartPoint {
+  date: string;
+  itemKey: string;
+}
+
+/**
+ * „Nur das hier …“ (use case „Tag kippt“, TARGET §2): what he ticked stays on `date`, every other named thing of that
+ * day goes in one move – to the next day, to „Noch ohne Tag“ or to „Nächste Wochen“ (a source without that step: no
+ * day). Things that are „fest“ stay and are named. One action, one undo; the first thing that stays becomes the day's
+ * starting point.
+ */
+export async function keepOnly(
+  date: string,
+  keep: readonly string[],
+  rest: readonly PlannableEntry[],
+  to: RestTarget,
+  titles: Record<string, string>,
+): Promise<boolean> {
+  const next = addDays(date, 1);
+  const k = t.planner.keep;
+  const lead = to === 'next' ? k.toNext(dayName(next)) : to === 'week' ? k.toWeek : k.toLater;
+  const place: Place =
+    to === 'next'
+      ? { kind: 'day', date: next }
+      : to === 'week'
+        ? { kind: 'week' }
+        : { kind: 'later' };
+  let fixed = 0;
+  const ok = await act(
+    k.title(rest.length),
+    lead,
+    titles,
+    async () => {
+      fixed = 0;
+      const touched: string[] = [];
+      for (const e of rest) {
+        const key = itemKeyOf(e.moduleId, e.id);
+        if ((await rowsOf(key)).some((r) => r.locked)) {
+          fixed += 1;
+          continue;
+        }
+        await placeAt(e, place, undefined);
+        touched.push(key);
+      }
+      return { touched };
+    },
+    {
+      leadOnly: true,
+      leadAfter: async () => (fixed > 0 ? `${lead}\n${t.planner.spread.fixed(fixed)}` : undefined),
+    },
+  );
+  if (ok && keep[0]) await setMeta(START_KEY, { date, itemKey: keep[0] } satisfies StartPoint);
+  return ok;
+}
+
+/** The things the sources keep for „Nächste Wochen“, for the planner's folded group. Reads only. */
+export async function laterThings(): Promise<PlannableEntry[]> {
+  const out: PlannableEntry[] = [];
+  for (const m of activeManifests(await loadModuleStates())) {
+    const s = await plannableSource(m);
+    if (!s?.listLater) continue;
+    for (const item of await s.listLater().catch(() => [])) out.push({ ...item, moduleId: m.id });
+  }
+  return out;
+}
+
+/** „Diese Woche“ on a thing of „Nächste Wochen“: it is back under „Noch ohne Tag“. One undo. */
+export const bringBack = (e: PlannableEntry, titles: Record<string, string>) =>
+  act(t.planner.keep.back, t.planner.keep.backDone(short(e.title)), titles, async () => {
+    await (await source(e.moduleId))?.onLater?.(e.id, false);
+    return { touched: [itemKeyOf(e.moduleId, e.id)] };
+  });
 
 /** „Fest an diesem Tag“ / „Nicht mehr fest“: the lock on the thing's rows. No proposal takes a thing that is fest. */
 export async function setLocked(

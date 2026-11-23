@@ -1,8 +1,9 @@
 import { getISOWeek } from 'date-fns';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { useNavigate } from 'react-router';
 import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
-import { getMeta, setMeta } from '@/core/db/metaKv';
+import { deleteMeta, getMeta, setMeta } from '@/core/db/metaKv';
 import { getLang } from '@/core/i18n/lang';
 import { dayName, explainAssignment, explainWait } from '@/core/plan/explain';
 import {
@@ -50,7 +51,12 @@ import {
   spreadDay,
   spreadOpen,
   takeOff,
+  bringBack,
+  laterThings,
+  START_KEY,
+  type StartPoint,
 } from '../actions';
+import { beginPlanFocus, planFocusPath } from '../focus';
 import type { PlannableEntry } from '@/core/modules/contributions';
 import type { BoardDay, BoardRow, OpenRow } from '../board';
 import { Capture } from '../components/Capture';
@@ -186,6 +192,9 @@ export default function PlannerPage() {
     async () => (await getMeta<{ date: string; on: string }>(DAY_KEY)) ?? null,
     [],
   );
+  // „Nur das hier“ (use case „Tag kippt“): the day's starting point, and the things kept for „Nächste Wochen“.
+  const startPoint = useLiveQuery(async () => (await getMeta<StartPoint>(START_KEY)) ?? null, []);
+  const laterList = useLiveQuery(() => laterThings(), []);
   const thenStored = useLiveQuery(
     async () => (await getMeta<boolean>(phone ? THEN_NARROW_KEY : THEN_WIDE_KEY)) ?? null,
     [phone],
@@ -225,9 +234,12 @@ export default function PlannerPage() {
   // „Auswählen“ on the day sheet (package 5, the page's ⋯): its chosen rows, one day for all of them.
   const [dayPicking, setDayPicking] = useState<string | undefined>();
   const [dayChosen, setDayChosen] = useState<Set<string>>(() => new Set());
+  // „Nur das hier …“: the same selection on the day sheet, but the ticked rows are what stays.
+  const [keeping, setKeeping] = useState(false);
+  const navigate = useNavigate();
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
   const abilities = useAbilities();
-  const { canDone, canAssign } = abilities;
+  const { canDone, canAssign, canLater } = abilities;
 
   const answered = !!pending || !!ask || !!sayLine;
   useEffect(() => {
@@ -1007,6 +1019,7 @@ export default function PlannerPage() {
   const endDayPick = () => {
     setDayPicking(undefined);
     setDayChosen(new Set());
+    setKeeping(false);
   };
   /** „Auswählen“ on the day sheet: the bar (count, „Auf einen Tag …“, cancel) or, while nothing is chosen, „Alle“. */
   const daySelection = (day: BoardDay) => {
@@ -1015,6 +1028,42 @@ export default function PlannerPage() {
     const entries = [
       ...new Map(rows.flatMap((r) => (r.entry ? [[r.itemKey, r.entry] as const] : []))).values(),
     ];
+    if (keeping) {
+      // What stays is ticked; the rest is every other thing of the day that can move (in the sheet's order).
+      const keep = [...new Set(rows.map((r) => r.itemKey))];
+      const rest = [
+        ...new Map(
+          day.rows
+            .filter((r) => canMove(r) && !keep.includes(r.itemKey))
+            .flatMap((r) => (r.entry ? [[r.itemKey, r.entry] as const] : [])),
+        ).values(),
+      ];
+      return (
+        <p className={styles.openActions} data-testid="day-keep">
+          {rows.length === 0 ? <span>{t.planner.keep.hint}</span> : null}
+          {rows.length > 0 && rest.length > 0 ? (
+            <Button
+              variant="primary"
+              onClick={() =>
+                setChoice({
+                  kind: 'rest',
+                  date: day.date,
+                  keep,
+                  rest,
+                  later: rest.some((e) => canLater(e.moduleId)),
+                  onDone: endDayPick,
+                })
+              }
+            >
+              {t.planner.keep.apply}
+            </Button>
+          ) : null}
+          <Button variant="ghost" onClick={endDayPick}>
+            {t.actions.cancel}
+          </Button>
+        </p>
+      );
+    }
     return rows.length > 0 ? (
       <SelectionBar count={entries.length} onCancel={endDayPick}>
         <Button onClick={() => setChoice({ kind: 'moveMany', entries, onDone: endDayPick })}>
@@ -1036,6 +1085,37 @@ export default function PlannerPage() {
       </p>
     );
   };
+  /**
+   * The day's starting point after „Nur das hier“ (TARGET §2): „Anfangen mit: Wäsche waschen · Fokus starten“ while
+   * that thing is still open on that day; one ✕ hides it. Nothing else on the sheet changes.
+   */
+  const startLine = (day: BoardDay) => {
+    if (!startPoint || startPoint.date !== day.date) return null;
+    const row = day.rows.find((r) => r.itemKey === startPoint.itemKey);
+    if (!row) return null;
+    return (
+      <p className={styles.startPoint} data-testid="start-point">
+        <span>
+          {t.planner.keep.start}: <strong>{row.title}</strong>
+        </span>
+        <Button
+          size="sm"
+          onClick={() =>
+            void beginPlanFocus({
+              unitId: row.unitId,
+              title: row.title,
+              minutes: row.minutes,
+            }).then(() => navigate(planFocusPath(row.unitId)))
+          }
+        >
+          {t.planner.keep.startFocus}
+        </Button>
+        <IconButton label={t.planner.keep.startHide} onClick={() => void deleteMeta(START_KEY)}>
+          <Icon name="close" size={16} />
+        </IconButton>
+      </p>
+    );
+  };
   const pageMenu: RowMenuItem[] = [
     // The phone in this week's week view (no band row): „4 Wochen zeigen“ lives here.
     ...(phone && !grid && start === thisWeek
@@ -1054,6 +1134,17 @@ export default function PlannerPage() {
             label: t.planner.open.select,
             onSelect: () => {
               setDayChosen(new Set());
+              setKeeping(false);
+              setDayPicking(shownDay.date);
+            },
+          },
+          // „Nur das hier …“ (use case „Tag kippt“): tick what stays, the rest goes in one move.
+          {
+            id: 'keep',
+            label: t.planner.keep.menu,
+            onSelect: () => {
+              setDayChosen(new Set());
+              setKeeping(true);
               setDayPicking(shownDay.date);
             },
           },
@@ -1351,8 +1442,9 @@ export default function PlannerPage() {
       {t.planner.head.replan}
     </button>
   );
+  const laterRows = laterList ?? [];
   const waitingBlock =
-    waiting.length > 0 ? (
+    waiting.length > 0 || laterRows.length > 0 ? (
       <div className={styles.waiting}>
         {/* „Woche vorschlagen“ (package 6): reachable with the group folded – a dumped pile is two taps from its days
             (the link, then „Übernehmen“ in the preview); nothing moves before that. On the phone the link stands
@@ -1400,6 +1492,35 @@ export default function PlannerPage() {
                     label: t.planner.wait.laterTitle,
                     count: laidLater.length,
                     children: waitRows(laidLater),
+                  },
+                ]
+              : []),
+            // „Nächste Wochen“ (use case „Tag kippt“): kept for later, not crossed out; back only by his tap.
+            ...(laterRows.length
+              ? [
+                  {
+                    id: 'nextWeeks',
+                    defaultClosed: true,
+                    label: t.planner.keep.laterGroup,
+                    count: laterRows.length,
+                    detail: t.planner.keep.laterHint,
+                    children: (
+                      <ul className={styles.laterList} data-testid="planner-later">
+                        {laterRows.map((e) => (
+                          <li key={`${e.moduleId}:${e.id}`}>
+                            <span>{e.title}</span>
+                            <button
+                              type="button"
+                              className={styles.textLink}
+                              aria-label={t.planner.keep.backName(e.title)}
+                              onClick={() => void bringBack(e, titles)}
+                            >
+                              {t.planner.keep.back}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ),
                   },
                 ]
               : []),
@@ -1624,7 +1745,12 @@ export default function PlannerPage() {
                 {shownDay && days ? (
                   <DayPage
                     key={shownDay.date}
-                    top={openLineNode}
+                    top={
+                      <>
+                        {startLine(shownDay)}
+                        {openLineNode}
+                      </>
+                    }
                     foot={waitingBlock}
                     day={shownDay}
                     tomorrow={days[1]?.date === shownDay.date}

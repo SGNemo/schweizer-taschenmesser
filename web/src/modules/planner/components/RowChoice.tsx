@@ -5,13 +5,15 @@ import { addDaysStr, formatDay } from '@/core/time/dates';
 import { DAY_PARTS, type DayPart } from '@/core/plan/types';
 import { today } from '@/core/time/now';
 import { t } from '@/strings';
-import { Chip, Chips, Dialog, Icon, IconButton } from '@/ui';
+import { Button, Chip, Chips, Dialog, Icon, IconButton } from '@/ui';
 import {
   asBreak,
   BREAK_CHOICES,
   ESTIMATE_CHOICES,
+  keepOnly,
   moveMany,
   moveTo,
+  type RestTarget,
   setEstimate,
   setPart,
 } from '../actions';
@@ -30,7 +32,19 @@ export type RowChoiceState =
   /** „Verschieben …“: `on` = the day the row lies on (none while it has no day). */
   | { kind: 'move'; entry: PlannableEntry; on?: string }
   /** „Auf einen Tag …“ of a selection (tab „Noch offen“, package 3): one day for all of them, one undo. */
-  | { kind: 'moveMany'; entries: readonly PlannableEntry[]; onDone?: () => void };
+  | { kind: 'moveMany'; entries: readonly PlannableEntry[]; onDone?: () => void }
+  /**
+   * „Nur das hier“ (use case „Tag kippt“): what stays on `date` (item keys, the first one is the starting point) and
+   * the rest, which goes in one move. `later`: some source of the rest keeps things for later.
+   */
+  | {
+      kind: 'rest';
+      date: string;
+      keep: readonly string[];
+      rest: readonly PlannableEntry[];
+      later: boolean;
+      onDone?: () => void;
+    };
 
 /**
  * The small sheet behind one ⋯ entry (REVIEW-FABLE R8: one entry opens the choice instead of a menu row per
@@ -133,6 +147,28 @@ export function RowChoice({
 }) {
   if (!choice) return null;
   const r = t.planner.row;
+  if (choice.kind === 'rest') {
+    const k = t.planner.keep;
+    const next = addDaysStr(choice.date, 1);
+    const nextLabel = `${dayName(next)} ${formatDay(next, 'd.')}`;
+    const go = (to: RestTarget) => {
+      onClose();
+      choice.onDone?.();
+      void keepOnly(choice.date, choice.keep, choice.rest, to, titles);
+    };
+    return (
+      <Dialog open onClose={onClose} title={k.title(choice.rest.length)}>
+        <p className={styles.capacity}>{k.line}</p>
+        <div className={styles.restChoices} data-testid="rest-choice">
+          <Button onClick={() => go('next')}>
+            {choice.date === today() ? k.next(nextLabel) : k.nextDay(nextLabel)}
+          </Button>
+          <Button onClick={() => go('week')}>{k.week}</Button>
+          {choice.later ? <Button onClick={() => go('later')}>{k.later}</Button> : null}
+        </div>
+      </Dialog>
+    );
+  }
   if (choice.kind === 'moveMany') {
     const heading = t.planner.open.moveManyTitle(choice.entries.length);
     return (
