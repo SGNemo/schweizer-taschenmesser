@@ -9635,6 +9635,23 @@ export const de = {
       openFrom: (days: string) => `Noch offen: Dinge von ${days}`,
       openSince: (day: string) => `Noch offen: Dinge seit ${day}`,
     },
+    copy: {
+      menu: 'Plan als Text kopieren',
+      done: (until: string, what: string) => `Plan bis ${until} kopiert – ${what}.`,
+      whatTitles: 'Titel',
+      whatDays: 'Tage',
+      whatMinutes: 'Minuten',
+      whatFixed: 'feste Zeiten',
+      whatGoal: 'Ziel',
+      list: (items: readonly string[]) =>
+        items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} und ${items.at(-1)}`,
+      failed: 'Kopieren hat gerade nicht geklappt. Versuch es gleich noch einmal.',
+      empty: 'Im Plan steht noch nichts zum Kopieren.',
+      fixed: (title: string, from: string, to: string) => `(${from}–${to} ${title})`,
+      week: 'Diese Woche, ohne Tag',
+      later: 'Nächste Wochen',
+      minutes: (min: number) => `${min} Min`,
+    },
     goal: {
       title: 'Ziel',
       line: (goal: string) => `Ziel: ${goal}`,
