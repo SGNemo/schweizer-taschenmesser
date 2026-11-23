@@ -40,10 +40,10 @@ export const tLegal = defineBundle(
         when: 'Nur nach dem Verbinden unter Sync & Backup bzw. nach dem Koppeln im Heimnetz: beim Start, etwa jede Minute, bei Änderungen.',
       },
       lan: {
-        title: 'Austausch und Fernsteuerung im Heimnetz (optional)',
-        what: 'Austausch: Notizen, Links und Dateien, die du von einem gekoppelten Gerät an ein anderes schickst (Dateien bis 100 MB). Fernsteuerung: vom Handy Medien-, Lautstärke- und Sperrbefehle, mit eigener Freigabe auch Maus- und Tastatureingaben und der Start von Programmen aus der Liste am PC; der PC zeigt dem Handy dafür seinen Stand (z. B. Betriebssystem, Schalter, Namen der freigegebenen Programme). Eingaben werden nie gespeichert oder protokolliert; Austausch-Karten bleiben 30 Tage auf den beiden Geräten, Dateien im gewählten Ordner, nichts davon wird synchronisiert, gesichert oder an die KI gegeben.',
+        title: 'Austausch und Fernbedienung im Heimnetz (optional)',
+        what: 'Austausch: Notizen und Links, die du von einem gekoppelten Gerät an ein anderes schickst; die Karten bleiben 30 Tage auf den beiden Geräten und werden nicht abgeglichen, nicht gesichert und nicht an die KI gegeben. Fernbedienung: vom Handy Medien-, Lautstärke- und Sperrbefehle und „Bildschirm aus“; mit eigener Freigabe Maus- und Tastatureingaben, der Start von Programmen aus der Liste am PC sowie Ausschalten, Neustart, Energiesparen oder Abmelden (mit Countdown am PC). Der PC zeigt dem Handy dafür Lautstärke, Stummschaltung, Wiedergabe, Sperre, was freigegeben ist, und die Namen in der Programmliste. Eingaben werden nie gespeichert oder protokolliert.',
         to: 'Nur deine gekoppelten Geräte im selben Heimnetz, direkt und verschlüsselt. Kein Server, kein Dienst des Betreibers von Nemo.',
-        when: 'Nur wenn du Austausch bzw. Fernsteuerung einschaltest, das Gerät am PC freigibst und selbst etwas schickst oder steuerst. Eine Freigabe für Maus und Tastatur reicht so weit wie dein Benutzerkonto am PC: das gesteuerte Gerät kann alles, was du dort per Hand könntest.',
+        when: 'Nur wenn du Austausch bzw. Fernbedienung einschaltest, das Gerät am PC freigibst und selbst etwas schickst oder steuerst. Ein gekoppeltes Handy ohne Freigabe erfährt nur, ob die Fernbedienung am PC an, freigegeben, pausiert oder gesperrt ist. Eine Freigabe für Maus und Tastatur reicht so weit wie dein Benutzerkonto am PC: das steuernde Gerät kann alles, was du dort per Hand könntest.',
       },
       push: {
         title: 'Web-Push-Erinnerungen (optional)',
@@ -124,16 +124,16 @@ export const tLegal = defineBundle(
         when: 'Nur wenn du das Modul „Browser“ einschaltest und eine Adresse oder einen Suchbegriff abschickst oder einem Link folgst. Die Tab-Vorschau (aus, siehe „Link- und Tab-Vorschau“) lädt Seiten offener Tabs selbst. Der Blocker hält bekannte Werbe- und Tracker-Server fern (nur Windows).',
       },
       breach: {
-        title: 'Leck-Prüfung im Tresor (optional)',
+        title: 'Leck-Prüfung der Passwörter (optional)',
         what: 'Je Passwort die ersten 5 Zeichen seines SHA-1-Hashwerts (nie das Passwort, nie Benutzername, Titel oder Adresse). Die Antwort, alle bekannten Hash-Endungen zu diesen 5 Zeichen, vergleicht Nemo auf dem Gerät; nichts davon wird gespeichert.',
         to: 'api.pwnedpasswords.com (Have I Been Pwned). Der Dienst sieht deine IP-Adresse.',
-        when: 'Nur wenn du in den Tresor-Einstellungen den Abgleich mit bekannten Datenlecks einschaltest, und dann nur, wenn du „Passwörter prüfen“ öffnest.',
+        when: 'Nur wenn du in den Einstellungen von „Passwörter“ den Abgleich mit bekannten Datenlecks einschaltest, und dann nur, wenn du „Passwörter prüfen“ öffnest.',
       },
       previews: {
         title: 'Link- und Tab-Vorschau (optional)',
-        what: 'Die Seite hinter einem gespeicherten Link bzw. einem offenen Browser-Tab und das Vorschaubild, das sie nennt, ohne Cookies und ohne Anmeldung. Gespeichert werden nur Titel, Kurzbeschreibung und ein kleines Bild auf diesem Gerät (nie Sync, nie Backup, nie KI).',
+        what: 'Die Seite hinter einem gespeicherten Link bzw. einem offenen Browser-Tab und das Vorschaubild, das sie nennt, ohne Cookies und ohne Anmeldung. Name der Website und Kurzbeschreibung werden mit dem Lesezeichen gespeichert (und wie dieses abgeglichen und gesichert); das kleine Bild bleibt nur auf diesem Gerät; nichts davon geht an die KI. Tab-Vorschauen werden nicht gespeichert.',
         to: 'Der Server der Seite und der Server des Vorschaubilds; in der Browser-App über deinen eigenen Sync-Server. Sie sehen deine IP-Adresse (bzw. die des Servers).',
-        when: 'Nur mit eingeschalteter „Linkvorschau laden“ bzw. „Vorschaubilder für offene Tabs“ (beides standardmäßig aus): beim Speichern eines Links oder auf „Vorschau von der Seite holen“ in der Merkliste; für Tabs automatisch für jeden offenen Tab, solange die Tab-Übersicht sichtbar ist (nur Windows).',
+        when: 'Mit „Linkvorschau laden“ (aus) bei jedem Speichern eines Links. Einzeln geht es immer: auf Klick auf „Vorschau von der Seite holen“ (Menü „⋯“) oder beim Speichern eines geteilten Links (Häkchen vorab gesetzt). Tabs nur mit „Vorschaubilder für offene Tabs“ (aus): automatisch für jeden offenen, nicht privaten https-Tab, solange die Tab-Übersicht sichtbar ist (nur Windows).',
       },
       downloads: {
         title: 'Downloads (optional)',
@@ -309,9 +309,9 @@ export const tLegal = defineBundle(
         },
         lan: {
           title: 'Device drop and Remote in the home network (optional)',
-          what: 'Device drop: notes, links and files you send from one paired device to another (files up to 100 MB). Remote: media, volume and lock commands from the phone and, with their own grant, mouse and keyboard input and starting programs from the list on the PC; for this the PC shows the phone its state (e.g. operating system, switches, names of the granted programs). Input is never stored or logged; drop cards stay on both devices for 30 days, files in the folder you chose, and none of it is synced, backed up or given to the AI.',
+          what: 'Device drop: notes and links you send from one paired device to another; the cards stay on both devices for 30 days and are not synced, not backed up and not given to the AI. Remote: media, volume and lock commands and “screen off” from the phone; with their own grant mouse and keyboard input, starting programs from the list on the PC, and shutting down, restarting, sleeping or signing out (with a countdown on the PC). For this the PC shows the phone the volume, mute, playback, lock state, what is granted, and the names in the program list. Input is never stored or logged.',
           to: 'Only your paired devices in the same home network, directly and encrypted. No server, no service run by the maintainer of Nemo.',
-          when: 'Only when you switch on Device drop or Remote, grant the device on the PC and send or control something yourself. A mouse and keyboard grant reaches as far as your user account on the PC: the controlling device can do whatever you could do there by hand.',
+          when: 'Only when you switch on Device drop or Remote, grant the device on the PC and send or control something yourself. A paired phone without a grant only learns whether Remote is on, granted, paused or locked on the PC. A mouse and keyboard grant reaches as far as your user account on the PC: the controlling device can do whatever you could do there by hand.',
         },
         push: {
           title: 'Web push reminders (optional)',
@@ -392,16 +392,16 @@ export const tLegal = defineBundle(
           when: 'Only when you switch on the “Browser” module and submit an address or a search term or follow a link. The tab preview (off, see “Link and tab previews”) fetches pages of open tabs itself. The blocker keeps known ad and tracker servers out (Windows only).',
         },
         breach: {
-          title: 'Leak check in the vault (optional)',
+          title: 'Password leak check (optional)',
           what: 'For each password the first 5 characters of its SHA-1 hash (never the password, never user name, title or address). Nemo compares the answer, all known hash endings for those 5 characters, on the device; none of it is stored.',
           to: 'api.pwnedpasswords.com (Have I Been Pwned). The service sees your IP address.',
-          when: 'Only when you switch on the comparison with known data leaks in the vault settings, and then only when you open “Check passwords”.',
+          when: 'Only when you switch on the comparison with known data leaks in the Passwords settings, and then only when you open “Check passwords”.',
         },
         previews: {
           title: 'Link and tab previews (optional)',
-          what: 'The page behind a saved link or an open browser tab and the preview picture it names, without cookies and without login. Only title, short description and a small picture are kept, on this device (never synced, never backed up, never to the AI).',
+          what: 'The page behind a saved link or an open browser tab and the preview picture it names, without cookies and without login. Site name and short description are saved with the bookmark (and synced and backed up like it); the small picture stays on this device only; none of it goes to the AI. Tab previews are not stored.',
           to: 'The page’s server and the server of the preview picture; in the browser app through your own sync server. They see your IP address (or the server’s).',
-          when: 'Only with “Load link previews” or “Preview pictures for open tabs” switched on (both off by default): when you save a link or click “Fetch a preview from the page” in Saved; for tabs automatically for each open tab while the tab overview is visible (Windows only).',
+          when: 'With “Load link previews” (off) on every save of a link. A single one always works: on clicking “Fetch a preview from the page” (menu “⋯”) or when you save a shared link (box ticked in advance). Tabs only with “Preview pictures for open tabs” (off): automatically for each open, non-private https tab while the tab overview is visible (Windows only).',
         },
         downloads: {
           title: 'Downloads (optional)',

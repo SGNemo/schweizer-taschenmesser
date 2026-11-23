@@ -26,7 +26,7 @@ The app opens these connections only in the cases named. Where a line names noth
 - **Built-in browser** (Windows and Android, off until you switch the module on), **downloads** (Windows, only on your click) and **torrent** (Windows, off until you switch it on) – the pages and files you ask for; with torrent, other users of the torrent network see your IP address and what you load, and loaded parts are offered to others.
 - **Home network** – sync, Device drop and Remote between your own paired devices in the home network, encrypted, without any server; the PC announces itself in the home network while you pair a device and as long as one is paired. A mouse and keyboard grant for Remote reaches as far as your user account on the PC.
 - **api.pwnedpasswords.com** (vault leak check, off until you switch it on) – only the first 5 characters of each password's SHA-1 hash, when you open “Check passwords”.
-- **Link and tab previews** (off until you switch them on) – the page behind a saved link or an open tab and its preview picture, without cookies; in the browser app through your own sync server.
+- **Link and tab previews** – the page behind a saved link or an open tab and its preview picture, without cookies; in the browser app through your own sync server. Links: on every save only with “Load link previews” (off); a single one on your click or when you save a shared link. Tabs: only with the tab preview switched on (Windows, off).
 - **Reminders as push** (browser app, off until you switch it on) – title and text of your reminders go to your own sync server and from there to your browser's push service; encrypted when your sync is encrypted.
 
 ### Securing the sync server
