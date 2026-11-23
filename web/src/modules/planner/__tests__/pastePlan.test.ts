@@ -336,7 +336,7 @@ describe('applyPaste', () => {
       estimateMin: 15,
     });
     expect(useUiStore.getState().toasts.at(-1)?.message).toBe(
-      'Plan übernommen.\nWas für später ist, steht in ToDos unter „Irgendwann“.',
+      'Plan übernommen.\nWas für später ist, steht im Planer unter „Nächste Wochen“.',
     );
     // One undo brings the whole paste back: no new ToDo, every thing on its old place.
     expect(await undoLast()).toBeTruthy();

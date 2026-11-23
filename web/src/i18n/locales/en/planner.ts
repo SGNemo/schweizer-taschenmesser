@@ -321,7 +321,7 @@ export const planner: Strings['planner'] = {
     apply: 'Apply',
     nothing: 'Everything is already like this.',
     done: 'Plan applied.',
-    laterWhere: 'What is for later is in To-dos under “Someday”.',
+    laterWhere: 'What is for later is in the planner under “Next weeks”.',
   },
   open: {
     empty: 'Nothing open from earlier.',

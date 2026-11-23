@@ -9635,7 +9635,7 @@ export const de = {
       apply: 'Übernehmen',
       nothing: 'Es ist schon alles so.',
       done: 'Plan übernommen.',
-      laterWhere: 'Was für später ist, steht in ToDos unter „Irgendwann“.',
+      laterWhere: 'Was für später ist, steht im Planer unter „Nächste Wochen“.',
     },
     open: {
       empty: 'Nichts offen von früher.',

@@ -541,13 +541,14 @@ test('T2 Samstagabend – 5 / 6 / 9', async ({ page }, info) => {
   const soLater = SUNDAY.filter((x) => !KEEP_SO.includes(x));
   const toSunday = SATURDAY.filter((x) => KEEP_SO.includes(x));
   let laterInPlanner = 'nein';
-  // Saturday first: what stays, then what goes to Sunday, then the rest.
-  if (await keepOnly(hand, page, [...KEEP_SA, ...toSunday], 'later', SA)) {
+  // „Nur das hier …“ (feat/nur-das-hier): Saturday keeps its five, the rest goes to Sunday in one move; Sunday keeps
+  // its six (two of them came from Saturday), the rest goes to the next weeks in one move. No grip per thing.
+  if (await keepOnly(hand, page, KEEP_SA, 'next', SA)) {
     laterInPlanner = 'ja';
-    // The two for Sunday: „Auswählen“ on the sheet, one day for both.
-    await moveRestOld(hand, page, KEEP_SA, SA, SO);
     await hand.tap(page.getByTestId(`week-${SO}`));
+    await expect(page.getByTestId(`day-${SO}`)).toBeVisible();
     await keepOnly(hand, page, KEEP_SO, 'later', SO);
+    await hand.tap(page.getByTestId(`week-${SA}`));
   } else {
     await moveRestOld(hand, page, KEEP_SA, SA, SO);
     await laterInTodos(hand, page, [...saLater, ...soLater]);

@@ -894,7 +894,7 @@ export async function keepOnly(
           fixed += 1;
           continue;
         }
-        await placeAt(e, place, undefined);
+        await placeAt(e, place);
         touched.push(key);
       }
       return { touched };
