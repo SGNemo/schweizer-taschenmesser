@@ -130,6 +130,9 @@ const asNetworkError = (e: unknown): PublicFetchError =>
     ? e
     : new PublicFetchError('network', e instanceof Error ? e.message : String(e));
 
+/** Hops followed on the desktop, each one checked like the first address (the server proxy has its own). */
+const MAX_REDIRECTS = 5;
+
 export async function fetchPublic(
   url: string,
   init?: RequestInit,
@@ -139,12 +142,23 @@ export async function fetchPublic(
   const platform = getPlatform();
   if (platform.isNative) {
     // The desktop app asks the host itself, so the address rules the proxy would apply are checked here.
-    if (!isPublicHttpsUrl(url)) throw new PublicFetchError('network', 'not a public https address');
+    // M2: redirects are followed here, not by the native fetch, so every hop is checked as well.
     try {
-      return await withTimeout(
-        async (signal) => limitPublicResponse(await platform.fetch(url, { ...init, signal }), kind),
-        timeoutMs,
-      );
+      return await withTimeout(async (signal) => {
+        let current = url;
+        for (let hop = 0; ; hop++) {
+          if (!isPublicHttpsUrl(current)) {
+            throw new PublicFetchError('network', 'not a public https address');
+          }
+          const res = await platform.fetch(current, { ...init, redirect: 'manual', signal });
+          const location = res.headers.get('location');
+          if (res.status < 300 || res.status >= 400 || !location) {
+            return limitPublicResponse(res, kind);
+          }
+          if (hop >= MAX_REDIRECTS) throw new PublicFetchError('network', 'too many redirects');
+          current = new URL(location, current).toString();
+        }
+      }, timeoutMs);
     } catch (e) {
       throw asNetworkError(e);
     }
