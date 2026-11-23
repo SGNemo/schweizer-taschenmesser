@@ -26,10 +26,11 @@ import { dismissNotices } from '../helpers';
  *
  * `IST` is the measured state per path and project. `TARGET` is docs/design/planner-hub-2/ANALYSIS.md §3. Every build PR
  * re-measures `IST` (never loosened); a figure is asserted against the better of its `IST` and – once reached – its
- * `TARGET` (lower is better, except `HIGHER`); a word equals its `IST`. One figure has its TARGET above its IST on
- * purpose: C2 `createTaps` (IST 0, TARGET 6) – bundling the round is a choice that buys rows 2 → 1, so the bound is the
- * TARGET: a package that reaches 6 is no regression, more than 6 fails.
- * Re-measured by the packages: 10b: D1 · 4a/4b/4c/2: B · 5a: C1 · 5b/6: C2 · 1: D2 · 3: A1 · 9: D3 · 11: D4.
+ * `TARGET` (lower is better, except `HIGHER`); a word equals its `IST`. Three figures have their TARGET above their IST
+ * on purpose – named prices, the bound is the TARGET (reaching it is no regression, more fails): C2 `createTaps` (0 → 8:
+ * getting a round together is a choice, incl. one trip to Listen, and buys rows 2 → 1), D1 `taps` (11 → 16) and D1
+ * `perThing` (5 → 10): from package 4a on a row's title expands it, so the jump into the module is two handles.
+ * Re-measured by the packages: 10b: D1 · 4a: D1, C1 · 4b/4c/2: B · 5a: C1 · 5b: C2 · 1: D2 · 3: A1, C1 · 9: D3 · 11: D4.
  * `MEASURE=1` only measures. Facts (the click path, the module routes passed) land beside the table in
  * `test-results/usecase-planner-hub-2/`.
  *
@@ -84,12 +85,12 @@ const TARGET: Record<string, Figures> = {
   'A2 Jedes Ding als richtige Art · pixel-7': { rows: 8, moduleSwitches: 5, taps: 34, perThing: 14, forms: 2, fields: 5, rightKind: 12, linkedToPlan: 11 },
   'B Finanzen und Mails abarbeiten · desktop-chrome': { rowsBefore: 2, taps: 13, perThing: 11, moduleSwitches: 0, doneInPlanner: 10, rowsAfter: 0, mails: 4 },
   'B Finanzen und Mails abarbeiten · pixel-7': { rowsBefore: 1, taps: 8, perThing: 7, moduleSwitches: 0, doneInPlanner: 6, rowsAfter: 0, mails: 'nicht möglich' },
-  'C1 Bündel Haushalt · desktop-chrome': { rows: 1, createTaps: 1, workTaps: 6, taps: 7, perThing: 5, moduleSwitches: 0, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
-  'C1 Bündel Haushalt · pixel-7': { rows: 1, createTaps: 1, workTaps: 6, taps: 7, perThing: 5, moduleSwitches: 0, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
-  'C2 Besorgung · desktop-chrome': { rows: 1, createTaps: 6, workTaps: 6, perThing: 5, moduleSwitches: 0, oneRow: 'ja', mapShown: 'nicht möglich' },
-  'C2 Besorgung · pixel-7': { rows: 1, createTaps: 6, workTaps: 6, perThing: 5, moduleSwitches: 0, oneRow: 'ja', mapShown: 'nicht möglich' },
-  'D1 Steht es im Plan, und wann · desktop-chrome': { taps: 11, perThing: 5, moduleSwitches: 10, markVisible: 5, markAgrees: 5, tripsToPlanner: 0 },
-  'D1 Steht es im Plan, und wann · pixel-7': { taps: 11, perThing: 5, moduleSwitches: 10, markVisible: 5, markAgrees: 5, tripsToPlanner: 0 },
+  'C1 Bündel Haushalt · desktop-chrome': { rows: 1, createTaps: 1, workTaps: 7, taps: 8, perThing: 5, moduleSwitches: 0, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
+  'C1 Bündel Haushalt · pixel-7': { rows: 1, createTaps: 1, workTaps: 7, taps: 8, perThing: 5, moduleSwitches: 0, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
+  'C2 Besorgung · desktop-chrome': { rows: 1, createTaps: 8, workTaps: 6, perThing: 5, moduleSwitches: 2, oneRow: 'ja', mapShown: 'nicht möglich' },
+  'C2 Besorgung · pixel-7': { rows: 1, createTaps: 8, workTaps: 6, perThing: 5, moduleSwitches: 2, oneRow: 'ja', mapShown: 'nicht möglich' },
+  'D1 Steht es im Plan, und wann · desktop-chrome': { taps: 16, perThing: 10, moduleSwitches: 10, markVisible: 5, markAgrees: 5, tripsToPlanner: 0 },
+  'D1 Steht es im Plan, und wann · pixel-7': { taps: 16, perThing: 10, moduleSwitches: 10, markVisible: 5, markAgrees: 5, tripsToPlanner: 0 },
   'D2 Geteilter Link in den Planer · desktop-chrome': { taps: 2, moduleSwitches: 1, forms: 1, inPlanner: 'ja', wayBack: 'ja' },
   'D2 Geteilter Link in den Planer · pixel-7': { taps: 2, moduleSwitches: 1, forms: 1, inPlanner: 'ja', wayBack: 'ja' },
   'D3 Vor einem Termin · desktop-chrome': { taps: 3, perThing: 0, moduleSwitches: 0, linked: 'ja', onWednesday: 'ja' },

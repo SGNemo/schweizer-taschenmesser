@@ -51,12 +51,12 @@ Measured 2026-11-23 on `develop` (69b217cf) by `web/e2e/usecases/planner-hub-2.s
 | | finished in the planner | 1 of 10 | 10 / 6 (no mail on the phone) | 4b, 4c, 2 |
 | C1 household round | rows | 1 (as a routine) | 1 | 5a |
 | | module switches | 4 / 5 | 0 | 5a (3 for creating in the field) |
-| | create · work handles | 12 · 7 | 1 · 6 | 3 · 5a |
+| | create · work handles | 12 · 7 | 1 · 7 | 3 · 5a |
 | | only the next step | no | yes | 5a |
 | C2 errand | rows | 2 (list not in the plan) | 1 | 5b |
-| | module switches | 2 | 0 | 4a, 5b |
+| | module switches | 2 | 2 the first time (the list is asked into the plan in Listen), 0 for later rounds | 5b |
 | | work handles | 9 / 8 | 6 | 5b |
-| | handles to bundle (the one figure that rises, by his choice) | 0 | 6 | 5b |
+| | handles to get the round together (a price, by his choice) | 0 | 8 | 5b |
 | D1 is it in the plan | mark visible · agrees | 1 · 2 of 5 | 5 · 5 | 10b |
 | | module switches to find out from the module's side (`tripsToPlanner`) | 8 | 0 | 10b |
 | D2 shared link | handles · switches · way back | 5 · 2 / 3 · no | 2 · 1 · yes | 1 |
@@ -64,17 +64,19 @@ Measured 2026-11-23 on `develop` (69b217cf) by `web/e2e/usecases/planner-hub-2.s
 | D4 one topic | rows · handles · switches | 20 · 27 / 22 · 2 | 7 · 11 · 0 | 11 |
 | D5 waiting | handles · switches · rows off the sheet | 7 · 0 · 3 | unchanged | – |
 
+**What gets dearer, said plainly:** after 4a the title of a row expands it, so jumping from a row into its module is two handles instead of one (D1, measured from the planner's side: 11 → 16 handles for five things) – the trip the mark and the panels are meant to make unnecessary; and getting a round together is a choice of 8 handles (C2).
+
 ## 4. The gate (principle 1: what lowers neither rows nor module switches is not built)
 
 | Idea | Rows | Switches | Verdict |
 | --- | --- | --- | --- |
 | 10 | – | D1 `tripsToPlanner` 8 → 0 (measured from the module's side); 10a itself moves no figure – it is the base of 10b, 4, 9, 11, 1, 3 | built |
-| 4 | – | 5 → 0 (B), 2 → 0 (C2) | built |
+| 4 | – | 5 → 0 (B, with 2) | built (4a itself is the frame and moves no figure) |
 | 2 | 5 → 2 (B) | – | built |
 | 5 | bundle: 2 → 1 (C2); steps: one row as today (C1 – today's routine is one row too) | 4 / 5 → 0 (C1) | built |
 | 1 | – | 2 → 1 (D2) | built – **without pictures** (no figure beyond the text path; the one truly new entry surface) |
 | 3 | 11 → 7 (A1) | 3 / 5 → 0 (A2) | built |
-| 6 | 2 → 1 (C2) – but that is the bundle of 5b | 2 → 0 – but that is the lists panel of 4a inside the bundle | **shrunk:** what the script rewards is built in 5b (a list member is ticked inside the bundle). **Struck:** a place per stop, the map jump, a map in the planner – `mapShown` stays „nicht möglich“, no figure moves. |
+| 6 | 2 → 1 (C2) – but that is the bundle of 5b | none the first time | **shrunk:** what the script rewards is built in 5b (a list member is ticked inside the bundle). **Struck:** a place per stop, the map jump, a map in the planner – `mapShown` stays „nicht möglich“, no figure moves. |
 | 9 | – | 4 → 0 (D3) | built |
 | 11 | 20 → 7 (D4) | 2 → 0 | built |
 | **8** | none | none | **struck.** It lowers per-thing handles („Dauer …“) and booked minutes only. Concept, hand-off and prompt are kept so one „ja“ starts it. My recommendation is to say that „ja“ after 5a: wrong 30-minute rows make days look full, which the script cannot count. |

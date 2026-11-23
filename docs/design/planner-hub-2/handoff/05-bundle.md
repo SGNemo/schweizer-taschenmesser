@@ -22,7 +22,7 @@ Concept: [CONCEPT-ROWS, idea 5](../CONCEPT-ROWS.md). Decision between two direct
 
 - Steps are tick `PanelLine`s in order; done ones stay in place (struck), so the order never jumps.
 - 5b: a member line has **one** lead column: the tick where the member takes one, else its source glyph (an invoice) – never both; `▸` at the end when it has a panel; drag handle on desktop hover / focus (`SortableList` from `@/ui`), „Nach oben / Nach unten“ in the line's ⋯ on the phone.
-- Foot: B3 „Los“ (secondary) · ⋯ (B14) · X2 (5a only: opens the ToDo / list / routine).
+- Foot: B3 „Los“ (secondary) · ⋯ (B14; this is where „Als Routine speichern“ is: two handles) · X2 (5a only: opens the ToDo / list / routine).
 - More than 12 steps: 12 + „n weitere“.
 
 ## „Los“ – the focus page in step mode (`/planner/focus/:unit?step=1`)
@@ -39,7 +39,7 @@ Reuses `FocusPage` (shell hidden, Esc leaves, the round survives a reload). Diff
 
 - No ring in step mode (a step has no minutes). No list of the other steps – **only the next one**.
 - „Fertig · weiter“: the step's own done (`onStepDone`, or the member's `onDone`; a member without a tick shows its panel under the title and advances when the thing is done there), then the next open step fades in (opacity, `--dur`).
-- After the last: B8 „Alles durch.“ + B9; „Erledigt“ ticks the carrying thing (5a) or closes the bundle (5b: nothing to tick when every member is done – then only „Zurück zum Plan“).
+- On the last open step the filled button reads B23 „Fertig“: it finishes the step **and** ticks the carrying thing (5a; the thing's toast carries the undo). Then B8 „Alles durch.“ with B9 „Zurück zum Plan“. 5b: nothing to tick – the bundle is done when its members are.
 - Skipped steps: at the end B10; „Später“ returns to the plan with the steps open.
 - 412: the same, actions stacked full width in the order B5, B6, B7.
 - Keys: Enter = B5, `S` = B6, `P` = B7, Esc = back to the plan (the round keeps its place); one line under the buttons names them (B19, `--text-meta`, `--text-3`), not drawn on touch devices.

@@ -19,15 +19,15 @@ Tag      [ohne Tag] [Heute] [Morgen]          (only while „In den Planer“ is
 - „In den Planer“ (S1) is the first choice and preselected when the planner module is on; otherwise the page is exactly as today. The targets keep the control the page has today (a column of choices, each 44 px high, on 412; one row at 1920); the empty state keeps today's sentence.
 - No second question above the choices: the page's own subline („Wohin soll der geteilte Inhalt?“) already asks.
 - The day choice is the shared `DateChips` with three chips; default „ohne Tag“.
-- S3 „Ablegen“ → `plan.requested { title, day, origin: 'share' }` + note / URL on the ToDo → the planner's handler shows toast S4; the page itself turns into its stored state: S8 „Abgelegt.“ with the buttons „Rückgängig“ (ghost) and S9 „Fertig“ (filled). It stays until he taps: „Fertig“ closes back to the sharing app on Android and opens the planner in the PWA. No new native command; if the build needs one, its permission is for the webview `main` only.
+- S3 „Ablegen“ → `plan.requested { title, note, day, origin: 'share' }` (the URL is the note's first line) → the planner's handler shows toast S4; the page itself turns into its stored state: S8 „Abgelegt.“ (or its day variant) with the one button S9 „Fertig“ (filled, full width on 412); the undo is the toast's, which stays in reach because the page stays. It stays until he taps: „Fertig“ closes back to the sharing app on Android and opens the planner in the PWA. No new native command; if the build needs one, its permission is for the webview `main` only.
 
 ## The row afterwards
 
-A normal ToDo row under „Noch ohne Tag“. A shared link shows one chip S7 („Im Browser öffnen · example.org“) in the row's existing chip line (the line that holds ≤ 2 link chips today – no new kind of control) and as first entry of the default panel; it opens the system browser only on a tap.
+A normal ToDo row under „Noch ohne Tag“. A shared link shows one chip S7 („Im Browser öffnen · example.org“) in the row's existing chip line (the line that holds ≤ 2 link chips today – no new kind of control) and in the ToDos panel; the host is `new URL(…).hostname` (no user info; punycode for non-ASCII hosts); it opens the system browser only on a tap.
 
 ## States
 
-planner off (target missing) · nothing arrived (as built) · long text (S5 under the card) · storing (button busy) · stored · failed (S6 as `role="alert"` under the button; the card and the choice stay).
+planner off (target missing) · nothing arrived (as built) · long text (S5 under the card) · storing (button busy until `answer`) · stored (`answer.ok`) · not stored (`answer.ok` false, or no answer within 3 s: S6 as `role="alert"` under the button; the card and the choice stay).
 
 ## Edge cases
 

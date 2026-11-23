@@ -4,7 +4,7 @@ Concept: [CONCEPT §1.4](../CONCEPT.md). Common parts: [00-common](00-common.md)
 
 ## Structure
 
-`PlanMark({ module, id, variant })` in `core/entitylinks`: reads `planRowState` + `planFacts` (lock) (+ the bundle name from 5b); renders nothing while loading, while the planner is off, and when the thing is not in the plan. Two reads are new in `planRow.ts` / `plannedDay`: an item key matches the entity when it equals `<module>:<id>` or starts with `<module>:<id>:` (subscriptions, routines and Unterlagen plan per occurrence), and for M4 the latest live assignment before today when none lies from today on. Bookmarks and subscriptions pass their own field as `fallback` (shown as M3 while the planner has no row yet).
+`PlanMark({ module, id, variant })` in `core/entitylinks`: reads `planRowState` + `planFacts` (lock) (+ the bundle name from 5b); renders nothing while loading, while the planner is off, and when the thing is not in the plan. Two reads are new in `planRow.ts` / `plannedDay`: an item key matches the entity when it equals `<module>:<id>` or starts with `<module>:<id>:` (subscriptions, routines and Unterlagen plan per occurrence), and for M4 the latest live assignment before today when none lies from today on. The day of a thing that is no plan row comes only from ToDos linking to it with `origin` / `about`. Bookmarks and subscriptions pass their own field as `fallback` (shown as M3 while the planner has no row yet).
 
 - `variant="meta"` (rows): inline in the row's meta line, **last** item, separated by „ · “. Planner glyph 16 px + text M1–M5, `--text-meta`, `--text-3`; the whole mark is one link (underline on hover / focus only).
 - `variant="detail"` (detail panels, dialogs): its own line under the title block, same type, min-height 44 px.

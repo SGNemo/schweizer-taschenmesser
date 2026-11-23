@@ -6,7 +6,7 @@ Concept: [CONCEPT-INTAKE, idea 11](../CONCEPT-INTAKE.md). Common parts: [00-comm
 
 - Row ⋯ → T1 „Thema …“ (in the group „Mehr“); selection bar: T1 after B11.
 - Chooser = `Dialog`, title T2: one `TextField` (combobox: typing filters, Enter on a new name creates it), below it his topics as a list of radio lines (≤ 8, then scroll inside the dialog), „Kein Thema“ last. With ToDo tags present and no topic of that name: T7 lines under a small head, at most 3.
-- A thing has one topic. Toast T8, one undo.
+- A thing has one topic. Toast T8, one undo. The link stores the thing (`entityId` for occurrence rows); „Thema …“ is not offered on pile and bundle rows.
 - The row shows **nothing new** for a topic (no chip, no colour): the topic is in the row's ⋯ under „Verknüpft“ and in the expanded panel's links.
 
 ## Shrinking the planner to a topic

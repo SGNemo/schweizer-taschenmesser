@@ -41,7 +41,7 @@ Identity: the planner keeps hue `indigo`, head `standard`, no filled action in t
 
 **A · „Eine Zeile, ‚Los‘ auf der Fokus-Seite“** (`05-bundle-a.html`, `05-los.html`): closed, a bundle is one row with „1 von 5“ as text; expanded, its steps are tick lines; „Los“ opens the focus page with only the next step.
 
-- For: a round is one row whether it is typed, bundled or a routine (C2: 2 → 1), and it is worked through without a module switch (C1: 4 / 5 → 0); „Los“ reuses the page that already hides everything else and survives a reload; nothing new on the sheet.
+- For: a round is one row whether it is typed, bundled or a routine (C2: 2 → 1), and a typed round is worked through without a module switch (C1: 4 / 5 → 0); „Los“ reuses the page that already hides everything else and survives a reload; nothing new on the sheet.
 - Against: the steps are invisible until he opens the row; „Los“ leaves the sheet (not the module).
 - Critique folded in: member lines have one lead column (tick or source glyph – the draft had both, ragged); „k von n“ counts done steps on the row and the position in „Los“, said in the hand-off; a member without a tick shows its panel as the step.
 

@@ -28,7 +28,7 @@ Concept: [CONCEPT-INTAKE, idea 3](../CONCEPT-INTAKE.md). Common parts: [00-commo
 
 ## States
 
-no reading (examples as today) · reading shown · stored (toast K4 for the kind; field empty, focus stays in the field) · K3 used · module of the kind off (no line) · target failed (the field's existing error line; text stays; nothing was stored – the thing and its plan row are made inside one undoable action by the planner's own place function, called directly with its toast suppressed; when placing fails the thing is taken back).
+no reading (examples as today) · reading shown · stored (toast K4 for the kind; field empty, focus stays in the field) · K3 used · module of the kind off (no line) · target failed (the field's existing error line; text stays; nothing was stored – the thing and its plan row are made inside one undoable action by the planner's own place function, called directly with its toast suppressed; when placing fails the thing is taken back: the place step returns failure instead of throwing, and the action then calls `undoEntry` on its own entry – the pattern of `placeRequested`).
 
 ## 1920 / 412
 

@@ -28,9 +28,9 @@ ItemRow  [lead] [title-button ▸ meta · chips] [minutes] [lock] [⋯]
 | Merkliste | title, host as text | X13 (ghost) · X2 |
 | Rechnungen | nothing the row already says (amount and deadline are in its meta); a reminder line if dunned; then `PayStep` as **one line**: label „Bezahlt am“ · `DateChips` (Heute · Gestern · Datum …) · label „Betrag“ · amount field prefilled (10 ch wide); the two labels are visible, `--text-meta`, `--text-3` | X9 „Bezahlt“ (secondary) · X2 |
 | Abos | name · price / period; X16 „Kündigen bis Do 10. Dez.“; after a tap on „Gekündigt am …“: `DateChips` (Heute · Gestern · Datum …, default Heute) and the foot's button becomes „Vermerken“ | X10 „Gekündigt am …“ (secondary) · „Läuft weiter“ (ghost) · X2 |
-| E-Mail | line 1: sender name · day; line 2: subject (600); body: first 6 lines of the newest message, `--text-sm`, clamped, plain text; „Antworten“ swaps the body for mail's composer (review step and the 10 s window as built) | X12 „Antworten“ (secondary); when the newest message is his: the text „Beantwortet?“ and the button „Erledigt“ instead · X2 |
+| E-Mail | line 1: sender name · day; line 2: subject (600); body: first 6 lines of the newest message, `--text-sm`, clamped, plain text; „Antworten“ opens mail's own compose dialog over the planner (as on the mail page) | X12 „Antworten“ (secondary); when the newest message is his: the text „Beantwortet?“ and the button „Erledigt“ instead · X2 |
 
-Mail only: the bar „Wird gesendet … · Zurückziehen“ (`PendingSendBar`, 10 s) is mounted at the planner page's foot, not in the compartment, so closing the row never hides it; a compartment closed with a typed reply keeps the text as mail's draft and shows it again when reopened.
+Mail only: the bar „Wird gesendet … · Zurückziehen“ (`PendingSendBar`, 10 s) is mail's `planPageFoot` (contract in 4a), mounted once at the planner page's foot, so closing the row never hides it. A typed reply lives in mail's dialog and follows mail's own rules (a server draft only through its „Entwurf speichern“).
 
 ## States (mockup `04-states.html` shows each)
 

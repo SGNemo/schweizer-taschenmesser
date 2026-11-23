@@ -31,7 +31,7 @@ BUDGETS ÜBER DEM RAHMEN                            In Budgets ansehen
 
 ## The offer (P5)
 
-One line at the top of „Noch ohne Tag“ (inside the group, under its head): text + one quiet button; ✕ at the end (name „Nicht mehr anbieten“). Shown when ≥ 3 single rows of one area wait there and the switch was never set. One offer at a time (money before mail). Tap → setting `pileMoney` / `pileMail` = true, toast P6 („Rückgängig“ sets it back – an explicit inverse, the undo journal does not hold settings). ✕ (name P13) → device-local flag, no toast. Stimulus: the offer is two buttons that exist only until answered; package 2 reports the planner counts with the offer showing (inside the budget's tolerance, and one tap removes n − 1 rows).
+One line at the top of „Noch ohne Tag“ (inside the group, under its head): text + one quiet button; ✕ at the end (name „Nicht mehr anbieten“). Shown when ≥ 3 single rows of one area wait there and the switch was never set. One offer at a time (money before mail). Tap → setting `pileMoney` / `pileMail` = true, toast P6 („Rückgängig“ sets it back – an explicit inverse, the undo journal does not hold settings). ✕ (name P13) → device-local flag, no toast. Stimulus: the offer is the one always-visible addition of the round (two buttons until answered). If the seeded stimulus views show it and `check:stimulus` rises, that rise needs the maintainer's approval like any other (`docs/howto/ci-stimulus-budget.md`): package 2 then ships the switch in the settings only and leaves the offer line for his „ja“ – named in [PACKAGES #common](../PACKAGES.md#common).
 
 ## States
 
@@ -43,7 +43,7 @@ Per 00-common. 412: the meta is short, one line – P12 „6 Dinge“, then P4 �
 
 ## Edge cases
 
-- A member gets a day by hand (member line ⋯ „Auf einen Tag legen …“): it leaves the pile and is its own row; the count falls.
+- To give one member a day of its own he uses P11 „Wieder einzeln zeigen“ (pile ⋯) and places it as today; a member that has a day or a lock is its own row and is not counted. A compact member line has no ⋯.
 - A pile on a day that passes with things still waiting: it goes to „Noch offen“ like any row; „nichts wartet“ piles do not.
 - The pile is `excluded` („Nicht planen“): single rows stay folded; the offer is not repeated.
 - Mail queue route missing (older mail module, phone): the mail pile does not exist.

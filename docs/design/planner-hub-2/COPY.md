@@ -27,7 +27,7 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 | X7 | Das hat nicht geklappt. Es ist nichts verändert. | That did not work. Nothing was changed. |
 | X8 (lists) | {n} weitere · Fertig eingekauft | {n} more · Done shopping |
 | X9 (invoices: two labels, the button) | Bezahlt am · Betrag · Bezahlt | Paid on · Amount · Paid |
-| X10 (subscriptions: two buttons, then the confirm) | Gekündigt am … · Läuft weiter · Vermerken | Cancelled on … · Keep it · Note it |
+| X10 (subscriptions: two buttons, then the confirm) | Gekündigt am … · Läuft weiter · Vermerken | Cancelled on … · Keep it · Save |
 | X11 (subscriptions, toast) | Als gekündigt vermerkt. / Läuft weiter, Frist erledigt. | Noted as cancelled. / Kept, deadline settled. |
 | X12 (mail: button · text + button) | Antworten · Beantwortet? · Erledigt | Reply · Answered? · Done |
 | X13 (bookmarks) | Im Browser öffnen | Open in the browser |
@@ -66,17 +66,18 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 | B6 | Überspringen | Skip |
 | B7 | Pause · Fortsetzen | Pause · Resume |
 | B8 | Alles durch. | All done. |
-| B9 (after B8) | Erledigt · Zurück zum Plan | Done · Back to the plan |
+| B9 (after B8) | Zurück zum Plan | Back to the plan |
+| B23 (the filled button on the last step) | Fertig | Done |
 | B10 (after a skip, last step; „Jetzt“ walks the skipped steps again, „Später“ returns to the plan with them open) | {n} übersprungen. Jetzt oder später? · Jetzt · Später | {n} skipped. Now or later? · Now · Later |
 | B11 (selection bar) | Bündeln … | Bundle … |
 | B12 (dialog; cancel = the shared „Abbrechen“) | Ein Name für das Bündel · Bündeln | A name for the bundle · Bundle |
-| B13 (toast) | {n} Dinge sind jetzt „{Wohnung}“. · Rückgängig | {n} things are “{Flat}” now. · Undo |
+| B13 (toast) | {n} Dinge sind jetzt „{Wohnung}“. · Rückgängig | {n} things are now in “{Flat}”. · Undo |
 | B14 (panel ⋯) | Auflösen · Als Routine speichern · Umbenennen … | Unbundle · Save as routine · Rename … |
 | B15 (toast) | Aufgelöst. Die Dinge liegen wieder einzeln auf {Mo}. · Rückgängig | Unbundled. The things are back on {Mon} one by one. · Undo |
 | B16 (toast) | Routine „{Haushalt}“ angelegt. · Ansehen | Routine “{Household}” created. · View |
 | B17 (step gone) | Gibt es nicht mehr | No longer exists |
 | B19 (key hint under the buttons, not on touch) | Enter: fertig · S: überspringen · P: Pause · Esc: zum Plan | Enter: done · S: skip · P: pause · Esc: to the plan |
-| B18 (module off) | {Modul} ist ausgeschaltet – „Los“ lässt diesen Schritt aus. | {module} is switched off – “Go” leaves this step out. |
+| B18 (module off) | {Modul} ist ausgeschaltet – „Los“ lässt diesen Schritt aus. | {module} is switched off – “Go” skips this step. |
 | B20 (line ⋯) | Aus dem Bündel nehmen | Take out of the bundle |
 | B21 (line ⋯, phone) | Nach oben · Nach unten | Move up · Move down |
 | B22 (clock, name) | Läuft seit {n} Minuten | Running for {n} minutes |
@@ -86,14 +87,15 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 | Id | Deutsch | English |
 | --- | --- | --- |
 | S1 (target) | In den Planer | Into the planner |
-| S2 (card) | Landet unter „Noch ohne Tag“. | Lands under “No day yet”. |
+| S2 (card; with a day chosen) | Landet unter „Noch ohne Tag“. / Landet auf {Di}. | Lands under “No day yet”. / Lands on {Tue}. |
 | S3 | Ablegen | Save |
-| S4 (toast) | Liegt im Planer unter „Noch ohne Tag“. · Ansehen · Rückgängig | In the planner under “No day yet”. · View · Undo |
+| S4 (toast; with a day chosen) | Liegt im Planer unter „Noch ohne Tag“. / Liegt im Planer auf {Di}. — each „· Ansehen · Rückgängig“ | In the planner under “No day yet”. / In the planner on {Tue}. — each “· View · Undo” |
 | S5 | Gekürzt auf 4 000 Zeichen. | Shortened to 4,000 characters. |
 | S6 | Nicht gespeichert. Noch einmal? | Not saved. Try again? |
 | S7 (chip on the row) | Im Browser öffnen · {host} | Open in the browser · {host} |
-| S8 (page after storing; undo = the shared „Rückgängig“) | Abgelegt. | Saved. |
+| S8 (page after storing) | Abgelegt. | Saved. |
 | S9 | Fertig | Done |
+| S10 (label of the day chips) | Tag | Day |
 | K1 (preview) | Wird: {Rechnung} · {Stadtwerke} · {80,00 €} · {Frist Fr 4. Dez.} | Becomes: {invoice} · {Stadtwerke} · {€80.00} · {due Fri 4 Dec} |
 | K2 (kinds) | Rechnung · Einkaufsliste · Termin · Notiz · Merkliste · Bündel | invoice · shopping list · appointment · note · bookmark · bundle |
 | K3 | Als Aufgabe eintragen | Enter as a task |
@@ -108,6 +110,7 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 | A2 (lead chip in the field) | vor {Friseur}, {Mi} · nach {Friseur}, {Mi} | before {hairdresser}, {Wed} · after {hairdresser}, {Wed} |
 | A3 (chip's second choice) | am Tag davor · am Tag danach | the day before · the day after |
 | A4 (row chip) | vor {Friseur} · nach {Friseur} | before {hairdresser} · after {hairdresser} |
+| A6 (lead chip: name of its menu button · name of ✕) | {vor Friseur, Mittwoch}. Ändern · Entfernen | {before hairdresser, Wednesday}. Change · Remove |
 | A5 (small heads in the panel) | Vorbereitung · Danach | Preparation · Afterwards |
 | T1 | Thema … | Topic … |
 | T2 (chooser title · field label · last choice · small head over T7 · hint without topics) | Thema wählen oder neu eintippen · Thema · Kein Thema · Aus deinen Tags · Ein Thema hält Dinge aus mehreren Modulen zusammen. | Choose a topic or type a new one · Topic · No topic · From your tags · A topic holds things from several modules together. |
