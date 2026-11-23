@@ -420,13 +420,19 @@ pub fn exchange_set_enabled(
     if !enabled {
         // under the slot lock, so `attach` sees this write or the parts see the call
         let slot = state.slot.lock().map_err(|_| "internal")?;
-        if slot.is_none() {
-            let dir = exchange_dir(&app).ok_or("no-data-dir")?;
-            return switch_at(&dir).set(false).map_err(|_| "storage".to_owned());
+        return match slot.as_ref() {
+            Some(parts) => parts.exchange.set_enabled(false),
+            None => {
+                let dir = exchange_dir(&app).ok_or("no-data-dir")?;
+                switch_at(&dir)
+                    .set(false)
+                    .map_err(|_| lan_sync::trust::TrustError::Storage)
+            }
         }
+        .map_err(|_| "storage".to_owned());
     }
     let parts = state.parts()?;
-    if !enabled || parts.exchange.enabled() {
+    if parts.exchange.enabled() {
         return parts
             .exchange
             .set_enabled(enabled)

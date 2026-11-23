@@ -88,6 +88,7 @@ export function LanHubSection({ tinted = true }: { tinted?: boolean }) {
   async function startPairing() {
     setFailure(undefined);
     setNote(undefined);
+    setUnpairAgain(undefined);
     setBusy(true);
     try {
       if (!enabled) {
@@ -127,6 +128,7 @@ export function LanHubSection({ tinted = true }: { tinted?: boolean }) {
 
   async function confirmRenew() {
     setAskRenew(false);
+    setUnpairAgain(undefined);
     setNote((await renewLanHubKey()) ? l.renewed : l.renewFailed);
   }
 
@@ -464,7 +466,7 @@ function PairDialog({
       setError(
         code === 'busy-controlled'
           ? l.pairControlled
-          : code === 'expired'
+          : code === 'expired' || code === 'changed'
             ? l.pairExpired
             : l.pairLost,
       );
@@ -488,7 +490,8 @@ function PairDialog({
     setStepping(true);
     setSeenOpen(false);
     await hub.pairCancel().catch(() => undefined);
-    await hub.pairOpen().catch(() => undefined);
+    // no fresh code: the "ended" text with its button instead of an endless "preparing"
+    await hub.pairOpen().catch(() => setSeenOpen(true));
     setStepping(false);
   }
 

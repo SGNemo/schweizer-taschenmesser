@@ -1316,12 +1316,18 @@ fn exchange_off_pause_and_answers_hold() {
         b[..b.find("\n}\n").unwrap()].to_owned()
     };
     let enabled = body("exchange_set_enabled");
-    let early = enabled.find("if slot.is_none() {").expect("off without a hub");
+    let early = enabled
+        .find("None => {")
+        .expect("off without a hub, under the slot lock");
     let attach = &src[src.find("pub fn attach(").unwrap()..];
     let attach = &attach[..attach.find("\n}\n").unwrap()];
-    assert!(attach.contains("if !switch_at(&dir).enabled() {"), "attach applies an earlier off");
+    assert!(
+        attach.contains("if !switch_at(&dir).enabled() {"),
+        "attach applies an earlier off"
+    );
     assert!(early < enabled.find("let parts = state.parts()?;").unwrap());
-    assert!(enabled.contains("switch_at(&dir).set(false)"));
+    let file = &enabled[enabled.find("None => {").unwrap()..];
+    assert!(file.contains("switch_at(&dir)") && file.contains(".set(false)"));
     let send = body("exchange_send");
     assert!(send.find("effective()").unwrap() < send.find("outbox.push(").unwrap());
     let ask = &src[src.find("fn ask(").unwrap()..];

@@ -697,11 +697,16 @@ pub fn lan_pair_confirm(
             Ok(live.pending.clone().filter(|p| p.attempt == attempt))
         })
     };
-    let pending = waiting(&state)?.ok_or("not-awaiting")?;
+    // the attempt and the hub it belongs to, read together
+    let (pending, asked) = with_core(&state, |core, _| {
+        let live = core.live.lock().map_err(|_| "internal")?;
+        let pending = live.pending.clone().filter(|p| p.attempt == attempt);
+        Ok((pending, core.clone()))
+    })?;
+    let pending = pending.ok_or("not-awaiting")?;
     // Like every widening question: never while a phone controls mouse and keyboard (it could
     // click the answer), checked again after it; one question at a time.
     // the hub that was asked about: a hub restarted meanwhile has its own attempts and controls
-    let asked = with_core(&state, |core, _| Ok(core.clone()))?;
     let ticket = asked.remote.ticket();
     if asked.remote.full_session_open() {
         return Err("busy-controlled".to_owned());

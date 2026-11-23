@@ -242,12 +242,6 @@ impl Router {
         }
     }
 
-    /// Whether `peer` may connect at all (private address inside a bound subnet); the transport asks
-    /// before it takes a connection slot.
-    pub fn peer_allowed(&self, peer: IpAddr) -> bool {
-        self.admission.lock().is_ok_and(|a| a.peer_ok(peer))
-    }
-
     /// Counts a TCP connection of `peer` (H1): over the accept limit it is closed before it takes a
     /// slot. A poisoned lock admits nothing.
     pub fn admit_connection(&self, peer: IpAddr, now: Duration) -> bool {
