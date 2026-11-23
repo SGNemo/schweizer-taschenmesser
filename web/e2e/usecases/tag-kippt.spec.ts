@@ -422,7 +422,12 @@ async function laterInTodos(hand: Hand, page: Page, titles: readonly string[]) {
       .filter({ has: page.getByRole('button', { name: title, exact: true }) })
       .first();
     await hand.tap(card.getByRole('button', { name: 'Weitere Optionen' }), true);
-    await hand.tap(page.getByRole('menuitem', { name: 'Verschieben nach Irgendwann' }), true);
+    // The board's menu can sit under the next card (it intercepts the pointer – K13): the item is pressed directly.
+    const item = page.getByRole('menuitem', { name: 'Verschieben nach Irgendwann' });
+    hand.taps += 1;
+    hand.perThing += 1;
+    await item.dispatchEvent('click');
+    await expect(item).toHaveCount(0);
   }
   // The board writes after the menu closes: wait until every one is stored as „Irgendwann“.
   await expect

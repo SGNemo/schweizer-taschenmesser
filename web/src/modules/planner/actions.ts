@@ -44,6 +44,7 @@ import { assignmentRepo, dayRepo, itemKeyOf, itemRepo, putRow } from './repo';
 import type { AssignmentRow, PlanDayRow, PlanItemRow } from './schema';
 import { overloadLine } from './overload';
 import type { Known, PasteLine, Place } from './pastePlan';
+import { requestedIds } from './run';
 import { getPlannerSettings } from './prefs';
 import { PlannerOffError, runUser, type RunScope, type UserRun } from './services';
 import { dayEndLabel, DEFAULT_PLANNER_SETTINGS, PLANNER_SCOPE } from './settings';
@@ -747,7 +748,12 @@ export const takeOff = (e: PlannableEntry, titles: Record<string, string>) =>
 export async function pasteKnown(): Promise<Known[]> {
   const day = today();
   const manifests = activeManifests(await loadModuleStates());
-  const entries = await collectPlannable({ today: day, until: addDays(day, 60) }, manifests);
+  // Things asked into the plan (a shopping list without a date) are listed only with their requests, as on the board.
+  const entries = await collectPlannable(
+    { today: day, until: addDays(day, 60) },
+    manifests,
+    requestedIds(await itemRepo.active().toArray()),
+  );
   const first = new Map<string, string>();
   const locked = new Set<string>();
   for (const r of (await assignmentRepo.active().toArray()) as AssignmentRow[]) {
@@ -771,7 +777,6 @@ export async function pasteKnown(): Promise<Known[]> {
       });
   }
   for (const e of entries) {
-    if (e.fixed) continue;
     const key = itemKeyOf(e.moduleId, e.id);
     const date = first.get(key) ?? e.day;
     out.push({
@@ -781,6 +786,7 @@ export async function pasteKnown(): Promise<Known[]> {
       canLater: canLater.has(e.moduleId),
       ...(locked.has(key) ? { locked: true } : {}),
       ...(e.day ? { dated: true } : {}),
+      ...(e.fixed ? { fixed: true } : {}),
     });
   }
   return out;
@@ -823,7 +829,7 @@ export function applyPaste(
     toLater.length > 0 || lines.some((l) => l.change !== 'same' && l.to.kind === 'later');
   return act(
     t.planner.paste.title,
-    toLaterAny ? `${t.planner.paste.done}\n${t.planner.paste.laterWhere}` : t.planner.paste.done,
+    toLaterAny ? t.planner.paste.doneLater : t.planner.paste.done,
     titles,
     async () => {
       const touched: string[] = [];
