@@ -1,17 +1,18 @@
 /**
- * NS6 (launch review 2026-11): what an Android notification shows on the lock screen. Off by
- * default: the notice is "secret" – a locked phone shows nothing of it (it still sounds; it is there
- * after unlocking). "Private" would not be enough: Android only hides a private notice's text when
- * the user chose "hide sensitive content", and its default shows everything. On: "private", so
- * Android's own lock-screen setting decides. The switch belongs to this phone (localStorage, never
- * synced): one device may lie on a desk at home, another in an office.
+ * NS6 (launch review 2026-11): what an Android notification shows on the lock screen (Android 8+,
+ * which has channels). Off by default: notices go through channels whose lock-screen setting is
+ * "secret" – a locked phone shows nothing of them; they are in the shade after unlocking. On: the
+ * plugin's default channel (or the older quiet one), so Android's own lock-screen setting decides.
+ * The channel decides because a notice's own visibility never reaches Android (the plugin's Rust
+ * layer drops it); see `channelFor` in `core/platform/tauri`. The switch belongs to this phone
+ * (localStorage, never synced): one device may lie on a desk at home, another in an office.
  */
 import { useSyncExternalStore } from 'react';
 
 const KEY = 'tm-lock-screen-content';
 const EVENT = 'tm-lock-screen-content-changed';
 
-/** Android's `NotificationCompat` visibility: -1 = secret (not on the lock screen), 0 = private. */
+/** The lock-screen setting of the channel a notice goes through: -1 = secret (hidden), 0 = private. */
 export type LockScreenVisibility = -1 | 0;
 
 export function lockScreenContent(): boolean {

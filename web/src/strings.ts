@@ -2837,7 +2837,7 @@ export const de = {
     channelHidden: 'Benachrichtigungen (Sperrbildschirm verborgen)',
     channelQuietHidden: 'Ruhe (Sperrbildschirm verborgen)',
     lockScreenHint:
-      'Aus: Auf dem gesperrten Handy erscheinen Nemo-Benachrichtigungen nicht – sie klingen trotzdem (außer bei „Ruhe“) und stehen nach dem Entsperren in der Benachrichtigungsleiste. An: Android zeigt sie so, wie du es für den Sperrbildschirm eingestellt hast. Gilt nur für dieses Gerät.',
+      'Aus (ab Android 8): Auf dem gesperrten Handy erscheinen Nemo-Benachrichtigungen nicht – sie klingen trotzdem (außer bei „Ruhe“ und im Spielmodus) und stehen nach dem Entsperren in der Benachrichtigungsleiste. An: Android zeigt sie so, wie du es für den Sperrbildschirm eingestellt hast. Gilt nur für dieses Gerät.',
     enable: 'Benachrichtigungen aktivieren',
     granted: 'Aktiviert',
     denied: 'Blockiert – bitte in den Browser-Einstellungen für diese Seite erlauben.',

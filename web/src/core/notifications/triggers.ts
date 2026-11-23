@@ -27,7 +27,8 @@ export function startScheduleTriggers(
   const stopMute = onMuteChange(run);
   // Game mode switched on or off: the quiet channel applies to the schedule from now on.
   const stopGame = onGameModeChange(run);
-  // NS6: the lock-screen switch changed – scheduled alarms carry their visibility, so rebuild them.
+  // NS6: the lock-screen switch changed – scheduled alarms keep their channel, so rebuild them on the
+  // matching one.
   const stopLock = onLockScreenContentChange(run);
 
   const later = () => {

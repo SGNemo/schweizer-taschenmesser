@@ -159,7 +159,8 @@ async function channelFor(quiet: boolean): Promise<string | undefined> {
               ? t.notifications.channelQuietHidden
               : t.notifications.channelHidden,
         importance: quiet ? Importance.Low : Importance.Default,
-        vibration: !quiet,
+        // no new stimulus: like the plugin's default channel, it does not vibrate (FOCUS-GUIDELINES)
+        vibration: false,
         visibility: hidden ? -1 : 0,
       }).catch(() => undefined),
     );
