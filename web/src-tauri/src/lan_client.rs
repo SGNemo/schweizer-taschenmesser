@@ -208,7 +208,17 @@ fn missing_or_retry(e: String) -> ClientError {
     }
 }
 
+/// H2 (launch review 2026-11): a phone dials its PC only while it is on Wi-Fi – never over mobile
+/// data or with no network, where the pinned private address would be a fingerprint at best. A
+/// device that cannot tell (the desktop) dials; a state that cannot be read is a "no".
+fn dial_allowed<E>(wifi: Result<tauri_plugin_lan_watch::WifiState, E>) -> bool {
+    wifi.is_ok_and(|w| !w.supported || w.connected)
+}
+
 fn open<R: Runtime>(app: &AppHandle<R>) -> Result<Session, ClientError> {
+    if !dial_allowed(app.lan_watch().wifi_state()) {
+        return Err(ClientError::Network); // calm: the next round tries again
+    }
     let (hub, addr, name) = hub_entry(app).map_err(missing_or_retry)?;
     let key = stored_key(app).map_err(missing_or_retry)?;
     Session::open(addr, &key, &hub, &name)
@@ -476,6 +486,16 @@ pub(crate) fn unpair_now<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {
 mod tests {
     use super::*;
     use tauri_plugin_secure_store::RUST_ONLY_PREFIX;
+
+    #[test]
+    fn a_phone_dials_only_on_wifi() {
+        use tauri_plugin_lan_watch::WifiState;
+        let state = |supported, connected| Ok::<_, ()>(WifiState { supported, connected });
+        assert!(dial_allowed(state(true, true)), "phone on Wi-Fi");
+        assert!(!dial_allowed(state(true, false)), "phone off Wi-Fi");
+        assert!(dial_allowed(state(false, false)), "desktop: cannot tell, keeps its address");
+        assert!(!dial_allowed(Err::<WifiState, ()>(())), "unreadable is a no");
+    }
 
     #[test]
     fn hex_round_trip() {
