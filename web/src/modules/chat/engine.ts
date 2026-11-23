@@ -95,7 +95,7 @@ export async function generateReply(threadId: string, opts: ReplyOptions): Promi
       stage = 'local';
     } else {
       if (!opts.provider) return { ok: false, error: 'no-engine' };
-      const pin = pinOf(thread, stored);
+      const pin = await pinOf(thread);
       // An older chat with cloud answers but no pin: which provider has its history is unknown, so
       // the user picks one (never a guess).
       if (pin === 'unknown') return { ok: false, error: 'provider-paused', detail: 'not-set-up' };
@@ -193,12 +193,17 @@ export async function generateReply(threadId: string, opts: ReplyOptions): Promi
  * Where a cloud turn may go (AI1): the provider the chat first went to; `unknown` for chats from
  * before the pin that already have cloud answers; a new chat has no pin yet.
  */
-function pinOf(
-  thread: Thread,
-  stored: readonly Message[],
-): { providerId: string; ref?: string } | 'unknown' | undefined {
+async function pinOf(
+  thread: Stored<Thread>,
+): Promise<{ providerId: string; ref?: string } | 'unknown' | undefined> {
   if (thread.providerId) return { providerId: thread.providerId, ref: thread.providerRef };
-  return stored.some((m) => m.role === 'assistant' && m.stage === 'cloud') ? 'unknown' : undefined;
+  // Deleted answers count too: "Neu generieren" or editing must not turn an older chat into a new one.
+  const cloudBefore = await messageRepo.table
+    .where('threadId')
+    .equals(thread.id)
+    .filter((m: Message) => m.role === 'assistant' && m.stage === 'cloud')
+    .count();
+  return cloudBefore > 0 ? 'unknown' : undefined;
 }
 
 /** "Anderen Anbieter wählen": the user moves the chat (with its history) to another provider. */

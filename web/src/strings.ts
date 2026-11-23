@@ -7675,18 +7675,22 @@ export const de = {
     provider: {
       paused: (name?: string) =>
         `${name ?? 'Der Anbieter dieses Chats'} ist gerade nicht erreichbar. Der Chat wechselt nicht von selbst zu einem anderen.`,
+      limit: (name?: string) =>
+        `Dein Limit für ${name ?? 'den Anbieter dieses Chats'} ist erreicht. Der Chat wechselt nicht von selbst zu einem anderen.`,
       missing: (name?: string) =>
         name
-          ? `${name} ist auf diesem Gerät nicht eingerichtet. Wähle selbst, an welchen Anbieter dieser Chat gehen soll.`
-          : 'Für diesen Chat ist noch kein Anbieter festgelegt. Wähle selbst, an welchen er gehen soll.',
+          ? `${name} ist auf diesem Gerät nicht oder anders eingerichtet. Wähle selbst, an welchen Anbieter dieser Chat gehen soll.`
+          : 'Bei diesem älteren Chat ist nicht gespeichert, welcher Anbieter ihn hat. Wähle einmal, wohin er gehen soll.',
+      pick: 'Anbieter wählen',
+      pickTitle: 'Anbieter für diesen Chat wählen',
+      openSettings: 'KI-Anbieter einrichten',
       choose: 'Anderen Anbieter wählen',
       chooseTitle: 'Anbieter für diesen Chat wechseln',
       chooseBody:
         'Der ganze Verlauf dieses Chats geht dann an den gewählten Anbieter, auch Daten, die du angehängt hast. Danach bleibt der Chat dort.',
       chooseField: 'Anbieter',
       mayTrain: (name: string) => `${name} (kann Eingaben zum Training nutzen)`,
-      chooseNone:
-        'Es ist kein anderer Anbieter eingerichtet. Unter Einstellungen → KI kannst du einen hinzufügen.',
+      chooseNone: 'Es ist kein anderer Anbieter eingerichtet.',
       chooseConfirm: 'Wechseln und senden',
     },
     engine: 'Antwortet mit',

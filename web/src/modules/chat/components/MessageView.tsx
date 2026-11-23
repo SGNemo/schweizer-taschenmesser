@@ -73,17 +73,25 @@ export function MessageView({
       <div className={styles.msgHead}>
         <strong>{user ? c.you : c.assistant}</strong>
         {!user && message.stage ? (
-          <Badge tone="neutral">
-            {message.stage === 'local'
-              ? c.stageLocal
-              : message.providerLabel
-                ? c.stageCloudBy(
-                    message.providerLabel.length > 24
-                      ? `${message.providerLabel.slice(0, 23)}…`
-                      : message.providerLabel,
-                  )
-                : c.stageCloud}
-          </Badge>
+          <span
+            title={
+              message.stage === 'cloud' && message.providerLabel
+                ? c.stageCloudBy(message.providerLabel)
+                : undefined
+            }
+          >
+            <Badge tone="neutral">
+              {message.stage === 'local'
+                ? c.stageLocal
+                : message.providerLabel
+                  ? c.stageCloudBy(
+                      message.providerLabel.length > 24
+                        ? `${message.providerLabel.slice(0, 23)}…`
+                        : message.providerLabel,
+                    )
+                  : c.stageCloud}
+            </Badge>
+          </span>
         ) : null}
         {user && message.context ? <Badge tone="neutral">{c.context.attached}</Badge> : null}
         <span className={styles.msgActions}>

@@ -27,17 +27,22 @@ export const chat: Strings['chat'] = {
   provider: {
     paused: (name?: string) =>
       `${name ?? 'This chat’s provider'} can’t be reached right now. The chat won’t switch to another one by itself.`,
+    limit: (name?: string) =>
+      `Your limit for ${name ?? 'this chat’s provider'} has been reached. The chat won’t switch to another one by itself.`,
     missing: (name?: string) =>
       name
-        ? `${name} isn’t set up on this device. Choose yourself which provider this chat should go to.`
-        : 'No provider is set for this chat yet. Choose yourself which one it should go to.',
+        ? `${name} isn’t set up on this device, or is set up differently. Choose yourself which provider this chat should go to.`
+        : 'This older chat doesn’t record which provider has it. Choose once where it should go.',
+    pick: 'Choose a provider',
+    pickTitle: 'Choose a provider for this chat',
+    openSettings: 'Set up AI provider',
     choose: 'Choose another provider',
     chooseTitle: 'Change the provider for this chat',
     chooseBody:
       'The whole history of this chat then goes to the chosen provider, including data you attached. The chat stays there afterwards.',
     chooseField: 'Provider',
     mayTrain: (name: string) => `${name} (may use inputs for training)`,
-    chooseNone: 'No other provider is set up. You can add one under Settings → AI.',
+    chooseNone: 'No other provider is set up.',
     chooseConfirm: 'Switch and send',
   },
   engine: 'Answers with',

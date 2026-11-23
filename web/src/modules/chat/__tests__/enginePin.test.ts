@@ -11,7 +11,7 @@ import {
   type CompletionRequest,
   type CompletionResult,
 } from '@/core/ai/providers/types';
-import { addQuestion, chooseProvider, generateReply, messagesOf } from '../engine';
+import { addQuestion, chooseProvider, dropLastAnswer, generateReply, messagesOf } from '../engine';
 import { messageRepo, threadRepo } from '../repo';
 import type { Thread } from '../schema';
 
@@ -128,6 +128,25 @@ describe('chat engine: provider pin', () => {
       stage: 'cloud',
     });
     await addQuestion(thread.id, 'Neu');
+    const p = provider();
+    expect(await generateReply(thread.id, { provider: p })).toMatchObject({
+      ok: false,
+      error: 'provider-paused',
+      detail: 'not-set-up',
+    });
+    expect(p.seen).toHaveLength(0);
+  });
+
+  it('an older chat stays "older" after its only cloud answer was regenerated away', async () => {
+    const thread = await threadRepo.create(base);
+    await addQuestion(thread.id, 'Alt', 'Daten');
+    await messageRepo.create({
+      threadId: thread.id,
+      role: 'assistant',
+      content: 'A',
+      stage: 'cloud',
+    });
+    await dropLastAnswer(thread.id);
     const p = provider();
     expect(await generateReply(thread.id, { provider: p })).toMatchObject({
       ok: false,

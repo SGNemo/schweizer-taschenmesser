@@ -111,9 +111,11 @@ describe('router: a pinned chat stays with its provider', () => {
       outcome: 'ok',
     });
     const limited = route([member(a, { limits: { requestsPerDay: 1 } }), member(b)]);
-    expect(await codeOf(limited.complete({ ...CHAT, pin: { providerId: 'a' } }))).toBe(
-      'provider-paused',
+    const overLimit = await limited.complete({ ...CHAT, pin: { providerId: 'a' } }).then(
+      () => new AiError('invalid-response', 'expected an error'),
+      (x: unknown) => x as AiError,
     );
+    expect(overLimit).toMatchObject({ code: 'provider-paused', message: 'limit' });
     expect(await codeOf(route([member(b)]).complete({ ...CHAT, pin: { providerId: 'a' } }))).toBe(
       'provider-paused',
     );

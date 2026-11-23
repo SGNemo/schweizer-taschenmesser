@@ -369,7 +369,8 @@ export async function routerEntries(
  */
 export function providerRef(entry: Pick<ProviderEntry, 'preset' | 'kind' | 'baseUrl'>): string {
   let h = 0x811c9dc5;
-  for (const ch of `${entry.preset}|${entry.kind}|${entry.baseUrl.trim()}`) {
+  const address = entry.baseUrl.trim().toLowerCase().replace(/\/+$/, '');
+  for (const ch of `${entry.preset}|${entry.kind}|${address}`) {
     h ^= ch.codePointAt(0)!;
     h = Math.imul(h, 0x01000193) >>> 0;
   }

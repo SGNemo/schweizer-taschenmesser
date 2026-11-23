@@ -140,7 +140,7 @@ export function createRouter(opts: RouterOptions): AiProvider {
           (requestsPerDay !== undefined && requestsToday >= requestsPerDay) ||
           (costUsdPerMonth !== undefined && costMonthUsd >= costUsdPerMonth)
         ) {
-          if (pin !== undefined) throw new AiError('provider-paused', 'paused', { attempts });
+          if (pin !== undefined) throw new AiError('provider-paused', 'limit', { attempts });
           skippedForLimit += 1;
           continue;
         }

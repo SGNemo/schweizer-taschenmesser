@@ -145,8 +145,8 @@ describe('chat: an older chat without a pin', () => {
     expect(alert).toHaveTextContent(c.provider.missing());
     expect(within(alert).queryByRole('button', { name: c.retry })).toBeNull();
     expect(seen).toHaveLength(0);
-    await user.click(within(alert).getByRole('button', { name: c.provider.choose }));
-    const dialog = await screen.findByRole('dialog', { name: c.provider.chooseTitle });
+    await user.click(within(alert).getByRole('button', { name: c.provider.pick }));
+    const dialog = await screen.findByRole('dialog', { name: c.provider.pickTitle });
     // Both configured providers are offered; the one that may train on inputs says so.
     expect(
       within(dialog)

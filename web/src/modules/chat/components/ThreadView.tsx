@@ -115,7 +115,10 @@ export function ThreadView({ threadId, onBack }: { threadId: string; onBack: () 
     thread.engine === 'router' &&
     !['ai-off', 'no-engine', 'local-unavailable', 'no-thread', 'aborted'].includes(error.code) &&
     (!!thread.providerId || error.code === 'provider-paused');
-  const notSetUp = error?.code === 'provider-paused' && error.detail === 'not-set-up';
+  const paused = error?.code === 'provider-paused' ? error.detail : undefined;
+  // Retrying cannot help while the provider is missing or the user's own limit holds.
+  const canRetry = paused !== 'not-set-up' && paused !== 'limit';
+  const choose = thread.providerId ? c.provider.choose : c.provider.pick;
 
   /** Only providers the router would really use (usable, key present), minus the current one. */
   async function openChooser() {
@@ -225,11 +228,13 @@ export function ThreadView({ threadId, onBack }: { threadId: string; onBack: () 
         {error ? (
           <div className={styles.error} role="alert" data-testid="chat-error">
             <span>
-              {notSetUp
+              {paused === 'not-set-up'
                 ? c.provider.missing(providerName)
-                : error.code === 'provider-paused'
-                  ? c.provider.paused(providerName)
-                  : (c.errors[error.code] ?? c.errors.fallback)}
+                : paused === 'limit'
+                  ? c.provider.limit(providerName)
+                  : paused !== undefined
+                    ? c.provider.paused(providerName)
+                    : (c.errors[error.code] ?? c.errors.fallback)}
             </span>
             {fromProvider ? (
               <Button
@@ -237,10 +242,10 @@ export function ThreadView({ threadId, onBack }: { threadId: string; onBack: () 
                 onClick={() => void openChooser()}
                 data-testid="chat-choose-provider"
               >
-                {c.provider.choose}
+                {choose}
               </Button>
             ) : null}
-            {notSetUp ? null : <Button onClick={() => void reply()}>{c.retry}</Button>}
+            {canRetry ? <Button onClick={() => void reply()}>{c.retry}</Button> : null}
           </div>
         ) : null}
         {awaitingReply && !error ? <Button onClick={() => void reply()}>{c.retry}</Button> : null}
@@ -350,6 +355,8 @@ export function ThreadView({ threadId, onBack }: { threadId: string; onBack: () 
       {choosing ? (
         <ChooseProvider
           options={choosing}
+          title={thread.providerId ? c.provider.chooseTitle : c.provider.pickTitle}
+          onOpenSettings={() => void navigate(settingsPath('ki', 'ai'))}
           onClose={() => setChoosing(undefined)}
           onChoose={(picked) => {
             setChoosing(undefined);
@@ -397,10 +404,14 @@ interface ProviderOption {
 /** "Anderen Anbieter wählen": only an explicit choice moves a chat (and its history) elsewhere. */
 function ChooseProvider({
   options,
+  title,
+  onOpenSettings,
   onClose,
   onChoose,
 }: {
   options: ProviderOption[];
+  title: string;
+  onOpenSettings: () => void;
   onClose: () => void;
   onChoose: (picked: ProviderOption) => void;
 }) {
@@ -410,10 +421,15 @@ function ChooseProvider({
     <Dialog
       open
       onClose={onClose}
-      title={c.provider.chooseTitle}
+      title={title}
       footer={
         <>
           <Button onClick={onClose}>{c.cancel}</Button>
+          {options.length === 0 ? (
+            <Button variant="primary" onClick={onOpenSettings}>
+              {c.provider.openSettings}
+            </Button>
+          ) : null}
           {choice ? (
             <Button
               variant="primary"

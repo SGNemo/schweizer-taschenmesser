@@ -96,8 +96,8 @@ export type AiErrorCode =
   /** Several providers were tried; none produced an answer. */
   | 'exhausted'
   /**
-   * A chat stays with its provider, and that one is paused or over its limit (message `paused`) or not
-   * set up here (message `not-set-up`).
+   * A chat stays with its provider, and that one is paused (message `paused`), over the user's own
+   * limit (`limit`) or not set up here as it was (`not-set-up`).
    */
   | 'provider-paused';
 
