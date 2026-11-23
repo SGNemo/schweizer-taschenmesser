@@ -1,6 +1,6 @@
 # Use case „Tag kippt“ – analysis (phase 1)
 
-Branch `design/usecase-tag-kippt`, 2026-11-23. Measured on `develop` b62a48e2 (planner rethink packages 1–7 and the look of direction A merged). Target picture: [TARGET](TARGET.md); packages that stay: [PACKAGES](PACKAGES.md). Rules: [FOCUS-GUIDELINES](../../FOCUS-GUIDELINES.md), [FOCUS-WORDING](../../FOCUS-WORDING.md), [decisions/plan-rethink](../../../decisions/plan-rethink.md).
+Branch `design/usecase-tag-kippt`, 2026-11-23. Measured on `develop` b62a48e2 (planner rethink packages 1–7 and the look of direction A merged). Target picture: [TARGET](TARGET.md). All packages are built (P1–P4, 2026-11-23); their prompts were removed and live in the git history. Rules: [FOCUS-GUIDELINES](../../FOCUS-GUIDELINES.md), [FOCUS-WORDING](../../FOCUS-WORDING.md), [decisions/plan-rethink](../../../decisions/plan-rethink.md).
 
 ## 0. The case (neutral, invented things)
 
@@ -45,21 +45,21 @@ Raw table: `web/test-results/usecase-tag-kippt.md` after a run.
 
 ## 3. Friction
 
-| Id  | Where                 | What                                                                                                               | Weight |
-| --- | --------------------- | ------------------------------------------------------------------------------------------------------------------ | ------ |
-| K01 | day sheet             | the rest can only go to a day – „diese Woche, ohne Tag“ and „nächste Wochen“ are no targets                        | high   |
-| K02 | day sheet             | selecting means selecting what **goes**; he thinks in what **stays** – one untick per keeper                       | medium |
-| K03 | planner               | no step to „Irgendwann“: 9 things = 18 handles in another module (T2)                                              | high   |
-| K04 | planner               | „nächste Wochen“ is invisible from the planner afterwards; findable only in ToDos                                  | medium |
-| K05 | row                   | no „kleiner machen“: first step today, rest later = rename + new ToDo by hand                                      | medium |
-| K06 | sheet after shrinking | the list stays the view; no single starting point                                                                  | medium |
-| K07 | plan from outside     | text with day headings has no door at all                                                                          | high   |
-| K08 | plan from outside     | JSON door is in ToDos (5 handles away), lands as muted rows, one tap each                                          | medium |
-| K09 | plan from outside     | pasting a changed plan duplicates every changed thing (11, then 12); a swap never arrives                          | high   |
-| K10 | plan from outside     | nothing tells what is missing from the new plan                                                                    | low    |
-| K11 | selection             | the row's checkbox is named only „Auswählen“ (the title is a button): a screen reader does not hear which thing    | low    |
-| K12 | Monday                | fine: tab, calm line, „Alle auf heute“ (2 handles); 8 rows today afterwards – the list again                       | low    |
-| K13 | ToDos board           | a card's ⋯ menu can sit under the next card (it takes the pointer); the measuring script presses the item directly | low    |
+| Id  | Where                 | What                                                                                                                                                                                                                                               | Weight |
+| --- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| K01 | day sheet             | the rest can only go to a day – „diese Woche, ohne Tag“ and „nächste Wochen“ are no targets                                                                                                                                                        | high   |
+| K02 | day sheet             | selecting means selecting what **goes**; he thinks in what **stays** – one untick per keeper                                                                                                                                                       | medium |
+| K03 | planner               | no step to „Irgendwann“: 9 things = 18 handles in another module (T2)                                                                                                                                                                              | high   |
+| K04 | planner               | „nächste Wochen“ is invisible from the planner afterwards; findable only in ToDos                                                                                                                                                                  | medium |
+| K05 | row                   | no „kleiner machen“: first step today, rest later = rename + new ToDo by hand                                                                                                                                                                      | medium |
+| K06 | sheet after shrinking | the list stays the view; no single starting point                                                                                                                                                                                                  | medium |
+| K07 | plan from outside     | text with day headings has no door at all                                                                                                                                                                                                          | high   |
+| K08 | plan from outside     | JSON door is in ToDos (5 handles away), lands as muted rows, one tap each                                                                                                                                                                          | medium |
+| K09 | plan from outside     | pasting a changed plan duplicates every changed thing (11, then 12); a swap never arrives                                                                                                                                                          | high   |
+| K10 | plan from outside     | nothing tells what is missing from the new plan                                                                                                                                                                                                    | low    |
+| K11 | selection             | the row's checkbox is named only „Auswählen“ (the title is a button): a screen reader does not hear which thing                                                                                                                                    | low    |
+| K12 | Monday                | fine: tab, calm line, „Alle auf heute“ (2 handles); 8 rows today afterwards – the list again                                                                                                                                                       | low    |
+| K13 | ToDos board           | once, a card's ⋯ menu seemed to sit under the next card during the measurement; not reproducible in isolation (12 cards, 9 moves in a row: 0 interceptions, the menu is on top) – most likely a reflow while the planner rewrote rows. Closed (P4) | low    |
 
 ## 4. Critique of today's planner in this case (`design:design-critique`)
 

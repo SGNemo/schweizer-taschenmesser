@@ -1,6 +1,6 @@
 # Use case „Tag kippt“ – target picture (phase 2)
 
-Branch `design/usecase-tag-kippt`, 2026-11-23. Analysis and friction `K01…K12`: [ANALYSIS](ANALYSIS.md). Packages left: [PACKAGES](PACKAGES.md). The seven guiding sentences of the brief hold; the planner's rules stay ([CONCEPT-MIGRATION §7](../../planner-rethink/CONCEPT-MIGRATION.md): nothing moves without an action that names it, nothing written by midnight or sync, every action one undo, a closed preview changed nothing).
+Branch `design/usecase-tag-kippt`, 2026-11-23. Analysis and friction `K01…K13`: [ANALYSIS](ANALYSIS.md). Built: §2–§3 and the packages P1–P4 (2026-11-23; decisions in [plan-tag-kippt](../../../decisions/plan-tag-kippt.md)). The seven guiding sentences of the brief hold; the planner's rules stay ([CONCEPT-MIGRATION §7](../../planner-rethink/CONCEPT-MIGRATION.md): nothing moves without an action that names it, nothing written by midnight or sync, every action one undo, a closed preview changed nothing).
 
 ## 1. Target figures (`TARGET` in the measuring script)
 

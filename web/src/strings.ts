@@ -9682,6 +9682,7 @@ export const de = {
       menu: 'Nur das hier …',
       hint: 'Tipp an, was heute bleibt.',
       all: 'Alles bleibt heute.',
+      fromSentence: 'Angehakt, was bleibt. Mit „Nur das hier“ wählst du, wohin der Rest geht.',
       apply: 'Nur das hier',
       title: (n: number) => (n === 1 ? 'Der Rest: 1 Ding' : `Der Rest: ${n} Dinge`),
       line: 'Nichts davon ist weg. Du entscheidest, wohin.',
