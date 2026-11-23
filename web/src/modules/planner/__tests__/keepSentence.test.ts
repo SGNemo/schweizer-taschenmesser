@@ -10,6 +10,8 @@ const rows = [
   { unitId: 'f#0', itemKey: 'f', title: 'Steuer' },
   { unitId: 'f#1', itemKey: 'f', title: 'Steuer' },
   { unitId: 'g#0', itemKey: 'g', title: 'Pfandflaschen zählen' },
+  { unitId: 'h#0', itemKey: 'h', title: 'Frühstück machen' },
+  { unitId: 'i#0', itemKey: 'i', title: 'E-Mails beantworten' },
 ];
 
 describe('readKeepSentence (P4)', () => {
@@ -20,6 +22,13 @@ describe('readKeepSentence (P4)', () => {
     });
     expect(readKeepSentence('nur noch Küche', rows)).toEqual({ unitIds: ['b#0'], today: false });
     expect(readKeepSentence('nur Steuer', rows)?.unitIds).toEqual(['f#0']);
+    // A first name with an umlaut is no day word („Frühstück“ ≠ „Fr“); a hyphenated name finds its title.
+    expect(readKeepSentence('heute nur Frühstück, Wäsche und Küche', rows)?.unitIds).toEqual([
+      'h#0',
+      'a#0',
+      'b#0',
+    ]);
+    expect(readKeepSentence('nur E-Mails', rows)?.unitIds).toEqual(['i#0']);
     // A title with „und“ in it, named whole.
     expect(readKeepSentence('heute nur Brot und Butter kaufen', rows)?.unitIds).toEqual(['e#0']);
   });

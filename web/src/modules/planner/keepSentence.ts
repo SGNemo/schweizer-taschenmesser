@@ -7,7 +7,7 @@ import { sameTitle } from './pastePlan';
 const SENTENCE = /^(heute\s+)?nur\s+(?:noch\s+)?(.+?)(\s+heute)?[.!]?$/i;
 /** What the field's own rules read („nur Donnerstag frei“, „heute nur 2 Stunden“): never taken over here. */
 const OTHER =
-  /^(?:\d|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|mo|di|mi|do|fr|sa|so|morgen|übermorgen)\b/i;
+  /^(?:\d|(?:montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|mo|di|mi|do|fr|sa|so|morgen|übermorgen)(?![\p{L}\p{N}-]))/iu;
 
 export interface KeepSentence {
   /** One unit per named thing (a thing in parts is named once). */
@@ -30,12 +30,13 @@ export function readKeepSentence(
   const today = !!(m[1] || m[3]);
   const find = (name: string) => {
     const exact = rows.filter((r) => sameTitle(r.title) === name);
+    // Title and name split the same way, so „E-Mails“ finds „E-Mails beantworten“ by its word start.
+    const words = (s: string) => s.split(/[\s,/-]+/).filter(Boolean);
+    const said = words(name).join(' ');
     const hits = exact.length
       ? exact
       : rows.filter((r) =>
-          sameTitle(r.title)
-            .split(/[\s,/-]+/)
-            .some((_, i, words) => words.slice(i).join(' ').startsWith(name)),
+          words(sameTitle(r.title)).some((_, i, w) => w.slice(i).join(' ').startsWith(said)),
         );
     // One unit per thing: its first part on the day.
     const things = hits.filter((r, i) => hits.findIndex((x) => x.itemKey === r.itemKey) === i);

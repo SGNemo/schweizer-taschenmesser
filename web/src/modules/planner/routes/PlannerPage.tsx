@@ -1250,6 +1250,7 @@ export default function PlannerPage() {
               setDayChosen(new Set());
               setKeeping(false);
               setDayPicking(shownDay.date);
+              if (sayLine === t.planner.keep.fromSentence) setSayLine(undefined);
             },
           },
           // „Nur das hier …“ (use case „Tag kippt“): tick what stays, the rest goes in one move.
@@ -1260,6 +1261,7 @@ export default function PlannerPage() {
               setDayChosen(new Set());
               setKeeping(true);
               setDayPicking(shownDay.date);
+              if (sayLine === t.planner.keep.fromSentence) setSayLine(undefined);
             },
           },
         ]
