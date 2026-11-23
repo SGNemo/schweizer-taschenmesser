@@ -65,7 +65,7 @@ export function useMailbox(
     const set = (patch: Partial<Loaded>) =>
       alive && setState((old) => ({ ...(old.req === req ? old : fresh(req)), ...patch }));
     void (async () => {
-      const cached = q ? [] : await loadThreads(account.key, { labelId });
+      const cached = q ? [] : await loadThreads(account.key, { labelId, limit: 200 });
       set({ threads: cached });
       if (account.key === DEMO_ACCOUNT) return set({ loading: false });
       try {

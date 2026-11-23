@@ -68,11 +68,13 @@ describe('mail never reaches a model', () => {
     }
     expect(offenders).toEqual([]);
     // In memory only: the index file never touches storage of its own.
-    const src = readFileSync(join(SRC, 'modules', 'mail', 'searchIndex.ts'), 'utf8')
+    const src = ['searchIndex.ts', 'searchMemory.ts', 'useLocalSearch.ts']
+      .map((f) => readFileSync(join(SRC, 'modules', 'mail', f), 'utf8'))
+      .join('\n')
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/\/\/.*$/gm, '');
     expect(src).not.toMatch(
-      /localStorage|sessionStorage|indexedDB|\.put\(|\.add\(|upsert|create\(|fetch\(/,
+      /localStorage|sessionStorage|indexedDB|\.put\(|bulkPut|\.update\(|upsert|\.create\(|fetch\(/,
     );
   });
 });

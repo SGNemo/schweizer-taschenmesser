@@ -40,7 +40,7 @@ Same numbers at 1920 and 412 px (the list is the same list; at 412 only three ro
 
 | # | Package | Answers |
 |---|---|---|
-| 1 | **Search on this device + at the mailbox:** one field; a local index over the cached headers and opened mails (sender, subject, preview, text, attachment names), typo-tolerant for names, hits highlighted as text (never HTML), shown first as „Auf diesem Gerät“, Gmail's answer below as „Im Postfach“ (without the doubles); offline the local part still works. Chip „Diese Woche“; plain hint text. Gmail's `hasAttachment` read from the message type; attachment names kept in the sealed header when a mail is opened; cache 200 → 1 000 headers. | A, B, C |
+| 1 | **Search on this device + at the mailbox:** one field; a local index over the cached headers and opened mails (sender, subject, preview, text, attachment names), typo-tolerant for names, hits highlighted as text (never HTML), shown first as „Auf diesem Gerät“, Gmail's answer below as „Im Postfach“ (without the doubles); offline the local part still works. Chip „Diese Woche“; plain hint text. Gmail's `hasAttachment` read from the message type; attachment names from opened mails (the newest 60 kept); cache 200 → 1 000 headers. | A, B, C |
 | 2 | **Kinds and „Wartet auf mich“:** one chip row „Alle · Braucht Antwort · Rechnungen · Newsletter · Rest“ from local rules (no AI) replaces „Persönlich“; queue „Wartet auf mich“ (default: to me, newest message not mine, no newsletter, last 30 days; or „markiert“) with a calm count and a view that goes mail by mail (Erledigt, Später, In den Plan); a small read contract for the planner (title, count, target). | D, E |
 | 3 | Small things from the measurement if 1–2 leave a gap (412 px head). | – |
 
@@ -56,4 +56,4 @@ Same numbers at 1920 and 412 px (the list is the same list; at 412 only three ro
 | D waits for my answer | 1 | 0 | 29 | 0 | open (package 2, target ≤ 14) |
 | E new and important this week | 0 | 0 | 15 | 0 | open (package 2, target ≤ 7) |
 
-Same at 1920 and 412 px; axe (WCAG 2.2 AA) finds nothing on the search with both parts at either width. Index: 5 000 mails built in ≈ 0,2 s, a warm search ≈ 50 ms (unit test, jsdom). Still open from the critique: the 412 px head (package 3).
+Same at 1920 and 412 px; axe (WCAG 2.2 AA) finds nothing on the search with both parts at either width. Index: 5 000 mails (5× the cache) built in ≈ 0,2 s, a warm search ≈ 50 ms (unit test, jsdom). The device part shows 50 hits, more on request. Still open from the critique: the 412 px head (package 3).

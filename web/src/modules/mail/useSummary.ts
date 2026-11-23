@@ -34,6 +34,9 @@ export interface MailSummary {
   recent: CachedThreadView[];
 }
 
+/** The head and the widget read the newest 200 cached headers (the cache keeps more for the search). */
+const SUMMARY_LIMIT = 200;
+
 /** Live data for the inbox widget and the head: reads the local cache only (plus a throttled inbox refresh). */
 export function useMailSummary(): MailSummary | undefined {
   useEffect(() => {
@@ -43,7 +46,9 @@ export function useMailSummary(): MailSummary | undefined {
     const keys = new Set((await threadRepo.active().toArray()).map((r) => r.accountKey));
     const real = [...keys].filter((k) => k !== DEMO_ACCOUNT);
     const accounts = real.length > 0 ? real : keys.has(DEMO_ACCOUNT) ? [DEMO_ACCOUNT] : [];
-    const all = (await Promise.all(accounts.map((a) => loadThreads(a)))).flat();
+    const all = (
+      await Promise.all(accounts.map((a) => loadThreads(a, { limit: SUMMARY_LIMIT })))
+    ).flat();
     const inbox = all.filter((t) => t.labelIds.includes('INBOX'));
     const unread = inbox.filter((t) => t.unread);
     const top = [...unread].sort(

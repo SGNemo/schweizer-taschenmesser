@@ -96,6 +96,8 @@ interface ListSection {
   detail?: string;
   threads: CachedThreadView[];
   note?: string;
+  /** More hits than shown: a quiet button shows the next ones. */
+  more?: { count: number; onShow: () => void };
 }
 
 function ThreadList({
@@ -250,13 +252,19 @@ function ThreadList({
           detail: sec.detail,
           children: (
             <>
-              {/* A status line: a screen reader hears „nothing more“ or „not reachable“ when the part settles. */}
-              {sec.note ? (
-                <p className={styles.sectionNote} role="status">
-                  {sec.note}
-                </p>
-              ) : null}
+              {/* A status line that stays mounted (a live region must exist before its text changes): a screen
+                  reader hears „nothing more“ or „not reachable“ when the part settles. */}
+              <p className={sec.note ? styles.sectionNote : 'sr-only'} role="status">
+                {sec.note ?? ''}
+              </p>
               {sec.threads.length > 0 ? rowsOf(sec.threads) : null}
+              {sec.more ? (
+                <div className={styles.row}>
+                  <Button variant="ghost" onClick={sec.more.onShow}>
+                    {t.mail.find.onDeviceMore(sec.more.count)}
+                  </Button>
+                </div>
+              ) : null}
             </>
           ),
         }))}
@@ -292,6 +300,8 @@ function AnsweredLine({ title, onDone }: { title: string; onDone: () => void }) 
 
 /** Page width (rem) from which folders, list and reading pane stand side by side: 12 + 20 + 24 rem and two gaps. */
 const MAIL_COLUMNS_REM = 58;
+/** Hits of the device part shown at once, and added per „weitere zeigen“. */
+const DEVICE_PAGE = 50;
 
 export default function MailPage() {
   const [params, setParams] = useSearchParams();
@@ -349,16 +359,18 @@ export default function MailPage() {
   const searching = query.trim() !== '';
   const local = useLocalSearch(account?.key, query, box.tick);
   const localIds = useMemo(() => new Set(local?.hits.map((h) => h.thread.id)), [local]);
-  const listed = useMemo(
-    () =>
-      searching
-        ? [
-            ...(local?.hits.map((h) => h.thread) ?? []),
-            ...box.threads.filter((th) => !localIds.has(th.id)),
-          ]
-        : box.threads,
-    [searching, local, localIds, box.threads],
-  );
+  const listed = useMemo(() => {
+    if (!searching) return box.threads;
+    // A thread both parts know shows the mailbox's fresh copy (labels, unread) in the device part.
+    const fresh = new Map(box.threads.map((th) => [th.id, th]));
+    return [
+      ...(local?.hits.map((h) => fresh.get(h.thread.id) ?? h.thread) ?? []),
+      ...box.threads.filter((th) => !localIds.has(th.id)),
+    ];
+  }, [searching, local, localIds, box.threads]);
+  // The device part shows 50 hits at first (a broad word can match hundreds); „N weitere zeigen“ adds more.
+  const [deviceLimit, setDeviceLimit] = useState({ q: query, n: DEVICE_PAGE });
+  if (deviceLimit.q !== query) setDeviceLimit({ q: query, n: DEVICE_PAGE });
   const hitLines = useMemo(() => {
     const m = new Map<string, HitLine>();
     for (const h of local?.hits ?? []) if (h.line) m.set(h.thread.id, h.line);
@@ -384,9 +396,15 @@ export default function MailPage() {
   const localAi = (prefs as { localAi?: boolean } | undefined)?.localAi ?? false;
   const offerPersonal = (prefs as { offerPersonal?: boolean } | undefined)?.offerPersonal ?? true;
   const offerPlanAll = (prefs as { offerPlanAll?: boolean } | undefined)?.offerPlanAll ?? true;
-  const shown =
+  const shown = useMemo(() => {
+    // „Persönlich“ shapes the inbox, not a search: a search looks at every mail (an invoice is not from a person).
     // Headers cached before the flag existed (`personal` unknown) stay in until the next fetch.
-    personalOnly && offerPersonal ? listed.filter((th) => th.personal !== false) : listed;
+    if (searching) {
+      const here = listed.filter((th) => localIds.has(th.id)).slice(0, deviceLimit.n);
+      return [...here, ...listed.filter((th) => !localIds.has(th.id))];
+    }
+    return personalOnly && offerPersonal ? listed.filter((th) => th.personal !== false) : listed;
+  }, [searching, listed, localIds, deviceLimit.n, personalOnly, offerPersonal]);
   const offerInvoices = (prefs as { offerInvoices?: boolean } | undefined)?.offerInvoices ?? true;
   const invoices = useInvoiceOffers(shown, offerInvoices) ?? NO_OFFERS;
   // Select mode (manage permission): checkboxes on the rows and the batch bar. A new folder, search or
@@ -666,10 +684,17 @@ export default function MailPage() {
           ? t.mail.find.onDeviceDetail(local.searched)
           : undefined,
       threads: here,
+      more:
+        local && local.hits.length > here.length
+          ? {
+              count: Math.min(DEVICE_PAGE, local.hits.length - here.length),
+              onShow: () => setDeviceLimit({ q: query, n: deviceLimit.n + DEVICE_PAGE }),
+            }
+          : undefined,
       note: !local
-        ? undefined
+        ? t.mail.find.onDeviceSearching
         : local.unsupported.length > 0
-          ? t.mail.find.onDeviceOnly
+          ? t.mail.find.onDeviceOnly(local.unsupported[0]!)
           : here.length === 0
             ? demo
               ? t.mail.find.onDeviceNoneDemo
@@ -680,7 +705,6 @@ export default function MailPage() {
     const mailbox: ListSection = {
       id: 'mailbox',
       label: t.mail.find.inMailbox,
-      detail: t.mail.find.inMailboxDetail,
       threads: there,
       note:
         box.error === 'network'
@@ -823,7 +847,7 @@ export default function MailPage() {
 
       {(offerPersonal || (offerPlanAll && onPlan) || canModify) && box.threads.length > 0 ? (
         <div className={styles.row} ref={selectRow}>
-          {offerPersonal ? (
+          {offerPersonal && !searching ? (
             <Chips>
               <Chip
                 label={t.mail.plan.personal}

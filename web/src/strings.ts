@@ -8583,12 +8583,15 @@ export const de = {
       forget: (q: string) => `Gemerkte Suche „${q}“ entfernen`,
       onDevice: 'Auf diesem Gerät',
       onDeviceDetail: (n: number) =>
-        n === 1 ? '1 gespeicherte Mail durchsucht' : `${n} gespeicherte Mails durchsucht`,
+        n === 1
+          ? '1 gespeicherte Mail durchsucht'
+          : `${formatNumber(n)} gespeicherte Mails durchsucht`,
+      onDeviceSearching: 'Wird durchsucht …',
+      onDeviceMore: (n: number) => `${formatNumber(n)} weitere zeigen`,
       onDeviceNone: 'Auf diesem Gerät liegt nichts dazu.',
       onDeviceNoneDemo: 'Nichts dazu gefunden. Probier ein anderes Wort oder einen Teil davon.',
-      onDeviceOnly: 'Diese Suche kann nur das Postfach beantworten (zum Beispiel to: oder size:).',
+      onDeviceOnly: (part: string) => `„${part}“ kann nur das Postfach beantworten.`,
       inMailbox: 'Im Postfach',
-      inMailboxDetail: 'ohne die Treffer von oben',
       inMailboxLoading: 'Im Postfach wird gesucht …',
       inMailboxNone: 'Im Postfach ist nichts Weiteres dazu.',
       inMailboxOffline:

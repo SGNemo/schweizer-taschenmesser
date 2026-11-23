@@ -1,3 +1,4 @@
+import { formatNumber } from '@/core/i18n/format';
 import type { Strings } from '@/strings';
 
 export const mail: Strings['mail'] = {
@@ -390,12 +391,13 @@ export const mail: Strings['mail'] = {
     forget: (q: string) => `Remove remembered search “${q}”`,
     onDevice: 'On this device',
     onDeviceDetail: (n: number) =>
-      n === 1 ? '1 saved mail searched' : `${n} saved mails searched`,
+      n === 1 ? '1 saved mail searched' : `${formatNumber(n)} saved mails searched`,
+    onDeviceSearching: 'Searching …',
+    onDeviceMore: (n: number) => `Show ${formatNumber(n)} more`,
     onDeviceNone: 'Nothing about this on this device.',
     onDeviceNoneDemo: 'Nothing found. Try another word or part of one.',
-    onDeviceOnly: 'Only the mailbox can answer this search (for example to: or size:).',
+    onDeviceOnly: (part: string) => `Only the mailbox can answer “${part}”.`,
     inMailbox: 'In the mailbox',
-    inMailboxDetail: 'without the hits above',
     inMailboxLoading: 'Searching the mailbox …',
     inMailboxNone: 'Nothing more about this in the mailbox.',
     inMailboxOffline: 'The mailbox cannot be reached right now. Above is what this device holds.',

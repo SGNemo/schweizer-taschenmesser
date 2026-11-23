@@ -5,8 +5,14 @@ import type { MailMessage, MailThreadSummary } from '@/core/mail/types';
 import { setNow } from '@/core/time/now';
 import { clearMailCache, patchCachedThread, saveBody, saveThreads } from '../cache';
 import { threadRepo, bodyRepo } from '../repo';
-import { highlightParts, parseQuery, searchLocal, withinEdits } from '../searchIndex';
-import { searchMemory } from '../searchMemory';
+import {
+  dropSearchIndex,
+  heldIndexes,
+  highlightParts,
+  parseQuery,
+  searchLocal,
+  withinEdits,
+} from '../searchIndex';
 
 const DAY = 86_400_000;
 const NOW = new Date('2026-11-23T10:00:00').getTime();
@@ -49,7 +55,7 @@ beforeEach(async () => {
   await db.table('mail_thread').clear();
   await db.table('mail_body').clear();
   await db.table('_outbox').clear();
-  searchMemory.clear();
+  dropSearchIndex();
 });
 afterEach(() => {
   setNow(undefined);
@@ -75,6 +81,10 @@ describe('query parsing (the operators the device can answer)', () => {
       { after: new Date(2026, 2, 1).getTime(), before: new Date(2026, 5, 1).getTime() },
     ],
     ['to:anna size:5m -from:x', { unsupported: ['to:anna', 'size:5m', '-from:x'] }],
+    ['rechnung OR mahnung', { words: ['rechnung', 'mahnung'], unsupported: ['OR'] }],
+    ['-newsletter {a b}', { unsupported: ['-newsletter', '{a', 'b}'] }],
+    ['label:Rechnungen', { labels: [], unsupported: ['label:Rechnungen'] }],
+    ['label:starred label:CATEGORY_PROMOTIONS', { labels: ['starred', 'category_promotions'] }],
     ['Müller Straße', { words: ['muller', 'strasse'] }],
   ];
   it.each(cases)('%s', (q, want) => {
@@ -134,6 +144,42 @@ describe('the index on this device', () => {
     expect(text.searched).toBe(2);
   });
 
+  it('a domain is no name: free words look at the name and the address before the @, `from:` at all of it', async () => {
+    await saveThreads('google', [
+      thread('a', 1, { from: { name: 'Anna Beispiel', email: 'anna.b@webmail.example.org' } }),
+    ]);
+    const ids = async (q: string) => (await searchLocal('google', q)).hits.map((h) => h.thread.id);
+    expect(await ids('webmail')).toEqual([]);
+    expect(await ids('webmial')).toEqual([]); // no typo match on a domain either
+    expect(await ids('anna.b')).toEqual(['a']);
+    expect(await ids('from:webmail')).toEqual(['a']);
+    // a name found with a typo is handed back for marking
+    expect((await searchLocal('google', 'Beispeil')).terms).toContain('beispiel');
+  });
+
+  it('reads an HTML-only mail as text (entities decoded) and cuts the excerpt at the right place after „ß“', async () => {
+    await saveThreads('google', [thread('h', 1)]);
+    await saveBody(
+      'google',
+      message('m1', 'h', {
+        text: undefined,
+        html: '<style>.x{}</style><p>Grüße aus der Straße &amp; mehr: Fälligkeit &lt;31.12.&gt; für den Zählerstand</p>',
+      }),
+    );
+    const r = await searchLocal('google', 'zahlerstand');
+    expect(r.hits[0]!.line).toEqual({ kind: 'text', text: expect.stringContaining('Zählerstand') });
+    expect(r.hits[0]!.line!.text).toContain('<31.12.>');
+    expect(r.hits[0]!.line!.text).not.toContain('.x{}');
+  });
+
+  it('a delete while the index is being built leaves nothing in memory', async () => {
+    await saveThreads('google', [thread('a', 1)]);
+    const running = searchLocal('google', 'elternabend');
+    await clearMailCache();
+    await running;
+    expect(heldIndexes()).toBe(0);
+  });
+
   it('answers the filters and keeps newest first', async () => {
     await saveThreads('google', [
       thread('old', 400),
@@ -165,9 +211,9 @@ describe('the index on this device', () => {
     await saveThreads('google', [thread('b', 0, { subject: 'Neu da' })]);
     expect((await searchLocal('google', 'neu')).hits.map((h) => h.thread.id)).toEqual(['b']);
 
-    expect(searchMemory.size).toBe(1);
+    expect(heldIndexes()).toBe(1);
     await clearMailCache();
-    expect(searchMemory.size).toBe(0); // the copy in memory goes with the cache
+    expect(heldIndexes()).toBe(0); // the copy in memory goes with the cache
     expect((await searchLocal('google', 'elternabend')).hits).toEqual([]);
     expect((await searchLocal('google', 'neu')).searched).toBe(0);
   });

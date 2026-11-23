@@ -81,10 +81,10 @@ Besonderheiten der Module, die oben nur eine kurze Zeile haben:
 
 Zeigst du auf die Zeile einer Mail, erscheint der Knopf „In den Plan“ („Als ToDo“ ohne Planer; am Touchscreen: wischen oder ⋯). Er legt ein ToDo „Absender · Betreff“ an, das zurück zur Mail führt, und der Hinweis bietet „Rückgängig“; der Planer bietet dafür „Zur Mail“. Dieselbe Mail ein zweites Mal ergibt keinen zweiten Eintrag („Schon im Plan“); wurde das ToDo gelöscht, bietet der Hinweis „Wieder einplanen“. Der Filter „Persönlich“ zeigt nur Mails von Menschen, und „Alle in den Plan…“ legt die angehakten Mails eines Ordners nach einer Vorschau an; beides lässt sich in den Mail-Einstellungen ausschalten.
 
-
 ## Mails finden (Windows-App)
 
 Ein Suchfeld schaut in Absender, Betreff, Text und Anhangsnamen. Die Treffer **auf diesem Gerät** kommen zuerst und gehen auch ohne Netz (die Mails, die die App schon gelistet oder geöffnet hat; ein kleiner Tippfehler im Namen wird verziehen); darunter zeigt **im Postfach**, was Gmail zusätzlich findet. Gefundene Wörter sind markiert. Chips grenzen ein (ungelesen, mit Anhang, diese Woche, mit Stern, älter als ein Jahr). Suche und Index bleiben auf diesem Gerät: nicht im Sync, nicht im Backup, nie bei einer KI, und „Mail-Cache löschen“ löscht sie mit.
+
 ## Kontoauszug importieren
 
 In **Finanzen** (Einstellungen → Module → Finanzen → Startdaten einrichten → _Kontoauszug importieren_) wählst du die Datei, die du im Online-Banking exportiert hast: **OFX**, **QIF**, **CAMT** oder **CSV**. Es wird nichts hochgeladen und kein Login gebraucht; du siehst erst eine Vorschau und kannst den Import rückgängig machen. Bekannte Banken (Sparkasse, ING, DKB, N26, comdirect, Volksbank/GLS) werden an der Datei erkannt und in der Vorschau genannt („Erkannt: DKB“). Bei einer CSV, die die App nicht kennt, ordnest du die Spalten Datum / Betrag / Empfänger / Verwendungszweck einmal zu; die App merkt es sich für den nächsten Export dieser Art. Eine Datei, die du zweimal importierst, bringt nichts Neues, und eine Datei in einer anderen Währung wird nur auf ein Konto dieser Währung gebucht.
