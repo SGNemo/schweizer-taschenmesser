@@ -1005,26 +1005,29 @@ export default function MailPage() {
       {(offerPersonal || (offerPlanAll && onPlan) || canModify) && box.threads.length > 0 ? (
         <div className={styles.row} ref={selectRow}>
           {offerPersonal && !searching && !inQueue ? (
-            <div role="group" aria-label={t.mail.kind.filters}>
-              <Chips>
-                <Chip
-                  label={t.mail.plan.personal}
-                  selected={personalOnly && !kind}
-                  onClick={() =>
-                    update({ personal: personalOnly ? null : '1', kind: null, thread: null })
-                  }
-                />
+            // One quiet choice instead of a row of chips (stimulus budget): all, from people, invoices, newsletters.
+            <div className={styles.picker}>
+              <SelectField
+                label={t.mail.kind.show}
+                labelHidden
+                value={kind ?? (personalOnly ? 'personal' : 'all')}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  update({
+                    personal: v === 'personal' ? '1' : null,
+                    kind: kindFilterOf(v) ?? null,
+                    thread: null,
+                  });
+                }}
+              >
+                <option value="all">{t.mail.kind.all}</option>
+                <option value="personal">{t.mail.plan.personal}</option>
                 {KIND_FILTERS.map((k) => (
-                  <Chip
-                    key={k}
-                    label={t.mail.kind[k]}
-                    selected={kind === k}
-                    onClick={() =>
-                      update({ kind: kind === k ? null : k, personal: null, thread: null })
-                    }
-                  />
+                  <option key={k} value={k}>
+                    {t.mail.kind[k]}
+                  </option>
                 ))}
-              </Chips>
+              </SelectField>
             </div>
           ) : null}
           {offerPlanAll && onPlan && shown.length > 0 ? (

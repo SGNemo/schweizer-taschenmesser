@@ -8616,7 +8616,8 @@ export const de = {
       inText: 'Im Text',
     },
     kind: {
-      filters: 'Nach Art filtern',
+      show: 'Welche Mails zeigen',
+      all: 'Alle Mails',
       invoice: 'Rechnungen',
       newsletter: 'Newsletter',
       emptyInvoice: 'Unter den geladenen Mails ist gerade keine Rechnung.',

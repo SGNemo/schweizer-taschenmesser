@@ -412,7 +412,8 @@ export const mail: Strings['mail'] = {
     inText: 'In the text',
   },
   kind: {
-    filters: 'Filter by kind',
+    show: 'Which mails to show',
+    all: 'All mail',
     invoice: 'Invoices',
     newsletter: 'Newsletters',
     emptyInvoice: 'No invoice among the loaded mails right now.',

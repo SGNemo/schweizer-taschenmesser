@@ -87,7 +87,7 @@ Ein Suchfeld schaut in Absender, Betreff, Text und Anhangsnamen. Die Treffer **a
 
 ## Wartet auf mich (Windows-App)
 
-Neben den Ordnern zeigt **Wartet auf mich** die Mails, die etwas von dir wollen: an dich, noch ohne Antwort, keine Rechnung und kein Newsletter, aus den letzten 30 Tagen (oder, wenn dir das lieber ist, deine Mails mit Stern – Mail-Einstellungen). **Erledigt** nimmt eine Mail aus der Liste, bis eine neue Nachricht kommt, **Morgen wieder** bis morgen früh; beides lässt sich zurücknehmen und bleibt auf diesem Gerät. **Nacheinander durchgehen** öffnet sie der Reihe nach. Über dem Posteingang stehen die Filter **Rechnungen** und **Newsletter** neben **Persönlich**.
+Neben den Ordnern zeigt **Wartet auf mich** die Mails, die etwas von dir wollen: an dich, noch ohne Antwort, keine Rechnung und kein Newsletter, aus den letzten 30 Tagen (oder, wenn dir das lieber ist, deine Mails mit Stern – Mail-Einstellungen). **Erledigt** nimmt eine Mail aus der Liste, bis eine neue Nachricht kommt, **Morgen wieder** bis morgen früh; beides lässt sich zurücknehmen und bleibt auf diesem Gerät. **Nacheinander durchgehen** öffnet sie der Reihe nach. Über dem Posteingang bietet **Welche Mails zeigen** alle Mails, **Persönlich**, **Rechnungen** oder **Newsletter**.
 
 ## Kontoauszug importieren
 

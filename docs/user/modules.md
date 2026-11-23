@@ -87,7 +87,7 @@ One search field looks at sender, subject, text and attachment names. The hits *
 
 ## Waiting for me (Windows app)
 
-Beside the folders, **Waiting for me** lists the mails that want something from you: to you, not answered yet, no invoice or newsletter, from the last 30 days (or, if you prefer, your starred mail – Mail settings). **Done** takes a mail off the list until a new message arrives, **Tomorrow again** until tomorrow morning; both can be undone and stay on this device. **Go through one by one** opens them in turn. Above the inbox, the filters **Invoices** and **Newsletters** sit beside **Personal**.
+Beside the folders, **Waiting for me** lists the mails that want something from you: to you, not answered yet, no invoice or newsletter, from the last 30 days (or, if you prefer, your starred mail – Mail settings). **Done** takes a mail off the list until a new message arrives, **Tomorrow again** until tomorrow morning; both can be undone and stay on this device. **Go through one by one** opens them in turn. Above the inbox, **Which mails to show** offers all mail, **Personal**, **Invoices** or **Newsletters**.
 
 ## Importing a bank statement
 

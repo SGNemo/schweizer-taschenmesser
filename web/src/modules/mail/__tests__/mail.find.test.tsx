@@ -309,7 +309,7 @@ describe('search: the device part', () => {
     mocks.threads.mockResolvedValue({ threads: [] });
     page('/mail?personal=1&q=wasser');
     expect(await screen.findByText('Wasser', { selector: 'mark' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Persönlich' })).toBeNull();
+    expect(screen.queryByRole('combobox', { name: 'Welche Mails zeigen' })).toBeNull();
   });
 
   it('shows 50 hits at first and the next ones on request; the count names all of them', async () => {
@@ -396,7 +396,7 @@ describe('„Wartet auf mich“ and the kind filters on the page', () => {
     expect(await screen.findByText('Kurze Frage')).toBeInTheDocument();
   });
 
-  it('the kind chips narrow the inbox: „Rechnungen“, then „Newsletter“', async () => {
+  it('the „Zeigen“ choice narrows the inbox: „Rechnungen“, then „Newsletter“', async () => {
     mocks.threads.mockResolvedValue({
       threads: [
         { ...summary('t-ask', 'Kurze Frage'), personal: true },
@@ -407,12 +407,12 @@ describe('„Wartet auf mich“ and the kind filters on the page', () => {
     const user = userEvent.setup();
     pageAt('/mail');
     await screen.findByText('Kurze Frage');
-    const kinds = screen.getByRole('group', { name: 'Nach Art filtern' });
-    await user.click(within(kinds).getByRole('button', { name: 'Rechnungen' }));
+    const show = screen.getByRole('combobox', { name: 'Welche Mails zeigen' });
+    await user.selectOptions(show, 'Rechnungen');
     await waitFor(() => expect(screen.queryByText('Kurze Frage')).toBeNull());
     expect(screen.getByText('Ihre Rechnung Strom')).toBeInTheDocument();
     expect(screen.queryByText('Rezepte der Woche')).toBeNull();
-    await user.click(within(kinds).getByRole('button', { name: 'Newsletter' }));
+    await user.selectOptions(show, 'Newsletter');
     expect(await screen.findByText('Rezepte der Woche')).toBeInTheDocument();
     expect(screen.queryByText('Ihre Rechnung Strom')).toBeNull();
   });

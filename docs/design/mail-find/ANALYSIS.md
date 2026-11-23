@@ -65,5 +65,5 @@ Same at 1920 and 412 px; axe (WCAG 2.2 AA) finds nothing on the search with both
 | D waits for my answer | 1 | 9 | 29 → 9, target ≤ 14 met |
 | E new and important this week | 1 | 3 | 15 → 3, target ≤ 7 met; one tap more than IST (the queue entry) |
 
-A–C unchanged (7 / 9 / 1). All five targets are now enforced in the script. The queue and its walk pass axe at both widths. Kinds are one chip row beside „Persönlich“ (Rechnungen, Newsletter); „Braucht Antwort“ is the queue itself, not a fourth chip; „Rest“ was left out (it is „Alle“ minus three chips, rarely a place to go).
+A–C unchanged (7 / 9 / 1). All five targets are now enforced in the script. The queue and its walk pass axe at both widths. Kinds are one choice „Welche Mails zeigen“ (Alle · Persönlich · Rechnungen · Newsletter) that replaces the chip „Persönlich“, so the page keeps its stimulus budget; „Braucht Antwort“ is the queue itself, not a fourth option; „Rest“ was left out (it is „Alle“ minus three options, rarely a place to go).
 

@@ -11,6 +11,6 @@ en: New in Mail: “Waiting for me” collects mails that still need an answer; 
 type: added
 area: mail
 breaking: false
-de: Über dem Posteingang filtern „Rechnungen“ und „Newsletter“ neben „Persönlich“.
-en: Above the inbox, “Invoices” and “Newsletters” filter beside “Personal”.
+de: Über dem Posteingang zeigt eine Auswahl alle Mails, nur persönliche, nur Rechnungen oder nur Newsletter.
+en: Above the inbox, one choice shows all mail, only personal mail, only invoices or only newsletters.
 ---
