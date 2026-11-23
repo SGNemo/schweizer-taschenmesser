@@ -26,8 +26,11 @@ export function linkDecision(text: string, href: string): LinkDecision {
     return { none: true };
   }
   const real = bare(host);
-  // every domain the text names counts: hidden text can put the real one first (F2, council)
-  for (const m of text.slice(0, 500).matchAll(DOMAIN_IN_TEXT)) {
+  // every domain the text names counts: hidden text can put the real one first, padding can push
+  // it far back (council). Bounded for the pattern's cost: start and end of the collapsed text.
+  const flat = text.replace(/\s+/g, ' ').trim();
+  const scanned = flat.length <= 500 ? flat : `${flat.slice(0, 250)} ${flat.slice(-250)}`;
+  for (const m of scanned.matchAll(DOMAIN_IN_TEXT)) {
     const named = m[1]!;
     if (!m[0].includes('://') && FILE_ENDING.test(named)) continue;
     if (!sameSite(real, bare(named))) return { ask: href, host };

@@ -142,9 +142,13 @@ export function nextHop(init: RequestInit, status: number, crossOrigin: boolean)
   const toGet =
     status === 303 ? method !== 'HEAD' : (status === 301 || status === 302) && method === 'POST';
   const next: RequestInit = toGet ? { ...init, method: 'GET', body: undefined } : { ...init };
-  if (crossOrigin && init.headers) {
+  if ((crossOrigin || toGet) && init.headers) {
     const headers = new Headers(init.headers);
-    for (const h of ['authorization', 'cookie', 'proxy-authorization']) headers.delete(h);
+    const drop = [
+      ...(crossOrigin ? ['authorization', 'cookie', 'proxy-authorization'] : []),
+      ...(toGet ? ['content-type', 'content-length'] : []),
+    ];
+    for (const h of drop) headers.delete(h);
     next.headers = headers;
   }
   return next;

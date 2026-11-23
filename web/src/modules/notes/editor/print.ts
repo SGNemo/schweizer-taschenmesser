@@ -2,6 +2,7 @@ import { Editor } from '@tiptap/core';
 import { noteExtensions } from './extensions';
 import { loadImage } from './images';
 import { pageToMarkdown } from '../exchange';
+import { t } from '@/strings';
 import type { Note } from '../schema';
 
 type Page = Pick<Note, 'title' | 'body'> & { id: string };
@@ -27,7 +28,11 @@ export async function pageToHtml(page: Page, scratchName: string): Promise<strin
   let html = editor.getHTML();
   editor.destroy();
   // Q2: like the editor, print loads no picture from the net – only this device's and inline ones
-  html = html.replace(/\ssrc="(?!nemo-img:|data:image\/)[^"]*"/gi, '');
+  html = html.replace(/<img\b[^>]*>/gi, (tag) =>
+    /\ssrc="(nemo-img:|data:image\/)/i.test(tag)
+      ? tag
+      : `<p>${escapeHtml(t.notes.imageRemote)}</p>`,
+  );
   const sources = [...new Set([...html.matchAll(/src="(nemo-img:[^"]+)"/g)].map((m) => m[1]!))];
   for (const src of sources) {
     const blob = await loadImage(src);

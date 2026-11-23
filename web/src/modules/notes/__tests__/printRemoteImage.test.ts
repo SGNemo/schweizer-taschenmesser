@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
+import { t } from '@/strings';
 import { pageToHtml } from '../editor/print';
 
 // Q2 (launch review 2026-11), council round 1: printing a note must not load a picture from the net
@@ -15,6 +16,7 @@ describe('printing a note', () => {
       'Scratchpad',
     );
     expect(html).not.toContain('tracker.example');
+    expect(html).toContain(t.notes.imageRemote);
     expect(html).toContain('src="data:image/png;base64,iVBORw0KGgo="');
   });
 });

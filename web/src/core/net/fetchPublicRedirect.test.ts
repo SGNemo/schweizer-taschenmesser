@@ -76,6 +76,8 @@ describe('the next hop (council round 1)', () => {
     expect(nextHop(post, 303, false)).toMatchObject({ method: 'GET', body: undefined });
     expect(nextHop(post, 302, false)).toMatchObject({ method: 'GET', body: undefined });
     expect(nextHop(post, 307, false)).toMatchObject({ method: 'POST', body: 'x' });
+    const typed = nextHop({ ...post, headers: { 'content-type': 'text/plain' } }, 303, false);
+    expect(new Headers(typed.headers).get('content-type')).toBeNull();
   });
 
   it('never carries credentials to another origin', () => {

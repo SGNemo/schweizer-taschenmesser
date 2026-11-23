@@ -36,6 +36,11 @@ describe('linkDecision', () => {
     });
   });
 
+  it('padding before the named site does not hide it', () => {
+    const text = `${' '.repeat(600)}\n${'x '.repeat(400)}paypal.com`;
+    expect(linkDecision(text, 'https://evil.test/')).toMatchObject({ host: 'evil.test' });
+  });
+
   it('a file name in the text is not a site', () => {
     for (const text of ['Rechnung_2026.pdf', 'bericht.docx herunterladen', 'Foto.JPG']) {
       expect(linkDecision(text, 'https://files.sender.example/d/1')).toEqual({
