@@ -7,7 +7,13 @@ import { recordWrite } from '@/core/db/recorder';
 import { randomId } from '@/core/db/util';
 import { formatMinutes } from '@/core/i18n/format';
 import { getLang } from '@/core/i18n/lang';
-import { plannableSource, type PlannableEntry } from '@/core/modules/contributions';
+import {
+  activeManifests,
+  collectPlannable,
+  plannableSource,
+  type PlannableEntry,
+} from '@/core/modules/contributions';
+import { loadModuleStates } from '@/core/modules/activation';
 import { availableManifests } from '@/core/modules/available';
 import { capacity, fixedCharges } from '@/core/plan/capacity';
 import { addDays } from '@/core/plan/dates';
@@ -36,6 +42,7 @@ import { extractLock, readFieldWithPart } from './dueWords';
 import { assignmentRepo, dayRepo, itemKeyOf, itemRepo, putRow } from './repo';
 import type { AssignmentRow, PlanDayRow, PlanItemRow } from './schema';
 import { overloadLine } from './overload';
+import type { Known, PasteLine, Place } from './pastePlan';
 import { getPlannerSettings } from './prefs';
 import { PlannerOffError, runUser, type RunScope, type UserRun } from './services';
 import { dayEndLabel, DEFAULT_PLANNER_SETTINGS, PLANNER_SCOPE } from './settings';
@@ -727,6 +734,108 @@ export const takeOff = (e: PlannableEntry, titles: Record<string, string>) =>
     for (const r of await rowsOf(key)) await assignmentRepo.remove(r.id);
     return { touched: [key] };
   });
+
+/**
+ * What „Plan einfügen“ recognises (TARGET §3): every open thing of the active sources with its place (its first row,
+ * else a dated turn's day, else „Noch ohne Tag“) and the things the sources keep for „Nächste Wochen“. Fixed blocks
+ * are no candidates (their time is the source's). Reads only; the planner's own rows and the sources' lists.
+ */
+export async function pasteKnown(): Promise<Known[]> {
+  const day = today();
+  const manifests = activeManifests(await loadModuleStates());
+  const entries = await collectPlannable({ today: day, until: addDays(day, 60) }, manifests);
+  const first = new Map<string, string>();
+  for (const r of (await assignmentRepo.active().toArray()) as AssignmentRow[]) {
+    const had = first.get(r.itemKey);
+    if (!had || r.date < had) first.set(r.itemKey, r.date);
+  }
+  const out: Known[] = [];
+  const canLater = new Set<string>();
+  for (const m of manifests) {
+    const s = await plannableSource(m);
+    if (!s?.onLater) continue;
+    canLater.add(m.id);
+    for (const item of (await s.listLater?.().catch(() => [])) ?? [])
+      out.push({
+        key: itemKeyOf(m.id, item.id),
+        title: item.title,
+        place: { kind: 'later' },
+        canLater: true,
+      });
+  }
+  for (const e of entries) {
+    if (e.fixed) continue;
+    const key = itemKeyOf(e.moduleId, e.id);
+    const date = first.get(key) ?? e.day;
+    out.push({
+      key,
+      title: e.title,
+      place: date ? { kind: 'day', date } : { kind: 'week' },
+      canLater: canLater.has(e.moduleId),
+    });
+  }
+  return out;
+}
+
+/**
+ * One thing to its pasted place: a day (its row moves there, „fest“ stays with it), „Noch ohne Tag“ (its rows go) or
+ * „Nächste Wochen“ (its rows go, the source keeps it for later). A thing that was kept for later is taken back first.
+ */
+async function placeAt(
+  ref: { moduleId: string; id: string },
+  to: Place,
+  from: Place | undefined,
+  minutes?: number,
+): Promise<void> {
+  const s = await source(ref.moduleId);
+  if (from?.kind === 'later' && to.kind !== 'later') await s?.onLater?.(ref.id, false);
+  if (to.kind === 'day') {
+    await layOn({ ...ref, durationMin: minutes }, to.date);
+    return;
+  }
+  for (const r of await rowsOf(itemKeyOf(ref.moduleId, ref.id))) await assignmentRepo.remove(r.id);
+  if (to.kind === 'later') await s?.onLater?.(ref.id, true);
+}
+
+/**
+ * „Übernehmen“ of „Plan einfügen“: every ticked line that changes something – a new thing becomes a ToDo (through the
+ * quick-capture target, as the field does), a known one moves – plus the missing things he sent to „Nächste Wochen“.
+ * Nothing else moves; one action, one undo, one toast.
+ */
+export function applyPaste(
+  lines: readonly PasteLine[],
+  toLater: readonly Known[],
+  titles: Record<string, string>,
+): Promise<boolean> {
+  // Everything is like that already: no action, no toast, no undo entry.
+  if (toLater.length === 0 && lines.every((l) => l.change === 'same'))
+    return Promise.resolve(false);
+  return act(
+    t.planner.paste.title,
+    t.planner.paste.done,
+    titles,
+    async () => {
+      const touched: string[] = [];
+      for (const line of lines) {
+        if (line.change === 'same') continue;
+        const ref = line.known
+          ? refOf(line.known.key)
+          : await saveCapture('todo', {
+              title: line.title,
+              ...(line.minutes ? { estimateMin: line.minutes } : {}),
+            });
+        await placeAt(ref, line.to, line.known?.place, line.minutes);
+        touched.push(itemKeyOf(ref.moduleId, ref.id));
+      }
+      for (const k of toLater) {
+        await placeAt(refOf(k.key), { kind: 'later' }, k.place);
+        touched.push(k.key);
+      }
+      return { touched };
+    },
+    { leadOnly: true },
+  );
+}
 
 /** „Fest an diesem Tag“ / „Nicht mehr fest“: the lock on the thing's rows. No proposal takes a thing that is fest. */
 export async function setLocked(

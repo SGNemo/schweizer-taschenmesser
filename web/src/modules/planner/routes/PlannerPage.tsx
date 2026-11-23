@@ -68,6 +68,8 @@ import { useDragMove, type DragRow } from '../components/dragMove';
 import { firstDayWithRows, plannerHead } from '../head';
 import { DaySetup } from '../components/DaySetup';
 import { DaySheet } from '../components/DaySheet';
+import { PasteDialog } from '../components/PasteDialog';
+import { looksLikePlan } from '../pastePlan';
 import { RowChoice, type RowChoiceState } from '../components/RowChoice';
 import { SETUP_DAYS } from '../daySetup';
 import { duesOf, eveningLine } from '../rest';
@@ -216,6 +218,8 @@ export default function PlannerPage() {
 
   // The open choice behind „Als Pause …“ / „Dauer …“ of a row.
   const [choice, setChoice] = useState<RowChoiceState>();
+  // „Plan einfügen“ (use case „Tag kippt“): the text the preview starts with ('' from ⋯), undefined while closed.
+  const [pasting, setPasting] = useState<string>();
   // „Auswählen“ in the tab „Noch offen“ (package 3): the chosen rows, one day for all of them.
   const [selecting, setSelecting] = useState(false);
   // „Auswählen“ on the day sheet (package 5, the page's ⋯): its chosen rows, one day for all of them.
@@ -1055,6 +1059,7 @@ export default function PlannerPage() {
           },
         ]
       : []),
+    { id: 'paste', label: t.planner.paste.menu, onSelect: () => setPasting('') },
     { id: 'check', label: t.planner.check.title, onSelect: () => setChecking(true) },
     { id: 'days', label: t.planner.daySetup.open, onSelect: () => setSettingUp(true) },
   ];
@@ -1460,6 +1465,12 @@ export default function PlannerPage() {
       // keeps the page's stimulus budget). The phone's plus sheet always has them.
       examples={inDialog || (!phone && nothingPlanned)}
       formRef={addRef}
+      onPastePlan={(pasted) => {
+        if (!looksLikePlan(pasted)) return false;
+        if (inDialog) setCapturing(false);
+        setPasting(pasted);
+        return true;
+      }}
     />
   );
 
@@ -1696,6 +1707,9 @@ export default function PlannerPage() {
           {capture(true)}
           {answer}
         </CaptureDialog>
+      ) : null}
+      {pasting !== undefined ? (
+        <PasteDialog initial={pasting} titles={titles} onClose={() => setPasting(undefined)} />
       ) : null}
       <RowChoice
         choice={choice}
