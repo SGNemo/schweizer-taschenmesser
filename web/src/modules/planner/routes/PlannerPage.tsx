@@ -180,6 +180,19 @@ export default function PlannerPage() {
   const [pickedDay, setPickedDay] = useState<string | undefined>(
     () => params.get('day') ?? undefined,
   );
+  // `?item=<module>:<id>` (a ToDo's „im Plan: Mi“, todos-plan-state): that thing's row is brought into view and gets the
+  // focus once the board shows it; read once, the other parameters are cleared as before.
+  const lookFor = useRef(params.get('item') ?? undefined);
+  useEffect(() => {
+    if (!lookFor.current) return;
+    const row = document.querySelector<HTMLElement>(
+      `[data-row-key="${CSS.escape(lookFor.current)}"]`,
+    );
+    if (!row) return;
+    lookFor.current = undefined;
+    row.scrollIntoView?.({ block: 'center' });
+    row.querySelector<HTMLElement>('[data-row]')?.focus({ preventScroll: true });
+  });
   const storedPick = useLiveQuery(
     async () => (await getMeta<{ date: string; on: string }>(DAY_KEY)) ?? null,
     [],

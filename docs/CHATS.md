@@ -62,7 +62,7 @@ Not stored in this file: `npm run chats:sync` prints the list from GitHub (`chat
 | images under `docs/`                                                                     | none ([DOCS-GUIDE](meta/DOCS-GUIDE.md#images)); screenshots go into the PR text             |
 | `docs/STATUS.md`                                                                         | only in a `docs(status)` PR of its own (docs only), never in a feature PR                   |
 | `docs/DECISIONS.md`, `docs/HOW-TO.md`, `docs/ARCHITECTURE-MAP.md`, `README.md`           | touch only on real change; one line / one block, no reformatting                            |
-| `planner/{settings.ts,run.ts,routes/PlannerPage.tsx}`, source `plannable.ts`             | planner rethink, `feat/plan-suggest`; package 7 after it                                    |
+| `todos/routes/TodosPage.tsx`, `planner/routes/PlannerPage.tsx`, `strings.ts`             | `feat/todos-plan-state`                                                                     |
 
 ## Hand-over conventions
 

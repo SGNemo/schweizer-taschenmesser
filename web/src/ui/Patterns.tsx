@@ -310,9 +310,12 @@ export function ItemRow({
   weight,
   recessed,
   below,
+  rowKey,
   children,
 }: {
   title: ReactNode;
+  /** A stable key of the thing on the row (`data-row-key`), for a page that brings a row into view by its key. */
+  rowKey?: string;
   /** Wrap a long title in full instead of ending it in "…" after two lines (lists the user reads and ticks). */
   titleFull?: boolean;
   meta?: ReactNode;
@@ -417,6 +420,7 @@ export function ItemRow({
           : undefined
       }
       data-tone={tone}
+      data-row-key={rowKey}
       data-signature-block={signatureBlock}
       className={[
         styles.item,

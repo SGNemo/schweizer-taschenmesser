@@ -109,6 +109,17 @@ export interface EventMap {
      * (CONCEPT-SOURCES §3.3); its item row is the request (`planner/actions.ts placeRequested`).
      */
     ref?: EntityRef;
+    /**
+     * Several plan items at once („In den Plan …“ of a selection in ToDos): each is placed like `ref`, all in one undoable
+     * action with one toast; `title`, `due` and `link` are ignored then. Takes precedence over `ref`.
+     */
+    refs?: EntityRef[];
+    /**
+     * With `ref`/`refs` only, the day asked for: 'YYYY-MM-DD' lays the thing there (also when it already lies elsewhere –
+     * the person named it), `null` leaves it without a day („Noch ohne Tag“, a day it had is taken off). Missing: with
+     * `ref` the rule of before (a thing that lies stays, one without a day lies on today), with `refs` today.
+     */
+    day?: string | null;
   };
   /**
    * „Nicht mehr planen“ on a thing asked in by `ref` (a list): the planner excludes its item row `<module>:<id>`, as

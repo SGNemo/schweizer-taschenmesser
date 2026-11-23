@@ -129,6 +129,8 @@ const short = (title: string, max = 32) =>
  * itself and no ToDo is made (`placeRequested`).
  */
 export async function addRequested(req: EventMap['plan.requested']): Promise<boolean> {
+  if (req.refs) return placeMany(req.refs, req.day === undefined ? today() : req.day);
+  if (req.ref && req.day !== undefined) return placeMany([req.ref], req.day);
   if (req.ref) return placeRequested(req.ref, req);
   const title = req.title.trim();
   if (!title) return false;
@@ -212,6 +214,67 @@ export async function placeRequested(
   const line = first
     ? t.planner.toast.requested(short(title), dayName(first.date))
     : t.planner.toast.requestedWaits(short(title));
+  toast(withOverload(line, await overloadNotice(run)), run);
+  return true;
+}
+
+/** A ref another module may ask into the plan: never the vault, a sane id, a module that is a plan source. */
+async function plannableRef(ref: EntityRef): Promise<boolean> {
+  if (ref.module === NEVER_LINKED || !ref.id || ref.id.length > 128) return false;
+  return !!(await source(ref.module).catch(() => undefined));
+}
+
+/**
+ * `plan.requested` with a day (or `refs`): „In den Plan …“ of one or several ToDos (todos-plan-state). Every named thing
+ * is asked in (its item row live, `excluded` off) and lies on `day` – moved there when it lay elsewhere, each keeps its
+ * lock – or, with `null`, has no day („Noch ohne Tag“: a row it had is removed). Nothing else is touched; one action,
+ * one undo, one toast. The refs are untrusted like in `placeRequested`; a thing its source does not list leaves its
+ * (hidden) row behind – when none is listed, the action is taken back.
+ */
+export async function placeMany(refs: readonly EntityRef[], day: string | null): Promise<boolean> {
+  if (day !== null && !/^\d{4}-\d{2}-\d{2}$/.test(day)) return false;
+  const valid: EntityRef[] = [];
+  const seen = new Set<string>();
+  for (const ref of refs.slice(0, 500)) {
+    const key = ref.module && ref.id ? itemKeyOf(ref.module, ref.id) : '';
+    if (!key || seen.has(key) || !(await plannableRef(ref))) continue;
+    seen.add(key);
+    valid.push(ref);
+  }
+  if (valid.length === 0) return false;
+  const n = valid.length;
+  const line =
+    day === null ? t.planner.toast.noDayMany(n) : t.planner.open.movedMany(n, dayName(day));
+  let run: UserRun;
+  try {
+    run = await runUser(t.planner.row.move, async () => {
+      const touched: string[] = [];
+      for (const ref of valid) {
+        const entry = { moduleId: ref.module, id: ref.id };
+        const key = itemKeyOf(ref.module, ref.id);
+        const item = await itemRepo.get(key);
+        // Asked in: a „Nicht planen“ is lifted (the person named the thing); an item row is written only when needed.
+        if (!item || item.deletedAt !== null || item.excluded)
+          await itemPatch(entry, { excluded: undefined });
+        if (day !== null) touched.push(...((await layOn(entry, day)).touched ?? []));
+        else {
+          for (const r of await rowsOf(key)) await assignmentRepo.remove(r.id);
+          touched.push(key);
+        }
+      }
+      return { touched };
+    });
+  } catch (e) {
+    if (!(e instanceof PlannerOffError)) throw e;
+    toast(t.planner.toast.off);
+    return false;
+  }
+  if (
+    !valid.some((ref) => run.outcome.inputs.titles[itemKeyOf(ref.module, ref.id)] !== undefined)
+  ) {
+    if (run.entry) await undoEntry(run.entry.id);
+    return false;
+  }
   toast(withOverload(line, await overloadNotice(run)), run);
   return true;
 }
