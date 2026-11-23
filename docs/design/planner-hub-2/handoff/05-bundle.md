@@ -6,7 +6,7 @@ Concept: [CONCEPT-ROWS, idea 5](../CONCEPT-ROWS.md). Decision between two direct
 
 - lead: for a thing with steps the source's own lead (a ToDo keeps its tick); for a bundle (5b) the bundle glyph (three stacked lines), not a button.
 - title: the thing's / bundle's title (expand button).
-- meta: B1 („5 Schritte“, once one is done „2 von 5“) or B2; then the usual meta. No bar, no ring, no percent.
+- meta: B1 („5 Schritte“, once one is done „1 von 5“ – k is the number of **done** steps) or B2; then the usual meta. No bar, no ring, no percent. („Los“ counts differently on purpose: „Schritt 2 von 5“ is the position of the step he is on.)
 - ⋯ first entry: B3 „Los“.
 
 ## Expanded (panel of the steps)
@@ -21,7 +21,7 @@ Concept: [CONCEPT-ROWS, idea 5](../CONCEPT-ROWS.md). Decision between two direct
 ```
 
 - Steps are tick `PanelLine`s in order; done ones stay in place (struck), so the order never jumps.
-- 5b: a member step shows its source glyph (16 px) before the title and `▸` when it has a panel (invoice); drag handle on desktop hover / focus (`SortableList` from `@/ui`), „Nach oben / Nach unten“ in the line's ⋯ on the phone.
+- 5b: a member line has **one** lead column: the tick where the member takes one, else its source glyph (an invoice) – never both; `▸` at the end when it has a panel; drag handle on desktop hover / focus (`SortableList` from `@/ui`), „Nach oben / Nach unten“ in the line's ⋯ on the phone.
 - Foot: B3 „Los“ (secondary) · ⋯ (B14) · X2 (5a only: opens the ToDo / list / routine).
 - More than 12 steps: 12 + „n weitere“.
 

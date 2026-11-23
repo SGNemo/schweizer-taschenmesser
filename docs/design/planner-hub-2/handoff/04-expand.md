@@ -9,7 +9,7 @@ ItemRow  [lead] [title-button ▸ meta · chips] [minutes] [lock] [⋯]
 └ RowCompartment (only while open)
    └ PlanPanelHost → the module's panel | default panel
       panel body: PanelLine × n, small heads
-      panel foot: [module's secondary action]   [Ganz öffnen]
+      panel foot: [the module's actions, left]        [Ganz öffnen, right]   ← every action of a panel lives in the foot, nowhere else
 ```
 
 - The title becomes a `button` (`aria-expanded`, `aria-controls`), name X1. It replaces the title link: **the count of interactive elements per row does not change.**
@@ -25,9 +25,9 @@ ItemRow  [lead] [title-button ▸ meta · chips] [minutes] [lock] [⋯]
 | ToDos | note: first 3 lines, `--text-sm`, clamp; checklist as tick lines (X14) | X2 |
 | Listen | section heads (caps) + open items as tick lines, max 8, then X8 „n weitere“ (a button that shows 8 more) | „Fertig eingekauft“ when none is open (the module's existing step) · X2 |
 | Merkliste | title, host as text | X13 · X2 |
-| Rechnungen | line 1: payee · amount; line 2: „Frist Fr 4. Dez.“ or „Frist war So“ (plain); reminder line if dunned; then `PayStep` inline: `DateChips` (Heute · Gestern · Datum …), amount field prefilled, X9 „Bezahlt“ (secondary) | X2 |
+| Rechnungen | nothing the row already says (amount and deadline are in its meta); a reminder line if dunned; then `PayStep` as **one line**: `DateChips` (Heute · Gestern · Datum …) · amount field prefilled (10 ch wide) – the words „Bezahlt am“ / „Betrag“ are the controls' accessible names, not visible labels | X9 „Bezahlt“ (secondary) · X2 |
 | Abos | name · price / period; „Kündigen bis Do 10. Dez.“; two buttons X10 | X2 |
-| E-Mail | line 1: sender name · day; line 2: subject (600); body: first 6 lines of the newest message, `--text-sm`, clamp, in `NoReadAid`-free plain text; X12 „Antworten“ opens mail's composer **in place of the body** (review step and the 10 s window as built) | „Beantwortet? · Erledigt“ when the newest message is his · X2 |
+| E-Mail | line 1: sender name · day; line 2: subject (600); body: first 6 lines of the newest message, `--text-sm`, clamped, plain text; „Antworten“ swaps the body for mail's composer (review step and the 10 s window as built) | X12 „Antworten“ (secondary), or „Beantwortet? · Erledigt“ when the newest message is his · X2 |
 
 ## States (mockup `04-states.html` shows each)
 
@@ -35,7 +35,7 @@ closed · loading · open · acting (button `aria-busy`, disabled) · done (the 
 
 ## 1920 / 412
 
-Per [00-common](00-common.md). On 412 the `PayStep` stacks: chips, amount, button full width (min-height 44 px). The mail body shows 4 lines.
+Per [00-common](00-common.md). On 412 the `PayStep` stacks: chips, amount, button full width (min-height 44 px). Mail is a desktop module: on the phone its panel is X5 + X6 and nothing else; in a narrow desktop window the body shows 4 lines.
 
 ## Edge cases
 

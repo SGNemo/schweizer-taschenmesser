@@ -25,8 +25,9 @@ BUDGETS ÜBER DEM RAHMEN                            In Budgets ansehen
 ```
 
 - Part head: P7, caps style; its jump P8 is a quiet link at the head's right end (phone: under the part's last line).
-- A member line is a `PanelLine` whose text is the member's title + `detail`; `▸` expands the member **inside the pile** (nested compartment, one level, same component, indented `--space-4`): there its module panel from hand-off 04 („Bezahlt“ …). One member open at a time.
-- A part without members (budgets, mail queue) is text lines (≤ 5, then „n weitere“) without `▸`.
+- A member line is a `PanelLine` whose text is the member's title + `detail`; `▸` expands the member **inside the pile**: its module panel from hand-off 04 („Bezahlt“ …) follows the line, indented `--space-5`, **without a surface of its own** (a box in a box read as a hole in dark mode); the open member's title is 600. One member open at a time.
+- A part without members (budgets, the mail queue) is text lines (≤ 5, then „n weitere“) without `▸`.
+- Mail: ToDos made from a mail that have no day are members (mail names them by key, `todos:<id>`); the count is queue + members.
 
 ## The offer (P5)
 
@@ -38,7 +39,7 @@ offered · unplaced · placed · fest · expanded · member expanded · nothing 
 
 ## 1920 / 412
 
-Per 00-common. 412: meta wraps to two lines at most (parts first, deadline second); the jump links stand under their part.
+Per 00-common. 412: the meta is short – P12 „6 Dinge“ and the deadline („6 Dinge · Frist Fr“), one line; the parts are in the panel. The jump links stand under their part.
 
 ## Edge cases
 

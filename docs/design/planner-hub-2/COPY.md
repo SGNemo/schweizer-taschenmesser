@@ -48,12 +48,13 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 | P9 | Finanzen checken · nichts wartet | Check finances · nothing waiting |
 | P10 (setting + hint) | Stapel als eine Zeile · „Fasst Dinge aus einem Bereich zusammen, die noch keinen Tag haben. Einzeln legen kannst du sie weiter.“ | Piles as one row · “Folds things of one area that have no day yet. You can still place them one by one.” |
 | P11 (panel ⋯) | Wieder einzeln zeigen | Show one by one again |
+| P12 (meta on the phone) | {n} Dinge | {n} things |
 
 ## 5 · bundles and „Los“
 
 | Id | Deutsch | English |
 | --- | --- | --- |
-| B1 (meta) | {n} Schritte · {k} von {n} | {n} steps · {k} of {n} |
+| B1 (meta; k = done steps) | {n} Schritte · {k} von {n} | {n} steps · {k} of {n} |
 | B2 (meta, things) | {n} Dinge · {k} von {n} | {n} things · {k} of {n} |
 | B3 | Los | Go |
 | B4 (focus, eyebrow) | {Haushalt} · Schritt {k} von {n} | {Household} · step {k} of {n} |
@@ -64,7 +65,7 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 | B9 (after B8) | Erledigt · Zurück zum Plan | Done · Back to the plan |
 | B10 (after a skip, last step) | {n} übersprungen. Jetzt oder später? · Jetzt · Später | {n} skipped. Now or later? · Now · Later |
 | B11 (selection bar) | Bündeln … | Bundle … |
-| B12 (dialog) | Ein Name für das Bündel · Unterwegs (Besorgungsrunde) · Bündeln | A name for the bundle · On the way (errands) · Bundle |
+| B12 (dialog; cancel = the shared „Abbrechen“) | Ein Name für das Bündel · Unterwegs (Besorgungsrunde) · Bündeln | A name for the bundle · On the way (errands) · Bundle |
 | B13 (toast) | {n} Dinge sind jetzt „{Wohnung}“. · Rückgängig | {n} things are “{Flat}” now. · Undo |
 | B14 (panel ⋯) | Auflösen · Als Routine speichern · Umbenennen … | Unbundle · Save as routine · Rename … |
 | B15 (toast) | Aufgelöst. Die Dinge liegen wieder einzeln auf {Mo}. · Rückgängig | Unbundled. The things lie on {Mon} one by one again. · Undo |
@@ -94,16 +95,16 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 | Id | Deutsch | English |
 | --- | --- | --- |
 | E1 (meta) | {n} Stopps · {k} von {n} | {n} stops · {k} of {n} |
-| E2 | Ort … · Kein Ort | Place … · No place |
+| E2 (entry · dialog title · search placeholder · last choice) | Ort … · Ort · Ort suchen · Kein Ort | Place … · Place · Search places · No place |
 | E3 | Auf der Karte ansehen | View on the map |
 | A1 | Vorbereiten … · Danach … | Prepare … · Afterwards … |
 | A2 (lead chip in the field) | vor {Friseur}, {Mi} · nach {Friseur}, {Mi} | before {hairdresser}, {Wed} · after {hairdresser}, {Wed} |
 | A3 (chip's second choice) | am Tag davor · am Tag danach | the day before · the day after |
 | A4 (row chip) | vor {Friseur} · nach {Friseur} | before {hairdresser} · after {hairdresser} |
 | T1 | Thema … | Topic … |
-| T2 (chooser) | Thema wählen oder neu eintippen · Kein Thema | Choose a topic or type a new one · No topic |
+| T2 (chooser title · field label · last choice · small head over T7 · hint without topics) | Thema wählen oder neu eintippen · Thema · Kein Thema · Aus deinen Tags · Ein Thema hält Dinge aus mehreren Modulen zusammen. | Choose a topic or type a new one · Topic · No topic · From your tags · A topic holds things from several modules together. |
 | T3 (page ⋯) | Nur ein Thema zeigen … | Show one topic only … |
-| T4 (line) | Thema: {Umzug} · {n} Dinge · Alles zeigen | Topic: {Move} · {n} things · Show everything |
+| T4 (page head while filtered) | Thema: {Umzug} · {n} Dinge · Alles zeigen | Topic: {Move} · {n} things · Show everything |
 | T5 | Auch im Thema · {n} | Also in this topic · {n} |
 | T6 | In diesem Thema liegt gerade nichts im Plan. | Nothing of this topic is in the plan right now. |
 | T7 (chooser) | Tag „{umzug}“ als Thema übernehmen | Take tag “{move}” as a topic |

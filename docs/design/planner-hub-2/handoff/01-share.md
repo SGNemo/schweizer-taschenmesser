@@ -5,7 +5,7 @@ Concept: [CONCEPT-INTAKE, idea 1](../CONCEPT-INTAKE.md). Common parts: [00-commo
 ## Structure (`web/src/pages/ShareTarget.tsx`, as built, with one more target)
 
 ```
-Geteilt                                            (page title, as built)
+Teilen                                             (page title and card as built)
 ┌ card ───────────────────────────────────────┐
 │ Fahrradträger für die Anhängerkupplung      │  title: first line, 2 lines max
 │ example.org                                 │  host as text, --text-3 (links only)
@@ -16,7 +16,7 @@ Tag      [ohne Tag] [Heute] [Morgen]          (only while „In den Planer“ is
 [ Ablegen ]                                    (filled primary, full width on 412)
 ```
 
-- „In den Planer“ (S1) is the first choice and preselected when the planner module is on; otherwise the page is exactly as today.
+- „In den Planer“ (S1) is the first choice and preselected when the planner module is on; otherwise the page is exactly as today. The targets keep the control the page has today (a column of choices, each 44 px high, on 412; one row at 1920); the empty state keeps today's sentence.
 - The day choice is the shared `DateChips` with three chips; default „ohne Tag“.
 - S3 „Ablegen“ → `plan.requested { title, day }` + note / URL on the ToDo → toast S4 → Android: the activity finishes back to the sharing app after the toast's first second; PWA: stays.
 

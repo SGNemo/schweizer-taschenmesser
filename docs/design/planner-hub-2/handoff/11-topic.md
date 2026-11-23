@@ -12,18 +12,18 @@ Concept: [CONCEPT-INTAKE, idea 11](../CONCEPT-INTAKE.md). Common parts: [00-comm
 ## Shrinking the planner to a topic
 
 - Page ⋯ → T3 → the same chooser without the field's „create“ and without T7.
-- While on: the goal line's slot above the sheet shows T4: „Thema: Umzug · 7 Dinge · Alles zeigen“ – text in `--text-sm`, the topic name 600, „Alles zeigen“ a quiet button. (A day's goal line, if any, stands under it.)
-- The sheet, „Noch ohne Tag“, „Noch offen“ and the week band's bars show only members. The head figure („1 h 12 frei“) keeps counting the whole day (the day is as full as it is), with the context „Thema: Umzug“.
+- While on: the page head changes instead of a new line appearing – the figure („1 h 20 frei“) gives its place to T4: „Thema: Umzug“ (the figure's type) with the context „7 Dinge“ and the quiet button „Alles zeigen“. The day's free time stays where it is on the day sheet's own head line.
+- The sheet, „Noch ohne Tag“, „Noch offen“ and the week band's bars show only members. The day sheet's „frei“ keeps counting the whole day (the day is as full as it is).
 - T5 „Auch im Thema · 3“: a folded line at the end of the right column / under the sheet; expanded: each linked non-plan thing as a `PanelLine` with its module glyph and its link word; a tap opens it in its module.
 - The field while filtered: a new thing gets the topic (lead chip „Thema: Umzug“ with ✕ in the preview slot).
 
 ## States
 
-no topics yet (chooser: only the field and a hint line „Ein Thema hält Dinge aus mehreren Modulen zusammen.“) · topics exist · filter on · filter on, empty (T6 as the sheet's empty state, button „Alles zeigen“) · topic deleted elsewhere (filter ends) · 20 topics (dialog list scrolls; no topic bar anywhere).
+no topics yet (chooser: only the field and a hint line „Ein Thema hält Dinge aus mehreren Modulen zusammen.“) · topics exist · filter on · filter on, empty (T6 as the sheet's empty state; „Alles zeigen“ only in the head, not twice) · topic deleted elsewhere (filter ends) · 20 topics (dialog list scrolls; no topic bar anywhere).
 
 ## 1920 / 412
 
-Same structure; on 412 T4 wraps („Alles zeigen“ on its own line, right-aligned, 44 px target).
+Same structure; on 412 the head wraps („Alles zeigen“ on its own line, 44 px target).
 
 ## Managing
 

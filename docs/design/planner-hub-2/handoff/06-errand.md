@@ -9,9 +9,11 @@ lead: the maps glyph (pin), not a button · title (default „Besorgungen“) ·
 ## Expanded
 
 ```
- 1  ○ Paket abholen                               Post, Lindenstr.   ⋯
- 2  ○ Altglas wegbringen                          Kein Ort           ⋯
- 3  ▾ Drogerie · 3 Dinge                          Drogerie am Markt  ⋯
+ 1  ○ Paket abholen                                                  ⋯
+      Post, Lindenstr.
+ 2  ○ Altglas wegbringen                                             ⋯
+ 3  ▾ Drogerie · 3 Dinge                                             ⋯
+      Drogerie am Markt
         ○ Spülmittel
         ○ Batterien AA
         ○ Zahnpasta
@@ -20,7 +22,7 @@ lead: the maps glyph (pin), not a button · title (default „Besorgungen“) ·
 
 - Stops are numbered (text, `--text-3`, tabular); order = the bundle's order, sortable as in 05.
 - A list stop is open by default inside the errand (its lists panel: tick lines, max 8 + „n weitere“); `▾` folds it.
-- Place: the line's end shows the place name (`--text-meta`, `--text-3`, truncates) or nothing; set through the line's ⋯ → E2 „Ort …“ → a `Dialog` with his saved places (search field + list, from maps through a lazy `places` reader in maps' `linkTarget` module – names only) and „Kein Ort“. Writes the `place` link.
+- Place: a second line under the stop's title (`--text-meta`, `--text-3`), on every width – or no second line; set through the line's ⋯ → E2 „Ort …“ → a `Dialog` with his saved places (search field + list, from maps through a lazy `places` reader in maps' `linkTarget` module – names only) and „Kein Ort“. Writes the `place` link.
 - E3 „Auf der Karte ansehen“: quiet button in the foot, only with ≥ 1 place and maps on. Opens `/maps?places=<id,id>&from=plan`.
 - „Los“: step mode of 05; the eyebrow reads „Besorgungen · Stopp 2 von 3“, the place name stands under the title; a list stop shows its tick lines under the title (the one case where „Los“ shows more than a title: the list **is** the step).
 
@@ -30,7 +32,7 @@ no places (no E3) · some places · maps off (no „Ort …“, no E3, places al
 
 ## 1920 / 412
 
-412: the place moves under the stop's title as a second line.
+Same on both.
 
 ## Tests
 

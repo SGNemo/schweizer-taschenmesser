@@ -10,7 +10,7 @@ Concept: [CONCEPT-INTAKE, idea 3](../CONCEPT-INTAKE.md). Common parts: [00-commo
 ```
 
 - The preview line sits directly under the field, left edge = the field's text edge; height 44 px **reserved only while it shows** (the examples line under the field is replaced by it, so the block does not grow: examples and preview never show together).
-- Left: the kind's module glyph 16 px, `--text-3`; text K1 in `--text-sm`: „Wird:“ in `--text-3`, the kind word (K2) 600 `--text`, the read parts `--text`; amount through `SensitiveValue`.
+- Left: the kind's module glyph 16 px, `--text-3`; text K1 in `--text-sm`: only „Wird:“ is `--text-3`; the kind word (K2) is 600 `--text`, the read parts `--text` (the line must not be grey on grey); amount through `SensitiveValue`.
 - Right: K3, a quiet text button (ghost), min 44 px target.
 - `aria-live="polite"` on the line: it is read once per change of kind, not per keystroke (debounce 400 ms; the visual line updates at once).
 - Enter stores what the line says; Alt+Enter = K3.
