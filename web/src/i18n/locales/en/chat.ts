@@ -23,11 +23,26 @@ export const chat: Strings['chat'] = {
   assistant: 'Assistant',
   stageLocal: 'Local · free',
   stageCloud: 'Cloud',
+  stageCloudBy: (provider: string) => `Cloud · ${provider}`,
+  provider: {
+    paused: (name?: string) =>
+      `${name ?? 'Your provider'} is taking a break right now. This chat stays with ${
+        name ?? 'it'
+      } so your history doesn’t go to another provider without you asking. Try again later or pick another one yourself.`,
+    choose: 'Choose another provider',
+    chooseTitle: 'Another provider for this chat',
+    chooseBody:
+      'The whole history of this chat then goes to the chosen provider, including data you attached. The chat stays there afterwards.',
+    chooseField: 'Provider',
+    chooseNone: 'No other provider is set up. You can add one under Settings → AI.',
+    chooseConfirm: 'Switch and send',
+  },
   engine: 'Answers with',
   engineLocal: 'Local model',
   engineRouter: 'My providers',
   engineHintLocal: 'Runs only on this device, offline, at no cost.',
-  engineHintRouter: 'The text of this chat goes to your chosen provider.',
+  engineHintRouter:
+    'The text of this chat goes to your chosen provider. A chat stays with the provider that got it first.',
   systemPrompt: 'Custom instruction for this chat',
   systemPromptHint: 'For example: “Answer briefly and in simple sentences.”',
   rename: 'Rename',

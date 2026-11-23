@@ -18,6 +18,12 @@ export interface CompletionRequest {
   history?: readonly ChatTurn[];
   user: string;
   tools: ToolDef[];
+  /**
+   * A conversation that already went to a provider stays with it (AI1): the router sends it to that
+   * provider only and reports `provider-paused` instead of switching. `first-configured` is for chats
+   * from before the pin existed.
+   */
+  pin?: { providerId: string } | 'first-configured';
   signal?: AbortSignal;
   /** Output limit (default 1024); the connection test uses a tiny one. */
   maxTokens?: number;
@@ -41,6 +47,8 @@ export interface CompletionResult {
   model: string;
   /** Set by the router: which configured provider answered … */
   providerId?: string;
+  /** … under which name the user knows it … */
+  providerLabel?: string;
   /** … what that call cost (USD, from the editable price of the provider) … */
   costUsd?: number;
   /** … and which providers failed before it (fallbacks). */
@@ -77,7 +85,9 @@ export type AiErrorCode =
   /** Every provider is used up (local limits) – nothing was sent. */
   | 'limit-reached'
   /** Several providers were tried; none produced an answer. */
-  | 'exhausted';
+  | 'exhausted'
+  /** A chat stays with its provider, and that one is paused, over its limit or no longer set up. */
+  | 'provider-paused';
 
 export class AiError extends Error {
   /** `Retry-After` of a rate limit, in ms. */

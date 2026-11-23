@@ -11,7 +11,9 @@
  * A request that carries a conversation (`history`, the chat module) is the exception to the
  * fallback: the user was promised *one* provider for what they typed, so only the first provider
  * that is not paused or over its limit gets it. If that one fails, its error is reported instead of
- * handing the conversation to the next provider (which may be one that trains on inputs).
+ * handing the conversation to the next provider (which may be one that trains on inputs). Once a
+ * chat went to a provider it is pinned (`req.pin`, AI1): it goes to that provider only, and when that
+ * one is paused, over its limit or gone, the answer is `provider-paused` – never a silent switch.
  */
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
 import { now } from '@/core/time/now';
@@ -102,11 +104,22 @@ export function createRouter(opts: RouterOptions): AiProvider {
       const attempts: Attempt[] = [];
       let skippedForLimit = 0;
       let skippedCooling = 0;
-      const singleProvider = req.history !== undefined;
+      const singleProvider = req.history !== undefined || req.pin !== undefined;
+      const pin = req.pin;
+      const candidates =
+        pin === undefined
+          ? members
+          : pin === 'first-configured'
+            ? members.slice(0, 1)
+            : members.filter((m) => m.entry.id === pin.providerId);
+      if (pin !== undefined && candidates.length === 0) {
+        throw new AiError('provider-paused', undefined, { attempts });
+      }
 
-      for (const { entry, provider } of members) {
+      for (const { entry, provider } of candidates) {
         const at = clock();
         if (coolingDown(entry.id, at)) {
+          if (pin !== undefined) throw new AiError('provider-paused', undefined, { attempts });
           skippedCooling += 1;
           continue;
         }
@@ -116,6 +129,7 @@ export function createRouter(opts: RouterOptions): AiProvider {
           (requestsPerDay !== undefined && requestsToday >= requestsPerDay) ||
           (costUsdPerMonth !== undefined && costMonthUsd >= costUsdPerMonth)
         ) {
+          if (pin !== undefined) throw new AiError('provider-paused', undefined, { attempts });
           skippedForLimit += 1;
           continue;
         }
@@ -126,6 +140,7 @@ export function createRouter(opts: RouterOptions): AiProvider {
           return {
             ...result,
             providerId: entry.id,
+            providerLabel: entry.label || entry.id,
             costUsd: estimateCostUsd(
               result.model,
               result.usage.inputTokens,

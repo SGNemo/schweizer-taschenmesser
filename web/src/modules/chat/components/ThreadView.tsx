@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { loadAiConfig, createRouterProvider } from '@/core/ai/config';
+import { createRouterProvider, isEntryUsable, loadAiConfig, useAiConfig } from '@/core/ai/config';
 import { useLocalModel } from '@/core/ai/local/state';
 import { downloadTextFile } from '@/core/backup/download';
 import { availableManifests } from '@/core/modules/available';
@@ -17,6 +17,7 @@ import { Button, Checkbox, Dialog, Icon, IconButton, SelectField, TextArea, Text
 import { buildContext, contextModules } from '../context';
 import {
   addQuestion,
+  chooseProvider,
   deleteThread,
   dropLastAnswer,
   editQuestion,
@@ -46,6 +47,8 @@ export function ThreadView({ threadId, onBack }: { threadId: string; onBack: () 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [renaming, setRenaming] = useState<string>();
+  const [choosing, setChoosing] = useState(false);
+  const aiConfig = useAiConfig();
   const controller = useRef<AbortController | undefined>(undefined);
 
   useEffect(() => () => controller.current?.abort(), []);
@@ -95,6 +98,14 @@ export function ThreadView({ threadId, onBack }: { threadId: string; onBack: () 
     }
     await ask(question);
   }
+
+  const providerName =
+    thread.providerLabel ||
+    aiConfig?.providers.find((p) => p.id === thread.providerId)?.label ||
+    undefined;
+  const otherProviders = (aiConfig?.providers ?? []).filter(
+    (p) => isEntryUsable(p) && p.id !== thread.providerId,
+  );
 
   const last = messages[messages.length - 1];
   const awaitingReply = last?.role === 'user' && !busy;
@@ -182,8 +193,17 @@ export function ThreadView({ threadId, onBack }: { threadId: string; onBack: () 
         ) : null}
         {error ? (
           <div className={styles.error} role="alert" data-testid="chat-error">
-            <span>{c.errors[error.code] ?? c.errors.fallback}</span>
+            <span>
+              {error.code === 'provider-paused'
+                ? c.provider.paused(providerName)
+                : (c.errors[error.code] ?? c.errors.fallback)}
+            </span>
             <Button onClick={() => void reply()}>{c.retry}</Button>
+            {error.code === 'provider-paused' ? (
+              <Button onClick={() => setChoosing(true)} data-testid="chat-choose-provider">
+                {c.provider.choose}
+              </Button>
+            ) : null}
           </div>
         ) : null}
         {awaitingReply && !error ? <Button onClick={() => void reply()}>{c.retry}</Button> : null}
@@ -290,6 +310,17 @@ export function ThreadView({ threadId, onBack }: { threadId: string; onBack: () 
         </Dialog>
       ) : null}
 
+      {choosing ? (
+        <ChooseProvider
+          options={otherProviders.map((p) => ({ id: p.id, label: p.label || p.id }))}
+          onClose={() => setChoosing(false)}
+          onChoose={(picked) => {
+            setChoosing(false);
+            void chooseProvider(threadId, picked).then(reply);
+          }}
+        />
+      ) : null}
+
       {settingsOpen ? (
         <ThreadSettings thread={thread} onClose={() => setSettingsOpen(false)} />
       ) : null}
@@ -314,6 +345,60 @@ export function ThreadView({ threadId, onBack }: { threadId: string; onBack: () 
         <p>{c.deleteBody}</p>
       </Dialog>
     </section>
+  );
+}
+
+/** "Anderen Anbieter wählen": only an explicit choice moves a chat (and its history) elsewhere. */
+function ChooseProvider({
+  options,
+  onClose,
+  onChoose,
+}: {
+  options: { id: string; label: string }[];
+  onClose: () => void;
+  onChoose: (picked: { id: string; label: string }) => void;
+}) {
+  const [picked, setPicked] = useState(options[0]?.id ?? '');
+  const choice = options.find((o) => o.id === picked);
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      title={c.provider.chooseTitle}
+      footer={
+        <>
+          <Button onClick={onClose}>{c.cancel}</Button>
+          {choice ? (
+            <Button
+              variant="primary"
+              onClick={() => onChoose(choice)}
+              data-testid="chat-choose-confirm"
+            >
+              {c.provider.chooseConfirm}
+            </Button>
+          ) : null}
+        </>
+      }
+    >
+      {options.length === 0 ? (
+        <p>{c.provider.chooseNone}</p>
+      ) : (
+        <div className={styles.facts}>
+          <p>{c.provider.chooseBody}</p>
+          <SelectField
+            label={c.provider.chooseField}
+            value={picked}
+            onChange={(e) => setPicked(e.target.value)}
+          >
+            {options.map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.label}
+              </option>
+            ))}
+          </SelectField>
+        </div>
+      )}
+    </Dialog>
   );
 }
 

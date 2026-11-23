@@ -7671,11 +7671,27 @@ export const de = {
     assistant: 'Assistent',
     stageLocal: 'Lokal · 0 €',
     stageCloud: 'Cloud',
+    stageCloudBy: (provider: string) => `Cloud · ${provider}`,
+    provider: {
+      paused: (name?: string) =>
+        `${name ?? 'Dein Anbieter'} macht gerade eine Pause. Dieser Chat bleibt bei ${
+          name ?? 'ihm'
+        }, damit dein Verlauf nicht ungefragt an einen anderen Anbieter geht. Versuche es später noch einmal oder wähle selbst einen anderen.`,
+      choose: 'Anderen Anbieter wählen',
+      chooseTitle: 'Anderen Anbieter für diesen Chat',
+      chooseBody:
+        'Der ganze Verlauf dieses Chats geht dann an den gewählten Anbieter, auch Daten, die du angehängt hast. Danach bleibt der Chat dort.',
+      chooseField: 'Anbieter',
+      chooseNone:
+        'Es ist kein anderer Anbieter eingerichtet. Unter Einstellungen → KI kannst du einen hinzufügen.',
+      chooseConfirm: 'Wechseln und senden',
+    },
     engine: 'Antwortet mit',
     engineLocal: 'Lokales Modell',
     engineRouter: 'Meine Anbieter',
     engineHintLocal: 'Läuft nur auf diesem Gerät, offline, ohne Kosten.',
-    engineHintRouter: 'Der Text dieses Chats geht an deinen eingestellten Anbieter.',
+    engineHintRouter:
+      'Der Text dieses Chats geht an deinen eingestellten Anbieter. Ein Chat bleibt bei dem Anbieter, der ihn zuerst bekommen hat.',
     systemPrompt: 'Eigene Anweisung für diesen Chat',
     systemPromptHint: 'Zum Beispiel: „Antworte kurz und in einfachen Sätzen.“',
     rename: 'Umbenennen',

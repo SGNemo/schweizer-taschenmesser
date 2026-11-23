@@ -73,7 +73,13 @@ export function MessageView({
       <div className={styles.msgHead}>
         <strong>{user ? c.you : c.assistant}</strong>
         {!user && message.stage ? (
-          <Badge tone="neutral">{message.stage === 'local' ? c.stageLocal : c.stageCloud}</Badge>
+          <Badge tone="neutral">
+            {message.stage === 'local'
+              ? c.stageLocal
+              : message.providerLabel
+                ? c.stageCloudBy(message.providerLabel)
+                : c.stageCloud}
+          </Badge>
         ) : null}
         {user && message.context ? <Badge tone="neutral">{c.context.attached}</Badge> : null}
         <span className={styles.msgActions}>
