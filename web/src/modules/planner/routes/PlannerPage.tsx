@@ -1,3 +1,4 @@
+import { getISOWeek } from 'date-fns';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
@@ -22,6 +23,7 @@ import {
   EmptyState,
   Icon,
   IconButton,
+  Segmented,
   GroupedList,
   ItemList,
   PageHeader,
@@ -123,22 +125,28 @@ const READ_DAYS = 28;
 const daysBetween = (from: string, to: string) =>
   Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
 const mondayOf = (date: string) => addDaysStr(date, 1 - isoWeekday(date));
+/** The ISO week of a date („KW 47“). */
+const isoWeekOf = (date: string) => getISOWeek(new Date(`${date}T12:00:00`));
 
 export default function PlannerPage() {
   const [searchParams] = useSearchParams();
   const now = today();
-  // The band's first day (package 4): today, or a later week paged to (`?week=` from the calendar's „Plan“, or
-  // the week from today that holds `?day=`, a calendar chip of a later week).
+  // The band's week (direction A): Monday to Sunday – this week (its passed days say „offen“), or a later one paged
+  // to (`?week=` from the calendar's „Plan“, the week of `?day=`, a calendar chip of a later week).
+  // On the weekend the band starts with today (the eve of the coming week: five or six passed days would leave one
+  // or two ahead) – Saturday or Sunday to the coming Friday or Saturday.
+  const thisWeek = isoWeekday(now) >= 6 ? now : mondayOf(now);
+  /** The band's week that holds `date`: weeks counted from this week's first day. */
+  const weekOf = (date: string) =>
+    addDaysStr(thisWeek, Math.floor(daysBetween(thisWeek, date) / SPAN) * SPAN);
   const [weekStart, setWeekStart] = useState<string>(() => {
     const iso = (v: string | null) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) && v > now ? v : null);
-    const week = iso(searchParams.get('week'));
-    if (week) return week;
-    const day = iso(searchParams.get('day'));
-    return day ? addDaysStr(now, Math.floor(daysBetween(now, day) / SPAN) * SPAN) : now;
+    const asked = iso(searchParams.get('week')) ?? iso(searchParams.get('day'));
+    return asked ? weekOf(asked) : thisWeek;
   });
   const [grid, setGrid] = useState(false);
-  // A new day (the page stayed open over midnight) never leaves the band on a passed start.
-  const start = weekStart < now ? now : weekStart;
+  // A new week (the page stayed open over Sunday night) never leaves the band on a passed week.
+  const start = weekStart < thisWeek ? thisWeek : weekStart;
   const viewFrom = grid ? mondayOf(start) : start;
   const viewSpan = grid ? GRID_DAYS : SPAN;
   const viewEnd = addDaysStr(viewFrom, viewSpan - 1);
@@ -1025,15 +1033,9 @@ export default function PlannerPage() {
     );
   };
   const pageMenu: RowMenuItem[] = [
-    // Phone: the switch „4 Wochen“ lives here (the band's row keeps the phone's stimulus budget).
-    ...(phone
-      ? [
-          {
-            id: 'grid',
-            label: grid ? t.planner.board.weekViewMenu : t.planner.board.gridViewMenu,
-            onSelect: toggleGrid,
-          },
-        ]
+    // The phone in this week's week view (no band row): „4 Wochen zeigen“ lives here.
+    ...(phone && !grid && start === thisWeek
+      ? [{ id: 'grid', label: t.planner.board.gridViewMenu, onSelect: toggleGrid }]
       : []),
     {
       id: 'replan',
@@ -1085,8 +1087,7 @@ export default function PlannerPage() {
     setPickedDay(date);
     // The band follows the picked day past its end (a swipe): the week it lies in, lined up from the band's start.
     // The grid stays put – a day does not move under the hand; the band lines up when the week view returns.
-    if (!grid && (date < start || date > addDaysStr(start, SPAN - 1)))
-      setWeekStart(addDaysStr(start, Math.floor(daysBetween(start, date) / SPAN) * SPAN));
+    if (!grid && (date < start || date > addDaysStr(start, SPAN - 1))) setWeekStart(weekOf(date));
     void setMeta(DAY_KEY, { date, on: data.today });
     setStatus(tileName(day, days?.[1]?.date === date));
   }
@@ -1099,7 +1100,7 @@ export default function PlannerPage() {
       pickedDay >= now &&
       (pickedDay < start || pickedDay > addDaysStr(start, SPAN - 1))
     )
-      setWeekStart(addDaysStr(now, Math.floor(daysBetween(now, pickedDay) / SPAN) * SPAN));
+      setWeekStart(weekOf(pickedDay));
     setGrid((g) => !g);
   }
 
@@ -1107,7 +1108,7 @@ export default function PlannerPage() {
   function page(dir: 1 | -1) {
     const step = grid ? GRID_DAYS : SPAN;
     const next = addDaysStr(start, dir * step);
-    setWeekStart(next < now ? now : next);
+    setWeekStart(next < thisWeek ? thisWeek : next);
   }
   const bandRange = bandDays?.length
     ? t.planner.board.range(
@@ -1115,13 +1116,16 @@ export default function PlannerPage() {
         `${dayName(bandDays.at(-1)!.date)} ${formatDay(bandDays.at(-1)!.date, 'd. MMM')}`,
       )
     : '';
-  // The band's row: paging, „Heute“ once paged, the switch „4 Wochen“ (on the phone in the sheet's ⋯ – the phone's
-  // stimulus budget). „‹“ only once there is an earlier week to go back to.
-  // Phone, this week, no grid: no row at all – the sheet's swipe pages day by day, ⋯ opens the grid.
+  // The band's row (direction A): „KW 47“ (the grid: its four weeks, with ‹ ›), „Heute“ once paged away, and the
+  // switch „Woche | 4 Wochen“ on the right – on the phone too. In the week view ‹ › stand at the band's ends.
+  const canPrev = start > thisWeek;
+  // The phone in this week's week view has no row (its page keeps the field whole on arrival, planner-hub M-3): the
+  // sheet's swipe pages, ⋯ holds „4 Wochen zeigen“; paged away or in the grid the row is there.
   const bandRow =
-    phone && !grid && start === now ? null : (
+    phone && !grid && !canPrev ? null : (
       <div className={styles.bandRow} data-testid="band-row">
-        {start > now ? (
+        {/* The grid, and the phone's week (its tiles need the band's whole width): ‹ › beside the label. */}
+        {(grid || phone) && canPrev ? (
           <IconButton
             className={styles.bandControl}
             label={grid ? t.planner.board.gridPrev : t.planner.board.prev}
@@ -1130,30 +1134,40 @@ export default function PlannerPage() {
             <Icon name="chevronLeft" size={16} />
           </IconButton>
         ) : null}
-        <span className={styles.bandLabel}>{bandRange}</span>
-        <IconButton
-          className={styles.bandControl}
-          label={grid ? t.planner.board.gridNext : t.planner.board.next}
-          onClick={() => page(1)}
-        >
-          <Icon name="chevronRight" size={16} />
-        </IconButton>
-        {start > now ? (
-          <button type="button" className={styles.textLink} onClick={() => setWeekStart(now)}>
-            {t.planner.board.today}
-          </button>
+        <span className={styles.bandLabel}>
+          {grid ? bandRange : t.planner.board.weekNo(isoWeekOf(addDaysStr(start, SPAN - 1)))}
+        </span>
+        {grid || phone ? (
+          <IconButton
+            className={styles.bandControl}
+            label={grid ? t.planner.board.gridNext : t.planner.board.next}
+            onClick={() => page(1)}
+          >
+            <Icon name="chevronRight" size={16} />
+          </IconButton>
         ) : null}
-        {phone ? null : (
+        {canPrev ? (
           <button
             type="button"
             className={`${styles.textLink} ${styles.bandControl}`}
-            aria-pressed={grid}
-            onClick={toggleGrid}
-            data-testid="grid-switch"
+            onClick={() => setWeekStart(thisWeek)}
           >
-            {t.planner.board.gridView}
+            {t.planner.board.today}
           </button>
-        )}
+        ) : null}
+        <span className={styles.bandSwitch} data-testid="grid-switch">
+          <Segmented
+            label={t.planner.board.viewSwitch}
+            value={grid ? 'grid' : 'week'}
+            options={[
+              { value: 'week', label: t.planner.board.weekView },
+              { value: 'grid', label: t.planner.board.gridView },
+            ]}
+            onChange={(v) => {
+              if ((v === 'grid') !== grid) toggleGrid();
+            }}
+          />
+        </span>
       </div>
     );
 
@@ -1297,6 +1311,30 @@ export default function PlannerPage() {
       })}
     </ItemList>
   );
+  // „Von Mo, Di ist noch etwas offen.“ – one calm line on top of today's sheet (inside its card, direction A), never a
+  // count (CONCEPT §3).
+  const openLineNode =
+    shownDay?.isToday && openRows.length > 0 && focus.openLine ? (
+      <p className={styles.openLine} data-testid="open-line">
+        <span>{openLineText(openRows)}</span>
+        <button
+          type="button"
+          className={styles.textLink}
+          onClick={() =>
+            setParams(
+              (p) => {
+                const q = new URLSearchParams(p);
+                q.set('tab', 'open');
+                return q;
+              },
+              { replace: true },
+            )
+          }
+        >
+          {t.planner.open.show}
+        </button>
+      </p>
+    ) : null;
   const suggestWeek = (
     <button
       type="button"
@@ -1312,10 +1350,10 @@ export default function PlannerPage() {
     waiting.length > 0 ? (
       <div className={styles.waiting}>
         {/* „Woche vorschlagen“ (package 6): reachable with the group folded – a dumped pile is two taps from its days
-            (the link, then „Übernehmen“ in the preview); nothing moves before that. The phone keeps its stimulus
-            budget (`kopf-leer.spec.ts` D): there the link stands inside the open group. */}
+            (the link, then „Übernehmen“ in the preview); nothing moves before that. On the phone the link stands
+            inside the open group (the page keeps its height: planner-hub M-3, the field whole on arrival). */}
         {!phone && noDay.some(proposable) ? (
-          <p className={styles.waitActions}>{suggestWeek}</p>
+          <p className={styles.waitSuggest}>{suggestWeek}</p>
         ) : null}
         <GroupedList
           listId="planner"
@@ -1330,7 +1368,7 @@ export default function PlannerPage() {
                     count: noDay.length,
                     detail: t.planner.wait.calm,
                     // The overload figure once the group is open: neutral text, no tone (CONCEPT §7); on the phone
-                    // „Woche vorschlagen“ beside it.
+                    // „Woche vorschlagen“ beside it (the phone's page keeps its height: its field stays whole).
                     ...(overflow > 0 || (phone && noDay.some(proposable))
                       ? {
                           action: (
@@ -1469,13 +1507,10 @@ export default function PlannerPage() {
       days={viewWeek}
       before={wide ? <LateGroup rows={late} renderRow={renderLate} /> : undefined}
       deadlines={deadlines}
-    >
-      {waitingBlock}
-    </Context>
+    />
   ) : null;
-  const hasBeside =
-    !!viewWeek &&
-    (waiting.length > 0 || appointmentsOf(viewWeek).length > 0 || deadlines.length > 0);
+  // Direction A: „Noch ohne Tag“ lies in the day's sheet; beside it stand appointments and deadlines.
+  const hasBeside = !!viewWeek && (appointmentsOf(viewWeek).length > 0 || deadlines.length > 0);
   const hasContext = hasBeside || (wide && late.length > 0);
 
   return (
@@ -1559,6 +1594,12 @@ export default function PlannerPage() {
                         onPick={pick}
                         today={data.today}
                         drop
+                        {...(phone
+                          ? {}
+                          : {
+                              onNext: () => page(1),
+                              ...(canPrev ? { onPrev: () => page(-1) } : {}),
+                            })}
                       />
                     )}
                   </>
@@ -1568,33 +1609,12 @@ export default function PlannerPage() {
 
                 {!wide ? <LateRow rows={late} renderRow={renderLate} /> : null}
 
-                {/* „Von Mo, Di ist noch etwas offen.“ – one calm line over today's sheet, never a count (CONCEPT §3). */}
-                {shownDay?.isToday && openRows.length > 0 && focus.openLine ? (
-                  <p className={styles.openLine} data-testid="open-line">
-                    <span>{openLineText(openRows)}</span>
-                    <button
-                      type="button"
-                      className={styles.textLink}
-                      onClick={() =>
-                        setParams(
-                          (p) => {
-                            const q = new URLSearchParams(p);
-                            q.set('tab', 'open');
-                            return q;
-                          },
-                          { replace: true },
-                        )
-                      }
-                    >
-                      {t.planner.open.show}
-                    </button>
-                  </p>
-                ) : null}
-
                 {shownDay && dayPicking === shownDay.date ? daySelection(shownDay) : null}
                 {shownDay && days ? (
                   <DayPage
                     key={shownDay.date}
+                    top={openLineNode}
+                    foot={waitingBlock}
                     day={shownDay}
                     tomorrow={days[1]?.date === shownDay.date}
                     renderRow={(row, next) => renderRow(row, shownDay, next)}

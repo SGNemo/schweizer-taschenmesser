@@ -115,12 +115,12 @@ describe('planner page', () => {
     );
     const sheet = screen.getByTestId('day-2026-11-09');
     expect(sheet).toHaveTextContent('2 h 12 frei von 3 h 12');
-    expect(within(sheet).getByRole('heading', { level: 2 })).toHaveTextContent(
-      'Heute · Montag, 9. November',
-    );
-    // One row form: the source in a word, the duration at the end, „Zuerst“ above the first rows.
-    expect(within(sheet).getByRole('heading', { level: 3, name: 'Zuerst' })).toBeInTheDocument();
-    expect(within(sheet).getByRole('list', { name: 'Zuerst' })).toHaveTextContent('ToDo');
+    expect(
+      within(sheet).getByRole('heading', { level: 2, name: 'Heute · Montag, 9. November' }),
+    ).toBeInTheDocument();
+    // Direction A: one card – the day's rows (no „Zuerst“ heading), „Noch ohne Tag“ inside it.
+    expect(within(sheet).queryByRole('heading', { level: 3, name: 'Zuerst' })).toBeNull();
+    expect(within(sheet).getByRole('list', { name: 'Zuerst' })).not.toHaveTextContent('ToDo');
     expect(within(sheet).getByRole('list', { name: 'Zuerst' })).toHaveTextContent('1 h');
     expect(screen.getByText('Teil 1 von 2')).toHaveClass('sr-only');
     // Another day is one click away: its blocker shows then.
