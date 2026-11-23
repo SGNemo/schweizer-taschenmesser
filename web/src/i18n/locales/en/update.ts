@@ -22,7 +22,7 @@ export const update: Strings['update'] = {
       'The program file is in a folder the app may not write to (read-only or no permission). Move the program file to a normal folder, such as your user folder, and try again.',
     'signature-invalid': 'The update’s signature is invalid – so it was not installed.',
     'version-not-newer':
-      'The update is not newer than your installed version – so it was not installed.',
+      'The update is older than your installed version – so it was not installed.',
     'version-unreadable':
       'The update’s version could not be checked – so it was not installed. Download the new version from the website.',
   } as Record<string, string>,
