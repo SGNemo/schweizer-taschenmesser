@@ -7645,6 +7645,10 @@ export const de = {
         'Die Programmdatei liegt in einem Ordner, in den die App nicht schreiben darf (schreibgeschützt oder ohne Berechtigung). Verschiebe die Programmdatei in einen normalen Ordner, z. B. in deinen Benutzerordner, und versuche es erneut.',
       'signature-invalid':
         'Die Signatur des Updates ist ungültig – es wurde deshalb nicht installiert.',
+      'version-not-newer':
+        'Das Update ist älter als deine installierte Version – es wurde deshalb nicht installiert.',
+      'version-unreadable':
+        'Die Version des Updates ließ sich nicht prüfen – es wurde deshalb nicht installiert. Lade die neue Version von der Website herunter.',
     } as Record<string, string>,
     settings: {
       intro:
