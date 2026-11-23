@@ -125,6 +125,16 @@ describe('readPastedPlan – council round 1', () => {
     expect(performance.now() - started).toBeLessThan(200);
   });
 
+  it("weekday headings go on from the paste's earlier days (a week plan pasted mid-week)", () => {
+    const wed = '2026-11-25';
+    const plan = readPastedPlan('Mittwoch\n- a\nDienstag\n- b\nMontag\n- c', wed);
+    expect(plan.things.map((x) => x.when)).toEqual([
+      { kind: 'day', date: wed },
+      { kind: 'day', date: '2026-12-01' },
+      { kind: 'day', date: '2026-12-07' },
+    ]);
+  });
+
   it('subtasks of the ToDos JSON stay out', () => {
     const plan = readPastedPlan(
       JSON.stringify({ items: [{ title: 'A' }, { title: 'A1', parentId: 'x' }] }),
@@ -227,6 +237,33 @@ describe('matchPaste', () => {
       ['fitness:t', 'same', { kind: 'day', date: SA }],
       ['new:neu', 'new', { kind: 'later' }],
     ]);
+  });
+
+  it('a timed block is known (never made twice) and never moved; a „fest“ missing thing is marked', () => {
+    const k: Known[] = [
+      {
+        key: 'calendar:x',
+        title: 'Geburtstag Oma',
+        place: { kind: 'day', date: SA },
+        canLater: false,
+        fixed: true,
+      },
+      {
+        key: 'todos:f',
+        title: 'Zahnarzt',
+        place: { kind: 'day', date: SA },
+        canLater: true,
+        locked: true,
+      },
+    ];
+    const { lines, missing } = matchPaste(
+      readPastedPlan('Sonntag\n- 14:00 Geburtstag Oma', SA),
+      k,
+      SA,
+      'none',
+    );
+    expect(lines.map((l) => [l.id, l.change])).toEqual([['calendar:x', 'same']]);
+    expect(missing.map((m) => [m.key, m.locked])).toEqual([['todos:f', true]]);
   });
 
   it('sameTitle ignores case, spaces, quotes and trailing marks', () => {
@@ -336,7 +373,7 @@ describe('applyPaste', () => {
       estimateMin: 15,
     });
     expect(useUiStore.getState().toasts.at(-1)?.message).toBe(
-      'Plan übernommen.\nWas für später ist, steht in ToDos unter „Irgendwann“.',
+      'Plan übernommen – was für später ist, steht in ToDos unter „Irgendwann“.',
     );
     // One undo brings the whole paste back: no new ToDo, every thing on its old place.
     expect(await undoLast()).toBeTruthy();

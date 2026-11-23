@@ -3,7 +3,7 @@
  * (`plannedFor`, `someday`, `estimateMin`) or text from a chat with day headings and bullets – into things with a
  * place. Pure and local: no model, no network, no clock (today comes in). German day words, a few English ones.
  */
-import { addDaysStr, DATE_RE } from '@/core/time/dates';
+import { addDaysStr, DATE_RE, isCalendarDate, isoWeekday } from '@/core/time/dates';
 
 /** Where a thing is or goes in the plan: a day, „Noch ohne Tag“ (this week) or „Nächste Wochen“. */
 export type Place = { kind: 'day'; date: string } | { kind: 'week' } | { kind: 'later' };
@@ -67,12 +67,7 @@ export function readPastedPlan(text: string, today: string): PastedPlan {
 }
 
 /** A real calendar day ('2026-11-31' is none). */
-const isDay = (date: string): boolean => {
-  if (!DATE_RE.test(date)) return false;
-  const d = new Date(`${date}T12:00:00`);
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` === date;
-};
+const isDay = (date: string): boolean => DATE_RE.test(date) && isCalendarDate(date);
 
 function readJson(data: unknown): PastedPlan {
   const items: unknown[] = Array.isArray(data)
@@ -147,14 +142,16 @@ const WEEKDAYS: Record<string, number> = {
   sat: 6,
 };
 
-const weekdayOf = (date: string) => new Date(`${date}T12:00:00`).getDay();
+/** 0 = Sunday … 6 = Saturday, as the table above. */
+const weekdayOf = (date: string) => isoWeekday(date) % 7;
 
 /**
  * A heading's day: „Heute“, „Morgen“, „Samstag“, „So 29.11.“, „29.11.2026“, „2026-11-29“. A weekday name is today or
- * the next such day – except yesterday's name (Saturday's plan pasted again on Sunday): that is yesterday, so the
- * preview asks once instead of moving it a week ahead.
+ * the next such day – except yesterday's name as the paste's first day (Saturday's plan pasted again on Sunday): that
+ * is yesterday, so the preview asks once. After an earlier day of the same paste (`after`) a weekday name goes on from
+ * there („Montag … Sonntag“ pasted on a Wednesday is one week ahead, not two days of the past).
  */
-function dayOfHeading(words: string, today: string): string | undefined {
+function dayOfHeading(words: string, today: string, after?: string): string | undefined {
   const iso = /\b(\d{4}-\d{2}-\d{2})\b/.exec(words);
   if (iso) return isDay(iso[1]!) ? iso[1] : undefined;
   const dm = /\b(\d{1,2})\.(\d{1,2})\.(\d{4}|\d{2})?/.exec(words);
@@ -174,6 +171,7 @@ function dayOfHeading(words: string, today: string): string | undefined {
   const first = /^[a-zäöü]+/.exec(lower.replace(/^(am|on)\s+/, ''))?.[0];
   if (first && first in WEEKDAYS) {
     const want = WEEKDAYS[first]!;
+    if (after && after >= today) return addDaysStr(after, (want - weekdayOf(after) + 7) % 7);
     const ahead = (want - weekdayOf(today) + 7) % 7;
     return addDaysStr(today, ahead === 6 ? -1 : ahead);
   }
@@ -212,6 +210,7 @@ function headingWhen(
   line: string,
   today: string,
   bullet: boolean,
+  after: string | undefined,
 ): PasteWhen | 'other' | undefined {
   const raw = line.replace(BULLET_RE, '').trim();
   const bare = raw
@@ -222,7 +221,7 @@ function headingWhen(
   const words = bare.replace(/:\s*$/, '').trim();
   const marked = /^#/.test(raw) || withColon || /^\*\*.*\*\*:?$/.test(raw);
   if (words.length > 60 || (bullet && !marked)) return undefined;
-  const date = dayOfHeading(words, today);
+  const date = dayOfHeading(words, today, after);
   if (date && (marked || DAY_ONLY.test(words))) return { kind: 'day', date };
   if (LATER_RE.test(words) && (marked || LATER_ONLY.test(words))) return { kind: 'later' };
   if (WEEK_RE.test(words) && (marked || WEEK_ONLY.test(words))) return { kind: 'week' };
@@ -264,15 +263,18 @@ function readText(text: string, today: string): PastedPlan {
   let when: PasteWhen = { kind: 'none' };
   const things: PastedThing[] = [];
   let skipped = 0;
-  for (const raw of text.split(/\r?\n/)) {
+  // The last day heading so far: later weekday names go on from it.
+  let lastDay: string | undefined;
+  for (const raw of text.split(/\r?\n/, MAX_THINGS * 10)) {
     const line = raw.trim().slice(0, MAX_LINE);
     if (!line) continue;
     if (GOAL_RE.test(line.replace(BULLET_RE, '').replace(/^#+\s*|[*_]/g, ''))) continue;
     const bullet = BULLET_RE.test(line);
-    const heading = headingWhen(line, today, bullet);
+    const heading = headingWhen(line, today, bullet, lastDay);
     if (heading === 'other') continue;
     if (heading) {
       when = heading;
+      if (heading.kind === 'day') lastDay = heading.date;
       continue;
     }
     // A task list („- [ ] …“): the box goes, a ticked one („[x]“) is done and stays out.
@@ -315,6 +317,8 @@ export interface Known {
   locked?: boolean;
   /** Its source dates it (a training, a routine's turn): it cannot leave its day, only move to another one. */
   dated?: boolean;
+  /** A timed block of its source (an appointment at 14:00): known so it is never made twice, never moved here. */
+  fixed?: boolean;
 }
 
 /** One line of the preview: a pasted thing, the thing it is (if any) and where it goes. */
@@ -380,6 +384,7 @@ export function matchPaste(
     if (to.kind === 'later' && k && !k.canLater) to = { kind: 'week' };
     // A thing its source dates stays on a day: „ohne Tag“ or later would come back by itself.
     if (k?.dated && to.kind !== 'day') to = k.place;
+    if (k?.fixed) to = k.place;
     const change: PasteLine['change'] = !k ? 'new' : samePlace(k.place, to) ? 'same' : 'move';
     return {
       id: k ? k.key : `new:${sameTitle(thing.title)}`,
@@ -397,6 +402,7 @@ export function matchPaste(
     ? known.filter(
         (k) =>
           !used.has(k.key) &&
+          !k.fixed &&
           k.place.kind === 'day' &&
           k.place.date >= today &&
           k.place.date <= last,
