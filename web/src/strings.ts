@@ -8800,6 +8800,7 @@ export const de = {
         'Noch keine Lesezeichen. Öffne eine Adresse und tippe auf den Stern, um sie zu speichern.',
     },
     popupBlocked: 'Ein Pop-up wurde blockiert.',
+    unfiltered: 'Der Werbeblocker läuft in diesem Tab nicht. Schließ den Tab und öffne ihn neu.',
     download: {
       offer: (name: string) => `Die Seite bietet „${name}“ zum Download an.`,
       toManager: 'Im Download-Manager öffnen',

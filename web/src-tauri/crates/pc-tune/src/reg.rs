@@ -141,6 +141,33 @@ pub fn writable(key: &str, name: &str) -> bool {
         }) || (cfg!(test) && key.starts_with(r"Software\NemoPcTuneTest\")))
 }
 
+/// The largest value an undo puts back: Windows keeps 12 bytes or a `DWORD` at these places.
+pub const MAX_RESTORE_BYTES: usize = 64;
+
+/**
+ * Whether an undo may put `value` back at this place (PC2, launch review 2026-11). The bytes come
+ * from the journal file, so a hand-edited journal must not decide what lands there: a value is
+ * small, and a StartupApproved entry is binary (or a `DWORD`), never text. Any other small value
+ * is put back exactly, even of an unexpected type, as the user had it. A key outside
+ * [`WRITABLE`] is not judged here ([`writable`] refuses it on the real registry anyway).
+ */
+pub fn restorable(key: &str, name: &str, value: &Value) -> bool {
+    let place = WRITABLE.iter().find(|(k, n)| {
+        k.eq_ignore_ascii_case(key) && n.is_none_or(|n| n.eq_ignore_ascii_case(name))
+    });
+    let Some((_, fixed_name)) = place else {
+        return true;
+    };
+    match value {
+        Value::Dword(_) => true,
+        // UTF-16 on disk: two bytes a character
+        Value::Sz(s) => fixed_name.is_some() && s.encode_utf16().count() * 2 <= MAX_RESTORE_BYTES,
+        Value::Raw { ty, data } => {
+            data.len() <= MAX_RESTORE_BYTES && (fixed_name.is_some() || *ty == TYPE_BINARY)
+        }
+    }
+}
+
 /// A value name the seam writes: not over-long, no control characters.
 pub(crate) fn valid_name(name: &str) -> bool {
     name.len() <= 255 && !name.chars().any(|c| c.is_control())
