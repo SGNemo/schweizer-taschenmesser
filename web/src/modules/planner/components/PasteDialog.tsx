@@ -161,9 +161,9 @@ export function PasteDialog({
       const lines = now.lines.filter((l) => ids.has(l.id) && ticked(l));
       const seen = new Set(toLater.map((k) => k.key));
       const later = now.missing.filter((k) => seen.has(k.key) && !k.locked && k.canLater);
-      if (await applyPaste(lines, later, titles, goal)) onClose();
-      // Nothing left to write (a sync did it): the preview shows the plan as it is now.
-      else setKnown(fresh);
+      // Written – or nothing was left to write (a sync or a goal outside the view had it already): done either way.
+      await applyPaste(lines, later, titles, goal);
+      onClose();
     } catch {
       setFailed(true);
     } finally {
