@@ -338,8 +338,16 @@ mod imp {
                 sddl,
                 spare: Mutex::new(None),
             };
-            // On error the listener drops and uncounts itself.
-            let first = listener.create_next()?;
+            // On error the listener drops and uncounts itself. A browser host that has not yet
+            // let go of the app's previous server can keep the name alive for a moment after a
+            // quick off-and-on: one short retry before the name counts as taken.
+            let first = match listener.create_next() {
+                Err(e) if e.kind() == io::ErrorKind::AddrInUse => {
+                    std::thread::sleep(Duration::from_millis(200));
+                    listener.create_next()?
+                }
+                other => other?,
+            };
             *listener.spare.lock().unwrap_or_else(|e| e.into_inner()) = Some(first);
             Ok(listener)
         }

@@ -6632,7 +6632,8 @@ export const de = {
         'register-failed': 'Die App konnte sich nicht bei den Browsern eintragen.',
         'channel-taken':
           'Die Verbindung ist belegt – von einem anderen Programm oder einem zweiten Nemo (z. B. der Dev-Preview). Schließe es und schalte die Verbindung erneut ein; hilft das nicht, melde andere Windows-Konten ab oder starte den PC neu.',
-        failed: 'Die Verbindung konnte nicht gestartet werden.',
+        failed:
+          'Die Verbindung konnte nicht gestartet werden. Versuche es erneut; hilft das nicht, starte Nemo neu.',
       },
       startErrors: {
         'channel-taken':
