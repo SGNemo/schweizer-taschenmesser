@@ -1,6 +1,6 @@
-# Hand-off 07 – „Warte auf Antwort“ (package 7, last, separable)
+# Hand-off 07 – „Warte auf Antwort“ (struck by principle 1; build only on the maintainer's „ja“)
 
-Concept: [CONCEPT-INTAKE, idea 7](../CONCEPT-INTAKE.md). Common parts: [00-common](00-common.md). Mockup: `../mockups/07-wait.html`.
+Concept: [CONCEPT-STRUCK, idea 7](../CONCEPT-STRUCK.md). Common parts: [00-common](00-common.md). Mockup: `../mockups/07-wait.html`.
 
 ## Structure
 

@@ -1,6 +1,6 @@
 # Planner hub 2 – concept: the frame and the link contract (idea 10)
 
-Ideas 4, 2, 5, 8: [CONCEPT-ROWS](CONCEPT-ROWS.md). Ideas 1, 3, 6, 9, 11, 7: [CONCEPT-INTAKE](CONCEPT-INTAKE.md). Figures: [ANALYSIS](ANALYSIS.md). Sample day everywhere: Monday 2026-11-30, invented things only.
+Ideas 4, 2, 5: [CONCEPT-ROWS](CONCEPT-ROWS.md). Ideas 1, 3, 6, 9, 11: [CONCEPT-INTAKE](CONCEPT-INTAKE.md). Struck 8 and 7: [CONCEPT-STRUCK](CONCEPT-STRUCK.md). Figures: [ANALYSIS](ANALYSIS.md). Sample day everywhere: Monday 2026-11-30, invented things only.
 
 ## 0. Seven sentences every package keeps
 
@@ -19,7 +19,7 @@ Ideas 4, 2, 5, 8: [CONCEPT-ROWS](CONCEPT-ROWS.md). Ideas 1, 3, 6, 9, 11, 7: [CON
 | `planner_item.bundle`, `.step` | id of a bundle, order inside it (integer) | 5b |
 | `planner_bundle` | `title`, `kind: 'steps' \| 'errand'` | 5b |
 | `planner_topic` | `title` (≤ 60) | 11 |
-| `planner_measure` | `key`, `minutes`, `on` – one row per measurement | 8 (struck, see ANALYSIS §4) |
+| `planner_measure` | `key`, `minutes`, `on` – one row per measurement | 8 (struck, [ANALYSIS §4](ANALYSIS.md)) |
 | settings `planner.piles` | `{ money?: boolean; mail?: boolean }` (synced scope) | 2 |
 
 Everything else is derived or lives in the source module. Each new collection: `npm run db:bump`, previous stores into `core/db/schema-history.json`, `manifest.version` + empty migration step.
@@ -30,12 +30,12 @@ What exists and stays: `_links` (one synced row per link, id = SHA-256 of `[from
 
 ### 1.1 Relations
 
-`LinkRel` gets five values. Older apps read an unknown value as `about` (`linkRel`), so a mixed fleet shows the link, only without its special place.
+`LinkRel` gets four values (`wait` only if the struck idea 7 is ever built). Older apps read an unknown value as `about` (`linkRel`), so a mixed fleet shows the link, only without its special place.
 
 | `rel` | From → to | Written by (always inside an undoable action) | Read by |
 | --- | --- | --- | --- |
 | `origin`, `dunning`, `about` | as today | as today | as today |
-| `wait` | carrier thing → mail thread or person | „Warte auf Antwort …“ (7) | the row that comes back, the person's page |
+| (`wait`) | carrier thing → mail thread or person | „Warte auf Antwort …“ (7, struck – not added by 10a) | – |
 | `before`, `after` | new ToDo → appointment | „Vorbereiten“ / „Danach“ (9) | the appointment's panel, the calendar's „Vorbereitung“ |
 | `topic` | `planner:t_<id>` → any thing | „Thema …“ (11) | topic filter, the mark in the module |
 | `place` | a thing → `maps:<placeId>` | „Ort …“ in an errand (6) | the errand's stops |
@@ -86,5 +86,5 @@ One component in `core/entitylinks` (`PlanMark`, replacing the ToDos-only one): 
 ### 1.5 Risk, target, not part of it
 
 - **Risk:** Unterlagen leaking a document title through a link label → label and `resolve().title` come from the same category function as the plan row; test pins it. A re-pull per device at the release (new rels need none; no new synced table in 10a/10b).
-- **Target (script, flow D1):** „is it in the plan, and when?“ from an invoice, a list, a note, a subscription, a bookmark: module switches 5 → 0, handles 10 → 0 (the mark is on the row); back to the row in the plan: 1 handle each.
+- **Target (script, flow D1):** five things placed from the planner – the day visible in the thing's own module for 1 → 5 of 5, agreeing with the plan for 2 → 5 of 5; trips to the planner just to find out: 8 → 0; back to the row in the plan: 1 handle.
 - **Not part of it:** no new plan source (a note or a person does not become a plan thing by itself), no link editor in every module (links are made where the action is: plan row ⋯, the panels of idea 4), no link from or to `accounts`, no label refresh job (a label is the title at the time of the tap; the live title comes from `resolveLink`).

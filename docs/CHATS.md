@@ -32,6 +32,7 @@ Not stored in this file: `npm run chats:sync` prints the list from GitHub (`chat
 9. Planer-Zentrale ([planner-hub](design/planner-hub/README.md)): läuft ohne Stopp durch; ansehen: Richtung A und die zwei zurückgenommenen Entscheidungen D2/D3 (Mockups im PR-Text von #922), Reiz-Budget der Planer-Ansichten für R1. (so lassen)
 10. Austausch Handy ↔ PC ([CONCEPT §11](design/device-exchange/CONCEPT.md)): Handy holt erst beim Öffnen? (ja, v1) · nur Heimnetz? (ja) · Name „Austausch“? (ja) · Regelzeile (Paket R) mergen.
 11. „Werte ausblenden“ (DESIGN-CHECK K2): nur Kopfzahl + Zeile darunter (so gebaut, #752) oder alle Beträge der Geld-Seiten und Karten? (alle Geld-Karten, Wunsch aus Budgets; eigener kleiner PR)
+12. Planer-Zentrale 2 ([planner-hub-2](design/planner-hub-2/README.md)): Mockups im PR ansehen, dann Paket 1 (Opus) starten.
 
 **Handgriffe:**
 
@@ -62,7 +63,6 @@ Not stored in this file: `npm run chats:sync` prints the list from GitHub (`chat
 | images under `docs/`                                                                     | none ([DOCS-GUIDE](meta/DOCS-GUIDE.md#images)); screenshots go into the PR text             |
 | `docs/STATUS.md`                                                                         | only in a `docs(status)` PR of its own (docs only), never in a feature PR                   |
 | `docs/DECISIONS.md`, `docs/HOW-TO.md`, `docs/ARCHITECTURE-MAP.md`, `README.md`           | touch only on real change; one line / one block, no reformatting                            |
-| `todos/routes/TodosPage.tsx`, `planner/routes/PlannerPage.tsx`, `strings.ts`             | `feat/todos-plan-state`                                                                     |
 
 ## Hand-over conventions
 

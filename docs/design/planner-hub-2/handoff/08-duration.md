@@ -1,6 +1,6 @@
 # Hand-off 08 – measured duration (struck by principle 1; build only on the maintainer's „ja“)
 
-Concept: [CONCEPT-ROWS, idea 8](../CONCEPT-ROWS.md). Mockup: `../mockups/08-duration.html`.
+Concept: [CONCEPT-STRUCK, idea 8](../CONCEPT-STRUCK.md). Mockup: `../mockups/08-duration.html`.
 
 ## Structure
 

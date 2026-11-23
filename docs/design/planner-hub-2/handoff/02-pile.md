@@ -25,7 +25,7 @@ BUDGETS ÜBER DEM RAHMEN                            In Budgets ansehen
 ```
 
 - Part head: P7, caps style; its jump P8 is a quiet link at the head's right end (phone: under the part's last line).
-- A member line is a `PanelLine` whose text is the member's title + `detail`; `▸` expands the member **inside the pile**: its module panel from hand-off 04 („Bezahlt“ …) follows the line, indented `--space-5`, **without a surface of its own** (a box in a box read as a hole in dark mode); the open member's title is 600; its foot is left-aligned inside the indent (so „Ganz öffnen“ reads as the member's, not the pile's) and `--space-3` separates it from the next member line. One member open at a time.
+- A member line is the member's panel in its `compact` form (CONCEPT-ROWS, idea 4): title + `detail`, and where the module has a one-tap end („Bezahlt“ for an invoice, the tick for a ToDo) that action at the line's end / lead; `▸` expands the member **inside the pile**: its module panel from hand-off 04 („Bezahlt“ …) follows the line, indented `--space-5`, **without a surface of its own** (a box in a box read as a hole in dark mode); the open member's title is 600; its foot is left-aligned inside the indent (so „Ganz öffnen“ reads as the member's, not the pile's) and `--space-3` separates it from the next member line. One member open at a time.
 - A part without members (budgets, the mail queue) is text lines (≤ 5, then „n weitere“) without `▸`.
 - Mail: ToDos made from a mail that have no day are members (mail names them by key, `todos:<id>`); the count is queue + members.
 

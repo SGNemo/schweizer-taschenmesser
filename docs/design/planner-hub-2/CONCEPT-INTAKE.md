@@ -1,4 +1,4 @@
-# Planner hub 2 – concept: what comes in and how it is cut (ideas 1, 3, 6, 9, 11, 7)
+# Planner hub 2 – concept: what comes in and how it is cut (ideas 1, 3, 6, 9, 11)
 
 Frame and link contract: [CONCEPT](CONCEPT.md). Rows: [CONCEPT-ROWS](CONCEPT-ROWS.md). Words: [COPY](COPY.md).
 
@@ -14,7 +14,7 @@ Frame and link contract: [CONCEPT](CONCEPT.md). Rows: [CONCEPT-ROWS](CONCEPT-ROW
 
 **States.** planner off (target missing, page as today) · empty share (page says „Nichts angekommen.“, as today) · too long (cut, said) · stored · write failed (card stays, „Nicht gespeichert. Noch einmal?“).
 
-**Target (script, D2).** Shared link ends as a planner row: handles 6 → 2, module switches 1 → 0, forms 1 → 0.
+**Target (script, D2).** Shared link ends as a planner row: handles 5 → 2, module switches 2 / 3 → 1 (the planner itself), way back to the URL nein → ja.
 
 **Not part of it.** No way back into the source *app* (Android hands no dependable sender; a guessed package name would be a lie), no share *out* of the planner, no background receive.
 
@@ -41,7 +41,7 @@ Everything else – and every kind whose module is off – is a ToDo. The planne
 
 **Risk.** A stale shopping name turning „Batterien“ into a list item when he meant a task: the line says so first. Money never appears in a toast while „Werte ausblenden“ is on (`SensitiveValue` in the line, no amount in the toast).
 
-**Target (script).** A1: `rightKind` 4 → 12 of 12 with the field alone; A2 becomes unnecessary: module switches 8 → 0, forms 6 → 0.
+**Target (script).** A1: `rightKind` 4 → 12 of 12 with the field alone, rows afterwards 11 → 7; A2 (the capture detour: 33 handles, 3 / 5 switches, 2 forms) is no longer needed.
 
 **Not part of it.** No model, no network, no kind picker, no second field, no recognition inside „Plan einfügen“.
 
@@ -55,7 +55,7 @@ Everything else – and every kind whose module is off – is a ToDo. The planne
 
 **Struck part.** A map inside the planner (tiles, a network request from the planner's page, a new stimulus block) lowers no figure the jump does not; the order of stops is his, no routing.
 
-**Target (script).** C2: rows 3 → 1, module switches 2 → 0 (list ticked in place; the map jump is optional and counted separately).
+**Target (script).** C2: rows 2 → 1 (and the list is in the plan at all), module switches 2 → 0, working handles 9 / 8 → 6; bundling costs 6 handles once (the map jump is optional and counted separately).
 
 **Not part of it.** No address field on things, no geofence, no opening hours, no route time in the day's minutes.
 
@@ -65,7 +65,7 @@ Everything else – and every kind whose module is off – is a ToDo. The planne
 
 **Contract.** Rels `before`, `after`; `plan.requested.links`; calendar `planPanel`. No time is given to the thing: the planner stays a day planner (`decisions/plan.md`).
 
-**Target (script, D3).** A prepared thing linked to its appointment: module switches 2 → 0, handles 7 → 3.
+**Target (script, D3).** A prepared thing linked to its appointment: module switches 4 → 0, handles 14 → 3.
 
 **Not part of it.** No automatic „Vorbereiten“ row, no travel time, no templates per kind of appointment, nothing for all-day events.
 
@@ -77,16 +77,6 @@ Everything else – and every kind whose module is off – is a ToDo. The planne
 
 **States.** no topic exists (no entry in the page's ⋯ beyond „Thema …“ on rows) · filter on · filter on and empty („In diesem Thema liegt gerade nichts im Plan.“) · topic gone on another device (filter ends, toast-free).
 
-**Target (script, D4).** Rows on the sheet while working on one topic of 7 among 20 things: 20 → 7; handles to give 5 things a topic: 3 (select, „Thema …“, choose).
+**Target (script, D4).** Rows while working on one topic of 7 among 20 things: 20 → 7; handles to give five things the topic and switch the filter on: 27 / 22 → 11; module switches 2 → 0.
 
 **Not part of it.** No topic page outside the planner, no colours per topic, no topic in the capture syntax, no nesting, no topic on `accounts`.
-
-## Idea 7 – „Warte auf Antwort“ (last, separable, not yet confirmed by the maintainer)
-
-**Behaviour.** (1) Row ⋯ „Warte auf Antwort …“ → „bis“: 3 Tage · 1 Woche · 2 Wochen · Datum; optional „von“: a person (people) – a mail thread is taken from the row's own link. (2) The row leaves the sheet and stands in a folded line „Wartet auf Antwort · 2“ at the end of „Noch ohne Tag“ (text, no count badge; expanded: thing, „bis Mo 7. Dez.“, „Zurückholen“). (3) On that day it is back in „Noch ohne Tag“ with the chip „Antwort da? · von Vermieter“ and its links; nothing is written on that day – the source simply lists it again. (4) No notification.
-
-**Contract.** `PlannableSource.onWait?(id, until: string | undefined)` + `listWaiting?()` (ToDos: `startDate`, which already hides a task until that day); link `wait` to the person / thread. A source without the step does not offer the entry.
-
-**Target (script, D5).** Rows on the sheet with 3 things waiting: −3; handles to park one: 3; to bring one back early: 2.
-
-**Not part of it.** No reading of mail to detect an answer, no reminder, no escalation wording, no waiting state for invoices or lists.

@@ -1,4 +1,4 @@
-# Planner hub 2 – prompts, packages 5a to 3
+# Planner hub 2 – prompts, packages 5a to 1
 
 Plan, order, target figures, the shared block `#common` and „as built“: [PACKAGES](PACKAGES.md). One prompt per chat, pasted as it stands. Model: Claude Opus.
 
@@ -26,7 +26,7 @@ CONCEPT-ROWS.md „Idea 5“ (5a); Entscheidung Richtung A in DESIGN.md §3; han
 Bündel aus mehreren Dingen (5b), Besorgungen (6), Dauer messen (8, gestrichen), Schritt-Dauern, Verschachtelung.
 
 ## Abnahme
-Tests der Übergabe (5a); Mess-Skript C1 neu gemessen mit einem ToDo samt Checkliste: Zeilen 5 → 1, Durcharbeiten 10 → 6 Griffe, `nextStepOnly` ja, `savedAsRoutine` ja in 2 Griffen; kopf-leer- und tag-kippt-Skript grün.
+Tests der Übergabe (5a); Mess-Skript C1 neu gemessen mit einem ToDo samt Checkliste: Modulwechsel beim Durcharbeiten 0, `workTaps` 7 → 6, `nextStepOnly` ja, `savedAsRoutine` ja (`createTaps` 1 erst mit Paket 3); kopf-leer- und tag-kippt-Skript grün.
 
 ## Skills
 `council` (Manifest-Vertrag), `design:accessibility-review`, `file-pr`, `babysit-pr`, `leaving-pr-comments`. Full stop.
@@ -56,7 +56,7 @@ CONCEPT.md §0.1; CONCEPT-ROWS.md „Idea 5“ (5b); handoff/05-bundle.md („5b
 Besorgungsrunde und Orte (6), Thema (11), Bündel in Bündeln, ein automatischer Vorschlag zu bündeln.
 
 ## Abnahme
-Tests der Übergabe (5b); `e2e/seed/plan-bundle.seed.spec.ts`; Mess-Skript C2 (ohne Karte): Zeilen 3 → 1 neu gemessen.
+Tests der Übergabe (5b); `e2e/seed/plan-bundle.seed.spec.ts`; Mess-Skript C2: Zeilen 2 → 1, `oneRow` ja, `createTaps` ≤ 6.
 
 ## Skills
 `council` (Daten, Migration, zwei Geräte), `design:accessibility-review`, `file-pr`, `babysit-pr`, `leaving-pr-comments`. Full stop.
@@ -86,38 +86,8 @@ CONCEPT-INTAKE.md „Idea 1“ (ganz, mit dem Abschnitt gegen docs/security/LAUN
 Bilder und Dateien (gestrichen, CONCEPT-INTAKE „Struck part“), Rückweg in die Quell-App, Teilen aus dem Planer heraus, Empfang im Hintergrund.
 
 ## Abnahme
-Tests der Übergabe; `e2e/seed/share-planner.seed.spec.ts` (PWA-Weg); Mess-Skript D2: Griffe 6 → 2, Modulwechsel 1 → 0. `cargo`-Tests des Plugins unverändert grün.
+Tests der Übergabe; `e2e/seed/share-planner.seed.spec.ts` (PWA-Weg); Mess-Skript D2: Griffe 5 → 2, Modulwechsel 2 / 3 → 1, `wayBack` ja. `cargo`-Tests des Plugins unverändert grün.
 
 ## Skills
 `council` (Eingang von außen; Guardian: nur vorbefüllen, Schema-Tor, Längen, nichts abrufen, Manifest unverändert), `design:accessibility-review`, `file-pr`, `babysit-pr`, `leaving-pr-comments`. Full stop.
-```
-
-## Prompt – package 3: kinds in the field (`feat/plan-field-kinds`)
-
-```
-# Aufgabe: Planer-Zentrale 2, Paket 3 – Abladen mit Art-Erkennung: das eine Feld sagt vor dem Eintragen, was aus der Zeile wird
-Routing: Claude Code · Planer-Zentrale 2 Paket 3 · Opus
-Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
-Gemeinsamer Block (gilt ganz): docs/design/planner-hub-2/PACKAGES.md#common
-Branch `feat/plan-field-kinds` von frischem `develop`, nach dem Merge von Paket 1. Hotspots ansagen: `PlannerPage.tsx`, `strings.ts`; `quickCapture/parser/**` nur lesen und über neue Tests festnageln.
-
-## Ausgangslage
-CONCEPT-INTAKE.md „Idea 3“ (Tabelle „Sure when“ ist die Regel, wörtlich); handoff/03-kinds.md; COPY.md K1–K5; A11Y.md (Vorschauzeile).
-
-## Pflichtliste
-- `planner/fieldKind.ts`: reine Funktion Text → sichere Art oder nichts, auf dem vorhandenen Parser und dem lokalen Nachschlagen der Einkaufs- und Vorratsnamen (`quickCapture/targets/lookup.ts`); die eigenen Lesarten des Planers (Datum, „fest“, „Pause …“, „heute nur …“, eingefügter Plan) gehen vor. Je Tabellenzeile zwei Treffer und drei Beinahe-Treffer als Test.
-- `Capture.tsx`: Prop `preview` – Zeile K1 mit „Als Aufgabe eintragen“ (K3, auch Alt+Enter); Beispiele und Vorschau nie zugleich; 412: Zeile über dem Feld; Live-Region entprellt.
-- Eintragen: `saveCapture(<Art>)` + `requestIntoPlan` für Rechnung, Einkaufsliste, Bündel in **einer** rückgängig machbaren Aktion (schlägt die Plan-Anfrage fehl, wird das Angelegte zurückgenommen); Termin, Notiz, Merkliste ohne Planzeile, Toast bietet „In den Plan“.
-- Toast K4; kein Betrag im Toast bei „Werte ausblenden“.
-- Schalter K5 in den Planer-Einstellungen (an).
-- Kein Modell, kein Netz: die lokale Modell-Stufe (Desktop) läuft wie heute nur für Einträge ohne Vorschauzeile.
-
-## Nicht in diesem Paket
-Ein Arten-Wähler, ein zweites Feld, Erkennung in „Plan einfügen“, neue Parser-Arten, Lernen aus „Als Aufgabe eintragen“.
-
-## Abnahme
-Tests der Übergabe; `e2e/seed/plan-kinds.seed.spec.ts`; Mess-Skript A1: `rightKind` 12 von 12 allein mit dem Feld, Formulare 0, Modulwechsel 0; Parser-Korpus (quick-capture, kopf-leer) unverändert grün, Diff im PR.
-
-## Skills
-`council` (Daten entstehen in fremden Modulen aus einer Zeile; Guardian: nie stillschweigend falsch, ein Undo, kein Lesepfad), `design:accessibility-review`, `file-pr`, `babysit-pr`, `leaving-pr-comments`. Full stop.
 ```

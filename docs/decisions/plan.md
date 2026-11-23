@@ -10,6 +10,7 @@ New decisions go into the matching topic file as one bullet (not into this index
 - [plan-packages-2-5](plan-packages-2-5.md) – One field for entering and saying (2); more sources without write-back (3); Heute follows the plan; stage 1 in the planner field (4); optional windows (5); folded waiting group („Kopf leer“)
 - [plan-hub](plan-hub.md) – Planner hub („Der Tag als Blatt“): sheet, week band and context column (D2); field first, the plus on the phone (D3); no filled action in the head
 - [plan-links](plan-links.md) – One link contract between modules: `EntityLink`, `contributions.linkTarget`, `resolveLink` (planner hub)
+- [plan-hub-2](plan-hub-2.md) – Planner hub 2: principle 1 as a gate (8 and 7 struck), one thing one home, panels mounted in the row, steps at the source, topic as links, piles on offer, kinds by a visible line
 - [plan-sources](plan-sources.md) – Plan sources beyond ToDos: lists on request, pantry links, deadlines (subscriptions, vault with category titles only), time-tracking `ref`, gifts, requested ToDos
 - [plan-rethink](plan-rethink.md) – The plan is laid, not computed: placements stay, the engine proposes on request, tab „Noch offen“, lock on the row, one-time migration
 - [plan-tag-kippt](plan-tag-kippt.md) – Use case „Tag kippt“: „Plan einfügen“, „Nur das hier …“ with „Nächste Wochen“ and the start line, „Kleiner machen …“, the goal line, „Plan als Text kopieren“, „heute nur …“

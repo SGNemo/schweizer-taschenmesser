@@ -64,7 +64,7 @@ Identity: the planner keeps hue `indigo`, head `standard`, no filled action in t
 | Errand (6) | stops read top to bottom | place moved under the title (five columns before) | nine stops with open lists get long; lists fold |
 | Appointment (9) | two quiet buttons where he already looks | lead chip reuses the preview slot | the recessed blocker row is weak among 20 rows (as built); the chips carry the relation |
 | Topic (11) | 20 rows against 7 is the whole argument | the page head carries the filter (a line above the sheet plus a head figure for the whole day confused); „Alles zeigen“ once | a topic is invisible on the row by design – he finds it in ⋯ „Verknüpft“ |
-| Waiting (7) | the row is gone, which is the wish | – | the folded line at the end of a long „Noch ohne Tag“ is easy to overlook; the thing returns by itself, so nothing is lost |
+| Waiting (7, struck) | the row is gone, which is the wish | – | the folded line at the end of a long „Noch ohne Tag“ is easy to overlook; the thing returns by itself, so nothing is lost |
 | Duration (8) | „· wie zuletzt“ is nearly invisible | – | that it is a guess is hard to see – one more reason it is struck |
 
 ## 5. FOCUS checklist for the round ([FOCUS-GUIDELINES](../FOCUS-GUIDELINES.md); each package answers it again with figures)
