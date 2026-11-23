@@ -1585,9 +1585,8 @@ test('D4 Ein Thema', async ({ page, isMobile }, info) => {
   await expect(listForm).toHaveCount(0);
   // The new list is shown (empty): back to all open ToDos.
   const allOpen = page.locator('main').getByRole('button', { name: 'Alle offenen' });
-  const firstRow = page.locator('main').getByRole('button', { name: new RegExp(`^${MOVE[0]}`) });
-  await expect(allOpen.or(firstRow).first()).toBeVisible();
-  if (await allOpen.isVisible()) await hand.tap(allOpen, 'Alle offenen');
+  // (The switch to the new list comes after the dialog has closed: wait for it, not for the rows it replaces.)
+  if (await appears(allOpen, 5000)) await hand.tap(allOpen, 'Alle offenen');
   for (const title of MOVE) {
     await hand.tap(
       page
