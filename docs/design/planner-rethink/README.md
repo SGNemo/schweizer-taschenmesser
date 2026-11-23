@@ -9,10 +9,8 @@ Branch `design/planner-rethink`, 2026-11-21. The maintainer's brief: the planner
 | [CONCEPT](CONCEPT.md) | states, the engine as a proposer, missed, entering, more than a week, moving, counter-scenarios, targets |
 | [CONCEPT-MIGRATION](CONCEPT-MIGRATION.md) | stored shape, the one-time migration, finished things, mirror to ToDos, two devices, sources, the four invariants |
 | [CONCEPT-COPY](CONCEPT-COPY.md) | every new word, German and English, with the rejected ones |
+| [`mockups/`](mockups/) | `a.html`, `b.html`, `c.html`, `render.mjs` – the look of the directions; A is the reference |
 | [CONCEPT-DIRECTIONS](CONCEPT-DIRECTIONS.md) | directions A/B/C, critique, FOCUS checklist, accessibility review |
-| [HANDOFF](HANDOFF.md) | what is on screen after package 1, states, edge cases, tests |
-| [PACKAGES](PACKAGES.md), [PACKAGES-2-3](PACKAGES-2-3.md), [PACKAGES-4-7](PACKAGES-4-7.md) | seven packages with their prompts |
-| [`mockups/`](mockups/) | `a.html`, `b.html`, `c.html`, `render.mjs` |
 | [`planner-rethink.spec.ts`](../../../web/e2e/usecases/planner-rethink.spec.ts) | the measuring script: `IST` (green on `develop`), `TARGET` (asserted by the last package) |
 
 ## The figures in one table
@@ -34,4 +32,4 @@ Branch `design/planner-rethink`, 2026-11-21. The maintainer's brief: the planner
 
 Read from his words and left uncontradicted: „aufteilbar“ = may be spread over days on request (never cut into parts by itself); „locken“ = „fest“; lock words „… fest“, „… lock“, „…!“; „Neues automatisch vorschlagen“ off; a date set in ToDos shows as a muted row „In ToDos: Do“; a pin on a later day is honoured at the update; phone and PC get the version together.
 
-Next: [PACKAGES](PACKAGES.md) (seven packages, prompts), [HANDOFF](HANDOFF.md) (package 1).
+Built in seven packages (2026-11-22, PRs #1034–#1053); what was decided along the way: [decisions/plan-rethink.md](../../decisions/plan-rethink.md). The working documents of the round (packages, hand-off) were removed after the last package; the mockups stay as the reference for the look of direction A (a follow-up package brings the page closer to it).
