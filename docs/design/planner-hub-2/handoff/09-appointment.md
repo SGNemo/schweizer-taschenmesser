@@ -17,8 +17,8 @@ The appointment is the recessed blocker row of the day sheet, as built („15:00
 ```
 
 - Line 1: day · time · place (`--text-sm`). Things already linked `before` / `after` stand under small heads (A5 „Vorbereitung“, „Danach“) as tick lines (they are ToDos: read through `linkEntries`, ticked through `todo.doneRequested` inside `undoable` – calendar never imports ToDos).
-- A1 are two quiet buttons in the foot, drawn by the planner for blocker rows (calendar's panel is the body only: it has no channel to the planner's field and must not import it). A tap closes nothing: focus moves into the planner's field, which shows the lead chip A2 („vor Friseur, Mi“) in the preview line's place (hand-off 03's slot); the chip is two controls: a small menu button (name A6, offers A3 „am Tag davor“) and a separate ✕ (name A6 „Entfernen“). Backspace in the empty field removes the chip.
-- Enter: ToDo on the appointment's day (or the day before / after), link `before` / `after`; toast as for any entry, one undo.
+- A1 are two quiet buttons in the foot, drawn by the planner for blocker rows (calendar's panel is the body only: it has no channel to the planner's field and must not import it). A tap closes nothing: focus moves into the planner's field, which shows the lead chip A2 („vor Friseur, Mi“) before the input (the order of lead chips and preview: [00-common](00-common.md) „One slot, an order“); the chip is two controls: a small menu button (name A6, offers A3 „am Tag davor“ – hidden when the appointment is today) and a separate ✕ (name A6 „Entfernen“). Backspace in the empty field removes the chip.
+- Enter: ToDo on the appointment's day (or the day before / after), link `before` / `after` – the planner's own `addFromField` grows: day and links inside its one undoable action, with the field's toast; not the bus. While K1 shows a kind without a plan row (Termin, Notiz, Merkliste) the chip is drawn struck through and not applied.
 - The new row carries chip A4 („vor Friseur“) in its chip line and sorts directly before (after) the blocker within the day.
 
 ## States
@@ -27,7 +27,7 @@ no linked things (no heads) · with linked things · lead chip active in the fie
 
 ## 1920 / 412
 
-412: the two buttons share one row (each ≥ 44 px high, wrap allowed); the lead chip stands above the field (the field is the last row).
+412: the two buttons share one row (each ≥ 44 px high, wrap allowed); the lead chip stands before the input as on 1920.
 
 ## Edge cases
 
@@ -37,6 +37,6 @@ no linked things (no heads) · with linked things · lead chip active in the fie
 
 ## Tests
 
-- Calendar panel component test (states); `links` on `plan.requested` writes a `_links` row with `before` and no `links[]` entry.
+- Calendar panel component test (states); `addFromField` with the lead chip writes the ToDo, its day and a `_links` row with `before` in one undo entry, with no `links[]` entry; A3 is not offered for an appointment today.
 - Order test: the row sorts before / after the blocker and is still moved only by him.
-- e2e seed `e2e/seed/plan-appointment.seed.spec.ts`; `planner-hub-2.spec.ts` D3 re-measured.
+- e2e seed `e2e/seed/plan-appointment.seed.spec.ts`; `planner-hub-2.spec.ts` D3 re-measured (taps 4, switches 0); its `linked` now reads `_links` (`before` from the ToDo to `calendar:ev1`) instead of `todo.links[]`.

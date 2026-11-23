@@ -15,7 +15,7 @@ Measured 2026-11-23 on `develop` (69b217cf) by `web/e2e/usecases/planner-hub-2.s
 | 7 | Waiting | partly | ToDo `startDate`, moving a selection to a day | a reason and a person on the row |
 | 8 | Real duration | missing | `DEFAULT_MIN = 30` (`core/plan/types.ts`), focus `startedAt` (device-local), `actuals` (types only) | any record of elapsed time |
 | 9 | Before / after | partly | calendar is a link target, „Vorbereitung“ reads reverse links, „Als ToDo merken“ | the offer in the planner; relations `before` / `after` |
-| 10 | Back reference | partly | `_links`, `resolveLink`, `plannedDay`, `planRow.ts`; seven link targets; marks in ToDos, invoices, mail | five link targets; a mark in lists, notes, calendar, people, vault, routines; bookmarks and subscriptions read their own field |
+| 10 | Back reference | partly | `_links`, `resolveLink`, `plannedDay`, `planRow.ts`; seven link targets; marks in ToDos, invoices, mail | four link targets; a mark in lists, notes, calendar, subscriptions, bookmarks, vault, routines |
 | 11 | Topic | missing | per-module tags, lists, notebooks, categories | anything across modules; any planner filter |
 
 ## 2. Friction (ids for the packages)
@@ -40,45 +40,63 @@ Measured 2026-11-23 on `develop` (69b217cf) by `web/e2e/usecases/planner-hub-2.s
 
 ## 3. Figures: now → target (desktop / phone where they differ)
 
-| Flow | Figure | Now | Target | By package |
-| --- | --- | --- | --- | --- |
-| A1 twelve things into the field | right kind | 4 of 12 | 12 of 12 | 3 |
-| | rows afterwards | 11 | 7 | 3 |
-| | module switches · forms | 0 · 0 (A2: 3 / 5 · 2) | 0 · 0, A2 no longer needed | 3 |
-| B finances and mail | rows before | 5 (for 10 things) | 2 / 1 | 2 |
-| | module switches | 5 | 0 | 4b, 4c, 2 |
-| | handles · per thing | 27 · 17 / 14 · 9 | 13 · 11 / 8 · 7 | 4b, 4c, 2 |
-| | finished in the planner | 1 of 10 | 10 / 6 (no mail on the phone) | 4b, 4c, 2 |
-| C1 household round | rows | 1 (as a routine) | 1 | 5a |
-| | module switches | 4 / 5 | 0 | 5a (3 for creating in the field) |
-| | create · work handles | 12 · 7 | 1 · 7 | 3 · 5a |
-| | only the next step | no | yes | 5a |
-| C2 errand | rows | 2 (list not in the plan) | 1 | 5b |
-| | module switches | 2 | 2 the first time (the list is asked into the plan in Listen), 0 for later rounds | 5b |
-| | work handles | 9 / 8 | 6 | 5b |
-| | handles to get the round together (a price, by his choice) | 0 | 8 | 5b |
-| D1 is it in the plan | mark visible · agrees | 1 · 2 of 5 | 5 · 5 | 10b |
-| | module switches to find out from the module's side (`tripsToPlanner`) | 8 | 0 | 10b |
-| D2 shared link | handles · switches · way back | 5 · 2 / 3 · no | 2 · 1 · yes | 1 |
-| D3 before an appointment | handles · switches | 14 · 4 | 3 · 0 | 9 |
-| D4 one topic | rows · handles · switches | 20 · 27 / 22 · 2 | 7 · 11 · 0 | 11 |
-| D5 waiting | handles · switches · rows off the sheet | 7 · 0 · 3 | unchanged | – |
+Target = the script's `TARGET` (the designed path after the last package of the flow, counted as the script counts); intermediate figures are what the script reads after the named package.
 
-**What gets dearer, said plainly:** after 4a the title of a row expands it, so jumping from a row into its module is two handles instead of one (D1, measured from the planner's side: 11 → 16 handles for five things) – the trip the mark and the panels are meant to make unnecessary; and getting a round together is a choice of 8 handles (C2).
+| Flow | Figure | Now | Target (after package) |
+| --- | --- | --- | --- |
+| A1 twelve things into the field | right kind · linked to the plan | 4 · 4 of 12 | 12 · 10 (3; the pantry knows the three shopping names, as in the script's seed) |
+| | rows afterwards | 11 | 7 (3) |
+| | handles · per thing · switches | 12 · 0 · 0 | unchanged |
+| A2 each as the right kind | handles · per thing · switches · forms | 33 / 34 · 13 / 14 · 3 / 5 · 2 | no longer needed (A1 does it); stays as measured |
+| B finances and mail (10 things) | rows before | 5 | 5 (4b) → 2 / 1 (2) |
+| | module switches | 5 | 3 (4b; budgets and mail stay trips) → 0 (2) |
+| | handles · per thing | 27 · 17 / 14 · 9 | 28 · 21 / 16 · 13 (4b, price) → 16 · 12 / 10 · 8 (2) |
+| | finished in the planner | 1 | 5 (4b) → 9 / 5 (2; the budget is read only and never counts, no mail on the phone) |
+| | rows after | 1 | 0 (4b) → 1 (2; a budget over its frame keeps the money pile) |
+| | 4c | – | no figure of its own (the mails enter through mail until 2) |
+| C1 household round | create · work · all handles | 12 · 7 · 19 | 12 · 8 · 20 (4a, price) → 11 / 10 · 7 · 18 / 17 (5a) → 1 · 7 · 8 (3) |
+| | per thing | 6 | 7 (from 4a, lasting price) |
+| | module switches | 4 / 5 | 4 / 5 (4a) → 2 (5a: the ToDo with its checklist is made in ToDos) → 0 (3) |
+| | only the next step · rows | no · 1 | yes (5a) · 1 |
+| C2 errand round | rows · one row | 2 · no | 1 · yes (5b) |
+| | create · work handles | 0 · 9 / 8 | 14 / 13 (price) · 6 (5b) |
+| | per thing · switches | 5 · 2 | 7 (price) · 2 (5b: the list is asked into the plan in Listen) |
+| D1 is it in the plan | mark visible · agrees | 1 · 2 of 5 | 5 · 5 (10b) |
+| | `tripsToPlanner` (from the module's side) | 8 | 0 (10b) |
+| | handles · per thing (from the planner's side) · switches | 11 · 5 · 10 | 11 · 5 · 10 (10b) → 15 · 9 · 10 (4a, price) |
+| D2 shared link | handles · switches · way back | 5 · 2 / 3 · no | 2 · 1 · yes (1) |
+| D3 before an appointment | handles · per thing · switches | 14 · 0 · 4 | 4 · 0 · 0 (9) |
+| D4 one topic | rows · switches · filter | 20 · 2 · no | 7 · 0 · yes (11) |
+| | handles · per thing | 27 / 22 · 20 / 15 | 22 / 23 · 15 (11; phone handles a price) |
+| D5 waiting | handles · switches · rows off the sheet | 7 · 0 · 3 | unchanged (7 struck) |
+
+**What gets dearer, said plainly.** After 4a the title of a row expands it, so jumping from a row into its module is expand + „Ganz öffnen“: D1 from the planner's side 11 → 15 handles, 5 → 9 per thing, for good; C1 per thing 6 → 7 for good and 7 → 8 work handles until 5a. After 4b every invoice and cancellation is expand + its step while budgets and mail are still trips: B 27 → 28 handles (phone 14 → 16), 17 → 21 per thing (9 → 13) until 2. Bundling an errand round with a shopping list (5b) costs 14 handles (phone 13) once and per thing 5 → 7, because the list has to be asked into the plan in Listen; it buys one row less (2 → 1) and 9 / 8 → 6 working handles, and no module switch fewer. On the phone, giving five things a topic costs one handle more than today (22 → 23: Thursday's invoice waits under the folded „Danach“). After 2 one row stays: the budget over its frame keeps the money pile (`rowsAfter` 0 after 4b, 1 after 2) – the script's header names no price for it.
+
+### Named prices (above `IST` on purpose; the script's header)
+
+| Figure | From → to | From package | Until |
+| --- | --- | --- | --- |
+| B taps | 27 → 28 (phone 14 → 16) | 4b (4c) | 2 (`PRICE`, while `rowsBefore` reads 5) |
+| B perThing | 17 → 21 (phone 9 → 13) | 4b (4c) | 2 (`PRICE`) |
+| C1 workTaps · taps | 7 → 8 · 19 → 20 | 4a | 5a (`PRICE`, while `nextStepOnly` reads nein) |
+| C1 perThing | 6 → 7 | 4a | lasting (`TARGET`) |
+| C2 createTaps · perThing | 0 → 14 (phone 13) · 5 → 7 | 5b | lasting |
+| D1 taps · perThing | 11 → 15 · 5 → 9 | 4a | lasting |
+| D4 taps (phone only) | 22 → 23 | 11 | lasting |
 
 ## 4. The gate (principle 1: what lowers neither rows nor module switches is not built)
 
 | Idea | Rows | Switches | Verdict |
 | --- | --- | --- | --- |
-| 10 | – | D1 `tripsToPlanner` 8 → 0 (measured from the module's side); 10a itself moves no figure – it is the base of 10b, 4, 9, 11, 1, 3 | built |
-| 4 | – | 5 → 0 (B, with 2) | built (4a itself is the frame and moves no figure) |
-| 2 | 5 → 2 (B) | – | built |
-| 5 | bundle: 2 → 1 (C2); steps: one row as today (C1 – today's routine is one row too) | 4 / 5 → 0 (C1) | built |
-| 1 | – | 2 → 1 (D2) | built – **without pictures** (no figure beyond the text path; the one truly new entry surface) |
-| 3 | 11 → 7 (A1) | 3 / 5 → 0 (A2) | built |
-| 6 | 2 → 1 (C2) – but that is the bundle of 5b | none the first time | **shrunk:** what the script rewards is built in 5b (a list member is ticked inside the bundle). **Struck:** a place per stop, the map jump, a map in the planner – `mapShown` stays „nicht möglich“, no figure moves. |
-| 9 | – | 4 → 0 (D3) | built |
-| 11 | 20 → 7 (D4) | 2 → 0 | built |
+| 10 | – | D1 `tripsToPlanner` 8 → 0 (10b, measured from the module's side); 10a itself moves no figure – it is the base of 10b, 4, 9, 11, 1, 3 | built |
+| 4 | – | B 5 → 3 (4b), → 0 with 2; 4a moves no figure of its own (it is the frame, and it carries the prices of D1 and C1); 4c moves no figure of B by itself (the mails enter through mail until 2) | built |
+| 2 | B 5 → 2 / 1 before; after: 0 (4b) → 1 | B 3 → 0 | built |
+| 5 | 5a: one row as today (C1 – today's routine is one row too); 5b: C2 2 → 1 | 5a: C1 4 / 5 → 2 (→ 0 with 3); 5b: C2 stays 2 | built – 5b is thin by the figures: one row less for 14 / 13 handles once and per thing 5 → 7 |
+| 1 | – | D2 2 / 3 → 1 | built – **without pictures** (no figure beyond the text path; the one truly new entry surface) |
+| 3 | A1 11 → 7 | C1 2 → 0; A2 3 / 5 → 0 (no longer needed) | built |
+| 6 | C2 2 → 1 – but that is the bundle of 5b | C2 stays 2 | **shrunk:** what the script rewards is built in 5b (a list member is ticked inside the bundle). **Struck:** a place per stop, the map jump, a map in the planner – `mapShown` stays „nicht möglich“, no figure moves. |
+| 9 | – | D3 4 → 0 | built |
+| 11 | D4 20 → 7 | D4 2 → 0 | built |
 | **8** | none | none | **struck.** It lowers per-thing handles („Dauer …“) and booked minutes only. Concept, hand-off and prompt are kept so one „ja“ starts it. My recommendation is to say that „ja“ after 5a: wrong 30-minute rows make days look full, which the script cannot count. |
 | **7** | none (today's move takes the three rows off the sheet as well) | none (0 today) | **struck.** Today: 7 handles, no switch, comes back by itself (H15). What it would add is the reason on the row („Antwort da? · von Vermieter“), not fewer rows. It was also the one idea the maintainer had not confirmed. Concept, hand-off and prompt are kept. |
 

@@ -56,4 +56,4 @@ Per [00-common](00-common.md). On 412 the `PayStep` stacks: chips, amount, butto
 - Per panel a component test with its states; invoices: paying from the panel writes what `PayStep` writes on the page and nothing in the planner (write spy).
 - Write spy: opening and closing any panel writes nothing anywhere.
 - e2e seed `e2e/seed/plan-expand.seed.spec.ts`: pay an invoice, tick two list items, tick a checklist line – without leaving `/planner`.
-- `planner-hub-2.spec.ts` flow B re-measured (4b: money, 4c: mail).
+- `planner-hub-2.spec.ts` re-measured – 4a: D1 taps 15, perThing 9 (lasting price) and C1 workTaps 8, taps 20 (price until 5a), perThing 7 (lasting); 4b: B switches 3, doneInPlanner 5, rowsAfter 0, taps 28 / phone 16 and perThing 21 / 13 (price until 2); 4c: B unchanged (the mails enter through mail until package 2).

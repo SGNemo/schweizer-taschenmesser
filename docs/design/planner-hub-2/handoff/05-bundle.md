@@ -22,7 +22,8 @@ Concept: [CONCEPT-ROWS, idea 5](../CONCEPT-ROWS.md). Decision between two direct
 
 - Steps are tick `PanelLine`s in order; done ones stay in place (struck), so the order never jumps.
 - 5b: a member line has **one** lead column: the tick where the member takes one, else its source glyph (an invoice) – never both; `▸` at the end when it has a panel; drag handle on desktop hover / focus (`SortableList` from `@/ui`), „Nach oben / Nach unten“ in the line's ⋯ on the phone.
-- Foot: B3 „Los“ (secondary) · ⋯ (B14; this is where „Als Routine speichern“ is: two handles) · X2 (5a only: opens the ToDo / list / routine).
+- Foot: B3 „Los“ (secondary) · ⋯ (B14; this is where „Als Routine speichern“ is: two handles – for a ToDo only when it is a plain task without an `origin` link; lists and routines as they are) · X2 (5a only: opens the ToDo / list / routine).
+- `▸` on a member line and `▾` on a list member are buttons named X1.
 - More than 12 steps: 12 + „n weitere“.
 
 ## „Los“ – the focus page in step mode (`/planner/focus/:unit?step=1`)
@@ -39,7 +40,7 @@ Reuses `FocusPage` (shell hidden, Esc leaves, the round survives a reload). Diff
 
 - No ring in step mode (a step has no minutes). No list of the other steps – **only the next one**.
 - „Fertig · weiter“: the step's own done (`onStepDone`, or the member's `onDone`; a member without a tick shows its panel under the title and advances when the thing is done there), then the next open step fades in (opacity, `--dur`).
-- On the last open step the filled button reads B23 „Fertig“: it finishes the step **and** ticks the carrying thing (5a; the thing's toast carries the undo). Then B8 „Alles durch.“ with B9 „Zurück zum Plan“. 5b: nothing to tick – the bundle is done when its members are.
+- On the last open step the filled button reads B23 „Fertig“: it finishes the step, ticks the carrying thing (5a) and **returns to the plan** with the thing's toast („Erledigt.“ + undo). No end page. 5b: after the last member the same return, nothing to tick – the bundle is done when its members are.
 - Skipped steps: at the end B10; „Später“ returns to the plan with the steps open.
 - 412: the same, actions stacked full width in the order B5, B6, B7.
 - Keys: Enter = B5, `S` = B6, `P` = B7, Esc = back to the plan (the round keeps its place); one line under the buttons names them (B19, `--text-meta`, `--text-3`), not drawn on touch devices.
@@ -49,7 +50,8 @@ Reuses `FocusPage` (shell hidden, Esc leaves, the round survives a reload). Diff
 
 - Selection bar (exists) gets B11 after „Verschieben …“; enabled from 2 rows. Dialog B12: one `TextField` (prefilled with the first title, selected), primary „Bündeln“, the shared „Abbrechen“. Toast B13.
 - A member that is a list is open inside the panel: its open items as tick lines (the lists panel's body, max 8 + „n weitere“), `▾` folds it. In „Los“ a list member is one step that shows these tick lines under its title.
-- The bundle takes the day of the first ticked row (or „ohne Tag“ if none had one); minutes = sum of the members'.
+- The bundle takes the day of the first ticked row (or „ohne Tag“ if none had one); minutes = sum of the members'. While it lives, a member's own assignment rows (also one written later on another device) are ignored by board, run, proposals and `plannedDay`: the bundle wins.
+- „Bündeln …“ is only in the selection bar, never in a row's ⋯.
 - Panel ⋯: „Umbenennen …“, „Als Routine speichern“ (only if all members are plain tasks; toast B16), „Auflösen“ (toast B15).
 - A line's ⋯: B20 „Aus dem Bündel nehmen“ (the member is its own row on the bundle's day again), on the phone also B21 „Nach oben“ / „Nach unten“.
 
@@ -59,7 +61,7 @@ closed · k of n · expanded · sorting · in „Los“ · paused · all done (d
 
 ## Tests
 
-- 5a: `steps` handed over by ToDos / Listen / Routinen (unit, per source); `onStepDone` round trip; steps never part of the input hash (`linksDisplayOnly`-style test); focus step mode: advance, skip, pause, reload mid-step, last step.
-- 5b: bundle / unbundle are one undo each and restore every assignment (snapshot test of all planner rows before / after undo); a member with `bundle` set is not on the board; two-device merge of `bundle` / `step` (field LWW) converges; deleting a bundle deletes no member.
+- 5a: `steps` handed over by ToDos / Listen / Routinen (unit, per source); `onStepDone` round trip; steps never part of the input hash (`linksDisplayOnly`-style test); focus step mode: advance, skip, pause, reload mid-step, last step (B23 ticks the thing and returns to the plan); „Als Routine speichern“ not offered for a ToDo with an `origin` link.
+- 5b: bundle / unbundle are one undo each and restore every assignment (snapshot test of all planner rows before / after undo); a member with `bundle` set is not on the board and its own assignment rows are ignored by run, proposals and `plannedDay`; two-device merge of `bundle` / `step` (field LWW) converges; device A bundles X while device B moves X to Thursday → X is in the bundle, shown on the bundle's day, „Auflösen“ puts it there; deleting a bundle deletes no member; `planner_bundle` in `NEVER_SHARED`.
 - Rule tests of planner rethink §7 extended to „Bündeln“, „Auflösen“, „Aus dem Bündel nehmen“, step ticks; write spy: a member done or deleted in its own module writes nothing in the planner's tables.
-- e2e seed `e2e/seed/plan-bundle.seed.spec.ts`; `planner-hub-2.spec.ts` C1 re-measured.
+- e2e seed `e2e/seed/plan-bundle.seed.spec.ts`; `planner-hub-2.spec.ts` re-measured – 5a: C1 (create 11 / phone 10, work 7, taps 18 / 17, perThing 7, switches 2, `nextStepOnly` ja); 5b: C2 (rows 1, `oneRow` ja, create 14 / 13, work 6, perThing 7, switches 2), with `rows` and `oneRow` read after the bundle exists.

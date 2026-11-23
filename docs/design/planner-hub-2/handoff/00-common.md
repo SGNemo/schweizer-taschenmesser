@@ -15,7 +15,9 @@ Read with the package's own hand-off. Words: [COPY](../COPY.md) (ids `M1` …). 
 | `PlanPanelHost` | `core/modules/PlanPanelHost.tsx` | lazy mount + boundary + default panel | 4a |
 | `PanelLine` | `@/ui` (in `ListSurface.tsx`, additive) | one line inside a panel: optional tick, text, meta, one end action | 4a |
 | Step mode | `planner/routes/FocusPage.tsx` | „Los“ | 5a |
-| Preview line | `planner/components/Capture.tsx` (additive prop `preview`) | K1 + K3, also A2's lead chip | 3 / 9 |
+| Preview line, lead chips | `planner/components/Capture.tsx` (additive props) | K1 + K3 under the field; lead chips A2 / T11 before the input (rule below) | 3 / 9 / 11 |
+
+**One slot, an order (field).** Lead chips stand before the input: A2 from „Vorbereiten …“, T11 while a topic filter is on; at most two, A2 first. The K1 preview line still shows under the field. Enter makes what K1 says and gives it both the link and the topic. For a kind that gets no plan row (Termin, Notiz, Merkliste) the lead chips are drawn struck through while K1 shows and are not applied.
 
 No new token, no new colour, no new icon family. Glyphs come from `ui/icons.tsx`; a missing one is drawn in the same 24 px, 1.75 stroke grid and named in the PR.
 

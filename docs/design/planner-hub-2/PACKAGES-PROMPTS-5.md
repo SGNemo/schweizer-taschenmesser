@@ -12,13 +12,13 @@ Gemeinsamer Block (gilt ganz): docs/design/planner-hub-2/PACKAGES.md#common
 Branch `feat/plan-topic` von frischem `develop`, nach dem Merge von Paket 9. Hotspots ansagen: Dexie-Version / `schema.snapshot.json`, `PlannerPage.tsx`, `strings.ts`.
 
 ## Ausgangslage
-CONCEPT.md §0.1, §1.1 (`topic`); CONCEPT-INTAKE.md „Idea 11“ (mit „Why a topic and not a tag“); handoff/11-topic.md; COPY.md T1–T11.
+CONCEPT.md §0.1, §1.1 (`topic`); CONCEPT-INTAKE.md „Idea 11“ (mit „Why a topic and not a tag“); handoff/11-topic.md; COPY.md T1–T4, T6, T8–T12.
 
 ## Pflichtliste
-- Sammlung `planner_topic` (`title` ≤ 60; Datensatz-id `t_<uuid>`, damit der Link-Schlüssel `planner:<Datensatz-id>` ist und `sweepPurged` ihn findet); `db:bump`, Schema-Historie, `manifest.version`; `planner`-`linkTarget` nur für Themen; Mitgliedschaft nur als `topic`-Link (Thema → Ding), ein Thema je Ding (ein zweites ersetzt das erste im selben Undo). Der Link speichert das Ding selbst (`entityId` bei Vorkommens-Zeilen); der Filter trifft Zeilen nach der Präfix-Regel aus CONCEPT §1.2; „Thema …“ gibt es nicht auf Stapel- und Bündel-Zeilen. `sync.test.ts` um den `topic`-Fall (aus 10a hierher verschoben).
-- Wähler (Dialog T2) aus Zeilen-⋯ und Auswahlleiste; Angebot T7 aus ToDo-Tags (höchstens 3, nur ein Tipp übernimmt, nichts wird zurück in Tags geschrieben).
-- Filter aus dem Seiten-⋯ (T3): Zeile T4, Blatt, Band, „Noch ohne Tag“, „Noch offen“ zeigen nur Mitglieder; die Kopfzahl zählt weiter den ganzen Tag; „Auch im Thema“ (T5) für verknüpfte Dinge, die keine Planzeilen sind (Unterlagen nur mit Kategorie-Wort); Filter ist Gerätezustand (`_meta`), schreibt nichts Synchronisiertes (Schreib-Spion).
-- Neues im Feld bei aktivem Filter bekommt das Thema (Vor-Chip mit ✕).
+- Sammlung `planner_topic` (`title` ≤ 60; Datensatz-id `t_<uuid>`, damit der Link-Schlüssel `planner:<Datensatz-id>` ist und `sweepPurged` ihn findet); `db:bump`, Schema-Historie, `manifest.version`; `planner_topic` kommt in den Teilen-Ausschluss (`NEVER_SHARED` in `core/share/share.ts`), mit Test; `planner`-`linkTarget` nur für Themen; Mitgliedschaft nur als `topic`-Link (Thema → Ding), geschrieben nur von der eigenen Aktion „Thema …“ (über den Bus wird `topic` übersprungen, seit 10a), ein Thema je Ding (ein zweites ersetzt das erste im selben Undo). Der Link speichert das Ding selbst (`entityId` bei Vorkommens-Zeilen); der Filter trifft Zeilen nach der Präfix-Regel aus CONCEPT §1.2; „Thema …“ gibt es nur auf Zeilen, deren Modul verknüpfbar ist (`isLinkable`), und auf Termin-(Blocker-)Zeilen; nie auf Stapel- und Bündel-Zeilen. `sync.test.ts` um den `topic`-Fall (aus 10a hierher verschoben).
+- Wähler (Dialog T2) aus Zeilen-⋯ und Auswahlleiste; der Planer liest keine ToDo-Tags. Nach dem ersten Gebrauch bietet das ⋯ einer Zeile das zuletzt benutzte Thema direkt als T12 „Thema: {Umzug}“ über T1 an (gerätelokal gemerkt, nicht synchronisiert).
+- Filter aus dem Seiten-⋯ (T3): Zeile T4, Blatt, Band, „Noch ohne Tag“, „Noch offen“ zeigen nur Mitglieder; die Frei-Zeit des Tagesblatts zählt weiter den ganzen Tag; die Kopfzahl weicht T4. Ein Termin mit dem Thema bleibt als Blocker-Zeile sichtbar, Blocker ohne das Thema sind ausgeblendet. Filter ist Gerätezustand (`_meta`), schreibt nichts Synchronisiertes (Schreib-Spion).
+- Neues im Feld bei aktivem Filter bekommt das Thema (Vor-Chip T11 mit ✕ vor der Eingabe, nach A2; über die eigene `addFromField` des Planers, nicht über den Bus; Regel aus Paket 3).
 - Verwalten in den Planer-Einstellungen: umbenennen, löschen (T9: entfernt nur die Links, ein Undo).
 - Zwei Geräte: dasselbe Ding offline in zwei Themen → beide Zeilen bleiben, gelesen wird die spätere; aufgeräumt wird nur in der nächsten Aktion „Thema …“ an diesem Ding – nie im Hintergrund, nie im Undo-Eintrag einer anderen Aktion.
 
@@ -26,7 +26,7 @@ CONCEPT.md §0.1, §1.1 (`topic`); CONCEPT-INTAKE.md „Idea 11“ (mit „Why a
 Eine Themen-Seite außerhalb des Planers, Farben je Thema, Thema in der Eingabe-Syntax, Verschachtelung, neue Felder in anderen Modulen.
 
 ## Abnahme
-Tests der Übergabe; `e2e/seed/plan-topic.seed.spec.ts`; Mess-Skript D4: Zeilen 20 → 7, Griffe 27 / 22 → 11, Modulwechsel 0, `planFilter` ja.
+Tests der Übergabe; `e2e/seed/plan-topic.seed.spec.ts`; Mess-Skript D4: `rows` 20 → 7, `moduleSwitches` 2 → 0, `planFilter` nein → ja, `perThing` 20 / 15 → 15, `taps` Desktop 27 → 22, Handy 22 → 23 – ein im Skript-Kopf benannter Preis, dauerhaft (Donnerstags Rechnung wartet unter dem gefalteten „Danach“ des Handys). Lesart des Skripts ändern: `rows` (die „· n Dinge“ der Kacheln plus „Termine“) und `planFilter` nach dem Einschalten des Filters lesen; heute werden beide vor dem Weg über einen Knopfnamen gelesen.
 
 ## Skills
 `council` (Daten, Link-Vertrag, zwei Geräte), `design:accessibility-review`, `file-pr`, `babysit-pr`, `leaving-pr-comments`. Full stop.
@@ -94,7 +94,7 @@ CONCEPT-STRUCK.md „Idea 8“ (ganz; „The same thing“ ist die Regel); hando
 - `planner_measure` (`key`, `minutes`, `on`), `db:bump`, Schema-Historie, `manifest.version`; aufgezeichnet in der Aktion „Erledigt“ / „Fertig · weiter“ einer Fokus-Runde (Pausen abgezogen; < 1 Min und > 8 h nicht), dort auch auf 5 je Schlüssel gekürzt.
 - Schlüssel: stabile Quell-id vor Titel; Titel-Normalisierung = die von `pastePlan.ts`; kein unscharfer Treffer.
 - Vorschlag: Median der letzten 5 bei ≥ 2, auf 5 gerundet, nur beim Anlegen ohne Minuten; Anzeige D1, Zeile D2 in „Dauer …“; Schalter und „Gemessene Zeiten löschen“ (D3).
-- Ausschluss-Test: die Sammlung erreicht keinen Export, keinen Kopiertext, keine Daten-API, kein Assistenten-Schema, keine Diagnose.
+- Ausschluss-Test: die Sammlung erreicht keinen Export, keinen Kopiertext, keine Teilen-Datei (`NEVER_SHARED`), keine Daten-API, kein Assistenten-Schema, keine Diagnose.
 
 ## Nicht in diesem Paket
 Zeiterfassung an- oder einschalten, bestehende Schätzungen ändern, Statistik-Ansichten, Vergleiche „geplant gegen gebraucht“.

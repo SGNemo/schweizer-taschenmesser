@@ -14,6 +14,8 @@ Concept: [CONCEPT-INTAKE, idea 3](../CONCEPT-INTAKE.md). Common parts: [00-commo
 - Right: K3, a quiet text button (ghost), min 44 px target.
 - `aria-live="polite"` on the line: it is read once per change of kind, not per keystroke (debounce 400 ms; the visual line updates at once).
 - Enter stores what the line says; Alt+Enter = K3.
+- Lead chips (A2 from hand-off 09, T11 from hand-off 11) stand before the input, at most two, A2 first; the line keeps its place under the field. Enter gives what K1 says both the link and the topic. For a kind that gets no plan row (Termin, Notiz, Merkliste) the lead chips are drawn struck through while the line shows and are not applied.
+- „Einkaufsliste“ by a known name needs the name lookup this package builds in `web/src/quickCapture/targets/lookup.ts` (today it holds only `findOpenInvoice`): pantry item names and shopping-list item names, read through the generic manifest repo as `findOpenInvoice` does (core, no module import), exact, case-blind, local, only while those modules are on.
 
 ## What the line may contain per kind
 
@@ -38,15 +40,17 @@ no reading (examples as today) · reading shown · stored (toast K4 for the kind
 
 - „Rechnung schreiben an Müller“ (no amount): no line; a ToDo.
 - „Milch“ known to the shopping list, but he is on a day sheet and wants a task: K3. No learning from that choice.
-- A date word the planner reads itself („Wäsche morgen“): the planner's reading wins; no kind line.
+- A date word without a sure kind („Wäsche morgen“): the planner's reading wins; no kind line. A sure kind that uses a date wins over the planner's date reading and takes the date: „Rechnung Stadtwerke 80 € bis Fr“ → invoice with deadline Fr; „Mi 15:00 Friseur“ → appointment on Wednesday. „fest“, „Pause …“, „heute nur …“ and a pasted plan still come first.
+- „Mahnung …“ with an amount: no line (not a sure kind; it would duplicate an open invoice).
 - Pasted block of lines: „Plan einfügen“ as built; no kind line.
 - Two kinds sure at once (URL inside an invoice sentence): the first of the order Rechnung, Termin, Einkaufsliste, Link, Notiz, Bündel.
 - The local model stage (desktop) runs after this, only for entries without a line, as built.
 
 ## Tests
 
-- `fieldKind.test.ts`: the „sure“ table, each row with two positives and three near misses; the order; module off.
+- `fieldKind.test.ts`: the „sure“ table, each row with two positives and three near misses; the order of readings („Rechnung Stadtwerke 80 € bis Fr“, „Mi 15:00 Friseur“, „Wäsche morgen“); „Mahnung“ is no kind; module off.
+- `lookup.test.ts`: the name lookup – exact, case-blind, pantry and shopping-list names, nothing while the module is off, no module import.
 - `Capture.test.tsx`: line and examples never together; Alt+Enter; live region debounce.
-- Action test: one undo takes back the invoice **and** the plan row; a failing place step leaves no invoice (rollback); „Milch“ with the shopping list on „Nicht planen“ adds the item and leaves `excluded` as it is; write spy shows the planner writes only its own tables, the invoice comes from the capture target.
+- Action test: one undo takes back the invoice **and** the plan row; a failing place step leaves no invoice (rollback); „Milch“ with the shopping list on „Nicht planen“ adds the item and leaves `excluded` as it is; write spy shows the planner writes only its own collections, `_links` (through `addLink` / `removeLink`) and its settings record – the invoice comes from the capture target; Enter with lead chips gives link and topic, and with a kind without plan row applies neither.
 - Privacy: no amount in the toast while „Werte ausblenden“ is on.
-- e2e seed `e2e/seed/plan-kinds.seed.spec.ts`; `planner-hub-2.spec.ts` flow A re-measured.
+- e2e seed `e2e/seed/plan-kinds.seed.spec.ts`; `planner-hub-2.spec.ts` A1 re-measured (rows 7, rightKind 12, linkedToPlan 10; the seed's pantry knows the three shopping names) and C1 (create 1, taps 8, switches 0).
