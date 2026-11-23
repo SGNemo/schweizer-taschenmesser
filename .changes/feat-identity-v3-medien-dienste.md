@@ -7,7 +7,6 @@ en: "Mail shows an envelope beside the stamp with the unread count at the top, t
 ---
 
 ---
-
 type: changed
 area: music
 breaking: false
@@ -16,7 +15,6 @@ en: "Music shows the queue beside the list as soon as the page is wide enough (n
 ---
 
 ---
-
 type: changed
 area: downloads
 breaking: false

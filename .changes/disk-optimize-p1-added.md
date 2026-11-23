@@ -6,9 +6,7 @@ highlight: true
 de: „Dieser PC“ hat den Reiter „Aufräumen“: Vorschläge für temporäre Dateien, Browser-Zwischenspeicher, Absturzberichte und alte Downloads mit Vorschau; gelöscht wird nur nach Bestätigung.
 en: “This PC” has a “Tidy up” tab: suggestions for temporary files, browser caches, crash reports and old downloads with a preview; nothing is deleted without your confirmation.
 ---
-
 ---
-
 type: added
 area: disk
 breaking: false

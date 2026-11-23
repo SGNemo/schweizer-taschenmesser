@@ -7,7 +7,6 @@ en: On the Budgets page it now says "limit" throughout (e.g. "Add limit"), and t
 ---
 
 ---
-
 type: changed
 area: people
 breaking: false

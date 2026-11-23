@@ -5,14 +5,12 @@ breaking: false
 de: Ohne Spotify-Verbindung sagt die Musik-Karte ruhig „Spotify ist nicht verbunden.“, darunter „Spotify verbinden“.
 en: Without a Spotify connection the music card calmly says "Spotify is not connected.", with "Connect Spotify" below.
 ---
-
 type: fixed
 area: feeds
 breaking: false
 de: Die leere Feeds-Karte endet wie die anderen leeren Karten mit einem Punkt.
 en: The empty feeds card ends with a full stop like the other empty cards.
 ---
-
 type: fixed
 area: app
 breaking: false

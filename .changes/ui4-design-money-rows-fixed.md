@@ -5,9 +5,7 @@ breaking: false
 de: Rechnungen brauchen am Handy weniger Platz je Zeile, und Datumsfelder in Rechnungen und Abos zeigen das Datum im Format der App.
 en: Invoices take less room per row on the phone, and date fields in invoices and subscriptions show the date in the app's format.
 ---
-
 ---
-
 type: fixed
 area: subscriptions
 breaking: false

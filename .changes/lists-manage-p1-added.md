@@ -8,7 +8,6 @@ en: Lists can be managed – with an icon and colour, your own order, an archive
 ---
 
 ---
-
 type: fixed
 area: lists
 breaking: false

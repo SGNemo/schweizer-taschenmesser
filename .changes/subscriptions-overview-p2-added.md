@@ -6,9 +6,7 @@ highlight: true
 de: Abos: Die Übersicht zeigt die Kündigungsfristen der nächsten 90 Tage mit „In den Plan“ und die Preisänderungen des letzten Jahres mit Vorher, Nachher und Betrag pro Jahr.
 en: Subscriptions: the overview shows the notice periods of the next 90 days with “Add to plan” and last year's price changes with before, after and the amount per year.
 ---
-
 ---
-
 type: added
 area: subscriptions
 breaking: false

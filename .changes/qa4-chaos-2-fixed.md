@@ -7,7 +7,6 @@ en: A double click on "Save" never creates two entries.
 ---
 
 ---
-
 type: fixed
 area: app
 breaking: false
@@ -16,7 +15,6 @@ en: A name of only spaces shows "Please fill in" instead of saving doing nothing
 ---
 
 ---
-
 type: fixed
 area: invoices
 breaking: false
@@ -25,7 +23,6 @@ en: Monthly invoices and bookings from the 31st return to the 31st after Februar
 ---
 
 ---
-
 type: fixed
 area: todos
 breaking: false
@@ -34,7 +31,6 @@ en: "Ends after N times" now ends; yearly from 29 Feb returns on 29 Feb in leap 
 ---
 
 ---
-
 type: fixed
 area: todos
 breaking: false
@@ -43,7 +39,6 @@ en: Overnight appointments stay on the "Today" card until they are over.
 ---
 
 ---
-
 type: fixed
 area: todos
 breaking: false
@@ -52,7 +47,6 @@ en: Imported subtasks no longer point at a missing task.
 ---
 
 ---
-
 type: fixed
 area: habits
 breaking: false
@@ -61,7 +55,6 @@ en: Two quick "+1" taps count twice; the 30-day rate no longer counts today or t
 ---
 
 ---
-
 type: fixed
 area: subscriptions
 breaking: false
@@ -70,7 +63,6 @@ en: Cancelled subscriptions no longer remind you of the notice deadline.
 ---
 
 ---
-
 type: fixed
 area: subscriptions
 breaking: false
@@ -79,7 +71,6 @@ en: Detected subscriptions keep their charge day; detection also reads ING, DKB,
 ---
 
 ---
-
 type: fixed
 area: calendar
 breaking: false
@@ -88,7 +79,6 @@ en: "1 day before" keeps its time across clock changes.
 ---
 
 ---
-
 type: fixed
 area: calendar
 breaking: false
@@ -97,7 +87,6 @@ en: ICS series from other time zones fall on the right weekday; long titles neve
 ---
 
 ---
-
 type: fixed
 area: app
 breaking: false
@@ -106,7 +95,6 @@ en: Snoozed reminders of a switched-off module stay silent.
 ---
 
 ---
-
 type: fixed
 area: home
 breaking: false
@@ -115,7 +103,6 @@ en: The overview shows appointments before automatic notices such as "Expires so
 ---
 
 ---
-
 type: fixed
 area: app
 breaking: false
@@ -124,7 +111,6 @@ en: Quick capture flags impossible dates such as "31.11.", understands "bis 24:0
 ---
 
 ---
-
 type: fixed
 area: app
 breaking: false
@@ -133,7 +119,6 @@ en: The data API rejects impossible dates such as 2026-02-30.
 ---
 
 ---
-
 type: fixed
 area: finance
 breaking: false
@@ -142,7 +127,6 @@ en: CAMT amounts with three decimals are read correctly in every region; "1.2.3"
 ---
 
 ---
-
 type: fixed
 area: people
 breaking: false
@@ -151,7 +135,6 @@ en: Birthdays with a two-digit year ("3.4.12") become 2012, not 1912; vCard name
 ---
 
 ---
-
 type: fixed
 area: settings
 breaking: false

@@ -6,9 +6,7 @@ highlight: true
 de: „Tage einteilen“ im Planer: aufschreiben, was ansteht, Zeit für heute und die zwei nächsten Tage antippen, Vorschau prüfen, übernehmen – mit einem Rückgängig.
 en: “Plan my days” in the planner: write down what is coming up, tap the time for today and the next two days, check the preview, apply – with one undo.
 ---
-
 ---
-
 type: changed
 area: home
 breaking: false

@@ -7,7 +7,6 @@ en: "Add document" first shows title, category, "End / expiry" and file (for con
 ---
 
 ---
-
 type: changed
 area: fitness
 breaking: false

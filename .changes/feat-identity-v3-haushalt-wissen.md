@@ -7,7 +7,6 @@ en: "The pantry now shows a shelf at the top with one tile per place and says in
 ---
 
 ---
-
 type: changed
 area: pantry
 breaking: false
@@ -16,7 +15,6 @@ en: "“Add to shopping list” is now a cart icon on the label (or a swipe to t
 ---
 
 ---
-
 type: changed
 area: lists
 breaking: false
@@ -25,7 +23,6 @@ en: "The shopping list looks like a receipt: open items and total at the top, it
 ---
 
 ---
-
 type: changed
 area: vault
 breaking: false
@@ -34,7 +31,6 @@ en: "Documents now have folder tabs as the filter, a head count with deadlines a
 ---
 
 ---
-
 type: changed
 area: accounts
 breaking: false

@@ -7,7 +7,6 @@ en: Finance draws its charts the same way everywhere: one ring for the categorie
 ---
 
 ---
-
 type: changed
 area: finance
 breaking: false

@@ -7,7 +7,6 @@ en: Finance is laid out more cleanly: amounts no longer break mid-line, the year
 ---
 
 ---
-
 type: changed
 area: finance
 breaking: false

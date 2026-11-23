@@ -7,7 +7,6 @@ en: With the reading aid on, the sidebar no longer keeps the highlight of the pr
 ---
 
 ---
-
 type: changed
 area: chat
 breaking: false

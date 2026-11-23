@@ -5,9 +5,7 @@ breaking: false
 de: Am Handy zeigt „Mehr“ in der unteren Leiste jetzt an, wo du bist, wenn du eine Seite dahinter geöffnet hast, etwa Listen, Musik oder die Einstellungen.
 en: On the phone, "More" in the bottom bar now shows where you are when you opened something behind it, such as Lists, Music or the settings.
 ---
-
 ---
-
 type: changed
 area: ui
 breaking: false

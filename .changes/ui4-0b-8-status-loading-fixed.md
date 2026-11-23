@@ -8,7 +8,6 @@ en: Device status and the status lines of the settings now appear at once when o
 ---
 
 ---
-
 type: fixed
 area: device
 breaking: false

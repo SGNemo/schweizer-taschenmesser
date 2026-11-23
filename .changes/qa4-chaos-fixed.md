@@ -8,7 +8,6 @@ en: An open edit dialog no longer undoes changes made in a second tab or by sync
 ---
 
 ---
-
 type: fixed
 area: app
 breaking: false
@@ -17,7 +16,6 @@ en: Esc, Back or a click outside now ask in every edit dialog before typed input
 ---
 
 ---
-
 type: fixed
 area: settings
 breaking: false
@@ -26,7 +24,6 @@ en: "Recently deleted" also brings back accounts with their transactions, single
 ---
 
 ---
-
 type: fixed
 area: invoices
 breaking: false
@@ -35,7 +32,6 @@ en: A part payment is kept when you save in the same dialog afterwards; Enter in
 ---
 
 ---
-
 type: fixed
 area: timetrack
 breaking: false
@@ -44,7 +40,6 @@ en: Editing the running time entry no longer stops it at 10:00.
 ---
 
 ---
-
 type: fixed
 area: todos
 breaking: false
@@ -53,7 +48,6 @@ en: A recurring to-do keeps going when it is ticked off, reopened and ticked off
 ---
 
 ---
-
 type: fixed
 area: app
 breaking: false

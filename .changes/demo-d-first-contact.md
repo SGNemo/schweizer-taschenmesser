@@ -7,7 +7,6 @@ en: Notes import from Obsidian: sub-folders become notebooks in the order of the
 ---
 
 ---
-
 type: fixed
 area: backup
 breaking: false
@@ -16,7 +15,6 @@ en: After a downloaded backup the settings status shows "Backed up · As a file"
 ---
 
 ---
-
 type: changed
 area: backup
 breaking: false
@@ -25,7 +23,6 @@ en: The backup without a password reads well in a text editor and explains its o
 ---
 
 ---
-
 type: added
 area: settings
 breaking: false
@@ -34,7 +31,6 @@ en: Settings → Connections shows the fixed addresses the app can contact and n
 ---
 
 ---
-
 type: fixed
 area: settings
 breaking: false

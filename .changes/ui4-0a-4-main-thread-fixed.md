@@ -5,9 +5,7 @@ breaking: false
 de: Fehlt das Seitenfenster eines Browser-Tabs, steht dort jetzt „Dieser Tab ist nicht mehr da“ mit „Tab neu öffnen“ statt einer leeren Fläche.
 en: When a browser tab's page window is missing, the frame now says "This tab is no longer there" with "Reopen tab" instead of staying empty.
 ---
-
 ---
-
 type: performance
 area: platform
 breaking: false

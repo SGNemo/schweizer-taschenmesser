@@ -5,9 +5,7 @@ breaking: false
 de: Unterlagen: „Verlängert“ erscheint bei Pass, Ausweis und TÜV schon, sobald „Läuft bald ab“ dransteht. Ordner mit Frist diese Woche, Abgelaufenes und Bald stehen oben.
 en: Documents: "Renewed" shows for a passport, an ID card or a vehicle inspection as soon as it reads "Expires soon". Folders with a deadline this week, run out or soon come first.
 ---
-
 ---
-
 type: fixed
 area: vault
 breaking: false

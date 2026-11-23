@@ -8,7 +8,6 @@ en: Under an invoice mail you see payee, amount and due date; “Add” creates 
 ---
 
 ---
-
 type: added
 area: mail
 breaking: false
@@ -17,7 +16,6 @@ en: A payment reminder for an open invoice is noted on that invoice with “Note
 ---
 
 ---
-
 type: changed
 area: mail
 breaking: false

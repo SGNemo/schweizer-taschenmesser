@@ -7,7 +7,6 @@ en: Moving from another app on one sheet: pick the origin, files or ZIP, recogni
 ---
 
 ---
-
 type: added
 area: app
 breaking: false

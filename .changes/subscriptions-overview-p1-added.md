@@ -6,9 +6,7 @@ highlight: true
 de: Abos: Neue Übersicht mit Tortendiagramm nach Art oder Abo, den Abbuchungen der nächsten 30 Tage und was jedes Abo im Jahr kostet.
 en: Subscriptions: a new overview with a pie chart by type or subscription, the charges of the next 30 days and what each subscription costs per year.
 ---
-
 ---
-
 type: changed
 area: subscriptions
 breaking: false

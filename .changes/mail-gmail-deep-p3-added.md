@@ -7,7 +7,6 @@ en: Forwarding takes the mail's attachments along; the compose window lists each
 ---
 
 ---
-
 type: added
 area: mail
 breaking: false
