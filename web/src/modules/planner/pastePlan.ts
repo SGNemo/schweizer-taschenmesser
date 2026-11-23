@@ -77,7 +77,7 @@ function readJson(data: unknown): PastedPlan {
       : [];
   const things: PastedThing[] = [];
   let skipped = 0;
-  for (const raw of items) {
+  for (const raw of items.slice(0, MAX_THINGS * 10)) {
     if (!raw || typeof raw !== 'object') {
       skipped++;
       continue;
@@ -188,7 +188,7 @@ function nearestYear(today: string, m: number, d: number): number {
 }
 
 const LATER_WORDS =
-  '(?:später|spaeter|nächste[nr]?\\s+woche[n]?|naechste[nr]?\\s+woche[n]?|kommende[nr]?\\s+woche[n]?|verschoben|irgendwann|nicht gestrichen|later|next weeks?|someday)';
+  '(?:später|spaeter|nächste[nr]?\\s+woche[n]?|naechste[nr]?\\s+woche[n]?|kommende[nr]?\\s+woche[n]?|coming weeks?|verschoben|irgendwann|nicht gestrichen|later|next weeks?|someday)';
 const WEEK_WORDS = '(?:diese woche|im laufe der woche|unter der woche|this week|during the week)';
 const LATER_RE = new RegExp(`\\b${LATER_WORDS}\\b`, 'i');
 const WEEK_RE = new RegExp(`\\b${WEEK_WORDS}\\b`, 'i');

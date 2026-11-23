@@ -9,7 +9,6 @@ import { formatMinutes } from '@/core/i18n/format';
 import { getLang } from '@/core/i18n/lang';
 import {
   activeManifests,
-  collectPlannable,
   plannableSource,
   type PlannableEntry,
 } from '@/core/modules/contributions';
@@ -738,18 +737,24 @@ export const takeOff = (e: PlannableEntry, titles: Record<string, string>) =>
 
 /**
  * What „Plan einfügen“ recognises (TARGET §3): every open thing of the active sources with its place (its first row,
- * else a dated turn's day, else „Noch ohne Tag“) and the things the sources keep for „Nächste Wochen“. Fixed blocks
- * are no candidates (their time is the source's). Reads only; the planner's own rows and the sources' lists.
+ * else a dated turn's day, else „Noch ohne Tag“), timed blocks included (known, never moved), and the things the
+ * sources keep for „Nächste Wochen“. Reads only. Unlike the board it **throws** when a source fails to list: matching
+ * against a missing source would make every one of its things „neu“ – a second ToDo of the same title.
  */
 export async function pasteKnown(): Promise<Known[]> {
   const day = today();
   const manifests = activeManifests(await loadModuleStates());
   // Things asked into the plan (a shopping list without a date) are listed only with their requests, as on the board.
-  const entries = await collectPlannable(
-    { today: day, until: addDays(day, 60) },
-    manifests,
-    requestedIds(await itemRepo.active().toArray()),
-  );
+  const requested = requestedIds(await itemRepo.active().toArray());
+  const entries: PlannableEntry[] = [];
+  for (const m of manifests) {
+    const s = await plannableSource(m);
+    if (!s) continue;
+    const asked = requested[m.id];
+    const ctx = { today: day, until: addDays(day, 60) };
+    for (const item of await s.list(asked?.length ? { ...ctx, requested: [...asked] } : ctx))
+      entries.push({ ...item, moduleId: m.id });
+  }
   const first = new Map<string, string>();
   const locked = new Set<string>();
   for (const r of (await assignmentRepo.active().toArray()) as AssignmentRow[]) {
@@ -760,11 +765,11 @@ export async function pasteKnown(): Promise<Known[]> {
   const out: Known[] = [];
   const canLater = new Set<string>();
   for (const m of manifests) {
-    // A source that fails to load is no candidate (as in `sourceAbilities`), never a stuck preview.
-    const s = await plannableSource(m).catch(() => undefined);
-    if (!s?.onLater) continue;
+    const s = await plannableSource(m);
+    // The two steps come together: keeping for later without listing it would double the thing on the next paste.
+    if (!s?.onLater || !s.listLater) continue;
     canLater.add(m.id);
-    for (const item of (await s.listLater?.().catch(() => [])) ?? [])
+    for (const item of await s.listLater())
       out.push({
         key: itemKeyOf(m.id, item.id),
         title: item.title,
