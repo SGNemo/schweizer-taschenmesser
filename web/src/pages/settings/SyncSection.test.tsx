@@ -10,7 +10,7 @@ vi.mock('@/core/sync/service', () => ({
   disconnect: vi.fn(),
   refreshServerStatus: vi.fn(),
   resetServer: vi.fn(),
-  signOutThisDevice: vi.fn(),
+  signOutThisDevice: vi.fn(async () => 'ok'),
   syncNow: vi.fn(),
 }));
 vi.mock('./SyncConflicts', () => ({ SyncConflicts: () => null }));

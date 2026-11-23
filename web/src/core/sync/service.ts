@@ -964,12 +964,13 @@ export async function lockDevice(
 export async function signOutThisDevice(
   deps: SyncServiceDeps = defaultDeps(),
 ): Promise<'ok' | 'token-missing'> {
-  const record = await readRecord(deps.database);
-  const c = await connectedRemote(deps);
-  if (record?.kind === 'selfHosted' && record.deviceId && !c) return 'token-missing';
-  if (c?.config.deviceId && c.remote.revokeDevice) {
+  // One read: the device id and the token come from the same record.
+  const config = await loadSyncConfig(deps.database);
+  if (config?.kind === 'selfHosted' && config.deviceId && !config.token) return 'token-missing';
+  const remote = config?.kind === 'selfHosted' ? deps.remote(config.url, config.token) : undefined;
+  if (config?.kind === 'selfHosted' && config.deviceId && remote?.revokeDevice) {
     try {
-      await c.remote.revokeDevice(c.config.deviceId);
+      await remote.revokeDevice(config.deviceId);
     } catch {
       // offline or already revoked: disconnecting locally is still what the user asked for
     }

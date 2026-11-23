@@ -189,10 +189,12 @@ export function SyncSection() {
               <Button
                 variant="danger"
                 onClick={() =>
-                  void signOutThisDevice().then((r) => {
-                    if (r === 'token-missing')
-                      useUiStore.getState().toast(t.sync.signOutTokenMissing);
-                  })
+                  void signOutThisDevice()
+                    .then((r) => {
+                      if (r === 'token-missing')
+                        useUiStore.getState().toast(t.sync.signOutTokenMissing);
+                    })
+                    .catch(() => useUiStore.getState().toast(t.sync.errors.unknown ?? ''))
                 }
               >
                 {t.sync.signOut}

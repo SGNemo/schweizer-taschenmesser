@@ -3746,7 +3746,7 @@ export const de = {
     signOutHint:
       'Sperrt das Token dieses Geräts auf dem Server und trennt es. Deine lokalen Daten bleiben erhalten.',
     signOutTokenMissing:
-      'Abmelden geht gerade nicht: Das Server-Token ist auf diesem Gerät nicht verfügbar. Versuche es später erneut oder sperre das Gerät von einem anderen Gerät aus.',
+      'Abmelden ist gerade nicht möglich: Das Server-Token ist auf diesem Gerät nicht verfügbar. Versuche es später erneut, verbinde das Gerät neu mit dem Server-Token oder sperre es von einem anderen Gerät aus (Einstellungen → Synchronisation → Geräte).',
     disconnectHint: 'Deine lokalen Daten bleiben erhalten; der Server wird nicht verändert.',
     state: { off: 'Aus', idle: 'Synchronisiert', syncing: 'Synchronisiere …', error: 'Fehler' },
     badge: (state: string) => `Synchronisation: ${state}`,
@@ -3811,7 +3811,7 @@ export const de = {
       unauthorized:
         'Der Server hat das Token abgelehnt. Trenne die Verbindung und verbinde das Gerät neu mit dem aktuellen Server-Token (Feld „Zugangstoken“).',
       'token-missing':
-        'Das Server-Token ist auf diesem Gerät gerade nicht verfügbar – es wird automatisch erneut versucht. Bleibt das so, trenne die Verbindung und verbinde das Gerät neu mit dem Server-Token (Feld „Zugangstoken“).',
+        'Das Server-Token ist auf diesem Gerät gerade nicht verfügbar. Falls das so bleibt, trenne die Verbindung und verbinde das Gerät neu mit dem Server-Token (Feld „Zugangstoken“).',
       server: 'Der Server hat einen Fehler gemeldet.',
       clock: 'Die Uhr dieses Geräts geht mehr als eine Stunde vor. Bitte Datum und Uhrzeit prüfen.',
       decrypt: 'Entschlüsselung fehlgeschlagen – stimmt der Passwortsatz?',

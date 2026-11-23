@@ -153,7 +153,7 @@ describe('devices', () => {
     await connect(params, a.deps);
     await connect(params, b.deps);
     const token = (await loadServerConfig(a.db))!.token;
-    await signOutThisDevice(a.deps);
+    expect(await signOutThisDevice(a.deps)).toBe('ok');
     expect(await loadServerConfig(a.db)).toBeUndefined();
     await expect(server.remote(token).getVault()).rejects.toMatchObject({ code: 'revoked' });
   });
