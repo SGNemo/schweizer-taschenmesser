@@ -57,6 +57,8 @@ beforeEach(() => {
   mocks.isPermissionGranted.mockResolvedValue(false);
   mocks.requestPermission.mockResolvedValue('granted');
   mocks.save.mockResolvedValue('/tmp/out.json');
+  mocks.pending.mockResolvedValue([]);
+  localStorage.clear();
 });
 
 describe('tauri platform', () => {
@@ -156,6 +158,39 @@ describe('tauri platform', () => {
       icon: 'ic_notification',
       iconColor: '#b5430c',
     });
+  });
+
+  // tauri-plugin-notification 2.7.0 does not store notices scheduled via `sendNotification` on
+  // Android, so `pending()` stays empty: Nemo must remember its own alarm ids.
+  it('cancels alarms it scheduled earlier even when the plugin lists none as pending', async () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mozilla/5.0 (Linux; Android 14)');
+    const p = await createTauriPlatform();
+    await p.notifications.scheduleUpcoming!([
+      { key: 'rem:1', at: 1_800_000_000_000, title: 'Miete' },
+      { key: 'rem:2', at: 1_800_000_100_000, title: 'Strom' },
+    ]);
+    expect(mocks.cancel).not.toHaveBeenCalled();
+
+    // "rem:2" was deleted in Nemo; the plugin still reports nothing pending.
+    await p.notifications.scheduleUpcoming!([
+      { key: 'rem:1', at: 1_800_000_000_000, title: 'Miete' },
+    ]);
+    expect(mocks.cancel).toHaveBeenCalledWith([notificationId('rem:2')]);
+
+    // An app restart reads the same device-local list.
+    mocks.cancel.mockClear();
+    await (
+      await createTauriPlatform()
+    ).notifications.scheduleUpcoming!([]);
+    expect(mocks.cancel).toHaveBeenCalledWith([notificationId('rem:1')]);
+  });
+
+  it('still schedules when the plugin cannot list pending notices', async () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mozilla/5.0 (Linux; Android 14)');
+    mocks.pending.mockRejectedValue(new Error('NullPointerException'));
+    const p = await createTauriPlatform();
+    await p.notifications.scheduleUpcoming!([{ key: 'rem:1', at: 1_800_000_000_000, title: 'M' }]);
+    expect(mocks.sendNotification).toHaveBeenCalledTimes(1);
   });
 
   it('Android notifications carry the monochrome status-bar icon, desktop ones do not', async () => {
