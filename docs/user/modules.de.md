@@ -87,6 +87,10 @@ In **Finanzen** (Einstellungen → Module → Finanzen → Startdaten einrichten
 
 Nach einem Import schlägt die Vorschau eventuell **Regeln** vor („Netflix immer in der Kategorie Abos buchen?“). Nichts ist angehakt: eine Regel entsteht nur, wenn du sie ankreuzt und den Import bestätigst, sie sortiert dann spätere Importe, und du entfernst sie unter Finanzen → Kategorien. Eine bezahlte Rechnung wird in Finanzen als Ausgabe gebucht (unter Rechnungen → Einstellungen abschaltbar), und eine Preiserhöhung bei einem Abo erscheint einmal unter _Jetzt wichtig_ (unter Abos → Einstellungen abschaltbar).
 
+## ToDos und der Planer
+
+Ist der Planer an, sagt jedes offene ToDo, wo es steht: _im Plan: Mi_, _im Plan: war Mo_ (von einem vergangenen Tag noch offen) oder _noch nicht im Plan_. Im ⋯ der Zeile öffnet _Im Planer zeigen_ den Tag bei der Zeile, und _In den Plan …_ gibt ihm einen Tag. Der Filter _Alle · Noch nicht im Plan · Im Plan_ zeigt, wie viel noch einen Tag braucht, und merkt sich deine Wahl auf diesem Gerät. Mit _Auswählen_ legst du mehrere auf einmal auf heute, morgen, ein Datum oder unter _Noch ohne Tag_ – ein Rückgängig nimmt es zurück. Ein Datum, das du in ToDos setzt, ist kein Tag im Plan; _fest_ und _nicht im Plan_ kommen aus dem Planer.
+
 ## Aufgaben aus Todoist oder Google Tasks mitnehmen
 
 Öffne **ToDos → Importieren → Aus Todoist oder Google Tasks** (sobald das Modul Aufgaben enthält: Einstellungen → Module → ToDos → Startdaten einrichten) und wähle eine Datei, die du selbst exportiert hast. Es wird nichts hochgeladen und kein Konto gebraucht; du siehst erst eine Vorschau und kannst den Import rückgängig machen.

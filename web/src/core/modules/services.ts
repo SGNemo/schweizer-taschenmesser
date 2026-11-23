@@ -19,15 +19,16 @@ export interface ServiceManager {
  */
 export function createServiceManager(manifests: readonly ModuleManifest[]): ServiceManager {
   const running = new Map<string, () => void>();
+  /** Modules whose `servicesOff` ran since they were last on. */
+  const offDone = new Set<string>();
   let chain: Promise<void> = Promise.resolve();
 
   async function reconcile(states: ModuleStates): Promise<void> {
     for (const m of manifests) {
-      const load = m.contributions?.services;
-      if (!load) continue;
       const want = states[m.id] === true;
+      const load = m.contributions?.services;
       const stop = running.get(m.id);
-      if (want && !stop) {
+      if (load && want && !stop) {
         try {
           const start = (await load()).default;
           running.set(m.id, start() ?? (() => undefined));
@@ -37,6 +38,17 @@ export function createServiceManager(manifests: readonly ModuleManifest[]): Serv
       } else if (!want && stop) {
         running.delete(m.id);
         stop();
+      }
+      // E3: once while off (after the stop above), again only after it was on in between
+      const off = m.contributions?.servicesOff;
+      if (want) offDone.delete(m.id);
+      else if (off && !offDone.has(m.id)) {
+        offDone.add(m.id);
+        try {
+          await (await off()).default();
+        } catch (e) {
+          console.error(`[services] "${m.id}" off hook failed`, e);
+        }
       }
     }
   }

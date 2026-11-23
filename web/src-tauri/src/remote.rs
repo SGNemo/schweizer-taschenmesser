@@ -45,7 +45,7 @@ use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tauri::{AppHandle, Manager, State};
-use tauri_plugin_dialog::{DialogExt as _, MessageDialogButtons, MessageDialogKind};
+use tauri_plugin_dialog::DialogExt as _;
 
 /// How often the tray is compared with who controls right now (only while the hub runs).
 const WATCH: Duration = Duration::from_millis(250);
@@ -375,13 +375,18 @@ impl RemoteHost {
         self.quiet.lock().ok().and_then(|q| q.clone())
     }
 
+    /// Whether the hub's controls are still the ones that were read before a question was put
+    /// (F2): a hub that was stopped and started meanwhile has new ones, and the answer belongs to
+    /// the old.
+    fn same_remote(&self, parts: &Parts) -> bool {
+        self.parts()
+            .is_ok_and(|now| Arc::ptr_eq(&now.remote, &parts.remote))
+    }
+
     /// Whether the hub's controls and the notice's switch are still the ones that were read
     /// before a question was put (a hub that was stopped and started has new ones).
     fn same_hub(&self, parts: &Parts, quiet: &Arc<dyn MasterSwitch>) -> bool {
-        let controls = self
-            .parts()
-            .is_ok_and(|now| Arc::ptr_eq(&now.remote, &parts.remote));
-        controls && self.quiet().is_some_and(|now| Arc::ptr_eq(&now, quiet))
+        self.same_remote(parts) && self.quiet().is_some_and(|now| Arc::ptr_eq(&now, quiet))
     }
 
     /// Whether a device that starts to control mouse and keyboard is told at the PC. Anything
@@ -438,8 +443,8 @@ fn quote(c: char) -> bool {
 /// A claimed device name as one line of plain text for a native dialog or tooltip: no control or
 /// invisible characters, no quotation marks (the name must not be able to close the quotes around
 /// it or turn the sentence after it around), capped. May be empty. Also the names of the PC's
-/// program list.
-fn plain(name: &str) -> String {
+/// program list, and of device exchange (E5).
+pub(crate) fn plain(name: &str) -> String {
     let flat: String = name
         .chars()
         .filter(|c| !invisible(*c))
@@ -845,18 +850,7 @@ fn asked(
     text: String,
     serious: bool,
 ) -> bool {
-    let kind = if serious {
-        MessageDialogKind::Warning
-    } else {
-        MessageDialogKind::Info
-    };
-    let mut dialog = app.dialog().message(text).title(title).kind(kind).buttons(
-        MessageDialogButtons::OkCancelCustom(allow.into(), cancel.into()),
-    );
-    if let Some(window) = app.get_webview_window("main") {
-        dialog = dialog.parent(&window);
-    }
-    dialog.blocking_show()
+    crate::native_ask::ask(app, title, text, serious, allow, cancel)
 }
 
 // ---- commands ----
@@ -917,6 +911,10 @@ pub fn remote_set_enabled(
         let serious = granted.iter().any(|(_, level)| *level == Level::Full);
         if !confirmed(&app, lang, switch_question(lang, &granted), serious) {
             return Err("cancelled".to_owned());
+        }
+        // F2: the answer belongs to the hub that was asked about
+        if !state.same_remote(&parts) {
+            return Err("changed".to_owned());
         }
     }
     parts
@@ -989,6 +987,10 @@ pub fn remote_set_device(
     );
     if !confirmed(&app, lang, text, serious(&old, &grant)) {
         return Err("cancelled".to_owned());
+    }
+    // F2: a hub restarted while the question was on screen has another store
+    if !state.same_remote(&parts) {
+        return Err("changed".to_owned());
     }
     // The question described the step from `old`. If the grant changed while it was on screen
     // (paused from the tray, narrowed elsewhere), the answer was given to another question.
@@ -1109,10 +1111,7 @@ pub fn remote_program_add(app: AppHandle, state: State<'_, RemoteHost>) -> Resul
         return Err("cancelled".to_owned());
     }
     // The hub may have been stopped and started meanwhile: its ticket says nothing then.
-    if !state
-        .parts()
-        .is_ok_and(|now| Arc::ptr_eq(&now.remote, &parts.remote))
-    {
+    if !state.same_remote(&parts) {
         return Err("changed".to_owned());
     }
     parts

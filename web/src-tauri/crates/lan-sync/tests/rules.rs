@@ -714,3 +714,43 @@ fn exchange_hub_parts_are_compiled_out_on_mobile_and_the_wire_is_not() {
         .expect("wire module");
     assert!(!ex_lines[at - 1].starts_with("#[cfg"));
 }
+
+/// H1 (launch review 2026-11): an accept is counted before it takes a slot or a thread, and a
+/// connection that never sends a first frame after message 2 ends at the handshake deadline.
+#[test]
+fn every_accept_counts_and_a_silent_peer_ends_at_the_handshake_deadline() {
+    let t = fs::read_to_string(root().join("src/transport/mod.rs"))
+        .unwrap()
+        .replace("\r\n", "\n"); // a Windows checkout has CRLF
+    let accept = &t[t.find("fn accept_loop(").unwrap()..];
+    let accept = &accept[..accept.find("\n}\n").unwrap()];
+    let counted = accept.find("admit_connection(").expect("accepts count");
+    let slot = accept.find("Slot::take(").expect("slot");
+    assert!(counted < slot, "counted before the slot");
+    let drive = &t[t.find("fn drive(").unwrap()..];
+    let drive = &drive[..drive.find("\n}\n").unwrap()];
+    assert!(drive.contains("if !heard && accepted.elapsed() > cfg.handshake_timeout {"));
+}
+
+/// H4 (launch review 2026-11): an open pairing window has a total lifetime that renewals do not
+/// extend; only `open()` sets its start.
+#[test]
+fn the_pairing_window_has_a_total_lifetime() {
+    let p = fs::read_to_string(root().join("src/pairing/mod.rs"))
+        .unwrap()
+        .replace("\r\n", "\n");
+    assert!(p.contains("pub const MAX_OPEN: Duration = Duration::from_secs(600);"));
+    assert_eq!(p.matches("first_opened = ").count(), 1, "set in one place");
+    let open = &p[p.find("pub fn open(&self)").unwrap()..];
+    let open = &open[..open.find("\n    }\n").unwrap()];
+    assert!(open.contains("g.first_opened = now;"));
+}
+
+/// H5 (launch review 2026-11): a revoke whose write failed is written again on the next try.
+#[test]
+fn a_revoke_that_was_not_written_is_never_reported_as_done() {
+    let f = source("src/trust/file.rs").replace("\r\n", "\n");
+    let revoke = &f[f.find("fn revoke(&self, key: &PublicKey)").unwrap()..];
+    let revoke = &revoke[..revoke.find("\n    }\n").unwrap()];
+    assert!(revoke.contains("if changed || self.unsaved.load("));
+}

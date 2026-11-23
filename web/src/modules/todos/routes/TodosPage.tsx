@@ -8,7 +8,7 @@ import { skipSuggestion } from '@/core/focus/state';
 import { usePageChrome } from '@/core/shell/pageChrome';
 import { useWriteAvailable, useWriteLabel } from '@/core/shell/writeAvailable';
 import { useModuleStates } from '@/core/modules/activation';
-import { dayName } from '@/core/plan/explain';
+import { planFacts, requestManyIntoPlan } from '@/core/entitylinks/planRow';
 import { useFocusSettings } from '@/core/settings/focus';
 import { useSettings } from '@/core/settings/settings';
 import { formatDay, relativeDayLabel, today } from '@/core/time/dates';
@@ -30,10 +30,12 @@ import {
   Tabs,
   Progress,
   RowMenu,
+  SelectionBar,
   SplitView,
   type RowMenuItem,
   useAdvancedMenuItem,
   useOpenParam,
+  useSelection,
   useSplitView,
 } from '@/ui';
 import { AddTaskDialog } from '../components/AddTaskDialog';
@@ -41,6 +43,18 @@ import { TaskDetail } from '../components/TaskDetail';
 import { BoardView } from '../components/BoardView';
 import { InboxSorter } from '../components/InboxSorter';
 import { TodayCard } from '../components/TodayCard';
+import { PlanDayDialog } from '../components/PlanDayDialog';
+import { PlanWords } from '../components/PlanMark';
+import {
+  PLAN_FILTERS,
+  passesPlanFilter,
+  planStateOf,
+  plannerPath,
+  readPlanFilter,
+  writePlanFilter,
+  type PlanFilter,
+  type PlanState,
+} from '../planState';
 import { ListEditor } from '../components/ListEditor';
 import { TaskEditor } from '../components/TaskEditor';
 import { describeRecurrence } from '@/core/recurrence/describe';
@@ -54,7 +68,6 @@ import { personName, usePeople } from '@/core/people/people';
 import { readQuickAdd } from '../quickAdd';
 import { tagCounts } from '../tags';
 import {
-  isPlannerOwned,
   movePatch,
   overdueTasks,
   TODO_VIEWS,
@@ -92,8 +105,15 @@ interface RowProps {
   calm?: boolean;
   /** A visible "Morgen" button (the Heute view). */
   quickTomorrow?: boolean;
-  /** The Bald view while the planner is on: a planner-set date shows a quiet „im Plan: Mi“. */
-  inPlan?: boolean;
+  /** While the planner is on: where the task stands in the plan (a quiet line under the title; todos-plan-state). */
+  plan?: PlanState;
+  /** „im Plan: Mi“ → the planner on that day; „noch nicht im Plan“ / „In den Plan …“ → the day choice. */
+  onPlanShow?: (task: StoredTask, plan: PlanState) => void;
+  onPlanChoose?: (task: StoredTask) => void;
+  /** The selection of „Auswählen“: a checkbox on the row. */
+  selectable?: boolean;
+  selected?: boolean;
+  onSelectChange?: (task: StoredTask, extend: boolean) => void;
   /** "n in Folge" of the task's series (shown on the open instance only). */
   streaks?: Map<string, Streak>;
   onToggle: (task: StoredTask, done: boolean) => void;
@@ -113,7 +133,12 @@ function TaskRow({
   sub,
   calm,
   quickTomorrow,
-  inPlan,
+  plan,
+  onPlanShow,
+  onPlanChoose,
+  selectable,
+  selected,
+  onSelectChange,
   streaks,
   onToggle,
   onOpen,
@@ -164,11 +189,23 @@ function TaskRow({
       onSelect: () =>
         void changeWithUndo(() => taskRepo.update(task.id, { priority: p }), t.todos.changed),
     }));
+  const planItem: RowMenuItem[] = [
+    ...(plan && (plan.kind === 'planned' || plan.kind === 'passed') && onPlanShow
+      ? [{ id: 'in-planner', label: t.todos.plan.showIn, onSelect: () => onPlanShow(task, plan) }]
+      : []),
+    ...(plan && plan.kind !== 'none' && onPlanChoose
+      ? [{ id: 'to-plan', label: t.todos.plan.action, onSelect: () => onPlanChoose(task) }]
+      : []),
+  ];
   return (
     <ItemRow
       title={task.title}
       done={task.done}
       current={currentId === task.id}
+      selectable={selectable}
+      selected={selected}
+      onSelectChange={onSelectChange ? (_, extend) => onSelectChange(task, extend) : undefined}
+
       tone={tone === 'overdue' && !waiting ? 'overdue' : tone === 'today' ? 'today' : undefined}
       className={sub ? styles.sub : undefined}
       onOpen={() => onOpen(task)}
@@ -181,7 +218,10 @@ function TaskRow({
         ...(onEdit
           ? [{ id: 'edit', label: t.actions.edit, onSelect: () => onEdit(task) } as RowMenuItem]
           : []),
-        ...(task.done ? [] : [...todayItem, laterItem, ...dueMenu]),
+        // „Auf heute“ stays the first entry (UI audit click path, `seed/plan-area.seed.spec.ts`); the plan's two follow.
+        ...(task.done ? [] : todayItem),
+        ...planItem,
+        ...(task.done ? [] : [laterItem, ...dueMenu]),
         ...(task.done ? [] : prioMenu),
         {
           id: 'duplicate',
@@ -274,15 +314,9 @@ function TaskRow({
               })()}
             </span>
           ) : null}
+          {plan ? <PlanWords state={plan} day={day} /> : null}
           {task.startDate && task.startDate > day ? (
             <span>{t.todos.startsOn(formatDay(task.startDate, 'EEE, d. MMM'))}</span>
-          ) : null}
-          {inPlan &&
-          !task.done &&
-          task.plannedFor &&
-          task.plannedFor > day &&
-          isPlannerOwned(task) ? (
-            <span data-testid="in-plan">{t.todos.inPlan(dayName(task.plannedFor))}</span>
           ) : null}
           {task.recurrence ? <span>↻ {describeRecurrence(task.recurrence)}</span> : null}
           {task.tags?.length ? <span>{task.tags.map((x) => `#${x}`).join(' ')}</span> : null}
@@ -328,7 +362,6 @@ function TaskRow({
               sub
               calm={calm}
               quickTomorrow={quickTomorrow}
-              inPlan={inPlan}
               streaks={streaks}
               onToggle={onToggle}
               onOpen={onOpen}
@@ -368,6 +401,15 @@ export default function TodosPage() {
   // (which rewrite dates) step back, a planner-set later day wins over an older due date (Heute counts what the plan
   // counts, N02) and shows „im Plan“ in Bald.
   const plannerOn = useModuleStates()?.planner === true;
+  // „Alle · Noch nicht im Plan · Im Plan“ (todos-plan-state): remembered per device; without the planner there is none.
+  const [planFilterPick, setPlanFilterPick] = useState<PlanFilter>(readPlanFilter);
+  const planFilter: PlanFilter = plannerOn ? planFilterPick : 'all';
+  const pickPlanFilter = (f: PlanFilter) => {
+    setPlanFilterPick(f);
+    writePlanFilter(f);
+  };
+  const [selecting, setSelecting] = useState(false);
+  const [planFor, setPlanFor] = useState<{ ids: string[]; title: string } | null>(null);
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
   // The page's one entry: the head's action, the plus on the phone, `?new=1` (quick add) and a shared title
@@ -426,12 +468,33 @@ export default function TodosPage() {
 
   const forPerson = usePersonFilter();
   const people = usePeople();
-  const visible = useMemo(() => {
+  // „fest“ and „Nicht planen“ live in the planner: read from its rows like the „Im Plan“ entries of other modules.
+  const openIds = useMemo(
+    () =>
+      (tasks ?? [])
+        .filter((x) => !x.done && !x.someday && !x.parentId)
+        .map((x) => x.id)
+        .sort()
+        .join(','),
+    [tasks],
+  );
+  const facts = useLiveQuery(
+    () => (plannerOn ? planFacts('todos', openIds ? openIds.split(',') : []) : undefined),
+    [plannerOn, openIds],
+  );
+  const planOf = useMemo(
+    () =>
+      (x: StoredTask): PlanState =>
+        // While „fest“ / „Nicht planen“ load, no mark yet (a „Nicht planen“ never flashes as „noch nicht im Plan“).
+        plannerOn && facts ? planStateOf(x, day, facts.get(x.id)) : { kind: 'none' },
+    [plannerOn, day, facts],
+  );
+  const scoped = useMemo(() => {
     const all = tasks ?? [];
     const matches = (x: StoredTask) =>
       (!forPerson || x.personId === forPerson) && (!tag || !!x.tags?.includes(tag));
     if (pageView === 'list') {
-      const scoped =
+      const inScope =
         selected === SOMEDAY
           ? all.filter((x) => x.someday)
           : all.filter(
@@ -441,7 +504,7 @@ export default function TodosPage() {
                 !(x.startDate && x.startDate > day && !x.parentId) &&
                 (selected === ALL || x.listId === selected),
             );
-      return scoped.filter((x) => (showDone || !x.done) && matches(x));
+      return inScope.filter((x) => (showDone || !x.done) && matches(x));
     }
     // A view picks top-level tasks by their dates; their subtasks and checklist ride along.
     const inList = (x: StoredTask) =>
@@ -457,6 +520,19 @@ export default function TodosPage() {
     const ids = new Set(tops.map((x) => x.id));
     return [...tops, ...all.filter((x) => x.parentId && ids.has(x.parentId))];
   }, [tasks, selected, showDone, forPerson, tag, pageView, day, plannerOn]);
+  // The plan filter picks top-level tasks; their subtasks ride along (only the main task is a thing of the plan).
+  const visible = useMemo(() => {
+    if (planFilter === 'all') return scoped;
+    const kept = new Set(
+      scoped.filter((x) => !x.parentId && passesPlanFilter(planOf(x), planFilter)).map((x) => x.id),
+    );
+    return scoped.filter((x) => (x.parentId ? kept.has(x.parentId) : kept.has(x.id)));
+  }, [scoped, planFilter, planOf]);
+  // The number at „Noch nicht im Plan“: what that filter shows in this view, list, tag and person.
+  const unplannedCount = useMemo(
+    () => scoped.filter((x) => !x.parentId && planOf(x).kind === 'unplanned').length,
+    [scoped, planOf],
+  );
   const { top, children } = useMemo(() => groupTasks(visible), [visible]);
   const tagList = useMemo(() => tagCounts(tasks ?? []), [tasks]);
   const project = useMemo(() => {
@@ -525,6 +601,34 @@ export default function TodosPage() {
     () => (focus.streaks && tasks ? streaksOf(tasks, day) : undefined),
     [focus.streaks, tasks, day],
   );
+  // „Auswählen“ (todos-plan-state): several tasks into the plan at once. Only things of the plan can be ticked; the
+  // order is the list's, so Shift-click takes the range between.
+  const pickable = useMemo(
+    () => top.filter((x) => planOf(x).kind !== 'none').map((x) => x.id),
+    [top, planOf],
+  );
+  const selection = useSelection(pickable);
+  const chosen = selection.ids;
+  const stopSelecting = () => {
+    setSelecting(false);
+    selection.clear();
+  };
+  // The planner switched off, or nothing left to tick: the mode ends by itself (adjusted while rendering).
+  if (selecting && (!plannerOn || pickable.length === 0)) {
+    setSelecting(false);
+    selection.clear();
+  }
+  function showInPlanner(task: StoredTask, plan: PlanState) {
+    const to = plannerPath(plan, task.id);
+    if (to) void navigate(to);
+  }
+  function intoPlan(ids: readonly string[], date: string | null) {
+    stopSelecting();
+    void requestManyIntoPlan(
+      ids.map((id) => ({ module: 'todos', id })),
+      date,
+    );
+  }
   const groups = useMemo(() => {
     const open = top.filter((x) => !x.done);
     const row = (task: StoredTask) => (
@@ -538,7 +642,12 @@ export default function TodosPage() {
         person={personName(people, task.personId)}
         calm={focus.calmAttention}
         quickTomorrow={pageView === 'today'}
-        inPlan={pageView === 'soon' && plannerOn}
+        plan={planOf(task)}
+        onPlanShow={showInPlanner}
+        onPlanChoose={(x) => setPlanFor({ ids: [x.id], title: t.todos.plan.title(x.title) })}
+        selectable={selecting && planOf(task).kind !== 'none'}
+        selected={selection.isSelected(task.id)}
+        onSelectChange={(x, extend) => selection.toggle(x.id, extend)}
         streaks={streaks}
         onToggle={toggle}
         onOpen={openRow}
@@ -597,6 +706,9 @@ export default function TodosPage() {
     plannerOn,
     split,
     detail?.id,
+    planOf,
+    selecting,
+    selection.selected,
   ]);
   const inboxOpen = useMemo(
     () =>
@@ -646,7 +758,9 @@ export default function TodosPage() {
     });
   }
 
-  const isEmpty = !!tasks && top.length === 0 && pageView !== 'board';
+  // The plan filter emptied the view: a plain line, never the empty state of a page without tasks (the filter stays).
+  const filteredOut = planFilter !== 'all' && top.length === 0 && scoped.some((x) => !x.parentId);
+  const isEmpty = !!tasks && top.length === 0 && !filteredOut && pageView !== 'board';
   const startItems = useStartDataItems('todos');
   const pageMenu: RowMenuItem[] = [
     {
@@ -766,6 +880,55 @@ export default function TodosPage() {
       <PersonFilter usedIds={(tasks ?? []).flatMap((x) => (x.personId ? [x.personId] : []))} />
       <div className={styles.layout}>
         <div className={styles.main}>
+          {plannerOn && !isEmpty ? (
+            <div className={styles.planBar}>
+              <div className={styles.planFilter} role="group" aria-label={t.todos.plan.filter}>
+                {PLAN_FILTERS.map((f) => (
+                  <button
+                    key={f}
+                    type="button"
+                    className={styles.tagChip}
+                    aria-pressed={planFilter === f}
+                    onClick={() => pickPlanFilter(f)}
+                    data-testid={`plan-filter-${f}`}
+                  >
+                    {f === 'unplanned'
+                      ? `${t.todos.plan.filters[f]} · ${unplannedCount}`
+                      : t.todos.plan.filters[f]}
+                  </button>
+                ))}
+              </div>
+              {pageView !== 'board' && pickable.length > 0 ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-pressed={selecting}
+                  onClick={() => (selecting ? stopSelecting() : setSelecting(true))}
+                  data-testid="todos-select"
+                >
+                  {t.todos.plan.select}
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
+          {selecting ? (
+            <SelectionBar count={chosen.length} onCancel={stopSelecting}>
+              <Button
+                variant="primary"
+                onClick={() =>
+                  setPlanFor({ ids: chosen, title: t.todos.plan.titleMany(chosen.length) })
+                }
+                data-testid="todos-to-plan"
+              >
+                {t.todos.plan.action}
+              </Button>
+              {chosen.length < pickable.length ? (
+                <Button variant="ghost" onClick={selection.selectAll}>
+                  {t.todos.plan.selectAll}
+                </Button>
+              ) : null}
+            </SelectionBar>
+          ) : null}
           {/* Tags are an advanced feature: the chips show in "Mehr Felder" mode or while a tag filters. */}
           {tagList.length > 0 && (advanced || tag) ? (
             <div className={styles.tagBar} role="group" aria-label={t.todos.tags.filter}>
@@ -838,6 +1001,11 @@ export default function TodosPage() {
               ) : null
             }
           >
+            {filteredOut && pageView !== 'board' ? (
+              <p className={styles.planHint} data-testid="plan-filter-empty">
+                {t.todos.plan.filterEmpty}
+              </p>
+            ) : null}
             {isEmpty ? (
               <EmptyState
                 title={t.todos.empty}
@@ -871,6 +1039,15 @@ export default function TodosPage() {
         </div>
       </div>
 
+      {planFor ? (
+        <PlanDayDialog
+          open
+          title={planFor.title}
+          day={day}
+          onPick={(date) => intoPlan(planFor.ids, date)}
+          onClose={() => setPlanFor(null)}
+        />
+      ) : null}
       <AddTaskDialog
         open={addTarget !== null}
         initialTitle={addTarget?.title}

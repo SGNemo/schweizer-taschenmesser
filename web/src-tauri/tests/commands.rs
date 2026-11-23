@@ -521,7 +521,7 @@ fn remote_widening_takes_a_ticket_before_the_native_dialog() {
         "picked_program(&app",
         "allowed_path(&path)",
         "asked(&app, texts::remote_program_dialog(lang)",
-        "Arc::ptr_eq(&now.remote, &parts.remote)",
+        "state.same_remote(&parts)",
         ".confirm(ticket)",
         ".add(remote_programs::Entry",
     ];
@@ -590,7 +590,22 @@ fn remote_widening_takes_a_ticket_before_the_native_dialog() {
     assert!(!body.contains("set_enabled") && !body.contains("set_grant"));
     // the answer comes from a blocking native dialog, never from the page
     let src = source("remote.rs");
-    assert_eq!(src.matches(".blocking_show()").count(), 1);
+    // F1: every question goes through `native_ask::ask` (cancel default on Windows, Escape a no)
+    assert!(!src.contains(".blocking_show()") && !src.contains(".blocking_show_with_result()"));
+    assert!(src.contains("crate::native_ask::ask(app, title, text, serious, allow, cancel)"));
+    for file in ["exchange.rs", "lan_sync.rs"] {
+        let other = source(file);
+        assert!(
+            !other.contains(".blocking_show"),
+            "{file} asks around native_ask"
+        );
+        assert!(other.contains("crate::native_ask::ask("), "{file}");
+    }
+    let ask = read("src/native_ask.rs");
+    assert!(ask.contains("rfd::MessageButtons::OkCancelCustom(cancel.into(), allow.into())"));
+    assert!(ask.contains(
+        "tauri_plugin_dialog::MessageDialogButtons::OkCancelCustom(allow.into(), cancel.into())"
+    ));
     assert!(!commands.contains("confirmed: bool") && !commands.contains("confirm: bool"));
 }
 
@@ -855,7 +870,8 @@ fn the_remote_client_only_passes_on_fixed_actions_and_keeps_out_of_sync() {
     }
     // the key and the hub entry are read, never returned: no DTO carries them
     assert_eq!(code.matches("stored_key(").count(), 1);
-    assert_eq!(code.matches("hub_entry(").count(), 1);
+    // through the Wi-Fi gate (H2), which reads the hub entry
+    assert_eq!(code.matches("dial_target(").count(), 1);
     for dto in ["StateDto", "EventDto", "OpenedDto"] {
         let at = code
             .find(&format!("pub struct {dto}"))
@@ -1155,4 +1171,171 @@ fn no_program_is_started_by_bare_name() {
         }
     }
     assert!(hits.is_empty(), "started by bare name: {hits:?}");
+}
+
+/// F2 (launch review 2026-11): an answer given while the hub was stopped and started belongs to
+/// controls that are gone. Every command that puts a native question re-checks after the answer
+/// that the hub is still the one it asked about.
+#[test]
+fn every_remote_question_rechecks_the_hub_after_the_answer() {
+    let commands = remote_commands_source();
+    let mut asking = 0;
+    for body in commands.split("#[tauri::command").skip(1) {
+        let name = body
+            .split("pub fn ")
+            .nth(1)
+            .and_then(|r| r.split('(').next())
+            .unwrap_or("?");
+        let ask = ["confirmed(&app", "asked(&app"]
+            .iter()
+            .filter_map(|q| body.find(q))
+            .min();
+        let Some(at) = ask else { continue };
+        asking += 1;
+        let after = &body[at..];
+        assert!(
+            after.contains("same_remote(&parts)") || after.contains("same_hub(&parts"),
+            "{name} asks at the PC but does not re-check the hub after the answer"
+        );
+    }
+    assert!(asking >= 4, "the asking commands were found ({asking})");
+}
+
+/// F3/NS7 (launch review 2026-11): the page writes only its backups (`backups/`, `backups/auto/`)
+/// into the app data folder. Its file scope is exactly that folder, so the native private files
+/// there (exchange inbox on Android, trust list, grants, keys) are out of reach on every platform,
+/// not only because Windows separates Local and Roaming.
+#[test]
+fn the_page_file_scope_is_the_backup_folder_only() {
+    for entry in fs::read_dir(format!("{}/capabilities", env!("CARGO_MANIFEST_DIR"))).unwrap() {
+        let path = entry.unwrap().path();
+        if path.extension().is_none_or(|e| e != "json") {
+            continue;
+        }
+        let name = path.file_name().unwrap().to_string_lossy().into_owned();
+        let value: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+        for p in value["permissions"].as_array().into_iter().flatten() {
+            if p["identifier"] != "fs:scope" {
+                continue;
+            }
+            let paths: Vec<&str> = p["allow"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|a| a["path"].as_str().unwrap())
+                .collect();
+            assert_eq!(
+                paths,
+                ["$APPDATA/backups/**", "$APPDATA/backups"],
+                "{name}: file scope"
+            );
+            assert!(p.get("deny").is_none_or(|d| d.is_array()), "{name}");
+        }
+    }
+    // the page's own file calls stay inside that folder
+    let web = read("../src/core/backup/safety.ts");
+    assert!(web.contains("export const BACKUP_DIR = 'backups';"));
+    let auto = read("../src/core/backup/auto.ts");
+    assert!(auto.contains("export const AUTO_DIR = `${BACKUP_DIR}/auto`;"));
+    let recovery = read("../src/core/db/recovery.ts");
+    assert!(recovery.contains("platform.files.write(`backups/${fileName}`"));
+}
+
+/// H6 (launch review 2026-11): the page cannot confirm a pairing by itself. `lan_pair_confirm`
+/// takes no code from the page; Rust shows the name and the code of the waiting attempt in a
+/// native question (cancel is the default) and confirms with its own copy of the code.
+#[test]
+fn a_pairing_is_confirmed_in_a_native_question_with_rust_s_own_code() {
+    let lan = source("lan_sync.rs");
+    let at = lan.find("pub fn lan_pair_confirm(").expect("command");
+    let body = &lan[at..];
+    let body = &body[..body.find("\n}\n").unwrap()];
+    let head = &body[..body.find('{').unwrap()];
+    assert!(
+        !head.contains("code"),
+        "the page hands over no code: {head}"
+    );
+    let ask = body.find("asked_to_pair(&app").expect("a native question");
+    // never while a phone controls mouse and keyboard: ticket, check, question, ticket checked
+    let ticket = body.find("remote.ticket()").expect("ticket");
+    let busy = body
+        .find("remote.full_session_open()")
+        .expect("session check");
+    let checked = body.find(".confirm(ticket)").expect("ticket checked");
+    assert!(ticket < busy && busy < ask && ask < checked, "order");
+    let helper = &lan[lan.find("fn asked_to_pair(").expect("helper")..];
+    let helper = &helper[..helper.find("\n}\n").unwrap()];
+    assert!(helper.contains("crate::native_ask::ask(app, title, text, false, allow, cancel)"));
+    let confirm = body.find(".confirm_deliver(").expect("the confirm");
+    assert!(ask < confirm, "asked before the confirm");
+    assert!(
+        body[..confirm].contains("pending"),
+        "the code comes from the waiting attempt Rust holds"
+    );
+}
+
+/// E4 (launch review 2026-11): pausing a device or switching it off at the PC drops its outbox.
+#[test]
+fn pausing_a_device_drops_its_outbox() {
+    let src = source("exchange.rs");
+    let at = src.find("pub fn exchange_set_device(").expect("command");
+    let body = &src[at..];
+    let body = &body[..body.find("\n}\n").unwrap()];
+    let set = body.find(".set_device(&key, grant)").expect("the write");
+    let drop = body
+        .find("outbox.discard_for(")
+        .expect("the outbox is dropped");
+    assert!(set < drop, "after the grant is stored");
+    assert!(body.contains("if !grant.on || grant.paused {"));
+}
+
+/// H2 (launch review 2026-11): every phone-side dialer gets its target through the Wi-Fi gate.
+#[test]
+fn every_phone_dialer_goes_through_the_wifi_gate() {
+    for file in ["exchange_client.rs", "remote_client.rs"] {
+        let src = source(file);
+        let code = &src[..src.find("#[cfg(test)]").unwrap_or(src.len())];
+        assert!(code.contains("crate::lan_client::dial_target("), "{file}");
+        assert!(!code.contains("hub_entry("), "{file} dials around the gate");
+    }
+    let lan = source("lan_client.rs");
+    let gate = &lan[lan.find("pub(crate) fn dial_target<").unwrap()..];
+    let gate = &gate[..gate.find("\n}\n").unwrap()];
+    assert!(gate.contains("if !dial_allowed(app.lan_watch().wifi_state()) {"));
+}
+
+/// E3/E4 (launch review 2026-11): off reaches the switch file without a running hub, nothing new
+/// is queued for a paused device, and an exchange answer belongs to the hub that asked.
+#[test]
+fn exchange_off_pause_and_answers_hold() {
+    let src = source("exchange.rs");
+    let body = |name: &str| {
+        let at = src.find(&format!("pub fn {name}(")).unwrap();
+        let b = &src[at..];
+        b[..b.find("\n}\n").unwrap()].to_owned()
+    };
+    let enabled = body("exchange_set_enabled");
+    let early = enabled
+        .find("exchange_dir(&app).ok_or(\"no-data-dir\")")
+        .expect("off without a hub, under the slot lock");
+    let attach = &src[src.find("pub fn attach(").unwrap()..];
+    let attach = &attach[..attach.find("\n}\n").unwrap()];
+    assert!(
+        attach.contains("if !switch_at(&dir).enabled() {"),
+        "attach applies an earlier off"
+    );
+    assert!(early < enabled.find("let parts = state.parts()?;").unwrap());
+    let file = &enabled[early..];
+    assert!(file.contains("switch_at(&dir)") && file.contains(".set(false)"));
+    let send = body("exchange_send");
+    assert!(send.find("effective()").unwrap() < send.find("outbox.push(").unwrap());
+    let ask = &src[src.find("fn ask(").unwrap()..];
+    let ask = &ask[..ask.find("\n}\n").unwrap()];
+    assert!(
+        ask.find(".confirm(ticket)").unwrap()
+            < ask
+                .find("Arc::ptr_eq(&now.exchange, &parts.exchange)")
+                .unwrap()
+    );
 }

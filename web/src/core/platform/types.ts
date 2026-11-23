@@ -201,7 +201,11 @@ export interface LanHubService {
   stop(): Promise<void>;
   status(): Promise<LanHubStatus>;
   pairOpen(): Promise<void>;
-  pairConfirm(attempt: number, code: string): Promise<void>;
+  /**
+   * "Koppeln": Rust asks in a native question with the name and code it holds (H6); the page
+   * hands over no code. Rejects with `cancelled` when the user said no there.
+   */
+  pairConfirm(attempt: number): Promise<void>;
   pairCancel(): Promise<void>;
   devices(): Promise<LanHubDevice[]>;
   revoke(id: string): Promise<boolean>;

@@ -464,3 +464,29 @@
   border-radius: var(--radius-md);
   background: var(--accent-soft);
 }
+
+/* The plan filter and „Auswählen“ (todos-plan-state). */
+.planBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.planFilter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.planHint {
+  margin: 0 0 var(--space-3);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.planDate {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-2);
+  margin: var(--space-3) 0;
+}
