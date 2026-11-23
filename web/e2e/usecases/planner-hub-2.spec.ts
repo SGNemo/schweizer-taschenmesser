@@ -20,7 +20,8 @@ import { dismissNotices } from '../helpers';
  *  - `rows`: thing rows the planner shows for the flow: today's sheet + „Noch ohne Tag“ + „Frist vorbei“ (counted
  *    from what the page names: the week tile's „· n Dinge“ and the groups' counts),
  *  - flow figures: `rightKind`, `linkedToPlan` (A), `forms`, `fields` (A2), `rowsBefore`, `rowsAfter`,
- *    `doneInPlanner` (B), `nextStepOnly`, `savedAsRoutine`, `durationProposed`, `learned` (C1), `oneRow`, `mapShown`
+ *    `doneInPlanner`, `replySwitches` (B: route changes from the planner to the reply of one
+ *    planned mail, desktop), `nextStepOnly`, `savedAsRoutine`, `durationProposed`, `learned` (C1), `oneRow`, `mapShown`
  *    (C2), `markVisible`, `markAgrees`, `tripsToPlanner` (D1: route changes to read the planned day starting in the
  *    thing's own module) and the D figures. A thing that cannot be done today is the word „nicht möglich“.
  *
@@ -39,7 +40,7 @@ import { dismissNotices } from '../helpers';
  *    that ends it): B `taps` 27 → 28 / phone 14 → 16 and `perThing` 17 → 21 / phone 9 → 13 from 4b (and 4c) until 2
  *    (each invoice and cancellation is expand + its step; budgets and mail are still trips); C1 `workTaps` 7 → 8 and
  *    `taps` 19 → 20 from 4a until 5a (expand, „Ganz öffnen“, the routine's run as today).
- * Re-measured by the packages: 10b: D1 · 4a: D1, C1 · 4b/4c/2: B · 5a: C1 · 5b: C2 · 1: D2 · 3: A1, C1 · 9: D3 · 11: D4.
+ * Re-measured by the packages: 10b: D1 · 4a: D1, C1 · 4b/2: B · 4c: B `replySwitches` · 5a: C1 · 5b: C2 · 1: D2 · 3: A1, C1 · 9: D3 · 11: D4.
  * `MEASURE=1` only measures. Facts (the click path, the module routes passed) land beside the table in
  * `test-results/usecase-planner-hub-2/`.
  *
@@ -59,7 +60,8 @@ const HIGHER = ['rightKind', 'linkedToPlan', 'doneInPlanner', 'markVisible', 'ma
 /**
  * The measured state: 2026-11-23 on `develop` (design/planner-hub-2), keyed `<path> · <project>`. The phone differs
  * where its navigation does (area in the bottom bar, the module used last there) and where a module is desktop-only
- * (mail).
+ * (mail). B `replySwitches` (added 2026-11-23, round 3): the demo mailbox loads no message body offline, so there is
+ * no „Antworten“ to press today – its IST counts the way to the open thread (row chip „Aus Mail“ → /mail: 1).
  */
 // prettier-ignore
 const IST: Record<string, Figures> = {
@@ -67,8 +69,8 @@ const IST: Record<string, Figures> = {
   'A1 Alles ins Planer-Feld · pixel-7': { rows: 11, moduleSwitches: 0, taps: 12, perThing: 0, rightKind: 4, linkedToPlan: 4 },
   'A2 Jedes Ding als richtige Art · desktop-chrome': { rows: 8, moduleSwitches: 3, taps: 33, perThing: 13, forms: 2, fields: 5, rightKind: 12, linkedToPlan: 11 },
   'A2 Jedes Ding als richtige Art · pixel-7': { rows: 8, moduleSwitches: 5, taps: 34, perThing: 14, forms: 2, fields: 5, rightKind: 12, linkedToPlan: 11 },
-  'B Finanzen und Mails abarbeiten · desktop-chrome': { rowsBefore: 5, taps: 27, perThing: 17, moduleSwitches: 5, doneInPlanner: 1, rowsAfter: 1, mails: 4 },
-  'B Finanzen und Mails abarbeiten · pixel-7': { rowsBefore: 5, taps: 14, perThing: 9, moduleSwitches: 5, doneInPlanner: 1, rowsAfter: 1, mails: 'nicht möglich' },
+  'B Finanzen und Mails abarbeiten · desktop-chrome': { rowsBefore: 5, taps: 27, perThing: 17, moduleSwitches: 5, doneInPlanner: 1, rowsAfter: 1, mails: 4, replySwitches: 1 },
+  'B Finanzen und Mails abarbeiten · pixel-7': { rowsBefore: 5, taps: 14, perThing: 9, moduleSwitches: 5, doneInPlanner: 1, rowsAfter: 1, mails: 'nicht möglich', replySwitches: 'nicht möglich' },
   'C1 Bündel Haushalt · desktop-chrome': { rows: 1, createTaps: 12, workTaps: 7, taps: 19, perThing: 6, moduleSwitches: 4, nextStepOnly: 'nein', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
   'C1 Bündel Haushalt · pixel-7': { rows: 1, createTaps: 12, workTaps: 7, taps: 19, perThing: 6, moduleSwitches: 5, nextStepOnly: 'nein', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
   'C2 Besorgung · desktop-chrome': { rows: 2, createTaps: 0, workTaps: 9, perThing: 5, moduleSwitches: 2, oneRow: 'nein', mapShown: 'nicht möglich' },
@@ -93,8 +95,8 @@ const TARGET: Record<string, Figures> = {
   'A1 Alles ins Planer-Feld · pixel-7': { rows: 7, moduleSwitches: 0, taps: 12, perThing: 0, rightKind: 12, linkedToPlan: 10 },
   'A2 Jedes Ding als richtige Art · desktop-chrome': { rows: 8, moduleSwitches: 3, taps: 33, perThing: 13, forms: 2, fields: 5, rightKind: 12, linkedToPlan: 11 },
   'A2 Jedes Ding als richtige Art · pixel-7': { rows: 8, moduleSwitches: 5, taps: 34, perThing: 14, forms: 2, fields: 5, rightKind: 12, linkedToPlan: 11 },
-  'B Finanzen und Mails abarbeiten · desktop-chrome': { rowsBefore: 2, taps: 16, perThing: 12, moduleSwitches: 0, doneInPlanner: 9, rowsAfter: 1, mails: 4 },
-  'B Finanzen und Mails abarbeiten · pixel-7': { rowsBefore: 1, taps: 10, perThing: 8, moduleSwitches: 0, doneInPlanner: 5, rowsAfter: 1, mails: 'nicht möglich' },
+  'B Finanzen und Mails abarbeiten · desktop-chrome': { rowsBefore: 2, taps: 16, perThing: 12, moduleSwitches: 0, doneInPlanner: 9, rowsAfter: 0, mails: 4, replySwitches: 0 },
+  'B Finanzen und Mails abarbeiten · pixel-7': { rowsBefore: 1, taps: 10, perThing: 8, moduleSwitches: 0, doneInPlanner: 5, rowsAfter: 0, mails: 'nicht möglich', replySwitches: 'nicht möglich' },
   'C1 Bündel Haushalt · desktop-chrome': { rows: 1, createTaps: 1, workTaps: 7, taps: 8, perThing: 7, moduleSwitches: 0, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
   'C1 Bündel Haushalt · pixel-7': { rows: 1, createTaps: 1, workTaps: 7, taps: 8, perThing: 7, moduleSwitches: 0, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
   'C2 Besorgung · desktop-chrome': { rows: 1, createTaps: 14, workTaps: 6, perThing: 7, moduleSwitches: 2, oneRow: 'ja', mapShown: 'nicht möglich' },
@@ -942,6 +944,9 @@ test('B Finanzen und Mails abarbeiten', async ({ page, isMobile }, info) => {
   ).toBeVisible();
   // 4 The mails: no source of the plan – „Alle in den Plan…“ in the mailbox makes four ToDos (desktop only).
   let mails: number | string = 'nicht möglich';
+  let replySwitches: number | string = 'nicht möglich';
+  let replyEditor = false;
+  let replyPath: string[] = [];
   if (!isMobile) {
     await go(hand, page, isMobile, 'mail');
     await hand.tap(page.getByRole('button', { name: 'Alle in den Plan…' }), 'Alle in den Plan…');
@@ -958,6 +963,47 @@ test('B Finanzen und Mails abarbeiten', async ({ page, isMobile }, info) => {
         (x) => !x.done && x.links?.some((l) => l.kind === 'mail'),
       );
     await expect.poll(async () => (await fromMail()).length).toBe(MAILS.length);
+    // Answering one planned mail (package 4c): route changes from the planner until the reply editor of the first one
+    // is open – its row's link chip („Aus Mail“, else ⋯ · „Öffnen“), then „Antworten“; nothing is sent. Its own hand:
+    // the flow's figures stay as they were (its routes are taken back off the flow's list, the page returns unseen).
+    const mark = hand.places.length;
+    const reply = new Hand(page, isMobile);
+    reply.start();
+    await openNoDay(reply, page);
+    const first = (await fromMail())[0]!;
+    const mailRow = page
+      .locator('main li')
+      .filter({
+        has: page.getByRole('button', { name: `Aktionen für ${first.title}`, exact: true }),
+      })
+      .first();
+    const chip = mailRow.locator('[data-link-chip]').first();
+    if (await chip.count()) await reply.tap(chip, 'Chip Aus Mail');
+    else {
+      await reply.tap(
+        mailRow.getByRole('button', { name: `Aktionen für ${first.title}`, exact: true }),
+        `⋯ ${first.title}`,
+      );
+      await reply.tap(page.getByRole('menuitem', { name: 'Öffnen', exact: true }), 'Öffnen');
+    }
+    // The thread on screen (mail's reading pane). The demo mailbox has no message body offline („Die Mail konnte nicht
+    // geladen werden.“), so there may be no „Antworten“ to press: then the figure counts the way to the open thread.
+    await expect(page).toHaveURL(/\/mail/);
+    await expect(page.getByRole('button', { name: 'Zur Liste' }).first()).toBeVisible();
+    const answer = page.getByRole('button', { name: 'Antworten', exact: true }).first();
+    if (await appears(answer, 1500)) {
+      await reply.tap(answer, 'Antworten');
+      replyEditor = await appears(page.getByRole('dialog').first());
+    }
+    replySwitches = reply.moduleSwitches;
+    replyPath = reply.path;
+    await page.goto('/planner');
+    await expect(page.getByTestId(`day-${TODAY}`)).toBeVisible();
+    // „Noch ohne Tag“ as the flow found it: folded (the reply's unfolding is remembered).
+    const opened = page.getByRole('button', { name: 'Noch ohne Tag einklappen' });
+    if (await opened.count()) await opened.click();
+    await expect(page.getByRole('button', { name: 'Noch ohne Tag ausklappen' })).toBeVisible();
+    hand.places = hand.places.slice(0, mark);
     // They wait under „Noch ohne Tag“, where a row has no tick: each one onto today first, then ticked.
     const head = page.getByRole('button', { name: 'Noch ohne Tag ausklappen' });
     if (await head.count()) await hand.tap(head, 'Noch ohne Tag aufklappen');
@@ -1028,8 +1074,10 @@ test('B Finanzen und Mails abarbeiten', async ({ page, isMobile }, info) => {
       doneInPlanner: hand.onlyInPlanner(things),
       rowsAfter: after.all,
       mails,
+      replySwitches,
     },
     {
+      reply: { editor: replyEditor, path: replyPath },
       before,
       after,
       places: hand.places,
