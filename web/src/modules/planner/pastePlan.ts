@@ -421,3 +421,44 @@ export function matchPaste(
     : [];
   return { lines, missing, hasPast };
 }
+
+/** One thing in the copied plan: its title and, when known, its minutes. Nothing else ever leaves (P3). */
+export interface CopyThing {
+  title: string;
+  minutes?: number;
+}
+
+/** The words of the copied text (localised headings; the reader understands German and English ones). */
+export interface CopyWords {
+  goal: (goal: string) => string;
+  day: (date: string) => string;
+  week: string;
+  later: string;
+  minutes: (min: number) => string;
+}
+
+/**
+ * „Plan als Text kopieren“ (use case „Tag kippt“, P3): the plan from today on in exactly the format „Plan einfügen“
+ * reads – an optional goal line, one heading per day with its things, then „Diese Woche, ohne Tag“ and „Nächste
+ * Wochen“. Titles, minutes, days and the goal only: no ids, notes, links, blocker labels or appointments. Pure; the
+ * page puts it on the clipboard only when he taps.
+ */
+export function planAsText(
+  plan: {
+    goal?: string;
+    days: readonly { date: string; things: readonly CopyThing[] }[];
+    week: readonly CopyThing[];
+    later: readonly CopyThing[];
+  },
+  words: CopyWords,
+): string {
+  const line = (x: CopyThing) =>
+    `- ${x.title.replace(/\s+/g, ' ').trim()}${x.minutes ? ` (${words.minutes(x.minutes)})` : ''}`;
+  const blocks: string[] = [];
+  if (plan.goal) blocks.push(words.goal(plan.goal));
+  for (const d of plan.days)
+    if (d.things.length) blocks.push([words.day(d.date), ...d.things.map(line)].join('\n'));
+  if (plan.week.length) blocks.push([`${words.week}:`, ...plan.week.map(line)].join('\n'));
+  if (plan.later.length) blocks.push([`${words.later}:`, ...plan.later.map(line)].join('\n'));
+  return blocks.join('\n\n');
+}

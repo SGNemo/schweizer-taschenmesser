@@ -9634,6 +9634,16 @@ export const de = {
       openFrom: (days: string) => `Noch offen: Dinge von ${days}`,
       openSince: (day: string) => `Noch offen: Dinge seit ${day}`,
     },
+    copy: {
+      menu: 'Plan als Text kopieren',
+      done: 'Plan kopiert. Nur Titel, Tage und Minuten.',
+      failed: 'Kopieren hat gerade nicht geklappt.',
+      empty: 'Im Plan steht noch nichts zum Kopieren.',
+      goal: (goal: string) => `Ziel: ${goal}`,
+      week: 'Diese Woche, ohne Tag',
+      later: 'Nächste Wochen',
+      minutes: (min: number) => `${min} Min`,
+    },
     goal: {
       title: 'Ziel',
       line: (goal: string) => `Ziel: ${goal}`,

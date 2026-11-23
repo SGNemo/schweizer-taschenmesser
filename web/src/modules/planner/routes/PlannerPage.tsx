@@ -77,7 +77,7 @@ import { firstDayWithRows, plannerHead } from '../head';
 import { DaySetup } from '../components/DaySetup';
 import { DaySheet } from '../components/DaySheet';
 import { PasteDialog } from '../components/PasteDialog';
-import { looksLikePlan } from '../pastePlan';
+import { looksLikePlan, planAsText } from '../pastePlan';
 import { RowChoice, type RowChoiceState } from '../components/RowChoice';
 import { SETUP_DAYS } from '../daySetup';
 import { duesOf, eveningLine } from '../rest';
@@ -92,6 +92,7 @@ import { instructionItems, opLines, planLines, restIsEmpty } from '../say';
 import { PlannerOffError, previewUser, proposeUser } from '../services';
 import { useBoard } from '../useBoard';
 import { useUiStore } from '@/stores/ui';
+import { getPlatform } from '@/core/platform';
 import styles from './planner.module.css';
 
 /** A thing open this many days gets the quiet offer „Vom Tag nehmen“ (CONCEPT §3). */
@@ -1115,6 +1116,54 @@ export default function PlannerPage() {
    * that thing is still open on that day; one ✕ hides it. Nothing else on the sheet changes.
    */
   /**
+   * „Plan als Text kopieren“ (use case „Tag kippt“, P3): the plan from today on as text „Plan einfügen“ reads back –
+   * the days in view with their things (a thing once, on its first day), „Noch ohne Tag“, „Nächste Wochen“ and the
+   * goal. Appointments and blocks stay out. Nothing is sent anywhere: the text goes to the clipboard on his tap.
+   */
+  async function copyPlan() {
+    const c = t.planner.copy;
+    const toast = useUiStore.getState().toast;
+    const from = data?.today ?? today();
+    const seen = new Set<string>();
+    const thing = (r: { itemKey: string; title: string; minutes?: number }) => {
+      if (seen.has(r.itemKey)) return [];
+      seen.add(r.itemKey);
+      return [{ title: r.title, ...(r.minutes ? { minutes: r.minutes } : {}) }];
+    };
+    const inView = (board?.days ?? []).filter((d) => d.date >= from);
+    const text = planAsText(
+      {
+        ...(inView.find((d) => d.row?.note)?.row?.note
+          ? { goal: inView.find((d) => d.row?.note)!.row!.note! }
+          : {}),
+        days: inView.map((d) => ({
+          date: d.date,
+          things: d.rows.filter((r) => r.entry && !r.fixed).flatMap(thing),
+        })),
+        week: (board?.waiting ?? []).filter((w) => w.reason !== 'later').flatMap(thing),
+        later: (laterList ?? []).map((e) => ({ title: e.title })),
+      },
+      {
+        goal: c.goal,
+        day: (date) => `${dayName(date)} ${formatDay(date, 'd.M.')}`,
+        week: c.week,
+        later: c.later,
+        minutes: c.minutes,
+      },
+    );
+    if (!text.trim()) {
+      toast(c.empty);
+      return;
+    }
+    try {
+      await getPlatform().clipboard.writeText(text);
+      toast(c.done);
+    } catch {
+      toast(c.failed);
+    }
+  }
+
+  /**
    * The goal of the day (P2): „Ziel: Wohnung frei bekommen“ – one quiet line, no figure, no bar. ✕ removes it from every
    * day in view that carries the same goal (the weekend it was set for); „Tag einstellen“ edits it per day.
    */
@@ -1200,6 +1249,8 @@ export default function PlannerPage() {
         ]
       : []),
     { id: 'paste', label: t.planner.paste.menu, onSelect: () => setPasting('') },
+    // „Plan als Text kopieren“ (P3): only on his tap, only to the clipboard, only titles, days, minutes and the goal.
+    { id: 'copy', label: t.planner.copy.menu, onSelect: () => void copyPlan() },
     { id: 'check', label: t.planner.check.title, onSelect: () => setChecking(true) },
     { id: 'days', label: t.planner.daySetup.open, onSelect: () => setSettingUp(true) },
   ];

@@ -271,6 +271,16 @@ export const planner: Strings['planner'] = {
     openFrom: (days: string) => `Still open: things from ${days}`,
     openSince: (day: string) => `Still open: things since ${day}`,
   },
+  copy: {
+    menu: 'Copy the plan as text',
+    done: 'Plan copied. Titles, days and minutes only.',
+    failed: 'Copying did not work just now.',
+    empty: 'There is nothing in the plan to copy yet.',
+    goal: (goal: string) => `Goal: ${goal}`,
+    week: 'This week, no day yet',
+    later: 'Next weeks',
+    minutes: (min: number) => `${min} min`,
+  },
   goal: {
     title: 'Goal',
     line: (goal: string) => `Goal: ${goal}`,
