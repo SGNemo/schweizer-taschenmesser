@@ -41,9 +41,9 @@ export const tLegal = defineBundle(
       },
       lan: {
         title: 'Austausch und Fernbedienung im Heimnetz (optional)',
-        what: 'Austausch: Notizen und Links, die du von einem gekoppelten Gerät an ein anderes schickst; die Karten bleiben 30 Tage auf den beiden Geräten und werden nicht abgeglichen, nicht gesichert und nicht an die KI gegeben. Fernbedienung: vom Handy Medien-, Lautstärke- und Sperrbefehle und „Bildschirm aus“; mit eigener Freigabe Maus- und Tastatureingaben, der Start von Programmen aus der Liste am PC sowie Ausschalten, Neustart, Energiesparen oder Abmelden (mit Countdown am PC). Der PC zeigt dem Handy dafür Lautstärke, Stummschaltung, Wiedergabe, Sperre, was freigegeben ist, und die Namen in der Programmliste. Eingaben werden nie gespeichert oder protokolliert.',
+        what: 'Austausch: Notizen und Links, die du von einem gekoppelten Gerät an ein anderes schickst; die Karten bleiben 30 Tage auf den beiden Geräten und werden nicht abgeglichen, nicht gesichert und nicht an die KI gegeben. Fernbedienung: vom Handy Medien-, Lautstärke- und Sperrbefehle und „Bildschirm aus“; mit eigener Freigabe Maus- und Tastatureingaben, der Start von Programmen aus der Liste am PC sowie Ausschalten, Neustart, Energiesparen, Ruhezustand oder Abmelden (mit Countdown am PC). Der PC zeigt dem Handy dafür Lautstärke, Stummschaltung, Wiedergabe, Sperre, was freigegeben ist, die Namen in der Programmliste und ob Nemo am PC gerade beschäftigt ist. Eingaben werden nie gespeichert oder protokolliert.',
         to: 'Nur deine gekoppelten Geräte im selben Heimnetz, direkt und verschlüsselt. Kein Server, kein Dienst des Betreibers von Nemo.',
-        when: 'Nur wenn du Austausch bzw. Fernbedienung einschaltest, das Gerät am PC freigibst und selbst etwas schickst oder steuerst. Ein gekoppeltes Handy ohne Freigabe erfährt nur, ob die Fernbedienung am PC an, freigegeben, pausiert oder gesperrt ist. Eine Freigabe für Maus und Tastatur reicht so weit wie dein Benutzerkonto am PC: das steuernde Gerät kann alles, was du dort per Hand könntest.',
+        when: 'Nur wenn du Austausch bzw. Fernbedienung einschaltest, das Gerät am PC freigibst und selbst etwas schickst oder steuerst. Ein gekoppeltes Handy ohne Freigabe erfährt nur, ob der PC überhaupt fernsteuerbar ist und ob die Fernbedienung dort an, freigegeben oder pausiert ist. Eine Freigabe für Maus und Tastatur reicht so weit wie dein Benutzerkonto am PC: das steuernde Gerät kann alles, was du dort per Hand könntest.',
       },
       push: {
         title: 'Web-Push-Erinnerungen (optional)',
@@ -133,7 +133,7 @@ export const tLegal = defineBundle(
         title: 'Link- und Tab-Vorschau (optional)',
         what: 'Die Seite hinter einem gespeicherten Link bzw. einem offenen Browser-Tab und das Vorschaubild, das sie nennt, ohne Cookies und ohne Anmeldung. Name der Website und Kurzbeschreibung werden mit dem Lesezeichen gespeichert (und wie dieses abgeglichen und gesichert); das kleine Bild bleibt nur auf diesem Gerät; nichts davon geht an die KI. Tab-Vorschauen werden nicht gespeichert.',
         to: 'Der Server der Seite und der Server des Vorschaubilds; in der Browser-App über deinen eigenen Sync-Server. Sie sehen deine IP-Adresse (bzw. die des Servers).',
-        when: 'Mit „Linkvorschau laden“ (aus) bei jedem Speichern eines Links. Einzeln geht es immer: auf Klick auf „Vorschau von der Seite holen“ (Menü „⋯“) oder beim Speichern eines geteilten Links (Häkchen vorab gesetzt). Tabs nur mit „Vorschaubilder für offene Tabs“ (aus): automatisch für jeden offenen, nicht privaten https-Tab, solange die Tab-Übersicht sichtbar ist (nur Windows).',
+        when: 'Mit „Linkvorschau laden“ (aus) bei jedem Speichern eines Links. Einzeln auf Klick auf „Vorschau von der Seite holen“ (Menü „⋯“) oder beim Speichern eines geteilten Links (Häkchen vorab gesetzt); in der Browser-App nur mit eigenem Sync-Server. Tabs nur mit „Vorschaubilder für offene Tabs“ (aus): automatisch für jeden offenen, nicht privaten https-Tab, solange die Tab-Übersicht sichtbar ist (nur Windows).',
       },
       downloads: {
         title: 'Downloads (optional)',
@@ -309,9 +309,9 @@ export const tLegal = defineBundle(
         },
         lan: {
           title: 'Device drop and Remote in the home network (optional)',
-          what: 'Device drop: notes and links you send from one paired device to another; the cards stay on both devices for 30 days and are not synced, not backed up and not given to the AI. Remote: media, volume and lock commands and “screen off” from the phone; with their own grant mouse and keyboard input, starting programs from the list on the PC, and shutting down, restarting, sleeping or signing out (with a countdown on the PC). For this the PC shows the phone the volume, mute, playback, lock state, what is granted, and the names in the program list. Input is never stored or logged.',
+          what: 'Device drop: notes and links you send from one paired device to another; the cards stay on both devices for 30 days and are not synced, not backed up and not given to the AI. Remote: media, volume and lock commands and “screen off” from the phone; with their own grant mouse and keyboard input, starting programs from the list on the PC, and shutting down, restarting, sleep, hibernate or signing out (with a countdown on the PC). For this the PC shows the phone the volume, mute, playback, lock state, what is granted, the names in the program list and whether Nemo on the PC is busy. Input is never stored or logged.',
           to: 'Only your paired devices in the same home network, directly and encrypted. No server, no service run by the maintainer of Nemo.',
-          when: 'Only when you switch on Device drop or Remote, grant the device on the PC and send or control something yourself. A paired phone without a grant only learns whether Remote is on, granted, paused or locked on the PC. A mouse and keyboard grant reaches as far as your user account on the PC: the controlling device can do whatever you could do there by hand.',
+          when: 'Only when you switch on Device drop or Remote, grant the device on the PC and send or control something yourself. A paired phone without a grant only learns whether the PC can be controlled at all and whether Remote is on, granted or paused there. A mouse and keyboard grant reaches as far as your user account on the PC: the controlling device can do whatever you could do there by hand.',
         },
         push: {
           title: 'Web push reminders (optional)',
@@ -401,7 +401,7 @@ export const tLegal = defineBundle(
           title: 'Link and tab previews (optional)',
           what: 'The page behind a saved link or an open browser tab and the preview picture it names, without cookies and without login. Site name and short description are saved with the bookmark (and synced and backed up like it); the small picture stays on this device only; none of it goes to the AI. Tab previews are not stored.',
           to: 'The page’s server and the server of the preview picture; in the browser app through your own sync server. They see your IP address (or the server’s).',
-          when: 'With “Load link previews” (off) on every save of a link. A single one always works: on clicking “Fetch a preview from the page” (menu “⋯”) or when you save a shared link (box ticked in advance). Tabs only with “Preview pictures for open tabs” (off): automatically for each open, non-private https tab while the tab overview is visible (Windows only).',
+          when: 'With “Load link previews” (off) on every save of a link. A single one on clicking “Fetch a preview from the page” (menu “⋯”) or when you save a shared link (box ticked in advance); in the browser app only with your own sync server. Tabs only with “Preview pictures for open tabs” (off): automatically for each open, non-private https tab while the tab overview is visible (Windows only).',
         },
         downloads: {
           title: 'Downloads (optional)',
