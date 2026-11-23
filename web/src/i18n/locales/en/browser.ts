@@ -145,6 +145,7 @@ export const browser: Strings['browser'] = {
     noBookmarks: 'No bookmarks yet. Open an address, then tap the star to save it.',
   },
   popupBlocked: 'A pop-up was blocked.',
+  unfiltered: 'The ad blocker is not running in this tab. Close the tab and open it again.',
   download: {
     offer: (name: string) => `The page offers “${name}” for download.`,
     toManager: 'Open in the download manager',

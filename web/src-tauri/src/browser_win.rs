@@ -3,7 +3,7 @@
 //! empty 403, and denies every permission request of the page (camera, microphone, location …); it
 //! injects nothing into the page. Decisions: `browser::decide_request`.
 
-use tauri::{AppHandle, Url, Webview};
+use tauri::{AppHandle, Manager, Url, Webview};
 use webview2_com::{
     take_pwstr,
     Microsoft::Web::WebView2::Win32::{
@@ -13,12 +13,21 @@ use webview2_com::{
 };
 use windows_next::core::{w, Interface, PWSTR};
 
-/// Start watching the requests of the tab's webview. Failures leave the tab unfiltered.
+/// Start watching the requests of the tab's webview. A failure leaves the tab unfiltered and says
+/// so (`Event::Unfiltered`, B3).
 pub fn hook(app: &AppHandle, webview: &Webview, tab: u32) {
     let app = app.clone();
-    let _ = webview.with_webview(move |platform| unsafe {
+    let failed = {
+        let app = app.clone();
+        move || {
+            app.state::<crate::browser::BrowserState>()
+                .emit(tab, crate::browser::Event::Unfiltered { tab })
+        }
+    };
+    let failed_to_queue = failed.clone();
+    let queued = webview.with_webview(move |platform| unsafe {
         let Ok(core) = platform.controller().CoreWebView2() else {
-            return;
+            return failed();
         };
         // Camera, microphone, location, notifications, clipboard …: the page never gets any of them.
         let deny = PermissionRequestedEventHandler::create(Box::new(|_, args| {
@@ -30,13 +39,13 @@ pub fn hook(app: &AppHandle, webview: &Webview, tab: u32) {
         let mut permission_token = 0i64;
         let _ = core.add_PermissionRequested(&deny, &mut permission_token);
         let Ok(env) = core.cast::<ICoreWebView2_2>().and_then(|c| c.Environment()) else {
-            return;
+            return failed();
         };
         if core
             .AddWebResourceRequestedFilter(w!("*"), COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL)
             .is_err()
         {
-            return;
+            return failed();
         }
         let handler = WebResourceRequestedEventHandler::create(Box::new(move |_, args| {
             let Some(args) = args else {
@@ -56,6 +65,11 @@ pub fn hook(app: &AppHandle, webview: &Webview, tab: u32) {
             Ok(())
         }));
         let mut token = 0i64;
-        let _ = core.add_WebResourceRequested(&handler, &mut token);
+        if core.add_WebResourceRequested(&handler, &mut token).is_err() {
+            failed();
+        }
     });
+    if queued.is_err() {
+        failed_to_queue();
+    }
 }
