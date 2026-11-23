@@ -33,14 +33,17 @@ function entries(): Set<string> {
   return found;
 }
 
-const dirOf = (file: string) => `/${relative(root, file).split('/').slice(0, -1).join('/')}`.replace(/\/$/, '') || '/';
+const dirOf = (file: string) =>
+  `/${relative(root, file).split('/').slice(0, -1).join('/')}`.replace(/\/$/, '') || '/';
 
 describe('Dependabot covers every project', () => {
   const have = entries();
   const want = [
     ...find(root, ['package-lock.json']).map((f) => `npm ${dirOf(f)}`),
     ...find(join(root, 'web/src-tauri'), ['Cargo.lock']).map((f) => `cargo ${dirOf(f)}`),
-    ...find(join(root, 'web/src-tauri/plugins'), ['build.gradle.kts']).map((f) => `gradle ${dirOf(f)}`),
+    ...find(join(root, 'web/src-tauri/plugins'), ['build.gradle.kts']).map(
+      (f) => `gradle ${dirOf(f)}`,
+    ),
   ];
 
   it('finds the projects', () => {
