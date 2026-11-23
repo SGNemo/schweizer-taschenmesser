@@ -12,13 +12,13 @@ Gemeinsamer Block (gilt ganz): docs/design/planner-hub-2/PACKAGES.md#common
 Branch `feat/plan-steps` von frischem `develop`, nach dem Merge von Paket 2. Hotspots ansagen: `core/modules/types.ts`, `PlannerPage.tsx`, `strings.ts`.
 
 ## Ausgangslage
-CONCEPT-ROWS.md „Idea 5“ (5a); Entscheidung Richtung A in DESIGN.md §3; handoff/05-bundle.md (Abschnitte „Closed row“, „Expanded“, „Los“); COPY.md B1, B3–B10, B14 (nur „Als Routine speichern“), B16; A11Y.md („Los“).
+CONCEPT-ROWS.md „Idea 5“ (5a); Entscheidung Richtung A in DESIGN.md §3; handoff/05-bundle.md (Abschnitte „Closed row“, „Expanded“, „Los“); COPY.md B1, B3–B10, B14 (nur „Als Routine speichern“), B16, B19, B22; A11Y.md („Los“).
 
 ## Pflichtliste
 - Vertrag: `PlannableItem.steps?` und `PlannableSource.onStepDone?` (nur Anzeige und „Los“, nie im Eingabe-Hash – Test nach dem Muster `linksDisplayOnly`).
 - Quellen: ToDos (Checkliste), Listen (offene Einträge), Routinen (Schritte des heutigen Laufs).
 - Zeile: Meta B1; Schritte-Panel über `PlanPanelHost` (ToDos- und Listen-Panel aus 4a bekommen den Fuß „Los“ · ⋯ · „Ganz öffnen“; Routinen ein eigenes).
-- „Los“: `FocusPage` im Schritt-Modus (`?step=1`) genau nach der Tabelle der Übergabe – kein Ring, keine Liste der übrigen Schritte, Uhr zählt hoch und folgt „Uhr ausblenden“; überlebt Neuladen; Tasten S, P, Esc. Die Startzeile „Anfangen mit … · Fokus starten“ von „Tag kippt“ bleibt unverändert; ist ihr Ding eins mit Schritten, führt sie in den Schritt-Modus.
+- „Los“: `FocusPage` im Schritt-Modus (`?step=1`) genau nach der Tabelle der Übergabe – kein Ring, keine Liste der übrigen Schritte, Uhr zählt hoch und folgt „Uhr ausblenden“; überlebt Neuladen; Tasten Enter, S, P, Esc – die Buchstaben nur, solange der Fokus in keinem Textfeld steht. Die Startzeile „Anfangen mit … · Fokus starten“ von „Tag kippt“ bleibt unverändert; ist ihr Ding eins mit Schritten, führt sie in den Schritt-Modus.
 - „Als Routine speichern“ sendet das vorhandene `routine.requested`; Toast B16.
 - Im Feld: „Name: a, b, c“ wird erst mit Paket 3 erkannt – hier nicht.
 
@@ -42,21 +42,23 @@ Gemeinsamer Block (gilt ganz): docs/design/planner-hub-2/PACKAGES.md#common
 Branch `feat/plan-bundles` von frischem `develop`, nach dem Merge von 5a. Hotspots ansagen: Dexie-Version / `schema.snapshot.json`, `PlannerPage.tsx`, `strings.ts`.
 
 ## Ausgangslage
-CONCEPT.md §0.1; CONCEPT-ROWS.md „Idea 5“ (5b); handoff/05-bundle.md („5b: making and unmaking“, Zustände); COPY.md B2, B11–B15, B17, B18, M5.
+CONCEPT.md §0.1; CONCEPT-ROWS.md „Idea 5“ (5b); handoff/05-bundle.md („5b: making and unmaking“, Zustände); COPY.md B2, B11–B15, B17, B18, B20, B21, M5.
 
 ## Pflichtliste
-- Daten: Sammlung `planner_bundle` (`title`, `kind`), Felder `bundle`, `step` auf `planner_item`; `npm run db:bump`, vorherige Stores nach `core/db/schema-history.json`, `manifest.version` + leerer Migrationsschritt; `dataApi: false` bleibt für das ganze Modul.
-- Die eigene Quelle des Planers listet Bündel (Art `bundle`, Schlüssel `planner:b_<id>`, `steps` = Mitglieder in Reihenfolge); ein Mitglied mit `bundle` steht nicht selbst auf dem Blatt, solange das Bündel lebt. `planner`-`linkTarget` für `b_`-ids (Titel des Bündels).
-- Aktionen, je genau ein Undo-Eintrag: „Bündeln …“ (Auswahlleiste, Dialog B12 ohne den Schalter „Unterwegs“ – der kommt mit Paket 6), „Auflösen“, „Aus dem Bündel nehmen“, „Umbenennen …“, Sortieren. Die Regel-Tests von planner-rethink CONCEPT-MIGRATION §7 um diese Aktionen erweitern (Schnappschuss aller Planer-Zeilen vor/nach jedem Undo).
+- Daten: Sammlung `planner_bundle` (`title`; Datensatz-id `b_<uuid>`), Felder `bundle`, `step` auf `planner_item`; `npm run db:bump`, vorherige Stores nach `core/db/schema-history.json`, `manifest.version` + leerer Migrationsschritt; `dataApi: false` bleibt für das ganze Modul.
+- Die eigene Quelle des Planers (`planner/plannable.ts` aus Paket 2) listet Bündel (Art `bundle`, Schlüssel `planner:<Datensatz-id>`, `steps` = Mitglieder in Reihenfolge); ein Mitglied mit `bundle` steht nicht selbst auf dem Blatt, solange das Bündel lebt. Kein Link-Ziel für Bündel (Mitgliedschaft ist kein Link).
+- „Alle Schritte erledigt“ ist abgeleitet (gezeichnet wie erledigt), nie geschrieben; Schreib-Spion: ein Mitglied, das in seinem Modul erledigt oder gelöscht wird, schreibt nichts in Planer-Tabellen.
+- Besorgungsrunde (Idee 6, hier eingebaut): ein Mitglied, das eine Liste ist, zeigt im Panel des Bündels seine offenen Einträge als Haken-Zeilen (Körper des Listen-Panels aus 4a); in „Los“ ist die Liste ein Schritt mit diesen Zeilen.
+- Aktionen, je genau ein Undo-Eintrag: „Bündeln …“ (Auswahlleiste, Dialog B12), „Auflösen“, „Aus dem Bündel nehmen“, „Umbenennen …“, Sortieren. Die Regel-Tests von planner-rethink CONCEPT-MIGRATION §7 um diese Aktionen erweitern (Schnappschuss aller Planer-Zeilen vor/nach jedem Undo).
 - „Los“ über Mitglieder (ein Mitglied ohne Haken zeigt sein Panel als Schritt); „Als Routine speichern“ nur, wenn alle Mitglieder einfache Aufgaben sind.
 - `PlanMark` zeigt M5 für Mitglieder.
 - Zwei Geräte: `bundle`/`step` konvergieren feldweise (Test in der Art von `core/entitylinks/sync.test.ts`); ein Bündel löschen löscht kein Mitglied.
 
 ## Nicht in diesem Paket
-Besorgungsrunde und Orte (6), Thema (11), Bündel in Bündeln, ein automatischer Vorschlag zu bündeln.
+Orte und Karte (gestrichen), Thema (11), Bündel in Bündeln, ein automatischer Vorschlag zu bündeln.
 
 ## Abnahme
-Tests der Übergabe (5b); `e2e/seed/plan-bundle.seed.spec.ts`; Mess-Skript C2: Zeilen 2 → 1, `oneRow` ja, `createTaps` ≤ 6.
+Tests der Übergabe (5b); `e2e/seed/plan-bundle.seed.spec.ts`; Mess-Skript C2: Zeilen 2 → 1, `oneRow` ja, Modulwechsel 2 → 0, `workTaps` 9 / 8 → 6; `createTaps` 0 → 6 ist der eine erlaubte Anstieg (im Skript-Kopf benannt).
 
 ## Skills
 `council` (Daten, Migration, zwei Geräte), `design:accessibility-review`, `file-pr`, `babysit-pr`, `leaving-pr-comments`. Full stop.
@@ -72,14 +74,15 @@ Gemeinsamer Block (gilt ganz): docs/design/planner-hub-2/PACKAGES.md#common
 Branch `feat/share-planner` von frischem `develop`, nach dem Merge von 5b (teilt keine Planer-Datei mit 5b: darf parallel zu 5b laufen, wenn Sven es will).
 
 ## Ausgangslage
-CONCEPT-INTAKE.md „Idea 1“ (ganz, mit dem Abschnitt gegen docs/security/LAUNCH-REVIEW-2026-11.md); handoff/01-share.md; COPY.md S1–S7. Bestand: `web/src/pages/ShareTarget.tsx`, `web/src/quickCapture/nativeShare.ts`, `web/src-tauri/plugins/share-intent/**`.
+CONCEPT-INTAKE.md „Idea 1“ (ganz, mit dem Abschnitt gegen docs/security/LAUNCH-REVIEW-2026-11.md); handoff/01-share.md; COPY.md S1–S9. Bestand: `web/src/pages/ShareTarget.tsx`, `web/src/quickCapture/nativeShare.ts`, `web/src-tauri/plugins/share-intent/**`.
 
 ## Pflichtliste
-- Ziel „In den Planer“ als erste, vorgewählte Wahl (nur bei eingeschaltetem Planer); Tageswahl „ohne Tag · Heute · Morgen“; „Ablegen“ → `plan.requested` (`day: null` bzw. der Tag); Toast S4 mit „Ansehen“ (`/planner?item=`) und „Rückgängig“.
-- Titel: erste Zeile, ≤ 160, Steuer- und Bidi-Zeichen entfernt; Rest als Notiz ≤ 4 000 mit Hinweis S5; nur-URL → lesbarer Titel aus Host und erstem Pfadteil.
+- Ziel „In den Planer“ als erste, vorgewählte Wahl (nur bei eingeschaltetem Planer); Tageswahl „ohne Tag · Heute · Morgen“; „Ablegen“ → `plan.requested` mit `day` (`null` bzw. der Tag) und `origin: 'share'` (beides seit 10a). Den Toast S4 mit „Ansehen“ (`/planner?item=`) und „Rückgängig“ sagt der Handler des Planers (er kennt den Schlüssel; der Bus antwortet nicht) – kein zweiter Toast von der Seite.
+- Die Seite zeigt danach S8 „Abgelegt.“ mit „Rückgängig“ und S9 „Fertig“ und bleibt, bis er tippt („Fertig“: Android zurück in die teilende App, PWA öffnet den Planer). Kein Schließen nach Zeit.
+- Titel: erste Zeile, ≤ 160, Steuer- und Bidi-Zeichen entfernt (bei einem Titel aus einer URL erst nach dem Prozent-Dekodieren); Rest als Notiz ≤ 4 000 mit Hinweis S5; nur-URL → lesbarer Titel aus Host und erstem Pfadteil.
 - Link: nur http/https wird zum Chip S7 und öffnet erst auf Tipp den Systembrowser; nichts wird je abgerufen (kein Titel, kein Vorschaubild, kein Favicon).
 - Vor „Ablegen“ wird nichts geschrieben (Schreib-Spion); `accounts` wird nie angeboten.
-- Android: nach dem Ablegen zurück in die teilende App (Activity beenden); **keine** Änderung an Intent-Filtern, exportierten Komponenten oder am zusammengeführten Manifest – der NS4-Check bleibt unverändert grün.
+- Android: **keine** Änderung an Intent-Filtern, exportierten Komponenten oder am zusammengeführten Manifest – der NS4-Check bleibt unverändert grün; braucht „Fertig“ einen neuen nativen Befehl, gilt seine Berechtigung nur für das Webview `main`.
 - Handtest (echtes Handy: aus Browser, Messenger, Notiz-App teilen) mit id in docs/MANUAL-TESTS.md.
 
 ## Nicht in diesem Paket

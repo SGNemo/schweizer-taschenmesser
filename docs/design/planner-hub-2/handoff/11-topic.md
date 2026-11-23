@@ -15,7 +15,7 @@ Concept: [CONCEPT-INTAKE, idea 11](../CONCEPT-INTAKE.md). Common parts: [00-comm
 - While on: the page head changes instead of a new line appearing – the figure („1 h 20 frei“) gives its place to T4: „Thema: Umzug“ (the figure's type) with the context „7 Dinge“ and the quiet button „Alles zeigen“. The day's free time stays where it is on the day sheet's own head line.
 - The sheet, „Noch ohne Tag“, „Noch offen“ and the week band's bars show only members. The day sheet's „frei“ keeps counting the whole day (the day is as full as it is).
 - T5 „Auch im Thema · 3“: a folded line at the end of the right column / under the sheet; expanded: each linked non-plan thing as a `PanelLine` with its module glyph and its link word; a tap opens it in its module.
-- The field while filtered: a new thing gets the topic (lead chip „Thema: Umzug“ with ✕ in the preview slot).
+- The field while filtered: a new thing gets the topic (lead chip T11 „Thema: Umzug“ with ✕ in the preview slot).
 
 ## States
 
@@ -27,12 +27,12 @@ Same structure; on 412 the head wraps („Alles zeigen“ on its own line, 44 px
 
 ## Managing
 
-Chooser foot: „Themen verwalten …“ → Planer → Einstellungen, section „Themen“: rename, T9 delete (confirm sentence, one undo, removes the links, touches no thing).
+Chooser foot: T10 „Themen verwalten …“ → Planer → Einstellungen, section „Themen“: rename, T9 delete (confirm sentence, one undo, removes the links, touches no thing).
 
 ## Tests
 
 - `topic.test.ts`: one topic per thing (a second replaces the first in one undo); delete removes links only; filter is device state.
 - `linkTarget` of the planner: topic alive / gone; a link label is the topic's title.
-- Two devices: the same thing given two topics offline → both rows exist; the reader takes the later `updatedAt`, the other row is tombstoned at the next tap on that thing (never by a background job).
+- Two devices: the same thing given two topics offline → both rows exist; the reader takes the later `updatedAt`; the other row is removed only inside the next „Thema …“ action on that thing (never by a background job, never inside another action's undo entry).
 - Write spy: switching the filter writes nothing synced.
 - e2e seed `e2e/seed/plan-topic.seed.spec.ts`; `planner-hub-2.spec.ts` D4 re-measured.

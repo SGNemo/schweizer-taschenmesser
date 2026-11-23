@@ -21,11 +21,14 @@ import { dismissNotices } from '../helpers';
  *    from what the page names: the week tile's „· n Dinge“ and the groups' counts),
  *  - flow figures: `rightKind`, `linkedToPlan` (A), `forms`, `fields` (A2), `rowsBefore`, `rowsAfter`,
  *    `doneInPlanner` (B), `nextStepOnly`, `savedAsRoutine`, `durationProposed`, `learned` (C1), `oneRow`, `mapShown`
- *    (C2). A thing that cannot be done today is the word „nicht möglich“.
+ *    (C2), `markVisible`, `markAgrees`, `tripsToPlanner` (D1: route changes to read the planned day starting in the
+ *    thing's own module) and the D figures. A thing that cannot be done today is the word „nicht möglich“.
  *
  * `IST` is the measured state per path and project. `TARGET` is docs/design/planner-hub-2/ANALYSIS.md §3. Every build PR
  * re-measures `IST` (never loosened); a figure is asserted against the better of its `IST` and – once reached – its
- * `TARGET` (lower is better, except `HIGHER`; `NO_SLACK` never takes a higher target); a word equals its `IST`.
+ * `TARGET` (lower is better, except `HIGHER`); a word equals its `IST`. One figure has its TARGET above its IST on
+ * purpose: C2 `createTaps` (IST 0, TARGET 6) – bundling the round is a choice that buys rows 2 → 1, so the bound is the
+ * TARGET: a package that reaches 6 is no regression, more than 6 fails.
  * Re-measured by the packages: 10b: D1 · 4a/4b/4c/2: B · 5a: C1 · 5b/6: C2 · 1: D2 · 3: A1 · 9: D3 · 11: D4.
  * `MEASURE=1` only measures. Facts (the click path, the module routes passed) land beside the table in
  * `test-results/usecase-planner-hub-2/`.
@@ -44,12 +47,6 @@ type Figures = Record<string, number | string>;
 const HIGHER = ['rightKind', 'linkedToPlan', 'doneInPlanner', 'markVisible', 'markAgrees'];
 
 /**
- * Counts whose target is higher than today on purpose (C2 `createTaps`: bundling a round is a choice that costs
- * handles): a target above `IST` gives them no slack – they stay bound to `IST` until a build PR re-measures it.
- */
-const NO_SLACK = ['createTaps'];
-
-/**
  * The measured state: 2026-11-23 on `develop` (design/planner-hub-2), keyed `<path> · <project>`. The phone differs
  * where its navigation does (area in the bottom bar, the module used last there) and where a module is desktop-only
  * (mail).
@@ -66,8 +63,8 @@ const IST: Record<string, Figures> = {
   'C1 Bündel Haushalt · pixel-7': { rows: 1, createTaps: 12, workTaps: 7, taps: 19, perThing: 6, moduleSwitches: 5, nextStepOnly: 'nein', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
   'C2 Besorgung · desktop-chrome': { rows: 2, createTaps: 0, workTaps: 9, perThing: 5, moduleSwitches: 2, oneRow: 'nein', mapShown: 'nicht möglich' },
   'C2 Besorgung · pixel-7': { rows: 2, createTaps: 0, workTaps: 8, perThing: 5, moduleSwitches: 2, oneRow: 'nein', mapShown: 'nicht möglich' },
-  'D1 Steht es im Plan, und wann · desktop-chrome': { taps: 11, perThing: 5, moduleSwitches: 10, markVisible: 1, markAgrees: 2 },
-  'D1 Steht es im Plan, und wann · pixel-7': { taps: 11, perThing: 5, moduleSwitches: 10, markVisible: 1, markAgrees: 2 },
+  'D1 Steht es im Plan, und wann · desktop-chrome': { taps: 11, perThing: 5, moduleSwitches: 10, markVisible: 1, markAgrees: 2, tripsToPlanner: 8 },
+  'D1 Steht es im Plan, und wann · pixel-7': { taps: 11, perThing: 5, moduleSwitches: 10, markVisible: 1, markAgrees: 2, tripsToPlanner: 8 },
   'D2 Geteilter Link in den Planer · desktop-chrome': { taps: 5, moduleSwitches: 2, forms: 1, inPlanner: 'ja', wayBack: 'nein' },
   'D2 Geteilter Link in den Planer · pixel-7': { taps: 5, moduleSwitches: 3, forms: 1, inPlanner: 'ja', wayBack: 'nein' },
   'D3 Vor einem Termin · desktop-chrome': { taps: 14, perThing: 0, moduleSwitches: 4, linked: 'ja', onWednesday: 'ja' },
@@ -91,8 +88,8 @@ const TARGET: Record<string, Figures> = {
   'C1 Bündel Haushalt · pixel-7': { rows: 1, createTaps: 1, workTaps: 6, taps: 7, perThing: 5, moduleSwitches: 0, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
   'C2 Besorgung · desktop-chrome': { rows: 1, createTaps: 6, workTaps: 6, perThing: 5, moduleSwitches: 0, oneRow: 'ja', mapShown: 'nicht möglich' },
   'C2 Besorgung · pixel-7': { rows: 1, createTaps: 6, workTaps: 6, perThing: 5, moduleSwitches: 0, oneRow: 'ja', mapShown: 'nicht möglich' },
-  'D1 Steht es im Plan, und wann · desktop-chrome': { taps: 11, perThing: 5, moduleSwitches: 10, markVisible: 5, markAgrees: 5 },
-  'D1 Steht es im Plan, und wann · pixel-7': { taps: 11, perThing: 5, moduleSwitches: 10, markVisible: 5, markAgrees: 5 },
+  'D1 Steht es im Plan, und wann · desktop-chrome': { taps: 11, perThing: 5, moduleSwitches: 10, markVisible: 5, markAgrees: 5, tripsToPlanner: 0 },
+  'D1 Steht es im Plan, und wann · pixel-7': { taps: 11, perThing: 5, moduleSwitches: 10, markVisible: 5, markAgrees: 5, tripsToPlanner: 0 },
   'D2 Geteilter Link in den Planer · desktop-chrome': { taps: 2, moduleSwitches: 1, forms: 1, inPlanner: 'ja', wayBack: 'ja' },
   'D2 Geteilter Link in den Planer · pixel-7': { taps: 2, moduleSwitches: 1, forms: 1, inPlanner: 'ja', wayBack: 'ja' },
   'D3 Vor einem Termin · desktop-chrome': { taps: 3, perThing: 0, moduleSwitches: 0, linked: 'ja', onWednesday: 'ja' },
@@ -134,6 +131,7 @@ const PLACES = {
   routines: { path: '/routines', area: 'Haushalt', areaPath: '/haushalt' },
   notes: { path: '/notes', area: 'Wissen', areaPath: '/wissen' },
   mail: { path: '/mail', area: 'Wissen', areaPath: '/wissen' },
+  bookmarks: { path: '/bookmarks', area: 'Wissen', areaPath: '/wissen' },
 } as const;
 type Place = keyof typeof PLACES;
 
@@ -507,7 +505,7 @@ function reached(id: string, figures: Figures) {
       const bound = typeof want === 'number' && want <= was ? want : was;
       expect(got, `${id}: ${k} ≥ ${bound}`).toBeGreaterThanOrEqual(bound);
     } else {
-      const bound = typeof want === 'number' && was <= want && !NO_SLACK.includes(k) ? want : was;
+      const bound = typeof want === 'number' && was <= want ? want : was;
       expect(got, `${id}: ${k} ≤ ${bound}`).toBeLessThanOrEqual(bound);
     }
   }
@@ -1257,16 +1255,22 @@ const DAY_MARK =
   /\b(Im|im) Plan\s*[·:]?\s*(Mo|Di|Mi|Do|Fr|Sa|So|Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag|heute|morgen|\d)/;
 const WED_MARK = /\b(Im|im) Plan\s*[·:]?\s*(Mi\b|Mittwoch|2\.)/;
 
-const D1_THINGS = [
-  { key: 'invoices:i3', title: 'Musikschule Beispiel bezahlen', module: 'invoices' },
-  { key: 'lists:shopping-default', title: 'Einkaufen · 3 Dinge', module: 'lists' },
-  { key: 'todos:nt', title: 'Regal im Flur', module: 'notes' },
+const D1_THINGS: { key: string; title: string; module: Place; id: string }[] = [
+  { key: 'invoices:i3', title: 'Musikschule Beispiel bezahlen', module: 'invoices', id: 'i3' },
+  {
+    key: 'lists:shopping-default',
+    title: 'Einkaufen · 3 Dinge',
+    module: 'lists',
+    id: 'shopping-default',
+  },
+  { key: 'todos:nt', title: 'Regal im Flur', module: 'notes', id: 'n1' },
   {
     key: 'subscriptions:s1:2026-12-03',
     title: 'Streamingdienst Beispiel kündigen',
     module: 'subscriptions',
+    id: 's1',
   },
-  { key: 'bookmarks:bm1', title: 'Ausprobieren: Fahrradträger', module: 'bookmarks' },
+  { key: 'bookmarks:bm1', title: 'Ausprobieren: Fahrradträger', module: 'bookmarks', id: 'bm1' },
 ];
 
 test('D1 Steht es im Plan, und wann', async ({ page, isMobile }, info) => {
@@ -1351,17 +1355,47 @@ test('D1 Steht es im Plan, und wann', async ({ page, isMobile }, info) => {
     await page.keyboard.press('Escape');
     await go(hand, page, isMobile, 'planner');
   }
+  // The other way round: starting on the thing in its own module, on which day is it planned? Readable there: no trip;
+  // else to the planner, find its row (Wednesday), and back to the module (route changes counted).
+  const first = {
+    taps: hand.taps,
+    perThing: hand.perThing,
+    moduleSwitches: hand.moduleSwitches,
+    places: [...hand.places],
+  };
+  let tripsToPlanner = 0;
+  const trips: Record<string, string[]> = {};
+  for (const thing of D1_THINGS) {
+    await page.goto(`/${thing.module}?open=${encodeURIComponent(thing.id)}`);
+    await expect(page.locator('main h1')).toBeVisible();
+    const trip = new Hand(page, isMobile);
+    trip.start();
+    if ((await planMarks(page)).some((l) => DAY_MARK.test(l))) {
+      trips[thing.title] = [];
+      continue;
+    }
+    await page.keyboard.press('Escape');
+    await go(trip, page, isMobile, 'planner');
+    await showDay(trip, page, WEDNESDAY);
+    await expect(
+      page.getByTestId(`day-${WEDNESDAY}`).getByText(thing.title, { exact: true }).first(),
+    ).toBeAttached();
+    await go(trip, page, isMobile, thing.module);
+    tripsToPlanner += trip.moduleSwitches;
+    trips[thing.title] = trip.path;
+  }
   record(
     info,
     name,
     {
-      taps: hand.taps,
-      perThing: hand.perThing,
-      moduleSwitches: hand.moduleSwitches,
+      taps: first.taps,
+      perThing: first.perThing,
+      moduleSwitches: first.moduleSwitches,
       markVisible,
       markAgrees,
+      tripsToPlanner,
     },
-    { marks, places: hand.places, path: hand.path },
+    { marks, trips, places: first.places, path: hand.path },
   );
 });
 

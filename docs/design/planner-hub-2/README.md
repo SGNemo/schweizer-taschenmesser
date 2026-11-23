@@ -7,7 +7,7 @@ Brief (maintainer, 2026-11-23): everything goes from the head into one field, un
 | [ANALYSIS](ANALYSIS.md) | idea × „exists / partly / missing“, the three flows measured, friction H01 …, critique of today's planner, the gate (what principle 1 strikes) |
 | [CONCEPT](CONCEPT.md) | seven sentences every package keeps, new data, **the link contract** (idea 10) with the table per module |
 | [CONCEPT-ROWS](CONCEPT-ROWS.md) | expand (4), collective rows (2), bundles and „Los“ (5) |
-| [CONCEPT-INTAKE](CONCEPT-INTAKE.md) | share (1), kinds in the field (3), errands (6), appointment (9), topic (11) |
+| [CONCEPT-INTAKE](CONCEPT-INTAKE.md) | share (1), kinds in the field (3), errands (6, shrunk), appointment (9), topic (11) |
 | [CONCEPT-STRUCK](CONCEPT-STRUCK.md) | measured duration (8) and „Warte auf Antwort“ (7): struck, kept ready |
 | [DESIGN](DESIGN.md) | building blocks, the two decisions (expanded row, bundle) with for and against, critique per surface, FOCUS checklist |
 | [COPY](COPY.md) | every new word, German and English, with ids and the rejected ones |

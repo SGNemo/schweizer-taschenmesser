@@ -26,12 +26,12 @@ BUDGETS ÜBER DEM RAHMEN                            In Budgets ansehen
 
 - Part head: P7, caps style; its jump P8 is a quiet link at the head's right end (phone: under the part's last line).
 - A member line is the member's panel in its `compact` form (CONCEPT-ROWS, idea 4): title + `detail`, and where the module has a one-tap end („Bezahlt“ for an invoice, the tick for a ToDo) that action at the line's end / lead; `▸` expands the member **inside the pile**: its module panel from hand-off 04 („Bezahlt“ …) follows the line, indented `--space-5`, **without a surface of its own** (a box in a box read as a hole in dark mode); the open member's title is 600; its foot is left-aligned inside the indent (so „Ganz öffnen“ reads as the member's, not the pile's) and `--space-3` separates it from the next member line. One member open at a time.
-- A part without members (budgets, the mail queue) is text lines (≤ 5, then „n weitere“) without `▸`.
+- Budgets: one line per budget over its frame, rendered by budgets' own `compact` panel (the amount goes through `SensitiveValue`; the planner never holds it), ≤ 5 then „n weitere“, no `▸`. The mail queue is a count and the jump only.
 - Mail: ToDos made from a mail that have no day are members (mail names them by key, `todos:<id>`); the count is queue + members.
 
 ## The offer (P5)
 
-One line at the top of „Noch ohne Tag“ (inside the group, under its head): text + one quiet button; ✕ at the end (name „Nicht mehr anbieten“). Shown when ≥ 3 single rows of one area wait there and the switch was never set. One offer at a time (money before mail). Tap → `planner.piles.<area> = true`, toast P6 with undo. ✕ → device-local flag, no toast.
+One line at the top of „Noch ohne Tag“ (inside the group, under its head): text + one quiet button; ✕ at the end (name „Nicht mehr anbieten“). Shown when ≥ 3 single rows of one area wait there and the switch was never set. One offer at a time (money before mail). Tap → setting `pileMoney` / `pileMail` = true, toast P6 („Rückgängig“ sets it back – an explicit inverse, the undo journal does not hold settings). ✕ (name P13) → device-local flag, no toast. Stimulus: the offer is two buttons that exist only until answered; package 2 reports the planner counts with the offer showing (inside the budget's tolerance, and one tap removes n − 1 rows).
 
 ## States
 
@@ -39,7 +39,7 @@ offered · unplaced · placed · fest · expanded · member expanded · nothing 
 
 ## 1920 / 412
 
-Per 00-common. 412: the meta is short – P12 „6 Dinge“ and the deadline („6 Dinge · Frist Fr“), one line; the parts are in the panel. The jump links stand under their part.
+Per 00-common. 412: the meta is short, one line – P12 „6 Dinge“, then P4 „Frist vorbei: 1“ when something is late, else the earliest deadline („6 Dinge · Frist Fr“); the parts are in the panel. The jump links stand under their part.
 
 ## Edge cases
 
@@ -54,6 +54,6 @@ Per 00-common. 412: the meta is short – P12 „6 Dinge“ and the deadline (�
 - `pile.test.ts` (core grouping): members folded only while unplaced and unlocked; a placed member is not counted; zero count → no unplaced row.
 - Each module's `pile.test.ts`: reads own data only; routes are fixed strings.
 - Route params `?view=` in invoices / subscriptions / budgets: allow-list, zero writes, param removed (pattern `payRoute.test.tsx`).
-- Write spy: a count that changes writes nothing in the planner.
+- Write spy: a count that changes – also to 0 – writes nothing in the planner. „Werte ausblenden“ hides the budget and invoice amounts in the pile; `copyInput` holds no pile content.
 - e2e seed `e2e/seed/plan-pile.seed.spec.ts`: offer → one row → expand → pay one → count falls.
 - `planner-hub-2.spec.ts` flow B `rowsBefore` re-measured.

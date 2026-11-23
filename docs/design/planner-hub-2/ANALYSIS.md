@@ -31,7 +31,7 @@ Measured 2026-11-23 on `develop` (69b217cf) by `web/e2e/usecases/planner-hub-2.s
 | H07 | Mail is a desktop module: nothing of it can be done on the phone. | B | stays (said on the row, COPY X6) |
 | H08 | A household round is a routine made in another module (4 / 5 switches, 12 handles); its run shows all steps at once. | C1 | 5a, 3 |
 | H09 | A new thing is 30 minutes, also after it was done in 12. | C1 | 8 (struck) |
-| H10 | An errand is two rows plus a list that is not in the plan; nothing bundles, no place, no map. | C2 | 5b, 6 |
+| H10 | An errand is two rows plus a list that is not in the plan; nothing bundles, no place, no map. | C2 | 5b (places and map: struck) |
 | H11 | Placed from the planner, a thing shows nothing in its module: 1 of 5 marks visible, 2 of 5 agree (subscription and bookmark read their own field). | D1 | 10 |
 | H12 | Share → ToDo drops the URL; the thing lands in ToDos, the planner is two stops away. | D2 | 1 |
 | H13 | A thing prepared for an appointment: 14 handles through calendar and ToDos. | D3 | 9 |
@@ -53,11 +53,12 @@ Measured 2026-11-23 on `develop` (69b217cf) by `web/e2e/usecases/planner-hub-2.s
 | | module switches | 4 / 5 | 0 | 5a (3 for creating in the field) |
 | | create · work handles | 12 · 7 | 1 · 6 | 3 · 5a |
 | | only the next step | no | yes | 5a |
-| C2 errand | rows | 2 (list not in the plan) | 1 | 5b, 6 |
-| | module switches | 2 | 0 | 4a, 6 |
-| | work handles | 9 / 8 | 6 (+ 6 once for bundling) | 6 |
+| C2 errand | rows | 2 (list not in the plan) | 1 | 5b |
+| | module switches | 2 | 0 | 4a, 5b |
+| | work handles | 9 / 8 | 6 | 5b |
+| | handles to bundle (the one figure that rises, by his choice) | 0 | 6 | 5b |
 | D1 is it in the plan | mark visible · agrees | 1 · 2 of 5 | 5 · 5 | 10b |
-| | trips to the planner to find out (derived: 2 per thing without a mark) | 8 | 0 | 10b |
+| | module switches to find out from the module's side (`tripsToPlanner`) | 8 | 0 | 10b |
 | D2 shared link | handles · switches · way back | 5 · 2 / 3 · no | 2 · 1 · yes | 1 |
 | D3 before an appointment | handles · switches | 14 · 4 | 3 · 0 | 9 |
 | D4 one topic | rows · handles · switches | 20 · 27 / 22 · 2 | 7 · 11 · 0 | 11 |
@@ -67,13 +68,13 @@ Measured 2026-11-23 on `develop` (69b217cf) by `web/e2e/usecases/planner-hub-2.s
 
 | Idea | Rows | Switches | Verdict |
 | --- | --- | --- | --- |
-| 10 | – | 8 → 0 (D1, derived) and the base of 4, 2, 5, 9, 11 | built |
+| 10 | – | D1 `tripsToPlanner` → 0 (measured from the module's side); 10a itself moves no figure – it is the base of 10b, 4, 9, 11, 1, 3 | built |
 | 4 | – | 5 → 0 (B), 2 → 0 (C2) | built |
 | 2 | 5 → 2 (B) | – | built |
-| 5 | steps: 5 typed rows → 1; bundle: 2 → 1 (C2) | 4 → 0 (C1) | built |
+| 5 | bundle: 2 → 1 (C2); steps: one row as today (C1 – today's routine is one row too) | 4 / 5 → 0 (C1) | built |
 | 1 | – | 2 → 1 (D2) | built – **without pictures** (no figure beyond the text path; the one truly new entry surface) |
 | 3 | 11 → 7 (A1) | 3 / 5 → 0 (A2) | built |
-| 6 | 2 → 1 (C2) | 2 → 0 | built – **without a map in the planner** (the jump costs the same; no network from the planner's page) |
+| 6 | 2 → 1 (C2) – but that is the bundle of 5b | 2 → 0 – but that is the lists panel of 4a inside the bundle | **shrunk:** what the script rewards is built in 5b (a list member is ticked inside the bundle). **Struck:** a place per stop, the map jump, a map in the planner – `mapShown` stays „nicht möglich“, no figure moves. |
 | 9 | – | 4 → 0 (D3) | built |
 | 11 | 20 → 7 (D4) | 2 → 0 | built |
 | **8** | none | none | **struck.** It lowers per-thing handles („Dauer …“) and booked minutes only. Concept, hand-off and prompt are kept so one „ja“ starts it. My recommendation is to say that „ja“ after 5a: wrong 30-minute rows make days look full, which the script cannot count. |
@@ -86,4 +87,4 @@ Measured 2026-11-23 on `develop` (69b217cf) by `web/e2e/usecases/planner-hub-2.s
 - **Working off (B):** the planner lists money well (action glyph, „Frist vorbei“), then sends him away for every single thing and brings him back each time; mail and budgets do not appear at all. The hierarchy is right, the path is five round trips.
 - **Bundles (C):** the planner knows parts of a duration but not steps of a thing; the one tool with steps (routines) lives elsewhere and shows everything at once. The start line of „Tag kippt“ is the right idea for one thing and has nothing to hold on to for five.
 - **What works and stays:** one field; rows of one grammar; „fest“; previews before anything moves; the undo on every action; counts as text.
-- **Research:** the material behind the eleven ideas is the maintainer's own use (`../planner-hub/ANALYSIS-RESEARCH.md`, the three use cases); ideas 6, 9 and 11 have no earlier evidence beyond his order – their target figures are the only argument, which is why the script got flows D3 and D4.
+- **Research:** the material behind the eleven ideas is the maintainer's own use (`../planner-hub/ANALYSIS-RESEARCH.md`, the three use cases); ideas 6, 9 and 11 have no earlier evidence beyond his order – their target figures are the only argument, which is why the script got flows D3 and D4 and why 6 shrank to what C2 shows.

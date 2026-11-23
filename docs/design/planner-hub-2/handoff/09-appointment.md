@@ -16,7 +16,7 @@ The appointment is the recessed blocker row of the day sheet, as built („15:00
  └───────────────────────────────────────────────────────────┘
 ```
 
-- Line 1: day · time · place (`--text-sm`). Things already linked `before` / `after` stand under small heads („VORBEREITUNG“, „DANACH“) as tick lines (they are ToDos: the tick is theirs).
+- Line 1: day · time · place (`--text-sm`). Things already linked `before` / `after` stand under small heads (A5 „Vorbereitung“, „Danach“) as tick lines (they are ToDos: read through `linkEntries`, ticked through `todo.doneRequested` inside `undoable` – calendar never imports ToDos).
 - A1 are two quiet buttons. A tap closes nothing: focus moves into the planner's field, which shows the lead chip A2 („vor Friseur, Mi“) in the preview line's place (hand-off 03's slot); the chip is a small menu button offering A3 („am Tag davor“) and has ✕. Backspace in the empty field removes the chip.
 - Enter: ToDo on the appointment's day (or the day before / after), link `before` / `after`; toast as for any entry, one undo.
 - The new row carries chip A4 („vor Friseur“) in its chip line and sorts directly before (after) the blocker within the day.

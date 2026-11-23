@@ -14,6 +14,7 @@ ItemRow  [lead] [title-button ▸ meta · chips] [minutes] [lock] [⋯]
 
 - The title becomes a `button` (`aria-expanded`, `aria-controls`), name X1. It replaces the title link: **the count of interactive elements per row does not change.**
 - A 16 px chevron sits after the title, `--text-3`, rotated 90° while open (transform). Phone: the same.
+- Switch X15 „Zeilen aufklappen“ (planner settings, on): off = the title is the link it is today, no chevron.
 - Open state: page state `openRow: unitId | undefined` in `PlannerPage` (lift into a hook `useOpenRow`), one at a time.
 - Rows in „Noch ohne Tag“, „Frist vorbei“, „Noch offen“ expand the same way. Rows in a selection („Auswählen“) do not expand: the title toggles the choice as today.
 
@@ -24,10 +25,12 @@ ItemRow  [lead] [title-button ▸ meta · chips] [minutes] [lock] [⋯]
 | default | `detail` line if any; links as `PanelLine`s with their chip word | X2 |
 | ToDos | note: first 3 lines, `--text-sm`, clamp; checklist as tick lines (X14) | X2 |
 | Listen | section heads (caps) + open items as tick lines, max 8, then X8 „n weitere“ (a button that shows 8 more) | „Fertig eingekauft“ when none is open (the module's existing step) · X2 |
-| Merkliste | title, host as text | X13 · X2 |
-| Rechnungen | nothing the row already says (amount and deadline are in its meta); a reminder line if dunned; then `PayStep` as **one line**: `DateChips` (Heute · Gestern · Datum …) · amount field prefilled (10 ch wide) – the words „Bezahlt am“ / „Betrag“ are the controls' accessible names, not visible labels | X9 „Bezahlt“ (secondary) · X2 |
-| Abos | name · price / period; „Kündigen bis Do 10. Dez.“; two buttons X10 | X2 |
-| E-Mail | line 1: sender name · day; line 2: subject (600); body: first 6 lines of the newest message, `--text-sm`, clamped, plain text; „Antworten“ swaps the body for mail's composer (review step and the 10 s window as built) | X12 „Antworten“ (secondary), or „Beantwortet? · Erledigt“ when the newest message is his · X2 |
+| Merkliste | title, host as text | X13 (ghost) · X2 |
+| Rechnungen | nothing the row already says (amount and deadline are in its meta); a reminder line if dunned; then `PayStep` as **one line**: label „Bezahlt am“ · `DateChips` (Heute · Gestern · Datum …) · label „Betrag“ · amount field prefilled (10 ch wide); the two labels are visible, `--text-meta`, `--text-3` | X9 „Bezahlt“ (secondary) · X2 |
+| Abos | name · price / period; X16 „Kündigen bis Do 10. Dez.“; after a tap on „Gekündigt am …“: `DateChips` (Heute · Gestern · Datum …, default Heute) and the foot's button becomes „Vermerken“ | X10 „Gekündigt am …“ (secondary) · „Läuft weiter“ (ghost) · X2 |
+| E-Mail | line 1: sender name · day; line 2: subject (600); body: first 6 lines of the newest message, `--text-sm`, clamped, plain text; „Antworten“ swaps the body for mail's composer (review step and the 10 s window as built) | X12 „Antworten“ (secondary); when the newest message is his: the text „Beantwortet?“ and the button „Erledigt“ instead · X2 |
+
+Mail only: the bar „Wird gesendet … · Zurückziehen“ (`PendingSendBar`, 10 s) is mounted at the planner page's foot, not in the compartment, so closing the row never hides it; a compartment closed with a typed reply keeps the text as mail's draft and shows it again when reopened.
 
 ## States (mockup `04-states.html` shows each)
 
@@ -49,7 +52,7 @@ Per [00-common](00-common.md). On 412 the `PayStep` stacks: chips, amount, butto
 ## Tests
 
 - `RowCompartment.test.tsx`: one open at a time, Esc, focus return, selection mode.
-- `PlanPanelHost.test.tsx`: lazy, boundary (a throwing panel shows X7 and the sheet lives), `accounts` never mounted, module off → X5.
+- `PlanPanelHost.test.tsx`: lazy, boundary (a throwing panel shows X7, the sheet lives, the log holds module id and error name only), `accounts` never mounted, module off → X5.
 - Per panel a component test with its states; invoices: paying from the panel writes what `PayStep` writes on the page and nothing in the planner (write spy).
 - Write spy: opening and closing any panel writes nothing anywhere.
 - e2e seed `e2e/seed/plan-expand.seed.spec.ts`: pay an invoice, tick two list items, tick a checklist line – without leaving `/planner`.

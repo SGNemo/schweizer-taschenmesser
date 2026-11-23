@@ -43,22 +43,23 @@ Reuses `FocusPage` (shell hidden, Esc leaves, the round survives a reload). Diff
 - Skipped steps: at the end B10; „Später“ returns to the plan with the steps open.
 - 412: the same, actions stacked full width in the order B5, B6, B7.
 - Keys: Enter = B5, `S` = B6, `P` = B7, Esc = back to the plan (the round keeps its place); one line under the buttons names them (B19, `--text-meta`, `--text-3`), not drawn on touch devices.
-- A step change is announced politely („Schritt 3 von 5: Bad wischen“); focus stays on B5.
+- A step change is announced politely („Schritt 3 von 5: Bad wischen“); focus stays on B5. A member step without a tick has no B5: focus goes to its panel's first control, and the letter keys work only while focus is not in a text field.
 
 ## 5b: making and unmaking
 
-- Selection bar (exists) gets B11 after „Verschieben …“; enabled from 2 rows. Dialog B12: one `TextField` (prefilled with the first title, selected), one `Checkbox` „Unterwegs (Besorgungsrunde)“ (hand-off 06), primary „Bündeln“. Toast B13.
+- Selection bar (exists) gets B11 after „Verschieben …“; enabled from 2 rows. Dialog B12: one `TextField` (prefilled with the first title, selected), primary „Bündeln“, the shared „Abbrechen“. Toast B13.
+- A member that is a list is open inside the panel: its open items as tick lines (the lists panel's body, max 8 + „n weitere“), `▾` folds it. In „Los“ a list member is one step that shows these tick lines under its title.
 - The bundle takes the day of the first ticked row (or „ohne Tag“ if none had one); minutes = sum of the members'.
 - Panel ⋯: „Umbenennen …“, „Als Routine speichern“ (only if all members are plain tasks; toast B16), „Auflösen“ (toast B15).
-- A line's ⋯: „Aus dem Bündel nehmen“ (the member is its own row on the bundle's day again).
+- A line's ⋯: B20 „Aus dem Bündel nehmen“ (the member is its own row on the bundle's day again), on the phone also B21 „Nach oben“ / „Nach unten“.
 
 ## States
 
-closed · k of n · expanded · sorting · in „Los“ · paused · all done · step gone (B17, struck, skipped by „Los“) · member's module off (B18, skipped) · empty bundle after the last member left (the bundle row is removed in that same action).
+closed · k of n · expanded · sorting · in „Los“ · paused · all done (derived: drawn as done, nothing written) · step gone (B17, struck, skipped by „Los“) · member's module off (B18, skipped) · empty bundle after the last member left (the bundle row is removed in that same action).
 
 ## Tests
 
 - 5a: `steps` handed over by ToDos / Listen / Routinen (unit, per source); `onStepDone` round trip; steps never part of the input hash (`linksDisplayOnly`-style test); focus step mode: advance, skip, pause, reload mid-step, last step.
 - 5b: bundle / unbundle are one undo each and restore every assignment (snapshot test of all planner rows before / after undo); a member with `bundle` set is not on the board; two-device merge of `bundle` / `step` (field LWW) converges; deleting a bundle deletes no member.
-- Rule tests of planner rethink §7 extended to „Bündeln“, „Auflösen“, „Aus dem Bündel nehmen“, step ticks.
+- Rule tests of planner rethink §7 extended to „Bündeln“, „Auflösen“, „Aus dem Bündel nehmen“, step ticks; write spy: a member done or deleted in its own module writes nothing in the planner's tables.
 - e2e seed `e2e/seed/plan-bundle.seed.spec.ts`; `planner-hub-2.spec.ts` C1 re-measured.

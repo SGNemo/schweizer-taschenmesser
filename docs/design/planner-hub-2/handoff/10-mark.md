@@ -4,7 +4,7 @@ Concept: [CONCEPT §1.4](../CONCEPT.md). Common parts: [00-common](00-common.md)
 
 ## Structure
 
-`PlanMark({ module, id, variant })` in `core/entitylinks`: reads `planRowState` + `planFacts` (lock) + the bundle name; renders nothing while loading, while the planner is off, and when the thing is not in the plan.
+`PlanMark({ module, id, variant })` in `core/entitylinks`: reads `planRowState` + `planFacts` (lock) (+ the bundle name from 5b); renders nothing while loading, while the planner is off, and when the thing is not in the plan. Two reads are new in `planRow.ts` / `plannedDay`: an item key matches the entity when it equals `<module>:<id>` or starts with `<module>:<id>:` (subscriptions, routines and Unterlagen plan per occurrence), and for M4 the latest live assignment before today when none lies from today on. Bookmarks and subscriptions pass their own field as `fallback` (shown as M3 while the planner has no row yet).
 
 - `variant="meta"` (rows): inline in the row's meta line, **last** item, separated by „ · “. Planner glyph 16 px + text M1–M5, `--text-meta`, `--text-3`; the whole mark is one link (underline on hover / focus only).
 - `variant="detail"` (detail panels, dialogs): its own line under the title block, same type, min-height 44 px.
@@ -22,7 +22,6 @@ Concept: [CONCEPT §1.4](../CONCEPT.md). Common parts: [00-common](00-common.md)
 | Kalender | – (agenda rows stay clean) | event detail | – |
 | Abos | row meta | detail | `plannedDeadline` „Im Plan“ |
 | Merkliste | row meta | – | `inPlan` „im Plan“ |
-| Personen | – | person page, under the name | – |
 | Unterlagen | row meta | detail | – |
 | Routinen | row meta | detail | – |
 
@@ -44,6 +43,6 @@ Same. On 412 a meta line that would wrap drops the module's own second meta item
 ## Tests
 
 - `PlanMark.test.tsx`: the six states; nothing rendered while the planner is off.
-- `planRow.test.ts` grows: bookmarks and subscriptions read the planner, not their own field; the one-time step writes a request row once and never again.
+- `planRow.test.ts` grows: the prefix match (a subscription placed from the planner shows M1; `todos:ab` never matches `todos:abc`), the passed-day read, the fallback; write spy: app start and rendering marks write nothing.
 - e2e seed (new file `e2e/seed/plan-mark.seed.spec.ts`): an invoice, a list, a note, a subscription, a bookmark placed on Wednesday show M1 and the link lands on the row.
 - `planner-hub-2.spec.ts` D1 re-measured.

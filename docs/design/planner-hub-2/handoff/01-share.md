@@ -19,11 +19,11 @@ Tag      [ohne Tag] [Heute] [Morgen]          (only while „In den Planer“ is
 - „In den Planer“ (S1) is the first choice and preselected when the planner module is on; otherwise the page is exactly as today. The targets keep the control the page has today (a column of choices, each 44 px high, on 412; one row at 1920); the empty state keeps today's sentence.
 - No second question above the choices: the page's own subline („Wohin soll der geteilte Inhalt?“) already asks.
 - The day choice is the shared `DateChips` with three chips; default „ohne Tag“.
-- S3 „Ablegen“ → `plan.requested { title, day }` + note / URL on the ToDo → toast S4 → Android: the activity finishes back to the sharing app after the toast's first second; PWA: stays.
+- S3 „Ablegen“ → `plan.requested { title, day, origin: 'share' }` + note / URL on the ToDo → the planner's handler shows toast S4; the page itself turns into its stored state: S8 „Abgelegt.“ with the buttons „Rückgängig“ (ghost) and S9 „Fertig“ (filled). It stays until he taps: „Fertig“ closes back to the sharing app on Android and opens the planner in the PWA. No new native command; if the build needs one, its permission is for the webview `main` only.
 
 ## The row afterwards
 
-A normal ToDo row under „Noch ohne Tag“. A shared link shows one chip S7 („Im Browser öffnen · example.org“) in the row's chip line and as first entry of the default panel; it opens the system browser only on a tap.
+A normal ToDo row under „Noch ohne Tag“. A shared link shows one chip S7 („Im Browser öffnen · example.org“) in the row's existing chip line (the line that holds ≤ 2 link chips today – no new kind of control) and as first entry of the default panel; it opens the system browser only on a tap.
 
 ## States
 
@@ -31,7 +31,7 @@ planner off (target missing) · nothing arrived (as built) · long text (S5 unde
 
 ## Edge cases
 
-- Text that is only a URL: title = host + first path segment, readable („example.org/fahrradtraeger“); never fetched.
+- Text that is only a URL: title = host + first path segment, readable („example.org/fahrradtraeger“), percent-decoded first, then stripped of control and bidi characters; never fetched.
 - A URL with another scheme (`intent:`, `file:`, `javascript:`): no chip; the text stays text.
 - 20 000 characters: title 160, note 4 000, S5 shown.
 - Control characters and bidi overrides are stripped from the title (existing `cleanTitle` of the capture path).

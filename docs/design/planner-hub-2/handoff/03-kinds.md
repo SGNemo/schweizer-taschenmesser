@@ -28,7 +28,7 @@ Concept: [CONCEPT-INTAKE, idea 3](../CONCEPT-INTAKE.md). Common parts: [00-commo
 
 ## States
 
-no reading (examples as today) · reading shown · stored (toast K4 for the kind; field empty, focus stays in the field) · K3 used · module of the kind off (no line) · target failed (the field's existing error line; text stays; nothing was stored – the invoice and its plan request are one transaction-like undoable action: if the request fails the invoice is taken back).
+no reading (examples as today) · reading shown · stored (toast K4 for the kind; field empty, focus stays in the field) · K3 used · module of the kind off (no line) · target failed (the field's existing error line; text stays; nothing was stored – the thing and its plan row are made inside one undoable action by the planner's own place function, called directly with its toast suppressed; when placing fails the thing is taken back).
 
 ## 1920 / 412
 
@@ -47,6 +47,6 @@ no reading (examples as today) · reading shown · stored (toast K4 for the kind
 
 - `fieldKind.test.ts`: the „sure“ table, each row with two positives and three near misses; the order; module off.
 - `Capture.test.tsx`: line and examples never together; Alt+Enter; live region debounce.
-- Action test: one undo takes back the invoice **and** the plan row; write spy shows the planner writes only its own tables, the invoice comes from the capture target.
+- Action test: one undo takes back the invoice **and** the plan row; a failing place step leaves no invoice (rollback); „Milch“ with the shopping list on „Nicht planen“ adds the item and leaves `excluded` as it is; write spy shows the planner writes only its own tables, the invoice comes from the capture target.
 - Privacy: no amount in the toast while „Werte ausblenden“ is on.
 - e2e seed `e2e/seed/plan-kinds.seed.spec.ts`; `planner-hub-2.spec.ts` flow A re-measured.

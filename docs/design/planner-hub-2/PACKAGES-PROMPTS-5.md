@@ -1,4 +1,4 @@
-# Planner hub 2 – prompts, packages 11, M and the struck 7 and 8
+# Planner hub 2 – prompts, packages 11, M and the struck 7, 8 and 6
 
 Plan, order, target figures, the shared block `#common` and „as built“: [PACKAGES](PACKAGES.md). One prompt per chat, pasted as it stands. Model: Claude Opus.
 
@@ -12,15 +12,15 @@ Gemeinsamer Block (gilt ganz): docs/design/planner-hub-2/PACKAGES.md#common
 Branch `feat/plan-topic` von frischem `develop`, nach dem Merge von Paket 9. Hotspots ansagen: Dexie-Version / `schema.snapshot.json`, `PlannerPage.tsx`, `strings.ts`.
 
 ## Ausgangslage
-CONCEPT.md §0.1, §1.1 (`topic`); CONCEPT-INTAKE.md „Idea 11“ (mit „Why a topic and not a tag“); handoff/11-topic.md; COPY.md T1–T9.
+CONCEPT.md §0.1, §1.1 (`topic`); CONCEPT-INTAKE.md „Idea 11“ (mit „Why a topic and not a tag“); handoff/11-topic.md; COPY.md T1–T11.
 
 ## Pflichtliste
-- Sammlung `planner_topic` (`title` ≤ 60); `db:bump`, Schema-Historie, `manifest.version`; `planner`-`linkTarget` für `t_`-ids; Mitgliedschaft nur als `topic`-Link (`planner:t_<id>` → Ding), ein Thema je Ding (ein zweites ersetzt das erste im selben Undo).
+- Sammlung `planner_topic` (`title` ≤ 60; Datensatz-id `t_<uuid>`, damit der Link-Schlüssel `planner:<Datensatz-id>` ist und `sweepPurged` ihn findet); `db:bump`, Schema-Historie, `manifest.version`; `planner`-`linkTarget` nur für Themen; Mitgliedschaft nur als `topic`-Link (Thema → Ding), ein Thema je Ding (ein zweites ersetzt das erste im selben Undo). `sync.test.ts` um den `topic`-Fall (aus 10a hierher verschoben).
 - Wähler (Dialog T2) aus Zeilen-⋯ und Auswahlleiste; Angebot T7 aus ToDo-Tags (höchstens 3, nur ein Tipp übernimmt, nichts wird zurück in Tags geschrieben).
 - Filter aus dem Seiten-⋯ (T3): Zeile T4, Blatt, Band, „Noch ohne Tag“, „Noch offen“ zeigen nur Mitglieder; die Kopfzahl zählt weiter den ganzen Tag; „Auch im Thema“ (T5) für verknüpfte Dinge, die keine Planzeilen sind (Unterlagen nur mit Kategorie-Wort); Filter ist Gerätezustand (`_meta`), schreibt nichts Synchronisiertes (Schreib-Spion).
 - Neues im Feld bei aktivem Filter bekommt das Thema (Vor-Chip mit ✕).
 - Verwalten in den Planer-Einstellungen: umbenennen, löschen (T9: entfernt nur die Links, ein Undo).
-- Zwei Geräte: dasselbe Ding offline in zwei Themen → beide Zeilen bleiben, gelesen wird die spätere; aufgeräumt wird erst beim nächsten Tipp an diesem Ding, nie im Hintergrund.
+- Zwei Geräte: dasselbe Ding offline in zwei Themen → beide Zeilen bleiben, gelesen wird die spätere; aufgeräumt wird nur in der nächsten Aktion „Thema …“ an diesem Ding – nie im Hintergrund, nie im Undo-Eintrag einer anderen Aktion.
 
 ## Nicht in diesem Paket
 Eine Themen-Seite außerhalb des Planers, Farben je Thema, Thema in der Eingabe-Syntax, Verschachtelung, neue Felder in anderen Modulen.
@@ -105,3 +105,31 @@ Tests der Übergabe; Mess-Skript C1: `learned` ja, `durationProposed` beim zweit
 ## Skills
 `council` (Daten, Privatsphäre), `design:accessibility-review`, `file-pr`, `babysit-pr`, `leaving-pr-comments`. Full stop.
 ```
+
+## Prompt – package 6 (struck by principle 1): places and map of an errand round (`feat/plan-errand`) – only on the maintainer's explicit yes
+
+```
+# Aufgabe: Planer-Zentrale 2, Paket 6 – Besorgungsrunde mit Orten: Stopps, „Ort …“, Sprung auf die Karte
+Routing: Claude Code · Planer-Zentrale 2 Paket 6 · Opus
+Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
+Gemeinsamer Block (gilt ganz): docs/design/planner-hub-2/PACKAGES.md#common
+Branch `feat/plan-errand` von frischem `develop`, frühestens nach 5b.
+
+## Ausgangslage
+Gebaut ist seit 5b: die Runde als Bündel, die Liste im Bündel abhaken. Gestrichen und hier nachzuholen: CONCEPT-INTAKE.md „Idea 6“ (Abschnitt „Struck parts“); handoff/06-errand.md; COPY.md E1–E3.
+
+## Pflichtliste
+- `LinkRel` um `place`; `maps`-`linkTarget` für Orte (Name; nur eigene Daten, id nicht vertrauenswürdig) und ein fauler Namens-Leser für den Dialog „Ort …“.
+- Bündel-Art „Unterwegs“ (Feld `kind` auf `planner_bundle`, Schalter im Dialog „Bündeln …“): Zeile mit Stopps (E1), Panel nach der Skizze der Übergabe.
+- „Auf der Karte ansehen“ → `/maps?places=<ids>&from=plan`: Erlaubt-Liste, ≤ 20 ids, unbekannte fallen weg, null Schreibvorgänge, Parameter verlässt die URL.
+
+## Nicht in diesem Paket
+Eine Karte im Planer, Routen, Wegezeiten, Adressfelder an Dingen.
+
+## Abnahme
+Tests der Übergabe; Mess-Skript C2 unverändert oder besser; `mapShown` neu gemessen.
+
+## Skills
+`review-loop`, `design:accessibility-review`, `file-pr`, `babysit-pr`, `leaving-pr-comments`. Full stop.
+```
+

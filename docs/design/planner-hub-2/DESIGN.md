@@ -41,14 +41,14 @@ Identity: the planner keeps hue `indigo`, head `standard`, no filled action in t
 
 **A · „Eine Zeile, ‚Los‘ auf der Fokus-Seite“** (`05-bundle-a.html`, `05-los.html`): closed, a bundle is one row with „1 von 5“ as text; expanded, its steps are tick lines; „Los“ opens the focus page with only the next step.
 
-- For: five rows become one (the figure principle 1 asks for); „Los“ reuses the page that already hides everything else and survives a reload; nothing new on the sheet.
+- For: a round is one row whether it is typed, bundled or a routine (C2: 2 → 1), and it is worked through without a module switch (C1: 4 / 5 → 0); „Los“ reuses the page that already hides everything else and survives a reload; nothing new on the sheet.
 - Against: the steps are invisible until he opens the row; „Los“ leaves the sheet (not the module).
 - Critique folded in: member lines have one lead column (tick or source glyph – the draft had both, ragged); „k von n“ counts done steps on the row and the position in „Los“, said in the hand-off; a member without a tick shows its panel as the step.
 
 **B · „Block mit sichtbaren Schritten, ‚Los‘ an Ort und Stelle“** (`05-bundle-b.html`): the bundle is a header row with its steps always visible beneath; „Los“ turns the header into a stage inside the sheet.
 
 - For: he sees all steps without a tap; he never leaves the sheet.
-- Against: it lowers no row count (six rows instead of five); the stage competes with every other row of the day while he should see one thing; the header row carries a fifth control.
+- Against: it shows every step as a row (six rows where A shows one); the stage competes with every other row of the day while he should see one thing; the header row carries a fifth control.
 
 **Decision: A.** B fails principle 1 by its own picture, and „‚Los‘ zeigt nur den nächsten Schritt“ is only true when nothing else is on screen.
 
@@ -61,7 +61,7 @@ Identity: the planner keeps hue `indigo`, head `standard`, no filled action in t
 | „Los“ (5) | one large title, one filled button | keys named under the buttons; step change announced | much empty space at 1920 – that is the point of the page |
 | Share (1) | one card, one choice, one button | targets are a column on 412; page title and empty text stay as built | a long shared title makes the new row three lines tall |
 | Kinds (3) | the line reads like a sentence | only „Wird:“ is muted (was grey on grey); on 412 it stands above the field | two lines above the keyboard on 412 when „Als Aufgabe eintragen“ wraps |
-| Errand (6) | stops read top to bottom | place moved under the title (five columns before) | nine stops with open lists get long; lists fold |
+| Errand (6) | stops read top to bottom | after the council: places and map struck (no figure); what stays is the list ticked inside the bundle (5b) | the drawn version with places is kept for a later „ja“ |
 | Appointment (9) | two quiet buttons where he already looks | lead chip reuses the preview slot | the recessed blocker row is weak among 20 rows (as built); the chips carry the relation |
 | Topic (11) | 20 rows against 7 is the whole argument | the page head carries the filter (a line above the sheet plus a head figure for the whole day confused); „Alles zeigen“ once | a topic is invisible on the row by design – he finds it in ⋯ „Verknüpft“ |
 | Waiting (7, struck) | the row is gone, which is the wish | – | the folded line at the end of a long „Noch ohne Tag“ is easy to overlook; the thing returns by itself, so nothing is lost |
@@ -69,12 +69,12 @@ Identity: the planner keeps hue `indigo`, head `standard`, no filled action in t
 
 ## 5. FOCUS checklist for the round ([FOCUS-GUIDELINES](../FOCUS-GUIDELINES.md); each package answers it again with figures)
 
-1. **Stimulus:** no new always-visible control; rows fall (flow B 10 → 2, C1 5 → 1); budget files unchanged.
-2. **Off switch:** piles, kinds, (duration) have switches; expand, steps, bundles, topic, waiting exist only when he uses them.
+1. **Stimulus:** no new always-visible control except the pile offer, which exists until it is answered; rows fall (flow B 5 → 2, C2 2 → 1, A1 11 → 7); budget files unchanged.
+2. **Off switch:** piles, kinds in the field and expanding rows have switches; steps, bundles and topics exist only when he makes them.
 3. **Next step:** each panel has at most one secondary action; „Los“ has one filled button.
 4. **Wording:** COPY, checked; counts are plain text and fall as he works.
 5. **Interruption:** „Los“ and the topic filter survive a reload; an open compartment does not (nothing is lost by that).
 6. **Tested:** lists in the hand-offs.
 7. **Readability:** panel text ≤ 68 ch; no colour without text.
 8. **Clicks:** counted in [ANALYSIS](ANALYSIS.md) per flow.
-9. **What goes instead:** the „Frist vorbei“ group (while the money pile is on), the ToDos-only `PlanMark`, the own „im Plan“ fields of bookmarks and subscriptions, the title link's jump as the default, five rows per household round.
+9. **What goes instead:** the „Frist vorbei“ group (while the money pile is on), the ToDos-only `PlanMark`, the own „im Plan“ texts of bookmarks and subscriptions, the title link's jump as the default, five rows per household round.

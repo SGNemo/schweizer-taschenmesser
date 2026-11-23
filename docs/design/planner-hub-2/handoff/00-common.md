@@ -29,8 +29,8 @@ No new token, no new colour, no new icon family. Glyphs come from `ui/icons.tsx`
 | `PanelLine` | min-height `--row-h` (44 px); text `--text-sm` / `--text`; meta `--text-meta` / `--text-3`; lines separated by `--space-1`, no hairline |
 | Tick in a panel | the shared `Checkbox`, 22 px glyph inside a 44 × 44 target |
 | Panel head (small) | `--text-caps`, 600, `--text-3`, margin-top `--space-3` (first: 0) |
-| Panel foot | right-aligned row of ≤ 2 quiet buttons (`Button variant="ghost"`), gap `--space-2`; phone: left-aligned, wraps |
-| Primary inside a panel | at most one, `Button variant="secondary"` (never the filled primary: the page's one filled button is „Eintragen“) |
+| Panel foot | one row, at most 3 controls: the module's actions left (≤ 2; the main one `Button variant="secondary"`, others ghost), X2 „Ganz öffnen“ always last on the right; gap `--space-2`; phone: left-aligned, wraps. **Every action of a panel lives in its foot** – the body only shows and ticks |
+| Filled primary | never inside a panel (the page's one filled button is „Eintragen“) |
 | Money | always through `SensitiveValue` |
 | Line length | panel text ≤ `--measure` (68 ch) |
 
