@@ -28,6 +28,8 @@ const schema = z.object({
   showAnswered: z.boolean(),
   /** Gmail-style keyboard shortcuts on the mail page (`useMailKeys.ts`). */
   shortcuts: z.boolean(),
+  /** What „Wartet auf mich“ holds (`queue.ts`): unanswered mail to the person, starred mail, or nothing. */
+  waitingRule: z.enum(['reply', 'starred', 'off']),
 });
 
 export type MailSettings = z.output<typeof schema>;
@@ -48,6 +50,7 @@ export const settings: ModuleSettings = {
     offerInvoices: true,
     showAnswered: true,
     shortcuts: true,
+    waitingRule: 'reply',
   },
   get keywords() {
     return [
@@ -104,6 +107,23 @@ export const settings: ModuleSettings = {
         return t.mail.meta.offerPersonalHelp;
       },
       type: 'boolean',
+    },
+    {
+      key: 'waitingRule',
+      get label() {
+        return t.mail.meta.waitingRule;
+      },
+      get help() {
+        return t.mail.meta.waitingRuleHelp;
+      },
+      type: 'select',
+      get options() {
+        return [
+          { value: 'reply', label: t.mail.meta.waitingReply },
+          { value: 'starred', label: t.mail.meta.waitingStarred },
+          { value: 'off', label: t.mail.meta.waitingOff },
+        ];
+      },
     },
     {
       key: 'offerPlanAll',

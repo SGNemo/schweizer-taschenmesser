@@ -57,3 +57,13 @@ Same numbers at 1920 and 412 px (the list is the same list; at 412 only three ro
 | E new and important this week | 0 | 0 | 15 | 0 | open (package 2, target ≤ 7) |
 
 Same at 1920 and 412 px; axe (WCAG 2.2 AA) finds nothing on the search with both parts at either width. Index: 5 000 mails (5× the cache) built in ≈ 0,2 s, a warm search ≈ 50 ms (unit test, jsdom). The device part shows 50 hits, more on request. Still open from the critique: the 412 px head (package 3).
+
+## After package 2 („Wartet auf mich“, kinds)
+
+| Task | Steps | Rows read | vs. IST |
+|---|---|---|---|
+| D waits for my answer | 1 | 9 | 29 → 9, target ≤ 14 met |
+| E new and important this week | 1 | 3 | 15 → 3, target ≤ 7 met; one tap more than IST (the queue entry) |
+
+A–C unchanged (7 / 9 / 1). All five targets are now enforced in the script. The queue and its walk pass axe at both widths. Kinds are one choice „Welche Mails zeigen“ (Alle · Persönlich · Rechnungen · Newsletter) that replaces the chip „Persönlich“, so the page keeps its stimulus budget; „Braucht Antwort“ is the queue itself, not a fourth option; „Rest“ was left out (it is „Alle“ minus three options, rarely a place to go).
+
