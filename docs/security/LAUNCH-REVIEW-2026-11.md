@@ -165,8 +165,8 @@ No critical finding. One high finding (SC1). The Dev-Preview that friends alread
 
 | ID | Sev | Finding | Evidence | Size |
 |---|---|---|---|---|
-| NS2 | low | Updater manifest version is unsigned: an older validly signed exe can be served as newer (rollback) | `src/update.rs:146-163`, `src/portable.rs:91-103` | M, Sven merges · **fixed (#PR)**: before the portable swap the version is read from the signed payload's own version block; an older one is refused (`version-not-newer`) |
-| NS3 | low | The APK installer's URL check is not flavour-aware: a stable app may fetch the dev APK (installs as a second app after confirmation) | `plugins/apk-installer/src/validate.rs:6-36` | S · **fixed (#PR)**: the installer check knows the build's channel; the stable app refuses `dev-preview` assets |
+| NS2 | low | Updater manifest version is unsigned: an older validly signed exe can be served as newer (rollback) | `src/update.rs:146-163`, `src/portable.rs:91-103` | M, Sven merges · **fixed (#1080)**: before the portable swap the version is read from the signed payload's own version block; an older one is refused (`version-not-newer`) |
+| NS3 | low | The APK installer's URL check is not flavour-aware: a stable app may fetch the dev APK (installs as a second app after confirmation) | `plugins/apk-installer/src/validate.rs:6-36` | S · **fixed (#1080)**: the installer check knows the build's channel; the stable app refuses `dev-preview` assets |
 | NS4 | low | Only the pre-merge manifest is asserted (`allowBackup="false"`); cleartext is printed, the merged manifest of the shipped APK (permissions, exported components) never checked | `web/scripts/lib/androidManifest.ts:20-33`, `.github/workflows/release.yml:354-357` | S, **fixed (#1050)** |
 | NS5 | low | No `dataExtractionRules`: device-to-device transfer can copy the database | `web/scripts/lib/androidManifest.ts:20-33` | S |
 | NS6 | low | Notifications set no visibility: reminder titles show on the lock screen unless the OS hides them | `core/platform/tauri/index.ts:103-107,139-147` | S |
