@@ -52,6 +52,7 @@ import {
   spreadOpen,
   takeOff,
   bringBack,
+  setGoal,
   setStartPoint,
   START_KEY,
   type StartPoints,
@@ -1113,6 +1114,26 @@ export default function PlannerPage() {
    * The day's starting point after „Nur das hier“ (TARGET §2): „Anfangen mit: Wäsche waschen · Fokus starten“ while
    * that thing is still open on that day; one ✕ hides it. Nothing else on the sheet changes.
    */
+  /**
+   * The goal of the day (P2): „Ziel: Wohnung frei bekommen“ – one quiet line, no figure, no bar. ✕ removes it from every
+   * day in view that carries the same goal (the weekend it was set for); „Tag einstellen“ edits it per day.
+   */
+  const goalLine = (day: BoardDay) => {
+    const goal = day.row?.note;
+    if (!goal) return null;
+    const same = (board?.days ?? []).filter((d) => d.row?.note === goal).map((d) => d.date);
+    return (
+      <p className={styles.goalLine} data-testid="day-goal">
+        <span>{t.planner.goal.line(goal)}</span>
+        <IconButton
+          label={t.planner.goal.removeName(goal)}
+          onClick={() => void setGoal(same.length ? same : [day.date], undefined, titles)}
+        >
+          <Icon name="close" size={16} />
+        </IconButton>
+      </p>
+    );
+  };
   const startLine = (day: BoardDay) => {
     const key = startPoints?.[day.date];
     if (!key) return null;
@@ -1775,6 +1796,7 @@ export default function PlannerPage() {
                     key={shownDay.date}
                     top={
                       <>
+                        {goalLine(shownDay)}
                         {startLine(shownDay)}
                         {openLineNode}
                       </>

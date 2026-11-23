@@ -43,7 +43,7 @@ import { extractLock, readFieldWithPart } from './dueWords';
 import { assignmentRepo, dayRepo, itemKeyOf, itemRepo, putRow } from './repo';
 import type { AssignmentRow, PlanDayRow, PlanItemRow } from './schema';
 import { overloadLine } from './overload';
-import type { Known, PasteLine, Place } from './pastePlan';
+import { GOAL_MAX, type Known, type PasteLine, type Place } from './pastePlan';
 import { requestedIds } from './run';
 import { getPlannerSettings } from './prefs';
 import { PlannerOffError, runUser, type RunScope, type UserRun } from './services';
@@ -893,9 +893,11 @@ export function applyPaste(
   lines: readonly PasteLine[],
   toLater: readonly Known[],
   titles: Record<string, string>,
+  /** The paste's goal line for the days it names (P2), in the same undo entry. */
+  goal?: { text: string; dates: readonly string[] },
 ): Promise<boolean> {
   // Everything is like that already: no action, no toast, no undo entry.
-  if (toLater.length === 0 && lines.every((l) => l.change === 'same'))
+  if (!goal?.dates.length && toLater.length === 0 && lines.every((l) => l.change === 'same'))
     return Promise.resolve(false);
   const toLaterAny =
     toLater.length > 0 || lines.some((l) => l.change !== 'same' && l.to.kind === 'later');
@@ -920,7 +922,29 @@ export function applyPaste(
         await placeAt(refOf(k.key), { kind: 'later' });
         touched.push(k.key);
       }
+      for (const date of goal?.dates ?? []) await dayPatch(date, { note: goal!.text });
       return { touched };
+    },
+    { leadOnly: true },
+  );
+}
+
+/**
+ * The goal line of days (use case „Tag kippt“, P2): „Ziel: Wohnung frei bekommen“ on the sheet of each named day –
+ * stored as the day's `note`, text only, no progress. `undefined` removes it from those days. One undo.
+ */
+export function setGoal(
+  dates: readonly string[],
+  goal: string | undefined,
+  titles: Record<string, string>,
+) {
+  const text = goal?.trim().slice(0, GOAL_MAX) || undefined;
+  return act(
+    t.planner.goal.title,
+    text ? t.planner.goal.set(short(text)) : t.planner.goal.removed,
+    titles,
+    async () => {
+      for (const date of dates) await dayPatch(date, { note: text });
     },
     { leadOnly: true },
   );

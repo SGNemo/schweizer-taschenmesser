@@ -21,6 +21,7 @@ import {
   clearWindow,
   removeBlocker,
   setAvailable,
+  setGoal,
   setWindow,
 } from '../actions';
 import type { BoardDay } from '../board';
@@ -51,7 +52,10 @@ export function DaySheet({
   const [blockTo, setBlockTo] = useState('');
   // What the user typed into the window fields, for the day it was typed on (the sheet stays mounted).
   const [win, setWin] = useState<{ date: string; from?: string; to?: string }>();
+  // The goal typed for the day it was typed on (P2); else the stored one.
+  const [goalDraft, setGoalDraft] = useState<{ date: string; text: string }>();
   if (!day) return null;
+  const goalText = goalDraft?.date === day.date ? goalDraft.text : (day.row?.note ?? '');
   const typedHere = win?.date === day.date ? win : undefined;
   const from = typedHere?.from ?? day.window?.from ?? '';
   const to = typedHere?.to ?? day.window?.to ?? '';
@@ -219,6 +223,28 @@ export function DaySheet({
         )}
         <Button type="submit" variant="secondary">
           {t.planner.day.addBlocker}
+        </Button>
+      </form>
+      {/* The goal of the day (P2): one calm line above the sheet; empty removes it. */}
+      <form
+        className={styles.blockerForm}
+        data-testid="day-goal-form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (goalText.trim() === (day.row?.note ?? '')) return;
+          void setGoal([day.date], goalText.trim() || undefined, titles);
+          setGoalDraft(undefined);
+        }}
+      >
+        <TextField
+          label={t.planner.goal.field}
+          hint={t.planner.goal.fieldHint}
+          value={goalText}
+          maxLength={80}
+          onChange={(e) => setGoalDraft({ date: day.date, text: e.target.value })}
+        />
+        <Button type="submit" variant="secondary">
+          {goalText.trim() || !day.row?.note ? t.planner.goal.save : t.planner.goal.remove}
         </Button>
       </form>
       <div className={styles.sheetRow}>

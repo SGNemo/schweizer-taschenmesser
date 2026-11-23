@@ -10,10 +10,10 @@ import { getManifest } from '@/core/modules/registry';
 import { setNow } from '@/core/time/now';
 import { resetUndoJournal, undoDepth, undoLast } from '@/core/undo';
 import { useUiStore } from '@/stores/ui';
-import { applyPaste, pasteKnown } from '../actions';
+import { applyPaste, pasteKnown, setGoal } from '../actions';
 import manifest from '../manifest';
 import { looksLikePlan, matchPaste, readPastedPlan, sameTitle, type Known } from '../pastePlan';
-import { assignmentRepo } from '../repo';
+import { assignmentRepo, dayRepo } from '../repo';
 import { runsSettled, setManifestsForTests } from '../services';
 
 const SA = '2026-11-28';
@@ -355,6 +355,27 @@ describe('applyPaste', () => {
   };
   const PLAN =
     'Samstag\n- Wäsche waschen\n- Pfand sammeln 15 Min\nSonntag\n- Bad putzen\nNächste Wochen\n- Pflanzen gießen';
+
+  it('P2: the goal line goes onto the days the paste names, in the same undo; ✕ takes it off again', async () => {
+    const text =
+      'Ziel fürs Wochenende: Wohnung frei bekommen\nSamstag\n- Wäsche waschen\nSonntag\n- Bad putzen';
+    const plan = readPastedPlan(text, SA);
+    expect(plan.goal).toBe('Wohnung frei bekommen');
+    expect(plan.things.map((x) => x.title)).toEqual(['Wäsche waschen', 'Bad putzen']);
+    const preview = matchPaste(plan, await pasteKnown(), SA, 'none');
+    await applyPaste(preview.lines, [], {}, { text: plan.goal!, dates: [SA, SO] });
+    await runsSettled();
+    expect(undoDepth()).toBe(1);
+    expect((await dayRepo.get(SA))?.note).toBe('Wohnung frei bekommen');
+    expect((await dayRepo.get(SO))?.note).toBe('Wohnung frei bekommen');
+    await undoLast();
+    await runsSettled();
+    expect((await dayRepo.get(SA))?.note).toBeUndefined();
+    await setGoal([SA, SO], 'Ruhig bleiben', {});
+    await setGoal([SA, SO], undefined, {});
+    await runsSettled();
+    expect((await dayRepo.get(SO))?.note).toBeUndefined();
+  });
 
   it('moves known things, makes new ones, sends later to „Irgendwann“ – one undo entry, the rest untouched', async () => {
     const before = await place();

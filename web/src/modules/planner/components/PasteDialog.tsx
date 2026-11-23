@@ -85,6 +85,8 @@ export function PasteDialog({
   const [missingLater, setMissingLater] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  // The paste's goal line (P2): on by default, for the days the paste names (else today).
+  const [goalOn, setGoalOn] = useState(true);
   const day = today();
 
   useEffect(() => {
@@ -116,7 +118,14 @@ export function PasteDialog({
     setMissingLater(false);
   }
   const toLater = missingLater && laterOk ? movable : [];
-  const writes = chosen.filter((l) => l.change !== 'same').length + toLater.length;
+  const goalDates = [
+    ...new Set(preview?.lines.flatMap((l) => (l.to.kind === 'day' ? [l.to.date] : [])) ?? []),
+  ].sort();
+  const goal =
+    plan.goal && goalOn && preview
+      ? { text: plan.goal, dates: goalDates.length ? goalDates : [day] }
+      : undefined;
+  const writes = chosen.filter((l) => l.change !== 'same').length + toLater.length + (goal ? 1 : 0);
 
   const groups = useMemo(() => {
     const out = new Map<string, { place: Place; lines: PasteLine[] }>();
@@ -141,7 +150,7 @@ export function PasteDialog({
       const lines = now.lines.filter((l) => ids.has(l.id) && ticked(l));
       const seen = new Set(toLater.map((k) => k.key));
       const later = now.missing.filter((k) => seen.has(k.key) && !k.locked && k.canLater);
-      if (await applyPaste(lines, later, titles)) onClose();
+      if (await applyPaste(lines, later, titles, goal)) onClose();
       // Nothing left to write (a sync did it): the preview shows the plan as it is now.
       else setKnown(fresh);
     } catch {
@@ -212,6 +221,16 @@ export function PasteDialog({
               { value: 'today', label: p.pastToday },
             ]}
             onChange={setPast}
+          />
+        ) : null}
+        {plan.goal && preview ? (
+          <Checkbox
+            label={t.planner.goal.paste(
+              plan.goal,
+              (goalDates.length ? goalDates : [day]).map(dayLabel).join(', '),
+            )}
+            checked={goalOn}
+            onChange={(e) => setGoalOn(e.target.checked)}
           />
         ) : null}
         {groups.map((g) => (
