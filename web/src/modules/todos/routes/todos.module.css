@@ -465,36 +465,7 @@
   background: var(--accent-soft);
 }
 
-/* Where a task stands in the plan (todos-plan-state): one quiet line under the title, no colour – the words carry
-   it. A day leads into the planner, „noch nicht im Plan“ opens „In den Plan …“; both are plain text links. */
-.planMark {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  align-self: flex-start;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--text-muted);
-  font: inherit;
-  font-size: var(--text-sm);
-  line-height: 1.5;
-}
-button.planMark {
-  cursor: pointer;
-  text-decoration: underline;
-  text-decoration-color: var(--border-strong);
-  text-underline-offset: 0.2em;
-}
-/* The line stays one text line high (20 marks are no extra screen of rows); the tap area is 44 px tall. */
-button.planMark::after {
-  content: '';
-  position: absolute;
-  inset: calc((var(--text-sm) * 1.5 - var(--touch)) / 2) calc(var(--space-2) * -1);
-}
-button.planMark:hover {
-  color: var(--text);
-}
+/* The plan filter and „Auswählen“ (todos-plan-state). */
 .planBar {
   display: flex;
   flex-wrap: wrap;

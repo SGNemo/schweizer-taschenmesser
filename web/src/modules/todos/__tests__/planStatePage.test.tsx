@@ -143,21 +143,24 @@ describe('the plan state in ToDos', () => {
     expect(screen.queryByTestId('todos-select')).toBeNull();
   });
 
-  it('a tap on „im Plan: Fr“ opens the planner on that day with the row; a passed one opens „Noch offen“', async () => {
+  it('⋯ → „Im Planer zeigen“ opens the planner on that day with the row; a passed one opens „Noch offen“', async () => {
     await planner(true);
     await seed();
+    const show = async (title: string) => {
+      const row = await waitFor(() => rowOf(title));
+      // The mark is words in the meta line, not a control of its own (stimulus budget).
+      expect(within(row).getByTestId('in-plan').tagName).toBe('SPAN');
+      await userEvent.click(within(row).getAllByRole('button', { name: 'Weitere Aktionen' })[0]!);
+      await userEvent.click(await screen.findByRole('menuitem', { name: 'Im Planer zeigen' }));
+    };
     const view = draw('/todos');
-    await userEvent.click(
-      await within(await waitFor(() => rowOf('Freitag im Plan'))).findByTestId('in-plan'),
-    );
+    await show('Freitag im Plan');
     expect(await screen.findByTestId('where')).toHaveTextContent(
       '/planner?day=2026-11-20&item=todos%3Ab',
     );
     view.unmount();
     draw('/todos');
-    await userEvent.click(
-      await within(await waitFor(() => rowOf('War Montag'))).findByTestId('in-plan'),
-    );
+    await show('War Montag');
     expect(await screen.findByTestId('where')).toHaveTextContent(
       '/planner?tab=open&item=todos%3Ad',
     );
@@ -189,15 +192,16 @@ describe('the plan state in ToDos', () => {
     await waitFor(() => expect(screen.queryByTestId('todos-to-plan')).toBeNull());
   });
 
-  it('„noch nicht im Plan“ opens the day choice for that task; „Noch ohne Tag“ asks without a day', async () => {
+  it('„noch nicht im Plan“ is plain text; ⋯ → „In den Plan …“ → „Noch ohne Tag“ asks without a day', async () => {
     await planner(true);
     await seed();
     const seen: EventMap['plan.requested'][] = [];
     bus.on('plan.requested', (req) => void seen.push(req));
     draw('/todos');
-    await userEvent.click(
-      await within(await waitFor(() => rowOf('Lose eins'))).findByTestId('plan-mark'),
-    );
+    const row = await waitFor(() => rowOf('Lose eins'));
+    expect(within(row).getByTestId('plan-mark').tagName).toBe('SPAN');
+    await userEvent.click(within(row).getAllByRole('button', { name: 'Weitere Aktionen' })[0]!);
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'In den Plan …' }));
     const dialog = await screen.findByRole('dialog', { name: 'In den Plan: Lose eins' });
     await userEvent.click(within(dialog).getByRole('button', { name: 'Noch ohne Tag' }));
     await waitFor(() => expect(seen).toHaveLength(1));

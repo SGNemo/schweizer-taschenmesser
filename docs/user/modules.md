@@ -89,7 +89,7 @@ After an import the preview may suggest **rules** ("Always book Netflix in categ
 
 ## To-dos and the planner
 
-With the planner on, every open to-do says where it stands: _in the plan: Wed_ (a tap opens the planner on that day, at the row), _in the plan: was Mon_ (still open from a passed day), or _not in the plan yet_ (a tap offers _Into the plan …_). The filter _All · Not in the plan yet · In the plan_ shows how many still need a day and remembers your choice on this device. _Select_ puts several at once on today, tomorrow, a date or under _No day yet_ – one undo takes it back. A date you set in To-dos is not a day in the plan; _fixed_ and _not in the plan_ come from the planner.
+With the planner on, every open to-do says where it stands: _in the plan: Wed_, _in the plan: was Mon_ (still open from a passed day) or _not in the plan yet_. In the row's ⋯, _Show in the planner_ opens that day at the row, and _Into the plan …_ gives it a day. The filter _All · Not in the plan yet · In the plan_ shows how many still need a day and remembers your choice on this device. _Select_ puts several at once on today, tomorrow, a date or under _No day yet_ – one undo takes it back. A date you set in To-dos is not a day in the plan; _fixed_ and _not in the plan_ come from the planner.
 
 ## Bringing tasks from Todoist or Google Tasks
 

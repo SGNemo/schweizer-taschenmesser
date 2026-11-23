@@ -89,7 +89,7 @@ Nach einem Import schlägt die Vorschau eventuell **Regeln** vor („Netflix imm
 
 ## ToDos und der Planer
 
-Ist der Planer an, sagt jedes offene ToDo, wo es steht: _im Plan: Mi_ (ein Tipp öffnet den Planer an diesem Tag, bei der Zeile), _im Plan: war Mo_ (von einem vergangenen Tag noch offen) oder _noch nicht im Plan_ (ein Tipp bietet _In den Plan …_). Der Filter _Alle · Noch nicht im Plan · Im Plan_ zeigt, wie viel noch einen Tag braucht, und merkt sich deine Wahl auf diesem Gerät. Mit _Auswählen_ legst du mehrere auf einmal auf heute, morgen, ein Datum oder unter _Noch ohne Tag_ – ein Rückgängig nimmt es zurück. Ein Datum, das du in ToDos setzt, ist kein Tag im Plan; _fest_ und _nicht im Plan_ kommen aus dem Planer.
+Ist der Planer an, sagt jedes offene ToDo, wo es steht: _im Plan: Mi_, _im Plan: war Mo_ (von einem vergangenen Tag noch offen) oder _noch nicht im Plan_. Im ⋯ der Zeile öffnet _Im Planer zeigen_ den Tag bei der Zeile, und _In den Plan …_ gibt ihm einen Tag. Der Filter _Alle · Noch nicht im Plan · Im Plan_ zeigt, wie viel noch einen Tag braucht, und merkt sich deine Wahl auf diesem Gerät. Mit _Auswählen_ legst du mehrere auf einmal auf heute, morgen, ein Datum oder unter _Noch ohne Tag_ – ein Rückgängig nimmt es zurück. Ein Datum, das du in ToDos setzt, ist kein Tag im Plan; _fest_ und _nicht im Plan_ kommen aus dem Planer.
 
 ## Aufgaben aus Todoist oder Google Tasks mitnehmen
 

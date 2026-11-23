@@ -154,8 +154,15 @@ test('20 imported, 5 laid in the planner → 15 not in the plan; three into the 
   await expect(unplanned(page)).toHaveText('Noch nicht im Plan · 15');
   await expect(page.getByTestId('in-plan')).toHaveCount(5);
 
-  // The jump: „im Plan: Mi“ opens the planner on Wednesday with the row in view.
-  await page.getByRole('button', { name: 'im Plan: Mi – im Planer zeigen' }).first().click();
+  // The jump: ⋯ → „Im Planer zeigen“ opens the planner on Wednesday with the row in view.
+  await page
+    .getByRole('listitem')
+    .filter({ has: page.getByTestId('in-plan') })
+    .first()
+    .getByRole('button', { name: 'Weitere Aktionen' })
+    .first()
+    .click();
+  await page.getByRole('menuitem', { name: 'Im Planer zeigen' }).click();
   await expect(page).toHaveURL(/\/planner/);
   const row = page.locator('[data-row-key^="todos:"]', { hasText: 'Ding 0' }).first();
   await expect(row).toBeVisible();

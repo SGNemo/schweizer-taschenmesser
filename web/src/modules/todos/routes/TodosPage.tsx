@@ -44,7 +44,7 @@ import { BoardView } from '../components/BoardView';
 import { InboxSorter } from '../components/InboxSorter';
 import { TodayCard } from '../components/TodayCard';
 import { PlanDayDialog } from '../components/PlanDayDialog';
-import { PlanMark } from '../components/PlanMark';
+import { PlanWords } from '../components/PlanMark';
 import {
   PLAN_FILTERS,
   passesPlanFilter,
@@ -189,10 +189,14 @@ function TaskRow({
       onSelect: () =>
         void changeWithUndo(() => taskRepo.update(task.id, { priority: p }), t.todos.changed),
     }));
-  const planItem: RowMenuItem[] =
-    plan && plan.kind !== 'none' && onPlanChoose
+  const planItem: RowMenuItem[] = [
+    ...(plan && (plan.kind === 'planned' || plan.kind === 'passed') && onPlanShow
+      ? [{ id: 'in-planner', label: t.todos.plan.showIn, onSelect: () => onPlanShow(task, plan) }]
+      : []),
+    ...(plan && plan.kind !== 'none' && onPlanChoose
       ? [{ id: 'to-plan', label: t.todos.plan.action, onSelect: () => onPlanChoose(task) }]
-      : [];
+      : []),
+  ];
   return (
     <ItemRow
       title={task.title}
@@ -201,17 +205,7 @@ function TaskRow({
       selectable={selectable}
       selected={selected}
       onSelectChange={onSelectChange ? (_, extend) => onSelectChange(task, extend) : undefined}
-      below={
-        plan && plan.kind !== 'none' ? (
-          <PlanMark
-            state={plan}
-            day={day}
-            title={task.title}
-            onShow={() => onPlanShow?.(task, plan)}
-            onChoose={() => onPlanChoose?.(task)}
-          />
-        ) : undefined
-      }
+
       tone={tone === 'overdue' && !waiting ? 'overdue' : tone === 'today' ? 'today' : undefined}
       className={sub ? styles.sub : undefined}
       onOpen={() => onOpen(task)}
@@ -318,6 +312,7 @@ function TaskRow({
               })()}
             </span>
           ) : null}
+          {plan ? <PlanWords state={plan} day={day} /> : null}
           {task.startDate && task.startDate > day ? (
             <span>{t.todos.startsOn(formatDay(task.startDate, 'EEE, d. MMM'))}</span>
           ) : null}
