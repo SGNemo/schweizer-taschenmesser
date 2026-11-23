@@ -12,7 +12,14 @@ import { resetUndoJournal, undoDepth, undoLast } from '@/core/undo';
 import { useUiStore } from '@/stores/ui';
 import { applyPaste, pasteKnown, setGoal } from '../actions';
 import manifest from '../manifest';
-import { looksLikePlan, matchPaste, readPastedPlan, sameTitle, type Known } from '../pastePlan';
+import {
+  goalDays,
+  looksLikePlan,
+  matchPaste,
+  readPastedPlan,
+  sameTitle,
+  type Known,
+} from '../pastePlan';
 import { assignmentRepo, dayRepo } from '../repo';
 import { runsSettled, setManifestsForTests } from '../services';
 
@@ -356,6 +363,13 @@ describe('applyPaste', () => {
   const PLAN =
     'Samstag\n- Wäsche waschen\n- Pfand sammeln 15 Min\nSonntag\n- Bad putzen\nNächste Wochen\n- Pflanzen gießen';
 
+  it("P2: goalDays are the days the paste names – not a known thing's own day; a passed day only „Auf heute“", () => {
+    const plan = readPastedPlan('Ziel: Ruhe\nFr 27.11.\n- a\nSonntag\n- b\nohne Überschrift', SA);
+    expect(goalDays(plan, SA, 'none')).toEqual([SO]);
+    expect(goalDays(plan, SA, 'today')).toEqual([SA, SO]);
+    expect(goalDays(readPastedPlan('Ziel: Ruhe\n- a\n- b', SA), SA, 'none')).toEqual([SA]);
+  });
+
   it('P2: the goal line goes onto the days the paste names, in the same undo; ✕ takes it off again', async () => {
     const text =
       'Ziel fürs Wochenende: Wohnung frei bekommen\nSamstag\n- Wäsche waschen\nSonntag\n- Bad putzen';
@@ -371,6 +385,15 @@ describe('applyPaste', () => {
     await undoLast();
     await runsSettled();
     expect((await dayRepo.get(SA))?.note).toBeUndefined();
+    // The same paste twice: the goal is there already – nothing written, no undo entry.
+    await applyPaste(preview.lines, [], {}, { text: plan.goal!, dates: [SA, SO] });
+    await runsSettled();
+    const depth = undoDepth();
+    const again = matchPaste(plan, await pasteKnown(), SA, 'none');
+    expect(await applyPaste(again.lines, [], {}, { text: plan.goal!, dates: [SA, SO] })).toBe(
+      false,
+    );
+    expect(undoDepth()).toBe(depth);
     await setGoal([SA, SO], 'Ruhig bleiben', {});
     await setGoal([SA, SO], undefined, {});
     await runsSettled();

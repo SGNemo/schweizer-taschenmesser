@@ -9648,7 +9648,7 @@ export const de = {
       title: 'Ziel',
       line: (goal: string) => `Ziel: ${goal}`,
       field: 'Ziel für diesen Tag',
-      fieldHint: 'Ein ruhiger Satz über dem Tag. Kein Fortschritt, keine Zahl.',
+      fieldHint: 'Ein ruhiger Satz über dem Tag.',
       save: 'Ziel setzen',
       remove: 'Ziel entfernen',
       removeName: (goal: string) => `Ziel entfernen: ${goal}`,

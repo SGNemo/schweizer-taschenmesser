@@ -1112,10 +1112,6 @@ export default function PlannerPage() {
     );
   };
   /**
-   * The day's starting point after „Nur das hier“ (TARGET §2): „Anfangen mit: Wäsche waschen · Fokus starten“ while
-   * that thing is still open on that day; one ✕ hides it. Nothing else on the sheet changes.
-   */
-  /**
    * „Plan als Text kopieren“ (use case „Tag kippt“, P3): the plan from today on as text „Plan einfügen“ reads back –
    * the days in view with their things (a thing once, on its first day), „Noch ohne Tag“, „Nächste Wochen“ and the
    * goal. Appointments and blocks stay out. Nothing is sent anywhere: the text goes to the clipboard on his tap.
@@ -1183,6 +1179,10 @@ export default function PlannerPage() {
       </p>
     );
   };
+  /**
+   * The day's starting point after „Nur das hier“ (TARGET §2): „Anfangen mit: Wäsche waschen · Fokus starten“ while
+   * that thing is still open on that day; one ✕ hides it. Nothing else on the sheet changes.
+   */
   const startLine = (day: BoardDay) => {
     const key = startPoints?.[day.date];
     if (!key) return null;
@@ -1938,7 +1938,14 @@ export default function PlannerPage() {
         </CaptureDialog>
       ) : null}
       {pasting !== undefined ? (
-        <PasteDialog initial={pasting} titles={titles} onClose={() => setPasting(undefined)} />
+        <PasteDialog
+          initial={pasting}
+          goals={Object.fromEntries(
+            (board?.days ?? []).flatMap((d) => (d.row?.note ? [[d.date, d.row.note]] : [])),
+          )}
+          titles={titles}
+          onClose={() => setPasting(undefined)}
+        />
       ) : null}
       <RowChoice
         choice={choice}
