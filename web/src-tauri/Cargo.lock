@@ -5776,6 +5776,7 @@ dependencies = [
  "base64 0.22.1",
  "keyring",
  "minisign-verify 0.2.5",
+ "rfd",
  "serde",
  "serde_json",
  "taschenmesser-browser-filter",

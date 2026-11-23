@@ -154,6 +154,7 @@ export function ThingRow({
   return (
     <ItemRow
       controls="always"
+      rowKey={row.itemKey}
       // A fixed block lies recessed with the day's appointments (CONCEPT-DESIGN §4); its tick stays.
       recessed={row.fixed ? true : undefined}
       weight={next ? 'next' : undefined}

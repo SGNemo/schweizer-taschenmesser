@@ -90,6 +90,46 @@ async function isRequested(
   return !!row && row.deletedAt === null && !row.excluded;
 }
 
+/** What the planner knows of a thing beyond its day: „fest“ (a live row of it is locked) and „Nicht planen“. */
+export interface PlanFacts {
+  locked?: true;
+  excluded?: true;
+}
+
+/**
+ * „fest“ and „Nicht planen“ of several things of one module (the ToDo list's marks, todos-plan-state), read like
+ * `isRequested`: the planner's item rows (`excluded`) and its live placement rows (`locked`), nothing written. Only
+ * things with a fact are in the map; empty while the planner is off or not in this build.
+ */
+export async function planFacts(
+  module: string,
+  ids: readonly string[],
+  database: TaschenmesserDB = defaultDb,
+): Promise<Map<string, PlanFacts>> {
+  const out = new Map<string, PlanFacts>();
+  const planner = getManifest(PLANNER);
+  if (ids.length === 0 || module === NEVER_LINKED) return out;
+  if (!planner?.dataSchema.collections.item || !planner.dataSchema.collections.assignment)
+    return out;
+  if (!(await loadModuleStates(undefined, database))[PLANNER]) return out;
+  const keys = ids.map((id) => refKey({ module, id }));
+  const idOf = (key: string) => key.slice(module.length + 1);
+  const items = await createCollectionRepo(planner, 'item', database).table.bulkGet(keys);
+  for (const row of items)
+    if (row && row.deletedAt === null && row.excluded === true)
+      out.set(idOf(row.id as string), { excluded: true });
+  const rows = await createCollectionRepo(planner, 'assignment', database)
+    .table.where('itemKey')
+    .anyOf(keys)
+    .toArray();
+  for (const r of rows) {
+    if (r.deletedAt !== null || r.locked !== true || typeof r.itemKey !== 'string') continue;
+    const id = idOf(r.itemKey);
+    out.set(id, { ...out.get(id), locked: true });
+  }
+  return out;
+}
+
 /** Asks the thing into the plan: `plan.requested` with `ref`, once the planner's service listens. */
 export async function requestIntoPlan(target: PlanRowTarget): Promise<void> {
   await whenServicesSettled();
@@ -98,6 +138,16 @@ export async function requestIntoPlan(target: PlanRowTarget): Promise<void> {
     ref: target.ref,
     ...(target.due ? { due: { date: target.due, hard: true } } : {}),
   });
+}
+
+/**
+ * „In den Plan …“ with a day for several things (todos-plan-state): one `plan.requested` with `refs` – the planner lays
+ * them on `day` ('YYYY-MM-DD') or leaves them without a day (`null`), as one undo with one toast.
+ */
+export async function requestManyIntoPlan(refs: EntityRef[], day: string | null): Promise<void> {
+  if (refs.length === 0) return;
+  await whenServicesSettled();
+  await bus.emit('plan.requested', { title: '', refs, day });
 }
 
 /** Takes the thing out of the plan again: `plan.unrequested`, the planner excludes its item row (one undo). */

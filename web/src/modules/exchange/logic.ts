@@ -4,6 +4,11 @@ import type { ExchangeRow } from './schema';
 
 /** Cards are kept this long (fixed in v1); files on disk are never touched by it. */
 export const RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
+/**
+ * Received cards kept per device (E1, launch review 2026-11): with the PC's daily limit a paired
+ * device could still fill the history for weeks; older received cards beyond this go in the sweep.
+ */
+export const HISTORY_PER_DEVICE = 1000;
 
 /** The most a body may carry (UTF-8 bytes), as the shell's `MAX_BODY`. */
 export const MAX_BODY_BYTES = 16 * 1024;

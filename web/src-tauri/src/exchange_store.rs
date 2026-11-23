@@ -26,6 +26,10 @@ use std::time::{SystemTime, UNIX_EPOCH};
 pub const INBOX_MAX: usize = 500;
 /// Items queued per device in the outbox.
 pub const OUTBOX_MAX_PER_DEVICE: usize = 500;
+/// New items one device may leave here per hour and per day (E1, E2). Kept in the file, so a
+/// restart does not reset them – on the PC and on the phone alike.
+pub const PER_DEVICE_HOUR: usize = 300;
+pub const PER_DEVICE_DAY: usize = 1_000;
 /// How long a seen id is remembered (longer than the hub's rate window of one hour).
 const SEEN_SECS: u64 = 2 * 60 * 60;
 
@@ -186,6 +190,10 @@ struct InboxFile {
     items: Vec<Entry>,
     /// peer → (id, unix seconds when seen)
     seen: HashMap<String, VecDeque<(String, u64)>>,
+    /// peer → (day = unix seconds / 86400, new items that day): the daily limit (E1, E2). Files from
+    /// before it have none.
+    #[serde(default)]
+    today: HashMap<String, (u64, usize)>,
 }
 
 pub struct Inbox {
@@ -222,6 +230,20 @@ impl Inbox {
         if file.items.len() >= INBOX_MAX {
             return Err(InboxError::Full);
         }
+        // E1/E2: the device's own hour and day, from what this file remembers (survives a restart)
+        let last_hour = file.seen.get(peer).map_or(0, |s| {
+            s.iter()
+                .filter(|(_, at)| now_s.saturating_sub(*at) < 3_600)
+                .count()
+        });
+        let day = now_s / 86_400;
+        let before = file.today.get(peer).copied();
+        let used = before.filter(|(d, _)| *d == day).map_or(0, |(_, n)| n);
+        if last_hour >= PER_DEVICE_HOUR || used >= PER_DEVICE_DAY {
+            return Err(InboxError::Full);
+        }
+        file.today.retain(|_, (d, _)| *d == day);
+        file.today.insert(peer.to_owned(), (day, used + 1));
         file.items.push(Entry::of(peer, item, now_ms));
         file.seen
             .entry(peer.to_owned())
@@ -233,6 +255,10 @@ impl Inbox {
             if let Some(s) = file.seen.get_mut(peer) {
                 s.pop_back();
             }
+            match before {
+                Some(b) => file.today.insert(peer.to_owned(), b),
+                None => file.today.remove(peer),
+            };
             return Err(InboxError::Full);
         }
         Ok(StoreResult::New)
@@ -406,6 +432,32 @@ impl Outbox {
         }
     }
 
+    /// E4: the device was paused or switched off at the PC (a lost phone): what waited for it is
+    /// dropped and answered `rejected`, so the card says it did not arrive.
+    pub fn discard_for(&self, peer: &str) {
+        if let Ok(mut file) = self.state.lock() {
+            let gone: Vec<String> = file
+                .queue
+                .iter()
+                .filter(|e| e.entry.peer == peer)
+                .map(|e| e.entry.id.clone())
+                .collect();
+            if gone.is_empty() {
+                return;
+            }
+            file.queue.retain(|e| e.entry.peer != peer);
+            for id in gone {
+                file.answers.retain(|a| !(a.peer == peer && a.id == id));
+                file.answers.push(Answer {
+                    peer: peer.to_owned(),
+                    id,
+                    state: "rejected".to_owned(),
+                });
+            }
+            let _ = write_json(&self.path, &*file);
+        }
+    }
+
     /// Only these devices keep their queue (a device unpaired, or all after "Schlüssel erneuern").
     pub fn keep_only(&self, peers: &[String]) {
         if let Ok(mut file) = self.state.lock() {
@@ -474,15 +526,109 @@ mod tests {
         );
     }
 
+    fn take_all(inbox: &Inbox) {
+        let keys: Vec<Key> = inbox
+            .pending()
+            .into_iter()
+            .map(|e| Key {
+                peer: e.peer,
+                id: e.id,
+            })
+            .collect();
+        inbox.confirm(&keys);
+    }
+
+    fn numbered(n: usize) -> Item {
+        let mut id = [0u8; 16];
+        id[..8].copy_from_slice(&(n as u64).to_be_bytes());
+        Item::new(id, Kind::Text, "x".into()).unwrap()
+    }
+
+    // E1/E2 (launch review 2026-11): one device can fill the other side only so far, and a restart
+    // does not reset what it already sent.
+    #[test]
+    fn one_device_is_held_to_its_hour_and_day_also_after_a_restart() {
+        let d = dir("per-device");
+        let path = d.join("inbox.json");
+        let hour = 3_600_000;
+        let mut n = 0;
+        let mut send = |inbox: &Inbox, peer: &str, at: u64| {
+            n += 1;
+            inbox.store(peer, &numbered(n), at)
+        };
+        let inbox = Inbox::open(&path);
+        for _ in 0..PER_DEVICE_HOUR {
+            assert_eq!(send(&inbox, "aa", 1_000), Ok(StoreResult::New));
+            take_all(&inbox);
+        }
+        assert_eq!(send(&inbox, "aa", 1_000), Err(InboxError::Full), "hour");
+        assert_eq!(
+            send(&inbox, "bb", 1_000),
+            Ok(StoreResult::New),
+            "other devices"
+        );
+        // a restart keeps the count
+        let inbox = Inbox::open(&path);
+        assert_eq!(
+            send(&inbox, "aa", 2_000),
+            Err(InboxError::Full),
+            "after a restart"
+        );
+        // the next hour lets more in, until the day is used up
+        let mut at = 1_000 + hour;
+        let mut taken = PER_DEVICE_HOUR;
+        while taken < PER_DEVICE_DAY {
+            match send(&inbox, "aa", at) {
+                Ok(_) => {
+                    taken += 1;
+                    take_all(&inbox);
+                }
+                Err(_) => at += hour,
+            }
+        }
+        assert_eq!(send(&inbox, "aa", at + hour), Err(InboxError::Full), "day");
+        assert_eq!(
+            send(&inbox, "aa", 1_000 + 25 * hour),
+            Ok(StoreResult::New),
+            "a new day"
+        );
+    }
+
+    // E4 (launch review 2026-11): pausing a device drops what waited for it.
+    #[test]
+    fn a_paused_device_loses_its_queue_and_the_cards_say_so() {
+        let d = dir("discard");
+        let path = d.join("outbox.json");
+        let outbox = Outbox::open(&path);
+        outbox.push("aa", &item(1, "für das Handy"), 1).unwrap();
+        outbox.push("aa", &item(2, "noch eins"), 2).unwrap();
+        outbox.push("bb", &item(3, "anderes Gerät"), 3).unwrap();
+        outbox.discard_for("aa");
+        assert!(
+            outbox.next_for("aa").is_none(),
+            "nothing goes to it any more"
+        );
+        assert!(outbox.next_for("bb").is_some(), "other devices keep theirs");
+        let rejected: Vec<_> = outbox
+            .answers()
+            .into_iter()
+            .filter(|a| a.peer == "aa" && a.state == "rejected")
+            .collect();
+        assert_eq!(rejected.len(), 2);
+        // also after a restart
+        let again = Outbox::open(&path);
+        assert!(again.next_for("aa").is_none());
+        assert_eq!(again.answers().len(), 2);
+    }
+
     #[test]
     fn a_full_inbox_takes_nothing_more() {
         let d = dir("full");
         let inbox = Inbox::open(&d.join("inbox.json"));
+        // from several devices, so no device reaches its own limit first
         for n in 0..INBOX_MAX {
-            let mut id = [0u8; 16];
-            id[..8].copy_from_slice(&(n as u64).to_be_bytes());
-            let i = Item::new(id, Kind::Text, "x".into()).unwrap();
-            assert_eq!(inbox.store("aa", &i, 1), Ok(StoreResult::New));
+            let peer = format!("{:02x}", n % 4);
+            assert_eq!(inbox.store(&peer, &numbered(n), 1), Ok(StoreResult::New));
         }
         assert_eq!(
             inbox.store("aa", &item(0xff, "x"), 1),

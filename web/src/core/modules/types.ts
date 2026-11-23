@@ -787,6 +787,12 @@ export interface ModuleContributions {
    * The default export starts it and returns a function that stops it.
    */
   services?: () => Promise<{ default: () => (() => void) | void }>;
+  /**
+   * Runs once while the module is off – at start, or after it was on in between – so a module that
+   * was switched off while the app was closed (sync) can still tell a native side (E3). Must check
+   * the stored state itself: in safe mode every module looks off here.
+   */
+  servicesOff?: () => Promise<{ default: () => void | Promise<void> }>;
   /** Values the assistant cannot know when creating an entry (e.g. the default list or account). */
   aiCreateDefaults?: () => Promise<{
     /** `data` = the values already known; defaults may depend on them (a reminder needs a notification). */

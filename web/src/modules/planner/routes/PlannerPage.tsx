@@ -189,6 +189,7 @@ export default function PlannerPage() {
   const [pickedDay, setPickedDay] = useState<string | undefined>(
     () => params.get('day') ?? undefined,
   );
+  const lookFor = useRef(params.get('item') ?? undefined);
   const storedPick = useLiveQuery(
     async () => (await getMeta<{ date: string; on: string }>(DAY_KEY)) ?? null,
     [],
@@ -420,6 +421,12 @@ export default function PlannerPage() {
       void showRest();
     } else if (params.get('week') || params.get('check') || params.get('start'))
       setParams({}, { replace: true });
+    else if (params.get('item')) {
+      // `?tab=open&item=…` (a ToDo's „im Plan: war Mo“): the tab stays, the row was read once above.
+      const next = new URLSearchParams(params);
+      next.delete('item');
+      setParams(next, { replace: true });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `showRest` reads the board this effect waits for
   }, [params, setParams, board]);
 
@@ -1008,6 +1015,21 @@ export default function PlannerPage() {
         days.find((d) => d.date === storedDate) ??
         firstDayWithRows(week ?? []) ??
         days[0]);
+
+  // `?item=<module>:<id>` (a ToDo's „im Plan: Mi“, todos-plan-state): that thing's row is brought into view and gets the
+  // focus once the board shows it; read once, the other parameters are cleared as before.
+  useEffect(() => {
+    // Once what holds the row is drawn: the day sheet on „Plan“, the board's open rows on „Noch offen“.
+    if (!lookFor.current || !(tab === 'open' ? data : shownDay)) return;
+    const row = document.querySelector<HTMLElement>(
+      `[data-row-key="${CSS.escape(lookFor.current)}"]`,
+    );
+    // Asked once: the board is drawn, so a row that is not there (taken off meanwhile) is not waited for.
+    lookFor.current = undefined;
+    if (!row) return;
+    row.scrollIntoView?.({ block: 'center' });
+    row.querySelector<HTMLElement>('[data-row]')?.focus({ preventScroll: true });
+  });
 
   // A row a drag or „Auswählen“ can move: a thing of a source that is not a fixed block or left out.
   const canMove = (r: BoardRow) => !!r.entry && !r.fixed && r.item?.excluded !== true;

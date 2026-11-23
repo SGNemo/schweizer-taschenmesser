@@ -28,7 +28,6 @@ use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Emitter as _, Manager as _, State};
-use tauri_plugin_dialog::{DialogExt as _, MessageDialogButtons, MessageDialogKind};
 
 const CHANGED: &str = "exchange://changed";
 
@@ -190,6 +189,12 @@ pub fn attach(
     remote: Arc<Remote>,
 ) {
     if let Ok(mut slot) = app.state::<ExchangeHost>().slot.lock() {
+        // E3: an off written to the file while the hub was being built (no parts yet) holds here
+        if let Some(dir) = exchange_dir(app) {
+            if !switch_at(&dir).enabled() {
+                let _ = exchange.set_enabled(false);
+            }
+        }
         *slot = Some(Parts {
             exchange,
             trust,
@@ -212,21 +217,10 @@ pub fn keep_only(app: &AppHandle, active: &[PublicKey]) {
     }
 }
 
-/// Unicode format characters (bidi controls, zero-width characters, BOM, soft hyphen …).
-fn is_format(c: char) -> bool {
-    matches!(c,
-        '\u{00AD}' | '\u{061C}' | '\u{180E}' | '\u{200B}'..='\u{200F}' | '\u{202A}'..='\u{202E}'
-        | '\u{2060}'..='\u{2064}' | '\u{2066}'..='\u{206F}' | '\u{FEFF}' | '\u{FFF9}'..='\u{FFFB}')
-}
-
-/// Plain text for a dialog: no control or format characters from a device name.
+/// Plain text for a dialog (E5): one line, no control, invisible or quote characters from a
+/// device name, capped – the same rule as the remote-control questions.
 fn plain(name: &str) -> String {
-    name.chars()
-        .filter(|c| !c.is_control() && !is_format(*c))
-        .take(64)
-        .collect::<String>()
-        .trim()
-        .to_owned()
+    crate::remote::plain(name)
 }
 
 fn shown_name(lang: Lang, name: &str) -> String {
@@ -238,21 +232,13 @@ fn shown_name(lang: Lang, name: &str) -> String {
     }
 }
 
-fn confirmed(app: &AppHandle, lang: Lang, names: &str) -> bool {
+fn confirmed(app: &AppHandle, lang: Lang, names: &str, extra: Option<&str>) -> bool {
     let (title, allow, cancel) = texts::exchange_dialog(lang);
-    let mut dialog = app
-        .dialog()
-        .message(texts::exchange_question(lang, names))
-        .title(title)
-        .kind(MessageDialogKind::Info)
-        .buttons(MessageDialogButtons::OkCancelCustom(
-            allow.into(),
-            cancel.into(),
-        ));
-    if let Some(window) = app.get_webview_window("main") {
-        dialog = dialog.parent(&window);
-    }
-    dialog.blocking_show()
+    let question = match extra {
+        Some(line) => format!("{}\n\n{line}", texts::exchange_question(lang, names)),
+        None => texts::exchange_question(lang, names),
+    };
+    crate::native_ask::ask(app, title, question, false, allow, cancel)
 }
 
 /// Takes the "a question is on screen" flag; refused while another one is.
@@ -376,6 +362,11 @@ pub fn exchange_send(
         .find_by_key(&key)
         .filter(|d| !d.revoked)
         .ok_or("not-found")?;
+    // E4: nothing new is queued for a paused or switched-off device (the card stays waiting and goes
+    // out once the device may exchange again), so a pause cannot be undone by a resend
+    if !parts.exchange.grant_of(&key).effective() {
+        return Err("paused".to_owned());
+    }
     let item = Item::new(
         id_from_hex(&id).ok_or("bad-id")?,
         kind_from(&kind).ok_or("bad-kind")?,
@@ -424,11 +415,27 @@ pub fn exchange_set_enabled(
     state: State<'_, ExchangeHost>,
     enabled: bool,
 ) -> Result<(), String> {
+    // E3: off is a narrowing and needs no hub – at app start the hub comes up only with the first
+    // sync round, after the module services. The switch file is written now; the hub reads it.
+    if !enabled {
+        // under the slot lock, so `attach` sees this write or the parts see the call
+        let slot = state.slot.lock().map_err(|_| "internal")?;
+        return match slot.as_ref() {
+            Some(parts) => parts.exchange.set_enabled(false),
+            None => {
+                let dir = exchange_dir(&app).ok_or("no-data-dir")?;
+                switch_at(&dir)
+                    .set(false)
+                    .map_err(|_| lan_sync::trust::TrustError::Storage)
+            }
+        }
+        .map_err(|_| "storage".to_owned());
+    }
     let parts = state.parts()?;
-    if !enabled || parts.exchange.enabled() {
+    if parts.exchange.enabled() {
         return parts
             .exchange
-            .set_enabled(enabled)
+            .set_enabled(true)
             .map_err(|_| "storage".to_owned());
     }
     let lang = crate::capture::native_lang(&app);
@@ -440,7 +447,7 @@ pub fn exchange_set_enabled(
         .map(|d| shown_name(lang, &d.name))
         .collect();
     if !granted.is_empty() {
-        ask(&app, &state, &parts, lang, &granted.join(", "))?;
+        ask(&app, &state, &parts, lang, &granted.join(", "), None)?;
     }
     parts
         .exchange
@@ -468,7 +475,16 @@ pub fn exchange_set_device(
     let old = parts.exchange.grant_of(&key);
     if grant.widens(&old) {
         let lang = crate::capture::native_lang(&app);
-        ask(&app, &state, &parts, lang, &shown_name(lang, &device.name))?;
+        // E5: the name is the peer's choice; the last contact tells two "Svens Handy" apart
+        let seen = texts::remote_last_contact(lang, device.last_seen, unix_ms() / 1000);
+        ask(
+            &app,
+            &state,
+            &parts,
+            lang,
+            &shown_name(lang, &device.name),
+            Some(&seen),
+        )?;
         // answered for another state? (changed at the PC while the question was on screen)
         if parts.exchange.grant_of(&key) != old {
             return Err("changed".to_owned());
@@ -477,7 +493,15 @@ pub fn exchange_set_device(
     parts
         .exchange
         .set_device(&key, grant)
-        .map_err(|_| "storage".to_owned())
+        .map_err(|_| "storage".to_owned())?;
+    // E4: paused or off (a lost phone): what waited for it is dropped, its cards say so
+    if !grant.on || grant.paused {
+        if let Some((_, outbox)) = state.files(&app) {
+            outbox.discard_for(&hex(key.as_bytes()));
+            let _ = app.emit(CHANGED, ());
+        }
+    }
+    Ok(())
 }
 
 /// The native question, never while a phone controls mouse and keyboard (it could click it).
@@ -487,6 +511,7 @@ fn ask(
     parts: &Parts,
     lang: Lang,
     names: &str,
+    extra: Option<&str>,
 ) -> Result<(), String> {
     // The ticket comes first: a mouse/keyboard session opened at any moment from here on –
     // before the question, while it is on screen (and closed again), or still open – refuses.
@@ -495,13 +520,21 @@ fn ask(
         return Err("busy-controlled".to_owned());
     }
     let _asking = Asking::take(&state.asking)?;
-    if !confirmed(app, lang, names) {
+    if !confirmed(app, lang, names, extra) {
         return Err("cancelled".to_owned());
     }
     parts
         .remote
         .confirm(ticket)
-        .map_err(|_| "busy-controlled".to_owned())
+        .map_err(|_| "busy-controlled".to_owned())?;
+    // F2: a hub restarted while the question was on screen has other controls
+    if !state
+        .parts()
+        .is_ok_and(|now| Arc::ptr_eq(&now.exchange, &parts.exchange))
+    {
+        return Err("changed".to_owned());
+    }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -513,7 +546,23 @@ mod tests {
         assert_eq!(plain("Svens\u{202E}Handy\n"), "SvensHandy");
         assert_eq!(shown_name(Lang::De, "  "), "Dein Handy");
         assert_eq!(shown_name(Lang::En, ""), "Your phone");
-        assert_eq!(plain(&"x".repeat(100)).len(), 64);
         assert_eq!(plain("Pi\u{FEFF}xel\u{2060} 7\u{00AD}"), "Pixel 7");
+    }
+
+    // E5 (launch review 2026-11): the peer chooses its name. In the native question it must stay
+    // one line (U+2028/U+2029 are line breaks there) and must not close the quotes or turn the
+    // sentence around – the same rule as the remote-control questions.
+    #[test]
+    fn a_peer_name_cannot_break_or_steer_the_native_question() {
+        assert_eq!(
+            plain("Handy\u{2028}Erlaubt nur Links"),
+            "Handy Erlaubt nur Links"
+        );
+        assert_eq!(plain("Handy\u{2029}\u{2029}x"), "Handy x");
+        assert_eq!(plain("Handy“ darf nichts. „"), "Handy' darf nichts. '");
+        assert_eq!(plain("  viel   Platz  "), "viel Platz");
+        let long = plain(&"x".repeat(100));
+        assert_eq!(long.chars().count(), 40);
+        assert!(long.ends_with('…'));
     }
 }
