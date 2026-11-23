@@ -13,7 +13,7 @@ ItemRow  [lead] [title-button ▸ meta · chips] [minutes] [lock] [⋯]
 ```
 
 - The title becomes a `button` (`aria-expanded`, `aria-controls`), name X1. It replaces the title link: **the count of interactive elements per row does not change.**
-- A 16 px chevron sits after the title, `--text-3`, rotated 90° while open (transform). Phone: the same.
+- Chevron: none on a closed row. Only the open row shows one – 16 px, after the title, `--text-3`, pointing down. On the desktop a closed row's title shows it on hover and keyboard focus only (not in the DOM otherwise, so the stimulus inventory does not count it); the phone shows it only on the open row.
 - Switch X15 „Zeilen aufklappen“ (planner settings, on): off = the title is the link it is today, no chevron.
 - Open state: page state `openRow: unitId | undefined` in `PlannerPage` (lift into a hook `useOpenRow`), one at a time.
 - Rows in „Noch ohne Tag“, „Frist vorbei“, „Noch offen“ expand the same way. Rows in a selection („Auswählen“) do not expand: the title toggles the choice as today.
@@ -26,11 +26,11 @@ ItemRow  [lead] [title-button ▸ meta · chips] [minutes] [lock] [⋯]
 | ToDos | note: first 3 lines, `--text-sm`, clamp; checklist as tick lines (X14) | X2 |
 | Listen | section heads (caps) + open items as tick lines, max 8, then X8 „n weitere“ (a button that shows 8 more) | „Fertig eingekauft“ when none is open (the module's existing step) · X2 |
 | Merkliste | title, host as text | X13 (ghost) · X2 |
-| Rechnungen | nothing the row already says (amount and deadline are in its meta); a reminder line if dunned; then `PayStep` as **one line**: label „Bezahlt am“ · `DateChips` (Heute · Gestern · Datum …) · label „Betrag“ · amount field prefilled (10 ch wide); the two labels are visible, `--text-meta`, `--text-3` | X9 „Bezahlt“ (secondary) · X2 |
-| Abos | name · price / period; X16 „Kündigen bis Do 10. Dez.“; after a tap on „Gekündigt am …“: `DateChips` (Heute · Gestern · Datum …, default Heute) and the foot's button becomes „Vermerken“ | X10 „Gekündigt am …“ (secondary) · „Läuft weiter“ (ghost) · X2 |
+| Rechnungen | nothing the row already says (amount and deadline are in its meta); a reminder line if dunned; then `PayStep` as **one line**, with its own controls as built: label „Bezahlt am“ · `DayField` (default today) · label „Betrag“ · amount field prefilled (10 ch wide) – no chips; the two labels are visible, `--text-meta`, `--text-3` | X9 „Bezahlt“ (secondary) · X2 |
+| Abos | name · price / period; X16 „Kündigen bis Do 10. Dez.“; after a tap on „Gekündigt am …“: `DayField` (default today) and the foot's button becomes „Vermerken“ | X10 „Gekündigt am …“ (secondary) · „Läuft weiter“ (ghost) · X2 |
 | E-Mail | line 1: sender name · day; line 2: subject (600); body: first 6 lines of the newest message, `--text-sm`, clamped, plain text; „Antworten“ opens mail's own compose dialog over the planner (as on the mail page) | X12 „Antworten“ (secondary); when the newest message is his: the text „Beantwortet?“ and the button „Erledigt“ instead · X2 |
 
-Mail only: the bar „Wird gesendet … · Zurückziehen“ (`PendingSendBar`, 10 s) is mail's `planPageFoot` (contract in 4a), mounted once at the planner page's foot, so closing the row never hides it. A typed reply lives in mail's dialog and follows mail's own rules (a server draft only through its „Entwurf speichern“).
+Mail only: the bar „Wird gesendet … · Zurückziehen“ (`PendingSendBar`, 10 s) is mail's `planPageFoot` (contract in 4a), mounted once at the planner page's foot, so closing the row never hides it; mail wires the bar's `onReopen` to its compose dialog over the planner, so a reply withdrawn while the row is closed reappears with its text (test). A typed reply lives in mail's dialog and follows mail's own rules (a server draft only through its „Entwurf speichern“).
 
 ## States (mockup `04-states.html` shows each)
 
@@ -38,7 +38,7 @@ closed · loading · open · acting (button `aria-busy`, disabled) · done (the 
 
 ## 1920 / 412
 
-Per [00-common](00-common.md). On 412 the `PayStep` stacks: chips, amount, button full width (min-height 44 px). Mail is a desktop module: on the phone its panel is X5 + X6 and nothing else; in a narrow desktop window the body shows 4 lines.
+Per [00-common](00-common.md). On 412 the `PayStep` stacks: day field, amount, button full width (min-height 44 px). Mail is a desktop module: on the phone its panel is X5 + X6 and nothing else; in a narrow desktop window the body shows 4 lines.
 
 ## Edge cases
 

@@ -6,7 +6,7 @@
 <p class="label">a · Link geteilt · „In den Planer“ vorgewählt</p>
 <div class="frame">
 <div><h1>Teilen</h1><p class="meta">Wohin soll der geteilte Inhalt?</p></div>
-<div class="card"><h2 style="margin-bottom:6px">Geteilt</h2><p class="ttl">Fahrradträger für die Anhängerkupplung</p><p class="host">example.org</p><p class="meta">Landet unter „Noch ohne Tag“.</p></div>
+<div class="card"><h2 style="margin-bottom:6px">Geteilt</h2><p class="ttl">Fahrradträger für die Anhängerkupplung</p><p class="host" style="color:var(--text)">example.org</p><p class="meta" style="overflow-wrap:anywhere">https://example.org/…/fahrradtraeger</p><p class="meta">Landet unter „Noch ohne Tag“.</p></div>
 <div class="radios"><span class="radio on">In den Planer</span><span class="radio">Merkliste</span><span class="radio">Notiz</span><span class="radio">ToDo</span><span class="radio">Liste</span></div>
 <h2>Tag</h2>
 <div><span class="seg"><span class="on">ohne Tag</span><span>Heute</span><span>Morgen</span></span></div>
@@ -15,15 +15,21 @@
 </div>
 
 <div>
-<p class="label">b · Text aus mehreren Zeilen · zu lang, gekürzt</p>
+<p class="label">b · Text aus mehreren Zeilen · „Text als Notiz“ nicht angehakt: nur die erste Zeile wird gespeichert</p>
 <div class="frame">
 <div><h1>Teilen</h1><p class="meta">Wohin soll der geteilte Inhalt?</p></div>
 <div class="card"><h2 style="margin-bottom:6px">Geteilt</h2><p class="ttl">Ideen für den Balkon im Frühjahr</p><p class="meta">Landet unter „Noch ohne Tag“.</p></div>
-<p class="note" style="margin-top:0">Gekürzt auf 4 000 Zeichen.</p>
+<div class="pl"><span class="cb"></span><span class="x">Text als Notiz</span></div>
 <div class="radios"><span class="radio on">In den Planer</span><span class="radio">Merkliste</span><span class="radio">Notiz</span><span class="radio">ToDo</span><span class="radio">Liste</span></div>
 <h2>Tag</h2>
 <div><span class="seg"><span>ohne Tag</span><span class="on">Heute</span><span>Morgen</span></span></div>
 <span class="btn p wide">Ablegen</span>
+</div>
+<p class="label">b · angehakt · die Karte zeigt die ersten drei Zeilen des Rests, gekürzt</p>
+<div class="frame">
+<div class="card"><h2 style="margin-bottom:6px">Geteilt</h2><p class="ttl">Ideen für den Balkon im Frühjahr</p><p class="meta">Kräuter in Kästen am Geländer<br>Tomaten im Kübel an der Südseite<br>eine Bank, die man zusammenklappen kann</p><p class="meta">Landet unter „Noch ohne Tag“.</p></div>
+<div class="pl"><span class="cb on"></span><span class="x">Text als Notiz</span></div>
+<p class="note" style="margin-top:0">Gekürzt auf 4 000 Zeichen.</p>
 </div>
 </div>
 
@@ -31,10 +37,15 @@
 <p class="label">c · nach „Ablegen“ · die Seite zeigt den gespeicherten Zustand und bleibt, bis er tippt</p>
 <div class="frame">
 <div><h1>Teilen</h1><p class="meta">Wohin soll der geteilte Inhalt?</p></div>
-<div class="card"><h2 style="margin-bottom:6px">Geteilt</h2><p class="ttl">Fahrradträger für die Anhängerkupplung</p><p class="host">example.org</p></div>
+<div class="card"><h2 style="margin-bottom:6px">Geteilt</h2><p class="ttl">Fahrradträger für die Anhängerkupplung</p><p class="host" style="color:var(--text)">example.org</p><p class="meta" style="overflow-wrap:anywhere">https://example.org/…/fahrradtraeger</p></div>
 <p role="status" style="font-size:16px;font-weight:600">Abgelegt.</p>
 <div class="foot" style="justify-content:flex-start;margin-top:0;flex-wrap:wrap"><span class="btn q" style="padding-left:0">Ansehen</span><span class="btn q">Rückgängig</span><span class="sp"></span><span class="btn p">Fertig</span></div>
 <p class="note" style="margin-top:0">„Fertig“: Android kehrt zur teilenden App zurück, die PWA öffnet den Planer.</p>
+</div>
+<p class="label">c · nach „Rückgängig“ auf der Seite · S14, kein „Rückgängig“ mehr</p>
+<div class="frame">
+<p role="status" style="font-size:16px;font-weight:600">Zurückgenommen.</p>
+<div class="foot" style="justify-content:flex-start;margin-top:0"><span class="sp"></span><span class="btn p">Fertig</span></div>
 </div>
 <p class="label">c · danach im Planer · „Noch ohne Tag“, neue Zeile oben, Hinweis S4</p>
 <div class="frame">
@@ -68,7 +79,7 @@
 <p class="label">e · Speichern fehlgeschlagen · Karte und Wahl bleiben</p>
 <div class="frame">
 <div><h1>Teilen</h1><p class="meta">Wohin soll der geteilte Inhalt?</p></div>
-<div class="card"><h2 style="margin-bottom:6px">Geteilt</h2><p class="ttl">Fahrradträger für die Anhängerkupplung</p><p class="host">example.org</p><p class="meta">Landet unter „Noch ohne Tag“.</p></div>
+<div class="card"><h2 style="margin-bottom:6px">Geteilt</h2><p class="ttl">Fahrradträger für die Anhängerkupplung</p><p class="host" style="color:var(--text)">example.org</p><p class="meta" style="overflow-wrap:anywhere">https://example.org/…/fahrradtraeger</p><p class="meta">Landet unter „Noch ohne Tag“.</p></div>
 <div class="radios"><span class="radio on">In den Planer</span><span class="radio">Merkliste</span><span class="radio">Notiz</span><span class="radio">ToDo</span><span class="radio">Liste</span></div>
 <h2>Tag</h2>
 <div><span class="seg"><span class="on">ohne Tag</span><span>Heute</span><span>Morgen</span></span></div>

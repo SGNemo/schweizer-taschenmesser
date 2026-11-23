@@ -17,7 +17,7 @@ Read with the package's own hand-off. Words: [COPY](../COPY.md) (ids `M1` …). 
 | Step mode | `planner/routes/FocusPage.tsx` | „Los“ | 5a |
 | Preview line, lead chips | `planner/components/Capture.tsx` (additive props) | K1 + K3 under the field; lead chips A2 / T11 before the input (rule below) | 3 / 9 / 11 |
 
-**One slot, an order (field).** Lead chips stand before the input: A2 from „Vorbereiten …“, T11 while a topic filter is on; at most two, A2 first. The K1 preview line still shows under the field. Enter makes what K1 says and gives it both the link and the topic. For a kind that gets no plan row (Termin, Notiz, Merkliste) the lead chips are drawn struck through while K1 shows and are not applied.
+**One slot, an order (field).** Lead chips stand before the input: A2 from „Vorbereiten …“, T11 while a topic filter is on; at most two, A2 first. The K1 preview line still shows under the field. Only a plain ToDo and a Bündel take the lead chips (A2 → link and day, T11 → topic). For every other kind (Rechnung, Einkaufsliste, Termin, Notiz, Merkliste) the chips are drawn struck through while K1 shows and are not applied. When a chip gives the day, K1 / the field's toast names that day.
 
 No new token, no new colour, no new icon family. Glyphs come from `ui/icons.tsx`; a missing one is drawn in the same 24 px, 1.75 stroke grid and named in the PR.
 
@@ -27,6 +27,7 @@ No new token, no new colour, no new icon family. Glyphs come from `ui/icons.tsx`
 | --- | --- |
 | Compartment, desktop (≥ 701 px) | starts at the title's left edge (lead 44 px + `--space-3`), ends at the row's right edge; padding `--space-3` `--space-4`; margin-bottom `--space-3` |
 | Compartment, phone (≤ 700 px) | full inner width of the card; padding `--space-3` |
+| Chevron | none on a closed row; the open row shows one, 16 px after the title, `--text-3`, pointing down; on the desktop a closed title shows it on hover / keyboard focus only (not in the DOM otherwise) |
 | Compartment surface | `--surface-2`, radius `--radius-md`, **no border, no shadow** (the stimulus budget counts both and holds them at 0) |
 | `PanelLine` | min-height `--row-h` (44 px); text `--text-sm` / `--text`; meta `--text-meta` / `--text-3`; lines separated by `--space-1`, no hairline |
 | Tick in a panel | the shared `Checkbox`, 22 px glyph inside a 44 × 44 target |

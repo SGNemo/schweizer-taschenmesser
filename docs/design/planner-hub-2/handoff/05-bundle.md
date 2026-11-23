@@ -22,7 +22,7 @@ Concept: [CONCEPT-ROWS, idea 5](../CONCEPT-ROWS.md). Decision between two direct
 
 - Steps are tick `PanelLine`s in order; done ones stay in place (struck), so the order never jumps.
 - 5b: a member line has **one** lead column: the tick where the member takes one, else its source glyph (an invoice) – never both; `▸` at the end when it has a panel; drag handle on desktop hover / focus (`SortableList` from `@/ui`), „Nach oben / Nach unten“ in the line's ⋯ on the phone.
-- Foot: B3 „Los“ (secondary) · ⋯ (B14; this is where „Als Routine speichern“ is: two handles – for a ToDo only when it is a plain task without an `origin` link; lists and routines as they are) · X2 (5a only: opens the ToDo / list / routine).
+- Foot: B3 „Los“ (secondary) · ⋯ (B14; this is where „Als Routine speichern“ is: two handles (⋯, the entry) – for a ToDo only when it is a plain task without an `origin` link; lists and routines as they are) · X2 (5a only: opens the ToDo / list / routine).
 - `▸` on a member line and `▾` on a list member are buttons named X1.
 - More than 12 steps: 12 + „n weitere“.
 
@@ -43,8 +43,8 @@ Reuses `FocusPage` (shell hidden, Esc leaves, the round survives a reload). Diff
 - On the last open step the filled button reads B23 „Fertig“: it finishes the step, ticks the carrying thing (5a) and **returns to the plan** with the thing's toast („Erledigt.“ + undo). No end page. 5b: after the last member the same return, nothing to tick – the bundle is done when its members are.
 - Skipped steps: at the end B10; „Später“ returns to the plan with the steps open.
 - 412: the same, actions stacked full width in the order B5, B6, B7.
-- Keys: Enter = B5, `S` = B6, `P` = B7, Esc = back to the plan (the round keeps its place); one line under the buttons names them (B19, `--text-meta`, `--text-3`), not drawn on touch devices.
-- A step change is announced politely („Schritt 3 von 5: Bad wischen“); focus stays on B5. A member step without a tick has no B5: focus goes to its panel's first control, and the letter keys work only while focus is not in a text field.
+- Keys: Enter is the focused button's own activation (B5 has focus by default); `S` = B6 and `P` = B7 only while focus is on one of the stage's buttons (not globally, so they never fire in a text field or a member's panel); Esc = back to the plan (the round keeps its place); one line under the buttons names them (B19, `--text-meta`, `--text-3`), not drawn on touch devices.
+- A step change is announced politely with B24 („Schritt 3 von 5: Bad wischen“); focus stays on B5. A member step without a tick has no B5: focus goes to its panel's first control; `S` / `P` work only while focus is on one of the stage's buttons (B6, B7).
 
 ## 5b: making and unmaking
 
@@ -52,6 +52,7 @@ Reuses `FocusPage` (shell hidden, Esc leaves, the round survives a reload). Diff
 - A member that is a list is open inside the panel: its open items as tick lines (the lists panel's body, max 8 + „n weitere“), `▾` folds it. In „Los“ a list member is one step that shows these tick lines under its title.
 - The bundle takes the day of the first ticked row (or „ohne Tag“ if none had one); minutes = sum of the members'. While it lives, a member's own assignment rows (also one written later on another device) are ignored by board, run, proposals and `plannedDay`: the bundle wins.
 - „Bündeln …“ is only in the selection bar, never in a row's ⋯.
+- The bundle source returns only the title and the member keys in order; the board joins titles, minutes and done state from the entries it already holds. A member no source lists any more is done or gone – `resolveLink` tells (`done` → a done step, `gone` → B17). The planner's own source never calls the collector. A bundled thing is never a pile member (test).
 - Panel ⋯: „Umbenennen …“, „Als Routine speichern“ (only if all members are plain tasks; toast B16), „Auflösen“ (toast B15).
 - A line's ⋯: B20 „Aus dem Bündel nehmen“ (the member is its own row on the bundle's day again), on the phone also B21 „Nach oben“ / „Nach unten“.
 

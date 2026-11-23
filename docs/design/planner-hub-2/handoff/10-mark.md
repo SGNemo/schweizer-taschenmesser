@@ -8,7 +8,7 @@ Concept: [CONCEPT §1.4](../CONCEPT.md). Common parts: [00-common](00-common.md)
 
 - `variant="meta"` (rows): inline in the row's meta line, **last** item, separated by „ · “. Planner glyph 16 px + text M1–M5, `--text-meta`, `--text-3`; the whole mark is one link (underline on hover / focus only).
 - `variant="detail"` (detail panels, dialogs): its own line under the title block, same type, min-height 44 px.
-- Target: **the plan row it matched** (`rowKey` = the occurrence key, the carrier ToDo's key, or the bundle's key): M1 / M2 / M5 `/planner?day=<d>&item=<rowKey>`, M4 `/planner?tab=open&item=<rowKey>`, M3 `/planner?item=<rowKey>` (the planner unfolds „Noch ohne Tag“ and focuses the row). `?item=` matches `data-row-key` exactly on the sheet shown and does not pick the day – the day is in the URL, as `todos/planState.ts` does.
+- Target: **the plan row it matched** (`rowKey` = the occurrence key, the carrier ToDo's key, the bundle's or the pile's key): M1 / M2 / M5 `/planner?day=<d>&item=<rowKey>`, M4 `/planner?tab=open&item=<rowKey>`, M3 `/planner?item=<rowKey>` (the planner unfolds „Noch ohne Tag“ and focuses the row – today the `?item` effect only scrolls and focuses while the group stays folded, so unfolding it, and picking `?tab=open`, when the row lies there is a must-do of 10b with a test). `?item=` matches `data-row-key` exactly on the sheet shown and does not pick the day – the day is in the URL, as `todos/planState.ts` does.
 - Accessible name M6: the visible text first, then the full date: „Im Plan · Mi – Mittwoch, 2. Dezember. Im Planer zeigen“.
 
 ## Where (10b touches each module's row and detail once)
@@ -28,7 +28,7 @@ Concept: [CONCEPT §1.4](../CONCEPT.md). Common parts: [00-common](00-common.md)
 
 ## States
 
-not in plan (nothing) · M1 · M2 · M3 · M4 (plain, never a tone) · M5 (in a bundle) · planner off (nothing) · loading (nothing; no layout jump: the meta line already has its height).
+not in plan (nothing) · M1 · M2 · M3 · M4 (plain, never a tone) · M5 (in a bundle; from 2 also a member folded into a placed pile: „Im Plan · Mi · in „Finanzen checken““, linking to the pile's row `?day=<d>&item=planner:pile-money`) · M3 for a member of an unplaced pile (linking to the pile row) · planner off (nothing) · loading (nothing; no layout jump: the meta line already has its height).
 
 ## 1920 / 412
 
@@ -45,5 +45,5 @@ Same. On 412 a meta line that would wrap drops the module's own second meta item
 
 - `PlanMark.test.tsx`: the six states; nothing rendered while the planner is off.
 - `planRow.test.ts` grows: the prefix match (a subscription placed from the planner shows M1; `todos:ab` never matches `todos:abc`), the passed-day read, the fallback; write spy: app start and rendering marks write nothing.
-- e2e seed (new file `e2e/seed/plan-mark.seed.spec.ts`): an invoice, a list, a note, a subscription, a bookmark placed on Wednesday show M1 and the link lands on the row – the subscription on its occurrence row on Wednesday, the note on its carrier ToDo's row; from 5b a bundle member lands on the bundle's row.
+- e2e seed (new file `e2e/seed/plan-mark.seed.spec.ts`): an invoice, a list, a note, a subscription, a bookmark placed on Wednesday show M1 and the link lands on the row – the subscription on its occurrence row on Wednesday, the note on its carrier ToDo's row; from 5b a bundle member lands on the bundle's row; from 2 a folded pile member lands on the pile's row (M5 on a placed pile, M3 on an unplaced one). 10b only prepares the prop for bundle and pile names; packages 5b and 2 extend the read.
 - `planner-hub-2.spec.ts` D1 re-measured (markVisible 5, markAgrees 5, tripsToPlanner 0; taps 11, perThing 5, switches 10 unchanged).

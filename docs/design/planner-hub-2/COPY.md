@@ -19,7 +19,7 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 | Id | Deutsch | English |
 | --- | --- | --- |
 | X1 (name of the title button; also of a member's `▸` in a pile or bundle and a list member's `▾`) | {Titel}. Aufklappen / {Titel}. Zuklappen | {title}. Expand / {title}. Collapse |
-| X2 | Ganz öffnen | Open fully |
+| X2 | Ganz öffnen | Open |
 | X3 | Gibt es nicht mehr. | No longer exists. |
 | X4 | Aus dem Plan nehmen | Take out of the plan |
 | X5 | Auf diesem Gerät nicht verfügbar. | Not available on this device. |
@@ -27,7 +27,7 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 | X7 | Das hat nicht geklappt. Es ist nichts verändert. | That did not work. Nothing was changed. |
 | X8 (lists) | {n} weitere · Fertig eingekauft | {n} more · Done shopping |
 | X9 (invoices: two labels, the button) | Bezahlt am · Betrag · Bezahlt | Paid on · Amount · Paid |
-| X10 (subscriptions: two buttons, then the confirm) | Gekündigt am … · Läuft weiter · Vermerken | Cancelled on … · Keep it · Note it |
+| X10 (subscriptions: two buttons, then the confirm) | Gekündigt am … · Läuft weiter · Vermerken | Cancelled on … · Keep it · Save |
 | X11 (subscriptions, toast) | Als gekündigt vermerkt. / Läuft weiter, Frist erledigt. | Noted as cancelled. / Kept, deadline settled. |
 | X12 (mail: button · text + button) | Antworten · Beantwortet? · Erledigt | Reply · Answered? · Done |
 | X13 (bookmarks) | Im Browser öffnen | Open in the browser |
@@ -53,7 +53,7 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 | P12 (meta on the phone) | {n} Dinge | {n} things |
 | P13 (name of ✕ on the offer) | Nicht mehr anbieten | Do not offer again |
 | P14 (budget line, by budgets; amount through `SensitiveValue`) | {Lebensmittel} · {40 €} über dem Rahmen | {Groceries} · {€40} over budget |
-| P15 (mail's queue line in the mail pile, by mail: the count P3, then the button running mail's „Alle in den Plan …“) | In den Plan ({n}) | Add to plan ({n}) |
+| P15 (mail's queue line in the mail pile, by mail: the count P3, then this button; it opens mail's `PlanAllDialog`) | In den Plan … ({n}) | Add to plan … ({n}) |
 
 ## 5 · bundles and „Los“
 
@@ -80,6 +80,7 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 | B21 (line ⋯, phone) | Nach oben · Nach unten | Move up · Move down |
 | B22 (clock, name) | Läuft seit {n} Minuten | Running for {n} minutes |
 | B23 (the filled button on the last step: finishes it, ticks the carrying thing, returns to the plan with the thing's toast) | Fertig | Done |
+| B24 (the announced step change, polite live region) | Schritt {k} von {n}: {Schritt} | Step {k} of {n}: {step} |
 
 ## 1 · share · 3 · kinds in the field
 
@@ -96,10 +97,11 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 | S9 | Fertig | Done |
 | S10 (label of the day chips) | Tag | Day |
 | S13 (first of the three day chips: S13 · Heute · Morgen) | ohne Tag | no day |
+| S14 (page after its own „Rückgängig“; replaces S8) | Zurückgenommen. | Taken back. |
 | K1 (preview) | Wird: {Rechnung} · {Stadtwerke} · {80,00 €} · {Frist Fr 4. Dez.} | Becomes: {invoice} · {Stadtwerke} · {€80.00} · {due Fri 4 Dec} |
 | K2 (kinds) | Rechnung · Einkaufsliste · Termin · Notiz · Merkliste · Bündel | invoice · shopping list · appointment · note · bookmark · bundle |
 | K3 | Als Aufgabe eintragen | Enter as a task |
-| K4 (toasts) | Rechnung angelegt, liegt unter „Noch ohne Tag“. / Steht auf der Einkaufsliste. / Termin eingetragen. / Notiz angelegt. · In den Plan / Auf der Merkliste. · In den Plan / Bündel mit {n} Schritten angelegt. — each „· Rückgängig“ | Invoice created, under “No day yet”. / On the shopping list. / Appointment entered. / Note created. · Add to plan / Bookmarked. · Add to plan / Bundle with {n} steps created. — each “· Undo” |
+| K4 (toasts) | Rechnung angelegt, liegt unter „Noch ohne Tag“. / Steht auf der Einkaufsliste. / Termin eingetragen. / Notiz angelegt. · In den Plan / Auf der Merkliste. · In den Plan / Bündel mit {n} Schritten angelegt, liegt auf {Mo}. — each „· Rückgängig“ | Invoice created, under “No day yet”. / On the shopping list. / Appointment entered. / Note created. · Add to plan / Bookmarked. · Add to plan / Bundle with {n} steps created, on {Mon}. — each “· Undo” |
 | K5 (setting + hint) | Arten im Feld erkennen · „Zeigt vor dem Eintragen, was aus der Zeile wird. Ohne die Zeile wird es eine Aufgabe.“ | Recognise kinds in the field · “Shows what the line becomes before you enter it. Without that line it becomes a task.” |
 
 ## 9 · appointment · 11 · topic · struck: 7 · waiting, 8 · duration, 6 · places
@@ -128,10 +130,10 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 | W4 (row in it) | bis {Mo 7. Dez.} · von {Vermieter} · Zurückholen | until {Mon 7 Dec} · from {landlord} · Bring back |
 | W5 (chip when back) | Antwort da? · von {Vermieter} | Got an answer? · from {landlord} |
 | W6 (toast) | Kommt am {Mo 7. Dez.} wieder. · Rückgängig | Comes back on {Mon 7 Dec}. · Undo |
-| D1 (row) | {20} Min · wie zuletzt | {20} min · as last time |
-| D2 („Dauer …“) | zuletzt {20}, {25}, {15} Min | last {20}, {25}, {15} min |
-| D3 (settings) | Aus gemessener Zeit vorschlagen · Gemessene Zeiten löschen | Propose from measured time · Delete measured times |
 | E1–E3 (struck with the map: stops, place, map jump) | {n} Stopps · {k} von {n} · Ort … · Ort · Ort suchen · Kein Ort · Auf der Karte ansehen | {n} stops · {k} of {n} · Place … · Place · Search places · No place · View on the map |
+| R1 (row) | {20} Min · wie zuletzt | {20} min · as last time |
+| R2 („Dauer …“) | zuletzt {20}, {25}, {15} Min | last {20}, {25}, {15} min |
+| R3 (settings) | Aus gemessener Zeit vorschlagen · Gemessene Zeiten löschen | Propose from measured time · Delete measured times |
 
 ## Rejected, and why
 

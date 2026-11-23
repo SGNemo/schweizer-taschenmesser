@@ -14,7 +14,7 @@ Concept: [CONCEPT-INTAKE, idea 3](../CONCEPT-INTAKE.md). Common parts: [00-commo
 - Right: K3, a quiet text button (ghost), min 44 px target.
 - `aria-live="polite"` on the line: it is read once per change of kind, not per keystroke (debounce 400 ms; the visual line updates at once).
 - Enter stores what the line says; Alt+Enter = K3.
-- Lead chips (A2 from hand-off 09, T11 from hand-off 11) stand before the input, at most two, A2 first; the line keeps its place under the field. Enter gives what K1 says both the link and the topic. For a kind that gets no plan row (Termin, Notiz, Merkliste) the lead chips are drawn struck through while the line shows and are not applied.
+- Lead chips (A2 from hand-off 09, T11 from hand-off 11) stand before the input, at most two, A2 first; the line keeps its place under the field. Only a plain ToDo and a Bündel take the lead chips (A2 → link and day, T11 → topic). For every other kind (Rechnung, Einkaufsliste, Termin, Notiz, Merkliste) the chips are drawn struck through while K1 shows and are not applied. When a chip gives the day, K1 / the field's toast names that day.
 - „Einkaufsliste“ by a known name needs the name lookup this package builds in `web/src/quickCapture/targets/lookup.ts` (today it holds only `findOpenInvoice`): pantry item names and shopping-list item names, read through the generic manifest repo as `findOpenInvoice` does (core, no module import), exact, case-blind, local, only while those modules are on.
 
 ## What the line may contain per kind
@@ -26,11 +26,11 @@ Concept: [CONCEPT-INTAKE, idea 3](../CONCEPT-INTAKE.md). Common parts: [00-commo
 | Termin | Wird: **Termin** · Friseur · Mi 2. Dez. · 15:00 |
 | Notiz | Wird: **Notiz** · Regal im Flur |
 | Merkliste | Wird: **Merkliste** · example.org |
-| Bündel | Wird: **Bündel** · Haushalt · 5 Schritte |
+| Bündel | Wird: **Bündel** · Haushalt · 5 Schritte (lands on the day on the sheet, like any field ToDo) |
 
 ## States
 
-no reading (examples as today) · reading shown · stored (toast K4 for the kind; field empty, focus stays in the field) · K3 used · module of the kind off (no line) · target failed (the field's existing error line; text stays; nothing was stored – the thing and its plan row are made inside one undoable action by the planner's own place function, called directly with its toast suppressed; when placing fails the thing is taken back: the place step returns failure instead of throwing, and the action then calls `undoEntry` on its own entry – the pattern of `placeRequested`).
+no reading (examples as today) · reading shown · stored (toast K4 for the kind – Rechnung and Einkaufsliste lie „ohne Tag“, a Bündel on the sheet's day and the toast says which; only Notiz and Merkliste offer „In den Plan“, a Termin none; field empty, focus stays in the field) · K3 used · module of the kind off (no line) · target failed (the field's existing error line; text stays; nothing was stored – the thing and its plan row are made inside one undoable action by the planner's own place function, called directly with its toast suppressed; when placing fails the thing is taken back: the place step returns failure instead of throwing, and the action then calls `undoEntry` on its own entry – the pattern of `placeRequested`).
 
 ## 1920 / 412
 
@@ -51,6 +51,6 @@ no reading (examples as today) · reading shown · stored (toast K4 for the kind
 - `fieldKind.test.ts`: the „sure“ table, each row with two positives and three near misses; the order of readings („Rechnung Stadtwerke 80 € bis Fr“, „Mi 15:00 Friseur“, „Wäsche morgen“); „Mahnung“ is no kind; module off.
 - `lookup.test.ts`: the name lookup – exact, case-blind, pantry and shopping-list names, nothing while the module is off, no module import.
 - `Capture.test.tsx`: line and examples never together; Alt+Enter; live region debounce.
-- Action test: one undo takes back the invoice **and** the plan row; a failing place step leaves no invoice (rollback); „Milch“ with the shopping list on „Nicht planen“ adds the item and leaves `excluded` as it is; write spy shows the planner writes only its own collections, `_links` (through `addLink` / `removeLink`) and its settings record – the invoice comes from the capture target; Enter with lead chips gives link and topic, and with a kind without plan row applies neither.
+- Action test: one undo takes back the invoice **and** the plan row; a failing place step leaves no invoice (rollback); „Milch“ with the shopping list on „Nicht planen“ adds the item and leaves `excluded` as it is; write spy: planner tables + `_links` + exactly the capture target's collection (the invoice comes from `saveCapture`, a core capture target, on his tap and inside the planner's one undo entry); Enter with lead chips gives a plain ToDo or a Bündel link, day and topic, and applies nothing for every other kind; the toast names the chip's day.
 - Privacy: no amount in the toast while „Werte ausblenden“ is on.
 - e2e seed `e2e/seed/plan-kinds.seed.spec.ts`; `planner-hub-2.spec.ts` A1 re-measured (rows 7, rightKind 12, linkedToPlan 10; the seed's pantry knows the three shopping names) and C1 (create 1, taps 8, switches 0).

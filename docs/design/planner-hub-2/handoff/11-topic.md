@@ -15,7 +15,7 @@ Concept: [CONCEPT-INTAKE, idea 11](../CONCEPT-INTAKE.md). Common parts: [00-comm
 - Page ⋯ → T3 → the same chooser without the field's „create“; a tap on a topic's line switches the filter on.
 - While on: the page head changes instead of a new line appearing – the figure („1 h 20 frei“) gives its place to T4: „Thema: Umzug“ (the figure's type) with the context „7 Dinge“ and the quiet button „Alles zeigen“. The day's free time stays where it is on the day sheet's own head line.
 - The sheet, „Noch ohne Tag“, „Noch offen“ and the week band's bars show only members. An appointment with the topic stays visible as its blocker row; blockers without the topic are hidden while filtered. The day sheet's „frei“ keeps counting the whole day (the day is as full as it is).
-- The field while filtered: a new thing gets the topic (lead chip T11 „Thema: Umzug“ with ✕ before the input; with A2 present, A2 first – [00-common](00-common.md) „One slot, an order“).
+- The field while filtered: a new thing gets the topic (lead chip T11 „Thema: Umzug“ with ✕ before the input; with A2 present, A2 first – [00-common](00-common.md) „One slot, an order“). Only a plain ToDo and a Bündel take the lead chips (A2 → link and day, T11 → topic). For every other kind (Rechnung, Einkaufsliste, Termin, Notiz, Merkliste) the chips are drawn struck through while K1 shows and are not applied. When a chip gives the day, K1 / the field's toast names that day.
 
 ## States
 

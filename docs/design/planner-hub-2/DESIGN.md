@@ -11,7 +11,7 @@ Mockups: `mockups/*.html`, rendered by `mockups/render.mjs` (1920 and 412, light
 | Lines inside | `Checkbox`, list type scale | `PanelLine` in `@/ui` – `ItemRow` is too heavy inside a row (no menu, no swipe, no hairline) |
 | Mounting a module's panel | lazy contributions, error boundary of widgets | `PlanPanelHost` (core) – the one place that mounts foreign UI in the planner |
 | Mark | text link, planner glyph | `PlanMark` moves from ToDos to `core/entitylinks` |
-| Dialogs, chips, selection | `Dialog`, `DateChips`, `SelectionBar`, `SortableList`, `TextField` | – |
+| Dialogs, chips, selection, days | `Dialog`, `DateChips`, `DayField` (pay step, cancel step), `SelectionBar`, `SortableList`, `TextField` | `DateChips` prop `presets` (package 1): a list that may hold a null entry, for the share page's „ohne Tag · Heute · Morgen“ – the fixed presets cannot show „ohne Tag“ |
 | „Los“ | `FocusPage`, `core/focus` session | a step mode of the same page – no second focus surface |
 | Preview under the field, lead chips | `Capture`, the examples' slot | prop `preview` – the slot is reused, the block does not grow; lead chips (A2, T11) stand before the input |
 | Folded lines | the fold of „Nächste Wochen“ | – |
