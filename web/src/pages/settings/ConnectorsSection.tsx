@@ -28,7 +28,7 @@ import { tSettingsConnect } from '@/strings.settingsConnect';
 import { useUiStore } from '@/stores/ui';
 import { Badge, Button, Card, Checkbox, Dialog, TextField } from '@/ui';
 import { ChoiceList, Facts, StateBanner, Step } from './ConnectParts';
-import { disconnectText } from './disconnectText';
+import { disconnectChoices, disconnectText } from './disconnectText';
 import styles from './settings.module.css';
 
 const s = t.connectors;
@@ -351,21 +351,19 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
         <div className={styles.form}>
           <p>{disconnectText(def)}</p>
           <div className={styles.row}>
-            <Button
-              onClick={() => {
-                void disconnect(def, { keepData: true }).then(() => setConfirm(false));
-              }}
-            >
-              {s.keepData}
-            </Button>
-            <Button
-              variant="danger"
-              onClick={() => {
-                void disconnect(def, { keepData: false }).then(() => setConfirm(false));
-              }}
-            >
-              {s.deleteData}
-            </Button>
+            {disconnectChoices(def).map((choice) => (
+              <Button
+                key={choice}
+                variant={choice === 'keep' ? undefined : 'danger'}
+                onClick={() => {
+                  void disconnect(def, { keepData: choice !== 'delete' }).then(() =>
+                    setConfirm(false),
+                  );
+                }}
+              >
+                {choice === 'keep' ? s.keepData : choice === 'delete' ? s.deleteData : s.disconnect}
+              </Button>
+            ))}
           </div>
         </div>
       </Dialog>
