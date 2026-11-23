@@ -102,7 +102,10 @@ export const sync: Strings['sync'] = {
     revoked:
       'This device has been blocked. Disconnect it and connect again if you want to allow it again.',
     'rate-limited': 'Too many requests or failed attempts – it will retry automatically.',
-    unauthorized: 'The server rejected the token.',
+    unauthorized:
+      'The server rejected the token. Disconnect and connect again with the current server token.',
+    'token-missing':
+      'The server token is missing on this device. Disconnect and connect again with the server token.',
     server: 'The server reported an error.',
     clock: 'This device’s clock is more than an hour fast. Please check the date and time.',
     decrypt: 'Decryption failed – is the passphrase right?',

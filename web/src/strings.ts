@@ -3806,7 +3806,10 @@ export const de = {
       revoked:
         'Dieses Gerät wurde gesperrt. Trenne es und verbinde es neu, wenn du es wieder zulassen willst.',
       'rate-limited': 'Zu viele Anfragen oder Fehlversuche – es wird automatisch erneut versucht.',
-      unauthorized: 'Der Server hat das Token abgelehnt.',
+      unauthorized:
+        'Der Server hat das Token abgelehnt. Trenne die Verbindung und verbinde neu mit dem aktuellen Server-Token.',
+      'token-missing':
+        'Das Server-Token fehlt auf diesem Gerät. Trenne die Verbindung und verbinde neu mit dem Server-Token.',
       server: 'Der Server hat einen Fehler gemeldet.',
       clock: 'Die Uhr dieses Geräts geht mehr als eine Stunde vor. Bitte Datum und Uhrzeit prüfen.',
       decrypt: 'Entschlüsselung fehlgeschlagen – stimmt der Passwortsatz?',

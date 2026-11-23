@@ -9,7 +9,7 @@ import { deleteBlob, getBlob, putBlob } from '@/core/blobs';
 import { parsePageMeta } from '@/core/io/pageMeta';
 import { fetchPublic, PublicFetchError } from '@/core/net/fetchPublic';
 import { getPlatform } from '@/core/platform';
-import { loadServerConfig } from '@/core/sync/service';
+import { syncConfigKind } from '@/core/sync/service';
 import { getSettings } from '@/core/settings/settings';
 import { itemRepo } from './repo';
 import { settings as moduleSettings, settingsSchema } from './settings';
@@ -37,7 +37,7 @@ export type PreviewResult = 'ok' | 'none' | 'unavailable';
 export async function previewAvailable(): Promise<boolean> {
   if (getPlatform().isNative) return true;
   try {
-    return !!(await loadServerConfig());
+    return (await syncConfigKind()) === 'selfHosted';
   } catch {
     return false;
   }

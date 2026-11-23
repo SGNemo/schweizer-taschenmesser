@@ -12,13 +12,17 @@ import { deviceSecretNames } from '@/core/reset/device';
 import type { SecretStore } from '@/core/secrets/types';
 import { DexieStorageAdapter } from '@/core/storage/dexie';
 import { createTestDb } from '@/test-utils';
+import { SYNC_TOKEN_SECRET } from './names';
+import { createMigratingStore } from '@/core/secrets/migrating';
 import {
   connect,
   disconnect,
   loadSyncConfig,
-  SYNC_TOKEN_SECRET,
+  rotateThisDeviceToken,
+  syncNow,
   type SyncServiceDeps,
 } from './service';
+import { useSyncStatus } from './status';
 import { MemoryServer } from './testing';
 
 const TOKEN = 'invented-token-for-the-test-123';
@@ -139,5 +143,108 @@ describe('sync token in the PWA (device-key store = the same IndexedDB)', () => 
     await connect({ url: 'https://sync.example', token: TOKEN, encrypt: false }, deps);
     expect((await record())?.token).toBe(TOKEN);
     expect(secrets.map.size).toBe(0);
+  });
+});
+
+describe('sync token – edge cases (council round 1)', () => {
+  it('a token moved earlier is found even on a start whose store is the device-key one', async () => {
+    const shared = store('os-keystore');
+    setPlatform({ ...getPlatform(), secrets: shared });
+    server = new MemoryServer();
+    server.token = TOKEN;
+    await connect({ url: 'https://sync.example', token: TOKEN, encrypt: false }, deps);
+    // Next start: the keystore probe failed; the device-key store answers (same entries here).
+    setPlatform({ ...getPlatform(), secrets: { ...shared, protection: 'device-key' } });
+    const loaded = await loadSyncConfig(db);
+    expect(loaded?.kind === 'selfHosted' && loaded.token).toBe(TOKEN);
+  });
+
+  it('a missing token is reported as such, no empty token is sent', async () => {
+    const secrets = store('os-keystore');
+    setPlatform({ ...getPlatform(), secrets });
+    await db.table('_secrets').put({
+      key: 'syncConfig',
+      value: { kind: 'selfHosted', url: 'https://sync.example', token: '' },
+    });
+    let asked = false;
+    await syncNow({
+      ...deps,
+      remote: (_url, token) => {
+        asked = true;
+        return server.remote(token);
+      },
+    });
+    expect(asked).toBe(false);
+    expect(useSyncStatus.getState().error).toBe('token-missing');
+  });
+
+  it('a refusing keystore at connect keeps the token in the record instead of losing it', async () => {
+    const secrets = store('os-keystore');
+    secrets.set = async () => {
+      throw new Error('keystore locked');
+    };
+    setPlatform({ ...getPlatform(), secrets });
+    server = new MemoryServer();
+    server.token = TOKEN;
+    await connect({ url: 'https://sync.example', token: TOKEN, encrypt: false }, deps);
+    expect((await record())?.token).toBe(TOKEN);
+  });
+
+  it('the real store falls back to the device-key store when the keystore fails', async () => {
+    const legacy = store('device-key');
+    const failing = store('os-keystore');
+    failing.set = async () => {
+      throw new Error('keystore locked');
+    };
+    failing.get = async () => {
+      throw new Error('keystore locked');
+    };
+    setPlatform({ ...getPlatform(), secrets: createMigratingStore(failing, legacy) });
+    server = new MemoryServer();
+    server.token = TOKEN;
+    await connect({ url: 'https://sync.example', token: TOKEN, encrypt: false }, deps);
+    expect(JSON.stringify(await record())).not.toContain(TOKEN);
+    const loaded = await loadSyncConfig(db);
+    expect(loaded?.kind === 'selfHosted' && loaded.token).toBe(TOKEN);
+  });
+
+  it('a rotated token replaces the old one in the keystore', async () => {
+    const secrets = store('os-keystore');
+    setPlatform({ ...getPlatform(), secrets });
+    server = new MemoryServer();
+    server.token = TOKEN;
+    server.supportsDevices = true;
+    await connect(
+      { url: 'https://sync.example', token: TOKEN, encrypt: false, deviceName: 'PC' },
+      deps,
+    );
+    const before = secrets.map.get(SYNC_TOKEN_SECRET);
+    expect(await rotateThisDeviceToken(deps)).toBe(true);
+    const after = secrets.map.get(SYNC_TOKEN_SECRET);
+    expect(after).toBeTruthy();
+    expect(after).not.toBe(before);
+    expect(JSON.stringify(await record())).not.toContain(after!);
+  });
+
+  it('a move that is still running cannot bring back a connection that was just removed', async () => {
+    const secrets = store('os-keystore');
+    let release!: () => void;
+    const slow = new Promise<void>((r) => (release = r));
+    const plainSet = secrets.set;
+    secrets.set = async (n, v) => {
+      await slow;
+      return plainSet(n, v);
+    };
+    setPlatform({ ...getPlatform(), secrets });
+    await db.table('_secrets').put({
+      key: 'syncConfig',
+      value: { kind: 'selfHosted', url: 'https://sync.example', token: TOKEN },
+    });
+    const loading = loadSyncConfig(db);
+    const removing = disconnect(deps);
+    release();
+    await Promise.all([loading, removing]);
+    expect(await record()).toBeUndefined();
+    expect(secrets.map.has(SYNC_TOKEN_SECRET)).toBe(false);
   });
 });

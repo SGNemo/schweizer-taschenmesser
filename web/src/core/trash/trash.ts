@@ -10,7 +10,7 @@ import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
 import { createRepo } from '@/core/db/repo';
 import { isRestorable } from '@/core/db/trash';
 import { formatMoney } from '@/core/money';
-import { loadSyncConfig } from '@/core/sync/service';
+import { hasSyncConfig } from '@/core/sync/service';
 import { formatDay } from '@/core/time/dates';
 import { now } from '@/core/time/now';
 import { trashRetentionMs } from './settings';
@@ -282,7 +282,7 @@ async function purgeNow(
 export async function flushPurgeQueue(database: TaschenmesserDB = defaultDb): Promise<number> {
   const queue = await readQueue(database);
   if (queue.length === 0) return 0;
-  const syncOn = (await loadSyncConfig(database)) !== undefined;
+  const syncOn = await hasSyncConfig(database);
   const left: string[] = [];
   for (const k of queue) {
     const [table, id] = k.split('|') as [string, string];
@@ -300,7 +300,7 @@ export async function purgeEntry(
 ): Promise<boolean> {
   const c = TRASH_COLLECTIONS.find((x) => x.table === entry.table);
   if (!c) throw new Error(`${entry.table} is not part of "Zuletzt gelöscht"`);
-  const syncOn = (await loadSyncConfig(database)) !== undefined;
+  const syncOn = await hasSyncConfig(database);
   // The other half of a transfer goes with it, otherwise it would show up as a new entry.
   const mates = await groupMates(database, c, await database.table(c.table).get(entry.id));
   const waiting: string[] = [];
