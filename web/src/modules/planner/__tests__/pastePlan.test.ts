@@ -15,6 +15,7 @@ import manifest from '../manifest';
 import {
   goalDays,
   looksLikePlan,
+  planAsText,
   matchPaste,
   readPastedPlan,
   sameTitle,
@@ -275,6 +276,69 @@ describe('matchPaste', () => {
 
   it('sameTitle ignores case, spaces, quotes and trailing marks', () => {
     expect(sameTitle(' „Bad  Putzen“! ')).toBe(sameTitle('bad putzen'));
+  });
+});
+
+describe('planAsText (P3)', () => {
+  const words = {
+    goal: (g: string) => `Ziel: ${g}`,
+    day: (d: string) =>
+      `${['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][new Date(`${d}T12:00:00`).getDay()]} ${Number(d.slice(8))}.${Number(d.slice(5, 7))}.`,
+    week: 'Diese Woche, ohne Tag',
+    later: 'Nächste Wochen',
+    minutes: (m: number) => `${m} Min`,
+  };
+  const plan = {
+    goal: 'Wohnung frei bekommen',
+    days: [
+      {
+        date: SA,
+        things: [
+          { title: 'Wäsche waschen', minutes: 30 },
+          { title: 'Pfand sammeln', minutes: 15 },
+        ],
+      },
+      { date: SO, things: [{ title: 'Bad putzen' }] },
+      { date: MO, things: [] },
+    ],
+    week: [{ title: 'Pfand wegbringen', minutes: 20 }],
+    later: [{ title: 'Steuerordner sortieren' }],
+  };
+
+  it('reads back as the same plan: every thing on its place, efforts and goal kept', () => {
+    const text = planAsText(plan, words);
+    const back = readPastedPlan(text, SA);
+    expect(back.goal).toBe('Wohnung frei bekommen');
+    expect(back.things).toEqual([
+      { title: 'Wäsche waschen', when: { kind: 'day', date: SA }, minutes: 30 },
+      { title: 'Pfand sammeln', when: { kind: 'day', date: SA }, minutes: 15 },
+      { title: 'Bad putzen', when: { kind: 'day', date: SO } },
+      { title: 'Pfand wegbringen', when: { kind: 'week' }, minutes: 20 },
+      { title: 'Steuerordner sortieren', when: { kind: 'later' } },
+    ]);
+  });
+
+  it('holds titles, days, minutes and the goal only – nothing else of the plan', () => {
+    const text = planAsText(plan, words);
+    expect(text).toBe(
+      [
+        'Ziel: Wohnung frei bekommen',
+        '',
+        'Sa 28.11.',
+        '- Wäsche waschen (30 Min)',
+        '- Pfand sammeln (15 Min)',
+        '',
+        'So 29.11.',
+        '- Bad putzen',
+        '',
+        'Diese Woche, ohne Tag:',
+        '- Pfand wegbringen (20 Min)',
+        '',
+        'Nächste Wochen:',
+        '- Steuerordner sortieren',
+      ].join('\n'),
+    );
+    expect(planAsText({ days: [], week: [], later: [] }, words)).toBe('');
   });
 });
 

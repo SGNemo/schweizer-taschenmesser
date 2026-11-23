@@ -32,6 +32,13 @@ type Figures = Record<string, number | string>;
  * T4 by the ToDos' JSON import plus „Hierher legen“ – a moved or postponed thing comes back as a second ToDo.
  */
 const IST: Record<string, Figures> = {
+  // P3 „Plan als Text kopieren“ (feat/plan-kopieren): ⋯ · the entry; pasted back unchanged, nothing changes.
+  'T5 Plan als Text kopieren und zurück': {
+    copyTaps: 2,
+    allThings: 'ja',
+    roundTripChanges: 0,
+    lost: 0,
+  },
   // „Nur das hier …“ (feat/nur-das-hier): tick what stays, the rest in one move; the start line on top.
   'T1 Samstag 16:00 – ab jetzt neu': {
     taps: 8,
@@ -77,6 +84,13 @@ const IST: Record<string, Figures> = {
 
 /** What the target picture asks (TARGET.md §1). */
 const TARGET: Record<string, Figures> = {
+  // P3 „Plan als Text kopieren“ (feat/plan-kopieren): ⋯ · the entry; pasted back unchanged, nothing changes.
+  'T5 Plan als Text kopieren und zurück': {
+    copyTaps: 2,
+    allThings: 'ja',
+    roundTripChanges: 0,
+    lost: 0,
+  },
   'T1 Samstag 16:00 – ab jetzt neu': {
     taps: 8,
     perThing: 0,
@@ -822,5 +836,44 @@ test('T4 Plan von außen übernehmen', async ({ page }, info) => {
       lost: await lost(page),
     },
     { before, after, second },
+  );
+});
+
+test('T5 Plan als Text kopieren und zurück', async ({ page, context }, info) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await prepare(page, `${SA}T20:00:00`);
+  await planner(page);
+  const before = await settled(page);
+  const hand = new Hand(page);
+  await hand.tap(page.getByRole('button', { name: 'Weitere Optionen', exact: true }).first());
+  await hand.tap(page.getByRole('menuitem', { name: 'Plan als Text kopieren' }));
+  await expect(page.getByText('Plan kopiert.', { exact: false })).toBeVisible();
+  const text = await page.evaluate(() => navigator.clipboard.readText());
+  const allThings = ALL.every((title) => text.includes(`- ${title}`)) ? 'ja' : 'nein';
+  // Pasted back unchanged: the preview says nothing changes; „Übernehmen“ stays off.
+  const field = page.locator('main form input[type="text"], main form input:not([type])').first();
+  await field.click();
+  await field.evaluate((el, text) => {
+    const data = new DataTransfer();
+    data.setData('text/plain', text);
+    el.dispatchEvent(
+      new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true }),
+    );
+  }, text);
+  const dialog = page.getByRole('dialog', { name: 'Plan einfügen' });
+  await expect(dialog.getByRole('status')).toHaveText('Es ist schon alles so.');
+  await expect(dialog.getByRole('button', { name: 'Übernehmen', exact: true })).toBeDisabled();
+  await page.keyboard.press('Escape');
+  const after = await settled(page);
+  record(
+    info,
+    'T5 Plan als Text kopieren und zurück',
+    {
+      copyTaps: hand.taps,
+      allThings,
+      roundTripChanges: unasked(before, after, []),
+      lost: await lost(page),
+    },
+    { text },
   );
 });

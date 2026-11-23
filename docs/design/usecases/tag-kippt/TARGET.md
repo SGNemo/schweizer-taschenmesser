@@ -41,7 +41,7 @@ Branch `design/usecase-tag-kippt`, 2026-11-23. Analysis and friction `K01…K12`
 | „Plan als Text kopieren“ (an explicit tap, clipboard)                                                              | **open decision for Sven** (§5): the planner has no data API and „exists for no assistant“ (decisions/plan-contract); a copy by his own tap leaves the device only through him, but it is the first export path of the plan |
 | Folding the list behind the start line                                                                             | package P3, only if the measured start line is not enough                                                                                                                                                                   |
 
-## 5. Open for Sven
+## 5. Open for Sven (answered 2026-11-23: both „ja“, built as P3 and in #1072)
 
 1. „Plan als Text kopieren“: allow as an explicit tap (clipboard only, no share target, no model)? Recommendation: yes, in the page's ⋯, plain text in the same format „Plan einfügen“ reads – the round trip he does by hand today.
 2. „Nächste Wochen“ inside the planner as a folded group (built) or only a link to ToDos „Irgendwann“? Recommendation: the group (findable where he shrank).
