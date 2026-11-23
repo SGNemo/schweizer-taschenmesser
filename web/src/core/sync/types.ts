@@ -40,6 +40,8 @@ export type SyncErrorCode =
   | 'clock'
   | 'decrypt'
   | 'no-key'
+  /** The server token is not in this device's key store (another PC, a reset profile). */
+  | 'token-missing'
   | 'unsupported';
 
 /** A device registered on the sync server. */

@@ -12,6 +12,7 @@ import { SelfHostedAdapter, normalizeServerUrl, type VaultInfo } from './adapter
 import { LanClientAdapter, LanHubAdapter } from './adapters/lanHub';
 import { copyTodoLinksAfterSync } from '@/core/entitylinks/migrate';
 import { getPlatform } from '@/core/platform';
+import { SYNC_TOKEN_SECRET } from './names';
 import type {
   LanClientService,
   LanWatchService,
@@ -40,6 +41,12 @@ export type SyncConfig = ServerSyncConfig | LanHubSyncConfig | LanClientSyncConf
 export interface ServerSyncConfig {
   kind: 'selfHosted';
   url: string;
+  /**
+   * The server token. In the apps the stored record holds `''` and the token lives in the OS keystore
+   * (`sync.token`, S5): read it only through `loadSyncConfig`, never from `_secrets.syncConfig`. The
+   * record keeps the token itself only when the keystore refused it or this start's keystore probe
+   * failed; the next healthy start moves it.
+   */
   token: string;
   /** Non-extractable AES-GCM key when end-to-end encryption is on. */
   key?: CryptoKey;
@@ -124,30 +131,133 @@ export const MIN_PASSPHRASE_LENGTH = 12;
 
 /* ------------------------------ config persistence ------------------------------ */
 
-export async function loadSyncConfig(
-  database: TaschenmesserDB = defaultDb,
-): Promise<SyncConfig | undefined> {
+const tokenInKeystore = (): boolean => getPlatform().secrets.protection === 'os-keystore';
+
+/**
+ * Save, clear and the S5 move of the server token run one at a time, so a move that started from an
+ * old record can never write back a token that `connect`, a rotation or `disconnect` replaced. Not
+ * re-entrant: never call a lock-taking function (load '' branch, save, clear, move) from inside.
+ */
+let tokenChain: Promise<unknown> = Promise.resolve();
+function withTokenLock<T>(fn: () => Promise<T>): Promise<T> {
+  const next = tokenChain.then(fn, fn);
+  tokenChain = next.catch(() => undefined);
+  return next;
+}
+
+async function readRecord(database: TaschenmesserDB): Promise<SyncConfig | undefined> {
   return (
     await database.table<{ key: string; value: SyncConfig }, string>('_secrets').get(CONFIG_KEY)
   )?.value;
 }
 
-/** The own-server settings only: push, the feed proxy and the device list need a server. */
+/** Whether a sync connection exists – the stored record only, no key store involved. */
+export async function hasSyncConfig(database: TaschenmesserDB = defaultDb): Promise<boolean> {
+  return (await readRecord(database)) !== undefined;
+}
+
+/** The kind of the stored connection – the record only, no key store involved. */
+export async function syncConfigKind(
+  database: TaschenmesserDB = defaultDb,
+): Promise<SyncConfig['kind'] | undefined> {
+  return (await readRecord(database))?.kind;
+}
+
+/**
+ * The full connection, with the server token. In the apps the token comes from the OS keystore, so
+ * this never runs inside a Dexie transaction, and callers that only need to know whether (or which)
+ * connection exists use `hasSyncConfig` / `syncConfigKind`. A token the store cannot give is `''`:
+ * the next sync round then reports `token-missing` instead of sending an empty token.
+ */
+export async function loadSyncConfig(
+  database: TaschenmesserDB = defaultDb,
+): Promise<SyncConfig | undefined> {
+  const config = await readRecord(database);
+  if (config?.kind !== 'selfHosted') return config;
+  if (config.token) {
+    if (tokenInKeystore()) await moveToken(database, config.token);
+    return config;
+  }
+  // Record and token are read together under the lock, so a save in between cannot pair the old
+  // record with a new token. Whatever the store is on this start (a failed probe falls back to the
+  // device-key store), it is asked.
+  return withTokenLock(async () => {
+    const now = await readRecord(database);
+    if (now?.kind !== 'selfHosted' || now.token) return now;
+    const token = await getPlatform()
+      .secrets.get(SYNC_TOKEN_SECRET)
+      .catch(() => undefined);
+    return { ...now, token: token ?? '' };
+  });
+}
+
+/**
+ * A record from before S5: read the old place, write the new one, then delete the old – only while
+ * the record still holds that token. A refusing keystore leaves the record as it is (sync keeps
+ * working; the next start tries again).
+ */
+function moveToken(database: TaschenmesserDB, token: string): Promise<void> {
+  return withTokenLock(async () => {
+    const now = await readRecord(database);
+    if (now?.kind !== 'selfHosted' || now.token !== token) return;
+    try {
+      await getPlatform().secrets.set(SYNC_TOKEN_SECRET, token);
+    } catch {
+      return;
+    }
+    await database.table('_secrets').put({ key: CONFIG_KEY, value: { ...now, token: '' } });
+  });
+}
+
+/**
+ * The own-server settings only: push, the feed proxy and the device list need a server. Without a
+ * readable token they get none (no request with an empty token); the sync status says `token-missing`.
+ */
 export async function loadServerConfig(
   database: TaschenmesserDB = defaultDb,
 ): Promise<ServerSyncConfig | undefined> {
   const config = await loadSyncConfig(database);
-  return config?.kind === 'selfHosted' ? config : undefined;
+  return config?.kind === 'selfHosted' && config.token ? config : undefined;
 }
 
-async function saveSyncConfig(database: TaschenmesserDB, config: SyncConfig): Promise<void> {
-  await database.table('_secrets').put({ key: CONFIG_KEY, value: config });
+function saveSyncConfig(database: TaschenmesserDB, config: SyncConfig): Promise<void> {
+  return withTokenLock(async () => {
+    if (config.kind === 'selfHosted' && tokenInKeystore()) {
+      // The keystore first: the record without a token is only written once the token is safe.
+      // If the keystore refuses, the token stays in the record (as before S5) rather than being lost.
+      const stored = await getPlatform()
+        .secrets.set(SYNC_TOKEN_SECRET, config.token)
+        .then(() => true)
+        .catch(() => false);
+      await database
+        .table('_secrets')
+        .put({ key: CONFIG_KEY, value: stored ? { ...config, token: '' } : config });
+      return;
+    }
+    const before = await readRecord(database);
+    await database.table('_secrets').put({ key: CONFIG_KEY, value: config });
+    // The token of a server connection this one replaces is not needed any more.
+    if (before?.kind === 'selfHosted' && config.kind !== 'selfHosted')
+      await getPlatform()
+        .secrets.delete(SYNC_TOKEN_SECRET)
+        .catch(() => undefined);
+  });
 }
 
-async function clearSyncConfig(database: TaschenmesserDB): Promise<void> {
-  await database.table('_secrets').delete(CONFIG_KEY);
-  // The flag describes the connection that is gone now.
-  await database.table('_meta').delete(PULL_COMPLETE_KEY);
+/** Tests only: the server → home-network replace is otherwise reachable only through a race in `enableLanHub`. */
+export const saveSyncConfigForTests = (database: TaschenmesserDB, config: SyncConfig) =>
+  saveSyncConfig(database, config);
+
+function clearSyncConfig(database: TaschenmesserDB): Promise<void> {
+  return withTokenLock(async () => {
+    await database.table('_secrets').delete(CONFIG_KEY);
+    // A failure here leaves a dead token in the keystore until the next connect or "Alle Daten löschen".
+    await getPlatform()
+      .secrets.delete(SYNC_TOKEN_SECRET)
+      .catch(() => undefined);
+    // The flag describes the connection that is gone now.
+    await database.table('_meta').delete(PULL_COMPLETE_KEY);
+  });
 }
 
 /* ------------------------------------ syncing ------------------------------------ */
@@ -182,7 +292,7 @@ export async function syncSettled(
   database: TaschenmesserDB = defaultDb,
   opts: { wait?: boolean } = {},
 ): Promise<boolean> {
-  if (!(await loadSyncConfig(database))) return true;
+  if (!(await hasSyncConfig(database))) return true;
   // `wait`: a background caller woken by the round's own `_meta` write lets this tab's chain end first
   // (bounded by the queued rounds); a user action reads the gate as it is.
   if (opts.wait) await chain;
@@ -212,8 +322,11 @@ async function adapterFor(
   config: SyncConfig,
   deps: SyncServiceDeps,
 ): Promise<{ adapter: SyncAdapter; key: CryptoKey | undefined }> {
-  if (config.kind === 'selfHosted')
+  if (config.kind === 'selfHosted') {
+    // The key store had no token (another PC, a reset Windows profile): say so instead of sending none.
+    if (!config.token) throw new SyncError('token-missing');
     return { adapter: deps.remote(config.url, config.token), key: config.key };
+  }
   if (config.kind === 'lanClient') {
     const client = deps.lanClient?.();
     if (!client?.supported) throw new SyncError('unsupported');
@@ -265,7 +378,8 @@ async function adoptLanHubKey(
 }
 
 /** Errors that can heal by themselves; everything else needs the user (token, passphrase, lock). */
-const RETRYABLE = new Set(['network', 'server', 'rate-limited', 'unknown']);
+// `token-missing` too: a locked or briefly unavailable key store heals by itself (no request is sent).
+const RETRYABLE = new Set(['network', 'server', 'rate-limited', 'unknown', 'token-missing']);
 
 /** Delay before retry number `failures` (1-based): 5 s, 10 s, 20 s … up to 5 min, with ±20 % jitter. */
 export function backoffMs(failures: number, random: () => number = Math.random): number {
@@ -326,12 +440,14 @@ export function syncNow(deps: SyncServiceDeps = defaultDeps()): Promise<void> {
       if (code === 'unknown') console.error('[sync] failed');
       const at = now();
       const failures = useSyncStatus.getState().failures + 1;
+      // A missing token heals only where the OS keystore answers; on a start without it, it cannot.
+      const retry = RETRYABLE.has(code) && (code !== 'token-missing' || tokenInKeystore());
       status.set({
         phase: 'error',
         error: code,
         errorAt: at,
         failures,
-        retryAt: RETRYABLE.has(code) ? at + backoffMs(failures) : undefined,
+        retryAt: retry ? at + backoffMs(failures) : undefined,
         pending: await deps.storage.pendingCount(),
       });
     }
@@ -340,7 +456,8 @@ export function syncNow(deps: SyncServiceDeps = defaultDeps()): Promise<void> {
 
 /** Loads persisted status after a reload so the UI is not blank until the first sync finishes. */
 export async function restoreSyncStatus(deps: SyncServiceDeps = defaultDeps()): Promise<void> {
-  const config = await loadSyncConfig(deps.database);
+  // Labels only (host, kind, encryption): the record is enough, no key store read.
+  const config = await readRecord(deps.database);
   const last = (
     await deps.database.table<{ key: string; value: number }, string>('_meta').get(LAST_SYNC_KEY)
   )?.value;
@@ -466,9 +583,9 @@ function watchWifi(
     if (stopped()) return;
     status.set({ wifi: connected });
     if (!connected) return;
-    void loadSyncConfig(deps.database)
-      .then((config) => {
-        if (config?.kind === 'lanClient') tick(true);
+    void syncConfigKind(deps.database)
+      .then((kind) => {
+        if (kind === 'lanClient') tick(true);
       })
       .catch(ignoreClosedDatabase);
   });
@@ -655,9 +772,9 @@ export type LanHubResult = { ok: true } | { ok: false; reason: LanHubFailure };
 export async function enableLanHub(deps: SyncServiceDeps = defaultDeps()): Promise<LanHubResult> {
   const hub = deps.lanHub?.();
   if (!hub?.supported) return { ok: false, reason: 'unsupported' };
-  const existing = await loadSyncConfig(deps.database);
-  if (existing?.kind === 'selfHosted') return { ok: false, reason: 'server-connected' };
-  if (existing?.kind === 'lanClient') return { ok: false, reason: 'client-paired' };
+  const existing = await syncConfigKind(deps.database);
+  if (existing === 'selfHosted') return { ok: false, reason: 'server-connected' };
+  if (existing === 'lanClient') return { ok: false, reason: 'client-paired' };
   let dataKey: LanHubDataKey;
   try {
     dataKey = (await hub.start()).dataKey;
@@ -751,9 +868,9 @@ export async function pairWithPc(
 ): Promise<PairResult> {
   const client = deps.lanClient?.();
   if (!client?.supported) return { ok: false, reason: 'unsupported' };
-  const existing = await loadSyncConfig(deps.database);
-  if (existing?.kind === 'lanHub') return { ok: false, reason: 'hub-on' };
-  if (existing && existing.kind !== 'lanClient') return { ok: false, reason: 'other-path' };
+  const existing = await syncConfigKind(deps.database);
+  if (existing === 'lanHub') return { ok: false, reason: 'hub-on' };
+  if (existing && existing !== 'lanClient') return { ok: false, reason: 'other-path' };
   let dataKey: LanPairing;
   try {
     dataKey = await client.pair(qr.trim(), name, onCode);
@@ -770,8 +887,8 @@ export async function pairWithPc(
     const key = await importDataKey(dataKey);
     stored = await exclusive(async () => {
       // still one path per device: an own server connected while the PC was asking wins
-      const now = await loadSyncConfig(deps.database);
-      if (now && now.kind !== 'lanClient') return false;
+      const now = await syncConfigKind(deps.database);
+      if (now && now !== 'lanClient') return false;
       await saveSyncConfig(deps.database, {
         kind: 'lanClient',
         key,
@@ -789,7 +906,7 @@ export async function pairWithPc(
   if (!stored) {
     await client.unpair().catch(() => undefined);
     // Rust already replaced the previous pairing; an old lanClient config would point at nothing
-    if (existing?.kind === 'lanClient') await disconnect(deps).catch(() => undefined);
+    if (existing === 'lanClient') await disconnect(deps).catch(() => undefined);
     return { ok: false, reason: 'failed' };
   }
   useSyncStatus.getState().set({ failures: 0, retryAt: undefined, errorAt: undefined });
@@ -839,17 +956,27 @@ export async function lockDevice(
   return c?.remote.revokeDevice ? c.remote.revokeDevice(id) : false;
 }
 
-/** Signs this device out: revokes its token on the server (best effort), then disconnects. */
-export async function signOutThisDevice(deps: SyncServiceDeps = defaultDeps()): Promise<void> {
-  const c = await connectedRemote(deps);
-  if (c?.config.deviceId && c.remote.revokeDevice) {
+/**
+ * Signs this device out: revokes its token on the server (best effort), then disconnects. With a
+ * device token that cannot be read right now (key store locked), nothing happens and the answer is
+ * `token-missing`: disconnecting alone would leave the token valid on the server.
+ */
+export async function signOutThisDevice(
+  deps: SyncServiceDeps = defaultDeps(),
+): Promise<'ok' | 'token-missing'> {
+  // One read: the device id and the token come from the same record.
+  const config = await loadSyncConfig(deps.database);
+  if (config?.kind === 'selfHosted' && config.deviceId && !config.token) return 'token-missing';
+  const remote = config?.kind === 'selfHosted' ? deps.remote(config.url, config.token) : undefined;
+  if (config?.kind === 'selfHosted' && config.deviceId && remote?.revokeDevice) {
     try {
-      await c.remote.revokeDevice(c.config.deviceId);
+      await remote.revokeDevice(config.deviceId);
     } catch {
       // offline or already revoked: disconnecting locally is still what the user asked for
     }
   }
   await disconnect(deps);
+  return 'ok';
 }
 
 /** Gives this device a new token (the old one stops working). No-op for legacy connections. */

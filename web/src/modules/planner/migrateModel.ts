@@ -18,7 +18,7 @@
 import { DEFAULT_MIN } from '@/core/plan/types';
 import { unitId } from '@/core/plan/units';
 import { setSettings } from '@/core/settings/settings';
-import { loadSyncConfig } from '@/core/sync/service';
+import { hasSyncConfig } from '@/core/sync/service';
 import { plannerRepos, putRow, type PlannerDb } from './repo';
 import type { AssignmentRow, PlanItemRow } from './schema';
 import { DEFAULT_PLANNER_SETTINGS, PLANNER_SCOPE } from './settings';
@@ -85,7 +85,7 @@ let autoChecked = false;
 export async function ensureAutoReplanOff(settings: { autoReplan?: boolean }): Promise<void> {
   if (autoChecked || settings.autoReplan === false) return;
   autoChecked = true;
-  if (await loadSyncConfig())
+  if (await hasSyncConfig())
     await setSettings(PLANNER_SCOPE, { autoReplan: false }, DEFAULT_PLANNER_SETTINGS);
 }
 
