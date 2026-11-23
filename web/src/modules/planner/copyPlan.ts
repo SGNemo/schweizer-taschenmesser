@@ -73,6 +73,7 @@ export function copyInput(
     ],
     later: later.map((l) => ({ title: l.title })),
   };
+  // Only days with things count: pasted back, `goalDays` puts the goal on exactly those days.
   const withThings = inRange.filter((d) => out.days.find((x) => x.date === d.date)!.things.length);
   const goal = withThings[0]?.row?.note;
   if (goal && withThings.every((d) => d.row?.note === goal)) out.goal = goal;

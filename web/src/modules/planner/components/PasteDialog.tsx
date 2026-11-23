@@ -3,6 +3,7 @@ import { formatMinutes } from '@/core/i18n/format';
 import { dayName } from '@/core/plan/explain';
 import { addDaysStr, formatDay } from '@/core/time/dates';
 import { today } from '@/core/time/now';
+import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { Button, Checkbox, Dialog, Segmented, TextArea } from '@/ui';
 import { applyPaste, pasteKnown } from '../actions';
@@ -162,7 +163,9 @@ export function PasteDialog({
       const seen = new Set(toLater.map((k) => k.key));
       const later = now.missing.filter((k) => seen.has(k.key) && !k.locked && k.canLater);
       // Written – or nothing was left to write (a sync or a goal outside the view had it already): done either way.
-      await applyPaste(lines, later, titles, goal);
+      // Nothing left to write (a sync or another tab did it): say so, then close.
+      if (!(await applyPaste(lines, later, titles, goal)))
+        useUiStore.getState().toast(t.planner.paste.nothing);
       onClose();
     } catch {
       setFailed(true);

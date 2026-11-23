@@ -9636,7 +9636,14 @@ export const de = {
     },
     copy: {
       menu: 'Plan als Text kopieren',
-      done: (until: string) => `Plan bis ${until} kopiert – Titel, Tage, Minuten und Ziel.`,
+      done: (until: string, what: string) => `Plan bis ${until} kopiert – ${what}.`,
+      whatTitles: 'Titel',
+      whatDays: 'Tage',
+      whatMinutes: 'Minuten',
+      whatFixed: 'feste Zeiten',
+      whatGoal: 'Ziel',
+      list: (items: readonly string[]) =>
+        items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} und ${items.at(-1)}`,
       failed: 'Kopieren hat gerade nicht geklappt. Versuch es gleich noch einmal.',
       empty: 'Im Plan steht noch nichts zum Kopieren.',
       fixed: (title: string, from: string, to: string) => `(${from}–${to} ${title})`,
