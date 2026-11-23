@@ -21,6 +21,7 @@ export type BrowserEvent =
   | { event: 'httpHeld'; tab: number; url: string }
   /** A page tried to open a pop-up; nothing opened. */
   | { event: 'popupBlocked'; tab: number; url: string }
+  | { event: 'unfiltered'; tab: number }
   /** The page started a download; the webview did not save it, the address goes to the Downloads module. */
   | { event: 'download'; tab: number; url: string }
   /** A request was stopped by the blocker (`host` = where it went). */

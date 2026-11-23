@@ -12,8 +12,24 @@ pub enum Verdict {
     Deny,
 }
 
+/// The app's own origins on Windows (WebView2 serves the app and its IPC under these names). A
+/// browser tab never loads them, whatever the scheme (B2, launch review 2026-11).
+const APP_HOSTS: [&str; 2] = ["tauri.localhost", "ipc.localhost"];
+
+fn is_app_host(url: &Url) -> bool {
+    url.host_str().is_some_and(|h| {
+        let h = h.trim_end_matches('.').to_ascii_lowercase();
+        APP_HOSTS
+            .iter()
+            .any(|a| h == *a || h.ends_with(&format!(".{a}")))
+    })
+}
+
 /// Classify a navigation target. `about:blank` is allowed (a new, empty tab).
 pub fn classify(url: &Url) -> Verdict {
+    if is_app_host(url) {
+        return Verdict::Deny;
+    }
     match url.scheme() {
         "https" => Verdict::Allow,
         "http" => Verdict::WarnHttp,
@@ -46,13 +62,22 @@ mod tests {
             "magnet:?xt=urn:btih:abc",
             "about:srcdoc",
         ] {
-            let url = Url::parse(bad).unwrap();
-            let want = if bad.starts_with("http://ipc.localhost") {
-                Verdict::WarnHttp // plain http host; isolation does not rely on the scheme, see capabilities
-            } else {
-                Verdict::Deny
-            };
-            assert_eq!(classify(&url), want, "{bad}");
+            assert_eq!(v(bad), Verdict::Deny, "{bad}");
         }
+    }
+
+    #[test]
+    fn the_apps_own_hosts_are_never_loaded_in_a_tab() {
+        for bad in [
+            "http://tauri.localhost/",
+            "https://tauri.localhost/index.html",
+            "http://ipc.localhost/plugin%3Ashell%7Copen",
+            "https://IPC.localhost./x",
+            "http://x.tauri.localhost/",
+        ] {
+            assert_eq!(v(bad), Verdict::Deny, "{bad}");
+        }
+        assert_eq!(v("https://localhost.example/"), Verdict::Allow);
+        assert_eq!(v("http://localhost:8080/"), Verdict::WarnHttp);
     }
 }
