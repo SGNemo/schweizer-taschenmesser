@@ -1,37 +1,14 @@
 # Use case „Tag kippt“ – packages left
 
-Built in this round (2026-11-23): „Plan einfügen“ (T4: 12 → 3 handles, 11 → 0 duplicates) and „Nur das hier …“ with „Nächste Wochen“ and the start line (T1: 9 → 8 handles, 4 → 0 per thing; T2: 31 → 21, 23 → 0). Figures and friction: [ANALYSIS](ANALYSIS.md), target: [TARGET](TARGET.md). Left open in `TARGET`: T1 `smallerInOneMove` (P1). Each prompt below is complete; run them in this order, each in its own chat, branch and PR.
+Built in this round (2026-11-23): „Plan einfügen“ (T4: 12 → 3 handles, 11 → 0 duplicates) and „Nur das hier …“ with „Nächste Wochen“ and the start line (T1: 9 → 8 handles, 4 → 0 per thing; T2: 31 → 21, 23 → 0). Figures and friction: [ANALYSIS](ANALYSIS.md), target: [TARGET](TARGET.md). P1 „Kleiner machen …“ is built too (T1 `smallerInOneMove`: 4 handles); every `TARGET` figure is reached. Each prompt below is complete; run them in this order, each in its own chat, branch and PR.
 
 | Package                          | Gains                                                                      | Needs Sven                     |
 | -------------------------------- | -------------------------------------------------------------------------- | ------------------------------ |
-| [P1 Kleiner machen](#p1)         | T1 „Pfand sammeln heute, wegbringen später“ in one move (K05)              | no                             |
 | [P2 Ziel-Zeile](#p2)             | a calm goal head for the weekend                                           | no                             |
 | [P3 Plan als Text kopieren](#p3) | the round trip to a chat without retyping                                  | **yes** – TARGET §5 question 1 |
 | [P4 Kleinkram](#p4)              | K11 checkbox names, K13 board menu, the sentence „heute nur …“ as an alias | no                             |
 
-Folding the list behind the start line (TARGET §4) is **not** a package: measure first with P1 in place; only if he still reports the list as the problem, write it.
-
----
-
-## P1
-
-Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
-Routing: Claude Code · Opus · unattended
-
-# „Kleiner machen …“ on a planner row (use case „Tag kippt“, package P1)
-
-Branch `feat/kleiner-machen` from fresh `develop`. Read CLAUDE.md, docs/design/usecases/tag-kippt/{ANALYSIS,TARGET}.md (K05, §4), docs/decisions/plan-rethink.md (last three bullets), FOCUS-GUIDELINES.md, FOCUS-WORDING.md, `web/src/modules/planner/{actions.ts,components/rowMenu.ts,components/RowChoice.tsx}`, `web/src/modules/todos/plannable.ts`, `web/src/core/modules/types.ts` (`PlannableSource`). Start with `npm run chats:status`.
-
-**Goal:** one move turns „Pfand wegbringen“ on today into „Pfand sammeln“ (today, same row, same lock) plus „Pfand wegbringen“ as its own thing for „Diese Woche, ohne Tag“ (default) or „Nächste Wochen“.
-
-- Row ⋯ → „Kleiner machen …“ (under the day steps, after „Dauer …“; only for sources that have the new step). Sheet: field „Heute nur:“ (prefilled empty, placeholder = the title), the choice „Der Rest: Diese Woche, ohne Tag · Nächste Wochen“, button „Kleiner machen“. Enter submits.
-- New optional source step `onSplitOff(id, todayTitle): Promise<string /* new id */>` in `PlannableSource` (hotspot `core/modules/types.ts`: heads-up row first). ToDos: the existing task keeps its id, gets `todayTitle`; a new task with the old title, same list, estimate and links, no date. The planner never edits a ToDo title itself.
-- One `act(...)`, one undo (both ToDos, the row, someday). Toast: „Heute nur: Pfand sammeln · Rest: diese Woche“. No counter, no „nur noch“.
-- `tag-kippt.spec.ts` T1: `smallerInOneMove` becomes `ja` (the script already looks for the menu item „Kleiner machen …“); move `IST` there, never loosen.
-- Tests: unit (one undo restores both titles and the row; lock stays; source without the step → not offered), the e2e above, `privacy.test.ts` untouched.
-- Words via `design:ux-copy`, the sheet via `design:accessibility-review`. `review loop`, then `file-pr`, `babysit-pr`. Change note de+en. Full stop.
-
-**Handoff (`design:design-handoff`):** sheet = `Dialog` with `TextField` (label „Heute nur“), `Segmented` (two values, default „Diese Woche, ohne Tag“), primary `Button`. States: empty field → button off; same text as the title → button off with the hint „Das ist schon der ganze Schritt.“; error → the planner's calm line. Phone: bottom sheet, field autofocus. Touch ≥ 44 px.
+Folding the list behind the start line (TARGET §4) is **not** a package: measure first now that P1 is in place; only if he still reports the list as the problem, write it.
 
 ---
 

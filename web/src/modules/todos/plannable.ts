@@ -91,6 +91,29 @@ const source: PlannableSource = {
     );
     return tasks.map(itemOf);
   },
+  // „Kleiner machen …“: the task keeps its id, list, links and place in the plan under the first step's title; the rest
+  // is a new top-level task of the old title with the same list, priority, estimate, deadline, tags, links and person –
+  // no date, no checklist or note (those stay with the original), not „Irgendwann“ (the planner decides that).
+  async onSplitOff(id, todayTitle) {
+    const task = await taskRepo.get(id);
+    const title = todayTitle.trim();
+    if (!task || task.done || !title || title === task.title) return undefined;
+    const rest = await taskRepo.create({
+      listId: task.listId,
+      title: task.title,
+      done: false,
+      priority: task.priority,
+      order: task.order,
+      ...(task.estimateMin !== undefined ? { estimateMin: task.estimateMin } : {}),
+      ...(task.dueDate ? { dueDate: task.dueDate } : {}),
+      ...(task.dueDate && task.dueTime ? { dueTime: task.dueTime } : {}),
+      ...(task.tags?.length ? { tags: [...task.tags] } : {}),
+      ...(task.links?.length ? { links: task.links.map((l) => ({ ...l })) } : {}),
+      ...(task.personId ? { personId: task.personId } : {}),
+    });
+    await taskRepo.update(id, { title });
+    return rest.id;
+  },
   async onLater(id, later) {
     const task = await taskRepo.get(id);
     if (!task || task.done || !!task.someday === later) return;

@@ -5,12 +5,13 @@ import { addDaysStr, formatDay } from '@/core/time/dates';
 import { DAY_PARTS, type DayPart } from '@/core/plan/types';
 import { today } from '@/core/time/now';
 import { t } from '@/strings';
-import { Button, Chip, Chips, Dialog, Icon, IconButton } from '@/ui';
+import { Button, Chip, Chips, Dialog, Icon, IconButton, Segmented, TextField } from '@/ui';
 import {
   asBreak,
   BREAK_CHOICES,
   ESTIMATE_CHOICES,
   keepOnly,
+  makeSmaller,
   moveMany,
   moveTo,
   type RestTarget,
@@ -28,6 +29,8 @@ import styles from '../routes/planner.module.css';
 export type RowChoiceState =
   | { kind: 'break'; entry: PlannableEntry; date: string }
   | { kind: 'estimate'; entry: PlannableEntry; current?: number }
+  /** „Kleiner machen …“ (use case „Tag kippt“, P1): the first step today, the rest its own thing. */
+  | { kind: 'smaller'; entry: PlannableEntry }
   | { kind: 'part'; entry: PlannableEntry; current?: DayPart }
   /** „Verschieben …“: `on` = the day the row lies on (none while it has no day). */
   | { kind: 'move'; entry: PlannableEntry; on?: string }
@@ -147,6 +150,8 @@ export function RowChoice({
 }) {
   if (!choice) return null;
   const r = t.planner.row;
+  if (choice.kind === 'smaller')
+    return <SmallerDialog entry={choice.entry} titles={titles} onClose={onClose} />;
   if (choice.kind === 'rest') {
     const k = t.planner.keep;
     const next = addDaysStr(choice.date, 1);
@@ -308,6 +313,71 @@ function BreakChoice({
           <Chip key={min} label={compact(min)} onClick={() => pick(min)} />
         ))}
       </Chips>
+    </Dialog>
+  );
+}
+
+/**
+ * „Kleiner machen …“: the field „Heute nur“ (the first step's title, empty until he types), the choice where the rest
+ * goes (default „Diese Woche, ohne Tag“) and one button. Enter submits; the same title as before is not a step.
+ */
+function SmallerDialog({
+  entry,
+  titles,
+  onClose,
+}: {
+  entry: PlannableEntry;
+  titles: Record<string, string>;
+  onClose: () => void;
+}) {
+  const m = t.planner.smaller;
+  const [step, setStep] = useState('');
+  const [rest, setRest] = useState<'week' | 'later'>('week');
+  const trimmed = step.trim();
+  const same = trimmed !== '' && trimmed === entry.title.trim();
+  const ok = trimmed !== '' && !same;
+  const submit = () => {
+    if (!ok) return;
+    onClose();
+    void makeSmaller(entry, trimmed, rest, titles);
+  };
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      title={m.title(entry.title)}
+      footer={
+        <Button variant="primary" disabled={!ok} onClick={submit}>
+          {m.apply}
+        </Button>
+      }
+    >
+      <form
+        className={styles.smaller}
+        onSubmit={(e) => {
+          e.preventDefault();
+          submit();
+        }}
+      >
+        <TextField
+          label={m.field}
+          hint={same ? m.same : m.hint}
+          placeholder={entry.title}
+          value={step}
+          onChange={(e) => setStep(e.target.value)}
+          enterKeyHint="done"
+          data-autofocus
+        />
+        <Segmented
+          label={m.rest}
+          value={rest}
+          options={[
+            { value: 'week', label: m.week },
+            { value: 'later', label: m.later },
+          ]}
+          onChange={setRest}
+        />
+      </form>
     </Dialog>
   );
 }
