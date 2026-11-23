@@ -4597,6 +4597,7 @@ export const de = {
     back: 'Zurück zur Liste',
     restored: 'Nicht gespeicherter Text wurde wiederhergestellt.',
     imageElsewhere: 'Dieses Bild liegt nur auf einem anderen Gerät.',
+    imageRemote: 'Bild aus dem Internet – wird nicht geladen.',
     imageFailed: 'Das Bild konnte nicht eingefügt werden.',
     fmt: {
       bold: 'Fett',

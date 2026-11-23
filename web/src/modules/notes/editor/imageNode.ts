@@ -29,11 +29,16 @@ export const NoteImage = Image.extend({
           img.alt = alt;
           dom.replaceChildren(img);
         });
-      } else {
+      } else if (/^(data:image\/|blob:)/i.test(src)) {
         const img = document.createElement('img');
         img.src = src;
         img.alt = alt;
         dom.append(img);
+      } else {
+        // Q2 (launch review 2026-11): a picture from the net is never loaded – opening a note must
+        // not tell anyone that it was opened (the desktop CSP blocks it, a browser would not)
+        dom.textContent = alt ? `${t.notes.imageRemote} (${alt})` : t.notes.imageRemote;
+        dom.dataset.missing = 'true';
       }
       return {
         dom,
