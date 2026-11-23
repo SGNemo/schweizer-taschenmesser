@@ -8381,6 +8381,10 @@ export const de = {
       blockedImages: (n: number) =>
         n === 1 ? '1 externes Bild blockiert' : `${n} externe Bilder blockiert`,
       loadImages: 'Bilder laden',
+      linkAskTitle: 'Link führt woanders hin',
+      linkAsk: (host: string) =>
+        `Der Text des Links nennt eine andere Seite. Er führt zu ${host}. Nur öffnen, wenn du das erwartest.`,
+      linkAskOpen: 'Trotzdem öffnen',
       loadingImages: 'Bilder werden geladen …',
       trackers: (n: number) =>
         n === 1 ? '1 Tracking-Pixel entfernt' : `${n} Tracking-Pixel entfernt`,

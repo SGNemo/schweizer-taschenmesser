@@ -7,10 +7,9 @@ import {
 } from '@/core/mail/sanitize';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
-import { Button } from '@/ui';
+import { Button, Dialog } from '@/ui';
+import { linkDecision } from '../linkCheck';
 import styles from './mail.module.css';
-
-const SAFE_OPEN = /^(https?:|mailto:|tel:)/i;
 
 /**
  * Shows one mail body. The HTML is sanitised (`sanitizeMailHtml`), then rendered in an iframe with
@@ -36,6 +35,8 @@ export function MailFrame({
   const [loadingImages, setLoadingImages] = useState(false);
   const frame = useRef<HTMLIFrameElement>(null);
   const [height, setHeight] = useState(120);
+  // M6: a link that names another site than it goes to waits here for a yes
+  const [asking, setAsking] = useState<{ href: string; host: string }>();
 
   const source = html ?? (text ? textToHtml(text) : '');
   const result = useMemo(() => sanitizeMailHtml(source, { images, cid }), [source, images, cid]);
@@ -79,8 +80,9 @@ export function MailFrame({
       const anchor = (e.target as Element | null)?.closest?.('a');
       if (!anchor) return;
       e.preventDefault();
-      const href = anchor.getAttribute('href') ?? '';
-      if (SAFE_OPEN.test(href)) void getPlatform().app.openUrl(href);
+      const decision = linkDecision(anchor.textContent ?? '', anchor.getAttribute('href') ?? '');
+      if ('open' in decision) void getPlatform().app.openUrl(decision.open);
+      else if ('ask' in decision) setAsking({ href: decision.ask, host: decision.host });
     });
   }
 
@@ -107,6 +109,29 @@ export function MailFrame({
         srcDoc={doc}
         onLoad={onLoad}
       />
+      <Dialog
+        open={asking !== undefined}
+        onClose={() => setAsking(undefined)}
+        title={t.mail.view.linkAskTitle}
+        footer={
+          <>
+            <Button onClick={() => setAsking(undefined)} data-autofocus>
+              {t.actions.cancel}
+            </Button>
+            <Button
+              onClick={() => {
+                const href = asking?.href;
+                setAsking(undefined);
+                if (href) void getPlatform().app.openUrl(href);
+              }}
+            >
+              {t.mail.view.linkAskOpen}
+            </Button>
+          </>
+        }
+      >
+        <p>{asking ? t.mail.view.linkAsk(asking.host) : null}</p>
+      </Dialog>
     </div>
   );
 }

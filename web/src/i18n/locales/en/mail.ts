@@ -192,6 +192,10 @@ export const mail: Strings['mail'] = {
     blockedImages: (n: number) =>
       n === 1 ? '1 external image blocked' : `${n} external images blocked`,
     loadImages: 'Load images',
+    linkAskTitle: 'Link goes somewhere else',
+    linkAsk: (host: string) =>
+      `The link's text names another site. It goes to ${host}. Only open it if you expect that.`,
+    linkAskOpen: 'Open anyway',
     loadingImages: 'Loading images …',
     trackers: (n: number) =>
       n === 1 ? '1 tracking pixel removed' : `${n} tracking pixels removed`,
