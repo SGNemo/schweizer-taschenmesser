@@ -59,6 +59,7 @@ Raw table: `web/test-results/usecase-tag-kippt.md` after a run.
 | K10 | plan from outside     | nothing tells what is missing from the new plan                                                                 | low    |
 | K11 | selection             | the row's checkbox is named only „Auswählen“ (the title is a button): a screen reader does not hear which thing | low    |
 | K12 | Monday                | fine: tab, calm line, „Alle auf heute“ (2 handles); 8 rows today afterwards – the list again                    | low    |
+| K13 | ToDos board | a card's ⋯ menu can sit under the next card (it takes the pointer); the measuring script presses the item directly | low |
 
 ## 4. Critique of today's planner in this case (`design:design-critique`)
 
