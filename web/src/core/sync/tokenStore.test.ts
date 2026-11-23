@@ -265,21 +265,55 @@ describe('sync token – edge cases (council round 1)', () => {
     server = new MemoryServer();
     server.token = TOKEN;
     await connect({ url: 'https://sync.example', token: TOKEN, encrypt: false }, deps);
-    const { saveSyncConfigForTest } = await import('./service');
+    const { saveSyncConfigForTests } = await import('./service');
     const key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, [
       'encrypt',
       'decrypt',
     ]);
-    await saveSyncConfigForTest(db, { kind: 'lanHub', key, keyVersion: 1 });
+    await saveSyncConfigForTests(db, { kind: 'lanHub', key, keyVersion: 1 });
     expect(deleted).toEqual([SYNC_TOKEN_SECRET]);
     expect(secrets.map.has(SYNC_TOKEN_SECRET)).toBe(false);
-    await saveSyncConfigForTest(db, { kind: 'lanHub', key, keyVersion: 2 });
+    await saveSyncConfigForTests(db, { kind: 'lanHub', key, keyVersion: 2 });
     expect(deleted).toEqual([SYNC_TOKEN_SECRET]);
   });
 
-  it('the new error has a text in both languages', async () => {
+  it('the new texts exist in both languages', async () => {
     const { t } = await import('@/strings');
+    const en = (await import('@/i18n/locales/en/sync')).sync as unknown as {
+      errors: Record<string, string>;
+      signOutTokenMissing: string;
+    };
     expect(t.sync.errors['token-missing']).toBeTruthy();
+    expect(en.errors['token-missing']).toBeTruthy();
+    expect(t.sync.signOutTokenMissing).toBeTruthy();
+    expect(en.signOutTokenMissing).toBeTruthy();
+  });
+
+  it('a missing token retries where the OS keystore answers, not on a start without it', async () => {
+    for (const [protection, retries] of [
+      ['os-keystore', true],
+      ['device-key', false],
+    ] as const) {
+      setPlatform({ ...getPlatform(), secrets: store(protection) });
+      useSyncStatus.getState().set({ retryAt: undefined, failures: 0 });
+      await db.table('_secrets').put({
+        key: 'syncConfig',
+        value: { kind: 'selfHosted', url: 'https://sync.example', token: '' },
+      });
+      await syncNow(deps);
+      expect(useSyncStatus.getState().error).toBe('token-missing');
+      expect(useSyncStatus.getState().retryAt !== undefined).toBe(retries);
+    }
+  });
+
+  it('signing out with an unavailable device token changes nothing and says so', async () => {
+    const secrets = store('os-keystore');
+    setPlatform({ ...getPlatform(), secrets });
+    const value = { kind: 'selfHosted', url: 'https://sync.example', token: '', deviceId: 'd1' };
+    await db.table('_secrets').put({ key: 'syncConfig', value });
+    const { signOutThisDevice } = await import('./service');
+    expect(await signOutThisDevice(deps)).toBe('token-missing');
+    expect(await record()).toEqual(value);
   });
 
   it('no request with an empty token: push, the feed proxy and the device list get no server', async () => {

@@ -10,6 +10,7 @@ import {
   type ConnectParams,
 } from '@/core/sync/service';
 import { useSyncStatus } from '@/core/sync/status';
+import { useUiStore } from '@/stores/ui';
 import { getPlatform } from '@/core/platform';
 import { formatDateTime } from '@/core/time/dates';
 import { isInsecureRemoteUrl } from '@/core/net/publicUrl';
@@ -185,7 +186,15 @@ export function SyncSection() {
           <Step title={c.stepConnection}>
             <Actions>
               <Button onClick={() => void disconnect()}>{t.sync.disconnect}</Button>
-              <Button variant="danger" onClick={() => void signOutThisDevice()}>
+              <Button
+                variant="danger"
+                onClick={() =>
+                  void signOutThisDevice().then((r) => {
+                    if (r === 'token-missing')
+                      useUiStore.getState().toast(t.sync.signOutTokenMissing);
+                  })
+                }
+              >
                 {t.sync.signOut}
               </Button>
             </Actions>

@@ -39,6 +39,8 @@ export const sync: Strings['sync'] = {
   signOut: 'Sign out this device',
   signOutHint:
     'Blocks this device’s token on the server and disconnects it. Your local data stays.',
+  signOutTokenMissing:
+    'Signing out isn’t possible right now: the server token isn’t available on this device. Try again later or lock this device from another one.',
   disconnectHint: 'Your local data stays; the server isn’t changed.',
   state: { off: 'Off', idle: 'Synced', syncing: 'Syncing …', error: 'Error' },
   badge: (state: string) => `Sync: ${state}`,
@@ -105,7 +107,7 @@ export const sync: Strings['sync'] = {
     unauthorized:
       'The server rejected the token. Disconnect and connect again with the current server token (the “Access token” field).',
     'token-missing':
-      'The server token cannot be read on this device right now – it will retry. If it stays this way, disconnect and connect again with the server token (the “Access token” field).',
+      'The server token isn’t available on this device right now – sync will retry automatically. If this keeps happening, disconnect and connect again with the server token (the “Access token” field).',
     server: 'The server reported an error.',
     clock: 'This device’s clock is more than an hour fast. Please check the date and time.',
     decrypt: 'Decryption failed – is the passphrase right?',

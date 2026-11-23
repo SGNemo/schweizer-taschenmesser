@@ -135,7 +135,8 @@ const tokenInKeystore = (): boolean => getPlatform().secrets.protection === 'os-
 
 /**
  * Save, clear and the S5 move of the server token run one at a time, so a move that started from an
- * old record can never write back a token that `connect`, a rotation or `disconnect` replaced.
+ * old record can never write back a token that `connect`, a rotation or `disconnect` replaced. Not
+ * re-entrant: never call a lock-taking function (load '' branch, save, clear, move) from inside.
  */
 let tokenChain: Promise<unknown> = Promise.resolve();
 function withTokenLock<T>(fn: () => Promise<T>): Promise<T> {
@@ -243,8 +244,8 @@ function saveSyncConfig(database: TaschenmesserDB, config: SyncConfig): Promise<
   });
 }
 
-/** Tests only. */
-export const saveSyncConfigForTest = (database: TaschenmesserDB, config: SyncConfig) =>
+/** Tests only: the server → home-network replace is otherwise reachable only through a race in `enableLanHub`. */
+export const saveSyncConfigForTests = (database: TaschenmesserDB, config: SyncConfig) =>
   saveSyncConfig(database, config);
 
 function clearSyncConfig(database: TaschenmesserDB): Promise<void> {
@@ -439,12 +440,14 @@ export function syncNow(deps: SyncServiceDeps = defaultDeps()): Promise<void> {
       if (code === 'unknown') console.error('[sync] failed');
       const at = now();
       const failures = useSyncStatus.getState().failures + 1;
+      // A missing token heals only where the OS keystore answers; on a start without it, it cannot.
+      const retry = RETRYABLE.has(code) && (code !== 'token-missing' || tokenInKeystore());
       status.set({
         phase: 'error',
         error: code,
         errorAt: at,
         failures,
-        retryAt: RETRYABLE.has(code) ? at + backoffMs(failures) : undefined,
+        retryAt: retry ? at + backoffMs(failures) : undefined,
         pending: await deps.storage.pendingCount(),
       });
     }
@@ -953,9 +956,17 @@ export async function lockDevice(
   return c?.remote.revokeDevice ? c.remote.revokeDevice(id) : false;
 }
 
-/** Signs this device out: revokes its token on the server (best effort), then disconnects. */
-export async function signOutThisDevice(deps: SyncServiceDeps = defaultDeps()): Promise<void> {
+/**
+ * Signs this device out: revokes its token on the server (best effort), then disconnects. With a
+ * device token that cannot be read right now (key store locked), nothing happens and the answer is
+ * `token-missing`: disconnecting alone would leave the token valid on the server.
+ */
+export async function signOutThisDevice(
+  deps: SyncServiceDeps = defaultDeps(),
+): Promise<'ok' | 'token-missing'> {
+  const record = await readRecord(deps.database);
   const c = await connectedRemote(deps);
+  if (record?.kind === 'selfHosted' && record.deviceId && !c) return 'token-missing';
   if (c?.config.deviceId && c.remote.revokeDevice) {
     try {
       await c.remote.revokeDevice(c.config.deviceId);
@@ -964,6 +975,7 @@ export async function signOutThisDevice(deps: SyncServiceDeps = defaultDeps()): 
     }
   }
   await disconnect(deps);
+  return 'ok';
 }
 
 /** Gives this device a new token (the old one stops working). No-op for legacy connections. */
