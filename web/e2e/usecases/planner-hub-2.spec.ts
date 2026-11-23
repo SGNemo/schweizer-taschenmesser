@@ -28,7 +28,8 @@ import { dismissNotices } from '../helpers';
  * `IST` is the measured state per path and project. `TARGET` is the figure the designed path reaches after the last
  * package that touches the flow, derived handle by handle with this script's counting (design round 3, 2026-11-23;
  * paths, stages and acceptance figures: docs/design/planner-hub-2/FIGURES.md; summary: ANALYSIS.md §3). Every build PR
- * re-measures `IST` (never loosened); a figure is asserted against the better of its `IST` and – once reached – its
+ * re-measures `IST` (never loosened: write into `IST` only figures that improved, and what a `PRICE` entry names as its
+ * `until` key – a figure with a named price keeps its `IST`); a figure is asserted against the better of its `IST` and – once reached – its
  * `TARGET` (lower is better, except `HIGHER`); a word equals its `IST`. Named prices – a figure above its IST on
  * purpose, reaching it is no regression, more fails:
  *  - lasting (the bound is the TARGET): C1 `perThing` 6 → 7 (4a: the row expands first, then „Ganz öffnen“, from 5a
