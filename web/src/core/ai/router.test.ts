@@ -149,7 +149,8 @@ describe('router: fallback chain', () => {
       attempts: [{ providerId: 'a', error: 'server' }],
     });
     expect(b.complete).not.toHaveBeenCalled();
-    // While "a" cools down nothing was sent to it, so the next eligible provider may be asked …
+    // Unpinned (a new chat that has not reached a provider yet) the next eligible one may be asked;
+    // a chat that already went to "a" is pinned and gets `provider-paused` (routerPin.test.ts) …
     expect((await r.complete(chat)).providerId).toBe('b');
     // … and an empty history still counts as a conversation.
     clearCooldown();

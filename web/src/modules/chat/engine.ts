@@ -18,7 +18,7 @@ import type { Stored } from '@/core/db/types';
 import { getPlatform } from '@/core/platform';
 import { autoTitle, byTime, toTurns } from './logic';
 import { messageRepo, threadRepo } from './repo';
-import type { Message } from './schema';
+import type { Message, Thread } from './schema';
 
 export type ChatErrorCode =
   AiErrorCode | 'no-engine' | 'local-unavailable' | 'no-thread' | 'ai-off';
@@ -73,6 +73,7 @@ export async function generateReply(threadId: string, opts: ReplyOptions): Promi
   let model: string;
   let stage: 'local' | 'cloud';
   let costUsd: number | undefined;
+  let providerLabel: string | undefined;
 
   try {
     if (thread.engine === 'local') {
@@ -94,9 +95,14 @@ export async function generateReply(threadId: string, opts: ReplyOptions): Promi
       stage = 'local';
     } else {
       if (!opts.provider) return { ok: false, error: 'no-engine' };
+      const pin = await pinOf(thread);
+      // An older chat with cloud answers but no pin: which provider has its history is unknown, so
+      // the user picks one (never a guess).
+      if (pin === 'unknown') return { ok: false, error: 'provider-paused', detail: 'not-set-up' };
       const response = await opts.provider.complete({
         system,
         history: turns.slice(0, -1),
+        pin,
         user: last.content,
         tools: [],
         signal: opts.signal,
@@ -108,6 +114,17 @@ export async function generateReply(threadId: string, opts: ReplyOptions): Promi
       model = response.model;
       stage = 'cloud';
       costUsd = response.costUsd;
+      providerLabel = response.providerLabel;
+      if (
+        response.providerId &&
+        (response.providerId !== thread.providerId || response.providerRef !== thread.providerRef)
+      ) {
+        await threadRepo.update(threadId, {
+          providerId: response.providerId,
+          providerLabel: response.providerLabel,
+          providerRef: response.providerRef,
+        });
+      }
       await recordUsage({
         provider: response.providerId ?? opts.provider.id,
         model,
@@ -123,6 +140,17 @@ export async function generateReply(threadId: string, opts: ReplyOptions): Promi
   } catch (e) {
     if (e instanceof AiError) {
       await recordAttempts(e.attempts);
+      // The chat was handed to this provider (even without an answer, also when stopped): it stays
+      // there, so "try again" cannot hand the history and attached data to another one. Fails safe
+      // when nothing went out (notice declined): the user is only asked to choose.
+      const { reached } = e;
+      if (thread.engine !== 'local' && !thread.providerId && reached) {
+        await threadRepo.update(threadId, {
+          providerId: reached.providerId,
+          providerLabel: reached.label,
+          providerRef: reached.ref,
+        });
+      }
       return { ok: false, error: e.code, detail: e.message };
     }
     if (opts.signal?.aborted) return { ok: false, error: 'aborted' };
@@ -147,6 +175,7 @@ export async function generateReply(threadId: string, opts: ReplyOptions): Promi
     content: text,
     stage,
     model,
+    ...(providerLabel ? { providerLabel } : {}),
     tokensIn: usage.inputTokens,
     tokensOut: usage.outputTokens,
   });
@@ -158,6 +187,35 @@ export async function generateReply(threadId: string, opts: ReplyOptions): Promi
     ...(thread.autoTitle && first ? { title: autoTitle(first.content) } : {}),
   });
   return { ok: true, message };
+}
+
+/**
+ * Where a cloud turn may go (AI1): the provider the chat first went to; `unknown` for chats from
+ * before the pin that already have cloud answers; a new chat has no pin yet.
+ */
+async function pinOf(
+  thread: Stored<Thread>,
+): Promise<{ providerId: string; ref?: string } | 'unknown' | undefined> {
+  if (thread.providerId) return { providerId: thread.providerId, ref: thread.providerRef };
+  // Deleted answers count too: "Neu generieren" or editing must not turn an older chat into a new one.
+  const cloudBefore = await messageRepo.table
+    .where('threadId')
+    .equals(thread.id)
+    .filter((m: Message) => m.role === 'assistant' && m.stage === 'cloud')
+    .count();
+  return cloudBefore > 0 ? 'unknown' : undefined;
+}
+
+/** "Anderen Anbieter wählen": the user moves the chat (with its history) to another provider. */
+export async function chooseProvider(
+  threadId: string,
+  provider: { id: string; label: string; ref?: string },
+): Promise<void> {
+  await threadRepo.update(threadId, {
+    providerId: provider.id,
+    providerLabel: provider.label,
+    providerRef: provider.ref,
+  });
 }
 
 /** Stores a question (with the data attached to it, as sent) and returns it. */

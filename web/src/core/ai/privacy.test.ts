@@ -11,7 +11,7 @@ import { createFakeLocalModel } from '@/core/platform/fakeLocalModel';
 import { createWebPlatform } from '@/core/platform/web';
 import { setNow } from '@/core/time/now';
 import { buildContext, contextModules } from '@/modules/chat/context';
-import { addQuestion, generateReply } from '@/modules/chat/engine';
+import { addQuestion, chooseProvider, generateReply } from '@/modules/chat/engine';
 import { threadRepo } from '@/modules/chat/repo';
 import plannerManifest from '@/modules/planner/manifest';
 import { assignmentRepo, dayRepo, itemRepo } from '@/modules/planner/repo';
@@ -348,6 +348,8 @@ describe('pin (4): a chat with planner data in the database', () => {
       const provider = createRouter({
         members: [{ entry: e, provider: createProviderFor(e, KEY, fetchFn) }],
       });
+      // A chat stays with its provider (AI1); here the user moves it on purpose for each adapter.
+      await chooseProvider(thread.id, { id: e.id, label: e.label });
       await addQuestion(thread.id, 'Und morgen?');
       const res = await generateReply(thread.id, { provider });
       expect(res.ok, c.name).toBe(true);

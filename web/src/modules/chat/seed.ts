@@ -34,9 +34,8 @@ function seed(ctx: SeedContext): SeedRows {
         data: {
           threadId,
           role: 'assistant',
+          // No `stage`: no model wrote it, and a cloud stage would make the chat ask for a provider (AI1).
           content: t.chat.seed.answer,
-          stage: 'cloud',
-          model: 'beispiel-modell',
         },
       },
     ],

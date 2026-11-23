@@ -7671,11 +7671,36 @@ export const de = {
     assistant: 'Assistent',
     stageLocal: 'Lokal · 0 €',
     stageCloud: 'Cloud',
+    stageCloudBy: (provider: string) => `Cloud · ${provider}`,
+    provider: {
+      paused: (name?: string) =>
+        `${name ?? 'Der Anbieter dieses Chats'} ist gerade nicht erreichbar. Der Chat wechselt nicht von selbst zu einem anderen.`,
+      limit: (name?: string) =>
+        `Dein Limit für ${name ?? 'den Anbieter dieses Chats'} ist erreicht. Der Chat wechselt nicht von selbst zu einem anderen.`,
+      missing: (name?: string) =>
+        name
+          ? `${name} ist auf diesem Gerät nicht oder anders eingerichtet. Wähle selbst, an welchen Anbieter dieser Chat gehen soll.`
+          : 'Bei diesem älteren Chat ist nicht gespeichert, welcher Anbieter ihn hat. Wähle einmal, wohin er gehen soll.',
+      pick: 'Anbieter wählen',
+      pickTitle: 'Anbieter für diesen Chat wählen',
+      pickConfirm: 'Wählen und senden',
+      pickNone: 'Es ist noch kein Anbieter eingerichtet.',
+      openSettings: 'KI-Anbieter einrichten',
+      choose: 'Anderen Anbieter wählen',
+      chooseTitle: 'Anbieter für diesen Chat wechseln',
+      chooseBody:
+        'Der ganze Verlauf dieses Chats geht dann an den gewählten Anbieter, auch Daten, die du angehängt hast. Danach bleibt der Chat dort.',
+      chooseField: 'Anbieter',
+      mayTrain: (name: string) => `${name} (kann Eingaben zum Training nutzen)`,
+      chooseNone: 'Es ist kein anderer Anbieter eingerichtet.',
+      chooseConfirm: 'Wechseln und senden',
+    },
     engine: 'Antwortet mit',
     engineLocal: 'Lokales Modell',
     engineRouter: 'Meine Anbieter',
     engineHintLocal: 'Läuft nur auf diesem Gerät, offline, ohne Kosten.',
-    engineHintRouter: 'Der Text dieses Chats geht an deinen eingestellten Anbieter.',
+    engineHintRouter:
+      'Der Text dieses Chats geht an deinen eingestellten Anbieter. Ein Chat bleibt bei dem Anbieter, der ihn zuerst bekommen hat.',
     systemPrompt: 'Eigene Anweisung für diesen Chat',
     systemPromptHint: 'Zum Beispiel: „Antworte kurz und in einfachen Sätzen.“',
     rename: 'Umbenennen',
