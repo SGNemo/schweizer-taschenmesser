@@ -32,21 +32,22 @@ type Figures = Record<string, number | string>;
  * T4 by the ToDos' JSON import plus „Hierher legen“ – a moved or postponed thing comes back as a second ToDo.
  */
 const IST: Record<string, Figures> = {
+  // „Nur das hier …“ (feat/nur-das-hier): tick what stays, the rest in one move; the start line on top.
   'T1 Samstag 16:00 – ab jetzt neu': {
-    taps: 9,
-    perThing: 4,
+    taps: 8,
+    perThing: 0,
     visibleToday: 4,
-    startPoint: 'nein',
+    startPoint: 'ja',
     smallerInOneMove: 'nein',
     lost: 0,
     unasked: 0,
   },
   'T2 Samstagabend – 5 / 6 / 9': {
-    taps: 31,
-    perThing: 23,
-    laterInPlanner: 'nein',
+    taps: 21,
+    perThing: 0,
+    laterInPlanner: 'ja',
     visibleToday: 5,
-    startPoint: 'nein',
+    startPoint: 'ja',
     lost: 0,
     unasked: 0,
   },
@@ -546,13 +547,14 @@ test('T2 Samstagabend – 5 / 6 / 9', async ({ page }, info) => {
   const soLater = SUNDAY.filter((x) => !KEEP_SO.includes(x));
   const toSunday = SATURDAY.filter((x) => KEEP_SO.includes(x));
   let laterInPlanner = 'nein';
-  // Saturday first: what stays, then what goes to Sunday, then the rest.
-  if (await keepOnly(hand, page, [...KEEP_SA, ...toSunday], 'later', SA)) {
+  // „Nur das hier …“ (feat/nur-das-hier): Saturday keeps its five, the rest goes to Sunday in one move; Sunday keeps
+  // its six (two of them came from Saturday), the rest goes to the next weeks in one move. No grip per thing.
+  if (await keepOnly(hand, page, KEEP_SA, 'next', SA)) {
     laterInPlanner = 'ja';
-    // The two for Sunday: „Auswählen“ on the sheet, one day for both.
-    await moveRestOld(hand, page, KEEP_SA, SA, SO);
     await hand.tap(page.getByTestId(`week-${SO}`));
+    await expect(page.getByTestId(`day-${SO}`)).toBeVisible();
     await keepOnly(hand, page, KEEP_SO, 'later', SO);
+    await hand.tap(page.getByTestId(`week-${SA}`));
   } else {
     await moveRestOld(hand, page, KEEP_SA, SA, SO);
     await laterInTodos(hand, page, [...saLater, ...soLater]);
@@ -578,6 +580,15 @@ test('T2 Samstagabend – 5 / 6 / 9', async ({ page }, info) => {
   for (const title of LATER) expect(after[title], title).toBe('später');
   for (const title of KEEP_SA) expect(after[title], title).toBe(SA);
   for (const title of KEEP_SO) expect(after[title], title).toBe(SO);
+  if (laterInPlanner === 'ja') {
+    // Findable where he shrank: the folded group „Nächste Wochen“ lists the nine; „Diese Woche“ takes one back.
+    await page.getByRole('button', { name: /^Nächste Wochen ausklappen/ }).click();
+    const group = page.getByTestId('planner-later');
+    await expect(group.getByRole('listitem')).toHaveCount(LATER.length);
+    await group.getByRole('button', { name: `Diese Woche: ${LATER[0]}` }).click();
+    await expect(group.getByRole('listitem')).toHaveCount(LATER.length - 1);
+    expect((await settled(page))[LATER[0]!]).toBe('ohne Tag');
+  }
 });
 
 test('T3 Montag – letzter Stand, neu legen', async ({ page }, info) => {
