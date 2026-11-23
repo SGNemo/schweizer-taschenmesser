@@ -431,7 +431,7 @@ export const mail: Strings['mail'] = {
     done: 'Done',
     doneFor: (title: string) => `“${title}” done`,
     later: 'Tomorrow again',
-    laterFor: (title: string) => `Show “${title}” again tomorrow`,
+    laterFor: (title: string) => `“${title}”: tomorrow again`,
     next: 'Next',
     doneToast: 'Taken off “Waiting for me”.',
     laterToast: 'Comes back tomorrow morning.',
