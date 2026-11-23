@@ -258,7 +258,7 @@ No regression. Verified at the code, not from the old status table.
 | P2 | **exe: fixed** – the dev updater key is a real, different key (stable id `3CDE…277E`, dev id `FA42…B9CE`) and CI stops when they are equal (`.github/workflows/dev-preview.yml:180-196`). **APK: open** (SC2) | – |
 | P3 | partly: release dry runs do not sign the exe; rest is SC2/SC3 | – |
 | P5 | **open** (low): no build provenance | – |
-| S13 | **fixed (#PR)**, way D (Sven's decision 2026-11-23): the installer refuses an APK whose package name is not the running app's; same package → Android's certificate check | [S13-APK-AUTHENTICITY.md](S13-APK-AUTHENTICITY.md) |
+| S13 | **fixed (#1094)**, way D (Sven's decision 2026-11-23): the installer refuses an APK whose package name is not the running app's; same package → Android's certificate check | [S13-APK-AUTHENTICITY.md](S13-APK-AUTHENTICITY.md) |
 | D1–D5 | fixed | `docs/user/security.md`, `SECURITY.md:15` |
 | Website controller placeholder | no placeholder in the repo; build variables, production build fails without them | `site/src/legal.js:22-40`, `npm run check:legal`: 0 open |
 | Not re-verified | X10, X11, N8, L3–L7, W4–W8, A7, A8, P4, P7–P13 (info items) | – |
