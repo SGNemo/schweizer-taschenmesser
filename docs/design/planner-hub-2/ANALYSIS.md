@@ -68,7 +68,7 @@ Measured 2026-11-23 on `develop` (69b217cf) by `web/e2e/usecases/planner-hub-2.s
 
 | Idea | Rows | Switches | Verdict |
 | --- | --- | --- | --- |
-| 10 | – | D1 `tripsToPlanner` → 0 (measured from the module's side); 10a itself moves no figure – it is the base of 10b, 4, 9, 11, 1, 3 | built |
+| 10 | – | D1 `tripsToPlanner` 8 → 0 (measured from the module's side); 10a itself moves no figure – it is the base of 10b, 4, 9, 11, 1, 3 | built |
 | 4 | – | 5 → 0 (B), 2 → 0 (C2) | built |
 | 2 | 5 → 2 (B) | – | built |
 | 5 | bundle: 2 → 1 (C2); steps: one row as today (C1 – today's routine is one row too) | 4 / 5 → 0 (C1) | built |
