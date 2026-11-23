@@ -61,6 +61,8 @@ export type OpenFailure = 'timeout' | 'address' | 'native' | 'gone';
 
 /** How long creating a tab's webview may take before the frame gives up and says so. */
 export const OPEN_TIMEOUT_MS = 15_000;
+/** Third-party hosts listed per tab at most (B1; `MAX_SEEN_HOSTS` in `src-tauri/src/browser.rs`). */
+export const MAX_HOSTS = 200;
 
 function failureOf(err: unknown): OpenFailure {
   const msg = err instanceof Error ? err.message : String(err);
@@ -151,7 +153,12 @@ function onEvent(e: BrowserEvent): void {
       patch(e.tab, { blocked: tab.blocked + 1 });
       break;
     case 'seen':
-      if (!tab.hosts.includes(e.host)) patch(e.tab, { hosts: [...tab.hosts, e.host] });
+      // B1: the shell reports at most MAX_SEEN_HOSTS per tab; the list stays bounded here as well
+      if (!tab.hosts.includes(e.host) && tab.hosts.length < MAX_HOSTS)
+        patch(e.tab, { hosts: [...tab.hosts, e.host] });
+      break;
+    case 'unfiltered':
+      useUiStore.getState().toast(t.browser.unfiltered);
       break;
   }
 }

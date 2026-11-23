@@ -105,9 +105,9 @@ No critical finding. One high finding (SC1). The Dev-Preview that friends alread
 
 | ID | Sev | Finding | Evidence | Size |
 |---|---|---|---|---|
-| B1 | low | Unbounded `seen` set and event flood from a page can stall the main UI | `src/browser.rs:659-696`, `modules/browser/tabsStore.ts:128-155` | S |
-| B2 | low | `http://tauri.localhost` / `ipc.localhost` are not denied as hosts; not verified at runtime (SEC-9) | `crates/browser-filter/src/policy.rs:16-22`, `src/browser.rs:224-260` | S |
-| B3 | low | The tab starts loading before the request hook is installed; a failed hook leaves the tab unfiltered without a sign | `src/browser.rs:223,354-356`, `src/browser_win.rs:17-22,31` | S |
+| B1 | low | Unbounded `seen` set and event flood from a page can stall the main UI | `src/browser.rs:659-696`, `modules/browser/tabsStore.ts:128-155` | S · **fixed (#1076)**: a tab reports at most 200 third-party hosts (shell and page); the per-request `Blocked` count events stay (proposal: coalesce them) |
+| B2 | low | `http://tauri.localhost` / `ipc.localhost` are not denied as hosts; not verified at runtime (SEC-9) | `crates/browser-filter/src/policy.rs:16-22`, `src/browser.rs:224-260` | S · **fixed (#1076)**: `tauri.localhost` / `ipc.localhost` (and subdomains) are denied in a tab whatever the scheme |
+| B3 | low | The tab starts loading before the request hook is installed; a failed hook leaves the tab unfiltered without a sign | `src/browser.rs:223,354-356`, `src/browser_win.rs:17-22,31` | S · **fixed (#1076)**: on Windows a tab opens empty and navigates only after the request filter is queued; a failed filter says so in a toast |
 | B4, B5 | low | No permission handler off Windows (not shipped); private tabs have no own data folder | `src/browser_win.rs`, `src/browser.rs:331-332` | S |
 | B6, B7 | info | Tauri's init script is present in every webview (comment says otherwise; `invoke` is rejected by the ACL); commands callable while the module is off | `src/browser.rs:1-3` | – |
 
@@ -128,8 +128,8 @@ No critical finding. One high finding (SC1). The Dev-Preview that friends alread
 
 | ID | Sev | Finding | Evidence | Size |
 |---|---|---|---|---|
-| PC2 | low | A tampered journal makes "undo" write attacker-chosen bytes at four writable places (no privilege gain) | `crates/pc-tune/src/reg.rs:113-141`, `journal.rs:571-600` | S |
-| PC3 | low | Unbounded recursion in the Steam file parser (crash only) | `crates/disk-scan/src/steam.rs:14,137-170` | S |
+| PC2 | low | A tampered journal makes "undo" write attacker-chosen bytes at four writable places (no privilege gain) | `crates/pc-tune/src/reg.rs:113-141`, `journal.rs:571-600` | S · **fixed (#1076)**: an undo puts back only small values (≤ 64 bytes), at StartupApproved only binary or `DWORD`; anything else is refused before any write |
+| PC3 | low | Unbounded recursion in the Steam file parser (crash only) | `crates/disk-scan/src/steam.rs:14,137-170` | S · **fixed (#1076)**: the VDF parser stops descending at depth 64 and skips iteratively |
 | PC4, PC5 | info | Panic text is free text (scrubbed twice, UNC now covered by R7); the typed delete confirmation became a boolean, still enforced in Rust | `src/panic_log.rs:21-36`, `crates/disk-scan/src/delete.rs:98-104` | – |
 
 **Mail, music, calendar, feeds, maps, weather (B7).** OAuth: PKCE S256, state checked in Rust, loopback only, no client secret shipped (user-entered, secret store), refresh token only in the secret store, Google revoke on disconnect. Mail HTML: DOMPurify, sandboxed frame without scripts, in-frame CSP, images blocked by default, unsubscribe only as an https link after a dialog, raster previews only.
@@ -139,7 +139,7 @@ No critical finding. One high finding (SC1). The Dev-Preview that friends alread
 | M2 | low | `fetchPublic` judges only the first URL; redirects are followed on the desktop (also `redirect: 'error'` in `core/mail/localAi.ts:100` has no effect there) | `core/net/fetchPublic.ts:142-146` | S–M |
 | M3 | low | Attachment name went unsanitised into the save dialog – **fixed** | `modules/mail/components/ThreadView.tsx:75-79` | – |
 | M4 | low | Feed `siteUrl` without scheme check as `href` – **fixed** | `modules/feeds/routes/MainPage.tsx:240` | – |
-| M5 | low | = old T5: loopback OAuth listener single-threaded, 5 s timeout; new fixed port for Spotify can be pre-bound (fails closed) | `src/oauth.rs:109-141,182-213` | S |
+| M5 | low | = old T5: loopback OAuth listener single-threaded, 5 s timeout; new fixed port for Spotify can be pre-bound (fails closed) | `src/oauth.rs:109-141,182-213` | S · **fixed (#1076)**: each callback connection is read on its own thread (up to 64), so silent local connections no longer hold up the redirect; a pre-bound fixed port still fails closed (unchanged) |
 | M6 | low | Mail links open without showing the real host | `modules/mail/components/MailFrame.tsx:73-79` | S |
 | M7, M8 | info | Spotify has no revoke endpoint (say so); stale "read-only" and "no iframes" comments | `connectors/spotify/index.ts:76-81`, `connectors/google/gmail.ts:1-4` | docs |
 
