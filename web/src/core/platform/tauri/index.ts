@@ -29,6 +29,7 @@ import {
   sendNotification,
 } from '@tauri-apps/plugin-notification';
 import { openUrl } from '@tauri-apps/plugin-opener';
+import { t } from '@/strings';
 import { tComfort } from '@/strings.comfort';
 import type {
   NotificationPermissionState,
@@ -102,16 +103,10 @@ async function createNotifications(kind: PlatformKind): Promise<NotificationServ
       // Android needs a monochrome status-bar icon (`res/drawable/ic_notification`, rendered by
       // gen-icons); the launcher icon would appear as a white square. Desktop uses the app icon.
       // "Stumm" on Android: the low-importance channel shows it without sound.
-      const quietId = kind === 'android' && quiet ? await ensureQuietChannel() : undefined;
+      const channelId = kind === 'android' ? await channelFor(quiet === true) : undefined;
       sendNotification(
         kind === 'android'
-          ? {
-              title,
-              body,
-              ...ANDROID_ICON,
-              ...(quietId ? { channelId: quietId } : {}),
-              visibility: lockScreenVisibility(),
-            }
+          ? { title, body, ...ANDROID_ICON, ...(channelId ? { channelId } : {}) }
           : { title, body },
       );
     },
@@ -125,38 +120,58 @@ async function createNotifications(kind: PlatformKind): Promise<NotificationServ
 const ANDROID_ICON = { icon: 'ic_notification', iconColor: '#b5430c' } as const;
 
 /**
- * Android channels without sound for "Stumm" (each created once; the plugin ignores a repeat). A
- * channel's lock-screen setting overrides the notice's and cannot change after creation, so there
- * are two (NS6): `nemo-quiet` (private, created by earlier versions) for "content on the lock
- * screen" and `nemo-quiet-hidden` (secret) for the default.
+ * Android channels (each created once; the plugin ignores a repeat). NS6 (launch review 2026-11):
+ * what a locked phone shows is decided by the channel. A notice's own `visibility` never reaches
+ * Android: the plugin's Rust `NotificationData` has no such field and drops it. A channel's
+ * lock-screen setting overrides the notice and cannot change after creation, so:
+ *  - default (switch off): `nemo-hidden` / `nemo-quiet-hidden`, both "secret" (nothing on the lock
+ *    screen; in the notification shade after unlocking);
+ *  - "Inhalt auf dem Sperrbildschirm zeigen": the plugin's own `default` channel (no override,
+ *    Android's lock-screen setting decides) / `nemo-quiet` (private, created by earlier versions).
+ * Created channels play the sound as a notification; the plugin's `default` channel as an alarm,
+ * so under Do Not Disturb the two may differ.
  */
 const QUIET_CHANNEL = 'nemo-quiet';
 const QUIET_HIDDEN_CHANNEL = 'nemo-quiet-hidden';
-const quietChannels = new Map<string, Promise<void>>();
-function quietChannel(): string {
-  return lockScreenVisibility() === -1 ? QUIET_HIDDEN_CHANNEL : QUIET_CHANNEL;
-}
-async function ensureQuietChannel(): Promise<string> {
-  const id = quietChannel();
-  if (!quietChannels.has(id))
-    quietChannels.set(
+const HIDDEN_CHANNEL = 'nemo-hidden';
+const channels = new Map<string, Promise<void>>();
+
+/** The channel for a notice now: `undefined` = the plugin's default channel. */
+async function channelFor(quiet: boolean): Promise<string | undefined> {
+  const hidden = lockScreenVisibility() === -1;
+  const id = quiet
+    ? hidden
+      ? QUIET_HIDDEN_CHANNEL
+      : QUIET_CHANNEL
+    : hidden
+      ? HIDDEN_CHANNEL
+      : undefined;
+  if (!id) return undefined;
+  if (!channels.has(id))
+    channels.set(
       id,
       createChannel({
         id,
-        name: tComfort.get().mute.channel,
-        importance: Importance.Low,
-        vibration: false,
-        visibility: id === QUIET_HIDDEN_CHANNEL ? -1 : 0,
+        name:
+          id === QUIET_CHANNEL
+            ? tComfort.get().mute.channel
+            : id === QUIET_HIDDEN_CHANNEL
+              ? t.notifications.channelQuietHidden
+              : t.notifications.channelHidden,
+        importance: quiet ? Importance.Low : Importance.Default,
+        vibration: !quiet,
+        visibility: hidden ? -1 : 0,
       }).catch(() => undefined),
     );
-  await quietChannels.get(id);
+  await channels.get(id);
   return id;
 }
 
 /** Replaces the pending OS notifications with `items`. */
 async function scheduleUpcoming(items: ScheduledNotification[]): Promise<void> {
   const wanted = new Map(items.map((n) => [notificationId(n.key), n]));
-  const quietId = items.some((n) => n.quiet) ? await ensureQuietChannel() : undefined;
+  const normalId = await channelFor(false);
+  const quietId = items.some((n) => n.quiet) ? await channelFor(true) : normalId;
   const stale = (await pending()).map((p) => p.id).filter((id) => !wanted.has(id));
   if (stale.length > 0) await cancel(stale);
   for (const [id, n] of wanted) {
@@ -168,9 +183,8 @@ async function scheduleUpcoming(items: ScheduledNotification[]): Promise<void> {
       schedule: Schedule.at(new Date(n.at), false, true),
       extra: { url: n.url ?? '/' },
       ...ANDROID_ICON,
-      ...(n.quiet && quietId ? { channelId: quietId } : {}),
-      // NS6: content hidden on the lock screen unless this phone allows it
-      visibility: lockScreenVisibility(),
+      // NS6: the channel decides what a locked phone shows (see `channelFor`)
+      ...((n.quiet ? quietId : normalId) ? { channelId: n.quiet ? quietId : normalId } : {}),
     });
   }
 }

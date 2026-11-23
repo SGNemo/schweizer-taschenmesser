@@ -13,8 +13,10 @@ export const notifications: Strings['notifications'] = {
   introDesktop:
     'Reminders appear as notifications while Nemo is running, also in the background or the system tray. If the app is quit they don’t arrive; what fell due meanwhile shows in the bell at the next start.',
   lockScreen: 'Show content on the lock screen',
+  channelHidden: 'Notifications (hidden on the lock screen)',
+  channelQuietHidden: 'Quiet (hidden on the lock screen)',
   lockScreenHint:
-    'Off: on a locked phone Nemo’s notifications do not appear – they still sound and are there after unlocking. On: Android shows them the way you set up its lock screen. Applies to this device only.',
+    'Off: on a locked phone Nemo’s notifications do not appear – they still sound (except in “Quiet”) and are in the notification shade after unlocking. On: Android shows them the way you set up its lock screen. Applies to this device only.',
   enable: 'Turn on notifications',
   granted: 'On',
   denied: 'Blocked – please allow them for this site in your browser settings.',

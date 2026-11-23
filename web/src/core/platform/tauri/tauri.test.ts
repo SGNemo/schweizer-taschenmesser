@@ -43,7 +43,7 @@ vi.mock('@tauri-apps/plugin-notification', () => ({
   requestPermission: mocks.requestPermission,
   sendNotification: mocks.sendNotification,
   createChannel: mocks.createChannel,
-  Importance: { Low: 2 },
+  Importance: { Low: 2, Default: 3 },
   pending: mocks.pending,
   cancel: mocks.cancel,
   Schedule: {
@@ -150,6 +150,10 @@ describe('tauri platform', () => {
       { key: 'inv:2', at: 1_800_000_100_000, title: 'Rechnung' },
     ]);
     expect(mocks.cancel).toHaveBeenCalledWith([111, 222]);
+    // NS6: the first Android notice creates the channel that hides it on the lock screen
+    expect(mocks.createChannel).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'nemo-hidden', visibility: -1, importance: 3 }),
+    );
     expect(mocks.sendNotification).toHaveBeenCalledTimes(2);
     expect(mocks.sendNotification).toHaveBeenCalledWith({
       id: keep,
@@ -161,7 +165,7 @@ describe('tauri platform', () => {
       extra: { url: '/reminders' },
       icon: 'ic_notification',
       iconColor: '#b5430c',
-      visibility: -1,
+      channelId: 'nemo-hidden',
     });
   });
 
@@ -174,29 +178,25 @@ describe('tauri platform', () => {
       body: 'heute',
       icon: 'ic_notification',
       iconColor: '#b5430c',
-      visibility: -1,
+      channelId: 'nemo-hidden',
     });
   });
 
-  it('NS6: a locked phone shows nothing of a notice unless this device allows it', async () => {
-    // launch review 2026-11: "private" alone shows the text under Android's default setting, so the
-    // default is "secret"; the switch makes it "private" (Android's own setting decides then)
+  it('NS6: by default every notice goes through a channel that hides it on the lock screen', async () => {
+    // launch review 2026-11: a notice's own `visibility` is dropped by the plugin's Rust layer, so
+    // the channel decides; "secret" channels by default, the plugin's default channel when allowed
     vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mozilla/5.0 (Linux; Android 14)');
     const p = await createTauriPlatform();
     try {
       await p.notifications.show({ title: 'Arzt', body: '9 Uhr', tag: 'k' });
       expect(mocks.sendNotification).toHaveBeenLastCalledWith(
-        expect.objectContaining({ visibility: -1 }),
+        expect.objectContaining({ channelId: 'nemo-hidden' }),
       );
       setLockScreenContent(true);
       await p.notifications.show({ title: 'Arzt', body: '9 Uhr', tag: 'k' });
-      expect(mocks.sendNotification).toHaveBeenLastCalledWith(
-        expect.objectContaining({ visibility: 0 }),
-      );
+      expect(mocks.sendNotification.mock.lastCall?.[0]).not.toHaveProperty('channelId');
       await p.notifications.scheduleUpcoming!([{ key: 'r', at: 1_800_000_000_000, title: 'Arzt' }]);
-      expect(mocks.sendNotification).toHaveBeenLastCalledWith(
-        expect.objectContaining({ visibility: 0 }),
-      );
+      expect(mocks.sendNotification.mock.lastCall?.[0]).not.toHaveProperty('channelId');
     } finally {
       setLockScreenContent(false);
     }
@@ -211,12 +211,18 @@ describe('tauri platform', () => {
         expect.objectContaining({ id: 'nemo-quiet-hidden', visibility: -1 }),
       );
       expect(mocks.sendNotification).toHaveBeenLastCalledWith(
-        expect.objectContaining({ channelId: 'nemo-quiet-hidden', visibility: -1 }),
+        expect.objectContaining({ channelId: 'nemo-quiet-hidden' }),
       );
+      await p.notifications.scheduleUpcoming!([
+        { key: 'a', at: 1_800_000_000_000, title: 'A' },
+        { key: 'b', at: 1_800_000_000_000, title: 'B', quiet: true },
+      ]);
+      const sent = mocks.sendNotification.mock.calls.slice(-2).map((c) => c[0].channelId);
+      expect(sent).toEqual(['nemo-hidden', 'nemo-quiet-hidden']);
       setLockScreenContent(true);
       await p.notifications.show({ title: 'Arzt', body: '9 Uhr', tag: 'k', quiet: true });
       expect(mocks.sendNotification).toHaveBeenLastCalledWith(
-        expect.objectContaining({ channelId: 'nemo-quiet', visibility: 0 }),
+        expect.objectContaining({ channelId: 'nemo-quiet' }),
       );
     } finally {
       setLockScreenContent(false);

@@ -2834,8 +2834,10 @@ export const de = {
     introDesktop:
       'Erinnerungen erscheinen als Benachrichtigung, solange Nemo läuft, auch im Hintergrund oder im Infobereich. Ist die App beendet, kommen sie nicht; was in der Zwischenzeit fällig wurde, siehst du beim nächsten Start in der Glocke.',
     lockScreen: 'Inhalt auf dem Sperrbildschirm zeigen',
+    channelHidden: 'Benachrichtigungen (Sperrbildschirm verborgen)',
+    channelQuietHidden: 'Ruhe (Sperrbildschirm verborgen)',
     lockScreenHint:
-      'Aus: Auf dem gesperrten Handy erscheinen Nemo-Benachrichtigungen nicht – sie klingen trotzdem und warten nach dem Entsperren. An: Android zeigt sie so, wie du es für den Sperrbildschirm eingestellt hast. Gilt nur für dieses Gerät.',
+      'Aus: Auf dem gesperrten Handy erscheinen Nemo-Benachrichtigungen nicht – sie klingen trotzdem (außer bei „Ruhe“) und stehen nach dem Entsperren in der Benachrichtigungsleiste. An: Android zeigt sie so, wie du es für den Sperrbildschirm eingestellt hast. Gilt nur für dieses Gerät.',
     enable: 'Benachrichtigungen aktivieren',
     granted: 'Aktiviert',
     denied: 'Blockiert – bitte in den Browser-Einstellungen für diese Seite erlauben.',
