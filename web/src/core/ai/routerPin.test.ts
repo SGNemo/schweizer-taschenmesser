@@ -121,21 +121,61 @@ describe('router: a pinned chat stays with its provider', () => {
     expect(b.complete).not.toHaveBeenCalled();
   });
 
-  it('"first-configured" (chats from before the pin) means the first provider, never the next one', async () => {
-    const a = fake('a', [err('rate-limit')]);
-    const b = fake('b');
-    const r = route([member(a), member(b)]);
-    expect(await codeOf(r.complete({ ...CHAT, pin: 'first-configured' }))).toBe('rate-limit');
-    expect(await codeOf(r.complete({ ...CHAT, pin: 'first-configured' }))).toBe('provider-paused');
-    expect(b.complete).not.toHaveBeenCalled();
+  it('the same id with another fingerprint (other device, re-created entry) is not the pinned provider', async () => {
+    const a = fake('custom');
+    const e = await route([{ ...member(a), ref: 'other-endpoint' }])
+      .complete({ ...CHAT, pin: { providerId: 'custom', ref: 'endpoint-1' } })
+      .then(
+        () => new AiError('invalid-response', 'expected an error'),
+        (x: unknown) => x as AiError,
+      );
+    expect(e).toMatchObject({ code: 'provider-paused', message: 'not-set-up' });
+    expect(a.complete).not.toHaveBeenCalled();
+    const ok = await route([{ ...member(a), ref: 'endpoint-1' }]).complete({
+      ...CHAT,
+      pin: { providerId: 'custom', ref: 'endpoint-1' },
+    });
+    expect(ok.providerRef).toBe('endpoint-1');
+  });
+
+  it('a cooling or limited pin says "paused", a missing one "not-set-up"', async () => {
+    const a = fake('a', [err('server')]);
+    const r = route([member(a)]);
+    await codeOf(r.complete({ ...CHAT, pin: { providerId: 'a' } }));
+    const paused = await r.complete({ ...CHAT, pin: { providerId: 'a' } }).then(
+      () => new AiError('invalid-response', 'expected an error'),
+      (x: unknown) => x as AiError,
+    );
+    expect(paused.message).toBe('paused');
+    const missing = await r.complete({ ...CHAT, pin: { providerId: 'gone' } }).then(
+      () => new AiError('invalid-response', 'expected an error'),
+      (x: unknown) => x as AiError,
+    );
+    expect(missing.message).toBe('not-set-up');
+  });
+
+  it('names the provider a stopped request had already reached', async () => {
+    const a = fake('a', [err('aborted')]);
+    const e = await route([member(a)])
+      .complete({ ...CHAT, history: [] })
+      .then(
+        () => new AiError('invalid-response', 'expected an error'),
+        (x: unknown) => x as AiError,
+      );
+    expect(e.code).toBe('aborted');
+    expect(e.reached).toEqual({ providerId: 'a', label: 'Label a', ref: 'a' });
   });
 
   it('a failed pinned call names the provider it went to', async () => {
     const a = fake('a', [err('network')]);
     const e = await route([member(a)])
       .complete({ ...CHAT, pin: { providerId: 'a' } })
-      .catch((x: unknown) => x as AiError);
+      .then(
+        () => new AiError('invalid-response', 'expected an error'),
+        (x: unknown) => x as AiError,
+      );
     expect(e.attempts?.[0]?.providerId).toBe('a');
+    expect(e.reached?.providerId).toBe('a');
   });
 
   it('the assistant (no history, no user data) keeps the fallback chain', async () => {

@@ -6,7 +6,9 @@ highlight: true
 de: Der Plan bleibt jetzt liegen – Dinge wechseln den Tag nur noch, wenn du sie bewegst. Was an einem vergangenen Tag liegt, steht im Reiter „Noch offen“; Neues landet auf dem Tag, den du ansiehst.
 en: The plan now stays put – things change their day only when you move them. What lies on a past day is in the tab “Still open”; new things land on the day you look at.
 ---
+
 ---
+
 type: changed
 area: planner
 breaking: true

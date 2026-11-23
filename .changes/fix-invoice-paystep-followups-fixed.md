@@ -7,6 +7,7 @@ en: An invoice already paid or deleted elsewhere is no longer counted twice in t
 ---
 
 ---
+
 type: fixed
 area: mail
 breaking: false

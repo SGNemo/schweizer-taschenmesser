@@ -7,6 +7,7 @@ en: In the many-lines sheet each line stands in one row with its target, and “
 ---
 
 ---
+
 type: changed
 area: mail
 breaking: false
@@ -15,6 +16,7 @@ en: An invoice added from a mail shows “In the plan · Wed” once the planner
 ---
 
 ---
+
 type: changed
 area: planner
 breaking: false

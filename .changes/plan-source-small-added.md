@@ -7,6 +7,7 @@ en: Gifts with a date appear in the planner as “Gift for <name>” – without
 ---
 
 ---
+
 type: added
 area: timetrack
 breaking: false
@@ -15,6 +16,7 @@ en: Time tracked from an appointment shows “For: <appointment>” and leads ba
 ---
 
 ---
+
 type: added
 area: calendar
 breaking: false
@@ -23,6 +25,7 @@ en: An appointment shows its preparation to-dos (“Preparation: …”) with th
 ---
 
 ---
+
 type: changed
 area: notes
 breaking: false

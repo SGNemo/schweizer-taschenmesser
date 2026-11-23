@@ -6,7 +6,9 @@ highlight: true
 de: Unterlagen: Kategorien lassen sich anlegen, umbenennen, einfärben, sortieren und löschen – Unterlagen darin wandern dabei in eine Kategorie deiner Wahl.
 en: Documents: categories can be added, renamed, coloured, sorted and deleted – their documents move to a category you choose.
 ---
+
 ---
+
 type: changed
 area: vault
 breaking: false

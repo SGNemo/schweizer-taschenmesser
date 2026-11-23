@@ -15,7 +15,7 @@ import { switchAiOn } from '@/core/ai/switch';
 import { db } from '@/core/db/db';
 import { t } from '@/strings';
 import { messagesOf } from '../engine';
-import { threadRepo } from '../repo';
+import { messageRepo, threadRepo } from '../repo';
 import { ThreadView } from '../components/ThreadView';
 
 const seen: CompletionRequest[] = [];
@@ -23,13 +23,16 @@ vi.mock('@/core/ai/config', async (importOriginal) => {
   const actual = await importOriginal<typeof ConfigModule>();
   return {
     ...actual,
+    // No keys in the test's secret store: offer the configured entries as they are.
+    routerEntries: async (config: ConfigModule.AiConfig) =>
+      config.providers.map((entry) => ({ entry, key: 'k' })),
     // The real router is tested in routerPin.test.ts; here only what the chat makes of its answer.
     createRouterProvider: async () => ({
       id: 'router',
       model: 'm',
       async complete(req: CompletionRequest) {
         seen.push(req);
-        const pinned = req.pin && req.pin !== 'first-configured' ? req.pin.providerId : undefined;
+        const pinned = req.pin?.providerId;
         if (pinned === 'anthropic') throw new AiError('provider-paused');
         return {
           toolCalls: [],
@@ -38,6 +41,7 @@ vi.mock('@/core/ai/config', async (importOriginal) => {
           model: 'm',
           providerId: pinned ?? 'anthropic',
           providerLabel: pinned === 'mistral' ? 'Mistral Test' : 'Claude Test',
+          providerRef: req.pin?.ref,
         };
       },
     }),
@@ -53,7 +57,8 @@ beforeEach(async () => {
   await switchAiOn();
   const a = { ...entryFromPreset('anthropic'), label: 'Claude Test', keySet: true };
   const m = { ...entryFromPreset('mistral'), label: 'Mistral Test', keySet: true };
-  await saveAiConfig({ ...defaultAiConfig(), providers: [a, m] });
+  const g = { ...entryFromPreset('gemini'), label: 'Gemini Test', keySet: true };
+  await saveAiConfig({ ...defaultAiConfig(), providers: [a, m, g] });
 });
 afterEach(cleanup);
 
@@ -88,21 +93,65 @@ describe('chat: a paused provider', () => {
 
     const dialog = await screen.findByRole('dialog', { name: c.provider.chooseTitle });
     expect(dialog).toHaveTextContent(c.provider.chooseBody);
-    // Only the other configured provider is offered.
+    // Only the other configured providers are offered; one that may train on inputs says so.
     expect(
       within(dialog)
         .getAllByRole('option')
         .map((o) => o.textContent),
-    ).toEqual(['Mistral Test']);
+    ).toEqual(['Mistral Test', c.provider.mayTrain('Gemini Test')]);
     await user.click(within(dialog).getByRole('button', { name: c.provider.chooseConfirm }));
 
     expect(await screen.findByText(c.stageCloudBy('Mistral Test'))).toBeInTheDocument();
-    expect(seen[1]!.pin).toEqual({ providerId: 'mistral' });
+    expect(seen[1]!.pin).toMatchObject({ providerId: 'mistral' });
+    expect(seen[1]!.pin?.ref).toMatch(/^[0-9a-f]{8}$/);
     expect(await threadRepo.get(thread.id)).toMatchObject({
       providerId: 'mistral',
       providerLabel: 'Mistral Test',
     });
     const [, answer] = await messagesOf(thread.id);
     expect(answer?.providerLabel).toBe('Mistral Test');
+  });
+});
+
+describe('chat: an older chat without a pin', () => {
+  it('asks which provider it should go to, sends nothing before, and offers no "try again"', async () => {
+    const user = userEvent.setup();
+    const thread = await threadRepo.create({
+      title: 'Alt',
+      autoTitle: false,
+      pinned: false,
+      archived: false,
+      engine: 'router',
+      contextModules: [],
+      tokensIn: 0,
+      tokensOut: 0,
+      costUsd: 0,
+    });
+    await messageRepo.create({ threadId: thread.id, role: 'user', content: 'Alt' });
+    await messageRepo.create({
+      threadId: thread.id,
+      role: 'assistant',
+      content: 'A',
+      stage: 'cloud',
+    });
+    render(
+      <MemoryRouter>
+        <ThreadView threadId={thread.id} onBack={() => {}} />
+      </MemoryRouter>,
+    );
+    await user.type(await screen.findByPlaceholderText(c.placeholder), 'Neu');
+    await user.click(screen.getByRole('button', { name: c.send }));
+    const alert = await screen.findByTestId('chat-error');
+    expect(alert).toHaveTextContent(c.provider.missing());
+    expect(within(alert).queryByRole('button', { name: c.retry })).toBeNull();
+    expect(seen).toHaveLength(0);
+    await user.click(within(alert).getByRole('button', { name: c.provider.choose }));
+    const dialog = await screen.findByRole('dialog', { name: c.provider.chooseTitle });
+    // Both configured providers are offered; the one that may train on inputs says so.
+    expect(
+      within(dialog)
+        .getAllByRole('option')
+        .map((o) => o.textContent),
+    ).toEqual(['Claude Test', 'Mistral Test', c.provider.mayTrain('Gemini Test')]);
   });
 });

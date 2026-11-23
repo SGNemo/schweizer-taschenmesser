@@ -6,7 +6,9 @@ highlight: true
 de: Planer: Im Reiter „Noch offen“ legst du alles mit „Alle auf heute“ zurück, lässt „Verteilen …“ vorschlagen oder gibst mehreren Dingen einen Tag.
 en: Planner: in the “Still open” tab, put everything back with “All to today”, let “Spread …” suggest days, or give several things one day.
 ---
+
 ---
+
 type: changed
 area: planner
 breaking: false

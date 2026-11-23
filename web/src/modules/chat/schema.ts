@@ -30,6 +30,8 @@ export const threadSchema = z.object({
   providerId: z.string().optional(),
   /** Its name at that time, for the calm "paused" message. */
   providerLabel: z.string().optional(),
+  /** Its fingerprint (`providerRef`): the same id on another device or re-created is not the same. */
+  providerRef: z.string().optional(),
 });
 export type Thread = z.output<typeof threadSchema>;
 

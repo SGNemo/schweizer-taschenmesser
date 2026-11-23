@@ -7,6 +7,7 @@ en: Every overview widget carries its module's small mark at the top right, so w
 ---
 
 ---
+
 type: changed
 area: ui
 breaking: false
@@ -15,6 +16,7 @@ en: Overdue entries name the day ("was due Tue", in the pantry "best-before was 
 ---
 
 ---
+
 type: changed
 area: app
 breaking: false
@@ -23,6 +25,7 @@ en: The sidebar unfolds only the area of the open page; what you open or fold yo
 ---
 
 ---
+
 type: changed
 area: app
 breaking: false

@@ -7,6 +7,7 @@ en: "Notebooks are now coloured index tabs above the page list, cards take the c
 ---
 
 ---
+
 type: changed
 area: bookmarks
 breaking: false
@@ -15,6 +16,7 @@ en: "The reading list shows at the top how many entries are open and what they a
 ---
 
 ---
+
 type: changed
 area: feeds
 breaking: false
@@ -23,6 +25,7 @@ en: "Feeds look like a front page: a newspaper head with the date and number of 
 ---
 
 ---
+
 type: changed
 area: chat
 breaking: false
@@ -31,6 +34,7 @@ en: "Chats show answers and your own messages as speech bubbles, and the widget 
 ---
 
 ---
+
 type: changed
 area: browser
 breaking: false

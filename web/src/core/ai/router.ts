@@ -31,7 +31,11 @@ import { estimateCostUsd, usageWindow } from './usage';
 export interface RouterMember {
   entry: Pick<ProviderEntry, 'id' | 'label' | 'limits' | 'price'>;
   provider: AiProvider;
+  /** Fingerprint of the entry (`providerRef`); defaults to its id. */
+  ref?: string;
 }
+
+const refOf = (m: RouterMember): string => m.ref ?? m.entry.id;
 
 export interface RouterOptions {
   members: readonly RouterMember[];
@@ -109,17 +113,24 @@ export function createRouter(opts: RouterOptions): AiProvider {
       const candidates =
         pin === undefined
           ? members
-          : pin === 'first-configured'
-            ? members.slice(0, 1)
-            : members.filter((m) => m.entry.id === pin.providerId);
+          : members.filter(
+              (m) =>
+                m.entry.id === pin.providerId && (pin.ref === undefined || refOf(m) === pin.ref),
+            );
       if (pin !== undefined && candidates.length === 0) {
-        throw new AiError('provider-paused', undefined, { attempts });
+        throw new AiError('provider-paused', 'not-set-up', { attempts });
       }
 
-      for (const { entry, provider } of candidates) {
+      for (const member of candidates) {
+        const { entry, provider } = member;
+        const reached = {
+          providerId: entry.id,
+          label: entry.label || entry.id,
+          ref: refOf(member),
+        };
         const at = clock();
         if (coolingDown(entry.id, at)) {
-          if (pin !== undefined) throw new AiError('provider-paused', undefined, { attempts });
+          if (pin !== undefined) throw new AiError('provider-paused', 'paused', { attempts });
           skippedCooling += 1;
           continue;
         }
@@ -129,7 +140,7 @@ export function createRouter(opts: RouterOptions): AiProvider {
           (requestsPerDay !== undefined && requestsToday >= requestsPerDay) ||
           (costUsdPerMonth !== undefined && costMonthUsd >= costUsdPerMonth)
         ) {
-          if (pin !== undefined) throw new AiError('provider-paused', undefined, { attempts });
+          if (pin !== undefined) throw new AiError('provider-paused', 'paused', { attempts });
           skippedForLimit += 1;
           continue;
         }
@@ -140,7 +151,8 @@ export function createRouter(opts: RouterOptions): AiProvider {
           return {
             ...result,
             providerId: entry.id,
-            providerLabel: entry.label || entry.id,
+            providerLabel: reached.label,
+            providerRef: reached.ref,
             costUsd: estimateCostUsd(
               result.model,
               result.usage.inputTokens,
@@ -151,7 +163,7 @@ export function createRouter(opts: RouterOptions): AiProvider {
           };
         } catch (e) {
           const error = asAiError(e);
-          if (error.code === 'aborted') throw error;
+          if (error.code === 'aborted') throw new AiError('aborted', error.message, { reached });
           attempts.push({
             providerId: entry.id,
             model: provider.model,
@@ -160,7 +172,7 @@ export function createRouter(opts: RouterOptions): AiProvider {
           });
           const wait = cooldownFor(error);
           if (wait > 0) cooldowns.set(entry.id, { until: clock() + wait, code: error.code });
-          if (singleProvider) throw new AiError(error.code, error.message, { attempts });
+          if (singleProvider) throw new AiError(error.code, error.message, { attempts, reached });
         }
       }
 

@@ -7,6 +7,7 @@ en: Mail has search filters (unread, with attachment, starred, older than a year
 ---
 
 ---
+
 type: added
 area: mail
 breaking: false

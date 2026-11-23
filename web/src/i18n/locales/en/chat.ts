@@ -26,14 +26,17 @@ export const chat: Strings['chat'] = {
   stageCloudBy: (provider: string) => `Cloud · ${provider}`,
   provider: {
     paused: (name?: string) =>
-      `${name ?? 'Your provider'} is taking a break right now. This chat stays with ${
-        name ?? 'it'
-      } so your history doesn’t go to another provider without you asking. Try again later or pick another one yourself.`,
+      `${name ?? 'This chat’s provider'} can’t be reached right now. The chat won’t switch to another one by itself.`,
+    missing: (name?: string) =>
+      name
+        ? `${name} isn’t set up on this device. Choose yourself which provider this chat should go to.`
+        : 'No provider is set for this chat yet. Choose yourself which one it should go to.',
     choose: 'Choose another provider',
-    chooseTitle: 'Another provider for this chat',
+    chooseTitle: 'Change the provider for this chat',
     chooseBody:
       'The whole history of this chat then goes to the chosen provider, including data you attached. The chat stays there afterwards.',
     chooseField: 'Provider',
+    mayTrain: (name: string) => `${name} (may use inputs for training)`,
     chooseNone: 'No other provider is set up. You can add one under Settings → AI.',
     chooseConfirm: 'Switch and send',
   },

@@ -7,6 +7,7 @@ en: The overview is tidier: cards in a row have the same height, icons line up o
 ---
 
 ---
+
 type: fixed
 area: home
 breaking: false

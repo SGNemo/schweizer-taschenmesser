@@ -77,7 +77,11 @@ export function MessageView({
             {message.stage === 'local'
               ? c.stageLocal
               : message.providerLabel
-                ? c.stageCloudBy(message.providerLabel)
+                ? c.stageCloudBy(
+                    message.providerLabel.length > 24
+                      ? `${message.providerLabel.slice(0, 23)}…`
+                      : message.providerLabel,
+                  )
                 : c.stageCloud}
           </Badge>
         ) : null}

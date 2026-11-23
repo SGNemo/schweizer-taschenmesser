@@ -7,6 +7,7 @@ en: Module pages no longer jump while opening: head, title and figure are in pla
 ---
 
 ---
+
 type: fixed
 area: app
 breaking: false
@@ -15,6 +16,7 @@ en: On the phone, the module name, figure and mark of ToDos, People, Invoices, C
 ---
 
 ---
+
 type: fixed
 area: app
 breaking: false
@@ -23,6 +25,7 @@ en: Setup: "Back" and "Next" stay visible at the bottom edge, also on long steps
 ---
 
 ---
+
 type: fixed
 area: app
 breaking: false

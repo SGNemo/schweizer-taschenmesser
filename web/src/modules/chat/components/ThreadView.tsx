@@ -1,7 +1,13 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { createRouterProvider, isEntryUsable, loadAiConfig, useAiConfig } from '@/core/ai/config';
+import {
+  createRouterProvider,
+  loadAiConfig,
+  providerRef,
+  routerEntries,
+  useAiConfig,
+} from '@/core/ai/config';
 import { useLocalModel } from '@/core/ai/local/state';
 import { downloadTextFile } from '@/core/backup/download';
 import { availableManifests } from '@/core/modules/available';
@@ -47,7 +53,7 @@ export function ThreadView({ threadId, onBack }: { threadId: string; onBack: () 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [renaming, setRenaming] = useState<string>();
-  const [choosing, setChoosing] = useState(false);
+  const [choosing, setChoosing] = useState<ProviderOption[]>();
   const aiConfig = useAiConfig();
   const controller = useRef<AbortController | undefined>(undefined);
 
@@ -100,12 +106,37 @@ export function ThreadView({ threadId, onBack }: { threadId: string; onBack: () 
   }
 
   const providerName =
-    thread.providerLabel ||
     aiConfig?.providers.find((p) => p.id === thread.providerId)?.label ||
+    thread.providerLabel ||
     undefined;
-  const otherProviders = (aiConfig?.providers ?? []).filter(
-    (p) => isEntryUsable(p) && p.id !== thread.providerId,
-  );
+  // Errors that come from the provider the chat is pinned to: the way out is an explicit choice.
+  const fromProvider =
+    !!error &&
+    thread.engine === 'router' &&
+    !['ai-off', 'no-engine', 'local-unavailable', 'no-thread', 'aborted'].includes(error.code) &&
+    (!!thread.providerId || error.code === 'provider-paused');
+  const notSetUp = error?.code === 'provider-paused' && error.detail === 'not-set-up';
+
+  /** Only providers the router would really use (usable, key present), minus the current one. */
+  async function openChooser() {
+    const entries = await routerEntries(await loadAiConfig());
+    setChoosing(
+      entries
+        .map(({ entry }) => ({
+          id: entry.id,
+          label: entry.label || entry.id,
+          ref: providerRef(entry),
+          mayTrain: entry.mayTrainOnInputs,
+        }))
+        .filter(
+          (o) =>
+            !(
+              o.id === thread!.providerId &&
+              (thread!.providerRef === undefined || o.ref === thread!.providerRef)
+            ),
+        ),
+    );
+  }
 
   const last = messages[messages.length - 1];
   const awaitingReply = last?.role === 'user' && !busy;
@@ -194,16 +225,22 @@ export function ThreadView({ threadId, onBack }: { threadId: string; onBack: () 
         {error ? (
           <div className={styles.error} role="alert" data-testid="chat-error">
             <span>
-              {error.code === 'provider-paused'
-                ? c.provider.paused(providerName)
-                : (c.errors[error.code] ?? c.errors.fallback)}
+              {notSetUp
+                ? c.provider.missing(providerName)
+                : error.code === 'provider-paused'
+                  ? c.provider.paused(providerName)
+                  : (c.errors[error.code] ?? c.errors.fallback)}
             </span>
-            <Button onClick={() => void reply()}>{c.retry}</Button>
-            {error.code === 'provider-paused' ? (
-              <Button onClick={() => setChoosing(true)} data-testid="chat-choose-provider">
+            {fromProvider ? (
+              <Button
+                variant={error.code === 'provider-paused' ? 'primary' : undefined}
+                onClick={() => void openChooser()}
+                data-testid="chat-choose-provider"
+              >
                 {c.provider.choose}
               </Button>
             ) : null}
+            {notSetUp ? null : <Button onClick={() => void reply()}>{c.retry}</Button>}
           </div>
         ) : null}
         {awaitingReply && !error ? <Button onClick={() => void reply()}>{c.retry}</Button> : null}
@@ -312,11 +349,13 @@ export function ThreadView({ threadId, onBack }: { threadId: string; onBack: () 
 
       {choosing ? (
         <ChooseProvider
-          options={otherProviders.map((p) => ({ id: p.id, label: p.label || p.id }))}
-          onClose={() => setChoosing(false)}
+          options={choosing}
+          onClose={() => setChoosing(undefined)}
           onChoose={(picked) => {
-            setChoosing(false);
-            void chooseProvider(threadId, picked).then(reply);
+            setChoosing(undefined);
+            chooseProvider(threadId, picked).then(reply, () =>
+              setError({ code: 'invalid-response' }),
+            );
           }}
         />
       ) : null}
@@ -348,15 +387,22 @@ export function ThreadView({ threadId, onBack }: { threadId: string; onBack: () 
   );
 }
 
+interface ProviderOption {
+  id: string;
+  label: string;
+  ref: string;
+  mayTrain: boolean;
+}
+
 /** "Anderen Anbieter wählen": only an explicit choice moves a chat (and its history) elsewhere. */
 function ChooseProvider({
   options,
   onClose,
   onChoose,
 }: {
-  options: { id: string; label: string }[];
+  options: ProviderOption[];
   onClose: () => void;
-  onChoose: (picked: { id: string; label: string }) => void;
+  onChoose: (picked: ProviderOption) => void;
 }) {
   const [picked, setPicked] = useState(options[0]?.id ?? '');
   const choice = options.find((o) => o.id === picked);
@@ -392,7 +438,7 @@ function ChooseProvider({
           >
             {options.map((o) => (
               <option key={o.id} value={o.id}>
-                {o.label}
+                {o.mayTrain ? c.provider.mayTrain(o.label) : o.label}
               </option>
             ))}
           </SelectField>

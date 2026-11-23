@@ -8,6 +8,7 @@ en: In Mail, tap “Select” to archive, trash, mark or report several mails as
 ---
 
 ---
+
 type: added
 area: mail
 breaking: false

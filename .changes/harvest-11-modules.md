@@ -7,6 +7,7 @@ en: Only a link really received through "Share" offers its preview.
 ---
 
 ---
+
 type: added
 area: lists
 breaking: false
@@ -15,6 +16,7 @@ en: With Routines switched on, the "Morning routine" and "Evening routine" templ
 ---
 
 ---
+
 type: fixed
 area: vault
 breaking: false
@@ -23,6 +25,7 @@ en: After "Cancel" in the categories the focus goes back to the button that open
 ---
 
 ---
+
 type: added
 area: routines
 breaking: false
@@ -31,6 +34,7 @@ en: A routine with a reminder shows a calm hint when notifications are not allow
 ---
 
 ---
+
 type: changed
 area: sync
 breaking: false
@@ -39,6 +43,7 @@ en: Under Settings → Sync only one main action is highlighted next to the home
 ---
 
 ---
+
 type: fixed
 area: disk
 breaking: false

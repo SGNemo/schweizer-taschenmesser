@@ -81,13 +81,31 @@ describe('chat engine: provider pin', () => {
     await addQuestion(thread.id, 'Frage', 'Daten');
     const failed = new AiError('server', 'down', {
       attempts: [{ providerId: 'p1', model: 'm', error: 'server' }],
+      reached: { providerId: 'p1', label: 'Eins', ref: 'r1' },
     });
     const p = provider([failed]);
     const result = await generateReply(thread.id, { provider: p });
     expect(result).toMatchObject({ ok: false, error: 'server' });
-    expect((await threadRepo.get(thread.id))?.providerId).toBe('p1');
+    expect(await threadRepo.get(thread.id)).toMatchObject({
+      providerId: 'p1',
+      providerLabel: 'Eins',
+      providerRef: 'r1',
+    });
     await generateReply(thread.id, { provider: p });
-    expect(p.seen[1]!.pin).toEqual({ providerId: 'p1' });
+    expect(p.seen[1]!.pin).toEqual({ providerId: 'p1', ref: 'r1' });
+  });
+
+  it('pins also when the user stopped the request: the question had already gone out', async () => {
+    const thread = await threadRepo.create(base);
+    await addQuestion(thread.id, 'Frage', 'Daten');
+    const stopped = new AiError('aborted', 'aborted', {
+      reached: { providerId: 'p1', label: 'Eins', ref: 'r1' },
+    });
+    expect(await generateReply(thread.id, { provider: provider([stopped]) })).toMatchObject({
+      ok: false,
+      error: 'aborted',
+    });
+    expect((await threadRepo.get(thread.id))?.providerId).toBe('p1');
   });
 
   it('reports a paused pinned provider calmly, with its name', async () => {
@@ -100,7 +118,7 @@ describe('chat engine: provider pin', () => {
     });
   });
 
-  it('a chat from before the pin with earlier cloud answers stays with the first configured provider', async () => {
+  it('a chat from before the pin with cloud answers asks the user instead of guessing', async () => {
     const thread = await threadRepo.create(base);
     await addQuestion(thread.id, 'Alt');
     await messageRepo.create({
@@ -111,18 +129,22 @@ describe('chat engine: provider pin', () => {
     });
     await addQuestion(thread.id, 'Neu');
     const p = provider();
-    await generateReply(thread.id, { provider: p });
-    expect(p.seen[0]!.pin).toBe('first-configured');
+    expect(await generateReply(thread.id, { provider: p })).toMatchObject({
+      ok: false,
+      error: 'provider-paused',
+      detail: 'not-set-up',
+    });
+    expect(p.seen).toHaveLength(0);
   });
 
   it('"Anderen Anbieter wählen" moves the pin only when the user picks one', async () => {
     const thread = await threadRepo.create({ ...base, providerId: 'p1', providerLabel: 'Eins' });
-    await chooseProvider(thread.id, { id: 'p2', label: 'Zwei' });
+    await chooseProvider(thread.id, { id: 'p2', label: 'Zwei', ref: 'r2' });
     const stored = await threadRepo.get(thread.id);
-    expect(stored).toMatchObject({ providerId: 'p2', providerLabel: 'Zwei' });
+    expect(stored).toMatchObject({ providerId: 'p2', providerLabel: 'Zwei', providerRef: 'r2' });
     await addQuestion(thread.id, 'Frage');
-    const p = provider([{ providerId: 'p2', providerLabel: 'Zwei' }]);
+    const p = provider([{ providerId: 'p2', providerLabel: 'Zwei', providerRef: 'r2' }]);
     await generateReply(thread.id, { provider: p });
-    expect(p.seen[0]!.pin).toEqual({ providerId: 'p2' });
+    expect(p.seen[0]!.pin).toEqual({ providerId: 'p2', ref: 'r2' });
   });
 });

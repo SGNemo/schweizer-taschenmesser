@@ -20,10 +20,10 @@ export interface CompletionRequest {
   tools: ToolDef[];
   /**
    * A conversation that already went to a provider stays with it (AI1): the router sends it to that
-   * provider only and reports `provider-paused` instead of switching. `first-configured` is for chats
-   * from before the pin existed.
+   * provider only and reports `provider-paused` instead of switching. `ref` (see `providerRef`) tells a
+   * re-created entry or another device's entry with the same id apart.
    */
-  pin?: { providerId: string } | 'first-configured';
+  pin?: { providerId: string; ref?: string };
   signal?: AbortSignal;
   /** Output limit (default 1024); the connection test uses a tiny one. */
   maxTokens?: number;
@@ -49,6 +49,8 @@ export interface CompletionResult {
   providerId?: string;
   /** … under which name the user knows it … */
   providerLabel?: string;
+  /** … and its fingerprint (`providerRef`) … */
+  providerRef?: string;
   /** … what that call cost (USD, from the editable price of the provider) … */
   costUsd?: number;
   /** … and which providers failed before it (fallbacks). */
@@ -61,6 +63,13 @@ export interface Attempt {
   model: string;
   error: AiErrorCode;
   detail?: string;
+}
+
+/** The provider a request was handed to (router). */
+export interface Reached {
+  providerId: string;
+  label: string;
+  ref: string;
 }
 
 export interface AiProvider {
@@ -86,7 +95,10 @@ export type AiErrorCode =
   | 'limit-reached'
   /** Several providers were tried; none produced an answer. */
   | 'exhausted'
-  /** A chat stays with its provider, and that one is paused, over its limit or no longer set up. */
+  /**
+   * A chat stays with its provider, and that one is paused or over its limit (message `paused`) or not
+   * set up here (message `not-set-up`).
+   */
   | 'provider-paused';
 
 export class AiError extends Error {
@@ -94,15 +106,18 @@ export class AiError extends Error {
   readonly retryAfterMs?: number;
   /** Failed provider calls that led to this error (router). */
   readonly attempts?: Attempt[];
+  /** A conversation reached this provider before the error (router, also on abort). */
+  readonly reached?: Reached;
 
   constructor(
     readonly code: AiErrorCode,
     message: string = code,
-    extra: { retryAfterMs?: number; attempts?: Attempt[] } = {},
+    extra: { retryAfterMs?: number; attempts?: Attempt[]; reached?: Reached } = {},
   ) {
     super(message);
     this.name = 'AiError';
     this.retryAfterMs = extra.retryAfterMs;
     this.attempts = extra.attempts;
+    this.reached = extra.reached;
   }
 }
