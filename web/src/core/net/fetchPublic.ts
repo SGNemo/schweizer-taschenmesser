@@ -130,6 +130,30 @@ const asNetworkError = (e: unknown): PublicFetchError =>
     ? e
     : new PublicFetchError('network', e instanceof Error ? e.message : String(e));
 
+/** Hops followed on the desktop, each one checked like the first address (the server proxy has its own). */
+const MAX_REDIRECTS = 5;
+
+/**
+ * What the next hop sends, as a browser would: 303 (and 301/302 after a POST) becomes a GET without
+ * body, and credentials never follow to another origin.
+ */
+export function nextHop(init: RequestInit, status: number, crossOrigin: boolean): RequestInit {
+  const method = (init.method ?? 'GET').toUpperCase();
+  const toGet =
+    status === 303 ? method !== 'HEAD' : (status === 301 || status === 302) && method === 'POST';
+  const next: RequestInit = toGet ? { ...init, method: 'GET', body: undefined } : { ...init };
+  if ((crossOrigin || toGet) && init.headers) {
+    const headers = new Headers(init.headers);
+    const drop = [
+      ...(crossOrigin ? ['authorization', 'cookie', 'proxy-authorization'] : []),
+      ...(toGet ? ['content-type', 'content-length'] : []),
+    ];
+    for (const h of drop) headers.delete(h);
+    next.headers = headers;
+  }
+  return next;
+}
+
 export async function fetchPublic(
   url: string,
   init?: RequestInit,
@@ -139,12 +163,27 @@ export async function fetchPublic(
   const platform = getPlatform();
   if (platform.isNative) {
     // The desktop app asks the host itself, so the address rules the proxy would apply are checked here.
-    if (!isPublicHttpsUrl(url)) throw new PublicFetchError('network', 'not a public https address');
+    // M2: redirects are followed here, not by the native fetch, so every hop is checked as well.
     try {
-      return await withTimeout(
-        async (signal) => limitPublicResponse(await platform.fetch(url, { ...init, signal }), kind),
-        timeoutMs,
-      );
+      return await withTimeout(async (signal) => {
+        let current = url;
+        let hopInit: RequestInit = { ...init };
+        for (let hop = 0; ; hop++) {
+          if (!isPublicHttpsUrl(current)) {
+            throw new PublicFetchError('network', 'not a public https address');
+          }
+          const res = await platform.fetch(current, { ...hopInit, redirect: 'manual', signal });
+          const location = res.headers.get('location');
+          if (res.status < 300 || res.status >= 400 || !location) {
+            return limitPublicResponse(res, kind);
+          }
+          void res.body?.cancel().catch(() => undefined);
+          if (hop >= MAX_REDIRECTS) throw new PublicFetchError('network', 'too many redirects');
+          const next = new URL(location, current);
+          hopInit = nextHop(hopInit, res.status, new URL(current).origin !== next.origin);
+          current = next.toString();
+        }
+      }, timeoutMs);
     } catch (e) {
       throw asNetworkError(e);
     }

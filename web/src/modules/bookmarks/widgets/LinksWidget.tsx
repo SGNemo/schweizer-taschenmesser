@@ -2,14 +2,16 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
 import { TileGrid } from '@/ui';
-import { groupLinks } from '../logic';
+import { groupLinks, linkOf } from '../logic';
 import { itemRepo } from '../repo';
 import styles from './LinksWidget.module.css';
 
 /** Lesezeichen as quick-launch tiles (one tap opens the address) and one context line: how many, in how many groups. */
 export default function LinksWidget() {
   const data = useLiveQuery(async () => {
-    const items = (await itemRepo.active().toArray()).filter((i) => i.kind === 'link' && i.url);
+    const items = (await itemRepo.active().toArray()).filter(
+      (i) => i.kind === 'link' && linkOf(i.url),
+    );
     const groups = groupLinks(items);
     return {
       links: groups.flatMap(([, group]) => group),
@@ -27,7 +29,10 @@ export default function LinksWidget() {
           entries={(links ?? []).map((l) => ({
             key: l.id,
             label: l.title,
-            onOpen: () => void getPlatform().app.openUrl(l.url!),
+            onOpen: () => {
+              const url = linkOf(l.url);
+              if (url) void getPlatform().app.openUrl(url);
+            },
           }))}
         />
       </div>

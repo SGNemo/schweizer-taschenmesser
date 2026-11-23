@@ -40,7 +40,8 @@ describe('device widget – core numbers', () => {
   it('PC: memory and uptime from one reading, no polling; never an address or a name', async () => {
     const info = vi.spyOn(system, 'info');
     const out = await view('desktop');
-    expect(screen.getByTestId('device-widget-facts')).toHaveTextContent(
+    // the reading is async: wait for the line instead of a fixed time (a loaded CI runner is slow)
+    expect(await screen.findByTestId('device-widget-facts')).toHaveTextContent(
       'Arbeitsspeicher 59 % · läuft seit 3 Tagen, 5 Std.',
     );
     await act(async () => {
@@ -62,7 +63,9 @@ describe('device widget – core numbers', () => {
     });
     try {
       await view('android');
-      expect(screen.getByTestId('device-widget-facts')).toHaveTextContent('Akku 77 % · lädt');
+      expect(await screen.findByTestId('device-widget-facts')).toHaveTextContent(
+        'Akku 77 % · lädt',
+      );
     } finally {
       delete (navigator as { getBattery?: unknown }).getBattery;
     }

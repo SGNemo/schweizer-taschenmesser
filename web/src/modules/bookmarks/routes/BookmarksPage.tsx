@@ -31,6 +31,7 @@ import {
   groupLinks,
   GROUPINGS,
   hostOf,
+  linkOf,
   normalizeUrl,
   tagCounts,
   type Filter,
@@ -328,17 +329,20 @@ export default function BookmarksPage() {
             <section key={group || '-'} aria-label={group || t.bookmarks.noGroup}>
               <h2>{group || t.bookmarks.noGroup}</h2>
               <ItemList layout="grid" label={group || t.bookmarks.noGroup}>
-                {list.map((i) => (
-                  <ItemRow
-                    key={i.id}
-                    title={i.title}
-                    meta={hostOf(i.url)}
-                    onOpen={
-                      i.url ? () => void getPlatform().app.openUrl(i.url!) : () => setTarget(i)
-                    }
-                    menu={bookmarkMenu(i, { edit: setTarget, read })}
-                  />
-                ))}
+                {list.map((i) => {
+                  const link = linkOf(i.url);
+                  return (
+                    <ItemRow
+                      key={i.id}
+                      title={i.title}
+                      meta={hostOf(i.url)}
+                      onOpen={
+                        link ? () => void getPlatform().app.openUrl(link) : () => setTarget(i)
+                      }
+                      menu={bookmarkMenu(i, { edit: setTarget, read })}
+                    />
+                  );
+                })}
               </ItemList>
             </section>
           ))}

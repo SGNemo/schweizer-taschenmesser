@@ -103,7 +103,13 @@ export function ShareSection() {
         return setOpenError(n.errors.gap!);
       setOpened({
         backup: read.backup,
-        plan: await planShare(read.backup),
+        // a file writes only the modules its pair agreed on, or (first file) the ones it names (R5)
+        plan: await planShare(
+          read.backup,
+          undefined,
+          undefined,
+          knownPair?.modules ?? read.modules,
+        ),
         modules: read.modules,
         pairId: read.pairId,
         range: read.range,
@@ -118,7 +124,12 @@ export function ShareSection() {
     if (!opened) return;
     setBusy(true);
     try {
-      const { records } = await applyShare(opened.backup);
+      const { records } = await applyShare(
+        opened.backup,
+        undefined,
+        undefined,
+        knownPair?.modules ?? opened.modules,
+      );
       if (opened.pairId) {
         const pair =
           knownPair ??

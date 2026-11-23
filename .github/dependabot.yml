@@ -444,3 +444,78 @@ updates:
     groups:
       gradle-minor-patch:
         update-types: [minor, patch]
+
+  # --- Added 2026-11-23 (SC7, launch review 2026-11): lock files that had no entry.
+  # `web/scripts/lib/dependabotCoverage.test.ts` keeps every lock file covered.
+  - package-ecosystem: npm
+    directory: "/scripts/agents"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: thursday
+      time: "05:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - javascript
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      npm-dev-dependencies:
+        dependency-type: development
+        update-types: [minor, patch]
+      npm-minor-patch:
+        dependency-type: production
+        update-types: [minor, patch]
+  - package-ecosystem: cargo
+    directory: "/web/src-tauri/crates/lan-sync"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: tuesday
+      time: "05:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - cargo
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      cargo-minor-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: cargo
+    directory: "/web/src-tauri/crates/remote-input"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: tuesday
+      time: "05:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - cargo
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      cargo-minor-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: gradle
+    directory: "/web/src-tauri/plugins/lan-watch/android"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: friday
+      time: "05:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - gradle
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      gradle-minor-patch:
+        update-types: [minor, patch]

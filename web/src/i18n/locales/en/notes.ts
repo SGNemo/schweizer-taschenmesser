@@ -66,6 +66,7 @@ export const notes: Strings['notes'] = {
   back: 'Back to the list',
   restored: 'Unsaved text was restored.',
   imageElsewhere: 'This image only exists on another device.',
+  imageRemote: 'Image from the internet – not loaded.',
   imageFailed: 'The image could not be inserted.',
   fmt: {
     bold: 'Bold',

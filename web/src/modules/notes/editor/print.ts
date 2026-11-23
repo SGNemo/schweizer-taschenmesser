@@ -2,6 +2,7 @@ import { Editor } from '@tiptap/core';
 import { noteExtensions } from './extensions';
 import { loadImage } from './images';
 import { pageToMarkdown } from '../exchange';
+import { t } from '@/strings';
 import type { Note } from '../schema';
 
 type Page = Pick<Note, 'title' | 'body'> & { id: string };
@@ -17,6 +18,12 @@ const readAsDataUrl = (blob: Blob): Promise<string> =>
 const escapeHtml = (s: string) =>
   s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 
+/** The editor's words for a picture from the net, with its alt text as there. */
+function remoteText(tag: string): string {
+  const alt = /\salt="([^"]*)"/i.exec(tag)?.[1];
+  return alt ? `${t.notes.imageRemote} (${alt})` : t.notes.imageRemote;
+}
+
 /** The page as HTML (rendered by an editor that is never shown); pictures of this device are inlined. */
 export async function pageToHtml(page: Page, scratchName: string): Promise<string> {
   const editor = new Editor({
@@ -26,6 +33,12 @@ export async function pageToHtml(page: Page, scratchName: string): Promise<strin
   });
   let html = editor.getHTML();
   editor.destroy();
+  // Q2: like the editor, print loads no picture from the net – only this device's and inline ones
+  html = html.replace(/<img\b[^>]*>/gi, (tag) =>
+    /\ssrc="(nemo-img:|data:image\/)/i.test(tag)
+      ? tag
+      : `<span>${escapeHtml(remoteText(tag))}</span>`,
+  );
   const sources = [...new Set([...html.matchAll(/src="(nemo-img:[^"]+)"/g)].map((m) => m[1]!))];
   for (const src of sources) {
     const blob = await loadImage(src);

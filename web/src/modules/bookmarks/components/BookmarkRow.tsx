@@ -10,7 +10,7 @@ import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { Checkbox, ItemRow, type RowMenuItem } from '@/ui';
 import { usePageWidthAtLeast } from '@/ui/pageWidth';
-import { hostOf, statusOf } from '../logic';
+import { hostOf, linkOf, statusOf } from '../logic';
 import { fetchPreviewNow } from '../preview';
 import { itemRepo } from '../repo';
 import type { BookmarkItem } from '../schema';
@@ -185,7 +185,7 @@ export function BookmarkRow({
   return (
     <ItemRow
       title={item.title}
-      href={item.url}
+      href={linkOf(item.url)}
       onOpen={() => onEdit(item)}
       done={item.done}
       lead={

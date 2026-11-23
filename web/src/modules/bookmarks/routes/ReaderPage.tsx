@@ -6,7 +6,7 @@ import { fetchPublic } from '@/core/net/fetchPublic';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
 import { Button, EmptyState, PageTitle } from '@/ui';
-import { hostOf, statusOf } from '../logic';
+import { hostOf, linkOf, statusOf } from '../logic';
 import { itemRepo } from '../repo';
 import styles from './reader.module.css';
 
@@ -53,6 +53,8 @@ export default function ReaderPage() {
   }, [ready, item?.id]);
 
   if (item === undefined) return <PageTitle title={t.bookmarks.reader.mode} />;
+  // Q3: only an http(s) address is ever handed to the browser
+  const link = linkOf(url ?? '');
   if (item === null || !url)
     return (
       <>
@@ -70,17 +72,21 @@ export default function ReaderPage() {
       <div className={styles.bar}>
         <Link to="/bookmarks">{t.bookmarks.reader.back}</Link>
         <span className={styles.site}>{hostOf(url)}</span>
-        <Button onClick={() => void getPlatform().app.openUrl(url)}>
-          {t.bookmarks.reader.inBrowser}
-        </Button>
+        {link ? (
+          <Button onClick={() => void getPlatform().app.openUrl(link)}>
+            {t.bookmarks.reader.inBrowser}
+          </Button>
+        ) : null}
       </div>
       <p className={styles.note}>{t.bookmarks.reader.note}</p>
       {state.kind === 'loading' ? <p role="status">{t.bookmarks.reader.loading}</p> : null}
       {state.kind === 'failed' ? (
         <EmptyState title={t.bookmarks.reader.failed}>
-          <Button onClick={() => void getPlatform().app.openUrl(url)}>
-            {t.bookmarks.reader.inBrowser}
-          </Button>
+          {link ? (
+            <Button onClick={() => void getPlatform().app.openUrl(link)}>
+              {t.bookmarks.reader.inBrowser}
+            </Button>
+          ) : null}
         </EmptyState>
       ) : null}
       {state.kind === 'ready' ? (

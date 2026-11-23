@@ -3,7 +3,7 @@ import type { Stored } from '@/core/db/types';
 import { useModuleStates } from '@/core/modules/activation';
 import { t } from '@/strings';
 import { RowMenu } from '@/ui';
-import { hostOf, statusOf } from '../logic';
+import { hostOf, linkOf, statusOf } from '../logic';
 import { usePreviewImage } from '../preview';
 import type { BookmarkItem } from '../schema';
 import { bookmarkMenu } from './BookmarkRow';
@@ -59,8 +59,13 @@ export function BookmarkCard({
         )}
       </div>
       <div className={styles.body}>
-        {item.url ? (
-          <a className={styles.link} href={item.url} target="_blank" rel="noreferrer noopener">
+        {linkOf(item.url) ? (
+          <a
+            className={styles.link}
+            href={linkOf(item.url)}
+            target="_blank"
+            rel="noreferrer noopener"
+          >
             {title}
           </a>
         ) : (

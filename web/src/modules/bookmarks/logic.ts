@@ -18,6 +18,21 @@ export function normalizeUrl(input: string): string | undefined {
   }
 }
 
+/**
+ * The address as a link, only for http(s) (Q3, launch review 2026-11): a bookmark from sync or a
+ * share file did not pass `normalizeUrl`, so anything else (`javascript:`, `data:`, `file:` …)
+ * stays plain text.
+ */
+export function linkOf(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  try {
+    const { protocol } = new URL(url);
+    return protocol === 'http:' || protocol === 'https:' ? url : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export function hostOf(url: string | undefined): string | undefined {
   if (!url) return undefined;
   try {

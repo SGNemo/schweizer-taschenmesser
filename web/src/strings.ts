@@ -4597,6 +4597,7 @@ export const de = {
     back: 'Zurück zur Liste',
     restored: 'Nicht gespeicherter Text wurde wiederhergestellt.',
     imageElsewhere: 'Dieses Bild liegt nur auf einem anderen Gerät.',
+    imageRemote: 'Bild aus dem Internet – wird nicht geladen.',
     imageFailed: 'Das Bild konnte nicht eingefügt werden.',
     fmt: {
       bold: 'Fett',
@@ -8381,6 +8382,10 @@ export const de = {
       blockedImages: (n: number) =>
         n === 1 ? '1 externes Bild blockiert' : `${n} externe Bilder blockiert`,
       loadImages: 'Bilder laden',
+      linkAskTitle: 'Link führt woanders hin',
+      linkAsk: (host: string) =>
+        `Der Text des Links nennt eine andere Seite. Er führt zu ${host}. Nur öffnen, wenn du das erwartest.`,
+      linkAskOpen: 'Trotzdem öffnen',
       loadingImages: 'Bilder werden geladen …',
       trackers: (n: number) =>
         n === 1 ? '1 Tracking-Pixel entfernt' : `${n} Tracking-Pixel entfernt`,
