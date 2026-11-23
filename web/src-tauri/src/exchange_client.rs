@@ -176,7 +176,7 @@ pub async fn exchange_client_open<R: Runtime>(
         // the session this one replaces ends now
         let old = state.open.lock().ok().and_then(|mut o| o.take());
         end(old);
-        let (hub, addr, name) = crate::lan_client::hub_entry(&app)?;
+        let (hub, addr, name) = crate::lan_client::dial_target(&app)?;
         let key = crate::lan_client::stored_key(&app)?;
         let inbox = inbox(&app)?;
         let shared = Arc::new(Shared::default());

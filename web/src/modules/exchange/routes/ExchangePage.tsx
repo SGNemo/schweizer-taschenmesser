@@ -260,14 +260,17 @@ function Conversation({
   peer: string;
   side: 'pc' | 'phone';
 }) {
+  // E1: the newest 300 straight from the index, never the whole history into memory
   const rows = useLiveQuery(
     async () =>
       (
-        await itemRepo
-          .active()
-          .filter((r) => side === 'phone' || r.peer === peer)
-          .sortBy('createdAt')
-      ).slice(-300),
+        await itemRepo.table
+          .orderBy('createdAt')
+          .reverse()
+          .filter((r: Stored) => r.deletedAt === null && (side === 'phone' || r.peer === peer))
+          .limit(300)
+          .toArray()
+      ).reverse() as Stored[],
     [peer, side],
   );
   const [text, setText] = useState('');

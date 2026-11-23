@@ -873,3 +873,25 @@ fn hello_at_or_after_the_computed_deadline_ends_the_attempt() {
         Some(PairError::NotAwaiting)
     );
 }
+
+// H4 (launch review 2026-11): renewals keep a forgotten dialog open forever, and the hub listens
+// on every private network meanwhile. The window has a total lifetime from `open()`.
+#[test]
+fn the_window_closes_after_its_total_lifetime_despite_renewals() {
+    let h = harness();
+    h.host.open().unwrap();
+    let mut elapsed = Duration::ZERO;
+    while elapsed + WINDOW < MAX_OPEN {
+        h.clock.advance(WINDOW);
+        elapsed += WINDOW;
+        h.host.tick(); // the dialog renews the QR
+        assert!(h.host.is_open(), "still open after {elapsed:?}");
+    }
+    h.clock.advance(MAX_OPEN - elapsed);
+    assert!(!h.host.is_open(), "closed after the total lifetime");
+    assert!(h.host.take_events().contains(&PairingEvent::Closed));
+    assert_eq!(h.host.qr(1234, [10, 0, 0, 1]).unwrap(), None, "no new QR");
+    // the user can open it again
+    h.host.open().unwrap();
+    assert!(h.host.is_open());
+}

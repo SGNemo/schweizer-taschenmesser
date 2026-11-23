@@ -180,6 +180,18 @@ pub(crate) fn hub_entry<R: Runtime>(
     Ok((PublicKey::from_bytes(hub), addr, entry.name))
 }
 
+/// The pinned hub, only when this device may dial it now (H2: on Wi-Fi; see [`dial_allowed`]).
+/// Every phone-side dialer – sync, device exchange, remote control – goes through here; off Wi-Fi
+/// it is the calm `network`.
+pub(crate) fn dial_target<R: Runtime>(
+    app: &AppHandle<R>,
+) -> Result<(PublicKey, SocketAddrV4, String), String> {
+    if !dial_allowed(app.lan_watch().wifi_state()) {
+        return Err("network".to_owned());
+    }
+    hub_entry(app)
+}
+
 /// A hub is pinned on this device (it syncs as a client). A keystore that does not answer counts as
 /// "not paired": the hub start then fails on the same keystore anyway.
 pub fn is_paired<R: Runtime>(app: &AppHandle<R>) -> bool {
@@ -208,8 +220,15 @@ fn missing_or_retry(e: String) -> ClientError {
     }
 }
 
+/// H2 (launch review 2026-11): a phone dials its PC only while it is on Wi-Fi – never over mobile
+/// data or with no network, where the pinned private address would be a fingerprint at best. A
+/// device that cannot tell (the desktop) dials; a state that cannot be read is a "no".
+fn dial_allowed<E>(wifi: Result<tauri_plugin_lan_watch::WifiState, E>) -> bool {
+    wifi.is_ok_and(|w| !w.supported || w.connected)
+}
+
 fn open<R: Runtime>(app: &AppHandle<R>) -> Result<Session, ClientError> {
-    let (hub, addr, name) = hub_entry(app).map_err(missing_or_retry)?;
+    let (hub, addr, name) = dial_target(app).map_err(missing_or_retry)?;
     let key = stored_key(app).map_err(missing_or_retry)?;
     Session::open(addr, &key, &hub, &name)
 }
@@ -476,6 +495,27 @@ pub(crate) fn unpair_now<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {
 mod tests {
     use super::*;
     use tauri_plugin_secure_store::RUST_ONLY_PREFIX;
+
+    #[test]
+    fn a_phone_dials_only_on_wifi() {
+        use tauri_plugin_lan_watch::WifiState;
+        let state = |supported, connected| {
+            Ok::<_, ()>(WifiState {
+                supported,
+                connected,
+            })
+        };
+        assert!(dial_allowed(state(true, true)), "phone on Wi-Fi");
+        assert!(!dial_allowed(state(true, false)), "phone off Wi-Fi");
+        assert!(
+            dial_allowed(state(false, false)),
+            "desktop: cannot tell, keeps its address"
+        );
+        assert!(
+            !dial_allowed(Err::<WifiState, ()>(())),
+            "unreadable is a no"
+        );
+    }
 
     #[test]
     fn hex_round_trip() {

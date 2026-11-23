@@ -1821,3 +1821,26 @@ fn two_interfaces_on_one_address_give_one_bind_that_is_home_only_if_both_are() {
     assert_eq!(binds.len(), 1, "one listener per address");
     assert!(!binds[0].is_home());
 }
+
+// H1 (launch review 2026-11): every TCP accept counts, not only complete first messages, so a
+// peer that opens connections and never finishes a handshake is limited too.
+#[test]
+fn accepts_are_rate_limited_per_address_and_recover() {
+    let mut a = adm();
+    let me = v4("10.0.0.7");
+    for _ in 0..ACCEPTS_PER_WINDOW {
+        assert_eq!(a.admit_accept(me, T0), Ok(()));
+    }
+    assert_eq!(a.admit_accept(me, T0), Err(Refusal::RateLimited));
+    assert_eq!(
+        a.admit_accept(v4("10.0.0.8"), T0),
+        Ok(()),
+        "other addresses"
+    );
+    assert_eq!(a.admit_accept(me, T0 + RATE_WINDOW), Ok(()), "a new window");
+    assert_eq!(
+        a.admit_accept(v4("8.8.8.8"), T0),
+        Err(Refusal::Address),
+        "strangers are not tracked"
+    );
+}

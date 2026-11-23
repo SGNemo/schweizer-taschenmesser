@@ -46,6 +46,8 @@ export function LanHubSection({ tinted = true }: { tinted?: boolean }) {
   const [failure, setFailure] = useState<string>();
   const [note, setNote] = useState<string>();
   const [unpair, setUnpair] = useState<LanHubDevice>();
+  // H5: an unpairing that could not be saved, to try again
+  const [unpairAgain, setUnpairAgain] = useState<LanHubDevice>();
   const [askRenew, setAskRenew] = useState(false);
   const [askHome, setAskHome] = useState(false);
   // "Mit einem anderen PC koppeln": this PC pairs as a client with another hub PC (webcam)
@@ -86,6 +88,7 @@ export function LanHubSection({ tinted = true }: { tinted?: boolean }) {
   async function startPairing() {
     setFailure(undefined);
     setNote(undefined);
+    setUnpairAgain(undefined);
     setBusy(true);
     try {
       if (!enabled) {
@@ -105,19 +108,27 @@ export function LanHubSection({ tinted = true }: { tinted?: boolean }) {
     }
   }
 
-  async function confirmUnpair() {
-    const device = unpair;
+  async function confirmUnpair(device = unpair, retry = false) {
     setUnpair(undefined);
+    setUnpairAgain(undefined);
     if (!device) return;
-    const changed = await hub.revoke(device.id).catch(() => false);
-    if (changed) {
-      setNote(l.unpaired(device.name));
-      setDevices(await hub.devices().catch(() => devices));
+    let changed: boolean;
+    try {
+      changed = await hub.revoke(device.id);
+    } catch {
+      // H5: not saved – it holds only until the next restart; say so and offer the next step
+      setNote(l.unpairFailed(device.name));
+      setUnpairAgain(device);
+      return;
     }
+    // a retry after a failed save reports "nothing changed": it is unpaired now all the same
+    setNote(changed || retry ? l.unpaired(device.name) : undefined);
+    setDevices(await hub.devices().catch(() => devices));
   }
 
   async function confirmRenew() {
     setAskRenew(false);
+    setUnpairAgain(undefined);
     setNote((await renewLanHubKey()) ? l.renewed : l.renewFailed);
   }
 
@@ -252,9 +263,14 @@ export function LanHubSection({ tinted = true }: { tinted?: boolean }) {
         </p>
       ) : null}
       {note ? (
-        <p role="status" className={styles.muted} data-testid="lan-note">
+        <p role="status" className={unpairAgain ? undefined : styles.muted} data-testid="lan-note">
           {note}
         </p>
+      ) : null}
+      {unpairAgain ? (
+        <Actions>
+          <Button onClick={() => void confirmUnpair(unpairAgain, true)}>{l.unpairRetry}</Button>
+        </Actions>
       ) : null}
 
       <Step title={l.devices}>
@@ -420,6 +436,12 @@ function PairDialog({
     }
   }
 
+  // H4: the hub closes a window after its lifetime; once it was open, closed means "ended"
+  const [seenOpen, setSeenOpen] = useState(false);
+  // a confirm or a fresh code is under way: the window closes for a moment, that is no "ended"
+  const [stepping, setStepping] = useState(false);
+  if (open && status?.pairingOpen && !seenOpen) setSeenOpen(true);
+  if (!open && seenOpen) setSeenOpen(false);
   const qr = status?.qr ?? undefined;
   const drawn = useMemo(() => (qr ? qrPath(makeQr(qr)) : undefined), [qr]);
   const pending = status?.pending ?? undefined;
@@ -432,22 +454,45 @@ function PairDialog({
   async function confirm() {
     if (!pending) return;
     setError(undefined);
+    setStepping(true);
     try {
-      await hub.pairConfirm(pending.attempt, pending.code);
+      await hub.pairConfirm(pending.attempt);
       setPaired(pending.name);
       void syncNow();
     } catch (e) {
       const code = e instanceof Error ? e.message : '';
+      // "Abbrechen" in the native question, or it is still on screen: nothing to say
+      if (code === 'cancelled' || code === 'busy') return;
       setError(
-        code === 'wrong-code' ? l.wrongCode : code === 'expired' ? l.pairExpired : l.pairLost,
+        code === 'busy-controlled'
+          ? l.pairControlled
+          : code === 'expired' || code === 'changed'
+            ? l.pairExpired
+            : l.pairLost,
       );
+    } finally {
+      setStepping(false);
+    }
+  }
+
+  async function again() {
+    setError(undefined);
+    try {
+      await hub.pairOpen();
+      setSeenOpen(false);
+    } catch {
+      // the ended text stays, with its button: nothing new to say
     }
   }
 
   async function reject() {
     // Cancel this attempt and show a fresh code: the device that knocked is not trusted.
+    setStepping(true);
+    setSeenOpen(false);
     await hub.pairCancel().catch(() => undefined);
-    await hub.pairOpen().catch(() => undefined);
+    // no fresh code: the "ended" text with its button instead of an endless "preparing"
+    await hub.pairOpen().catch(() => setSeenOpen(true));
+    setStepping(false);
   }
 
   async function finish() {
@@ -503,11 +548,25 @@ function PairDialog({
               <Button
                 variant="primary"
                 onClick={() => void confirm()}
+                disabled={stepping}
                 data-testid="lan-pair-confirm"
               >
                 {l.pairConfirm}
               </Button>
-              <Button onClick={() => void reject()}>{t.actions.cancel}</Button>
+              <Button onClick={() => void reject()} disabled={stepping}>
+                {t.actions.cancel}
+              </Button>
+            </Actions>
+          </>
+        ) : seenOpen && !stepping && status?.pairingOpen === false ? (
+          <>
+            <p role="status" data-testid="lan-pair-closed">
+              {l.pairClosed}
+            </p>
+            <Actions>
+              <Button variant="primary" onClick={() => void again()}>
+                {l.pairNewCode}
+              </Button>
             </Actions>
           </>
         ) : status?.reason === 'public-network' && !drawn ? (

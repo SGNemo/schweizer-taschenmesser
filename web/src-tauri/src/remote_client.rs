@@ -904,7 +904,7 @@ fn open_now<R: Runtime>(
                 end(session);
             }
         }
-        let (hub, addr, name) = crate::lan_client::hub_entry(app).map_err(stored_error)?;
+        let (hub, addr, name) = crate::lan_client::dial_target(app).map_err(stored_error)?;
         let key = crate::lan_client::stored_key(app).map_err(stored_error)?;
         let newest = state.newest.clone();
         let live = state.live.clone();

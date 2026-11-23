@@ -1854,3 +1854,50 @@ mod exchange_files_over_socket {
         );
     }
 }
+
+// H1 (launch review 2026-11): a replayed first message of a paired phone gets message 2 but can
+// never send an authenticated frame; it must not hold a slot for the whole idle time.
+#[test]
+fn an_accepted_connection_without_a_first_frame_is_closed_at_the_handshake_deadline() {
+    let r = rig_with(ServerConfig {
+        handshake_timeout: Duration::from_millis(300),
+        idle_timeout: Duration::from_secs(60),
+        tick: Duration::from_millis(20),
+        ..ServerConfig::default()
+    });
+    let key = StaticKey::generate().unwrap();
+    pair_over_socket(&r, &key);
+    let (_init, m1) = noise::start_initiator(Mode::Session, &key, &r.hub_key, None).unwrap();
+    let mut s = connect(&r);
+    send(&mut s, &m1);
+    assert!(recv(&mut s).is_some(), "message 2 comes back");
+    let began = Instant::now();
+    assert!(closed(&mut s), "closed without a first frame");
+    assert!(
+        began.elapsed() < Duration::from_secs(3),
+        "closed at the handshake deadline, not after the idle time"
+    );
+}
+
+#[test]
+fn connections_beyond_the_accept_limit_are_closed_at_once() {
+    let r = rig_with(ServerConfig {
+        handshake_timeout: Duration::from_secs(30),
+        max_per_ip: 1000,
+        max_connections: 1000,
+        tick: Duration::from_millis(20),
+        ..ServerConfig::default()
+    });
+    let mut held = Vec::new();
+    for _ in 0..crate::hub::router::ACCEPTS_PER_WINDOW {
+        held.push(connect(&r));
+    }
+    let mut over = connect(&r);
+    over.set_read_timeout(Some(Duration::from_secs(2))).unwrap();
+    let began = Instant::now();
+    assert!(closed(&mut over));
+    assert!(
+        began.elapsed() < Duration::from_secs(1),
+        "dropped at accept"
+    );
+}

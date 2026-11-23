@@ -681,15 +681,59 @@ pub fn lan_pair_open(state: State<'_, LanSync>) -> Result<(), String> {
     })
 }
 
-/// The user confirmed the code shown on the PC. The sealed data-key frame goes only to the
-/// connection of that attempt, and the device is trusted only if that write succeeded.
+/// "Koppeln" on the page. H6: the page cannot confirm by itself – Rust asks in a native question
+/// (name and code of the waiting attempt, cancel is the default) and confirms with its own copy
+/// of the code. The sealed data-key frame goes only to the connection of that attempt, and the
+/// device is trusted only if that write succeeded.
 #[tauri::command(async)]
 pub fn lan_pair_confirm(
+    app: AppHandle,
     state: State<'_, LanSync>,
     attempt: u64,
-    code: String,
 ) -> Result<(), String> {
+    let waiting = |state: &State<'_, LanSync>| {
+        with_core(state, |core, _| {
+            let live = core.live.lock().map_err(|_| "internal")?;
+            Ok(live.pending.clone().filter(|p| p.attempt == attempt))
+        })
+    };
+    // the attempt and the hub it belongs to, read together
+    let (pending, asked) = with_core(&state, |core, _| {
+        let live = core.live.lock().map_err(|_| "internal")?;
+        let pending = live.pending.clone().filter(|p| p.attempt == attempt);
+        Ok((pending, core.clone()))
+    })?;
+    let pending = pending.ok_or("not-awaiting")?;
+    // Like every widening question: never while a phone controls mouse and keyboard (it could
+    // click the answer), checked again after it; one question at a time.
+    // the hub that was asked about: a hub restarted meanwhile has its own attempts and controls
+    let ticket = asked.remote.ticket();
+    if asked.remote.full_session_open() {
+        return Err("busy-controlled".to_owned());
+    }
+    let allowed = {
+        let _asking = PairAsking::take()?;
+        asked_to_pair(&app, &pending)
+    };
+    if !allowed {
+        return Err("cancelled".to_owned());
+    }
+    if !with_core(&state, |core, _| Ok(Arc::ptr_eq(core, &asked)))? {
+        return Err("changed".to_owned());
+    }
+    asked
+        .remote
+        .confirm(ticket)
+        .map_err(|_| "busy-controlled".to_owned())?;
+    // the attempt may have ended while the question was on screen
+    waiting(&state)?.ok_or("not-awaiting")?;
+    let code = pending.code;
     with_core(&state, |core, wake| {
+        // every step after the question on the hub that was asked (the check before guarded
+        // the ticket, this one the delivery)
+        if !Arc::ptr_eq(core, &asked) {
+            return Err("changed".to_owned());
+        }
         // the hub lock is not held while the frame is written: take the handle, let go, then confirm
         let deliverer = core
             .live
@@ -718,6 +762,38 @@ pub fn lan_pair_confirm(
         })?;
         Ok(())
     })
+}
+
+/// A pairing question is on screen (one at a time); released on drop, also on a panic.
+static PAIR_ASKING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+struct PairAsking;
+
+impl PairAsking {
+    fn take() -> Result<Self, String> {
+        if PAIR_ASKING.swap(true, std::sync::atomic::Ordering::SeqCst) {
+            return Err("busy".to_owned());
+        }
+        Ok(PairAsking)
+    }
+}
+
+impl Drop for PairAsking {
+    fn drop(&mut self) {
+        PAIR_ASKING.store(false, std::sync::atomic::Ordering::SeqCst);
+    }
+}
+
+/// The native pairing question; true only for the exact "pair" button.
+fn asked_to_pair(app: &AppHandle, pending: &Pending) -> bool {
+    let lang = crate::capture::native_lang(app);
+    let (title, allow, cancel) = crate::texts::pair_dialog(lang);
+    let name = match crate::remote::plain(&pending.name) {
+        n if n.is_empty() => crate::texts::pair_unnamed(lang).to_owned(),
+        n => n,
+    };
+    let text = crate::texts::pair_question(lang, &name, &pending.code);
+    crate::native_ask::ask(app, title, text, false, allow, cancel)
 }
 
 #[tauri::command(async)]
@@ -753,11 +829,11 @@ pub fn lan_devices(state: State<'_, LanSync>) -> Result<Vec<DeviceDto>, String> 
 pub fn lan_revoke(app: AppHandle, state: State<'_, LanSync>, id: String) -> Result<bool, String> {
     with_core(&state, |core, wake| {
         let key = from_hex32(&id).ok_or("bad-id")?;
-        let changed = core
+        let result = core
             .sessions
-            .revoke(&*core.trust, &PublicKey::from_bytes(key))
-            .map_err(|_| "failed")?;
-        // what this PC queued for it goes too
+            .revoke(&*core.trust, &PublicKey::from_bytes(key));
+        // what this PC queued for it goes too – also when the revoke could not be written (H5):
+        // in memory it is revoked already
         let active: Vec<PublicKey> = core
             .trust
             .list()
@@ -767,7 +843,7 @@ pub fn lan_revoke(app: AppHandle, state: State<'_, LanSync>, id: String) -> Resu
             .collect();
         crate::exchange::keep_only(&app, &active);
         let _ = wake.send(());
-        Ok(changed)
+        result.map_err(|_| "failed".to_owned())
     })
 }
 

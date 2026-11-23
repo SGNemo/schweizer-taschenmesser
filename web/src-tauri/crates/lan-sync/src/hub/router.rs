@@ -33,6 +33,13 @@ use std::time::Duration;
 /// First messages per address and window.
 pub const HANDSHAKES_PER_WINDOW: u32 = 20;
 pub const RATE_WINDOW: Duration = Duration::from_secs(60);
+/// TCP connections per address and window (H1): an accept counts before a slot is taken, so a
+/// peer that never finishes a handshake is limited too. A connection without a first frame holds
+/// its slot at most the handshake timeout (5 s) from its accept. Sent in bursts, one address can
+/// still fill its 4 slots for about 25 s of each minute (20 / 4 × 5 s), so several aligned
+/// addresses can fill all 32 for that long; reserving slots for paired devices is a follow-up. A
+/// phone opens a few connections a minute (sync rounds, exchange, remote control).
+pub const ACCEPTS_PER_WINDOW: u32 = 20;
 /// Addresses tracked at once; a full table of live entries refuses new addresses (fail-closed).
 pub const MAX_TRACKED_ADDRS: usize = 1024;
 
@@ -55,6 +62,8 @@ struct Window {
 pub struct Admission {
     binds: Vec<Bind>,
     seen: HashMap<IpAddr, Window>,
+    /// TCP accepts per address (H1).
+    accepts: HashMap<IpAddr, Window>,
     /// Tests talk over the loopback interface; production never sets this (there is no such field).
     #[cfg(test)]
     loopback: bool,
@@ -107,6 +116,14 @@ impl Admission {
         self.binds = binds;
     }
 
+    /// One TCP connection from `peer` at `now` (H1).
+    pub fn admit_accept(&mut self, peer: IpAddr, now: Duration) -> Result<(), Refusal> {
+        if !self.peer_ok(peer) {
+            return Err(Refusal::Address);
+        }
+        bump(&mut self.accepts, peer, now, ACCEPTS_PER_WINDOW)
+    }
+
     /// `now` is monotonic time (only differences count). Counted: only first messages that passed
     /// the address and size checks, so strangers from outside never fill the table.
     pub fn admit(&mut self, peer: IpAddr, first_len: usize, now: Duration) -> Result<(), Refusal> {
@@ -116,26 +133,35 @@ impl Admission {
         if first_len > PRE_HANDSHAKE_CAP {
             return Err(Refusal::Oversize);
         }
-        if self.seen.len() >= MAX_TRACKED_ADDRS && !self.seen.contains_key(&peer) {
-            self.seen
-                .retain(|_, w| now.saturating_sub(w.started) < RATE_WINDOW);
-            if self.seen.len() >= MAX_TRACKED_ADDRS {
-                return Err(Refusal::RateLimited);
-            }
-        }
-        let w = self.seen.entry(peer).or_default();
-        if w.count == 0 || now.saturating_sub(w.started) >= RATE_WINDOW {
-            *w = Window {
-                started: now,
-                count: 0,
-            };
-        }
-        if w.count >= HANDSHAKES_PER_WINDOW {
+        bump(&mut self.seen, peer, now, HANDSHAKES_PER_WINDOW)
+    }
+}
+
+/// Counts one event of `peer` in its window; a full table of live entries refuses new addresses.
+fn bump(
+    table: &mut HashMap<IpAddr, Window>,
+    peer: IpAddr,
+    now: Duration,
+    limit: u32,
+) -> Result<(), Refusal> {
+    if table.len() >= MAX_TRACKED_ADDRS && !table.contains_key(&peer) {
+        table.retain(|_, w| now.saturating_sub(w.started) < RATE_WINDOW);
+        if table.len() >= MAX_TRACKED_ADDRS {
             return Err(Refusal::RateLimited);
         }
-        w.count += 1;
-        Ok(())
     }
+    let w = table.entry(peer).or_default();
+    if w.count == 0 || now.saturating_sub(w.started) >= RATE_WINDOW {
+        *w = Window {
+            started: now,
+            count: 0,
+        };
+    }
+    if w.count >= limit {
+        return Err(Refusal::RateLimited);
+    }
+    w.count += 1;
+    Ok(())
 }
 
 pub struct Router {
@@ -216,10 +242,12 @@ impl Router {
         }
     }
 
-    /// Whether `peer` may connect at all (private address inside a bound subnet); the transport asks
-    /// before it takes a connection slot.
-    pub fn peer_allowed(&self, peer: IpAddr) -> bool {
-        self.admission.lock().is_ok_and(|a| a.peer_ok(peer))
+    /// Counts a TCP connection of `peer` (H1): over the accept limit it is closed before it takes a
+    /// slot. A poisoned lock admits nothing.
+    pub fn admit_connection(&self, peer: IpAddr, now: Duration) -> bool {
+        self.admission
+            .lock()
+            .is_ok_and(|mut a| a.admit_accept(peer, now).is_ok())
     }
 
     /// First message of a new connection from `peer` whose local address is not known: sync and
