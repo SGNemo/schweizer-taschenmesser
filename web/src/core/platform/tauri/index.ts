@@ -2,6 +2,7 @@
  * Native (Tauri 2) implementation of `PlatformService`. This directory is the only place that may
  * import `@tauri-apps/*` (ESLint). Keep each capability small and mockable.
  */
+import { lockScreenVisibility } from '@/core/notifications/lockScreen';
 import { loggedFetch } from '@/core/net/netlog';
 import { checkRedirect, nativeInit } from './redirect';
 import { getVersion } from '@tauri-apps/api/app';
@@ -104,7 +105,13 @@ async function createNotifications(kind: PlatformKind): Promise<NotificationServ
       if (kind === 'android' && quiet) await ensureQuietChannel();
       sendNotification(
         kind === 'android'
-          ? { title, body, ...ANDROID_ICON, ...(quiet ? { channelId: QUIET_CHANNEL } : {}) }
+          ? {
+              title,
+              body,
+              ...ANDROID_ICON,
+              ...(quiet ? { channelId: QUIET_CHANNEL } : {}),
+              visibility: lockScreenVisibility(),
+            }
           : { title, body },
       );
     },
@@ -146,6 +153,8 @@ async function scheduleUpcoming(items: ScheduledNotification[]): Promise<void> {
       extra: { url: n.url ?? '/' },
       ...ANDROID_ICON,
       ...(n.quiet ? { channelId: QUIET_CHANNEL } : {}),
+      // NS6: content hidden on the lock screen unless this phone allows it
+      visibility: lockScreenVisibility(),
     });
   }
 }

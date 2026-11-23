@@ -49,6 +49,7 @@ vi.mock('@tauri-apps/plugin-notification', () => ({
 }));
 vi.mock('@tauri-apps/plugin-opener', () => ({ openUrl: mocks.openUrl }));
 
+import { setLockScreenContent } from '@/core/notifications/lockScreen';
 import { createTauriPlatform, notificationId } from './index';
 
 beforeEach(() => {
@@ -155,6 +156,7 @@ describe('tauri platform', () => {
       extra: { url: '/reminders' },
       icon: 'ic_notification',
       iconColor: '#b5430c',
+      visibility: 0,
     });
   });
 
@@ -167,7 +169,33 @@ describe('tauri platform', () => {
       body: 'heute',
       icon: 'ic_notification',
       iconColor: '#b5430c',
+      visibility: 0,
     });
+  });
+
+  it('NS6: on the lock screen the content is hidden unless this device allows it', async () => {
+    // launch review 2026-11: reminder titles showed on the lock screen; now "private" (Android
+    // shows that there is a notice, not its text) until the device-local switch is on
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mozilla/5.0 (Linux; Android 14)');
+    const p = await createTauriPlatform();
+    try {
+      setLockScreenContent(true);
+      await p.notifications.show({ title: 'Arzt', body: '9 Uhr', tag: 'k' });
+      expect(mocks.sendNotification).toHaveBeenLastCalledWith(
+        expect.objectContaining({ visibility: 1 }),
+      );
+      await p.notifications.scheduleUpcoming!([{ key: 'r', at: 1_800_000_000_000, title: 'Arzt' }]);
+      expect(mocks.sendNotification).toHaveBeenLastCalledWith(
+        expect.objectContaining({ visibility: 1 }),
+      );
+      setLockScreenContent(false);
+      await p.notifications.show({ title: 'Arzt', body: '9 Uhr', tag: 'k' });
+      expect(mocks.sendNotification).toHaveBeenLastCalledWith(
+        expect.objectContaining({ visibility: 0 }),
+      );
+    } finally {
+      setLockScreenContent(false);
+    }
   });
 
   it('derives stable, distinct 31-bit ids', () => {

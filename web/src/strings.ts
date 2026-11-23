@@ -2833,6 +2833,9 @@ export const de = {
       'Auf Android plant die App Erinnerungen beim System ein, damit sie auch bei geschlossener App kommen. Das klappt, wenn Nemo Benachrichtigungen und „Wecker & Erinnerungen“ darf und der Akku nicht eingeschränkt ist (Einstellungen → Apps → Nemo).',
     introDesktop:
       'Erinnerungen erscheinen als Benachrichtigung, solange Nemo läuft, auch im Hintergrund oder im Infobereich. Ist die App beendet, kommen sie nicht; was in der Zwischenzeit fällig wurde, siehst du beim nächsten Start in der Glocke.',
+    lockScreen: 'Inhalt auf dem Sperrbildschirm zeigen',
+    lockScreenHint:
+      'Aus: Ist das Handy gesperrt, siehst du nur, dass eine Erinnerung da ist, nicht ihren Text. Gilt nur für dieses Gerät.',
     enable: 'Benachrichtigungen aktivieren',
     granted: 'Aktiviert',
     denied: 'Blockiert – bitte in den Browser-Einstellungen für diese Seite erlauben.',
