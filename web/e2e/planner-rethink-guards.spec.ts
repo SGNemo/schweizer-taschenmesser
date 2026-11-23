@@ -181,6 +181,7 @@ test.describe('phone', () => {
 for (const scheme of ['light', 'dark'] as const) {
   test(`axe: the band's row and the 4-week grid with a passed day (${scheme})`, async ({
     page,
+    isMobile,
   }) => {
     await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' });
     await plannerOn(page);
@@ -191,8 +192,11 @@ for (const scheme of ['light', 'dark'] as const) {
     await page.clock.setFixedTime(new Date('2026-10-04T10:00:00'));
     await page.goto('/planner');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    // Direction A: the switch „Woche | 4 Wochen“ stands in the band's row, on the phone too.
-    await page.getByTestId('grid-switch').getByRole('button', { name: '4 Wochen' }).click();
+    // Direction A: the switch „Woche | 4 Wochen“ in the band's row; the phone in this week keeps it in ⋯.
+    if (isMobile) {
+      await page.getByRole('button', { name: 'Weitere Optionen', exact: true }).first().click();
+      await page.getByRole('menuitem', { name: '4 Wochen zeigen' }).click();
+    } else await page.getByTestId('grid-switch').getByRole('button', { name: '4 Wochen' }).click();
     await expect(page.getByRole('grid', { name: 'Vier Wochen' })).toBeVisible();
     await expect(page.getByTestId('week-2026-09-29')).toHaveAccessibleName(
       'Dienstag, 29. September: offen',

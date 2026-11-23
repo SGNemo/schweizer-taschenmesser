@@ -637,11 +637,8 @@ test('D Planer öffnen bei Überlast', async ({ page, isMobile }, info) => {
   // cut into parts any more, so today holds a fourth, small thing where develop had three rows (one of them
   // „Teil 1/2“) – the sheet's existing fold „Danach · 1 Ding“ is the one control more. No new control was added
   // (compared element by element against a develop build); named in the PR for the maintainer's veto.
-  // Direction A (2026-11-23, the look of mockup A – the maintainer: „nah an den Mockup“, rules may follow): 32 on the
-  // phone. The band's row now shows „KW“ with ‹ › and „Woche | 4 Wochen“ (four controls the phone kept in ⋯ or left
-  // out before); nothing else was added.
   const bound = isMobile
-    ? { interactive: 32, words: 200, rows: 5, scroll: 800 }
+    ? { interactive: 28, words: 200, rows: 5, scroll: 800 }
     : { interactive: 40, words: 280, rows: 13, scroll: 700 };
   expect(s.interactive, 'interactive elements').toBeLessThanOrEqual(bound.interactive);
   expect(s.words, 'words').toBeLessThanOrEqual(bound.words);

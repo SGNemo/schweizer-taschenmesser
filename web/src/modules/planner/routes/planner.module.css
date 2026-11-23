@@ -831,14 +831,15 @@ section.sheet .headEnd button[aria-expanded='true'] {
   padding-bottom: var(--space-2);
   border-bottom: 1px solid var(--border);
 }
-/* The phone (direction A): the end slot is hidden – „fest“ and the minutes stand in the meta line; the day's head
-   puts its time under the title; „Woche vorschlagen“ gets a line of its own under the group's header. */
+/* The phone (direction A): rows on one line like the desktop; the day's head puts its time under the title;
+   „Woche vorschlagen“ gets a line of its own under the group's header. */
 @media (max-width: 899px) {
-  .endFacts {
-    display: none;
+  /* One line per row on the phone too (mockup A): „fest“ and the minutes at the row's end. */
+  .endFacts .duration {
+    display: inline;
   }
   .metaPhoneOnly {
-    display: flex;
+    display: none;
   }
   .sheetHead {
     grid-template-columns: minmax(0, 1fr) auto;

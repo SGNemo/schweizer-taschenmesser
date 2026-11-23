@@ -621,7 +621,13 @@ test('U5 Ding auf einen Tag in drei Wochen', async ({ page }, info) => {
   const after = await settled(page);
   const bySentence = after['Angebot'] === IN_THREE_WEEKS;
   // Is the day there to look at (package 4: the switch „4 Wochen“ in the band's row; not counted – a look)?
-  await page.getByTestId('grid-switch').getByRole('button', { name: '4 Wochen' }).click();
+  const gridSwitch = page.getByTestId('grid-switch');
+  if (await gridSwitch.count()) await gridSwitch.getByRole('button', { name: '4 Wochen' }).click();
+  else {
+    // The phone in this week: „4 Wochen zeigen“ in the page's ⋯.
+    await page.getByRole('button', { name: 'Weitere Optionen', exact: true }).first().click();
+    await page.getByRole('menuitem', { name: '4 Wochen zeigen' }).click();
+  }
   const weekTile = await page.getByTestId(`week-${IN_THREE_WEEKS}`).count();
   record(
     info,

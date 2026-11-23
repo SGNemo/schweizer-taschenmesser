@@ -99,6 +99,9 @@ const rowOf = (page: Page, title: string) =>
 
 /** A mouse drag from the row's title onto a target, in small steps (as a hand moves). */
 async function mouseDrag(page: Page, from: Locator, to: Locator) {
+  // The page settles first (a toast, the open line): the hand grabs the row where it is now.
+  await from.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
   const a = (await from.boundingBox())!;
   const b = (await to.boundingBox())!;
   await page.mouse.move(a.x + 20, a.y + a.height / 2);

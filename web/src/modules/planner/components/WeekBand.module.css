@@ -112,11 +112,13 @@
     width: var(--space-6);
     min-width: var(--space-6);
   }
-  /* „Mo“ above „16“: the narrow tile never breaks inside a word. */
+  /* „Mo 16“ on one line where the tile holds it (the phone's band has its ‹ › in the row above); a narrower tile
+     breaks between the two words, never inside one. */
   .day {
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    column-gap: 0.25em;
   }
 }
 

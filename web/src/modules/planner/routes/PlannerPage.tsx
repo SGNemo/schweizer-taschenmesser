@@ -1033,6 +1033,10 @@ export default function PlannerPage() {
     );
   };
   const pageMenu: RowMenuItem[] = [
+    // The phone in this week's week view (no band row): „4 Wochen zeigen“ lives here.
+    ...(phone && !grid && start === thisWeek
+      ? [{ id: 'grid', label: t.planner.board.gridViewMenu, onSelect: toggleGrid }]
+      : []),
     {
       id: 'replan',
       label: t.planner.head.replan,
@@ -1115,54 +1119,57 @@ export default function PlannerPage() {
   // The band's row (direction A): „KW 47“ (the grid: its four weeks, with ‹ ›), „Heute“ once paged away, and the
   // switch „Woche | 4 Wochen“ on the right – on the phone too. In the week view ‹ › stand at the band's ends.
   const canPrev = start > thisWeek;
-  const bandRow = (
-    <div className={styles.bandRow} data-testid="band-row">
-      {/* The grid, and the phone's week (its tiles need the band's whole width): ‹ › beside the label. */}
-      {(grid || phone) && canPrev ? (
-        <IconButton
-          className={styles.bandControl}
-          label={grid ? t.planner.board.gridPrev : t.planner.board.prev}
-          onClick={() => page(-1)}
-        >
-          <Icon name="chevronLeft" size={16} />
-        </IconButton>
-      ) : null}
-      <span className={styles.bandLabel}>
-        {grid ? bandRange : t.planner.board.weekNo(isoWeekOf(addDaysStr(start, SPAN - 1)))}
-      </span>
-      {grid || phone ? (
-        <IconButton
-          className={styles.bandControl}
-          label={grid ? t.planner.board.gridNext : t.planner.board.next}
-          onClick={() => page(1)}
-        >
-          <Icon name="chevronRight" size={16} />
-        </IconButton>
-      ) : null}
-      {canPrev ? (
-        <button
-          type="button"
-          className={`${styles.textLink} ${styles.bandControl}`}
-          onClick={() => setWeekStart(thisWeek)}
-        >
-          {t.planner.board.today}
-        </button>
-      ) : null}
-      <span className={styles.bandSwitch} data-testid="grid-switch">
-        <Segmented
-          label={t.planner.board.viewSwitch}
-          value={grid ? 'grid' : 'week'}
-          options={[
-            { value: 'week', label: t.planner.board.weekView },
-            { value: 'grid', label: t.planner.board.gridView },
-          ]}
-          onChange={(v) => {
-            if ((v === 'grid') !== grid) toggleGrid();
-          }}
-        />
-      </span>
-    </div>
-  );
+  // The phone in this week's week view has no row (its page keeps the field whole on arrival, planner-hub M-3): the
+  // sheet's swipe pages, ⋯ holds „4 Wochen zeigen“; paged away or in the grid the row is there.
+  const bandRow =
+    phone && !grid && !canPrev ? null : (
+      <div className={styles.bandRow} data-testid="band-row">
+        {/* The grid, and the phone's week (its tiles need the band's whole width): ‹ › beside the label. */}
+        {(grid || phone) && canPrev ? (
+          <IconButton
+            className={styles.bandControl}
+            label={grid ? t.planner.board.gridPrev : t.planner.board.prev}
+            onClick={() => page(-1)}
+          >
+            <Icon name="chevronLeft" size={16} />
+          </IconButton>
+        ) : null}
+        <span className={styles.bandLabel}>
+          {grid ? bandRange : t.planner.board.weekNo(isoWeekOf(addDaysStr(start, SPAN - 1)))}
+        </span>
+        {grid || phone ? (
+          <IconButton
+            className={styles.bandControl}
+            label={grid ? t.planner.board.gridNext : t.planner.board.next}
+            onClick={() => page(1)}
+          >
+            <Icon name="chevronRight" size={16} />
+          </IconButton>
+        ) : null}
+        {canPrev ? (
+          <button
+            type="button"
+            className={`${styles.textLink} ${styles.bandControl}`}
+            onClick={() => setWeekStart(thisWeek)}
+          >
+            {t.planner.board.today}
+          </button>
+        ) : null}
+        <span className={styles.bandSwitch} data-testid="grid-switch">
+          <Segmented
+            label={t.planner.board.viewSwitch}
+            value={grid ? 'grid' : 'week'}
+            options={[
+              { value: 'week', label: t.planner.board.weekView },
+              { value: 'grid', label: t.planner.board.gridView },
+            ]}
+            onChange={(v) => {
+              if ((v === 'grid') !== grid) toggleGrid();
+            }}
+          />
+        </span>
+      </div>
+    );
 
   // „Danach“ is folded on the phone and open on the desktop until the user says otherwise (device-local).
   const thenOpen = thenStored ?? !phone;
