@@ -497,8 +497,9 @@ export default function PlannerPage() {
     // before he picks where the rest goes. A name that fits no or several things: the field reads it as before.
     if (getLang() === 'de' && tab === 'plan' && shownDay) {
       const keep = readKeepSentence(value, shownDay.rows.filter(canMove));
-      if (keep?.length) {
-        setDayChosen(new Set(keep));
+      // „heute nur …“ belongs to today: on another day's sheet the field reads it as before.
+      if (keep && (!keep.today || shownDay.date === (data?.today ?? today()))) {
+        setDayChosen(new Set(keep.unitIds));
         setKeeping(true);
         setDayPicking(shownDay.date);
         setText('');
@@ -1055,11 +1056,15 @@ export default function PlannerPage() {
   if (dayPicking && (tab !== 'plan' || (shownDay && shownDay.date !== dayPicking))) {
     setDayPicking(undefined);
     setDayChosen(new Set());
+    setKeeping(false);
+    if (sayLine === t.planner.keep.fromSentence) setSayLine(undefined);
   }
   const endDayPick = () => {
     setDayPicking(undefined);
     setDayChosen(new Set());
     setKeeping(false);
+    // The sentence's hint („Mit „Nur das hier“ wählst du …“) goes with the selection it pointed to.
+    if (sayLine === t.planner.keep.fromSentence) setSayLine(undefined);
   };
   /** „Auswählen“ on the day sheet: the bar (count, „Auf einen Tag …“, cancel) or, while nothing is chosen, „Alle“. */
   const daySelection = (day: BoardDay) => {
