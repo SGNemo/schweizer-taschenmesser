@@ -23,9 +23,10 @@ import { dismissNotices } from '../helpers';
  *    `doneInPlanner` (B), `nextStepOnly`, `savedAsRoutine`, `durationProposed`, `learned` (C1), `oneRow`, `mapShown`
  *    (C2). A thing that cannot be done today is the word „nicht möglich“.
  *
- * `IST` is the measured state per path and project. `TARGET` is set by the design lead (CONCEPT.md). Every build PR
+ * `IST` is the measured state per path and project. `TARGET` is docs/design/planner-hub-2/ANALYSIS.md §3. Every build PR
  * re-measures `IST` (never loosened); a figure is asserted against the better of its `IST` and – once reached – its
- * `TARGET` (lower is better, except `rightKind`, `linkedToPlan`, `doneInPlanner`); a word equals its `IST`.
+ * `TARGET` (lower is better, except `HIGHER`; `NO_SLACK` never takes a higher target); a word equals its `IST`.
+ * Re-measured by the packages: 10b: D1 · 4a/4b/4c/2: B · 5a: C1 · 5b/6: C2 · 1: D2 · 3: A1 · 9: D3 · 11: D4.
  * `MEASURE=1` only measures. Facts (the click path, the module routes passed) land beside the table in
  * `test-results/usecase-planner-hub-2/`.
  *
@@ -35,17 +36,72 @@ import { dismissNotices } from '../helpers';
 const OUT = 'test-results/usecase-planner-hub-2';
 const TODAY = '2026-11-30'; // Monday
 const WEDNESDAY = '2026-12-02';
+const NEXT_MONDAY = '2026-12-07';
 
 type Figures = Record<string, number | string>;
 
 /** Higher is better for these; every other count is better lower. */
-const HIGHER = ['rightKind', 'linkedToPlan', 'doneInPlanner'];
+const HIGHER = ['rightKind', 'linkedToPlan', 'doneInPlanner', 'markVisible', 'markAgrees'];
 
-/** The measured state: 2026-11-23 on `develop` (design/planner-hub-2). Keyed `<path> · <project>`. */
-const IST: Record<string, Figures> = {};
+/**
+ * Counts whose target is higher than today on purpose (C2 `createTaps`: bundling a round is a choice that costs
+ * handles): a target above `IST` gives them no slack – they stay bound to `IST` until a build PR re-measures it.
+ */
+const NO_SLACK = ['createTaps'];
 
-// TARGET: set by the design lead (CONCEPT.md) – for now a copy of IST.
-const TARGET: Record<string, Figures> = {};
+/**
+ * The measured state: 2026-11-23 on `develop` (design/planner-hub-2), keyed `<path> · <project>`. The phone differs
+ * where its navigation does (area in the bottom bar, the module used last there) and where a module is desktop-only
+ * (mail).
+ */
+// prettier-ignore
+const IST: Record<string, Figures> = {
+  'A1 Alles ins Planer-Feld · desktop-chrome': { rows: 11, moduleSwitches: 0, taps: 12, perThing: 0, rightKind: 4, linkedToPlan: 4 },
+  'A1 Alles ins Planer-Feld · pixel-7': { rows: 11, moduleSwitches: 0, taps: 12, perThing: 0, rightKind: 4, linkedToPlan: 4 },
+  'A2 Jedes Ding als richtige Art · desktop-chrome': { rows: 8, moduleSwitches: 3, taps: 33, perThing: 13, forms: 2, fields: 5, rightKind: 12, linkedToPlan: 11 },
+  'A2 Jedes Ding als richtige Art · pixel-7': { rows: 8, moduleSwitches: 5, taps: 34, perThing: 14, forms: 2, fields: 5, rightKind: 12, linkedToPlan: 11 },
+  'B Finanzen und Mails abarbeiten · desktop-chrome': { rowsBefore: 5, taps: 27, perThing: 17, moduleSwitches: 5, doneInPlanner: 1, rowsAfter: 1, mails: 4 },
+  'B Finanzen und Mails abarbeiten · pixel-7': { rowsBefore: 5, taps: 14, perThing: 9, moduleSwitches: 5, doneInPlanner: 1, rowsAfter: 1, mails: 'nicht möglich' },
+  'C1 Bündel Haushalt · desktop-chrome': { rows: 1, createTaps: 12, workTaps: 7, taps: 19, perThing: 6, moduleSwitches: 4, nextStepOnly: 'nein', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
+  'C1 Bündel Haushalt · pixel-7': { rows: 1, createTaps: 12, workTaps: 7, taps: 19, perThing: 6, moduleSwitches: 5, nextStepOnly: 'nein', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
+  'C2 Besorgung · desktop-chrome': { rows: 2, createTaps: 0, workTaps: 9, perThing: 5, moduleSwitches: 2, oneRow: 'nein', mapShown: 'nicht möglich' },
+  'C2 Besorgung · pixel-7': { rows: 2, createTaps: 0, workTaps: 8, perThing: 5, moduleSwitches: 2, oneRow: 'nein', mapShown: 'nicht möglich' },
+  'D1 Steht es im Plan, und wann · desktop-chrome': { taps: 11, perThing: 5, moduleSwitches: 10, markVisible: 1, markAgrees: 2 },
+  'D1 Steht es im Plan, und wann · pixel-7': { taps: 11, perThing: 5, moduleSwitches: 10, markVisible: 1, markAgrees: 2 },
+  'D2 Geteilter Link in den Planer · desktop-chrome': { taps: 5, moduleSwitches: 2, forms: 1, inPlanner: 'ja', wayBack: 'nein' },
+  'D2 Geteilter Link in den Planer · pixel-7': { taps: 5, moduleSwitches: 3, forms: 1, inPlanner: 'ja', wayBack: 'nein' },
+  'D3 Vor einem Termin · desktop-chrome': { taps: 14, perThing: 0, moduleSwitches: 4, linked: 'ja', onWednesday: 'ja' },
+  'D3 Vor einem Termin · pixel-7': { taps: 14, perThing: 0, moduleSwitches: 4, linked: 'ja', onWednesday: 'ja' },
+  'D4 Ein Thema · desktop-chrome': { rows: 20, taps: 27, perThing: 20, moduleSwitches: 2, planFilter: 'nein' },
+  'D4 Ein Thema · pixel-7': { rows: 20, taps: 22, perThing: 15, moduleSwitches: 2, planFilter: 'nein' },
+  'D5 Warte auf Antwort · desktop-chrome': { taps: 7, perThing: 3, moduleSwitches: 0, rowsOffSheet: 3, comesBackByItself: 'ja' },
+  'D5 Warte auf Antwort · pixel-7': { taps: 7, perThing: 3, moduleSwitches: 0, rowsOffSheet: 3, comesBackByItself: 'ja' },
+};
+
+// TARGET: docs/design/planner-hub-2/ANALYSIS.md §3 (set by the design lead). Struck ideas (D5, C1 learned) keep their IST.
+// prettier-ignore
+const TARGET: Record<string, Figures> = {
+  'A1 Alles ins Planer-Feld · desktop-chrome': { rows: 7, moduleSwitches: 0, taps: 12, perThing: 0, rightKind: 12, linkedToPlan: 10 },
+  'A1 Alles ins Planer-Feld · pixel-7': { rows: 7, moduleSwitches: 0, taps: 12, perThing: 0, rightKind: 12, linkedToPlan: 10 },
+  'A2 Jedes Ding als richtige Art · desktop-chrome': { rows: 8, moduleSwitches: 3, taps: 33, perThing: 13, forms: 2, fields: 5, rightKind: 12, linkedToPlan: 11 },
+  'A2 Jedes Ding als richtige Art · pixel-7': { rows: 8, moduleSwitches: 5, taps: 34, perThing: 14, forms: 2, fields: 5, rightKind: 12, linkedToPlan: 11 },
+  'B Finanzen und Mails abarbeiten · desktop-chrome': { rowsBefore: 2, taps: 13, perThing: 11, moduleSwitches: 0, doneInPlanner: 10, rowsAfter: 0, mails: 4 },
+  'B Finanzen und Mails abarbeiten · pixel-7': { rowsBefore: 1, taps: 8, perThing: 7, moduleSwitches: 0, doneInPlanner: 6, rowsAfter: 0, mails: 'nicht möglich' },
+  'C1 Bündel Haushalt · desktop-chrome': { rows: 1, createTaps: 1, workTaps: 6, taps: 7, perThing: 5, moduleSwitches: 0, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
+  'C1 Bündel Haushalt · pixel-7': { rows: 1, createTaps: 1, workTaps: 6, taps: 7, perThing: 5, moduleSwitches: 0, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
+  'C2 Besorgung · desktop-chrome': { rows: 1, createTaps: 6, workTaps: 6, perThing: 5, moduleSwitches: 0, oneRow: 'ja', mapShown: 'nicht möglich' },
+  'C2 Besorgung · pixel-7': { rows: 1, createTaps: 6, workTaps: 6, perThing: 5, moduleSwitches: 0, oneRow: 'ja', mapShown: 'nicht möglich' },
+  'D1 Steht es im Plan, und wann · desktop-chrome': { taps: 11, perThing: 5, moduleSwitches: 10, markVisible: 5, markAgrees: 5 },
+  'D1 Steht es im Plan, und wann · pixel-7': { taps: 11, perThing: 5, moduleSwitches: 10, markVisible: 5, markAgrees: 5 },
+  'D2 Geteilter Link in den Planer · desktop-chrome': { taps: 2, moduleSwitches: 1, forms: 1, inPlanner: 'ja', wayBack: 'ja' },
+  'D2 Geteilter Link in den Planer · pixel-7': { taps: 2, moduleSwitches: 1, forms: 1, inPlanner: 'ja', wayBack: 'ja' },
+  'D3 Vor einem Termin · desktop-chrome': { taps: 3, perThing: 0, moduleSwitches: 0, linked: 'ja', onWednesday: 'ja' },
+  'D3 Vor einem Termin · pixel-7': { taps: 3, perThing: 0, moduleSwitches: 0, linked: 'ja', onWednesday: 'ja' },
+  'D4 Ein Thema · desktop-chrome': { rows: 7, taps: 11, perThing: 5, moduleSwitches: 0, planFilter: 'ja' },
+  'D4 Ein Thema · pixel-7': { rows: 7, taps: 11, perThing: 5, moduleSwitches: 0, planFilter: 'ja' },
+  'D5 Warte auf Antwort · desktop-chrome': { taps: 7, perThing: 3, moduleSwitches: 0, rowsOffSheet: 3, comesBackByItself: 'ja' },
+  'D5 Warte auf Antwort · pixel-7': { taps: 7, perThing: 3, moduleSwitches: 0, rowsOffSheet: 3, comesBackByItself: 'ja' },
+};
 
 const base = { createdAt: 1, updatedAt: 1, deviceId: 'e2e', deletedAt: null, _f: {} };
 
@@ -69,6 +125,8 @@ const MODULES = [
 /** Where a module lives in the navigation: its route and its area (sidebar group / phone area page). */
 const PLACES = {
   planner: { path: '/planner', area: 'Planen', areaPath: '/planen' },
+  calendar: { path: '/calendar', area: 'Planen', areaPath: '/planen' },
+  todos: { path: '/todos', area: 'Planen', areaPath: '/planen' },
   invoices: { path: '/invoices', area: 'Geld', areaPath: '/geld' },
   subscriptions: { path: '/subscriptions', area: 'Geld', areaPath: '/geld' },
   budgets: { path: '/budgets', area: 'Geld', areaPath: '/geld' },
@@ -260,6 +318,9 @@ async function go(hand: Hand, page: Page, isMobile: boolean, to: Place, thing?: 
         thing,
       );
     await hand.tap(link, `Navigation ${to}`, thing);
+  } else if (await appears(page.locator(`a[href="${place.path}"]:visible`).first(), 1000)) {
+    // A module of the same area: its tab in the page's head.
+    await hand.tap(page.locator(`a[href="${place.path}"]:visible`).first(), `Reiter ${to}`, thing);
   } else {
     const before = page.url();
     const bar = page.getByRole('navigation', { name: 'Hauptnavigation' }).last();
@@ -296,6 +357,13 @@ async function go(hand: Hand, page: Page, isMobile: boolean, to: Place, thing?: 
   await expect(page).toHaveURL(new RegExp(`${place.path}(\\?|$)`));
   await expect(page.locator('main h1')).toBeVisible();
 }
+
+/** Whether a control shows up within a short while (a page that is still rendering decides nothing). */
+const appears = (target: Locator, timeout = 2500) =>
+  target
+    .waitFor({ state: 'visible', timeout })
+    .then(() => true)
+    .catch(() => false);
 
 /** A count that has settled: two reads 400 ms apart agree. */
 async function settled(read: () => Promise<number>): Promise<number> {
@@ -363,10 +431,15 @@ async function unfold(page: Page) {
   const head = page.getByRole('button', { name: /^Noch ohne Tag ausklappen$/ });
   if (await head.count()) await head.click();
   const then = page.getByTestId(`day-${TODAY}`).getByRole('button', { name: /^Danach/ });
-  if ((await then.count()) && (await then.getAttribute('aria-expanded')) === 'false')
+  if ((await then.count()) && (await then.getAttribute('aria-expanded')) === 'false') {
     await then.click();
+    await expect(then).toHaveAttribute('aria-expanded', 'true');
+  }
   const more = page.getByTestId('planner-more');
-  if (await more.count()) await more.first().click();
+  if (await more.count()) {
+    await more.first().click();
+    await expect(more).toHaveCount(0);
+  }
   const fold = page.getByTestId('planner-late-row');
   if ((await fold.count()) && (await fold.getAttribute('aria-expanded')) !== 'true')
     await fold.click();
@@ -434,7 +507,7 @@ function reached(id: string, figures: Figures) {
       const bound = typeof want === 'number' && want <= was ? want : was;
       expect(got, `${id}: ${k} ≥ ${bound}`).toBeGreaterThanOrEqual(bound);
     } else {
-      const bound = typeof want === 'number' && was <= want ? want : was;
+      const bound = typeof want === 'number' && was <= want && !NO_SLACK.includes(k) ? want : was;
       expect(got, `${id}: ${k} ≤ ${bound}`).toBeLessThanOrEqual(bound);
     }
   }
@@ -646,7 +719,7 @@ test('A2 Jedes Ding als richtige Art', async ({ page, isMobile }, info) => {
     .first();
   await expect(pageRow).toBeVisible();
   const pageMenu = page.locator('main').getByRole('button', { name: 'Seite: weitere Aktionen' });
-  if (!(await pageMenu.first().isVisible())) await hand.tap(pageRow, 'Seite öffnen', note);
+  if (!(await appears(pageMenu.first()))) await hand.tap(pageRow, 'Seite öffnen', note);
   await hand.tap(pageMenu.first(), 'Seite ⋯', note);
   await hand.tap(page.getByRole('menuitem', { name: /^In den Plan/ }), 'In den Plan', note);
   const planDialog = page.getByRole('dialog', { name: 'In den Plan' });
@@ -679,7 +752,6 @@ test('A2 Jedes Ding als richtige Art', async ({ page, isMobile }, info) => {
     { rows: after, guessed, places: hand.places, path: hand.path, ...k },
   );
 });
-
 
 // ---------------------------------------------------------------------------------------------------------------
 // B  Finanzen checken, E-Mails durchgehen
@@ -773,8 +845,12 @@ test('B Finanzen und Mails abarbeiten', async ({ page, isMobile }, info) => {
       inv.payee,
     );
     const ask = page.getByRole('dialog', { name: `${inv.payee} bezahlt?` });
-    if (await ask.isVisible().catch(() => false)) {
-      await hand.tap(ask.getByRole('button', { name: 'Bezahlt', exact: true }), 'Bezahlt', inv.payee);
+    if (await appears(ask, 1500)) {
+      await hand.tap(
+        ask.getByRole('button', { name: 'Bezahlt', exact: true }),
+        'Bezahlt',
+        inv.payee,
+      );
       await expect(ask).toHaveCount(0);
     }
     await expect
@@ -800,11 +876,20 @@ test('B Finanzen und Mails abarbeiten', async ({ page, isMobile }, info) => {
   await hand.fill(editor.getByLabel('Gekündigt zum (optional)'), '2026-12-10', 'Gekündigt zum', {
     thing: cancel!.name,
   });
-  await hand.tap(editor.getByRole('button', { name: 'Speichern', exact: true }), 'Speichern', cancel!.name);
+  await hand.tap(
+    editor.getByRole('button', { name: 'Speichern', exact: true }),
+    'Speichern',
+    cancel!.name,
+  );
   await expect(editor).toHaveCount(0);
   // 3 The budget: never in the plan – a look on its page.
   await go(hand, page, isMobile, 'budgets', 'Budget');
-  await expect(page.locator('main').getByText(/drüber/).first()).toBeVisible();
+  await expect(
+    page
+      .locator('main')
+      .getByText(/drüber/)
+      .first(),
+  ).toBeVisible();
   // 4 The mails: no source of the plan – „Alle in den Plan…“ in the mailbox makes four ToDos (desktop only).
   let mails: number | string = 'nicht möglich';
   if (!isMobile) {
@@ -838,12 +923,22 @@ test('B Finanzen und Mails abarbeiten', async ({ page, isMobile }, info) => {
         const doneItem = page.getByRole('menuitem', { name: 'Erledigt', exact: true });
         if (await doneItem.count()) {
           await hand.tap(doneItem, 'Erledigt', subject);
-          await expect.poll(async () => (await fromMail()).some((x) => x.id === todo.id)).toBe(false);
+          await expect
+            .poll(async () => (await fromMail()).some((x) => x.id === todo.id))
+            .toBe(false);
           continue;
         }
-        await hand.tap(page.getByRole('menuitem', { name: 'Verschieben …' }), 'Verschieben …', subject);
+        await hand.tap(
+          page.getByRole('menuitem', { name: 'Verschieben …' }),
+          'Verschieben …',
+          subject,
+        );
         const move = page.getByRole('dialog', { name: `Verschieben: ${todo.title}` });
-        await hand.tap(move.getByRole('button', { name: 'Mo 30.', exact: true }), 'Mo 30.', subject);
+        await hand.tap(
+          move.getByRole('button', { name: 'Mo 30.', exact: true }),
+          'Mo 30.',
+          subject,
+        );
         await expect(move).toHaveCount(0);
       }
       const then = page.getByTestId(`day-${TODAY}`).getByRole('button', { name: /^Danach/ });
@@ -945,7 +1040,11 @@ test('C1 Bündel Haushalt', async ({ page, isMobile }, info) => {
   const createSwitches = hand.moduleSwitches;
   // Working through it: the row's title opens the routine's steps („Los“) in Routinen; five ticks, the last one is
   // „Erledigt“ for the routine; back to the planner.
-  const row = page.getByTestId(`day-${TODAY}`).locator('li').filter({ hasText: 'Haushalt' }).first();
+  const row = page
+    .getByTestId(`day-${TODAY}`)
+    .locator('li')
+    .filter({ hasText: 'Haushalt' })
+    .first();
   await expect(row).toBeVisible();
   await hand.tap(row.locator('button[data-row]').first(), 'Haushalt öffnen', 'Haushalt');
   const run = page.getByRole('dialog', { name: 'Haushalt' });
@@ -1037,7 +1136,13 @@ test('C2 Besorgung', async ({ page, isMobile }, info) => {
       reason: 'new',
     })),
     lists_list: [{ id: 'drog', name: 'Drogerie', kind: 'shopping', order: 0 }],
-    lists_item: DRUGSTORE.map((n, i) => ({ id: `d${i}`, listId: 'drog', name: n, done: false, order: i })),
+    lists_item: DRUGSTORE.map((n, i) => ({
+      id: `d${i}`,
+      listId: 'drog',
+      name: n,
+      done: false,
+      order: i,
+    })),
   });
   await planner(page);
   const before = await plannerRows(page);
@@ -1054,7 +1159,7 @@ test('C2 Besorgung', async ({ page, isMobile }, info) => {
   // The only list opens by itself; with more lists it is one tap on its name.
   const first = page.getByRole('checkbox', { name: DRUGSTORE[0], exact: true });
   await expect(page.locator('main').getByText('Drogerie').first()).toBeVisible();
-  if (!(await first.isVisible()))
+  if (!(await appears(first)))
     await hand.tap(
       page.locator('main').getByRole('button', { name: 'Drogerie', exact: true }).first(),
       'Liste Drogerie',
@@ -1062,7 +1167,9 @@ test('C2 Besorgung', async ({ page, isMobile }, info) => {
   for (const item of DRUGSTORE)
     await hand.tap(page.getByRole('checkbox', { name: item, exact: true }), item, item);
   await expect
-    .poll(async () => (await rows<{ done: boolean }>(page, 'lists_item')).filter((x) => x.done).length)
+    .poll(
+      async () => (await rows<{ done: boolean }>(page, 'lists_item')).filter((x) => x.done).length,
+    )
     .toBe(3);
   await go(hand, page, isMobile, 'planner');
   for (const title of ERRANDS)
@@ -1077,7 +1184,10 @@ test('C2 Besorgung', async ({ page, isMobile }, info) => {
     name,
     {
       rows: before.all,
-      taps: hand.taps,
+      // Getting the round into the plan as it is worked: nothing to do today (no bundle, the list stays out of the
+      // plan – the path works it in Listen).
+      createTaps: 0,
+      workTaps: hand.taps,
       perThing: hand.perThing,
       moduleSwitches: hand.moduleSwitches,
       oneRow: menu.some((m) => /bündel|zusammen/i.test(m)) ? 'ja' : 'nein',
@@ -1087,29 +1197,509 @@ test('C2 Besorgung', async ({ page, isMobile }, info) => {
   );
 });
 
-test('zz explore D', async ({ page, isMobile }) => {
-  const S = '/tmp/claude-0/-home-user-schweizer-taschenmesser/745fa3b2-d9a7-5933-a92b-0b24ca034803/scratchpad/measure';
-  const p = isMobile ? 'phone' : 'desk';
+// ---------------------------------------------------------------------------------------------------------------
+// D  Spuren des Plans in den Modulen, Teilen, Termine, Themen, Warten
+
+/** A thing laid on a day by the planner (the row „Verschieben …“ writes: `<itemKey>#0`, whole). */
+const laid = (itemKey: string, date: string, minutes: number, order: number) => ({
+  id: `${itemKey}#0`,
+  itemKey,
+  k: 0,
+  of: 1,
+  date,
+  minutes,
+  order,
+  reason: 'new',
+});
+
+const task = (id: string, title: string, order: number, extra: Record<string, unknown> = {}) => ({
+  id,
+  listId: 'inbox',
+  title,
+  done: false,
+  priority: 0,
+  order,
+  estimateMin: 20,
+  ...extra,
+});
+
+/** „Noch ohne Tag“ unfolded by the person (one tap while it is folded); waits for the board first. */
+async function openNoDay(hand: Hand, page: Page) {
+  await settled(() => noDay(page));
+  const head = page.getByRole('button', { name: /^Noch ohne Tag (aus|ein)klappen$/ });
+  if (!(await head.count())) return;
+  if ((await head.getAttribute('aria-expanded')) === 'true') return;
+  await hand.tap(head, 'Noch ohne Tag aufklappen');
+  await expect(head).toHaveAttribute('aria-expanded', 'true');
+}
+
+/** The planner on a picked day of the week band (one tap when it is not the shown day). */
+async function showDay(hand: Hand, page: Page, date: string) {
+  const tile = page.getByTestId(`week-${date}`);
+  if ((await tile.getAttribute('aria-pressed')) !== 'true') await hand.tap(tile, `Tag ${date}`);
+  await expect(page.getByTestId(`day-${date}`)).toBeVisible();
+}
+
+/** What the open page (and its dialogs) says about the plan: every „im Plan“ with a little of its context. */
+async function planMarks(page: Page): Promise<string[]> {
+  await page.waitForTimeout(800);
+  const text = [
+    await page.locator('main').innerText(),
+    ...(await page.getByRole('dialog').allInnerTexts()),
+  ]
+    .join(' ')
+    .replace(/\s+/g, ' ');
+  return [...new Set(text.match(/.{0,30}\b(im|Im) Plan\b.{0,30}/g) ?? [])];
+}
+
+/** A plan mark that names a day („Im Plan · Mi“, „im Plan: 2. Dez.“). */
+const DAY_MARK =
+  /\b(Im|im) Plan\s*[·:]?\s*(Mo|Di|Mi|Do|Fr|Sa|So|Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag|heute|morgen|\d)/;
+const WED_MARK = /\b(Im|im) Plan\s*[·:]?\s*(Mi\b|Mittwoch|2\.)/;
+
+const D1_THINGS = [
+  { key: 'invoices:i3', title: 'Musikschule Beispiel bezahlen', module: 'invoices' },
+  { key: 'lists:shopping-default', title: 'Einkaufen · 3 Dinge', module: 'lists' },
+  { key: 'todos:nt', title: 'Regal im Flur', module: 'notes' },
+  {
+    key: 'subscriptions:s1:2026-12-03',
+    title: 'Streamingdienst Beispiel kündigen',
+    module: 'subscriptions',
+  },
+  { key: 'bookmarks:bm1', title: 'Ausprobieren: Fahrradträger', module: 'bookmarks' },
+];
+
+test('D1 Steht es im Plan, und wann', async ({ page, isMobile }, info) => {
+  const name = 'D1 Steht es im Plan, und wann';
+  // Five things the planner laid on Wednesday (stored placement rows, as „Verschieben …“ in the planner writes them):
+  // an invoice, the shopping list (asked into the plan), a note through its plan ToDo, a subscription's deadline and
+  // a Merkliste entry – the subscription and the entry placed from the planner, not from their modules.
   await prepare(page, isMobile, {
-    todos_task: [1, 2, 3].map((i) => ({ id: `u${i}`, listId: 'inbox', title: `Umzug ${i}`, done: false, priority: 0, order: i })),
+    invoices_invoice: [INVOICES[2]!].map((i) => ({ ...i, status: 'open' })),
+    subscriptions_subscription: [SUBSCRIPTIONS[0]!].map((s) => ({
+      ...s,
+      recurrence: { freq: 'monthly', interval: 1 },
+      cancelNoticeDays: 7,
+      active: true,
+    })),
+    lists_list: [{ id: 'shopping-default', name: 'Einkauf', kind: 'shopping', order: 0 }],
+    lists_item: SHOPPING.map((n, i) => ({
+      id: `s${i}`,
+      listId: 'shopping-default',
+      name: n,
+      done: false,
+      order: i,
+    })),
+    notes_note: [{ id: 'n1', title: 'Regal im Flur', body: 'Maße nehmen.', pinned: false }],
+    todos_task: [
+      task('nt', 'Regal im Flur', 0, {
+        links: [{ kind: 'note', id: 'n1', label: 'Regal im Flur' }],
+      }),
+    ],
+    bookmarks_item: [
+      {
+        id: 'bm1',
+        title: 'Fahrradträger',
+        url: 'https://example.org/fahrradtraeger',
+        kind: 'try',
+        tags: [],
+        done: false,
+        started: false,
+        inPlan: true,
+      },
+    ],
+    planner_item: [
+      {
+        id: 'lists:shopping-default',
+        source: { module: 'lists', id: 'shopping-default' },
+        order: 0,
+      },
+    ],
+    planner_assignment: D1_THINGS.map((x, i) => laid(x.key, WEDNESDAY, 20, i)),
   });
-  await page.goto('/todos');
-  await page.waitForTimeout(1500);
-  await page.locator('main').getByRole('button', { name: 'Auswählen' }).click();
-  await page.waitForTimeout(500);
-  const cb = await page.locator('main').getByRole('checkbox').evaluateAll((els) => els.map((e) => e.getAttribute('aria-label') || (e as HTMLInputElement).labels?.[0]?.innerText));
-  await page.locator('main').getByRole('checkbox').nth(1).click();
-  await page.waitForTimeout(300);
-  const bb = await page.getByRole('button').evaluateAll((els) => els.filter((e) => (e as HTMLElement).offsetParent).map((e) => e.getAttribute('aria-label') || (e as HTMLElement).innerText));
-  writeFileSync(`${S}/d4-select-${p}.json`, JSON.stringify({ cb, bb }, null, 1));
-  await page.goto('/todos?open=u1');
-  await page.waitForTimeout(1000);
-  writeFileSync(`${S}/d4-editor-${p}.txt`, await page.getByRole('dialog').innerText());
-  await page.goto('/share?title=Fahrradtr%C3%A4ger&text=https%3A%2F%2Fexample.org%2Ffahrradtraeger');
-  await page.getByRole('radio', { name: 'ToDo' }).click();
-  await page.waitForTimeout(300);
-  writeFileSync(`${S}/d2-todo-${p}.txt`, await page.locator('main').innerText());
-  await page.getByRole('button', { name: 'Speichern' }).click();
-  await page.waitForTimeout(1000);
-  writeFileSync(`${S}/d2-after-${p}.txt`, page.url() + '\n' + JSON.stringify((await page.evaluate(() => 1)) && 0));
+  await planner(page);
+  const hand = new Hand(page, isMobile);
+  hand.start();
+  const marks: Record<string, string[]> = {};
+  let markVisible = 0;
+  let markAgrees = 0;
+  for (const thing of D1_THINGS) {
+    await showDay(hand, page, WEDNESDAY);
+    const row = page
+      .getByTestId(`day-${WEDNESDAY}`)
+      .locator('li')
+      .filter({ hasText: thing.title })
+      .first();
+    const then = page.getByTestId(`day-${WEDNESDAY}`).getByRole('button', { name: /^Danach/ });
+    if (!(await appears(row, 1500)) && (await then.count()))
+      await hand.tap(then, 'Danach aufklappen');
+    await expect(row).toBeVisible();
+    // The note is reached through its ToDo's chip („Zur Notiz“), everything else through the row's title.
+    const way =
+      thing.module === 'notes'
+        ? row.getByRole('button', { name: /Notiz/ }).first()
+        : row.locator('button[data-row]').first();
+    await hand.tap(way, `Öffnen: ${thing.title}`, thing.title);
+    await expect(page).toHaveURL(new RegExp(`/${thing.module}`));
+    await expect(page.locator('main h1')).toBeVisible();
+    const said = await planMarks(page);
+    marks[thing.title] = said;
+    const day = said.some((l) => DAY_MARK.test(l));
+    if (day) markVisible += 1;
+    // Agrees with the plan: a mark that names Wednesday, or one that says „im Plan“ without naming another day.
+    if (said.some((l) => WED_MARK.test(l)) || (said.length > 0 && !day)) markAgrees += 1;
+    await page.keyboard.press('Escape');
+    await go(hand, page, isMobile, 'planner');
+  }
+  record(
+    info,
+    name,
+    {
+      taps: hand.taps,
+      perThing: hand.perThing,
+      moduleSwitches: hand.moduleSwitches,
+      markVisible,
+      markAgrees,
+    },
+    { marks, places: hand.places, path: hand.path },
+  );
+});
+
+test('D2 Geteilter Link in den Planer', async ({ page, isMobile }, info) => {
+  const name = 'D2 Geteilter Link in den Planer';
+  await prepare(page, isMobile);
+  // The PWA's share target, opened directly: its form suggests the Merkliste – a plain link the planner never takes
+  // (`bookmarks/plannable.ts`). „ToDo“ makes a thing the planner shows under „Noch ohne Tag“.
+  await page.goto(
+    '/share?title=Fahrradtr%C3%A4ger&text=https%3A%2F%2Fexample.org%2Ffahrradtraeger',
+  );
+  await expect(page.getByRole('radio', { name: 'ToDo' })).toBeVisible();
+  const hand = new Hand(page, isMobile);
+  hand.start();
+  const forms = 1;
+  await hand.tap(page.getByRole('radio', { name: 'ToDo' }), 'Ziel ToDo');
+  await hand.tap(page.getByRole('button', { name: 'Speichern', exact: true }), 'Speichern');
+  await expect.poll(async () => (await rows<Task>(page, 'todos_task')).length).toBe(1);
+  const [saved] = await rows<Task & { note?: string }>(page, 'todos_task');
+  await expect(page).not.toHaveURL(/\/share/);
+  await go(hand, page, isMobile, 'planner');
+  await openNoDay(hand, page);
+  const row = page.locator('main li').filter({ hasText: 'Fahrradträger' }).first();
+  const inPlanner = (await appears(row)) ? 'ja' : 'nein';
+  // A way back to the address from the row: a link or a chip on it, or an entry of its ⋯ (read, not counted).
+  let wayBack = 'nein';
+  let menu: string[] = [];
+  if (inPlanner === 'ja') {
+    const onRow = await row
+      .locator('a[href^="https://example.org"], button')
+      .evaluateAll((els) =>
+        els.map((e) => `${e.getAttribute('href') ?? ''} ${e.getAttribute('aria-label') ?? ''}`),
+      );
+    if (onRow.some((x) => /example\.org|Browser/.test(x))) wayBack = 'ja';
+    await row.getByRole('button', { name: /^Aktionen für / }).click();
+    menu = await page.getByRole('menuitem').allInnerTexts();
+    await page.keyboard.press('Escape');
+    if (menu.some((m) => /example\.org|Browser|Link/.test(m))) wayBack = 'ja';
+  }
+  record(
+    info,
+    name,
+    { taps: hand.taps, moduleSwitches: hand.moduleSwitches, forms, inPlanner, wayBack },
+    { saved, menu, places: hand.places, path: hand.path },
+  );
+});
+
+test('D3 Vor einem Termin', async ({ page, isMobile }, info) => {
+  const name = 'D3 Vor einem Termin';
+  await prepare(page, isMobile, {
+    calendar_event: [
+      {
+        id: 'ev1',
+        title: 'Friseur',
+        allDay: false,
+        startDate: WEDNESDAY,
+        startTime: '15:00',
+        endTime: '16:00',
+      },
+    ],
+  });
+  await planner(page);
+  const hand = new Hand(page, isMobile);
+  hand.start();
+  // The planner's field makes a ToDo without a link; the one link to an appointment is its editor's „Als ToDo
+  // merken“ (a ToDo titled like the appointment, due that day). Renamed in its own editor, laid on Wednesday in the
+  // planner.
+  await go(hand, page, isMobile, 'calendar');
+  const entry = page
+    .getByRole('button', { name: /Friseur/ })
+    .and(page.locator('xpath=//*[not(ancestor::aside)]'))
+    .first();
+  // The phone's month shows the day, not the entry: the day first.
+  const shown = await entry
+    .waitFor({ state: 'visible', timeout: 3000 })
+    .then(() => true)
+    .catch(() => false);
+  if (!shown)
+    await hand.tap(
+      page.getByRole('button', { name: /^Mittwoch, 2\. Dezember/ }).first(),
+      'Tag Mi 2.',
+    );
+  await hand.tap(entry, 'Termin Friseur');
+  const editor = page.getByRole('dialog').filter({ hasText: 'Als ToDo merken' });
+  await expect(editor).toBeVisible();
+  await hand.tap(editor.getByRole('button', { name: 'Als ToDo merken' }), 'Als ToDo merken');
+  await expect.poll(async () => (await rows<Task>(page, 'todos_task')).length).toBe(1);
+  await hand.tap(editor.getByRole('button', { name: 'Abbrechen' }), 'Schließen');
+  await expect(editor).toHaveCount(0);
+  await go(hand, page, isMobile, 'todos');
+  const todoRow = page
+    .locator('main')
+    .getByRole('button', { name: /^Friseur/ })
+    .first();
+  await hand.tap(todoRow, 'ToDo Friseur');
+  const todoEditor = page.getByRole('dialog', { name: 'Aufgabe bearbeiten' });
+  if (!(await appears(todoEditor)))
+    await hand.tap(
+      page.locator('main').getByRole('button', { name: 'Bearbeiten' }).first(),
+      'Bearbeiten',
+    );
+  await expect(todoEditor).toBeVisible();
+  await hand.fill(todoEditor.getByRole('textbox', { name: 'Titel' }), 'Bargeld holen', 'Titel');
+  await hand.tap(todoEditor.getByRole('button', { name: 'Speichern', exact: true }), 'Speichern');
+  await expect(todoEditor).toHaveCount(0);
+  await go(hand, page, isMobile, 'planner');
+  await openNoDay(hand, page);
+  await hand.tap(
+    page.getByRole('button', { name: 'Aktionen für Bargeld holen', exact: true }).first(),
+    '⋯ Bargeld holen',
+  );
+  await hand.tap(page.getByRole('menuitem', { name: 'Verschieben …' }), 'Verschieben …');
+  const move = page.getByRole('dialog', { name: 'Verschieben: Bargeld holen' });
+  await hand.tap(move.getByRole('button', { name: 'Mi 2.', exact: true }), 'Mi 2.');
+  await expect(move).toHaveCount(0);
+  const placed = await rows<{ itemKey: string; date: string }>(page, 'planner_assignment');
+  // Linked: the appointment's editor names it under „Vorbereitung“ (read, not counted).
+  await page.goto(`/calendar?open=ev1`);
+  const back = page.getByRole('dialog').filter({ hasText: 'Als ToDo merken' });
+  await expect(back).toBeVisible();
+  const shows = await expect(back.getByText('Bargeld holen').first())
+    .toBeVisible({ timeout: 5000 })
+    .then(() => true)
+    .catch(() => false);
+  const [todo] = await rows<Task & { dueDate?: string; plannedFor?: string }>(page, 'todos_task');
+  record(
+    info,
+    name,
+    {
+      taps: hand.taps,
+      perThing: hand.perThing,
+      moduleSwitches: hand.moduleSwitches,
+      linked: shows && todo?.links?.some((l) => l.kind === 'event') ? 'ja' : 'nein',
+      onWednesday: placed.some((a) => a.date === WEDNESDAY) ? 'ja' : 'nein',
+    },
+    { todo, placed, places: hand.places, path: hand.path },
+  );
+});
+
+const MOVE = [
+  'Umzugskartons holen',
+  'Nachsendeauftrag stellen',
+  'Strom ummelden',
+  'Helfer fragen',
+  'Transporter buchen',
+];
+const OTHER = [
+  'Wäsche',
+  'Bad putzen',
+  'Steuerordner sortieren',
+  'Pflanzen gießen',
+  'Fahrrad aufpumpen',
+  'Mail an Kollegin',
+  'Altpapier runterbringen',
+  'Geschenk bestellen',
+  'Schrank ausmisten',
+  'Fenster putzen',
+  'Paket abholen',
+  'Arzttermin bestätigen',
+  'Bericht lesen',
+];
+const WEEK = ['2026-11-30', '2026-12-01', '2026-12-02', '2026-12-03', '2026-12-04'];
+
+test('D4 Ein Thema', async ({ page, isMobile }, info) => {
+  const name = 'D4 Ein Thema';
+  // This week: 18 ToDos laid on Monday to Friday (5 of them for the move), an invoice for the move laid on Thursday and
+  // the appointment „Wohnungsübergabe“ on Friday – 20 things, 7 of „Umzug“.
+  const todos = [...MOVE, ...OTHER].map((title, i) => task(`w${i}`, title, i));
+  await prepare(page, isMobile, {
+    todos_task: todos,
+    invoices_invoice: [
+      {
+        id: 'mv',
+        payee: 'Umzugsfirma Beispiel',
+        amountMinor: 45000,
+        dueDate: '2026-12-10',
+        status: 'open',
+      },
+    ],
+    calendar_event: [
+      {
+        id: 'ev-move',
+        title: 'Wohnungsübergabe Umzug',
+        allDay: false,
+        startDate: '2026-12-04',
+        startTime: '10:00',
+        endTime: '11:00',
+      },
+    ],
+    planner_assignment: [
+      ...todos.map((x, i) => laid(`todos:${x.id}`, WEEK[i % WEEK.length]!, 20, i)),
+      laid('invoices:mv', '2026-12-03', 10, 30),
+    ],
+  });
+  await planner(page);
+  // What the planner shows of the week: the things on the days (the tiles) and the appointments beside them. A view of
+  // one topic only: a control that filters the plan (none today: every thing stays on its day).
+  let onDays = 0;
+  for (const date of WEEK) onDays += await settled(() => onDay(page, date));
+  const appointments = await page.getByTestId('planner-appointments').locator('li').count();
+  const filters = await page
+    .locator('main')
+    .getByRole('button', { name: /filter|thema/i })
+    .count();
+  const hand = new Hand(page, isMobile);
+  hand.start();
+  // Marking the five as belonging together: the ToDos' lists (no bulk step for a list or a tag – the selection
+  // only offers „In den Plan …“): a list „Umzug“, then each ToDo's editor · „Liste“ · „Speichern“.
+  await go(hand, page, isMobile, 'todos');
+  await hand.tap(
+    page.locator('main').getByRole('button', { name: 'Weitere Optionen' }).first(),
+    'ToDos ⋯',
+  );
+  await hand.tap(page.getByRole('menuitem', { name: 'Neue Liste' }), 'Neue Liste');
+  const listForm = page.getByRole('dialog');
+  await hand.fill(listForm.getByRole('textbox').first(), 'Umzug', 'Name');
+  await hand.tap(
+    listForm.getByRole('button', { name: /^(Speichern|Anlegen|Liste anlegen|Erstellen)$/ }).last(),
+    'Speichern',
+  );
+  await expect(listForm).toHaveCount(0);
+  // The new list is shown (empty): back to all open ToDos.
+  const allOpen = page.locator('main').getByRole('button', { name: 'Alle offenen' });
+  const firstRow = page.locator('main').getByRole('button', { name: new RegExp(`^${MOVE[0]}`) });
+  await expect(allOpen.or(firstRow).first()).toBeVisible();
+  if (await allOpen.isVisible()) await hand.tap(allOpen, 'Alle offenen');
+  for (const title of MOVE) {
+    await hand.tap(
+      page
+        .locator('main')
+        .getByRole('button', { name: new RegExp(`^${title}`) })
+        .first(),
+      title,
+      title,
+    );
+    const editor = page.getByRole('dialog', { name: 'Aufgabe bearbeiten' });
+    if (!(await appears(editor)))
+      await hand.tap(
+        page.locator('main').getByRole('button', { name: 'Bearbeiten' }).first(),
+        'Bearbeiten',
+        title,
+      );
+    await expect(editor).toBeVisible();
+    await hand.choose(editor.getByLabel('Liste', { exact: true }), 'Umzug', 'Liste Umzug', title);
+    await hand.tap(
+      editor.getByRole('button', { name: 'Speichern', exact: true }),
+      'Speichern',
+      title,
+    );
+    await expect(editor).toHaveCount(0);
+  }
+  await go(hand, page, isMobile, 'planner');
+  const lists = await rows<{ id: string; name: string }>(page, 'todos_list');
+  const umzug = lists.find((l) => l.name === 'Umzug');
+  const inList = (await rows<Task & { listId: string }>(page, 'todos_task')).filter(
+    (x) => x.listId === umzug?.id,
+  ).length;
+  record(
+    info,
+    name,
+    {
+      rows: filters > 0 ? 'Filter da – messen' : onDays + appointments,
+      taps: hand.taps,
+      perThing: hand.perThing,
+      moduleSwitches: hand.moduleSwitches,
+      planFilter: filters > 0 ? 'ja' : 'nein',
+    },
+    { onDays, appointments, filters, inList, places: hand.places, path: hand.path },
+  );
+  expect(inList).toBe(MOVE.length);
+});
+
+const WAITING = ['Antwort Vermieter abwarten', 'Rückmeldung Werkstatt', 'Angebot Maler abwarten'];
+
+test('D5 Warte auf Antwort', async ({ page, isMobile }, info) => {
+  const name = 'D5 Warte auf Antwort';
+  const today = [...WAITING, 'Wäsche', 'Bad putzen'].map((title, i) =>
+    task(`a${i}`, title, i, { plannedFor: TODAY, planMark: { date: TODAY, order: i } }),
+  );
+  await prepare(page, isMobile, {
+    todos_task: today,
+    planner_assignment: today.map((x, i) => laid(`todos:${x.id}`, TODAY, 20, i)),
+  });
+  await planner(page);
+  const before = await settled(() => onDay(page, TODAY));
+  const hand = new Hand(page, isMobile);
+  hand.start();
+  // The day's „Auswählen“: tick the three, „Auf einen Tag …“, Monday 7. (the planner's days reach two weeks).
+  const sheet = page.getByTestId(`day-${TODAY}`);
+  await hand.tap(
+    page.getByRole('button', { name: 'Weitere Optionen', exact: true }).first(),
+    'Tag ⋯',
+  );
+  await hand.tap(page.getByRole('menuitem', { name: 'Auswählen' }), 'Auswählen');
+  for (const title of WAITING)
+    await hand.tap(
+      sheet
+        .getByRole('checkbox', { name: `„${title}“ auswählen` })
+        .or(
+          sheet
+            .locator('li')
+            .filter({
+              has: page.getByRole('button', { name: `Aktionen für ${title}`, exact: true }),
+            })
+            .getByRole('checkbox'),
+        )
+        .first(),
+      `auswählen: ${title}`,
+      title,
+    );
+  await hand.tap(page.getByRole('button', { name: 'Auf einen Tag …' }), 'Auf einen Tag …');
+  const dialog = page.getByRole('dialog', { name: /^Verschieben: \d+ Dinge?$/ });
+  await hand.tap(dialog.getByRole('button', { name: 'Mo 7.', exact: true }), 'Mo 7.');
+  await expect(dialog).toHaveCount(0);
+  await expect.poll(() => onDay(page, TODAY)).toBe(before - WAITING.length);
+  const after = await settled(() => onDay(page, TODAY));
+  // Monday 7 December: are they on today's sheet by themselves?
+  await page.clock.setFixedTime(new Date(`${NEXT_MONDAY}T09:00:00`));
+  await page.goto('/planner');
+  await expect(page.getByTestId(`week-${NEXT_MONDAY}`)).toBeVisible();
+  await unfold(page);
+  const back = (
+    await Promise.all(
+      WAITING.map((title) =>
+        page.getByTestId(`day-${NEXT_MONDAY}`).getByText(title, { exact: true }).count(),
+      ),
+    )
+  ).filter((n) => n > 0).length;
+  record(
+    info,
+    name,
+    {
+      taps: hand.taps,
+      perThing: hand.perThing,
+      moduleSwitches: hand.moduleSwitches,
+      rowsOffSheet: before - after,
+      comesBackByItself: back === WAITING.length ? 'ja' : 'nein',
+    },
+    { before, after, back, places: hand.places, path: hand.path },
+  );
 });
