@@ -192,16 +192,12 @@ export function ThingRow({
       meta={
         facts.length === 0 && !whyOpen ? (
           // Only the phone shows the minutes in the meta (its end slot is hidden).
-          noDuration ? undefined : (
+          // The phone: „fest“ under the title (its row's end holds minutes, lock and ⋯ on one line).
+          row.pinned && lock && !row.fixed ? (
             <span className={`${styles.meta} ${styles.metaPhoneOnly}`}>
-              {row.pinned && lock && !row.fixed ? (
-                <span className={`${styles.chipFest} ${styles.metaDuration}`}>
-                  {t.planner.row.fixed}
-                </span>
-              ) : null}
-              <span className={styles.metaDuration}>{duration}</span>
+              <span className={styles.chipFest}>{t.planner.row.fixed}</span>
             </span>
-          )
+          ) : undefined
         ) : (
           <span className={styles.meta}>
             {facts.map((fact, i) => (
@@ -365,9 +361,7 @@ export function TodoHintRow({
       // The phone hides the end slot: there the chip stands in the meta line.
       meta={
         <span className={`${styles.meta} ${styles.metaPhoneOnly}`}>
-          <span className={`${styles.chipHint} ${styles.metaDuration}`}>
-            {t.planner.chips.inTodos(dayName(date))}
-          </span>
+          <span className={styles.chipHint}>{t.planner.chips.inTodos(dayName(date))}</span>
         </span>
       }
       end={

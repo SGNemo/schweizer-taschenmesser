@@ -834,12 +834,22 @@ section.sheet .headEnd button[aria-expanded='true'] {
 /* The phone (direction A): rows on one line like the desktop; the day's head puts its time under the title;
    „Woche vorschlagen“ gets a line of its own under the group's header. */
 @media (max-width: 899px) {
-  /* One line per row on the phone too (mockup A): „fest“ and the minutes at the row's end. */
+  /* The phone (mockup A): minutes, lock and ⋯ on the row's line; the chips („fest“, „In ToDos: Mi“) under the
+     title, where the row has room for them. */
   .endFacts .duration {
     display: inline;
   }
-  .metaPhoneOnly {
+  .endFacts .chipFest,
+  .endFacts .chipHint {
     display: none;
+  }
+  /* The title gives way first (it may wrap): minutes, lock and ⋯ stay on the row's line. */
+  section.sheet [data-row] {
+    flex-basis: 6rem;
+    min-width: 6rem;
+  }
+  .metaPhoneOnly {
+    display: flex;
   }
   .sheetHead {
     grid-template-columns: minmax(0, 1fr) auto;
