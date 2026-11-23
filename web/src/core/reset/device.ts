@@ -21,6 +21,7 @@ import { getPlatform, type BiometricService } from '@/core/platform';
 import type { DeviceWipeReport, DeviceWipeService } from '@/core/platform/deviceWipe';
 import { loadPairs } from '@/core/share/pairs';
 import type { SecretStore } from '@/core/secrets/types';
+import { SYNC_TOKEN_SECRET } from '@/core/sync/names';
 
 /** Secrets kept outside the database (OS keystore or device key) that belong to this device's data. */
 export async function deviceSecretNames(database: TaschenmesserDB = defaultDb): Promise<string[]> {
@@ -43,6 +44,7 @@ export async function deviceSecretNames(database: TaschenmesserDB = defaultDb): 
     ...extraAccounts,
     ...shareCodes,
     AUTO_PASSPHRASE_SECRET,
+    SYNC_TOKEN_SECRET,
     PIN_SECRET,
     BIO_SECRET,
     ...connectors.flatMap((c) => [

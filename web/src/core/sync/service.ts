@@ -12,6 +12,7 @@ import { SelfHostedAdapter, normalizeServerUrl, type VaultInfo } from './adapter
 import { LanClientAdapter, LanHubAdapter } from './adapters/lanHub';
 import { copyTodoLinksAfterSync } from '@/core/entitylinks/migrate';
 import { getPlatform } from '@/core/platform';
+import { SYNC_TOKEN_SECRET } from './names';
 import type {
   LanClientService,
   LanWatchService,
@@ -124,12 +125,25 @@ export const MIN_PASSPHRASE_LENGTH = 12;
 
 /* ------------------------------ config persistence ------------------------------ */
 
+export { SYNC_TOKEN_SECRET };
+
+const tokenInKeystore = (): boolean => getPlatform().secrets.protection === 'os-keystore';
+
+/** Never call inside a Dexie transaction: in the apps it reads the OS keystore. */
 export async function loadSyncConfig(
   database: TaschenmesserDB = defaultDb,
 ): Promise<SyncConfig | undefined> {
-  return (
+  const config = (
     await database.table<{ key: string; value: SyncConfig }, string>('_secrets').get(CONFIG_KEY)
   )?.value;
+  if (config?.kind !== 'selfHosted' || !tokenInKeystore()) return config;
+  if (config.token) {
+    // A record from before S5: read the old place, write the new one, then delete the old. If the
+    // keystore refuses, the record stays as it was (sync keeps working) and the next start retries.
+    await saveSyncConfig(database, config).catch(() => undefined);
+    return config;
+  }
+  return { ...config, token: (await getPlatform().secrets.get(SYNC_TOKEN_SECRET)) ?? '' };
 }
 
 /** The own-server settings only: push, the feed proxy and the device list need a server. */
@@ -141,11 +155,25 @@ export async function loadServerConfig(
 }
 
 async function saveSyncConfig(database: TaschenmesserDB, config: SyncConfig): Promise<void> {
+  if (config.kind === 'selfHosted' && tokenInKeystore()) {
+    // The keystore first: the record without a token is only written once the token is safe.
+    await getPlatform().secrets.set(SYNC_TOKEN_SECRET, config.token);
+    await database.table('_secrets').put({ key: CONFIG_KEY, value: { ...config, token: '' } });
+    return;
+  }
   await database.table('_secrets').put({ key: CONFIG_KEY, value: config });
+  // Another kind of connection (home network) has no server token.
+  if (tokenInKeystore())
+    await getPlatform()
+      .secrets.delete(SYNC_TOKEN_SECRET)
+      .catch(() => undefined);
 }
 
 async function clearSyncConfig(database: TaschenmesserDB): Promise<void> {
   await database.table('_secrets').delete(CONFIG_KEY);
+  await getPlatform()
+    .secrets.delete(SYNC_TOKEN_SECRET)
+    .catch(() => undefined);
   // The flag describes the connection that is gone now.
   await database.table('_meta').delete(PULL_COMPLETE_KEY);
 }

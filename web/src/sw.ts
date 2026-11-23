@@ -51,7 +51,10 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-/** The sync key for encrypted push payloads lives in the app's IndexedDB (`_secrets.syncConfig`). */
+/**
+ * The sync key for encrypted push payloads lives in the app's IndexedDB (`_secrets.syncConfig`).
+ * Only the key is read; in the apps the server token is not in that record at all (S5, OS keystore).
+ */
 function readSyncKey(): Promise<CryptoKey | undefined> {
   return new Promise((resolve) => {
     const open = indexedDB.open('taschenmesser');
