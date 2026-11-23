@@ -1,7 +1,7 @@
 /**
  * What kind of mail a row is, from local rules only (no model, nothing leaves the device): the filters
  * „Rechnungen“ and „Newsletter“ beside „Persönlich“, and the waiting queue (`queue.ts`), which leaves invoices and
- * newsletters out. One table of rules, pinned by `__tests__/mail.kinds.test.ts`.
+ * newsletters out. One table of rules, pinned as a table in `__tests__/mail.queue.test.ts`.
  */
 import type { MailThreadSummary } from '@/core/mail/types';
 
@@ -9,7 +9,7 @@ export type MailKind = 'invoice' | 'newsletter' | 'other';
 
 /** Bills, reminders and debits, as a shop, an office or a lawyer word them (subject or preview). */
 const INVOICE =
-  /(rechnung|invoice|receipt|quittung|zahlungserinnerung|mahnung|zahlungsaufforderung|beitragsbescheid|kostennote|honorarnote|\bforderung|abbuchung|lastschrift|kontoauszug|payment due|offener betrag|fällig)/i;
+  /(rechnung|invoice|receipt|quittung|zahlungserinnerung|mahnung|zahlungsaufforderung|beitragsbescheid|kostennote|honorarnote|\bforderung|abbuchung|lastschrift|kontoauszug|payment due|offener betrag)/i;
 
 /** Gmail's own bulk tabs: promotions, social networks, forums. („Updates“ also holds bills, so it is no hint.) */
 const BULK_TABS = ['CATEGORY_PROMOTIONS', 'CATEGORY_SOCIAL', 'CATEGORY_FORUMS'];

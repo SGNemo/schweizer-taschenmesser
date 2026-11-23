@@ -129,7 +129,11 @@ beforeEach(async () => {
   mocks.trash.mockResolvedValue(undefined);
   mocks.untrash.mockResolvedValue(undefined);
   mocks.threads.mockResolvedValue({
-    threads: [summary('t1', 'Rechnung'), summary('t2', 'Angebote der Woche'), summary('t3', 'Termin')],
+    threads: [
+      summary('t1', 'Rechnung'),
+      summary('t2', 'Angebote der Woche'),
+      summary('t3', 'Termin'),
+    ],
   });
   onBack.mockReset();
   onChanged.mockReset();

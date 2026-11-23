@@ -652,12 +652,13 @@ export default function MailPage() {
 
   const walkIndex = walking && threadId ? waiting.findIndex((th) => th.id === threadId) : -1;
   /** The next mail of the walk after the open one (the list is read before a mark changes it). */
-  const walkOn = (from: number) => {
+  const walkOn = (from: number, marked: boolean) => {
     const next = waiting[from + 1];
     if (next) return update({ thread: next.id });
     setWalking(false);
     update({ thread: null });
-    useUiStore.getState().toast(t.mail.queue.walkEnd);
+    // After a mark its undo notice stays (one notice at a time); the end of the walk speaks for itself then.
+    if (!marked) useUiStore.getState().toast(t.mail.queue.walkEnd);
   };
   const doneWith = (th: CachedThreadView, how: 'done' | 'later') => {
     setMarks(how === 'done' ? markDone(account.key, th.id) : markLater(account.key, th.id));
@@ -672,10 +673,11 @@ export default function MailPage() {
         <span className={styles.stepText}>{t.mail.queue.step(walkIndex + 1, waiting.length)}</span>
         <Button
           size="sm"
+          aria-label={t.mail.queue.doneFor(planTitle(account, waiting[walkIndex]!))}
           onClick={() => {
             const th = waiting[walkIndex]!;
             doneWith(th, 'done');
-            walkOn(walkIndex);
+            walkOn(walkIndex, true);
           }}
         >
           {t.mail.queue.done}
@@ -683,10 +685,11 @@ export default function MailPage() {
         <Button
           size="sm"
           variant="ghost"
+          aria-label={t.mail.queue.laterFor(planTitle(account, waiting[walkIndex]!))}
           onClick={() => {
             const th = waiting[walkIndex]!;
             doneWith(th, 'later');
-            walkOn(walkIndex);
+            walkOn(walkIndex, true);
           }}
         >
           {t.mail.queue.later}
@@ -697,13 +700,13 @@ export default function MailPage() {
             variant="ghost"
             onClick={() => {
               void planMail(account, waiting[walkIndex]!, box.reload);
-              walkOn(walkIndex);
+              walkOn(walkIndex, true);
             }}
           >
             {planLabel}
           </Button>
         ) : null}
-        <Button size="sm" variant="ghost" onClick={() => walkOn(walkIndex)}>
+        <Button size="sm" variant="ghost" onClick={() => walkOn(walkIndex, false)}>
           {t.mail.queue.next}
         </Button>
         <Button
@@ -736,7 +739,7 @@ export default function MailPage() {
     ? (th: CachedThreadView) => void planMail(account, th, box.reload)
     : undefined;
   const menuFor =
-    onPlan || canModify
+    onPlan || canModify || inQueue
       ? (th: (typeof box.threads)[number]): RowMenuItem[] => [
           ...(inQueue
             ? [

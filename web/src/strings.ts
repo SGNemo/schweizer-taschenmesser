@@ -8639,7 +8639,7 @@ export const de = {
       next: 'Nächste',
       doneToast: 'Aus „Wartet auf mich“ genommen.',
       laterToast: 'Kommt morgen früh wieder.',
-      walkEnd: 'Alle durchgesehen. Gerade wartet nichts mehr.',
+      walkEnd: 'Alle durchgesehen.',
       stepBar: 'Durch „Wartet auf mich“ gehen',
       leave: 'Zurück zur Liste',
     },

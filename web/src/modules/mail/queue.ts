@@ -6,9 +6,10 @@
  * The planner reads only `mailQueueSummary()` – a count and a route, no subject, sender or id (planner hub 2,
  * agreed in the notes repo 2026-11-23). It wraps it in its own pile contribution; this module adds no event.
  */
+import { listMailAccounts } from '@/core/mail/accounts';
 import { getSettings } from '@/core/settings/settings';
 import { now } from '@/core/time/now';
-import { DEMO_ACCOUNT, loadThreads, type CachedThreadView } from './cache';
+import { DEMO_ACCOUNT, DEMO_EMAIL, loadThreads, type CachedThreadView } from './cache';
 import { kindOf } from './kinds';
 import { threadRepo } from './repo';
 import { settings, type MailSettings } from './settings';
@@ -146,7 +147,8 @@ export interface MailQueueSummary {
 
 /**
  * The count of „Wartet auf mich“ over every connected account (the demo mailbox only when none is), from the
- * device cache, without network. For the planner's pile: no content leaves this function.
+ * device cache, without network. For the planner's pile: no content leaves this function. With several accounts
+ * the count is their sum; the route opens the first account's queue (the mail page's own default).
  */
 export async function mailQueueSummary(): Promise<MailQueueSummary> {
   const prefs = (await getSettings(
@@ -154,15 +156,20 @@ export async function mailQueueSummary(): Promise<MailQueueSummary> {
     settings.schema,
     settings.defaults,
   )) as MailSettings;
-  const keys = (await threadRepo.table.orderBy('accountKey').uniqueKeys()).map(String);
-  const real = keys.filter((k) => k !== DEMO_ACCOUNT);
-  const accounts = real.length > 0 ? real : keys.filter((k) => k === DEMO_ACCOUNT);
+  // The connected accounts (a disconnected account's old cache does not count), with their own address: a
+  // header refreshed in the background has lost `lastFromMe`, the sender address still tells.
+  const connected = (await listMailAccounts()).map((a) => ({ key: a.key, me: a.email }));
+  const demo =
+    (await threadRepo.table.where('accountKey').equals(DEMO_ACCOUNT).count()) > 0
+      ? [{ key: DEMO_ACCOUNT, me: DEMO_EMAIL }]
+      : [];
+  const accounts = connected.length > 0 ? connected : demo;
   const marks = readMarks();
   const at = now();
   let count = 0;
-  for (const accountKey of accounts) {
+  for (const { key: accountKey, me } of accounts) {
     const threads = await loadThreads(accountKey, { limit: 200 });
-    count += waitingThreads(threads, { rule: prefs.waitingRule, marks, accountKey, at }).length;
+    count += waitingThreads(threads, { rule: prefs.waitingRule, marks, accountKey, me, at }).length;
   }
   return { count, target: QUEUE_ROUTE };
 }

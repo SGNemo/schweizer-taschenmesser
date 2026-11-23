@@ -435,7 +435,7 @@ export const mail: Strings['mail'] = {
     next: 'Next',
     doneToast: 'Taken off “Waiting for me”.',
     laterToast: 'Comes back tomorrow morning.',
-    walkEnd: 'All gone through. Nothing is waiting any more.',
+    walkEnd: 'All gone through.',
     stepBar: 'Go through “Waiting for me”',
     leave: 'Back to the list',
   },

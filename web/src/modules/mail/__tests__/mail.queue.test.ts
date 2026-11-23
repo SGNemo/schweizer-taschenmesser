@@ -1,5 +1,9 @@
 // @vitest-environment jsdom
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { MailAccountRef } from '@/core/mail/types';
+
+let accounts: MailAccountRef[] = [];
+vi.mock('@/core/mail/accounts', () => ({ listMailAccounts: async () => accounts }));
 import { db } from '@/core/db/db';
 import type { MailThreadSummary } from '@/core/mail/types';
 import { setSettings } from '@/core/settings/settings';
@@ -49,6 +53,9 @@ const ctx = (extra: Partial<Parameters<typeof isWaiting>[1]> = {}) => ({
 beforeEach(async () => {
   setNow(() => NOW);
   localStorage.clear();
+  accounts = [
+    { key: 'google', connectorId: 'google', email: 'me@example.org', features: ['mail'] },
+  ];
   await db.table('mail_thread').clear();
   await db.table('mail_body').clear();
   await db.table('_settings').clear();
@@ -187,6 +194,22 @@ describe('the planner’s contract: a count and a route, nothing else', () => {
     expect((await mailQueueSummary()).count).toBe(1);
   });
 
+  it('a header whose newest message is from the account itself does not count, even without `lastFromMe`', async () => {
+    accounts = [
+      { key: 'google', connectorId: 'google', email: 'me@example.org', features: ['mail'] },
+    ];
+    await saveThreads('google', [header('mine', { from: { email: 'me@example.org' } })]);
+    expect((await mailQueueSummary()).count).toBe(0);
+  });
+
+  it('a disconnected account’s old cache does not count', async () => {
+    accounts = [
+      { key: 'google#a1', connectorId: 'google', email: 'b@example.org', features: ['mail'] },
+    ];
+    await saveThreads('google', [header('old')], { list: true });
+    expect((await mailQueueSummary()).count).toBe(0);
+  });
+
   it('is 0 without mail, and 0 when the queue is switched off', async () => {
     expect(await mailQueueSummary()).toEqual({ count: 0, target: '/mail?view=waiting' });
     await saveThreads('google', [header('a')], { list: true });
@@ -194,9 +217,13 @@ describe('the planner’s contract: a count and a route, nothing else', () => {
     expect((await mailQueueSummary()).count).toBe(0);
   });
 
-  it('counts the real accounts, not the demo mailbox beside them', async () => {
+  it('counts the connected accounts; the demo mailbox only when none is connected', async () => {
     await saveThreads('demo', [header('d1'), header('d2')], { list: true });
+    accounts = [];
     expect((await mailQueueSummary()).count).toBe(2);
+    accounts = [
+      { key: 'google', connectorId: 'google', email: 'me@example.org', features: ['mail'] },
+    ];
     await saveThreads('google', [header('g1')], { list: true });
     expect((await mailQueueSummary()).count).toBe(1);
   });
