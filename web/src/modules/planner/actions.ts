@@ -939,19 +939,22 @@ export async function makeSmaller(
 ): Promise<boolean> {
   const s = await source(e.moduleId);
   const step = todayTitle.trim();
-  if (!s?.onSplitOff || !step || step === e.title) return false;
+  if (!s?.onSplitOff || !step || step === e.title.trim()) return false;
   const m = t.planner.smaller;
+  let split = false;
   return act(
     m.menu,
     m.done(short(step), rest === 'later' ? m.doneLater : m.doneWeek),
     titles,
     async () => {
       const id = await s.onSplitOff!(e.id, step);
+      split = !!id;
       if (!id) return { touched: [] };
       if (rest === 'later') await s.onLater?.(id, true);
       return { touched: [itemKeyOf(e.moduleId, e.id), itemKeyOf(e.moduleId, id)] };
     },
-    { leadOnly: true },
+    // Done or gone meanwhile: nothing was split, the toast says so instead of the step.
+    { leadOnly: true, leadAfter: async () => (split ? undefined : t.planner.preview.nothing) },
   );
 }
 

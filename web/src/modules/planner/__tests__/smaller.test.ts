@@ -137,6 +137,31 @@ describe('makeSmaller', () => {
     expect(await place()).toMatchObject({ 'Zahnarzt anrufen': SA, Zahnarzt: 'later' });
   });
 
+  it('a series goes with the rest: the step is a one-off, so a tick never makes the next turn the step', async () => {
+    await taskRepo.update('b', {
+      recurrence: { freq: 'weekly', interval: 1 },
+      dueDate: SA,
+      dueTime: '18:00',
+      dueRemind: true,
+    });
+    const [küche] = await entries(['b']);
+    await makeSmaller(küche!, 'Spüle leeren', 'week', {});
+    await runsSettled();
+    const all = (await taskRepo.active().toArray()) as unknown as {
+      id: string;
+      title: string;
+      recurrence?: unknown;
+      dueRemind?: boolean;
+    }[];
+    expect(all.find((x) => x.id === 'b')).toMatchObject({ title: 'Spüle leeren' });
+    expect(all.find((x) => x.id === 'b')?.recurrence).toBeUndefined();
+    expect(all.find((x) => x.id === 'b')?.dueRemind).toBeUndefined();
+    expect(all.find((x) => x.title === 'Küche')).toMatchObject({
+      recurrence: { freq: 'weekly', interval: 1 },
+      dueRemind: true,
+    });
+  });
+
   it('an empty or unchanged step does nothing (no undo entry); ToDos offer the step', async () => {
     const [wäsche] = await entries(['a']);
     expect(await makeSmaller(wäsche!, '  ', 'week', {})).toBe(false);
