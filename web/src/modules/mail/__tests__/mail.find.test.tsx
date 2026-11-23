@@ -173,7 +173,7 @@ describe('keyboard shortcuts', () => {
     page();
     await screen.findByText('Rechnung');
     key('/');
-    expect(document.activeElement).toBe(screen.getByPlaceholderText(/Suchen, z\. B\./));
+    expect(document.activeElement).toBe(screen.getByPlaceholderText(/Absender, Betreff/));
     (document.activeElement as HTMLElement).blur();
     key('c');
     expect(await screen.findByRole('dialog', { name: 'Neue Mail' })).toBeInTheDocument();
@@ -235,7 +235,7 @@ describe('keyboard shortcuts', () => {
     page();
     await screen.findByText('Rechnung');
     key('/', { shiftKey: true });
-    expect(document.activeElement).toBe(screen.getByPlaceholderText(/Suchen, z\. B\./));
+    expect(document.activeElement).toBe(screen.getByPlaceholderText(/Absender, Betreff/));
   });
 
   it('switched off in the settings: the keys do nothing', async () => {
@@ -249,5 +249,53 @@ describe('keyboard shortcuts', () => {
     expect(mocks.modify).not.toHaveBeenCalled();
     expect(screen.queryByRole('dialog')).toBeNull();
     await setSettings('module.mail', { shortcuts: true });
+  });
+});
+
+describe('search: on this device and in the mailbox', () => {
+  const sealedHeader = async (id: string, subject: string) => {
+    const { saveThreads } = await import('../cache');
+    await saveThreads(
+      'google',
+      [{ ...summary(id, subject), from: { name: 'Kita Pusteblume', email: 'kita@example.org' } }],
+      {
+        list: true,
+      },
+    );
+  };
+
+  it('shows the hits on this device first, highlighted, and the mailbox below without the doubles', async () => {
+    await sealedHeader('t-local', 'Elternabend im Mai');
+    mocks.threads.mockResolvedValue({
+      threads: [summary('t-local', 'Elternabend im Mai'), summary('t-remote', 'Elternabend 2019')],
+    });
+    page('/mail?q=elternabend');
+    const device = await screen.findByRole('heading', { name: /Auf diesem Gerät/ });
+    const mailbox = await screen.findByRole('heading', { name: /Im Postfach/ });
+    await screen.findByText('2019', { exact: false });
+    const deviceSection = device.closest('section')!;
+    const mailboxSection = mailbox.closest('section')!;
+    expect(
+      await within(deviceSection).findByText('Elternabend', { selector: 'mark' }),
+    ).toBeInTheDocument();
+    expect(within(deviceSection).queryByText(/2019/)).toBeNull();
+    expect(within(mailboxSection).getByText(/2019/)).toBeInTheDocument();
+    expect(within(mailboxSection).queryByText(/im Mai/)).toBeNull();
+  });
+
+  it('offline: the hits on this device stay, the mailbox part says it cannot be reached', async () => {
+    await sealedHeader('t-local', 'Elternabend im Mai');
+    const { ConnectorError } = await import('@/core/connectors/types');
+    mocks.threads.mockRejectedValue(new ConnectorError('network', 'offline'));
+    page('/mail?q=pusteblme'); // a typo in the sender's name
+    expect(await screen.findByText(/Das Postfach ist gerade nicht erreichbar/)).toBeInTheDocument();
+    expect(await screen.findByText('im Mai', { exact: false })).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('an operator only the mailbox knows: the device part says so instead of guessing', async () => {
+    await sealedHeader('t-local', 'Elternabend im Mai');
+    page('/mail?q=to%3Aanna');
+    expect(await screen.findByText(/kann nur das Postfach beantworten/)).toBeInTheDocument();
   });
 });

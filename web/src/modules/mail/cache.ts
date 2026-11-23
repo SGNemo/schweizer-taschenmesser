@@ -8,11 +8,13 @@ import { now } from '@/core/time/now';
 import type { MailMessage, MailThreadSummary } from '@/core/mail/types';
 import { bodyRepo, threadRepo } from './repo';
 import { threadMetaSchema, type ThreadMeta } from './schema';
+import { dropSearchIndex, touchSearchIndex } from './searchMemory';
 
 export const DEMO_ACCOUNT = 'demo';
 /** The invented own address of the demo mailbox (`seed.ts` ME): a reply of one's own never names a ToDo. */
 export const DEMO_EMAIL = 'test@example.org';
-const MAX_THREADS = 200;
+/** Headers per account: enough for the search on this device to reach back months (≈ 1 KB each, sealed). */
+const MAX_THREADS = 1000;
 const MAX_BODIES = 60;
 
 const threadId = (accountKey: string, id: string) => `${accountKey}|${id}`;
@@ -54,6 +56,7 @@ export async function saveThreads(
     });
   }
   await trim(accountKey);
+  touchSearchIndex();
 }
 
 /** Keeps the newest `MAX_THREADS` headers per account. */
@@ -144,6 +147,7 @@ export async function patchCachedThread(
     inbox: labels.has('INBOX'),
     ...(row.demo ? { demo: next } : { sealed: await sealJson(key, id, next) }),
   });
+  touchSearchIndex();
 }
 
 export async function saveBody(accountKey: string, message: MailMessage): Promise<void> {
@@ -161,6 +165,7 @@ export async function saveBody(accountKey: string, message: MailMessage): Promis
     rows.sort((a, b) => b.sortKey - a.sortKey);
     await bodyRepo.purge(rows.slice(MAX_BODIES).map((r) => r.id));
   }
+  touchSearchIndex();
 }
 
 export async function loadBody(
@@ -216,6 +221,8 @@ export async function clearMailCache(accountKey?: string): Promise<void> {
   const bodies = await bodyRepo.table.toCollection().filter(mine).primaryKeys();
   await threadRepo.purge(threads as string[]);
   await bodyRepo.purge(bodies as string[]);
+  // The search index is built from these rows: its copy in memory goes with them.
+  dropSearchIndex();
 }
 
 /** Cached bodies of one thread (seed rows and opened messages), oldest first. */

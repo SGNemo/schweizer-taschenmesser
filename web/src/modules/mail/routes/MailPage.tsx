@@ -75,6 +75,9 @@ import {
 } from '../searchHistory';
 import { focusedThreadId, useMailKeys } from '../useMailKeys';
 import { useMailbox } from '../useMailbox';
+import { useLocalSearch } from '../useLocalSearch';
+import type { HitLine } from '../searchIndex';
+import { Highlight } from '../components/Highlight';
 import { useMailSummary } from '../useSummary';
 
 const GROUPS: DayGroup[] = ['today', 'yesterday', 'week', 'older'];
@@ -85,6 +88,15 @@ const DEFAULT_LABELS: MailLabel[] = ['INBOX', 'STARRED', 'IMPORTANT', 'SENT'].ma
 }));
 
 const labelName = (l: MailLabel) => t.mail.page.labels[l.id] ?? l.name;
+
+/** A part of the search result: „Auf diesem Gerät“ or „Im Postfach“, with a quiet line when it has no rows. */
+interface ListSection {
+  id: string;
+  label: string;
+  detail?: string;
+  threads: CachedThreadView[];
+  note?: string;
+}
 
 function ThreadList({
   threads,
@@ -100,8 +112,17 @@ function ThreadList({
   selection,
   answered,
   onAnswered,
+  sections,
+  terms,
+  hitLines,
 }: {
   threads: CachedThreadView[];
+  /** A running search: these parts instead of the day groups (every part open). */
+  sections?: ListSection[];
+  /** Search words to mark in sender, subject and preview (as text, never HTML). */
+  terms?: readonly string[];
+  /** Where a hit was found when the row's own lines do not show it. */
+  hitLines?: ReadonlyMap<string, HitLine>;
   /** Select mode: a checkbox per row (Shift-click takes a range). */
   selection?: {
     isSelected: (id: string) => boolean;
@@ -127,90 +148,123 @@ function ThreadList({
   onAnswered: (todoId: string) => void;
 }) {
   const hover = useMediaQuery('(hover: hover)');
+  const rowsOf = (rows: CachedThreadView[]) => (
+    <ItemList>
+      {rows.map((th) => (
+        <ItemRow
+          key={th.id}
+          // Sender and time share the title line, subject and snippet are two lines at most: a row keeps
+          // its height beside the reading pane (design check G1, G4).
+          title={
+            <span className={styles.rowTitle} data-thread-id={th.id}>
+              <span className={th.unread ? styles.unreadRow : styles.rowFrom}>
+                <Highlight text={personName(th.from)} terms={terms} />
+                {th.messageCount > 1 ? ` (${th.messageCount})` : ''}
+              </span>
+              <span className={styles.rowWhen}>
+                {th.labelIds.includes('STARRED') ? (
+                  <span
+                    className={styles.starMark}
+                    role="img"
+                    aria-label={t.mail.page.starredMark}
+                    data-testid="mail-starred"
+                  >
+                    <Icon name="star" size={14} />{' '}
+                  </span>
+                ) : null}
+                {planned.has(th.id) ? (
+                  <span className={styles.planMark} data-testid="mail-in-plan">
+                    {plannerOn ? t.mail.plan.mark : t.mail.plan.todo.mark} ·{' '}
+                  </span>
+                ) : null}
+                {shortWhen(th.date)}
+              </span>
+            </span>
+          }
+          meta={
+            <span className={styles.rowText}>
+              <span className={th.unread ? styles.unreadRow : undefined}>
+                <Highlight text={subjectOf(th.subject)} terms={terms} />
+              </span>
+              {th.snippet ? (
+                <span className={styles.snippet}>
+                  {' – '}
+                  <Highlight text={th.snippet} terms={terms} />
+                </span>
+              ) : null}
+            </span>
+          }
+          onOpen={() => onOpen(th.id)}
+          selectable={!!selection}
+          selected={selection?.isSelected(th.id)}
+          onSelectChange={(_, extend) => selection?.toggle(th.id, extend)}
+          menu={menuFor?.(th)}
+          // A quiet button only where the pointer hovers (PC); on touch it is in ⋯ and a swipe,
+          // so a phone row never carries a standing button.
+          actions={
+            hover && onPlan && !planned.has(th.id) ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                aria-label={t.mail.plan.actionFor(planLabel, titleOf(th))}
+                onClick={() => onPlan(th)}
+                data-testid="mail-plan-row"
+              >
+                {planLabel}
+              </Button>
+            ) : undefined
+          }
+          onSwipeLeft={onPlan && !planned.has(th.id) ? () => onPlan(th) : undefined}
+          swipeLeftLabel={planLabel}
+        >
+          {hitLines?.get(th.id) ? (
+            <p className={styles.hitLine} data-testid="mail-hit-line">
+              {hitLines.get(th.id)!.kind === 'file' ? t.mail.find.inFile : t.mail.find.inText}
+              {': '}
+              <Highlight text={hitLines.get(th.id)!.text} terms={terms} />
+            </p>
+          ) : null}
+          {invoices.get(th.id) ? (
+            <InvoiceLine
+              offer={invoices.get(th.id)!}
+              onAct={() => onInvoice(th, invoices.get(th.id)!)}
+            />
+          ) : null}
+          {answered.get(th.id) ? (
+            <AnsweredLine title={titleOf(th)} onDone={() => onAnswered(answered.get(th.id)!)} />
+          ) : null}
+        </ItemRow>
+      ))}
+    </ItemList>
+  );
+  if (sections)
+    return (
+      <GroupedList
+        listId="mail-search"
+        forceOpen
+        groups={sections.map((sec) => ({
+          id: sec.id,
+          label: sec.label,
+          count: sec.threads.length,
+          countHidden: sec.threads.length === 0,
+          detail: sec.detail,
+          children: (
+            <>
+              {/* A status line: a screen reader hears „nothing more“ or „not reachable“ when the part settles. */}
+              {sec.note ? (
+                <p className={styles.sectionNote} role="status">
+                  {sec.note}
+                </p>
+              ) : null}
+              {sec.threads.length > 0 ? rowsOf(sec.threads) : null}
+            </>
+          ),
+        }))}
+      />
+    );
   const groups: GroupedListGroup[] = GROUPS.map((g) => {
     const rows = threads.filter((th) => dayGroup(th.date) === g);
-    return {
-      id: g,
-      label: t.mail.page.groups[g],
-      count: rows.length,
-      children: (
-        <ItemList>
-          {rows.map((th) => (
-            <ItemRow
-              key={th.id}
-              // Sender and time share the title line, subject and snippet are two lines at most: a row keeps
-              // its height beside the reading pane (design check G1, G4).
-              title={
-                <span className={styles.rowTitle} data-thread-id={th.id}>
-                  <span className={th.unread ? styles.unreadRow : styles.rowFrom}>
-                    {personName(th.from)}
-                    {th.messageCount > 1 ? ` (${th.messageCount})` : ''}
-                  </span>
-                  <span className={styles.rowWhen}>
-                    {th.labelIds.includes('STARRED') ? (
-                      <span
-                        className={styles.starMark}
-                        role="img"
-                        aria-label={t.mail.page.starredMark}
-                        data-testid="mail-starred"
-                      >
-                        <Icon name="star" size={14} />{' '}
-                      </span>
-                    ) : null}
-                    {planned.has(th.id) ? (
-                      <span className={styles.planMark} data-testid="mail-in-plan">
-                        {plannerOn ? t.mail.plan.mark : t.mail.plan.todo.mark} ·{' '}
-                      </span>
-                    ) : null}
-                    {shortWhen(th.date)}
-                  </span>
-                </span>
-              }
-              meta={
-                <span className={styles.rowText}>
-                  <span className={th.unread ? styles.unreadRow : undefined}>
-                    {subjectOf(th.subject)}
-                  </span>
-                  {th.snippet ? <span className={styles.snippet}> – {th.snippet}</span> : null}
-                </span>
-              }
-              onOpen={() => onOpen(th.id)}
-              selectable={!!selection}
-              selected={selection?.isSelected(th.id)}
-              onSelectChange={(_, extend) => selection?.toggle(th.id, extend)}
-              menu={menuFor?.(th)}
-              // A quiet button only where the pointer hovers (PC); on touch it is in ⋯ and a swipe,
-              // so a phone row never carries a standing button.
-              actions={
-                hover && onPlan && !planned.has(th.id) ? (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    aria-label={t.mail.plan.actionFor(planLabel, titleOf(th))}
-                    onClick={() => onPlan(th)}
-                    data-testid="mail-plan-row"
-                  >
-                    {planLabel}
-                  </Button>
-                ) : undefined
-              }
-              onSwipeLeft={onPlan && !planned.has(th.id) ? () => onPlan(th) : undefined}
-              swipeLeftLabel={planLabel}
-            >
-              {invoices.get(th.id) ? (
-                <InvoiceLine
-                  offer={invoices.get(th.id)!}
-                  onAct={() => onInvoice(th, invoices.get(th.id)!)}
-                />
-              ) : null}
-              {answered.get(th.id) ? (
-                <AnsweredLine title={titleOf(th)} onDone={() => onAnswered(answered.get(th.id)!)} />
-              ) : null}
-            </ItemRow>
-          ))}
-        </ItemList>
-      ),
-    };
+    return { id: g, label: t.mail.page.groups[g], count: rows.length, children: rowsOf(rows) };
   }).filter((g) => g.count > 0);
   return <GroupedList listId="mail" groups={groups} />;
 }
@@ -291,6 +345,25 @@ export default function MailPage() {
       : DEFAULT_LABELS;
 
   const box = useMailbox(account, labelId, query);
+  // A running search: the hits on this device first (instant, also offline), the mailbox's answer below without them.
+  const searching = query.trim() !== '';
+  const local = useLocalSearch(account?.key, query, box.tick);
+  const localIds = useMemo(() => new Set(local?.hits.map((h) => h.thread.id)), [local]);
+  const listed = useMemo(
+    () =>
+      searching
+        ? [
+            ...(local?.hits.map((h) => h.thread) ?? []),
+            ...box.threads.filter((th) => !localIds.has(th.id)),
+          ]
+        : box.threads,
+    [searching, local, localIds, box.threads],
+  );
+  const hitLines = useMemo(() => {
+    const m = new Map<string, HitLine>();
+    for (const h of local?.hits ?? []) if (h.line) m.set(h.thread.id, h.line);
+    return m;
+  }, [local]);
   // Three columns follow the room the page really has (sidebar, rail and window all count); outside a page container the window decides.
   const pageWide = usePageWidthAtLeast(MAIL_COLUMNS_REM);
   const windowWide = useMediaQuery('(min-width: 1200px)');
@@ -303,10 +376,7 @@ export default function MailPage() {
   const savedQuery = query
     ? saved.find((x) => x.toLowerCase() === query.trim().toLowerCase())
     : undefined;
-  const senders = useMemo(
-    () => [...new Set(box.threads.map((th) => personName(th.from)))],
-    [box.threads],
-  );
+  const senders = useMemo(() => [...new Set(listed.map((th) => personName(th.from)))], [listed]);
   const suggestions = suggestionsFor(draft, recent, senders);
   const images = (prefs as { images?: string } | undefined)?.images === 'always';
   const cacheBodies = (prefs as { cacheBodies?: boolean } | undefined)?.cacheBodies ?? true;
@@ -316,7 +386,7 @@ export default function MailPage() {
   const offerPlanAll = (prefs as { offerPlanAll?: boolean } | undefined)?.offerPlanAll ?? true;
   const shown =
     // Headers cached before the flag existed (`personal` unknown) stay in until the next fetch.
-    personalOnly && offerPersonal ? box.threads.filter((th) => th.personal !== false) : box.threads;
+    personalOnly && offerPersonal ? listed.filter((th) => th.personal !== false) : listed;
   const offerInvoices = (prefs as { offerInvoices?: boolean } | undefined)?.offerInvoices ?? true;
   const invoices = useInvoiceOffers(shown, offerInvoices) ?? NO_OFFERS;
   // Select mode (manage permission): checkboxes on the rows and the batch bar. A new folder, search or
@@ -569,9 +639,64 @@ export default function MailPage() {
       : []),
   ];
 
+  const openRow = (id: string) => {
+    // In select mode a tap on a row ticks it (a mis-tap never leaves the list).
+    if (selecting) return selection.toggle(id, false);
+    setStartInvoice(undefined);
+    update({ thread: id });
+  };
+  const onInvoice = (th: CachedThreadView, offer: InvoiceOffer) => {
+    if (offer.kind === 'create') void createInvoice(account, th, offer, box.reload);
+    else if (offer.kind === 'note') void noteReminder(account, th, offer, box.reload);
+    else if (offer.kind === 'check') {
+      setStartInvoice(th.id);
+      update({ thread: th.id });
+    }
+  };
+  const demo = account.key === DEMO_ACCOUNT;
+  /** The two parts of a search; each says in words when it has nothing (never a bare empty list). */
+  const searchSections = (): ListSection[] => {
+    const here = shown.filter((th) => localIds.has(th.id));
+    const there = shown.filter((th) => !localIds.has(th.id));
+    const device: ListSection = {
+      id: 'device',
+      label: t.mail.find.onDevice,
+      detail:
+        local && local.unsupported.length === 0
+          ? t.mail.find.onDeviceDetail(local.searched)
+          : undefined,
+      threads: here,
+      note: !local
+        ? undefined
+        : local.unsupported.length > 0
+          ? t.mail.find.onDeviceOnly
+          : here.length === 0
+            ? demo
+              ? t.mail.find.onDeviceNoneDemo
+              : t.mail.find.onDeviceNone
+            : undefined,
+    };
+    if (demo) return [device];
+    const mailbox: ListSection = {
+      id: 'mailbox',
+      label: t.mail.find.inMailbox,
+      detail: t.mail.find.inMailboxDetail,
+      threads: there,
+      note:
+        box.error === 'network'
+          ? t.mail.find.inMailboxOffline
+          : box.loading && there.length === 0
+            ? t.mail.find.inMailboxLoading
+            : there.length === 0 && !box.error
+              ? t.mail.find.inMailboxNone
+              : undefined,
+    };
+    return [device, mailbox];
+  };
+
   const listPane = (
     <>
-      {account.key === DEMO_ACCOUNT ? <p className={styles.notice}>{t.mail.page.demo}</p> : null}
+      {demo ? <p className={styles.notice}>{t.mail.page.demo}</p> : null}
       <form
         className={styles.toolbar}
         ref={searchForm}
@@ -785,10 +910,30 @@ export default function MailPage() {
         />
       ) : null}
 
-      {box.error ? <MailError code={box.error} /> : null}
+      {/* While searching, an unreachable mailbox is a quiet line in its part: the hits on this device still stand. */}
+      {box.error && !(searching && box.error === 'network') ? <MailError code={box.error} /> : null}
       {box.fromCache ? <p className={styles.hint}>{t.mail.page.cached}</p> : null}
 
-      {shown.length === 0 && box.loading ? (
+      {searching ? (
+        <ThreadList
+          threads={shown}
+          sections={searchSections()}
+          terms={local?.terms}
+          hitLines={hitLines}
+          onOpen={openRow}
+          menuFor={selecting ? undefined : menuFor}
+          planned={planned}
+          planLabel={planLabel}
+          plannerOn={!!states?.planner}
+          onPlan={selecting ? undefined : onPlan}
+          titleOf={(th) => planTitle(account, th)}
+          invoices={invoices}
+          selection={selecting ? selection : undefined}
+          answered={selecting ? NO_ANSWERED : answered}
+          onAnswered={(todoId) => void closeAnswered(todoId)}
+          onInvoice={onInvoice}
+        />
+      ) : shown.length === 0 && box.loading ? (
         <Skeleton height="10rem" />
       ) : shown.length === 0 && !box.error ? (
         <EmptyState
@@ -809,12 +954,7 @@ export default function MailPage() {
       ) : (
         <ThreadList
           threads={shown}
-          onOpen={(id) => {
-            // In select mode a tap on a row ticks it (a mis-tap never leaves the list).
-            if (selecting) return selection.toggle(id, false);
-            setStartInvoice(undefined);
-            update({ thread: id });
-          }}
+          onOpen={openRow}
           // While picking, rows carry only their checkbox (no menu, no plan or invoice buttons).
           menuFor={selecting ? undefined : menuFor}
           planned={planned}
@@ -826,14 +966,7 @@ export default function MailPage() {
           selection={selecting ? selection : undefined}
           answered={selecting ? NO_ANSWERED : answered}
           onAnswered={(todoId) => void closeAnswered(todoId)}
-          onInvoice={(th, offer) => {
-            if (offer.kind === 'create') void createInvoice(account, th, offer, box.reload);
-            else if (offer.kind === 'note') void noteReminder(account, th, offer, box.reload);
-            else if (offer.kind === 'check') {
-              setStartInvoice(th.id);
-              update({ thread: th.id });
-            }
-          }}
+          onInvoice={onInvoice}
         />
       )}
       {box.hasMore ? (

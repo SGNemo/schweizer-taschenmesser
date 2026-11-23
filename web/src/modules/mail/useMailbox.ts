@@ -14,6 +14,8 @@ export interface MailboxState {
   hasMore: boolean;
   loadMore: () => void;
   reload: () => void;
+  /** Bumped by `reload` (the search on this device runs again with it). */
+  tick: number;
 }
 
 const codeOf = (e: unknown): MailErrorCode =>
@@ -123,5 +125,6 @@ export function useMailbox(
     hasMore: current.next !== undefined,
     loadMore,
     reload: () => setTick((n) => n + 1),
+    tick,
   };
 }

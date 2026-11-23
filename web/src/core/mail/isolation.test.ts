@@ -58,4 +58,21 @@ describe('mail never reaches a model', () => {
     }
     expect(offenders).toEqual([]);
   });
+
+  it('the mail search index stays inside the mail module (no backup, diagnostics, sync or search reaches it)', () => {
+    const offenders: string[] = [];
+    for (const f of files(SRC)) {
+      if (f.includes(join('modules', 'mail'))) continue;
+      if (/modules\/mail\/(searchIndex|searchMemory|useLocalSearch)/.test(readFileSync(f, 'utf8')))
+        offenders.push(f);
+    }
+    expect(offenders).toEqual([]);
+    // In memory only: the index file never touches storage of its own.
+    const src = readFileSync(join(SRC, 'modules', 'mail', 'searchIndex.ts'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/\/\/.*$/gm, '');
+    expect(src).not.toMatch(
+      /localStorage|sessionStorage|indexedDB|\.put\(|\.add\(|upsert|create\(|fetch\(/,
+    );
+  });
 });
