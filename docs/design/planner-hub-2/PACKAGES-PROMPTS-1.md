@@ -80,7 +80,7 @@ Konzept CONCEPT-ROWS.md „Idea 4“; Entscheidung Richtung A in DESIGN.md §2 (
 - Panels: Standard, ToDos (Notiz, Checkliste), Listen (offene Einträge, 8 + „n weitere“, „Fertig eingekauft“), Merkliste („Im Browser öffnen“; kein eigenes „Erledigt“ – das ist der Haken der Zeile). Fuß-Regel aus 00-common: alle Aktionen im Fuß, höchstens drei, „Ganz öffnen“ rechts. Jedes schreibt nur im eigenen Modul mit dessen eigenem Undo-Toast.
 - Schreib-Spion: Auf- und Zuklappen schreibt nirgends; der Planer schreibt bei einem Panel-Tipp nichts.
 - `copyInput`-Test: Panel-Inhalt steht nie in „Plan als Text kopieren“.
-- docs/decisions/plan-hub-2.md: ein Bullet (Titel klappt auf, „Ganz öffnen“ ist der alte Sprung; der Planer schreibt seine eigenen Sammlungen, `_links` (über `addLink` / `removeLink`) und seinen eigenen Einstellungs-Datensatz und darf ein Ding über ein Erfassungsziel des Kerns (`saveCapture`) anlegen – nur auf seinen Tipp und in seinem einen Undo-Eintrag; sonst nichts).
+- docs/decisions/plan-hub-2.md: ein Bullet (Titel klappt auf, „Ganz öffnen“ ist der alte Sprung; der Planer schreibt seine eigenen Sammlungen, `_links` (über `addLink` / `removeLink`) seinen eigenen Einstellungs-Datensatz und seine gerätelokalen `_meta`-Schlüssel (wie heute) und darf ein Ding über ein Erfassungsziel des Kerns (`saveCapture`) anlegen – nur auf seinen Tipp und in seinem einen Undo-Eintrag; sonst nichts).
 
 ## Nicht in diesem Paket
 Rechnungen, Abos (4b), E-Mail (4c), Stapel (2), Schritte und „Los“ (5a), Kalender-Panel (9), Aufklappen im Wochenband, im 4-Wochen-Raster oder im Widget.

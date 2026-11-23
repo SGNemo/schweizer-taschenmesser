@@ -41,7 +41,7 @@ Everything else – and every kind whose module is off – is a ToDo. **Order of
 
 **Never silently wrong.** The line appears before Enter and is the only thing that decides; a reading below the „sure“ rules shows nothing; the wrong kind costs one tap before (button) or one after (undo). Switch „Arten im Feld erkennen“ (on; off = today).
 
-**Data / contract.** None new: `saveCapture(type, …)` (a core capture target – the one way the planner may create a thing in another module, only on his tap and inside its one undo entry, CONCEPT §0 sentence 2) and `requestIntoPlan`. The preview is derived, not stored.
+**Data / contract.** None new: `saveCapture(type, …)` (a core capture target – the one way the planner may create a thing in another module, only on his tap and inside its one undo entry, CONCEPT §0 sentence 2). Enter never uses `requestIntoPlan` (the bus emit, which swallows a failure): it calls the planner's own place step inside the action – for „ohne Tag“ (Rechnung, Einkaufsliste) the no-day placement `placeMany(refs, null)`; a plain ToDo / Aufgabe mit Schritten goes the field's normal way (`addFromField`). `requestIntoPlan` is used only by the toast's later offer „In den Plan“ for Notiz and Merkliste. The preview is derived, not stored.
 
 **Risk.** A stale shopping name turning „Batterien“ into a list item when he meant a task: the line says so first. Money never appears in a toast while „Werte ausblenden“ is on (`SensitiveValue` in the line, no amount in the toast).
 

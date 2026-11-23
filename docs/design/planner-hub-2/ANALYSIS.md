@@ -101,7 +101,7 @@ Target = the script's `TARGET` (the designed path after the last package of the 
 | 2 | B 5 → 2 / 1 before; after stays 0 | B 3 → 0 | built |
 | 5 | 5a: one row as today (C1 – today's routine is one row too); 5b: C2 2 → 1 | 5a: C1 4 / 5 → 2 (→ 0 with 3); 5b: C2 stays 2 | built – 5b is thin by the figures: one row less for 14 / 13 handles once and per thing 5 → 7 |
 | 1 | – | D2 2 / 3 → 1 | built – **without pictures** (no figure beyond the text path; the one truly new entry surface) |
-| 3 | A1 11 → 7 | C1 2 → 0; A2 3 / 5 → 0 (no longer needed) | built |
+| 3 | A1 11 → 7 (right kind 4 → 12) | C1 2 → 0 | built |
 | 6 | C2 2 → 1 – but that is the bundle of 5b | C2 stays 2 | **shrunk:** what the script rewards is built in 5b (a list member is ticked inside the bundle). **Struck:** a place per stop, the map jump, a map in the planner – `mapShown` stays „nicht möglich“, no figure moves. |
 | 9 | – | D3 4 → 0 | built |
 | 11 | D4 20 → 7 | D4 2 → 0 | built |

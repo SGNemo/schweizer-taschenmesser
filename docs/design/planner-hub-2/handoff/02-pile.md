@@ -30,7 +30,7 @@ BUDGETS ÜBER DEM RAHMEN                            In Budgets ansehen
 - `▸` is a button named X1 („{Titel}. Aufklappen / Zuklappen“).
 - Budgets: one line per budget over its frame, rendered by budgets' own `compact` panel (the amount goes through `SensitiveValue`; the planner never holds it), ≤ 5 then „n weitere“, no `▸`. Read only: never counted as finished in the planner. They are shown only while the money pile exists: a pile is a row only while it has something to do (members, or a mail queue count). When only budgets remain, an unplaced pile is gone and a placed one reads P9 „nichts wartet“.
 - Mail: the queue part is mail's own one-line panel – P3 „4 warten“ · the button P15 „In den Plan … (4)“ · the jump P8. P15 opens mail's existing `PlanAllDialog` over the planner (mail's code): one tick per mail; bulk mail and mails whose ToDo was deleted stay unticked; nothing is written before that dialog's own button. Afterwards those mails are ToDos: member lines with a tick (mail names them by key, `todos:<id>`). The count is queue threads with no plan ToDo (open or done) + open member ToDos, so a mail put into the plan is not counted twice and a thread whose ToDo is done leaves the count. The mail chat's contract (count + route, no content) is unchanged.
-- Members: core keeps a key only if it belongs to the pile's own module, or – for mail – is a `todos:` key whose `origin` link points to a mail thread (`linkEntries`); never `accounts`. A bundled thing is never a member.
+- Members: core keeps a key only if it belongs to the pile's own module, or – for mail – is a `todos:` key whose `origin` link points to a mail thread (`linkEntries`); never `accounts`; at most 40 members per pile (core drops the rest).
 - The mark of a folded member: on a placed pile M5 with the pile's title („Im Plan · Mi · in „Finanzen checken““), linking to the pile's row (`?day=<d>&item=planner:pile-money`); on an unplaced pile M3, linking to the pile row. Package 2 extends the mark's read (10b prepared the prop).
 
 ```
@@ -63,7 +63,7 @@ Per 00-common. 412: the meta is short, one line – P12 „6 Dinge“, then P4 �
 
 - `pile.test.ts` (core grouping): members folded only while unplaced and unlocked; a placed member is not counted; zero count → no unplaced row; a member key of another module is dropped, except a mail pile's `todos:` key whose `origin` link points to a mail thread; an `accounts` key never.
 - Mail count: a thread whose plan ToDo exists counts once (as the member); a thread whose ToDo is done leaves the count. P15 writes nothing before `PlanAllDialog`'s own button; bulk mail and mails whose ToDo was deleted are not revived (stay unticked).
-- A bundled thing is never a member; a folded member's mark reads M5 / M3 and links to the pile's row.
+- `members` capped at 40 per pile (core drops the rest); a folded member's mark reads M5 / M3 and links to the pile's row.
 - Each module's `pile.test.ts`: reads own data only; routes are fixed strings.
 - Route params `?view=` in invoices / subscriptions / budgets: allow-list, zero writes, param removed (pattern `payRoute.test.tsx`).
 - Write spy: a count that changes – also to 0 – writes nothing in the planner. „Werte ausblenden“ hides the budget and invoice amounts in the pile; `copyInput` holds no pile content.

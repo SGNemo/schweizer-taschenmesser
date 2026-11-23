@@ -73,15 +73,17 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 | B13 (toast) | {n} Dinge sind jetzt „{Wohnung}“. · Rückgängig | {n} things are now in “{Flat}”. · Undo |
 | B14 (panel ⋯) | Auflösen · Als Routine speichern · Umbenennen … | Unbundle · Save as routine · Rename … |
 | B15 (toast) | Aufgelöst. Die Dinge liegen wieder einzeln auf {Mo}. · Rückgängig | Unbundled. The things are back on {Mon} one by one. · Undo |
-| B16 (toast) | Routine „{Haushalt}“ angelegt. · Ansehen | Routine “{Household}” created. · View |
+| B16 (toast) | Routine „{Haushalt}“ angelegt. · Ansehen · Rückgängig | Routine “{Household}” created. · View · Undo |
 | B17 (step gone) | Gibt es nicht mehr | No longer exists |
 | B18 (module off) | {Modul} ist ausgeschaltet – „Los“ lässt diesen Schritt aus. | {module} is switched off – “Go” skips this step. |
-| B19 (key hint under the buttons, not on touch) | Enter: fertig · S: überspringen · P: Pause · Esc: zum Plan | Enter: done · S: skip · P: pause · Esc: to the plan |
+| B19 (key hint under the buttons, not on touch; the corner's „Verlassen“ is as built, `t.focus.mode.leave`) | Enter: fertig · S: überspringen · P: Pause · Esc: zum Plan | Enter: done · S: skip · P: pause · Esc: to the plan |
 | B20 (line ⋯) | Aus dem Bündel nehmen | Take out of the bundle |
 | B21 (line ⋯, phone) | Nach oben · Nach unten | Move up · Move down |
 | B22 (clock, name) | Läuft seit {n} Minuten | Running for {n} minutes |
 | B23 (the filled button on the last step: finishes it, ticks the carrying thing, returns to the plan with the thing's toast) | Fertig | Done |
 | B24 (the announced step change, polite live region) | Schritt {k} von {n}: {Schritt} | Step {k} of {n}: {step} |
+| B25 (toast when a routine of that name exists; nothing written) | Die Routine „{Haushalt}“ gibt es schon. · Ansehen | The routine “{Household}” already exists. · View |
+| B26 (quiet toast in „Los“ after a step) | Schritt erledigt. · Rückgängig | Step done. · Undo |
 
 ## 1 · share · 3 · kinds in the field
 
@@ -93,9 +95,8 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 | S7 (chip on the row) | Im Browser öffnen · {host} | Open in the browser · {host} |
 | S8 (page after „Speichern“; then „Ansehen“ · „Rückgängig“ · S9) | Abgelegt. | Saved. |
 | S9 | Fertig | Done |
-| S14 (page after its own „Rückgängig“; replaces S8, the buttons go) | Zurückgenommen. | Taken back. |
-| S16 (second line under the form, for a shared http/https address ≤ 2 048 characters) | Der Link wird mit abgelegt: {host} | The link is saved with it: {host} |
-| S17 (on the „Geteilt“ card: what it does not show) | + {n} weitere Zeilen | + {n} more lines |
+| S14 (page once the saved ToDo is gone – its own „Rückgängig“ or the toast's; replaces S8, the buttons go) | Zurückgenommen. | Taken back. |
+| S16 (second line under the form, only while the type is `plan`, for a shared http/https address ≤ 2 048 characters) | Der Link wird mit abgelegt: {host} | The link is saved with it: {host} |
 | K1 (preview) | Wird: {Rechnung} · {Stadtwerke} · {80,00 €} · {Frist Fr 4. Dez.} | Becomes: {invoice} · {Stadtwerke} · {€80.00} · {due Fri 4 Dec} |
 | K2 (kinds) | Rechnung · Einkaufsliste · Termin · Notiz · Merkliste · Aufgabe mit Schritten | invoice · shopping list · appointment · note · bookmark · task with steps |
 | K3 | Als Aufgabe eintragen | Enter as a task |
