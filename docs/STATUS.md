@@ -25,7 +25,7 @@ UI-Audit 4.0 ist abgenommen: Identity 4.0 gilt seit 0b-8 (2026-11-14, [REPORT �
 
 ## Abgeschlossene Runden (je eine Zeile; alles auf `develop`)
 
-- Planer neu gedacht (Pakete 1–7, #1034–#1055): nichts wandert mehr von selbst, „Noch offen“, mehr als eine Woche, Ziehen, „Woche vorschlagen“; nachgemessen gegen `TARGET` auf Desktop und Handy ([decisions/plan-rethink.md](decisions/plan-rethink.md), [ANALYSIS §1](design/planner-rethink/ANALYSIS.md)).
+- Planer neu gedacht (Pakete 1–7, #1034–#1055): nichts wandert von selbst; gemessen gegen `TARGET` ([decisions/plan-rethink.md](decisions/plan-rethink.md)).
 - Rechnungen „Tiefe“: Überblick mit Torte, Suche, mehrere bezahlen (#999, #1000).
 - Gerätestatus „Tiefe“ (#927–#929) und Dieser PC „Tiefe“ (#933–#968); offen: Handtests GS-10–14, PC-A, DO-A, DO3, PC-E.
 - Use case „Wochenende retten“ (`docs/design/usecases/wochenende/`, nachgemessen in #940): Samstagmorgen A–G 29 statt 56 Taps, ≈ 176 statt 240 s (ANALYSIS §5, TARGET §4); nicht gebaut W08, W15, W16, neue Reibung W23–W25; offen für Sven: Handtest FU-W1 ([MANUAL-TESTS](MANUAL-TESTS.md)).
