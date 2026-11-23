@@ -115,9 +115,9 @@ export interface EventMap {
      */
     refs?: EntityRef[];
     /**
-     * With `ref`/`refs` only, the day asked for: 'YYYY-MM-DD' lays the thing there (also when it already lies elsewhere –
-     * the person named it), `null` leaves it without a day („Noch ohne Tag“, a day it had is taken off). Missing: with
-     * `ref` the rule of before (a thing that lies stays, one without a day lies on today), with `refs` today.
+     * With `refs` only, the day asked for (today or later): 'YYYY-MM-DD' lays the things there (also when one already
+     * lies elsewhere – the person named it), `null` leaves them without a day („Noch ohne Tag“, a day one had is taken
+     * off). Missing = today.
      */
     day?: string | null;
   };

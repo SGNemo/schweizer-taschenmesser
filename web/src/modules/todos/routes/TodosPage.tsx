@@ -482,13 +482,14 @@ export default function TodosPage() {
     [tasks],
   );
   const facts = useLiveQuery(
-    () => (plannerOn && openIds ? planFacts('todos', openIds.split(',')) : undefined),
+    () => (plannerOn ? planFacts('todos', openIds ? openIds.split(',') : []) : undefined),
     [plannerOn, openIds],
   );
   const planOf = useMemo(
     () =>
       (x: StoredTask): PlanState =>
-        plannerOn ? planStateOf(x, day, facts?.get(x.id)) : { kind: 'none' },
+        // While „fest“ / „Nicht planen“ load, no mark yet (a „Nicht planen“ never flashes as „noch nicht im Plan“).
+        plannerOn && facts ? planStateOf(x, day, facts.get(x.id)) : { kind: 'none' },
     [plannerOn, day, facts],
   );
   const scoped = useMemo(() => {

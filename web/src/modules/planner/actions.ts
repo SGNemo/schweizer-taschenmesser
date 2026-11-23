@@ -130,7 +130,6 @@ const short = (title: string, max = 32) =>
  */
 export async function addRequested(req: EventMap['plan.requested']): Promise<boolean> {
   if (req.refs) return placeMany(req.refs, req.day === undefined ? today() : req.day);
-  if (req.ref && req.day !== undefined) return placeMany([req.ref], req.day);
   if (req.ref) return placeRequested(req.ref, req);
   const title = req.title.trim();
   if (!title) return false;
@@ -225,14 +224,15 @@ async function plannableRef(ref: EntityRef): Promise<boolean> {
 }
 
 /**
- * `plan.requested` with a day (or `refs`): „In den Plan …“ of one or several ToDos (todos-plan-state). Every named thing
+ * `plan.requested` with `refs`: „In den Plan …“ of one or several ToDos (todos-plan-state). Every named thing
  * is asked in (its item row live, `excluded` off) and lies on `day` – moved there when it lay elsewhere, each keeps its
  * lock – or, with `null`, has no day („Noch ohne Tag“: a row it had is removed). Nothing else is touched; one action,
  * one undo, one toast. The refs are untrusted like in `placeRequested`; a thing its source does not list leaves its
  * (hidden) row behind – when none is listed, the action is taken back.
  */
 export async function placeMany(refs: readonly EntityRef[], day: string | null): Promise<boolean> {
-  if (day !== null && !/^\d{4}-\d{2}-\d{2}$/.test(day)) return false;
+  // A day from today on: the bus is open to every module, a passed day would lay rows straight into „Noch offen“.
+  if (day !== null && (!/^\d{4}-\d{2}-\d{2}$/.test(day) || day < today())) return false;
   const valid: EntityRef[] = [];
   const seen = new Set<string>();
   for (const ref of refs.slice(0, 500)) {

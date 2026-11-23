@@ -237,6 +237,8 @@ describe('„In den Plan …“ from ToDos (`plan.requested` with refs and day)'
       await addRequested({ title: '', refs: [{ module: 'accounts', id: 'x' }], day: TUE }),
     ).toBe(false);
     expect(await addRequested({ title: '', refs: [ref('n1')], day: 'morgen' })).toBe(false);
+    // A passed day would lay straight into „Noch offen“: refused.
+    expect(await addRequested({ title: '', refs: [ref('n1')], day: '2026-11-10' })).toBe(false);
     expect(await addRequested({ title: '', refs: [ref('gone')], day: TUE })).toBe(false);
     expect(undoDepth()).toBe(0);
     expect(await row('n1')).toBeNull();

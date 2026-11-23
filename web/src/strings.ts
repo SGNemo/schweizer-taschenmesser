@@ -1639,7 +1639,6 @@ export const de = {
       choose: (label: string, title: string) => `${label} – In den Plan: ${title}`,
       filter: 'Stand im Plan',
       filters: { all: 'Alle', unplanned: 'Noch nicht im Plan', planned: 'Im Plan' },
-      filterCount: (label: string, n: number) => `${label}: ${n}`,
       filterEmpty: 'Hier ist gerade nichts.',
       action: 'In den Plan …',
       title: (title: string) => `In den Plan: ${title}`,

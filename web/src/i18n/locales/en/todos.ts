@@ -12,7 +12,6 @@ export const todos: Strings['todos'] = {
     choose: (label: string, title: string) => `${label} – Into the plan: ${title}`,
     filter: 'State in the plan',
     filters: { all: 'All', unplanned: 'Not in the plan yet', planned: 'In the plan' },
-    filterCount: (label: string, n: number) => `${label}: ${n}`,
     filterEmpty: 'Nothing here right now.',
     action: 'Into the plan …',
     title: (title: string) => `Into the plan: ${title}`,
