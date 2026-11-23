@@ -1317,7 +1317,7 @@ fn exchange_off_pause_and_answers_hold() {
     };
     let enabled = body("exchange_set_enabled");
     let early = enabled
-        .find("None => {")
+        .find("exchange_dir(&app).ok_or(\"no-data-dir\")")
         .expect("off without a hub, under the slot lock");
     let attach = &src[src.find("pub fn attach(").unwrap()..];
     let attach = &attach[..attach.find("\n}\n").unwrap()];
@@ -1326,7 +1326,7 @@ fn exchange_off_pause_and_answers_hold() {
         "attach applies an earlier off"
     );
     assert!(early < enabled.find("let parts = state.parts()?;").unwrap());
-    let file = &enabled[enabled.find("None => {").unwrap()..];
+    let file = &enabled[early..];
     assert!(file.contains("switch_at(&dir)") && file.contains(".set(false)"));
     let send = body("exchange_send");
     assert!(send.find("effective()").unwrap() < send.find("outbox.push(").unwrap());

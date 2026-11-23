@@ -435,7 +435,7 @@ pub fn exchange_set_enabled(
     if parts.exchange.enabled() {
         return parts
             .exchange
-            .set_enabled(enabled)
+            .set_enabled(true)
             .map_err(|_| "storage".to_owned());
     }
     let lang = crate::capture::native_lang(&app);

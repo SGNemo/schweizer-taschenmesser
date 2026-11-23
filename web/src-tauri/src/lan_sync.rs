@@ -729,6 +729,10 @@ pub fn lan_pair_confirm(
     waiting(&state)?.ok_or("not-awaiting")?;
     let code = pending.code;
     with_core(&state, |core, wake| {
+        // every step after the question on the hub that was asked
+        if !Arc::ptr_eq(core, &asked) {
+            return Err("changed".to_owned());
+        }
         // the hub lock is not held while the frame is written: take the handle, let go, then confirm
         let deliverer = core
             .live
