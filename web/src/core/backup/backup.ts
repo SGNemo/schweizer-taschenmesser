@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
-import { isHlcTooFarAhead } from '@/core/db/hlc';
+import { formatHlc, isHlcTooFarAhead } from '@/core/db/hlc';
+import { now } from '@/core/time/now';
 import { syncedTableNames } from '@/core/db/schema';
 import { allManifests } from '@/core/modules/registry';
 import type { StorageAdapter } from '@/core/storage/types';
@@ -87,6 +88,17 @@ export async function createBackup(
 
 export const serializeBackup = (backup: Backup): string => JSON.stringify(backup);
 
+/** Stamps beyond the drift bound, set to the current time (same device id), so they cannot block later edits. */
+function clampFutureStamps(f: Record<string, string>): Record<string, string> {
+  const at = now();
+  return Object.fromEntries(
+    Object.entries(f).map(([field, stamp]) => [
+      field,
+      isHlcTooFarAhead(stamp, at) ? formatHlc(at, 0, stamp.slice(19)) : stamp,
+    ]),
+  );
+}
+
 /** Rows and the tables that actually hold rows (a backup lists every table, most of them empty). */
 export function backupCounts(backup: Pick<Backup, 'tables'>): { records: number; tables: number } {
   const filled = Object.values(backup.tables).filter((rows) => rows.length > 0);
@@ -124,12 +136,14 @@ export function parseBackup(text: string): ParseResult {
     for (const row of rows) {
       const core = coreRowSchema.safeParse(row);
       if (!core.success) return { ok: false, reason: 'invalid' };
+      if (!extraRowSchema.safeParse(row).success) {
+        skippedRows++;
+        continue;
+      }
       // R5: a field stamped beyond the sync drift bound would win against every later edit on all
-      // devices and stall sync; such a row is skipped like any other that fails the checks
-      const future = Object.values(core.data._f).some((stamp) => isHlcTooFarAhead(stamp));
-      if (!future && extraRowSchema.safeParse(row).success)
-        good.push(core.data as unknown as SyncRow);
-      else skippedRows++;
+      // devices and stall sync. The row is kept (a clock running ahead must not cost data); its
+      // stamp is pulled back to now, so a later edit anywhere wins again.
+      good.push({ ...core.data, _f: clampFutureStamps(core.data._f) } as unknown as SyncRow);
     }
     tables[name] = good;
   }

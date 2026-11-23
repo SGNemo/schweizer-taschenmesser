@@ -26,6 +26,8 @@ export async function pageToHtml(page: Page, scratchName: string): Promise<strin
   });
   let html = editor.getHTML();
   editor.destroy();
+  // Q2: like the editor, print loads no picture from the net – only this device's and inline ones
+  html = html.replace(/\ssrc="(?!nemo-img:|data:image\/)[^"]*"/gi, '');
   const sources = [...new Set([...html.matchAll(/src="(nemo-img:[^"]+)"/g)].map((m) => m[1]!))];
   for (const src of sources) {
     const blob = await loadImage(src);

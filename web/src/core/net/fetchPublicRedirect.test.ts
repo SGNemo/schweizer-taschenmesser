@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { setPlatform } from '@/core/platform';
 import { createWebPlatform } from '@/core/platform/web';
 import { checkRedirect, nativeInit } from '@/core/platform/tauri/redirect';
-import { fetchPublic } from './fetchPublic';
+import { fetchPublic, nextHop } from './fetchPublic';
 
 // M2 (launch review 2026-11): on the desktop `fetchPublic` judged only the first address and the
 // native fetch followed redirects itself – to a home-network address too. It now follows them
@@ -67,6 +67,23 @@ describe('fetchPublic redirects (native)', () => {
       code: 'network',
     });
     expect(seen.length).toBeLessThanOrEqual(6);
+  });
+});
+
+describe('the next hop (council round 1)', () => {
+  it('turns 303, and 301/302 after a POST, into a GET without body', () => {
+    const post: RequestInit = { method: 'POST', body: 'x' };
+    expect(nextHop(post, 303, false)).toMatchObject({ method: 'GET', body: undefined });
+    expect(nextHop(post, 302, false)).toMatchObject({ method: 'GET', body: undefined });
+    expect(nextHop(post, 307, false)).toMatchObject({ method: 'POST', body: 'x' });
+  });
+
+  it('never carries credentials to another origin', () => {
+    const init: RequestInit = { headers: { authorization: 'Bearer t', accept: 'text/html' } };
+    const cross = new Headers(nextHop(init, 302, true).headers);
+    expect(cross.get('authorization')).toBeNull();
+    expect(cross.get('accept')).toBe('text/html');
+    expect(new Headers(nextHop(init, 302, false).headers).get('authorization')).toBe('Bearer t');
   });
 });
 

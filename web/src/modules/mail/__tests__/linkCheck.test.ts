@@ -21,13 +21,27 @@ describe('linkDecision', () => {
     expect(linkDecision('www.bank.example', 'https://bank-example.evil.test/login')).toEqual({
       ask: 'https://bank-example.evil.test/login',
       host: 'bank-example.evil.test',
-      shown: 'www.bank.example',
     });
     expect(
       linkDecision('Login: https://paypal.com/signin', 'http://paypal.com.evil.test/'),
     ).toMatchObject({
       host: 'paypal.com.evil.test',
     });
+  });
+
+  it('a second named domain counts too (hidden text can name the target first)', () => {
+    expect(linkDecision('evil.test paypal.com', 'https://evil.test/')).toEqual({
+      ask: 'https://evil.test/',
+      host: 'evil.test',
+    });
+  });
+
+  it('a file name in the text is not a site', () => {
+    for (const text of ['Rechnung_2026.pdf', 'bericht.docx herunterladen', 'Foto.JPG']) {
+      expect(linkDecision(text, 'https://files.sender.example/d/1')).toEqual({
+        open: 'https://files.sender.example/d/1',
+      });
+    }
   });
 
   it('never opens anything but http(s), mailto and tel', () => {

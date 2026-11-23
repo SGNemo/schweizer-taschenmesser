@@ -133,6 +133,23 @@ const asNetworkError = (e: unknown): PublicFetchError =>
 /** Hops followed on the desktop, each one checked like the first address (the server proxy has its own). */
 const MAX_REDIRECTS = 5;
 
+/**
+ * What the next hop sends, as a browser would: 303 (and 301/302 after a POST) becomes a GET without
+ * body, and credentials never follow to another origin.
+ */
+export function nextHop(init: RequestInit, status: number, crossOrigin: boolean): RequestInit {
+  const method = (init.method ?? 'GET').toUpperCase();
+  const toGet =
+    status === 303 ? method !== 'HEAD' : (status === 301 || status === 302) && method === 'POST';
+  const next: RequestInit = toGet ? { ...init, method: 'GET', body: undefined } : { ...init };
+  if (crossOrigin && init.headers) {
+    const headers = new Headers(init.headers);
+    for (const h of ['authorization', 'cookie', 'proxy-authorization']) headers.delete(h);
+    next.headers = headers;
+  }
+  return next;
+}
+
 export async function fetchPublic(
   url: string,
   init?: RequestInit,
@@ -146,17 +163,21 @@ export async function fetchPublic(
     try {
       return await withTimeout(async (signal) => {
         let current = url;
+        let hopInit: RequestInit = { ...init };
         for (let hop = 0; ; hop++) {
           if (!isPublicHttpsUrl(current)) {
             throw new PublicFetchError('network', 'not a public https address');
           }
-          const res = await platform.fetch(current, { ...init, redirect: 'manual', signal });
+          const res = await platform.fetch(current, { ...hopInit, redirect: 'manual', signal });
           const location = res.headers.get('location');
           if (res.status < 300 || res.status >= 400 || !location) {
             return limitPublicResponse(res, kind);
           }
+          void res.body?.cancel().catch(() => undefined);
           if (hop >= MAX_REDIRECTS) throw new PublicFetchError('network', 'too many redirects');
-          current = new URL(location, current).toString();
+          const next = new URL(location, current);
+          hopInit = nextHop(hopInit, res.status, new URL(current).origin !== next.origin);
+          current = next.toString();
         }
       }, timeoutMs);
     } catch (e) {

@@ -11,8 +11,8 @@ services:
     env_file: .env
     ports:
       # BIND_ADDRESS=127.0.0.1 publishes only on this machine (behind `tailscale serve` or another
-      # tunnel/reverse proxy); the default keeps it reachable in the LAN as before.
-      - '${BIND_ADDRESS:-0.0.0.0}:${PORT:-8787}:8787'
+      # tunnel/reverse proxy); unset, it is reachable in the LAN as before (IPv4 and IPv6).
+      - '${BIND_ADDRESS:+${BIND_ADDRESS}:}${PORT:-8787}:8787'
     volumes:
       - sync-data:/data
 

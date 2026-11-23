@@ -1,5 +1,6 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative, resolve } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 /**
@@ -8,16 +9,11 @@ import { describe, expect, it } from 'vitest';
  * fails here.
  */
 const root = resolve(__dirname, '../../..');
-const SKIP = new Set(['node_modules', 'target', 'dist', '.git', 'build', '.gradle', 'gen']);
-
-function find(dir: string, names: string[], out: string[] = []): string[] {
-  for (const entry of readdirSync(dir)) {
-    if (SKIP.has(entry)) continue;
-    const path = join(dir, entry);
-    if (statSync(path).isDirectory()) find(path, names, out);
-    else if (names.includes(entry)) out.push(path);
-  }
-  return out;
+/** Tracked files only: scratch clones, worktrees and reports in a dev checkout do not count. */
+function tracked(pattern: string): string[] {
+  return execFileSync('git', ['ls-files', '--', pattern], { cwd: root, encoding: 'utf8' })
+    .split('\n')
+    .filter(Boolean);
 }
 
 function entries(): Set<string> {
@@ -33,17 +29,14 @@ function entries(): Set<string> {
   return found;
 }
 
-const dirOf = (file: string) =>
-  `/${relative(root, file).split('/').slice(0, -1).join('/')}`.replace(/\/$/, '') || '/';
+const dirOf = (file: string) => `/${file.split('/').slice(0, -1).join('/')}`;
 
 describe('Dependabot covers every project', () => {
   const have = entries();
   const want = [
-    ...find(root, ['package-lock.json']).map((f) => `npm ${dirOf(f)}`),
-    ...find(join(root, 'web/src-tauri'), ['Cargo.lock']).map((f) => `cargo ${dirOf(f)}`),
-    ...find(join(root, 'web/src-tauri/plugins'), ['build.gradle.kts']).map(
-      (f) => `gradle ${dirOf(f)}`,
-    ),
+    ...tracked('*package-lock.json').map((f) => `npm ${dirOf(f)}`),
+    ...tracked('web/src-tauri/*Cargo.lock').map((f) => `cargo ${dirOf(f)}`),
+    ...tracked('web/src-tauri/plugins/*build.gradle.kts').map((f) => `gradle ${dirOf(f)}`),
   ];
 
   it('finds the projects', () => {

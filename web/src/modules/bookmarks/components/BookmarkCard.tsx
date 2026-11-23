@@ -59,7 +59,7 @@ export function BookmarkCard({
         )}
       </div>
       <div className={styles.body}>
-        {item.url ? (
+        {linkOf(item.url) ? (
           <a
             className={styles.link}
             href={linkOf(item.url)}

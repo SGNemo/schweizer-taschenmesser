@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { STATUS_CODES } from 'node:http';
 import { isIP } from 'node:net';
 import { join } from 'node:path';
@@ -33,6 +33,8 @@ declare module 'fastify' {
 }
 
 /** Protocol level of this server. 2 adds devices, `/v1/info`, `/v1/status` and Argon2id vaults. */
+export const PROTOCOL_VERSION = 2;
+export const FEATURES = ['devices', 'stats', 'vault-v2'] as const;
 
 /**
  * The served PWA's Content-Security-Policy: the desktop shell's (`web/src-tauri/tauri.conf.json`)
@@ -58,7 +60,10 @@ export const pwaCsp = (inlineScriptHashes: readonly string[] = []) =>
     "frame-ancestors 'none'",
   ].join('; ');
 
-/** SHA-256 (base64) of every inline `<script>` of the built page (the theme loader before first paint). */
+/**
+ * SHA-256 (base64) of every inline `<script>` of the built pages (the theme loader before first
+ * paint). Read once at start: after replacing `WEB_DIR`, restart the server.
+ */
 function inlineScriptHashes(html: string): string[] {
   const hashes: string[] = [];
   for (const m of html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)) {
@@ -66,8 +71,6 @@ function inlineScriptHashes(html: string): string[] {
   }
   return hashes;
 }
-export const PROTOCOL_VERSION = 2;
-export const FEATURES = ['devices', 'stats', 'vault-v2'] as const;
 
 /** Feed URLs may carry private tokens: never write the query of `/v1/proxy` to the log. */
 export const redactUrl = (url: string): string =>
@@ -592,7 +595,12 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
   if (opts.webDir && existsSync(join(opts.webDir, 'index.html'))) {
     // R6 (launch review 2026-11): the served app gets the desktop shell's CSP (without its `ipc:`
     // parts), cannot be framed and is not sniffed; the API keeps its own headers above.
-    const csp = pwaCsp(inlineScriptHashes(readFileSync(join(opts.webDir, 'index.html'), 'utf8')));
+    const pages = readdirSync(opts.webDir).filter((f) => f.endsWith('.html'));
+    const csp = pwaCsp([
+      ...new Set(
+        pages.flatMap((f) => inlineScriptHashes(readFileSync(join(opts.webDir!, f), 'utf8'))),
+      ),
+    ]);
     app.addHook('onSend', async (req, reply) => {
       if (req.url.startsWith('/v1/')) return;
       reply.header('content-security-policy', csp);

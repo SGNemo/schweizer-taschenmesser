@@ -9,7 +9,9 @@ import styles from './LinksWidget.module.css';
 /** Lesezeichen as quick-launch tiles (one tap opens the address) and one context line: how many, in how many groups. */
 export default function LinksWidget() {
   const data = useLiveQuery(async () => {
-    const items = (await itemRepo.active().toArray()).filter((i) => i.kind === 'link' && i.url);
+    const items = (await itemRepo.active().toArray()).filter(
+      (i) => i.kind === 'link' && linkOf(i.url),
+    );
     const groups = groupLinks(items);
     return {
       links: groups.flatMap(([, group]) => group),

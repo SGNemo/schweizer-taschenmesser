@@ -9,7 +9,10 @@ const read = (path: string) => readFileSync(join(__dirname, '..', path), 'utf8')
 
 describe('publishing the server', () => {
   it('the bind address of the published port is a setting', () => {
-    expect(read('docker-compose.yml')).toContain("'${BIND_ADDRESS:-0.0.0.0}:${PORT:-8787}:8787'");
+    // unset: no host address at all, so Docker keeps publishing on IPv4 and IPv6 as before
+    expect(read('docker-compose.yml')).toContain(
+      "'${BIND_ADDRESS:+${BIND_ADDRESS}:}${PORT:-8787}:8787'",
+    );
   });
 
   it('the example file and both user docs explain 127.0.0.1 behind a tunnel', () => {

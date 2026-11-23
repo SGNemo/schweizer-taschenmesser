@@ -3,7 +3,7 @@ type: security
 area: app
 breaking: false
 de: Links in Mails, die eine andere Seite nennen als ihr Ziel, fragen vorher nach. Bilder aus dem Internet lädt eine Notiz nicht. Merkliste öffnet nur Web-Adressen.
-en: Mail links that name another site than their target ask first. A note does not load pictures from the internet. Bookmarks open only web addresses.
+en: Mail links that name another site than their target ask first. A note does not load pictures from the internet. Saved opens only web addresses.
 ---
 
 ---

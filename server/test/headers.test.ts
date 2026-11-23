@@ -15,6 +15,10 @@ describe('headers of the served PWA', () => {
       join(dir, 'index.html'),
       '<!doctype html><title>Nemo</title><script>var theme = 1;</script><script type="module" src="/app.js"></script>',
     );
+    writeFileSync(
+      join(dir, 'capture.html'),
+      '<!doctype html><title>Nemo</title><script>var capture = 1;</script>',
+    );
     writeFileSync(join(dir, 'app.js'), 'console.log(1)');
   });
   afterAll(() => rmSync(dir, { recursive: true, force: true }));
@@ -33,11 +37,19 @@ describe('headers of the served PWA', () => {
     }
   });
 
-  it('allows exactly the inline script of index.html, by its hash', async () => {
+  it('allows the inline script of index.html by its hash, never all inline scripts', async () => {
     const { app } = await setup({ webDir: dir });
     const csp = String((await app.inject({ url: '/' })).headers['content-security-policy']);
     const hash = createHash('sha256').update('var theme = 1;').digest('base64');
-    expect(csp).toContain(`script-src 'self' 'wasm-unsafe-eval' 'sha256-${hash}'`);
+    expect(csp).toMatch(/script-src 'self' 'wasm-unsafe-eval' 'sha256-[^;]*;/);
+    expect(csp).toContain(`'sha256-${hash}'`);
     expect(csp).not.toContain("'unsafe-inline' 'sha256");
+  });
+
+  it('the inline scripts of the other built pages (capture.html) are allowed as well', async () => {
+    const { app } = await setup({ webDir: dir });
+    const res = await app.inject({ url: '/capture.html' });
+    const hash = createHash('sha256').update('var capture = 1;').digest('base64');
+    expect(String(res.headers['content-security-policy'])).toContain(`'sha256-${hash}'`);
   });
 });

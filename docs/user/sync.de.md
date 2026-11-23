@@ -71,7 +71,7 @@ tailscale serve --bg 8787       # je nach Tailscale-Version; HTTPS-Zertifikate i
 ```
 
 Mit Docker zusätzlich `BIND_ADDRESS=127.0.0.1` in `.env` setzen: Der Server antwortet dann nur auf diesem
-Rechner (und über Tailscale), nicht unverschlüsselt im LAN.
+Rechner (und über Tailscale), nicht unverschlüsselt im LAN; verbinde dich dann nur über die Tailscale-Adresse.
 
 Diese Adresse auf dem Handy und am PC öffnen, die PWA von dort installieren und in den Einstellungen unter
 **Synchronisation** verbinden (die Adresse wird automatisch vorgeschlagen). Im LAN ohne HTTPS funktioniert der Sync,
