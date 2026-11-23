@@ -889,16 +889,20 @@ async function placeAt(
  * quick-capture target, as the field does), a known one moves – plus the missing things he sent to „Nächste Wochen“.
  * Nothing else moves; one action, one undo, one toast.
  */
-export function applyPaste(
+export async function applyPaste(
   lines: readonly PasteLine[],
   toLater: readonly Known[],
   titles: Record<string, string>,
   /** The paste's goal line for the days it names (P2), in the same undo entry. */
   goal?: { text: string; dates: readonly string[] },
 ): Promise<boolean> {
+  // Only the days whose goal differs: the same paste twice writes nothing.
+  const goalDates: string[] = [];
+  for (const date of goal?.dates ?? [])
+    if ((await dayRepo.get(date))?.note !== goal!.text) goalDates.push(date);
   // Everything is like that already: no action, no toast, no undo entry.
-  if (!goal?.dates.length && toLater.length === 0 && lines.every((l) => l.change === 'same'))
-    return Promise.resolve(false);
+  if (!goalDates.length && toLater.length === 0 && lines.every((l) => l.change === 'same'))
+    return false;
   const toLaterAny =
     toLater.length > 0 || lines.some((l) => l.change !== 'same' && l.to.kind === 'later');
   return act(
@@ -922,7 +926,7 @@ export function applyPaste(
         await placeAt(refOf(k.key), { kind: 'later' });
         touched.push(k.key);
       }
-      for (const date of goal?.dates ?? []) await dayPatch(date, { note: goal!.text });
+      for (const date of goalDates) await dayPatch(date, { note: goal!.text });
       return { touched };
     },
     { leadOnly: true },

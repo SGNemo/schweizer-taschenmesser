@@ -1111,10 +1111,6 @@ export default function PlannerPage() {
     );
   };
   /**
-   * The day's starting point after „Nur das hier“ (TARGET §2): „Anfangen mit: Wäsche waschen · Fokus starten“ while
-   * that thing is still open on that day; one ✕ hides it. Nothing else on the sheet changes.
-   */
-  /**
    * The goal of the day (P2): „Ziel: Wohnung frei bekommen“ – one quiet line, no figure, no bar. ✕ removes it from every
    * day in view that carries the same goal (the weekend it was set for); „Tag einstellen“ edits it per day.
    */
@@ -1134,6 +1130,10 @@ export default function PlannerPage() {
       </p>
     );
   };
+  /**
+   * The day's starting point after „Nur das hier“ (TARGET §2): „Anfangen mit: Wäsche waschen · Fokus starten“ while
+   * that thing is still open on that day; one ✕ hides it. Nothing else on the sheet changes.
+   */
   const startLine = (day: BoardDay) => {
     const key = startPoints?.[day.date];
     if (!key) return null;
@@ -1887,7 +1887,14 @@ export default function PlannerPage() {
         </CaptureDialog>
       ) : null}
       {pasting !== undefined ? (
-        <PasteDialog initial={pasting} titles={titles} onClose={() => setPasting(undefined)} />
+        <PasteDialog
+          initial={pasting}
+          goals={Object.fromEntries(
+            (board?.days ?? []).flatMap((d) => (d.row?.note ? [[d.date, d.row.note]] : [])),
+          )}
+          titles={titles}
+          onClose={() => setPasting(undefined)}
+        />
       ) : null}
       <RowChoice
         choice={choice}

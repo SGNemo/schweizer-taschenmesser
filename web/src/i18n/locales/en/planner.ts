@@ -275,7 +275,7 @@ export const planner: Strings['planner'] = {
     title: 'Goal',
     line: (goal: string) => `Goal: ${goal}`,
     field: 'Goal for this day',
-    fieldHint: 'One calm sentence above the day. No progress, no figure.',
+    fieldHint: 'One calm sentence above the day.',
     save: 'Set goal',
     remove: 'Remove goal',
     removeName: (goal: string) => `Remove goal: ${goal}`,

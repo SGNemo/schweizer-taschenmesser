@@ -232,8 +232,10 @@ export function DaySheet({
         onSubmit={(e) => {
           e.preventDefault();
           if (goalText.trim() === (day.row?.note ?? '')) return;
-          void setGoal([day.date], goalText.trim() || undefined, titles);
-          setGoalDraft(undefined);
+          // The draft goes once the goal is stored (a failed write keeps what he typed).
+          void setGoal([day.date], goalText.trim() || undefined, titles).then(
+            (ok) => ok && setGoalDraft(undefined),
+          );
         }}
       >
         <TextField

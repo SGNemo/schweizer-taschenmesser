@@ -6,7 +6,14 @@ import { today } from '@/core/time/now';
 import { t } from '@/strings';
 import { Button, Checkbox, Dialog, Segmented, TextArea } from '@/ui';
 import { applyPaste, pasteKnown } from '../actions';
-import { matchPaste, readPastedPlan, type Known, type PasteLine, type Place } from '../pastePlan';
+import {
+  goalDays,
+  matchPaste,
+  readPastedPlan,
+  type Known,
+  type PasteLine,
+  type Place,
+} from '../pastePlan';
 import styles from './PasteDialog.module.css';
 
 /** Days first in date order, then this week, then later: the plan reads from now on, not from what is put off. */
@@ -67,11 +74,14 @@ function detailOf(line: PasteLine): string {
  */
 export function PasteDialog({
   initial,
+  goals,
   titles,
   onClose,
 }: {
   /** Text pasted into the planner's field: the preview shows at once. */
   initial: string;
+  /** The goals stored on the days in view (date → goal), so the preview knows what a goal line would change. */
+  goals: Readonly<Record<string, string>>;
   titles: Record<string, string>;
   onClose: () => void;
 }) {
@@ -118,14 +128,15 @@ export function PasteDialog({
     setMissingLater(false);
   }
   const toLater = missingLater && laterOk ? movable : [];
-  const goalDates = [
-    ...new Set(preview?.lines.flatMap((l) => (l.to.kind === 'day' ? [l.to.date] : [])) ?? []),
-  ].sort();
+  const goalDates = goalDays(plan, day, past);
+  // The goal line counts as a change only on days whose goal differs (the same paste twice changes nothing).
+  const goalNew = goalDates.some((d) => (goals[d] ?? '') !== plan.goal);
   const goal =
-    plan.goal && goalOn && preview
-      ? { text: plan.goal, dates: goalDates.length ? goalDates : [day] }
+    plan.goal && goalOn && preview && plan.things.length > 0
+      ? { text: plan.goal, dates: goalDates }
       : undefined;
-  const writes = chosen.filter((l) => l.change !== 'same').length + toLater.length + (goal ? 1 : 0);
+  const writes =
+    chosen.filter((l) => l.change !== 'same').length + toLater.length + (goal && goalNew ? 1 : 0);
 
   const groups = useMemo(() => {
     const out = new Map<string, { place: Place; lines: PasteLine[] }>();
@@ -223,12 +234,9 @@ export function PasteDialog({
             onChange={setPast}
           />
         ) : null}
-        {plan.goal && preview ? (
+        {plan.goal && preview && plan.things.length > 0 ? (
           <Checkbox
-            label={t.planner.goal.paste(
-              plan.goal,
-              (goalDates.length ? goalDates : [day]).map(dayLabel).join(', '),
-            )}
+            label={t.planner.goal.paste(plan.goal, goalDates.map(dayLabel).join(', '))}
             checked={goalOn}
             onChange={(e) => setGoalOn(e.target.checked)}
           />
