@@ -356,6 +356,8 @@ export function ThreadView({ threadId, onBack }: { threadId: string; onBack: () 
         <ChooseProvider
           options={choosing}
           title={thread.providerId ? c.provider.chooseTitle : c.provider.pickTitle}
+          confirm={thread.providerId ? c.provider.chooseConfirm : c.provider.pickConfirm}
+          none={thread.providerId ? c.provider.chooseNone : c.provider.pickNone}
           onOpenSettings={() => void navigate(settingsPath('ki', 'ai'))}
           onClose={() => setChoosing(undefined)}
           onChoose={(picked) => {
@@ -405,12 +407,16 @@ interface ProviderOption {
 function ChooseProvider({
   options,
   title,
+  confirm,
+  none,
   onOpenSettings,
   onClose,
   onChoose,
 }: {
   options: ProviderOption[];
   title: string;
+  confirm: string;
+  none: string;
   onOpenSettings: () => void;
   onClose: () => void;
   onChoose: (picked: ProviderOption) => void;
@@ -436,14 +442,14 @@ function ChooseProvider({
               onClick={() => onChoose(choice)}
               data-testid="chat-choose-confirm"
             >
-              {c.provider.chooseConfirm}
+              {confirm}
             </Button>
           ) : null}
         </>
       }
     >
       {options.length === 0 ? (
-        <p>{c.provider.chooseNone}</p>
+        <p>{none}</p>
       ) : (
         <div className={styles.facts}>
           <p>{c.provider.chooseBody}</p>

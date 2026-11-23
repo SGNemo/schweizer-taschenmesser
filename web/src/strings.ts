@@ -7683,6 +7683,8 @@ export const de = {
           : 'Bei diesem älteren Chat ist nicht gespeichert, welcher Anbieter ihn hat. Wähle einmal, wohin er gehen soll.',
       pick: 'Anbieter wählen',
       pickTitle: 'Anbieter für diesen Chat wählen',
+      pickConfirm: 'Wählen und senden',
+      pickNone: 'Es ist noch kein Anbieter eingerichtet.',
       openSettings: 'KI-Anbieter einrichten',
       choose: 'Anderen Anbieter wählen',
       chooseTitle: 'Anbieter für diesen Chat wechseln',

@@ -35,6 +35,8 @@ export const chat: Strings['chat'] = {
         : 'This older chat doesn’t record which provider has it. Choose once where it should go.',
     pick: 'Choose a provider',
     pickTitle: 'Choose a provider for this chat',
+    pickConfirm: 'Choose and send',
+    pickNone: 'No provider is set up yet.',
     openSettings: 'Set up AI provider',
     choose: 'Choose another provider',
     chooseTitle: 'Change the provider for this chat',
