@@ -498,3 +498,71 @@ it('module package S-b: the device status has no aiSchema, so no prompt and no c
   expect(writableModules(visibleManifests).map((m) => m.id)).not.toContain('device');
   expect(buildSystemPrompt(visibleManifests)).not.toMatch(/Gerätestatus|Device status|"device"/);
 });
+
+it('mail search (round „Mail finden“): the index on this device and its hits never reach a provider or the palette search', async () => {
+  const { searchLocal } = await import('@/modules/mail/searchIndex');
+  const { searchEntries } = await import('./search/fulltext');
+  const MAIL = ['Zebrastreifen-Verein', 'Kündigung Fitnessstudio Gepard', 'Mietvertrag_Zebra.pdf'];
+  await db.table('mail_thread').put({
+    id: 'demo|pz1',
+    createdAt: 1,
+    updatedAt: 1,
+    deviceId: 'test',
+    deletedAt: null,
+    _f: {},
+    accountKey: 'demo',
+    threadId: 'pz1',
+    sortKey: 1,
+    unread: true,
+    inbox: true,
+    demo: {
+      from: { name: MAIL[0], email: 'verein@example.org' },
+      subject: MAIL[1],
+      snippet: 'Vorschau',
+      messageCount: 1,
+      hasAttachment: true,
+      labelIds: ['INBOX'],
+    },
+  });
+  await db.table('mail_body').put({
+    id: 'demo|pz1-m1',
+    createdAt: 1,
+    updatedAt: 1,
+    deviceId: 'test',
+    deletedAt: null,
+    _f: {},
+    accountKey: 'demo',
+    messageId: 'pz1-m1',
+    threadId: 'pz1',
+    sortKey: 1,
+    demo: {
+      from: { email: 'verein@example.org' },
+      to: [],
+      subject: MAIL[1],
+      date: 1,
+      attachments: [MAIL[2]],
+    },
+  });
+  const ollama = CASES.find((c) => c.preset === 'ollama')!;
+  const { sent, fetchFn } = recording(ollama.answer);
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = fetchFn;
+  try {
+    // The search on this device finds the mail – without a single request.
+    const local = await searchLocal('demo', 'Zebra');
+    expect(local.hits.map((h) => h.thread.id)).toEqual(['pz1']);
+    expect(sent).toHaveLength(0);
+    // The app-wide search (palette, assistant context) knows nothing of mail.
+    const { manifests, known } = ctxFor();
+    expect(await searchEntries('Zebra', { manifests, database: db }, 5, false)).toEqual([]);
+    // A question to a model right after carries no word of the mail or its index.
+    const e: ProviderEntry = { ...entryFromPreset('ollama'), keySet: true };
+    const provider = createRouter({ members: [{ entry: e, provider: createProviderFor(e, '') }] });
+    await ask(QUESTION, { manifests, known, today: TODAY, provider, database: db });
+    expect(sent).toHaveLength(1);
+    for (const word of [...MAIL, 'Zebra', 'Gepard'])
+      expect(sent[0]!.body, word).not.toContain(word);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});

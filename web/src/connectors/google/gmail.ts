@@ -198,7 +198,11 @@ function summarize(raw: unknown, snippetFallback = ''): MailThreadSummary {
     date: Number(last.internalDate) || 0,
     unread: labelIds.includes('UNREAD'),
     labelIds,
-    hasAttachment: false,
+    // The metadata format carries no parts, but the message type: `multipart/mixed` is how a mail with files is built
+    // (an image inside the text is `multipart/related`), so the row can show and filter it without the full message.
+    hasAttachment: messages.some(
+      (m) => str(obj(m.payload).mimeType).toLowerCase() === 'multipart/mixed',
+    ),
     ...(str(last.id) ? { lastMessageId: str(last.id) } : {}),
     // Only the newest message's labels: „last message is mine“ (`SENT`) must not come from an older reply.
     lastLabelIds,

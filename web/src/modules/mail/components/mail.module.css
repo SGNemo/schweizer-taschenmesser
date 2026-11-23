@@ -428,3 +428,25 @@
   align-items: center;
   cursor: pointer;
 }
+
+/* A search hit inside a row: a soft background and weight, the text itself stays (colour never alone). */
+.hit {
+  border-radius: 0.15em;
+  background: var(--accent-soft);
+  color: inherit;
+  font-weight: var(--weight-semibold);
+}
+/* Where a hit was found when it is not in the row's own lines (an attachment name, a piece of the text). */
+.hitLine {
+  margin: 0;
+  padding: 0 var(--space-3) var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+.sectionNote {
+  margin: 0;
+  padding: var(--space-2) 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}

@@ -54,7 +54,13 @@ export function suggestionsFor(
 /* ------------------------------ filter chips (Gmail operators) ------------------------------ */
 
 /** The quick filters under the search: each one is a Gmail operator written into the search text. */
-export const FILTERS = ['is:unread', 'has:attachment', 'is:starred', 'older_than:1y'] as const;
+export const FILTERS = [
+  'is:unread',
+  'has:attachment',
+  'newer_than:7d',
+  'is:starred',
+  'older_than:1y',
+] as const;
 export type Filter = (typeof FILTERS)[number];
 
 const tokens = (query: string): string[] => query.trim().split(/\s+/).filter(Boolean);
