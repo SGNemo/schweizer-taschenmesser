@@ -38,7 +38,9 @@ const IST: Record<string, Figures> = {
     perThing: 0,
     visibleToday: 4,
     startPoint: 'ja',
-    smallerInOneMove: 'nein',
+    // P1 „Kleiner machen …“ (feat/kleiner-machen): ⋯ · the entry · the step's title · „Kleiner machen“.
+    smallerInOneMove: 'ja',
+    smallerTaps: 4,
     lost: 0,
     unasked: 0,
   },
@@ -80,6 +82,7 @@ const TARGET: Record<string, Figures> = {
     visibleToday: 4,
     startPoint: 'ja',
     smallerInOneMove: 'ja',
+    smallerTaps: 4,
     lost: 0,
     unasked: 0,
   },
@@ -510,14 +513,27 @@ test('T1 Samstag 16:00 – ab jetzt neu', async ({ page }, info) => {
   const hand = new Hand(page);
   const keep = ['Pfand wegbringen', 'Wäsche waschen', 'Küche aufräumen', 'Flur saugen'];
   const rest = SATURDAY.filter((x) => !keep.includes(x));
-  // „Pfand wegbringen“ only in part today: is there a step that makes one thing smaller in one move?
-  const smaller = await page
-    .getByRole('button', { name: 'Aktionen für Pfand wegbringen', exact: true })
-    .first()
-    .click()
-    .then(() => page.getByRole('menuitem', { name: 'Kleiner machen …' }).count());
-  await page.keyboard.press('Escape');
   if (!(await keepOnly(hand, page, keep, 'next', SA))) await moveRestOld(hand, page, keep, SA, SO);
+  // „Pfand wegbringen“ only in part today: one move makes it „Pfand sammeln“ (today, same row), the rest a thing of its
+  // own (P1 „Kleiner machen …“: ⋯ · the entry · the step's title · „Kleiner machen“). Counted on its own.
+  const small = new Hand(page);
+  await small.tap(
+    page.getByRole('button', { name: 'Aktionen für Pfand wegbringen', exact: true }).first(),
+  );
+  const entry = page.getByRole('menuitem', { name: 'Kleiner machen …' });
+  let smaller = 'nein';
+  if (await entry.count()) {
+    await small.tap(entry);
+    const dialog = page.getByRole('dialog', { name: 'Kleiner machen: Pfand wegbringen' });
+    await small.fill(dialog.getByRole('textbox', { name: 'Heute nur' }), 'Pfand sammeln');
+    await small.tap(dialog.getByRole('button', { name: 'Kleiner machen', exact: true }));
+    await expect(dialog).toHaveCount(0);
+    await expect.poll(async () => (await where(page))['Pfand sammeln']).toBe(SA);
+    smaller = (await where(page))['Pfand wegbringen'] === 'ohne Tag' ? 'ja' : 'nein';
+  } else {
+    small.taps -= 1;
+    await page.keyboard.press('Escape');
+  }
   const after = await settled(page);
   const visibleToday = await visibleOn(page, SA);
   record(
@@ -528,9 +544,11 @@ test('T1 Samstag 16:00 – ab jetzt neu', async ({ page }, info) => {
       perThing: hand.perThing,
       visibleToday,
       startPoint: await startPoint(page),
-      smallerInOneMove: smaller > 0 ? 'ja' : 'nein',
+      smallerInOneMove: smaller,
+      ...(smaller === 'ja' ? { smallerTaps: small.taps } : {}),
       lost: await lost(page),
-      unasked: unasked(before, after, rest),
+      // „Kleiner machen …“ named „Pfand wegbringen“ (its rest has no day now).
+      unasked: unasked(before, after, [...rest, 'Pfand wegbringen']),
     },
     { before, after },
   );

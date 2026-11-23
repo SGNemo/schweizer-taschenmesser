@@ -35,6 +35,7 @@ export function useAbilities() {
     // Shown only once the source is known to take them (a missing ability hides, never offers in vain).
     canRemove: (moduleId: string) => abilities?.[moduleId]?.remove === true,
     canEstimate: (moduleId: string) => abilities?.[moduleId]?.estimate === true,
+    canSplit: (moduleId: string) => abilities?.[moduleId]?.split === true,
     canLater: (moduleId: string) => abilities?.[moduleId]?.later === true,
   };
 }
@@ -148,6 +149,16 @@ export function useRowMenu(ctx: {
                   entry: e,
                   ...(e.durationMin !== undefined ? { current: e.durationMin } : {}),
                 }),
+            },
+          ]
+        : []),
+      // „Kleiner machen …“ (use case „Tag kippt“, P1): the first step today, the rest its own thing.
+      ...(abilities.canSplit(e.moduleId)
+        ? [
+            {
+              id: 'smaller',
+              label: t.planner.smaller.menu,
+              onSelect: () => setChoice({ kind: 'smaller', entry: e }),
             },
           ]
         : []),
