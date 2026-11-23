@@ -32,21 +32,22 @@ type Figures = Record<string, number | string>;
  * T4 by the ToDos' JSON import plus „Hierher legen“ – a moved or postponed thing comes back as a second ToDo.
  */
 const IST: Record<string, Figures> = {
+  // „Nur das hier …“ (feat/nur-das-hier): tick what stays, the rest in one move; the start line on top.
   'T1 Samstag 16:00 – ab jetzt neu': {
-    taps: 9,
-    perThing: 4,
+    taps: 8,
+    perThing: 0,
     visibleToday: 4,
-    startPoint: 'nein',
+    startPoint: 'ja',
     smallerInOneMove: 'nein',
     lost: 0,
     unasked: 0,
   },
   'T2 Samstagabend – 5 / 6 / 9': {
-    taps: 31,
-    perThing: 23,
-    laterInPlanner: 'nein',
+    taps: 21,
+    perThing: 0,
+    laterInPlanner: 'ja',
     visibleToday: 5,
-    startPoint: 'nein',
+    startPoint: 'ja',
     lost: 0,
     unasked: 0,
   },

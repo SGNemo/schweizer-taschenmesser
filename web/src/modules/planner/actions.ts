@@ -4,7 +4,7 @@
  * reached only through the contract (`plannableSource`), never by import.
  */
 import { recordWrite } from '@/core/db/recorder';
-import { setMeta } from '@/core/db/metaKv';
+import { getMeta, setMeta } from '@/core/db/metaKv';
 import { randomId } from '@/core/db/util';
 import { formatMinutes } from '@/core/i18n/format';
 import { getLang } from '@/core/i18n/lang';
@@ -862,11 +862,17 @@ export function applyPaste(
 /** Where „Nur das hier …“ sends the rest: the next day, „Noch ohne Tag“ or „Nächste Wochen“. */
 export type RestTarget = 'next' | 'week' | 'later';
 
-/** The thing „Nur das hier“ named as the day's starting point (device-local, one at a time). */
+/** The things „Nur das hier“ named as starting points: date → item key (device-local; passed days are dropped). */
 export const START_KEY = 'planner.start';
-export interface StartPoint {
-  date: string;
-  itemKey: string;
+export type StartPoints = Record<string, string>;
+
+/** Sets or clears (`itemKey` undefined) the starting point of a day. */
+export async function setStartPoint(date: string, itemKey: string | undefined): Promise<void> {
+  const day = today();
+  const now = (await getMeta<StartPoints>(START_KEY)) ?? {};
+  const next = Object.fromEntries(Object.entries(now).filter(([d]) => d >= day && d !== date));
+  if (itemKey) next[date] = itemKey;
+  await setMeta(START_KEY, next);
 }
 
 /**
@@ -915,7 +921,7 @@ export async function keepOnly(
       leadAfter: async () => (fixed > 0 ? `${lead}\n${t.planner.spread.fixed(fixed)}` : undefined),
     },
   );
-  if (ok && keep[0]) await setMeta(START_KEY, { date, itemKey: keep[0] } satisfies StartPoint);
+  if (ok && keep[0]) await setStartPoint(date, keep[0]);
   return ok;
 }
 

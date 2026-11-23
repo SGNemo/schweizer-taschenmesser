@@ -93,6 +93,7 @@ export function DayPage({
   renderRow,
   onEditDay,
   thenOpen,
+  choosing = false,
   onThenToggle,
   empty,
   onRest,
@@ -111,6 +112,8 @@ export function DayPage({
   renderRow: (row: BoardRow, next: boolean) => ReactNode;
   onEditDay: () => void;
   thenOpen: boolean;
+  /** A selection is open („Auswählen“, „Nur das hier …“): every row of the day is in reach, nothing folded. */
+  choosing?: boolean;
   onThenToggle: (open: boolean) => void;
   /** What the sheet says while the day holds nothing (an empty state or one calm line). */
   empty: ReactNode;
@@ -155,7 +158,7 @@ export function DayPage({
   );
   const first = things.slice(0, FIRST_ROWS);
   const then = things.slice(FIRST_ROWS);
-  const folded = !all && then.length - THEN_ROWS >= MIN_HIDDEN;
+  const folded = !all && !choosing && then.length - THEN_ROWS >= MIN_HIDDEN;
   const shown = folded ? then.slice(0, THEN_ROWS) : then;
   const state = capacityState(day);
   const hasRows = things.length > 0;

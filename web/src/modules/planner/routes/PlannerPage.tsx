@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router';
 import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
-import { deleteMeta, getMeta, setMeta } from '@/core/db/metaKv';
+import { getMeta, setMeta } from '@/core/db/metaKv';
 import { getLang } from '@/core/i18n/lang';
 import { dayName, explainAssignment, explainWait } from '@/core/plan/explain';
 import {
@@ -53,8 +53,9 @@ import {
   takeOff,
   bringBack,
   laterThings,
+  setStartPoint,
   START_KEY,
-  type StartPoint,
+  type StartPoints,
 } from '../actions';
 import { beginPlanFocus, planFocusPath } from '../focus';
 import type { PlannableEntry } from '@/core/modules/contributions';
@@ -193,7 +194,7 @@ export default function PlannerPage() {
     [],
   );
   // „Nur das hier“ (use case „Tag kippt“): the day's starting point, and the things kept for „Nächste Wochen“.
-  const startPoint = useLiveQuery(async () => (await getMeta<StartPoint>(START_KEY)) ?? null, []);
+  const startPoints = useLiveQuery(async () => (await getMeta<StartPoints>(START_KEY)) ?? null, []);
   const laterList = useLiveQuery(() => laterThings(), []);
   const thenStored = useLiveQuery(
     async () => (await getMeta<boolean>(phone ? THEN_NARROW_KEY : THEN_WIDE_KEY)) ?? null,
@@ -1090,8 +1091,9 @@ export default function PlannerPage() {
    * that thing is still open on that day; one ✕ hides it. Nothing else on the sheet changes.
    */
   const startLine = (day: BoardDay) => {
-    if (!startPoint || startPoint.date !== day.date) return null;
-    const row = day.rows.find((r) => r.itemKey === startPoint.itemKey);
+    const key = startPoints?.[day.date];
+    if (!key) return null;
+    const row = day.rows.find((r) => r.itemKey === key);
     if (!row) return null;
     return (
       <p className={styles.startPoint} data-testid="start-point">
@@ -1110,7 +1112,10 @@ export default function PlannerPage() {
         >
           {t.planner.keep.startFocus}
         </Button>
-        <IconButton label={t.planner.keep.startHide} onClick={() => void deleteMeta(START_KEY)}>
+        <IconButton
+          label={t.planner.keep.startHide}
+          onClick={() => void setStartPoint(day.date, undefined)}
+        >
           <Icon name="close" size={16} />
         </IconButton>
       </p>
@@ -1756,7 +1761,9 @@ export default function PlannerPage() {
                     tomorrow={days[1]?.date === shownDay.date}
                     renderRow={(row, next) => renderRow(row, shownDay, next)}
                     onEditDay={() => setSheetDate(shownDay.date)}
-                    thenOpen={thenOpen}
+                    // While choosing („Auswählen“, „Nur das hier …“) every row of the day is in reach.
+                    thenOpen={thenOpen || dayPicking === shownDay.date}
+                    choosing={dayPicking === shownDay.date}
                     onThenToggle={(open) =>
                       void setMeta(phone ? THEN_NARROW_KEY : THEN_WIDE_KEY, open)
                     }
