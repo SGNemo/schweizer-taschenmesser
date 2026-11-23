@@ -344,8 +344,13 @@
       },
       "offerPersonal": {
         "type": "boolean",
-        "label": "Filter „Persönlich“ anbieten",
+        "label": "Filter „Persönlich“, „Rechnungen“, „Newsletter“ anbieten",
         "default": true
+      },
+      "waitingRule": {
+        "type": "select",
+        "label": "Was in „Wartet auf mich“ steht",
+        "default": "reply"
       },
       "offerPlanAll": {
         "type": "boolean",
