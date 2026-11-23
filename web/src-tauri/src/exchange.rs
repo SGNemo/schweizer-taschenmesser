@@ -189,6 +189,12 @@ pub fn attach(
     remote: Arc<Remote>,
 ) {
     if let Ok(mut slot) = app.state::<ExchangeHost>().slot.lock() {
+        // E3: an off written to the file while the hub was being built (no parts yet) holds here
+        if let Some(dir) = exchange_dir(app) {
+            if !switch_at(&dir).enabled() {
+                let _ = exchange.set_enabled(false);
+            }
+        }
         *slot = Some(Parts {
             exchange,
             trust,
@@ -411,9 +417,13 @@ pub fn exchange_set_enabled(
 ) -> Result<(), String> {
     // E3: off is a narrowing and needs no hub – at app start the hub comes up only with the first
     // sync round, after the module services. The switch file is written now; the hub reads it.
-    if !enabled && state.parts().is_err() {
-        let dir = exchange_dir(&app).ok_or("no-data-dir")?;
-        return switch_at(&dir).set(false).map_err(|_| "storage".to_owned());
+    if !enabled {
+        // under the slot lock, so `attach` sees this write or the parts see the call
+        let slot = state.slot.lock().map_err(|_| "internal")?;
+        if slot.is_none() {
+            let dir = exchange_dir(&app).ok_or("no-data-dir")?;
+            return switch_at(&dir).set(false).map_err(|_| "storage".to_owned());
+        }
     }
     let parts = state.parts()?;
     if !enabled || parts.exchange.enabled() {

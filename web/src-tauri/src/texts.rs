@@ -217,6 +217,15 @@ pub fn pair_dialog(lang: Lang) -> (&'static str, &'static str, &'static str) {
     }
 }
 
+/// A device that sent no name, in the middle of the pairing question.
+pub fn pair_unnamed(lang: Lang) -> &'static str {
+    if german(lang) {
+        "Das Gerät"
+    } else {
+        "The device"
+    }
+}
+
 /// The question: the device's name and the code to compare with the phone (groups of three).
 pub fn pair_question(lang: Lang, name: &str, code: &str) -> String {
     let grouped: String = code
@@ -225,9 +234,9 @@ pub fn pair_question(lang: Lang, name: &str, code: &str) -> String {
         .flat_map(|(i, c)| (i > 0 && i % 3 == 0).then_some(' ').into_iter().chain([c]))
         .collect();
     if german(lang) {
-        format!("{name} möchte mit diesem PC abgleichen.\n\nCode: {grouped}\n\nKoppeln nur, wenn {name} genau diesen Code zeigt.")
+        format!("{name} möchte mit diesem PC abgleichen.\n\nCode: {grouped}\n\nKoppeln nur, wenn das Gerät genau diesen Code zeigt.")
     } else {
-        format!("{name} wants to sync with this PC.\n\nCode: {grouped}\n\nPair only if {name} shows exactly this code.")
+        format!("{name} wants to sync with this PC.\n\nCode: {grouped}\n\nPair only if the device shows exactly this code.")
     }
 }
 

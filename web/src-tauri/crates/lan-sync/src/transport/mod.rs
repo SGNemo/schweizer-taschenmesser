@@ -305,11 +305,8 @@ fn accept_loop(listener: TcpListener, shared: Arc<Shared>) {
         match listener.accept() {
             Ok((stream, peer)) => {
                 let ip = peer.ip();
-                // not a private peer inside a bound subnet: closed before it costs a slot or a thread
-                if !shared.router.peer_allowed(ip) {
-                    continue;
-                }
-                // every accept counts (H1), not only complete first messages
+                // not a private peer inside a bound subnet, or over its accept limit (H1): closed
+                // before it costs a slot or a thread (only allowed peers are counted)
                 if !shared.router.admit_connection(ip, shared.started.elapsed()) {
                     continue;
                 }
@@ -466,6 +463,7 @@ fn serve(mut stream: TcpStream, ip: IpAddr, sh: &Arc<Shared>) {
         &mut conn,
         &rx,
         attempt.is_some(),
+        began,
         sh,
     );
     if let Some(a) = attempt {
@@ -481,6 +479,7 @@ fn drive(
     conn: &mut Connection,
     rx: &Receiver<Delivery>,
     pairing: bool,
+    accepted: Instant,
     sh: &Arc<Shared>,
 ) {
     let cfg = sh.cfg;
@@ -513,7 +512,8 @@ fn drive(
         } else if last.elapsed() > cfg.idle_timeout {
             return;
         }
-        if !heard && born.elapsed() > cfg.handshake_timeout {
+        // one deadline from the accept until the first frame, not a second one after message 2
+        if !heard && accepted.elapsed() > cfg.handshake_timeout {
             return;
         }
         if busy != short_reads {

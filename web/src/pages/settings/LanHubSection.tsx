@@ -261,7 +261,7 @@ export function LanHubSection({ tinted = true }: { tinted?: boolean }) {
         </p>
       ) : null}
       {note ? (
-        <p role="status" className={styles.muted} data-testid="lan-note">
+        <p role="status" className={unpairAgain ? undefined : styles.muted} data-testid="lan-note">
           {note}
         </p>
       ) : null}
@@ -459,8 +459,8 @@ function PairDialog({
       void syncNow();
     } catch (e) {
       const code = e instanceof Error ? e.message : '';
-      // "Abbrechen" in the native question: the request stays, nothing to say
-      if (code === 'cancelled') return;
+      // "Abbrechen" in the native question, or it is still on screen: nothing to say
+      if (code === 'cancelled' || code === 'busy') return;
       setError(
         code === 'busy-controlled'
           ? l.pairControlled
@@ -545,11 +545,14 @@ function PairDialog({
               <Button
                 variant="primary"
                 onClick={() => void confirm()}
+                disabled={stepping}
                 data-testid="lan-pair-confirm"
               >
                 {l.pairConfirm}
               </Button>
-              <Button onClick={() => void reject()}>{t.actions.cancel}</Button>
+              <Button onClick={() => void reject()} disabled={stepping}>
+                {t.actions.cancel}
+              </Button>
             </Actions>
           </>
         ) : seenOpen && !stepping && status?.pairingOpen === false ? (

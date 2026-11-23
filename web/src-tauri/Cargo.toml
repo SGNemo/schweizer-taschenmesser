@@ -63,8 +63,9 @@ tauri-plugin-autostart = "2"
 tauri-plugin-single-instance = "2"
 # Native questions that give a device more (src/native_ask.rs): on Windows straight through rfd, so
 # "cancel" can be the default button and Escape stays a no (the plugin maps Cancel to a label).
-# Same version and features as tauri-plugin-dialog's (already in the tree).
-rfd = { version = "0.16", default-features = false }
+# Same version as tauri-plugin-dialog's. `common-controls-v6` is required: without it rfd uses
+# MessageBoxW, which knows no custom buttons, and every widening on Windows would be refused.
+rfd = { version = "0.16", default-features = false, features = ["common-controls-v6"] }
 # Local AI import API (loopback only, off by default; src/local_api.rs).
 taschenmesser-local-api = { path = "crates/local-api" }
 # Home-network sync hub (desktop only; package 1 = the field store, see docs/design/sync-lan).

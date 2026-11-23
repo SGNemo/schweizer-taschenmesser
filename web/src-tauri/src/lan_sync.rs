@@ -700,23 +700,27 @@ pub fn lan_pair_confirm(
     let pending = waiting(&state)?.ok_or("not-awaiting")?;
     // Like every widening question: never while a phone controls mouse and keyboard (it could
     // click the answer), checked again after it; one question at a time.
-    let remote = with_core(&state, |core, _| Ok(core.remote.clone()))?;
-    let ticket = remote.ticket();
-    if remote.full_session_open() {
+    // the hub that was asked about: a hub restarted meanwhile has its own attempts and controls
+    let asked = with_core(&state, |core, _| Ok(core.clone()))?;
+    let ticket = asked.remote.ticket();
+    if asked.remote.full_session_open() {
         return Err("busy-controlled".to_owned());
     }
-    if PAIR_ASKING.swap(true, std::sync::atomic::Ordering::SeqCst) {
-        return Err("busy".to_owned());
-    }
-    let allowed = asked_to_pair(&app, &pending);
-    PAIR_ASKING.store(false, std::sync::atomic::Ordering::SeqCst);
+    let allowed = {
+        let _asking = PairAsking::take()?;
+        asked_to_pair(&app, &pending)
+    };
     if !allowed {
         return Err("cancelled".to_owned());
     }
-    remote
+    if !with_core(&state, |core, _| Ok(Arc::ptr_eq(core, &asked)))? {
+        return Err("changed".to_owned());
+    }
+    asked
+        .remote
         .confirm(ticket)
         .map_err(|_| "busy-controlled".to_owned())?;
-    // the attempt may have ended while the question was on screen (the attempt id is unique)
+    // the attempt may have ended while the question was on screen
     waiting(&state)?.ok_or("not-awaiting")?;
     let code = pending.code;
     with_core(&state, |core, wake| {
@@ -750,15 +754,32 @@ pub fn lan_pair_confirm(
     })
 }
 
-/// A pairing question is on screen (one at a time).
+/// A pairing question is on screen (one at a time); released on drop, also on a panic.
 static PAIR_ASKING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+struct PairAsking;
+
+impl PairAsking {
+    fn take() -> Result<Self, String> {
+        if PAIR_ASKING.swap(true, std::sync::atomic::Ordering::SeqCst) {
+            return Err("busy".to_owned());
+        }
+        Ok(PairAsking)
+    }
+}
+
+impl Drop for PairAsking {
+    fn drop(&mut self) {
+        PAIR_ASKING.store(false, std::sync::atomic::Ordering::SeqCst);
+    }
+}
 
 /// The native pairing question; true only for the exact "pair" button.
 fn asked_to_pair(app: &AppHandle, pending: &Pending) -> bool {
     let lang = crate::capture::native_lang(app);
     let (title, allow, cancel) = crate::texts::pair_dialog(lang);
     let name = match crate::remote::plain(&pending.name) {
-        n if n.is_empty() => crate::texts::exchange_unnamed(lang).to_owned(),
+        n if n.is_empty() => crate::texts::pair_unnamed(lang).to_owned(),
         n => n,
     };
     let text = crate::texts::pair_question(lang, &name, &pending.code);

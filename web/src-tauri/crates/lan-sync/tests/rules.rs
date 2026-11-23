@@ -727,7 +727,7 @@ fn every_accept_counts_and_a_silent_peer_ends_at_the_handshake_deadline() {
     assert!(counted < slot, "counted before the slot");
     let drive = &t[t.find("fn drive(").unwrap()..];
     let drive = &drive[..drive.find("\n}\n").unwrap()];
-    assert!(drive.contains("if !heard && born.elapsed() > cfg.handshake_timeout {"));
+    assert!(drive.contains("if !heard && accepted.elapsed() > cfg.handshake_timeout {"));
 }
 
 /// H4 (launch review 2026-11): an open pairing window has a total lifetime that renewals do not

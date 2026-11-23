@@ -242,6 +242,7 @@ impl Inbox {
         if last_hour >= PER_DEVICE_HOUR || used >= PER_DEVICE_DAY {
             return Err(InboxError::Full);
         }
+        file.today.retain(|_, (d, _)| *d == day);
         file.today.insert(peer.to_owned(), (day, used + 1));
         file.items.push(Entry::of(peer, item, now_ms));
         file.seen
