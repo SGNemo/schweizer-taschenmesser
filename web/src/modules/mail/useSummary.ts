@@ -34,16 +34,34 @@ export interface MailSummary {
   recent: CachedThreadView[];
 }
 
+/** The head and the widget read the newest 200 cached headers (the cache keeps more for the search). */
+const SUMMARY_LIMIT = 200;
+
 /** Live data for the inbox widget and the head: reads the local cache only (plus a throttled inbox refresh). */
 export function useMailSummary(): MailSummary | undefined {
   useEffect(() => {
     void refresh();
   }, []);
   return useLiveQuery(async () => {
-    const keys = new Set((await threadRepo.active().toArray()).map((r) => r.accountKey));
+    // The account keys from the index; a key whose rows are all deleted (tombstones) does not count.
+    const indexed = (await threadRepo.table.orderBy('accountKey').uniqueKeys()).map(String);
+    const live = await Promise.all(
+      indexed.map(async (k) =>
+        (await threadRepo.table
+          .where('accountKey')
+          .equals(k)
+          .filter((r) => r.deletedAt === null)
+          .count()) > 0
+          ? k
+          : undefined,
+      ),
+    );
+    const keys = new Set(live.filter((k): k is string => k !== undefined));
     const real = [...keys].filter((k) => k !== DEMO_ACCOUNT);
     const accounts = real.length > 0 ? real : keys.has(DEMO_ACCOUNT) ? [DEMO_ACCOUNT] : [];
-    const all = (await Promise.all(accounts.map((a) => loadThreads(a)))).flat();
+    const all = (
+      await Promise.all(accounts.map((a) => loadThreads(a, { limit: SUMMARY_LIMIT })))
+    ).flat();
     const inbox = all.filter((t) => t.labelIds.includes('INBOX'));
     const unread = inbox.filter((t) => t.unread);
     const top = [...unread].sort(

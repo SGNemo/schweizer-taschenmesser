@@ -57,6 +57,8 @@ export const bodySchema = z.object({
       date: z.number(),
       text: z.string().optional(),
       html: z.string().optional(),
+      /** Attachment names of an invented mail (the search on this device finds them). */
+      attachments: z.array(z.string()).optional(),
     })
     .optional(),
 });

@@ -137,14 +137,14 @@ describe('mail cache', () => {
     expect(await loadThreads('google')).toEqual([]);
   });
 
-  it('keeps the newest 200 headers and 60 bodies per limit', async () => {
+  it('keeps the newest 1 000 headers and 60 bodies per limit', async () => {
     await saveThreads(
       'google',
-      Array.from({ length: 205 }, (_, i) => thread(`t${i}`, i + 1)),
+      Array.from({ length: 1005 }, (_, i) => thread(`t${i}`, i + 1)),
     );
     const kept = await loadThreads('google');
-    expect(kept).toHaveLength(200);
-    expect(kept[0]!.id).toBe('t204');
+    expect(kept).toHaveLength(1000);
+    expect(kept[0]!.id).toBe('t1004');
     expect(kept.at(-1)!.id).toBe('t5');
     for (let i = 0; i < 62; i++) await saveBody('google', { ...message, id: `m${i}` });
     expect((await bodyRepo.active().toArray()).length).toBe(60);

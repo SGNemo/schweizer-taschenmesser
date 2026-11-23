@@ -26,7 +26,7 @@ const source: NotificationSource = async (range) => {
     const state = await loadNotifyState(account.key);
     const batches = state.batches.filter((b) => b.at > range.from && b.at <= range.to);
     if (batches.length === 0) continue;
-    const cached = await loadThreads(account.key);
+    const cached = await loadThreads(account.key, { limit: 200 });
     const unread = new Set(cached.filter((c) => c.unread).map((c) => c.id));
     const names = prefs.notifyNames
       ? new Map(cached.map((c) => [c.id, personName(c.from)]))

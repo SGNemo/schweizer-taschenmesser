@@ -384,7 +384,7 @@ export const de = {
       modules: ['Bibliothek', 'Modul aktivieren', 'Importieren'],
       tools: ['Werkzeugleiste', 'Reihenfolge'],
       persona: ['Persona', 'Wegwerf-Mail', 'Fake-Daten', 'Anmeldung', 'Testdaten'],
-      notifications: ['Push', 'Erlaubnis', 'Erinnerung'],
+      notifications: ['Push', 'Erlaubnis', 'Erinnerung', 'Sperrbildschirm'],
       'browser-extension': ['Brave', 'Chrome', 'Autofill'],
       sync: ['Server', 'Token', 'Geräte', 'Ende-zu-Ende', 'Passwortsatz', 'Passphrase'],
       backup: ['Export', 'Import', 'Sicherung', 'Wiederherstellen', 'Automatisch'],
@@ -2833,6 +2833,11 @@ export const de = {
       'Auf Android plant die App Erinnerungen beim System ein, damit sie auch bei geschlossener App kommen. Das klappt, wenn Nemo Benachrichtigungen und „Wecker & Erinnerungen“ darf und der Akku nicht eingeschränkt ist (Einstellungen → Apps → Nemo).',
     introDesktop:
       'Erinnerungen erscheinen als Benachrichtigung, solange Nemo läuft, auch im Hintergrund oder im Infobereich. Ist die App beendet, kommen sie nicht; was in der Zwischenzeit fällig wurde, siehst du beim nächsten Start in der Glocke.',
+    lockScreen: 'Inhalt auf dem Sperrbildschirm zeigen',
+    channelHidden: 'Benachrichtigungen (Sperrbildschirm verborgen)',
+    channelQuietHidden: 'Ruhe (Sperrbildschirm verborgen)',
+    lockScreenHint:
+      'Aus (ab Android 8): Auf dem gesperrten Handy erscheinen Nemo-Benachrichtigungen nicht – sie klingen trotzdem (außer bei „Ruhe“ und im Spielmodus) und stehen nach dem Entsperren in der Benachrichtigungsleiste. An: Android zeigt sie so, wie du es für den Sperrbildschirm eingestellt hast. Gilt nur für dieses Gerät.',
     enable: 'Benachrichtigungen aktivieren',
     granted: 'Aktiviert',
     denied: 'Blockiert – bitte in den Browser-Einstellungen für diese Seite erlauben.',
@@ -8320,9 +8325,8 @@ export const de = {
       loading: 'Mails werden geladen …',
       more: 'Mehr laden',
       searchLabel: 'Suchen',
-      searchPlaceholder: 'Suchen, z. B. from:name has:attachment',
-      searchHint:
-        'Es gilt die Gmail-Suchsyntax: from:, to:, subject:, has:attachment, newer_than:7d, label:…',
+      searchPlaceholder: 'Absender, Betreff, Text oder Anhang',
+      searchHint: 'Sucht zuerst auf diesem Gerät, dann im Postfach.',
       searchEnd: 'Suche beenden',
       account: 'Konto',
       accountN: (n: number) => `Konto ${n}`,
@@ -8576,6 +8580,7 @@ export const de = {
         'has:attachment': 'Mit Anhang',
         'is:starred': 'Mit Stern',
         'older_than:1y': 'Älter als ein Jahr',
+        'newer_than:7d': 'Letzte 7 Tage',
       } as Record<string, string>,
       save: 'Suche merken',
       forgetThis: 'Nicht mehr merken',
@@ -8584,6 +8589,25 @@ export const de = {
       savedDone: 'Suche gemerkt. Sie steht jetzt bei den Ordnern.',
       forgotten: 'Suche nicht mehr gemerkt.',
       forget: (q: string) => `Gemerkte Suche „${q}“ entfernen`,
+      onDevice: 'Auf diesem Gerät',
+      onDeviceDetail: (n: number) =>
+        n === 1
+          ? '1 gespeicherte Mail durchsucht'
+          : `${formatNumber(n)} gespeicherte Mails durchsucht`,
+      onDeviceSearching: 'Wird durchsucht …',
+      onDeviceMore: (n: number) => `${formatNumber(n)} weitere zeigen`,
+      onDeviceNone: 'Auf diesem Gerät liegt nichts dazu.',
+      onDeviceNoneDemo: 'Nichts dazu gefunden. Probier ein anderes Wort oder einen Teil davon.',
+      onDeviceOnly: (part: string) => `„${part}“ kann nur das Postfach beantworten.`,
+      onDeviceOnlyDemo: (part: string) => `„${part}“ geht erst mit verbundenem Gmail.`,
+      inMailbox: 'Im Postfach',
+      inMailboxLoading: 'Im Postfach wird gesucht …',
+      inMailboxNone: 'Im Postfach ist nichts Weiteres dazu.',
+      inMailboxError: 'Im Postfach konnte gerade nicht gesucht werden – mehr dazu oben.',
+      inMailboxOffline:
+        'Das Postfach ist gerade nicht erreichbar. Oben steht, was auf diesem Gerät liegt.',
+      inFile: 'Anhang',
+      inText: 'Im Text',
     },
     batch: {
       select: 'Auswählen',
