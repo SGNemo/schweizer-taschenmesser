@@ -58,6 +58,8 @@ pub fn vault_bridge_start(
             .is_ok()
     })
     .map_err(|e| match e.kind() {
+        // AddrInUse: the name is held by someone else (or served already). PermissionDenied: an
+        // existing pipe of that name refuses this process – held by someone else as well.
         std::io::ErrorKind::AddrInUse | std::io::ErrorKind::PermissionDenied => "channel-taken",
         _ => "failed",
     })?;

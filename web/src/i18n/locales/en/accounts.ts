@@ -295,13 +295,14 @@ export const accounts: Strings['accounts'] = {
     errors: {
       'register-failed': 'The app couldn’t register with the browsers.',
       'channel-taken':
-        'Another program or a second open Nemo is already using the connection. Close the second Nemo; if that does not help, restart the PC and switch the connection on again.',
+        'The connection is in use by another program or a second Nemo (e.g. the Dev Preview). Close it and switch the connection on again; if that does not help, sign out other Windows accounts or restart the PC.',
       failed: 'The connection couldn’t be started.',
     },
     startErrors: {
       'channel-taken':
-        'The connection to the browser extension is already in use by another program or a second Nemo. Close the second Nemo or restart the PC.',
-      failed: 'The connection to the browser extension couldn’t be started.',
+        'The connection to the browser extension is in use by another program or a second Nemo (e.g. the Dev Preview). Close it, then switch the connection off and on here; if that does not help, sign out other Windows accounts or restart the PC.',
+      failed:
+        'The connection to the browser extension couldn’t be started. Switch it off and on here.',
     },
   },
 };

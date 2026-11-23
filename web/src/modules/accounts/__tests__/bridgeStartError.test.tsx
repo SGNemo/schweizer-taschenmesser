@@ -14,7 +14,7 @@ import { useUiStore } from '@/stores/ui';
 import { enableBridge, resumeBridge, useBridgeStartError } from '../bridge/control';
 import { BridgeDialog } from '../components/BridgeDialog';
 
-function fakeBridge(start: VaultBridgeService['start']) {
+function fakeBridge(start: VaultBridgeService['start'], state?: VaultBridgeService['state']) {
   const reg = { browsers: [], upToDate: true, manifest: 'm.json' };
   setPlatform({
     ...createWebPlatform(),
@@ -25,6 +25,7 @@ function fakeBridge(start: VaultBridgeService['start']) {
       register: vi.fn(async () => reg),
       unregister: vi.fn(async () => undefined),
       status: vi.fn(async () => reg),
+      state,
     },
   });
 }
@@ -47,6 +48,20 @@ describe('bridge start error at app start', () => {
       await screen.findByText(t.accounts.bridge.startErrors['channel-taken'], { exact: false }),
     ).toBeTruthy();
     expect(screen.queryByText(t.accounts.bridge.statusOn, { exact: false })).toBeNull();
+  });
+
+  it('a channel taken while running shows in the open dialog', async () => {
+    fakeBridge(
+      vi.fn(async () => null),
+      vi.fn(async () => 'taken' as const),
+    );
+    await setBridgeEnabled(true);
+    await resumeBridge();
+    expect(useBridgeStartError.getState().error).toBeNull();
+    render(<BridgeDialog open onClose={() => {}} />);
+    expect(
+      await screen.findByText(t.accounts.bridge.startErrors['channel-taken'], { exact: false }),
+    ).toBeTruthy();
   });
 
   it('a successful start clears the remembered error', async () => {

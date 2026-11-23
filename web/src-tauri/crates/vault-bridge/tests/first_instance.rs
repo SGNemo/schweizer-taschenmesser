@@ -97,10 +97,18 @@ fn a_restart_with_a_browser_connection_still_open_is_not_taken() {
     let held = connect(&ep).expect("the browser host stays connected");
     std::thread::sleep(Duration::from_millis(50));
     first.stop();
-    // The app's own open connection must not look like a foreign process.
+    // The app's own open connection must not look like a foreign process …
     let mut second = Server::start(ep.clone(), |_| false).expect("restart while connected");
-    assert!(!second.taken());
+    // … and the restarted server really serves and keeps the name once the old connection ends.
     drop(held);
+    std::thread::sleep(Duration::from_millis(50));
+    drop(connect(&ep).expect("a new host reaches the restarted server"));
+    std::thread::sleep(Duration::from_millis(150));
+    assert!(
+        squat(&ep).is_none(),
+        "the name became free after the restart"
+    );
+    assert!(!second.taken());
     second.stop();
 }
 
@@ -108,7 +116,7 @@ fn a_restart_with_a_browser_connection_still_open_is_not_taken() {
 fn a_client_that_gives_up_early_does_not_free_the_name() {
     let ep = endpoint();
     let mut server = Server::start(ep.clone(), |_| false).expect("server starts");
-    let held = connect(&ep).expect("one host stays connected");
+    // No other connection holds the name: only the free instance does.
     for _ in 0..20 {
         drop(connect(&ep).expect("short client"));
     }
@@ -117,11 +125,23 @@ fn a_client_that_gives_up_early_does_not_free_the_name() {
         squat(&ep).is_none(),
         "the name became free after aborted clients"
     );
+    assert!(!server.taken());
+    server.stop();
+}
+
+#[test]
+fn aborted_clients_next_to_an_open_connection_are_not_a_foreign_process() {
+    let ep = endpoint();
+    let mut server = Server::start(ep.clone(), |_| false).expect("server starts");
+    let held = connect(&ep).expect("one host stays connected");
+    for _ in 0..20 {
+        drop(connect(&ep).expect("short client"));
+    }
+    std::thread::sleep(Duration::from_millis(150));
     assert!(
         !server.taken(),
         "the app's own connections were taken for a foreign process"
     );
-    // Still serving: another host can connect.
     drop(connect(&ep).expect("a later host connects"));
     drop(held);
     server.stop();

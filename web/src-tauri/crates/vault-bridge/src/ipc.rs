@@ -39,11 +39,21 @@ impl Endpoint {
 pub struct Stream {
     #[cfg(unix)]
     inner: std::os::unix::net::UnixStream,
+    /// On the server side the handle belongs to `own`, which closes it (see `imp::Own`).
     #[cfg(windows)]
-    inner: std::fs::File,
-    /// Server side: counts as one of this process's instances of the name until dropped.
+    inner: std::mem::ManuallyDrop<std::fs::File>,
     #[cfg(windows)]
-    _own: Option<imp::Own>,
+    own: Option<imp::Own>,
+}
+
+#[cfg(windows)]
+impl Drop for Stream {
+    fn drop(&mut self) {
+        if self.own.take().is_none() {
+            // A client stream: the file owns its handle.
+            unsafe { std::mem::ManuallyDrop::drop(&mut self.inner) };
+        }
+    }
 }
 
 impl Read for Stream {
@@ -153,72 +163,75 @@ mod imp {
     const SECURITY_SQOS_PRESENT: u32 = 0x0010_0000;
     const SECURITY_IDENTIFICATION: u32 = 0x0001_0000;
 
-    /// How many instances of each pipe name this process holds right now (free, connected or in
-    /// a stream). While it is above zero the name is the app's own, so the next instance does not
-    /// need `FILE_FLAG_FIRST_PIPE_INSTANCE` (which would fail on the app's own instances, e.g. a
-    /// browser connection still open across a bridge restart). At zero it must be a first
-    /// instance again, so a process that took the name in between is detected.
-    static OWN: Mutex<Option<HashMap<Vec<u16>, usize>>> = Mutex::new(None);
-
-    fn own_count(name: &[u16]) -> usize {
-        let map = OWN.lock().unwrap_or_else(|e| e.into_inner());
-        map.as_ref().and_then(|m| m.get(name).copied()).unwrap_or(0)
+    /// Per pipe name: how many instances this process holds right now (free, connected or in a
+    /// stream) and how many listeners serve it. While instances exist the name is the app's own,
+    /// so the next instance does not need `FILE_FLAG_FIRST_PIPE_INSTANCE` (which would fail on the
+    /// app's own instances, e.g. a browser connection still open across a bridge restart). At zero
+    /// it must be a first instance again, so a process that took the name in between is detected.
+    /// Check, create and count happen under this lock, and so do close and uncount: a count above
+    /// zero always means one of the app's handles is open.
+    #[derive(Default)]
+    struct Holding {
+        instances: usize,
+        listeners: usize,
     }
 
-    /// One counted instance of a name; the count drops with it.
-    pub struct Own(Vec<u16>);
+    static HELD: Mutex<Option<HashMap<Vec<u16>, Holding>>> = Mutex::new(None);
 
-    impl Own {
-        fn new(name: &[u16]) -> Own {
-            let mut map = OWN.lock().unwrap_or_else(|e| e.into_inner());
-            *map.get_or_insert_with(HashMap::new)
-                .entry(name.to_vec())
-                .or_insert(0) += 1;
-            Own(name.to_vec())
-        }
+    fn held() -> std::sync::MutexGuard<'static, Option<HashMap<Vec<u16>, Holding>>> {
+        HELD.lock().unwrap_or_else(|e| e.into_inner())
     }
 
-    impl Drop for Own {
-        fn drop(&mut self) {
-            let mut map = OWN.lock().unwrap_or_else(|e| e.into_inner());
-            if let Some(m) = map.as_mut() {
-                if let Some(n) = m.get_mut(&self.0) {
-                    *n = n.saturating_sub(1);
-                    if *n == 0 {
-                        m.remove(&self.0);
-                    }
-                }
+    fn holding<'a>(
+        map: &'a mut Option<HashMap<Vec<u16>, Holding>>,
+        name: &[u16],
+    ) -> &'a mut Holding {
+        map.get_or_insert_with(HashMap::new)
+            .entry(name.to_vec())
+            .or_default()
+    }
+
+    fn forget_if_empty(map: &mut Option<HashMap<Vec<u16>, Holding>>, name: &[u16]) {
+        if let Some(m) = map.as_mut() {
+            if m.get(name)
+                .is_some_and(|h| h.instances == 0 && h.listeners == 0)
+            {
+                m.remove(name);
             }
         }
     }
 
-    /// A pipe instance this process created and has not handed to a client yet. The kernel handle
-    /// is owned here and closed exactly once (on drop, or by the `File` it becomes).
-    struct Instance {
+    /// One pipe instance of this process: owns the kernel handle and closes it exactly once,
+    /// together with uncounting it.
+    pub struct Own {
+        name: Vec<u16>,
         handle: HANDLE,
-        own: Option<Own>,
     }
 
     // SAFETY: an owned kernel handle may be used and closed from any thread; it is closed once.
-    unsafe impl Send for Instance {}
+    unsafe impl Send for Own {}
 
-    impl Instance {
-        fn into_stream(mut self) -> Stream {
-            let handle = std::mem::replace(&mut self.handle, INVALID_HANDLE_VALUE);
-            let own = self.own.take();
-            Stream {
-                inner: unsafe { File::from_raw_handle(handle.0) },
-                _own: own,
+    impl Drop for Own {
+        fn drop(&mut self) {
+            let mut map = held();
+            unsafe {
+                let _ = CloseHandle(self.handle);
             }
+            let h = holding(&mut map, &self.name);
+            h.instances = h.instances.saturating_sub(1);
+            forget_if_empty(&mut map, &self.name);
         }
     }
 
-    impl Drop for Instance {
-        fn drop(&mut self) {
-            if self.handle != INVALID_HANDLE_VALUE {
-                unsafe {
-                    let _ = CloseHandle(self.handle);
-                }
+    /// A pipe instance not yet handed to a client.
+    struct Instance(Own);
+
+    impl Instance {
+        fn into_stream(self) -> Stream {
+            let file = unsafe { File::from_raw_handle(self.0.handle.0) };
+            Stream {
+                inner: std::mem::ManuallyDrop::new(file),
+                own: Some(self.0),
             }
         }
     }
@@ -285,7 +298,12 @@ mod imp {
                 .security_qos_flags(SECURITY_SQOS_PRESENT | SECURITY_IDENTIFICATION)
                 .open(&ep.0)
             {
-                Ok(inner) => return Ok(Stream { inner, _own: None }),
+                Ok(inner) => {
+                    return Ok(Stream {
+                        inner: std::mem::ManuallyDrop::new(inner),
+                        own: None,
+                    })
+                }
                 Err(e) if e.raw_os_error() == Some(PIPE_BUSY) => {
                     last = e;
                     std::thread::sleep(Duration::from_millis(50));
@@ -297,15 +315,30 @@ mod imp {
     }
 
     impl Listener {
-        /// Fails with `AddrInUse` when another process already holds the name.
+        /// Fails with `AddrInUse` when another process holds the name, or another listener of
+        /// this process serves it.
         pub fn bind(ep: &Endpoint) -> io::Result<Listener> {
             // Only this user, nobody else (the default pipe DACL would let everyone read).
             let sddl = wide(&format!("D:P(A;;GA;;;{})", current_user_sid()?));
+            let name = wide(&ep.0);
+            {
+                let mut map = held();
+                let h = holding(&mut map, &name);
+                if h.listeners > 0 {
+                    forget_if_empty(&mut map, &name);
+                    return Err(io::Error::new(
+                        io::ErrorKind::AddrInUse,
+                        "the channel is served already",
+                    ));
+                }
+                h.listeners += 1;
+            }
             let listener = Listener {
-                name: wide(&ep.0),
+                name,
                 sddl,
                 spare: Mutex::new(None),
             };
+            // On error the listener drops and uncounts itself.
             let first = listener.create_next()?;
             *listener.spare.lock().unwrap_or_else(|e| e.into_inner()) = Some(first);
             Ok(listener)
@@ -320,17 +353,21 @@ mod imp {
                     // Only after an earlier creation failed.
                     None => self.create_next()?,
                 };
-                let connected = unsafe { ConnectNamedPipe(instance.handle, None) };
-                match connected {
+                let handle = instance.0.handle;
+                match unsafe { ConnectNamedPipe(handle, None) } {
                     Ok(()) => {}
                     // A client that connected between create and connect is fine.
                     Err(e) if e.code() == ERROR_PIPE_CONNECTED.to_hresult() => {}
                     Err(e) => {
-                        // Keep the instance (and with it the name): reset it for the next client.
-                        unsafe {
-                            let _ = DisconnectNamedPipe(instance.handle);
+                        // Keep the instance (and with it the name) when it can be reset for the
+                        // next client; otherwise it is closed and the next one created.
+                        if unsafe { DisconnectNamedPipe(handle) }.is_ok() {
+                            *self.spare.lock().unwrap_or_else(|e| e.into_inner()) = Some(instance);
+                        } else {
+                            let next = self.create_next();
+                            drop(instance);
+                            *self.spare.lock().unwrap_or_else(|e| e.into_inner()) = next.ok();
                         }
-                        *self.spare.lock().unwrap_or_else(|e| e.into_inner()) = Some(instance);
                         if e.code() == ERROR_NO_DATA.to_hresult() {
                             continue; // the client gave up before the connection was complete
                         }
@@ -346,12 +383,28 @@ mod imp {
             }
         }
 
-        /// A first instance when the app holds none of the name, otherwise one more of its own.
+        /// A first instance when the app holds none of the name, otherwise one more of its own;
+        /// decided and counted under the lock, so no own handle can close in between.
         fn create_next(&self) -> io::Result<Instance> {
-            self.create(own_count(&self.name) == 0)
+            let mut map = held();
+            let first = holding(&mut map, &self.name).instances == 0;
+            let handle = self.create(first);
+            match handle {
+                Ok(handle) => {
+                    holding(&mut map, &self.name).instances += 1;
+                    Ok(Instance(Own {
+                        name: self.name.clone(),
+                        handle,
+                    }))
+                }
+                Err(e) => {
+                    forget_if_empty(&mut map, &self.name);
+                    Err(e)
+                }
+            }
         }
 
-        fn create(&self, first: bool) -> io::Result<Instance> {
+        fn create(&self, first: bool) -> io::Result<HANDLE> {
             unsafe {
                 let mut descriptor = PSECURITY_DESCRIPTOR::default();
                 ConvertStringSecurityDescriptorToSecurityDescriptorW(
@@ -391,11 +444,19 @@ mod imp {
                     }
                     return Err(e);
                 }
-                Ok(Instance {
-                    handle,
-                    own: Some(Own::new(&self.name)),
-                })
+                Ok(handle)
             }
+        }
+    }
+
+    impl Drop for Listener {
+        fn drop(&mut self) {
+            // The free instance closes first (it holds the lock briefly itself).
+            drop(self.spare.lock().unwrap_or_else(|e| e.into_inner()).take());
+            let mut map = held();
+            let h = holding(&mut map, &self.name);
+            h.listeners = h.listeners.saturating_sub(1);
+            forget_if_empty(&mut map, &self.name);
         }
     }
 }

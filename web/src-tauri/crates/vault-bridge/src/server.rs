@@ -97,7 +97,9 @@ impl Server {
         self.shared.stopped.store(true, Ordering::SeqCst);
         // Wake the blocked accept with a throw-away connection – not when the loop has ended
         // already (the name may belong to someone else then).
-        if self.thread.as_ref().is_some_and(|t| !t.is_finished()) {
+        if !self.shared.taken.load(Ordering::SeqCst)
+            && self.thread.as_ref().is_some_and(|t| !t.is_finished())
+        {
             let _ = connect(&self.endpoint);
         }
         if let Some(thread) = self.thread.take() {

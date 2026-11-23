@@ -41,7 +41,14 @@ function Body() {
 
   useEffect(() => {
     if (enabled) void bridgeRegistration().then(setRegistration); // shown only while enabled
-    if (enabled) void checkBridgeTaken();
+  }, [enabled]);
+
+  // Whether another program took the channel while it ran: checked while the dialog is open.
+  useEffect(() => {
+    if (!enabled) return;
+    void checkBridgeTaken();
+    const timer = window.setInterval(() => void checkBridgeTaken(), 5000);
+    return () => window.clearInterval(timer);
   }, [enabled]);
 
   async function toggle(on: boolean) {
