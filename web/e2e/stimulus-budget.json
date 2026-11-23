@@ -342,11 +342,11 @@
       "signatureBlocks": 0
     },
     "d1920--planner": {
-      "height": 1093,
-      "buttons": 60,
+      "height": 1080,
+      "buttons": 56,
       "links": 19,
-      "icons": 72,
-      "firstScreenActions": 73,
+      "icons": 75,
+      "firstScreenActions": 69,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
@@ -918,11 +918,11 @@
       "signatureBlocks": 0
     },
     "p412--planner": {
-      "height": 2088,
-      "buttons": 23,
+      "height": 2052,
+      "buttons": 22,
       "links": 14,
-      "icons": 33,
-      "firstScreenActions": 32,
+      "icons": 34,
+      "firstScreenActions": 33,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
