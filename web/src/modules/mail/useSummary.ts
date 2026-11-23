@@ -43,8 +43,20 @@ export function useMailSummary(): MailSummary | undefined {
     void refresh();
   }, []);
   return useLiveQuery(async () => {
-    // The account keys straight from the index (no row is read for them).
-    const keys = new Set((await threadRepo.table.orderBy('accountKey').uniqueKeys()).map(String));
+    // The account keys from the index; a key whose rows are all deleted (tombstones) does not count.
+    const indexed = (await threadRepo.table.orderBy('accountKey').uniqueKeys()).map(String);
+    const live = await Promise.all(
+      indexed.map(async (k) =>
+        (await threadRepo.table
+          .where('accountKey')
+          .equals(k)
+          .filter((r) => r.deletedAt === null)
+          .count()) > 0
+          ? k
+          : undefined,
+      ),
+    );
+    const keys = new Set(live.filter((k): k is string => k !== undefined));
     const real = [...keys].filter((k) => k !== DEMO_ACCOUNT);
     const accounts = real.length > 0 ? real : keys.has(DEMO_ACCOUNT) ? [DEMO_ACCOUNT] : [];
     const all = (
