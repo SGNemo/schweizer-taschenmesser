@@ -135,7 +135,7 @@ const SUNDAY = [
   'Geschenk bestellen',
   'Wochenplan Arbeit',
 ] as const;
-const ALL = [...SATURDAY, ...SUNDAY];
+const ALL: string[] = [...SATURDAY, ...SUNDAY];
 
 /** Step 2's split: five on Saturday, six on Sunday, nine for the next weeks (invented). */
 const KEEP_SA = [
