@@ -460,7 +460,7 @@
   gap: var(--space-2) var(--space-3);
   margin-block: var(--space-2);
 }
-/* The walk through the queue: where the person is and four verbs, above the open mail. */
+/* The walk through the queue: where the person is and its verbs, above the open mail (its plan button stays in the mail). */
 .stepBar {
   display: flex;
   flex-wrap: wrap;

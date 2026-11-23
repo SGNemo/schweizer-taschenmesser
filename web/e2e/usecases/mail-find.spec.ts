@@ -296,6 +296,8 @@ test.describe('mail search accessibility', () => {
       await openMailbox(page);
       await openQueue(page, new Meter(page));
       const first = await listedIds(page);
+      if (process.env.MAIL_FIND_SHOTS)
+        await page.screenshot({ path: `test-results/mail-find-shots/Q-list-${width}.png` });
       await page.getByTestId('mail-queue-walk').click();
       const bar = page.getByRole('group', { name: 'Durch „Wartet auf mich“ gehen' });
       await expect(bar).toContainText(`Mail 1 von ${first.length}`);
@@ -307,6 +309,8 @@ test.describe('mail search accessibility', () => {
       expect(
         results.violations.map((v) => `${v.id}: ${v.help} ${v.nodes[0]?.target.join(' ')}`),
       ).toEqual([]);
+      if (process.env.MAIL_FIND_SHOTS)
+        await page.screenshot({ path: `test-results/mail-find-shots/Q-walk-${width}.png` });
       await bar.getByRole('button', { name: 'Erledigt' }).click();
       // The done mail left the queue; the walk shows the next one as „1 von n-1“.
       await expect(bar).toContainText(`Mail 1 von ${first.length - 1}`);

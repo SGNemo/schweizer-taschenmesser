@@ -694,18 +694,6 @@ export default function MailPage() {
         >
           {t.mail.queue.later}
         </Button>
-        {canPlan && !planned.has(waiting[walkIndex]!.id) ? (
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => {
-              void planMail(account, waiting[walkIndex]!, box.reload);
-              walkOn(walkIndex, true);
-            }}
-          >
-            {planLabel}
-          </Button>
-        ) : null}
         <Button size="sm" variant="ghost" onClick={() => walkOn(walkIndex, false)}>
           {t.mail.queue.next}
         </Button>
