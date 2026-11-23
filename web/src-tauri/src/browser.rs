@@ -11,7 +11,7 @@ use std::{
     sync::Mutex,
 };
 
-use browser_filter::{classify, Blocker, Rule, Verdict};
+use browser_filter::{classify, is_app_host, Blocker, Rule, Verdict};
 use serde::{Deserialize, Serialize};
 use tauri::{
     ipc::Channel,
@@ -394,7 +394,8 @@ pub fn browser_open(
             #[cfg(windows)]
             crate::browser_win::hook(&app, &wv, tab);
             if let Some(url) = then {
-                wv.navigate(url).map_err(|e| e.to_string())?;
+                // The tab stays (empty, ready): the page can go to the address again.
+                let _ = wv.navigate(url);
             }
             if (options.zoom - 1.0).abs() > f64::EPSILON {
                 let _ = wv.set_zoom(options.zoom);
@@ -712,6 +713,12 @@ fn note_seen(seen: &mut HashSet<String>, host: &str) -> bool {
     seen.len() < MAX_SEEN_HOSTS && seen.insert(host.to_string())
 }
 
+/// Whether a page's request is stopped: the blocker's rules, and (B2) always the app's own hosts,
+/// also as a subresource or frame of a page.
+fn request_blocked(blocker: &Blocker, url: &Url, page: Option<&Url>) -> bool {
+    is_app_host(url) || blocker.blocks(url, page)
+}
+
 /// Called for every request a tab makes (Windows hook): `true` = stop it. Third-party hosts that were
 /// not stopped are reported once as `Seen`, so the page can offer "Blocken" for them.
 #[cfg_attr(not(windows), allow(dead_code))]
@@ -720,7 +727,7 @@ pub(crate) fn decide_request(app: &AppHandle, tab: u32, url: &Url) -> bool {
     let (block, new_host) = {
         let mut g = state.lock();
         let page = g.tabs.get(&tab).and_then(|t| t.page.clone());
-        let block = g.blocker.blocks(url, page.as_ref());
+        let block = request_blocked(&g.blocker, url, page.as_ref());
         let host = url.host_str().map(str::to_ascii_lowercase);
         let third = match (&host, page.as_ref().and_then(|p| p.host_str())) {
             (Some(h), Some(p)) => h != &p.to_ascii_lowercase(),
@@ -754,6 +761,22 @@ pub(crate) fn decide_request(app: &AppHandle, tab: u32, url: &Url) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_page_never_reaches_the_apps_own_hosts() {
+        let page = Url::parse("https://page.example/").unwrap();
+        let off = Blocker::new(false);
+        for u in [
+            "http://ipc.localhost/x",
+            "https://tauri.localhost/",
+            "http://ipc.localhost.",
+        ] {
+            let url = Url::parse(u).unwrap();
+            assert!(request_blocked(&off, &url, Some(&page)), "{u}");
+        }
+        let other = Url::parse("https://cdn.example/app.js").unwrap();
+        assert!(!request_blocked(&off, &other, Some(&page)));
+    }
 
     #[test]
     fn a_page_cannot_grow_the_seen_hosts_without_end() {

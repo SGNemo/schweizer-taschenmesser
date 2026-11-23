@@ -107,11 +107,19 @@ fn respond(stream: &mut TcpStream, status: &str, lang: Lang, message: &str) {
     let _ = stream.flush();
 }
 
+/// The whole request must arrive within this time (M5): a connection that trickles bytes cannot
+/// hold a reading slot for longer.
+const READ_DEADLINE: Duration = Duration::from_secs(5);
+
 fn read_request(stream: &mut TcpStream) -> String {
-    let _ = stream.set_read_timeout(Some(Duration::from_secs(5)));
+    let deadline = Instant::now() + READ_DEADLINE;
     let mut buf = [0u8; 8192];
     let mut len = 0;
     while len < buf.len() {
+        let left = deadline.saturating_duration_since(Instant::now());
+        if left.is_zero() || stream.set_read_timeout(Some(left)).is_err() {
+            break;
+        }
         match stream.read(&mut buf[len..]) {
             Ok(0) | Err(_) => break,
             Ok(n) => {

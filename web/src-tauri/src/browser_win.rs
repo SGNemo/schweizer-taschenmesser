@@ -24,6 +24,7 @@ pub fn hook(app: &AppHandle, webview: &Webview, tab: u32) {
                 .emit(tab, crate::browser::Event::Unfiltered { tab })
         }
     };
+    let failed_to_queue = failed.clone();
     let queued = webview.with_webview(move |platform| unsafe {
         let Ok(core) = platform.controller().CoreWebView2() else {
             return failed();
@@ -69,7 +70,6 @@ pub fn hook(app: &AppHandle, webview: &Webview, tab: u32) {
         }
     });
     if queued.is_err() {
-        app.state::<crate::browser::BrowserState>()
-            .emit(tab, crate::browser::Event::Unfiltered { tab });
+        failed_to_queue();
     }
 }

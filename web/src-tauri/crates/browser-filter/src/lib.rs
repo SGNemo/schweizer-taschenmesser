@@ -5,4 +5,4 @@ mod blocker;
 mod policy;
 
 pub use blocker::{Blocker, Rule, BUILTIN_DOMAINS};
-pub use policy::{classify, Verdict};
+pub use policy::{classify, is_app_host, Verdict};

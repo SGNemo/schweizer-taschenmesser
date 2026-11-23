@@ -16,12 +16,14 @@ pub enum Verdict {
 /// browser tab never loads them, whatever the scheme (B2, launch review 2026-11).
 const APP_HOSTS: [&str; 2] = ["tauri.localhost", "ipc.localhost"];
 
-fn is_app_host(url: &Url) -> bool {
+/// `true` for the app's own hosts and their subdomains (a tab never loads them, nor a page's request).
+pub fn is_app_host(url: &Url) -> bool {
     url.host_str().is_some_and(|h| {
         let h = h.trim_end_matches('.').to_ascii_lowercase();
-        APP_HOSTS
-            .iter()
-            .any(|a| h == *a || h.ends_with(&format!(".{a}")))
+        APP_HOSTS.iter().any(|a| {
+            h.strip_suffix(a)
+                .is_some_and(|r| r.is_empty() || r.ends_with('.'))
+        })
     })
 }
 
