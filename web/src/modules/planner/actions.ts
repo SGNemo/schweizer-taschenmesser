@@ -14,6 +14,7 @@ import {
   type PlannableEntry,
 } from '@/core/modules/contributions';
 import { loadModuleStates } from '@/core/modules/activation';
+import type { ModuleManifest } from '@/core/modules/types';
 import { availableManifests } from '@/core/modules/available';
 import { capacity, fixedCharges } from '@/core/plan/capacity';
 import { addDays } from '@/core/plan/dates';
@@ -926,9 +927,11 @@ export async function keepOnly(
 }
 
 /** The things the sources keep for „Nächste Wochen“, for the planner's folded group. Reads only. */
-export async function laterThings(): Promise<PlannableEntry[]> {
+export async function laterThings(
+  manifests?: readonly ModuleManifest[],
+): Promise<PlannableEntry[]> {
   const out: PlannableEntry[] = [];
-  for (const m of activeManifests(await loadModuleStates())) {
+  for (const m of manifests ?? activeManifests(await loadModuleStates())) {
     const s = await plannableSource(m);
     if (!s?.listLater) continue;
     for (const item of await s.listLater().catch(() => [])) out.push({ ...item, moduleId: m.id });

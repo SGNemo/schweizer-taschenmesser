@@ -580,6 +580,15 @@ test('T2 Samstagabend – 5 / 6 / 9', async ({ page }, info) => {
   for (const title of LATER) expect(after[title], title).toBe('später');
   for (const title of KEEP_SA) expect(after[title], title).toBe(SA);
   for (const title of KEEP_SO) expect(after[title], title).toBe(SO);
+  if (laterInPlanner === 'ja') {
+    // Findable where he shrank: the folded group „Nächste Wochen“ lists the nine; „Diese Woche“ takes one back.
+    await page.getByRole('button', { name: /^Nächste Wochen ausklappen/ }).click();
+    const group = page.getByTestId('planner-later');
+    await expect(group.getByRole('listitem')).toHaveCount(LATER.length);
+    await group.getByRole('button', { name: `Diese Woche: ${LATER[0]}` }).click();
+    await expect(group.getByRole('listitem')).toHaveCount(LATER.length - 1);
+    expect((await settled(page))[LATER[0]!]).toBe('ohne Tag');
+  }
 });
 
 test('T3 Montag – letzter Stand, neu legen', async ({ page }, info) => {

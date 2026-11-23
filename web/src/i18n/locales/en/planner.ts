@@ -274,6 +274,7 @@ export const planner: Strings['planner'] = {
   keep: {
     menu: 'Only this …',
     hint: 'Tick what stays today.',
+    all: 'Everything stays today.',
     apply: 'Only this',
     title: (n: number) => (n === 1 ? 'The rest: 1 thing' : `The rest: ${n} things`),
     line: 'Nothing of it is gone. You decide where it goes.',

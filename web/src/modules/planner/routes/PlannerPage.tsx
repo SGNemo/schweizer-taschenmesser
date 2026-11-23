@@ -52,12 +52,12 @@ import {
   spreadOpen,
   takeOff,
   bringBack,
-  laterThings,
   setStartPoint,
   START_KEY,
   type StartPoints,
 } from '../actions';
 import { beginPlanFocus, planFocusPath } from '../focus';
+import { useLater } from '../useLater';
 import type { PlannableEntry } from '@/core/modules/contributions';
 import type { BoardDay, BoardRow, OpenRow } from '../board';
 import { Capture } from '../components/Capture';
@@ -195,7 +195,7 @@ export default function PlannerPage() {
   );
   // „Nur das hier“ (use case „Tag kippt“): the day's starting point, and the things kept for „Nächste Wochen“.
   const startPoints = useLiveQuery(async () => (await getMeta<StartPoints>(START_KEY)) ?? null, []);
-  const laterList = useLiveQuery(() => laterThings(), []);
+  const laterList = useLater();
   const thenStored = useLiveQuery(
     async () => (await getMeta<boolean>(phone ? THEN_NARROW_KEY : THEN_WIDE_KEY)) ?? null,
     [phone],
@@ -1042,6 +1042,7 @@ export default function PlannerPage() {
       return (
         <p className={styles.openActions} data-testid="day-keep">
           {rows.length === 0 ? <span>{t.planner.keep.hint}</span> : null}
+          {rows.length > 0 && rest.length === 0 ? <span>{t.planner.keep.all}</span> : null}
           {rows.length > 0 && rest.length > 0 ? (
             <Button
               variant="primary"
