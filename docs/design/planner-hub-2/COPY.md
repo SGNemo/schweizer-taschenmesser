@@ -71,6 +71,7 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 | B15 (toast) | Aufgelöst. Die Dinge liegen wieder einzeln auf {Mo}. · Rückgängig | Unbundled. The things lie on {Mon} one by one again. · Undo |
 | B16 (toast) | Routine „{Haushalt}“ angelegt. · Ansehen | Routine “{Household}” created. · View |
 | B17 (step gone) | Gibt es nicht mehr | No longer exists |
+| B19 (key hint under the buttons, not on touch) | Enter: fertig · S: überspringen · P: Pause · Esc: zum Plan | Enter: done · S: skip · P: pause · Esc: to the plan |
 | B18 (module off) | {Modul} ist ausgeschaltet – dieser Schritt wartet. | {module} is switched off – this step waits. |
 
 ## 1 · share · 3 · kinds in the field

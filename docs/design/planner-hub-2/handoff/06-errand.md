@@ -26,6 +26,8 @@ lead: the maps glyph (pin), not a button · title (default „Besorgungen“) ·
 - E3 „Auf der Karte ansehen“: quiet button in the foot, only with ≥ 1 place and maps on. Opens `/maps?places=<id,id>&from=plan`.
 - „Los“: step mode of 05; the eyebrow reads „Besorgungen · Stopp 2 von 3“, the place name stands under the title; a list stop shows its tick lines under the title (the one case where „Los“ shows more than a title: the list **is** the step).
 
+A done stop strikes its title only, never the place line.
+
 ## States
 
 no places (no E3) · some places · maps off (no „Ort …“, no E3, places already set are not shown) · place deleted in maps (the stop shows no place) · list emptied elsewhere (the stop is done).

@@ -42,7 +42,7 @@ Reuses `FocusPage` (shell hidden, Esc leaves, the round survives a reload). Diff
 - After the last: B8 „Alles durch.“ + B9; „Erledigt“ ticks the carrying thing (5a) or closes the bundle (5b: nothing to tick when every member is done – then only „Zurück zum Plan“).
 - Skipped steps: at the end B10; „Später“ returns to the plan with the steps open.
 - 412: the same, actions stacked full width in the order B5, B6, B7.
-- Keys: Enter = B5, `S` = B6, `P` = B7, Esc = back to the plan (the round keeps its place); one line under the buttons names them (`--text-meta`, `--text-3`), not drawn on touch devices.
+- Keys: Enter = B5, `S` = B6, `P` = B7, Esc = back to the plan (the round keeps its place); one line under the buttons names them (B19, `--text-meta`, `--text-3`), not drawn on touch devices.
 - A step change is announced politely („Schritt 3 von 5: Bad wischen“); focus stays on B5.
 
 ## 5b: making and unmaking

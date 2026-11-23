@@ -23,7 +23,7 @@ no topics yet (chooser: only the field and a hint line „Ein Thema hält Dinge 
 
 ## 1920 / 412
 
-Same structure; on 412 the head wraps („Alles zeigen“ on its own line, 44 px target).
+Same structure; on 412 the head wraps („Alles zeigen“ on its own line, 44 px target) and a topic name truncates after one line (full name as the accessible name).
 
 ## Managing
 
