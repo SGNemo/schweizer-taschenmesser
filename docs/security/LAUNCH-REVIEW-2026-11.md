@@ -64,7 +64,7 @@ No critical finding. One high finding (SC1). The Dev-Preview that friends alread
 | X4 | medium | extension | Open since October: overlay host can be hidden or covered by the page (same-site UI redress) | `extension/src/content/ui.ts:21-32` | M | **accepted for 1.0 by Sven** (documented in VAULT-EXTENSION.md) |
 | S5 | medium | sync | Open since September: the sync token lives in IndexedDB `_secrets.syncConfig`, not in the OS secret store (the service worker reads only the key from that record) | `core/sync/service.ts:120,131,144`, `sw.ts:55-68` | M | **fixed in the apps (#1057)**; PWA: IndexedDB stays the store (accepted, reason in `core/sync/names.ts`) |
 | S13 | medium | Android update | Open: the expected APK digest is the unsigned `.sha256` asset of the same release; authenticity rests on GitHub + TLS and Android's same-certificate check. Recommendation: **accept** for 1.0 (the OS refuses an APK signed with another key), revisit with package 4 | `core/update/github.ts:18-28,113`, `core/platform/tauri/updater.ts:106-128` | M | Sven merges |
-| V5 | medium (residual) | backup | Envelope types and the 64 MB cap are checked; the data part is still not validated against the collection schema, and `pages/settings/BackupSection.tsx:65` reads the file before the cap. Recommendation: accept for 1.0 (own file, preview, safety copy) | `core/backup/backup.ts:16-31,100,124-126` | M | accept (or package 10) |
+| V5 | medium (residual) | backup | Envelope types and the 64 MB cap are checked; the data part is still not validated against the collection schema, and `pages/settings/BackupSection.tsx:65` reads the file before the cap. Recommendation: accept for 1.0 (own file, preview, safety copy) | `core/backup/backup.ts:16-31,100,124-126` | M | **accepted** (Sven, 2026-11-23) |
 
 ### Low and info, by area
 
@@ -169,7 +169,7 @@ No critical finding. One high finding (SC1). The Dev-Preview that friends alread
 | NS3 | low | The APK installer's URL check is not flavour-aware: a stable app may fetch the dev APK (installs as a second app after confirmation) | `plugins/apk-installer/src/validate.rs:6-36` | S · **fixed (#1080)**: the installer check knows the build's channel; the stable app refuses `dev-preview` assets |
 | NS4 | low | Only the pre-merge manifest is asserted (`allowBackup="false"`); cleartext is printed, the merged manifest of the shipped APK (permissions, exported components) never checked | `web/scripts/lib/androidManifest.ts:20-33`, `.github/workflows/release.yml:354-357` | S, **fixed (#1050)** |
 | NS5 | low | No `dataExtractionRules`: device-to-device transfer can copy the database | `web/scripts/lib/androidManifest.ts:20-33` | S · **proposal (#1081)**: ready code in the PR text (`web/scripts/**` is protected; alternative: a small plugin whose library manifest sets `dataExtractionRules`) |
-| NS6 | low | Notifications set no visibility: reminder titles show on the lock screen unless the OS hides them | `core/platform/tauri/index.ts:103-107,139-147` | S · **fixed (#1081)** (Android 8+): every Android notice goes through a channel whose lock-screen setting is "secret" (a notice's own visibility is dropped by the plugin's Rust layer); a device-local switch moves them to channels where Android's own setting decides |
+| NS6 | low | Notifications set no visibility: reminder titles show on the lock screen unless the OS hides them | `core/platform/tauri/index.ts:103-107,139-147` | S · **fixed (#1081)** (Android 8+): every Android notice goes through a channel whose lock-screen setting is "secret" (a notice's own visibility is dropped by the plugin's Rust layer); a device-local switch moves them to channels where Android's own setting decides; default kept (Sven, 2026-11-23) |
 | NS7 | low | = F3; on Android `exchange/inbox.json` is inside the page's file scope | `capabilities/default.json:59-70`, `src/exchange_client.rs:91-97` | S · **fixed (#1068)** |
 | NS8 | low | = old V4: Android clipboard without the sensitive flag | `core/platform/tauri/index.ts:175-182` | S · **fixed (#1081)**: secrets go to the clipboard through the plugin's `writeSecret` (Android: sensitive flag; Windows: not in history or cloud clipboard; Linux/macOS only a hint) |
 | NS9, NS10 | info | `disk_scan_start` takes any root (read-only); 29 desktop grants duplicated for all platforms; stale capability description | `src/disk.rs:146-155`, `capabilities/default.json:8-36` | – |
@@ -243,7 +243,7 @@ No regression. Verified at the code, not from the old status table.
 | V1 | fixed for the vault seal; the same gap is new for LAN keys (R1) | `core/reset/device.test.ts:67` |
 | V2, V3, V6–V8, V11 | fixed | `plugins/secure-store/src/desktop/sealed.rs`, `core/crypto/crypto.test.ts:125-141` |
 | V4 | **fixed (#1081)** (= NS8) | `core/platform/tauri/index.ts:175-181` |
-| V5 | partly (residual, table above) | – |
+| V5 | **accepted** (Sven, 2026-11-23); residual in the table above | – |
 | V9 | unchanged (info): no rollback protection for vault ciphertext | – |
 | V10 | by decision: vault CSV export is not neutralised | `modules/accounts/csv.ts:33` |
 | L1, L2 | fixed | `crates/local-api/tests/server.rs:256,360` |
