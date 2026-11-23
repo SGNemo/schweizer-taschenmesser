@@ -1,7 +1,7 @@
 import { loadStoredModuleState } from '@/core/modules/activation';
 import { getPlatform } from '@/core/platform';
 import type { ExchangeEvent, ExchangeService, ExchangeSession } from '@/core/platform/types';
-import { UNDO_KEEP_MS, expired, problemOf } from './logic';
+import { HISTORY_PER_DEVICE, UNDO_KEEP_MS, expired, problemOf } from './logic';
 import { now } from '@/core/time/now';
 import { itemRepo } from './repo';
 import { useExchangeView } from './state';
@@ -213,8 +213,19 @@ export async function sweep(at = now()): Promise<void> {
         (r.direction === 'out' && r.deletedAt !== null && at - r.deletedAt > UNDO_KEEP_MS),
     )
     .primaryKeys();
+  // E1: per device only the newest received cards (a paired device must not fill this one)
+  const kept = new Map<string, number>();
+  await itemRepo.table
+    .orderBy('createdAt')
+    .reverse()
+    .each((r: { id: string; peer: string; direction: string }) => {
+      if (r.direction !== 'in') return;
+      const n = (kept.get(r.peer) ?? 0) + 1;
+      kept.set(r.peer, n);
+      if (n > HISTORY_PER_DEVICE) gone.push(r.id);
+    });
   // in the state queue: no answer is written to a card that is being deleted
-  if (gone.length) await serial(() => itemRepo.purge(gone));
+  if (gone.length) await serial(() => itemRepo.purge([...new Set(gone)]));
 }
 
 export async function refreshPc(ex: ExchangeService): Promise<void> {

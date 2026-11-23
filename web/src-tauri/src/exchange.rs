@@ -463,7 +463,15 @@ pub fn exchange_set_device(
     parts
         .exchange
         .set_device(&key, grant)
-        .map_err(|_| "storage".to_owned())
+        .map_err(|_| "storage".to_owned())?;
+    // E4: paused or off (a lost phone): what waited for it is dropped, its cards say so
+    if !grant.on || grant.paused {
+        if let Some((_, outbox)) = state.files(&app) {
+            outbox.discard_for(&hex(key.as_bytes()));
+            let _ = app.emit(CHANGED, ());
+        }
+    }
+    Ok(())
 }
 
 /// The native question, never while a phone controls mouse and keyboard (it could click it).
@@ -507,7 +515,10 @@ mod tests {
     // sentence around – the same rule as the remote-control questions.
     #[test]
     fn a_peer_name_cannot_break_or_steer_the_native_question() {
-        assert_eq!(plain("Handy\u{2028}Erlaubt nur Links"), "Handy Erlaubt nur Links");
+        assert_eq!(
+            plain("Handy\u{2028}Erlaubt nur Links"),
+            "Handy Erlaubt nur Links"
+        );
         assert_eq!(plain("Handy\u{2029}\u{2029}x"), "Handy x");
         assert_eq!(plain("Handy“ darf nichts. „"), "Handy' darf nichts. '");
         assert_eq!(plain("  viel   Platz  "), "viel Platz");

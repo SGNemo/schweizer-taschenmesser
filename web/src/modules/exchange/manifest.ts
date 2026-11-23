@@ -68,6 +68,7 @@ const manifest: ModuleManifest = {
   contributions: {
     onboarding: noOnboarding,
     services: () => import('./services'),
+    servicesOff: () => import('./servicesOff'),
   },
 };
 

@@ -392,7 +392,10 @@ mod tests {
         std::fs::remove_dir_all(&blocker).unwrap();
         assert_eq!(s.revoke(&dev(1).key), Ok(false), "written now");
         let again = FileTrustStore::open(&path).unwrap();
-        assert!(again.find_by_key(&dev(1).key).unwrap().revoked, "survives a restart");
+        assert!(
+            again.find_by_key(&dev(1).key).unwrap().revoked,
+            "survives a restart"
+        );
         std::fs::remove_dir_all(d).ok();
     }
 

@@ -490,11 +490,22 @@ mod tests {
     #[test]
     fn a_phone_dials_only_on_wifi() {
         use tauri_plugin_lan_watch::WifiState;
-        let state = |supported, connected| Ok::<_, ()>(WifiState { supported, connected });
+        let state = |supported, connected| {
+            Ok::<_, ()>(WifiState {
+                supported,
+                connected,
+            })
+        };
         assert!(dial_allowed(state(true, true)), "phone on Wi-Fi");
         assert!(!dial_allowed(state(true, false)), "phone off Wi-Fi");
-        assert!(dial_allowed(state(false, false)), "desktop: cannot tell, keeps its address");
-        assert!(!dial_allowed(Err::<WifiState, ()>(())), "unreadable is a no");
+        assert!(
+            dial_allowed(state(false, false)),
+            "desktop: cannot tell, keeps its address"
+        );
+        assert!(
+            !dial_allowed(Err::<WifiState, ()>(())),
+            "unreadable is a no"
+        );
     }
 
     #[test]

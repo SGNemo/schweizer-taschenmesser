@@ -1239,16 +1239,36 @@ fn a_pairing_is_confirmed_in_a_native_question_with_rust_s_own_code() {
     let body = &lan[at..];
     let body = &body[..body.find("\n}\n").unwrap()];
     let head = &body[..body.find('{').unwrap()];
-    assert!(!head.contains("code"), "the page hands over no code: {head}");
+    assert!(
+        !head.contains("code"),
+        "the page hands over no code: {head}"
+    );
     let ask = body.find("asked_to_pair(&app").expect("a native question");
     let helper = &lan[lan.find("fn asked_to_pair(").expect("helper")..];
     let helper = &helper[..helper.find("\n}\n").unwrap()];
     assert!(helper.contains("crate::native_ask::buttons(allow, cancel)"));
-    assert!(helper.contains("crate::native_ask::allowed(&dialog.blocking_show_with_result(), allow)"));
+    assert!(
+        helper.contains("crate::native_ask::allowed(&dialog.blocking_show_with_result(), allow)")
+    );
     let confirm = body.find(".confirm_deliver(").expect("the confirm");
     assert!(ask < confirm, "asked before the confirm");
     assert!(
         body[..confirm].contains("pending"),
         "the code comes from the waiting attempt Rust holds"
     );
+}
+
+/// E4 (launch review 2026-11): pausing a device or switching it off at the PC drops its outbox.
+#[test]
+fn pausing_a_device_drops_its_outbox() {
+    let src = source("exchange.rs");
+    let at = src.find("pub fn exchange_set_device(").expect("command");
+    let body = &src[at..];
+    let body = &body[..body.find("\n}\n").unwrap()];
+    let set = body.find(".set_device(&key, grant)").expect("the write");
+    let drop = body
+        .find("outbox.discard_for(")
+        .expect("the outbox is dropped");
+    assert!(set < drop, "after the grant is stored");
+    assert!(body.contains("if !grant.on || grant.paused {"));
 }
