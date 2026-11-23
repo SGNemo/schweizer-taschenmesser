@@ -28,7 +28,7 @@ use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Emitter as _, Manager as _, State};
-use tauri_plugin_dialog::{DialogExt as _, MessageDialogButtons, MessageDialogKind};
+use tauri_plugin_dialog::{DialogExt as _, MessageDialogKind};
 
 const CHANGED: &str = "exchange://changed";
 
@@ -245,14 +245,11 @@ fn confirmed(app: &AppHandle, lang: Lang, names: &str) -> bool {
         .message(texts::exchange_question(lang, names))
         .title(title)
         .kind(MessageDialogKind::Info)
-        .buttons(MessageDialogButtons::OkCancelCustom(
-            allow.into(),
-            cancel.into(),
-        ));
+        .buttons(crate::native_ask::buttons(allow, cancel));
     if let Some(window) = app.get_webview_window("main") {
         dialog = dialog.parent(&window);
     }
-    dialog.blocking_show()
+    crate::native_ask::allowed(&dialog.blocking_show_with_result(), allow)
 }
 
 /// Takes the "a question is on screen" flag; refused while another one is.

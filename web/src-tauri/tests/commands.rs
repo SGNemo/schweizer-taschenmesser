@@ -521,7 +521,7 @@ fn remote_widening_takes_a_ticket_before_the_native_dialog() {
         "picked_program(&app",
         "allowed_path(&path)",
         "asked(&app, texts::remote_program_dialog(lang)",
-        "Arc::ptr_eq(&now.remote, &parts.remote)",
+        "state.same_remote(&parts)",
         ".confirm(ticket)",
         ".add(remote_programs::Entry",
     ];
@@ -590,7 +590,10 @@ fn remote_widening_takes_a_ticket_before_the_native_dialog() {
     assert!(!body.contains("set_enabled") && !body.contains("set_grant"));
     // the answer comes from a blocking native dialog, never from the page
     let src = source("remote.rs");
-    assert_eq!(src.matches(".blocking_show()").count(), 1);
+    // F1: through `native_ask`, which counts only the exact "allow" button
+    assert_eq!(src.matches(".blocking_show_with_result()").count(), 1);
+    assert!(!src.contains(".blocking_show()"));
+    assert!(src.contains("crate::native_ask::allowed(&dialog.blocking_show_with_result(), allow)"));
     assert!(!commands.contains("confirmed: bool") && !commands.contains("confirm: bool"));
 }
 
@@ -1155,4 +1158,73 @@ fn no_program_is_started_by_bare_name() {
         }
     }
     assert!(hits.is_empty(), "started by bare name: {hits:?}");
+}
+
+/// F2 (launch review 2026-11): an answer given while the hub was stopped and started belongs to
+/// controls that are gone. Every command that puts a native question re-checks after the answer
+/// that the hub is still the one it asked about.
+#[test]
+fn every_remote_question_rechecks_the_hub_after_the_answer() {
+    let commands = remote_commands_source();
+    let mut asking = 0;
+    for body in commands.split("#[tauri::command").skip(1) {
+        let name = body
+            .split("pub fn ")
+            .nth(1)
+            .and_then(|r| r.split('(').next())
+            .unwrap_or("?");
+        let ask = ["confirmed(&app", "asked(&app"]
+            .iter()
+            .filter_map(|q| body.find(q))
+            .min();
+        let Some(at) = ask else { continue };
+        asking += 1;
+        let after = &body[at..];
+        assert!(
+            after.contains("same_remote(&parts)") || after.contains("same_hub(&parts"),
+            "{name} asks at the PC but does not re-check the hub after the answer"
+        );
+    }
+    assert!(asking >= 4, "the asking commands were found ({asking})");
+}
+
+/// F3/NS7 (launch review 2026-11): the page writes only its backups (`backups/`, `backups/auto/`)
+/// into the app data folder. Its file scope is exactly that folder, so the native private files
+/// there (exchange inbox on Android, trust list, grants, keys) are out of reach on every platform,
+/// not only because Windows separates Local and Roaming.
+#[test]
+fn the_page_file_scope_is_the_backup_folder_only() {
+    for entry in fs::read_dir(format!("{}/capabilities", env!("CARGO_MANIFEST_DIR"))).unwrap() {
+        let path = entry.unwrap().path();
+        if path.extension().is_none_or(|e| e != "json") {
+            continue;
+        }
+        let name = path.file_name().unwrap().to_string_lossy().into_owned();
+        let value: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+        for p in value["permissions"].as_array().into_iter().flatten() {
+            if p["identifier"] != "fs:scope" {
+                continue;
+            }
+            let paths: Vec<&str> = p["allow"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|a| a["path"].as_str().unwrap())
+                .collect();
+            assert_eq!(
+                paths,
+                ["$APPDATA/backups/**", "$APPDATA/backups"],
+                "{name}: file scope"
+            );
+            assert!(p.get("deny").is_none_or(|d| d.is_array()), "{name}");
+        }
+    }
+    // the page's own file calls stay inside that folder
+    let web = read("../src/core/backup/safety.ts");
+    assert!(web.contains("export const BACKUP_DIR = 'backups';"));
+    let auto = read("../src/core/backup/auto.ts");
+    assert!(auto.contains("export const AUTO_DIR = `${BACKUP_DIR}/auto`;"));
+    let recovery = read("../src/core/db/recovery.ts");
+    assert!(recovery.contains("platform.files.write(`backups/${fileName}`"));
 }

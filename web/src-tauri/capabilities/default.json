@@ -63,10 +63,10 @@
       "identifier": "fs:scope",
       "allow": [
         {
-          "path": "$APPDATA/**"
+          "path": "$APPDATA/backups/**"
         },
         {
-          "path": "$APPDATA"
+          "path": "$APPDATA/backups"
         }
       ]
     },

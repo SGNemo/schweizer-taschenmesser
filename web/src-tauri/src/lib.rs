@@ -41,6 +41,8 @@ mod exchange;
 mod exchange_client;
 mod exchange_store;
 #[cfg(desktop)]
+mod native_ask;
+#[cfg(desktop)]
 mod remote;
 #[cfg(desktop)]
 mod remote_notice;
