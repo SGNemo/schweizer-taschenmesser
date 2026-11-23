@@ -168,13 +168,45 @@ async function channelFor(quiet: boolean): Promise<string | undefined> {
   return id;
 }
 
+/**
+ * Device-local list of the alarm ids Nemo handed to Android (localStorage, never synced). Needed
+ * because tauri-plugin-notification 2.7.0 does not store notices scheduled via `sendNotification`,
+ * so `pending()` misses them; `cancel(ids)` still stops their alarms
+ * (docs/features/android-scheduled-reminders.md).
+ */
+export const ALARM_IDS_KEY = 'tm-native-alarm-ids';
+
+function readAlarmIds(): number[] {
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem(ALARM_IDS_KEY) ?? '[]');
+    return Array.isArray(parsed) ? parsed.filter((id): id is number => Number.isInteger(id)) : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeAlarmIds(ids: Iterable<number>): void {
+  try {
+    localStorage.setItem(ALARM_IDS_KEY, JSON.stringify([...ids]));
+  } catch {
+    // storage full or blocked: the next run cancels by the plugin's list only
+  }
+}
+
 /** Replaces the pending OS notifications with `items`. */
 async function scheduleUpcoming(items: ScheduledNotification[]): Promise<void> {
   const wanted = new Map(items.map((n) => [notificationId(n.key), n]));
   const normalId = await channelFor(false);
   const quietId = items.some((n) => n.quiet) ? await channelFor(true) : normalId;
-  const stale = (await pending()).map((p) => p.id).filter((id) => !wanted.has(id));
+  const listed = await pending().then(
+    (list) => list.map((p) => p.id),
+    () => [] as number[],
+  );
+  const known = new Set([...readAlarmIds(), ...listed]);
+  const stale = [...known].filter((id) => !wanted.has(id));
   if (stale.length > 0) await cancel(stale);
+  // Recorded before scheduling, so an interrupted run still cancels them next time.
+  writeAlarmIds(wanted.keys());
   for (const [id, n] of wanted) {
     // Same id = replaces the earlier entry; `allowWhileIdle` lets it fire in Doze mode.
     sendNotification({
