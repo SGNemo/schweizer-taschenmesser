@@ -49,6 +49,8 @@ export const connectors: Strings['connectors'] = {
   disconnectTitle: (name: string) => `Disconnect ${name}?`,
   disconnectBody:
     'Access is revoked at the service and the stored sign-in data is deleted from this device.',
+  disconnectBodyNoRevoke:
+    'The stored sign-in data is deleted from this device. The service offers no revoke for the app: remove its access in your account there (on Spotify under “Manage apps”).',
   keepData: 'Keep imported events',
   deleteData: 'Delete imported events',
   accounts: 'Accounts',

@@ -29,6 +29,7 @@ export const NET_CATALOGUE: readonly NetUse[] = [
     reason: 'ai',
     when: 'setup',
     hosts: [
+      'api.anthropic.com',
       'api.openai.com',
       'generativelanguage.googleapis.com',
       'api.groq.com',

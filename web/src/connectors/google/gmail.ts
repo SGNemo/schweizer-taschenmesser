@@ -1,6 +1,8 @@
 /**
- * Gmail as a `MailProvider` (scope `gmail.readonly`): labels, threads, search (Gmail syntax passed
- * through), full messages with MIME parsing, attachments. Read-only; nothing here writes to the mailbox.
+ * Gmail as a `MailProvider`: labels, threads, search (Gmail syntax passed through), full messages
+ * with MIME parsing, attachments (scope `gmail.readonly`). Writing is opt-in and separate: `modify`
+ * (mark, archive, trash, drafts) needs `gmail.modify`, `send` needs `gmail.send`, each switched on
+ * by the user; without them nothing here writes to the mailbox (M8, launch review 2026-11).
  */
 import { ConnectorError, type ConnectorContext } from '@/core/connectors/types';
 import type {

@@ -3,8 +3,9 @@ import { describe, expect, it } from 'vitest';
 
 /**
  * Guards the desktop webview CSP in `src-tauri/tauri.conf.json`: no inline or eval'd scripts, no
- * plugins, no frames, no form navigation, no `<base>` hijack. The app has no iframes, objects or
- * forms with an `action`; React forms submit through `onSubmit` + `preventDefault`.
+ * plugins, no frames, no form navigation, no `<base>` hijack. The app has no objects or forms with
+ * an `action` (React forms submit through `onSubmit` + `preventDefault`); its one iframe is the mail
+ * body (`modules/mail/components/MailFrame.tsx`): `srcDoc`, sandboxed without scripts (M8).
  */
 function readCsp(): Map<string, string[]> {
   const raw = readFileSync(
