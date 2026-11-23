@@ -10,7 +10,7 @@ The app finds the release on GitHub, reads the expected SHA-256 from the release
 
 | Way | Effort | What it buys | Costs and risks |
 |---|---|---|---|
-| A. Digest in a signed manifest (like `latest.json` for the desktop, minisign) | M: release job writes `android` into the signed manifest, app verifies the minisign signature before trusting the digest | the digest no longer rests on GitHub + TLS alone | touches `release.yml` and the updater key (hard limit: Sven); the key then guards both platforms |
+| A. A minisign signature over the APK's digest, carried in `latest.json` or the release (note: `latest.json` itself is not signed – only each payload's `.sig` in it, see NS2) | M: release job signs the digest with the updater key, app verifies it before trusting the digest | the digest no longer rests on GitHub + TLS alone | touches `release.yml` and the updater key (hard limit: Sven); the key then guards both platforms |
 | B. `.apk.sig` with the updater key, verified in the plugin | M: one more release asset, Rust verify in the plugin (as `portable.rs`) | the same as A, without changing the manifest | same hard limit; a second asset that can go missing (update stops, fails closed) |
 | C. Leave as is | none | – | a GitHub account or TLS break can offer an APK the OS then refuses unless it carries the release certificate; that needs the Android keystore too |
 

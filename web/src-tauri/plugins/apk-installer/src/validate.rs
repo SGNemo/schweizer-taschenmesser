@@ -21,6 +21,10 @@ pub fn check_url(url: &str) -> Result<(), &'static str> {
     if rest.contains(['?', '#', '@', '\\']) {
         return Err("url-has-query-fragment-or-userinfo");
     }
+    // tag and asset names never need an escape; `dev%2Dpreview` would reach the dev release (NS3)
+    if rest.contains('%') {
+        return Err("url-has-percent-escape");
+    }
     let segments: Vec<&str> = rest.split('/').collect();
     if segments.len() != 2 {
         return Err("url-not-a-release-asset");
@@ -142,6 +146,10 @@ mod tests {
         // NS3 (launch review 2026-11): the check knows the build's channel, like `update.rs`
         let dev_apk = "https://github.com/SGNemo/schweizer-taschenmesser/releases/download/dev-preview/Nemo-dev.apk";
         assert!(check_url_for(dev_apk, false).is_err());
+        // GitHub decodes `%2D`: the escaped tag is the same release (council round 1)
+        let escaped = dev_apk.replace("dev-preview", "dev%2Dpreview");
+        assert!(check_url_for(&escaped, false).is_err());
+        assert!(check_url_for(&escaped, true).is_err());
         assert!(check_download_for(dev_apk, Some(OK_SHA), false).is_err());
         assert_eq!(check_url_for(dev_apk, true), Ok(()));
         assert_eq!(check_url_for(OK_URL, false), Ok(()));

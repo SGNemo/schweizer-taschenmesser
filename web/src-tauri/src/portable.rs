@@ -40,7 +40,8 @@ impl SwapError {
             Self::FolderNotWritable(_) => "folder-not-writable",
             Self::Failed(_) => "swap-failed",
             Self::NotAnExecutable => "not-an-executable",
-            Self::OlderVersion | Self::VersionUnreadable => "version-not-newer",
+            Self::OlderVersion => "version-not-newer",
+            Self::VersionUnreadable => "version-unreadable",
         }
     }
 }
@@ -93,22 +94,54 @@ pub fn looks_like_executable(bytes: &[u8]) -> bool {
     bytes.len() >= 2 && &bytes[..2] == b"MZ"
 }
 
-/// Signature of a Windows `VS_FIXEDFILEINFO` block, followed by its structure version 1.0.
-const FIXED_FILE_INFO: [u8; 8] = [0xBD, 0x04, 0xEF, 0xFE, 0x00, 0x00, 0x01, 0x00];
+/// `dwSignature` of a Windows `VS_FIXEDFILEINFO` block, then its structure version 1.0.
+const FIXED_SIGNATURE: u32 = 0xFEEF_04BD;
+const FIXED_STRUC_VERSION: u32 = 0x0001_0000;
 
-/// `major.minor.patch` of the executable's own version block (`FileVersion`, which the build sets
+/// `major.minor.patch` of the executable's own version resource (`FileVersion`, which the build sets
 /// from the app version). Read from the signed bytes, unlike the manifest's unsigned `version`.
+///
+/// Anchored on the resource itself: the `VS_VERSIONINFO` header (`wValueLength` = 52), its key
+/// `VS_VERSION_INFO` in UTF-16 and, after the padding, the `VS_FIXEDFILEINFO` signature. Matching the
+/// signature bytes alone would also hit this function's own machine code in every later build.
+/// The last such resource wins (`.rsrc` comes after code and data).
 pub fn payload_version(bytes: &[u8]) -> Option<[u16; 3]> {
-    let at = bytes
-        .windows(FIXED_FILE_INFO.len())
-        .position(|w| w == FIXED_FILE_INFO)?;
-    let word = |i: usize| -> Option<u32> {
-        let b = bytes.get(at + 8 + 4 * i..at + 12 + 4 * i)?;
-        Some(u32::from_le_bytes([b[0], b[1], b[2], b[3]]))
+    // built at run time, so the UTF-16 key is not a literal in this binary's data
+    let key: Vec<u8> = "VS_VERSION_INFO\0"
+        .encode_utf16()
+        .flat_map(u16::to_le_bytes)
+        .collect();
+    let u16_at = |i: usize| {
+        bytes
+            .get(i..i + 2)
+            .map(|b| u16::from_le_bytes([b[0], b[1]]))
     };
-    let (ms, ls) = (word(0)?, word(1)?);
-    // the halves of a u32: the casts keep exactly 16 bits
-    Some([(ms >> 16) as u16, (ms & 0xFFFF) as u16, (ls >> 16) as u16])
+    let u32_at = |i: usize| {
+        bytes
+            .get(i..i + 4)
+            .map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]))
+    };
+    let mut found = None;
+    let mut from = 0;
+    while let Some(rel) = bytes.get(from..)?.windows(key.len()).position(|w| w == key) {
+        let key_at = from + rel;
+        from = key_at + 1;
+        // wLength, wValueLength, wType come right before the key
+        let Some(start) = key_at.checked_sub(6) else {
+            continue;
+        };
+        let fixed = start + (6 + key.len()).next_multiple_of(4);
+        if u16_at(start + 2) == Some(52)
+            && u32_at(fixed) == Some(FIXED_SIGNATURE)
+            && u32_at(fixed + 4) == Some(FIXED_STRUC_VERSION)
+        {
+            if let (Some(ms), Some(ls)) = (u32_at(fixed + 8), u32_at(fixed + 12)) {
+                // the halves of a u32: the casts keep exactly 16 bits
+                found = Some([(ms >> 16) as u16, (ms & 0xFFFF) as u16, (ls >> 16) as u16]);
+            }
+        }
+    }
+    found
 }
 
 /// `major.minor.patch` of a version like `1.2.0` or `1.2.0-beta.3` (pre-release ignored).
@@ -122,13 +155,17 @@ fn core_version(version: &str) -> Option<[u16; 3]> {
 /**
  * NS2 (launch review 2026-11): the update's version comes from the unsigned manifest, so an older,
  * validly signed executable could be served as "newer". The signed payload must not be older than
- * the running app; the same version passes (a beta followed by its final release).
+ * the running app; the same `major.minor.patch` passes (a beta followed by its final release). The
+ * pre-release part is not in the Windows version block, so it is not protected (1.2.0 → 1.2.0-beta.1,
+ * Dev-Preview builds of one version). Fails closed when either version cannot be read.
  */
 pub fn not_older(bytes: &[u8], running: &str) -> Result<(), SwapError> {
     let payload = payload_version(bytes).ok_or(SwapError::VersionUnreadable)?;
-    match core_version(running) {
-        Some(current) if payload < current => Err(SwapError::OlderVersion),
-        _ => Ok(()),
+    let current = core_version(running).ok_or(SwapError::VersionUnreadable)?;
+    if payload < current {
+        Err(SwapError::OlderVersion)
+    } else {
+        Ok(())
     }
 }
 
@@ -246,20 +283,66 @@ mod tests {
     use super::*;
     use std::cell::Cell;
 
-    /// An executable with a Windows version block (`VS_FIXEDFILEINFO`) for `major.minor.patch.build`.
-    fn exe_with_version(major: u16, minor: u16, patch: u16) -> Vec<u8> {
-        let mut b = b"MZ".to_vec();
-        b.extend_from_slice(&[0u8; 300]);
+    /// The bytes of a `VS_VERSIONINFO` resource for `major.minor.patch.0`, as the build writes it.
+    fn version_resource(major: u16, minor: u16, patch: u16) -> Vec<u8> {
+        let mut b = Vec::new();
+        for half in [0x0178_u16, 52, 0] {
+            b.extend_from_slice(&half.to_le_bytes()); // wLength, wValueLength, wType
+        }
+        b.extend(
+            "VS_VERSION_INFO\0"
+                .encode_utf16()
+                .flat_map(u16::to_le_bytes),
+        );
+        b.extend_from_slice(&[0, 0]); // padding to 32 bits
+        let ms = (u32::from(major) << 16) | u32::from(minor);
+        let ls = u32::from(patch) << 16;
         for word in [
-            0xFEEF_04BD_u32,
-            0x0001_0000,
-            (u32::from(major) << 16) | u32::from(minor),
-            u32::from(patch) << 16,
+            FIXED_SIGNATURE,
+            FIXED_STRUC_VERSION,
+            ms,
+            ls,
+            ms,
+            ls,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
         ] {
             b.extend_from_slice(&word.to_le_bytes());
         }
-        b.extend_from_slice(&[0u8; 40]);
         b
+    }
+
+    /// An executable: code that happens to carry the signature bytes (as this very function's
+    /// machine code does), then the version resource.
+    fn exe_with_version(major: u16, minor: u16, patch: u16) -> Vec<u8> {
+        let mut b = b"MZ".to_vec();
+        b.extend_from_slice(&[0u8; 64]);
+        b.extend_from_slice(&[0x49, 0xB8]); // movabs …
+        b.extend_from_slice(&FIXED_SIGNATURE.to_le_bytes());
+        b.extend_from_slice(&FIXED_STRUC_VERSION.to_le_bytes());
+        b.extend_from_slice(&[0x77; 16]);
+        b.extend_from_slice(&[0u8; 300]);
+        b.extend(version_resource(major, minor, patch));
+        b
+    }
+
+    #[test]
+    fn the_version_comes_from_the_resource_not_from_code_bytes() {
+        // council round 1: the signature bytes also sit in this function's own machine code
+        assert_eq!(payload_version(&exe_with_version(0, 3, 1)), Some([0, 3, 1]));
+        let mut code_only = b"MZ".to_vec();
+        code_only.extend_from_slice(&FIXED_SIGNATURE.to_le_bytes());
+        code_only.extend_from_slice(&FIXED_STRUC_VERSION.to_le_bytes());
+        code_only.extend_from_slice(&[9u8; 16]);
+        assert_eq!(payload_version(&code_only), None);
+        // this test binary contains the constants and the code, but no version resource
+        let own = std::fs::read(std::env::current_exe().unwrap()).unwrap();
+        assert_eq!(payload_version(&own), None);
     }
 
     #[test]
@@ -267,7 +350,6 @@ mod tests {
         // NS2 (launch review 2026-11): the manifest's version is unsigned, so the version is read
         // from the signed payload itself; an older one is refused (rollback), the same or a newer
         // one passes.
-        assert_eq!(payload_version(&exe_with_version(0, 3, 1)), Some([0, 3, 1]));
         assert_eq!(not_older(&exe_with_version(1, 2, 0), "1.2.0"), Ok(()));
         assert_eq!(not_older(&exe_with_version(1, 3, 0), "1.2.9"), Ok(()));
         assert_eq!(

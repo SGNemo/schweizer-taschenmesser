@@ -27,7 +27,8 @@ export type UpdateErrorCode =
   | 'install-failed'
   | 'folder-not-writable'
   | 'signature-invalid'
-  | 'version-not-newer';
+  | 'version-not-newer'
+  | 'version-unreadable';
 
 /** The Rust side prefixes its errors with a code (`folder-not-writable: …`); everything else is generic. */
 export function installErrorCode(e: unknown): UpdateErrorCode {
@@ -36,6 +37,7 @@ export function installErrorCode(e: unknown): UpdateErrorCode {
   if (text.startsWith('signature-invalid')) return 'signature-invalid';
   // NS2: the signed payload is older than the running app (a rollback); nothing was installed
   if (text.startsWith('version-not-newer')) return 'version-not-newer';
+  if (text.startsWith('version-unreadable')) return 'version-unreadable';
   return 'install-failed';
 }
 

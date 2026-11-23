@@ -23,6 +23,8 @@ export const update: Strings['update'] = {
     'signature-invalid': 'The update’s signature is invalid – so it was not installed.',
     'version-not-newer':
       'The update is not newer than your installed version – so it was not installed.',
+    'version-unreadable':
+      'The update’s version could not be checked – so it was not installed. Download the new version from the website.',
   } as Record<string, string>,
   settings: {
     intro:

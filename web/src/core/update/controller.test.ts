@@ -189,6 +189,7 @@ describe('installUpdate', () => {
       ['folder-not-writable: Access is denied. (os error 5)', 'folder-not-writable'],
       ['signature-invalid: signature does not match', 'signature-invalid'],
       ['version-not-newer: older than the running app', 'version-not-newer'],
+      ['version-unreadable: no version in the payload', 'version-unreadable'],
       ['swap-failed: boom', 'install-failed'],
       [new Error('network'), 'install-failed'],
     ];
