@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, useLocation } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
 import type {
@@ -333,5 +333,87 @@ describe('search: the device part', () => {
     await user.click(within(device).getByRole('button', { name: '50 weitere zeigen' }));
     await waitFor(() => expect(device.querySelectorAll('[data-thread-id]')).toHaveLength(100));
     expect(within(device).getByRole('button', { name: '20 weitere zeigen' })).toBeInTheDocument();
+  });
+});
+
+describe('„Wartet auf mich“ and the kind filters on the page', () => {
+  function Where() {
+    const loc = useLocation();
+    return <output data-testid="where">{loc.pathname + loc.search}</output>;
+  }
+  const pageAt = (url: string) =>
+    render(
+      <MemoryRouter initialEntries={[url]}>
+        <MailPage />
+        <Where />
+      </MemoryRouter>,
+    );
+  const seed = async () => {
+    const { saveThreads } = await import('../cache');
+    await saveThreads(
+      'google',
+      [
+        { ...summary('t-ask', 'Kurze Frage', ['INBOX', 'UNREAD']), personal: true },
+        { ...summary('t-bill', 'Ihre Rechnung Strom'), personal: false },
+        { ...summary('t-news', 'Rezepte der Woche'), personal: false },
+      ],
+      { list: true },
+    );
+  };
+
+  it('`?view=waiting` opens the queue once and leaves the address clean; only waiting mail is listed', async () => {
+    await seed();
+    mocks.threads.mockResolvedValue({ threads: [] });
+    pageAt('/mail?view=waiting');
+    expect(await screen.findByText(/An dich, noch ohne Antwort/)).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId('where')).toHaveTextContent(/^\/mail$/));
+    expect(await screen.findByText('Kurze Frage')).toBeInTheDocument();
+    expect(screen.queryByText('Ihre Rechnung Strom')).toBeNull();
+    expect(screen.queryByText('Rezepte der Woche')).toBeNull();
+  });
+
+  it('an unknown `view` word is dropped and opens nothing', async () => {
+    await seed();
+    mocks.threads.mockResolvedValue({ threads: [] });
+    pageAt('/mail?view=javascript:alert(1)');
+    await waitFor(() => expect(screen.getByTestId('where')).toHaveTextContent(/^\/mail$/));
+    expect(screen.queryByText(/An dich, noch ohne Antwort/)).toBeNull();
+  });
+
+  it('„Erledigt“ from the row menu takes the mail out, with an undo', async () => {
+    await seed();
+    mocks.threads.mockResolvedValue({ threads: [] });
+    const user = userEvent.setup();
+    pageAt('/mail?view=waiting');
+    const row = (await screen.findByText('Kurze Frage')).closest('li')!;
+    await user.click(within(row).getByRole('button', { name: /Weitere Aktionen|Aktionen/ }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Erledigt' }));
+    await waitFor(() => expect(screen.queryByText('Kurze Frage')).toBeNull());
+    expect(await screen.findByText('Gerade wartet hier nichts auf dich.')).toBeInTheDocument();
+    const toast = useUiStore.getState().toasts.at(-1)!;
+    expect(toast.message).toBe('Aus „Wartet auf mich“ genommen.');
+    toast.action!.run();
+    expect(await screen.findByText('Kurze Frage')).toBeInTheDocument();
+  });
+
+  it('the kind chips narrow the inbox: „Rechnungen“, then „Newsletter“', async () => {
+    mocks.threads.mockResolvedValue({
+      threads: [
+        { ...summary('t-ask', 'Kurze Frage'), personal: true },
+        { ...summary('t-bill', 'Ihre Rechnung Strom'), personal: false },
+        { ...summary('t-news', 'Rezepte der Woche'), personal: false },
+      ],
+    });
+    const user = userEvent.setup();
+    pageAt('/mail');
+    await screen.findByText('Kurze Frage');
+    const kinds = screen.getByRole('group', { name: 'Nach Art filtern' });
+    await user.click(within(kinds).getByRole('button', { name: 'Rechnungen' }));
+    await waitFor(() => expect(screen.queryByText('Kurze Frage')).toBeNull());
+    expect(screen.getByText('Ihre Rechnung Strom')).toBeInTheDocument();
+    expect(screen.queryByText('Rezepte der Woche')).toBeNull();
+    await user.click(within(kinds).getByRole('button', { name: 'Newsletter' }));
+    expect(await screen.findByText('Rezepte der Woche')).toBeInTheDocument();
+    expect(screen.queryByText('Ihre Rechnung Strom')).toBeNull();
   });
 });

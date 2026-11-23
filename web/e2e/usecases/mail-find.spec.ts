@@ -36,18 +36,21 @@ const IST: Record<string, Record<Metric, number>> = {
   'E Diese Woche neu und wichtig': { steps: 0, keys: 0, rows: 15, detours: 0 },
 };
 
-/** Upper bounds: the numbers as measured after package 1 (search on this device + mailbox, 2026-11-23). */
+/**
+ * Upper bounds: the numbers as measured after package 2 („Wartet auf mich“, 2026-11-23). E costs one tap more than
+ * IST (the queue entry) and reads 3 rows instead of 15.
+ */
 // prettier-ignore
 const MAX: Record<string, Record<Metric, number>> = {
   'A Rechnung vom Frühjahr': { steps: 2, keys: 15, rows: 7, detours: 0 },
   'B Alles von einem Absender': { steps: 2, keys: 10, rows: 9, detours: 0 },
   'C Mail mit einem bestimmten Anhang': { steps: 2, keys: 11, rows: 1, detours: 0 },
-  'D Wartet auf eine Antwort von mir': IST['D Wartet auf eine Antwort von mir']!,
-  'E Diese Woche neu und wichtig': IST['E Diese Woche neu und wichtig']!,
+  'D Wartet auf eine Antwort von mir': { steps: 1, keys: 0, rows: 9, detours: 0 },
+  'E Diese Woche neu und wichtig': { steps: 1, keys: 0, rows: 3, detours: 0 },
 };
 
 /** Tasks that reached the goal: from now on the goal is enforced for them too. */
-const REACHED = ['A', 'B', 'C'];
+const REACHED = ['A', 'B', 'C', 'D', 'E'];
 
 /** The goal of the round (ANALYSIS.md „Ziel“): half the rows, the invoice in 3 steps. */
 // prettier-ignore
@@ -153,19 +156,32 @@ async function searchOrRead(page: Page, m: Meter, query: string, targets: readon
   await m.read(targets);
 }
 
+/** One step into „Wartet auf mich“: the folder entry, or the folder select when the window is narrow. */
+async function openQueue(page: Page, m: Meter) {
+  const entry = page.getByTestId('mail-queue');
+  if (await entry.isVisible()) await m.tap(entry);
+  else {
+    m.steps += 1;
+    await page.getByLabel('Ordner').selectOption('view:waiting');
+  }
+  await expect(page.getByText('An dich, noch ohne Antwort')).toBeVisible();
+  // The walk button is drawn with the queue's rows: the list on screen is the queue now.
+  await expect(page.getByTestId('mail-queue-walk')).toBeVisible();
+}
+
 const TASKS: Record<string, (page: Page, m: Meter) => Promise<void>> = {
   'A Rechnung vom Frühjahr': (page, m) =>
     searchOrRead(page, m, 'Rechnung Wasser', [TARGETS.springInvoice]),
   'B Alles von einem Absender': (page, m) => searchOrRead(page, m, 'Pusteblume', TARGETS.sender),
   'C Mail mit einem bestimmten Anhang': (page, m) =>
     searchOrRead(page, m, 'Mietvertrag', [TARGETS.attachment]),
+  // Package 2: „Wartet auf mich“ (folder entry beside the list, the folder select in a narrow window).
   'D Wartet auf eine Antwort von mir': async (page, m) => {
-    // Today: the nearest thing is the filter „Persönlich“, then reading the list.
-    await m.tap(page.getByRole('button', { name: 'Persönlich' }));
+    await openQueue(page, m);
     await m.read(TARGETS.waiting);
   },
-  'E Diese Woche neu und wichtig': async (_page, m) => {
-    // Today: the day groups „Heute“, „Gestern“, „Diese Woche“ – read them from the top.
+  'E Diese Woche neu und wichtig': async (page, m) => {
+    await openQueue(page, m);
     await m.read(TARGETS.weekImportant);
   },
 };
@@ -266,6 +282,36 @@ test.describe('mail search accessibility', () => {
       expect(
         results.violations.map((v) => `${v.id}: ${v.help} ${v.nodes[0]?.target.join(' ')}`),
       ).toEqual([]);
+    });
+  }
+
+  for (const width of [1920, 412]) {
+    test(`the queue and its walk pass axe at ${width} px; „Erledigt“ moves on and can be undone`, async ({
+      page,
+      isMobile,
+    }) => {
+      test.skip(isMobile, 'mail is a desktop-only module');
+      test.setTimeout(90_000);
+      await page.setViewportSize({ width, height: width > 1000 ? 1080 : 915 });
+      await openMailbox(page);
+      await openQueue(page, new Meter(page));
+      const first = await listedIds(page);
+      await page.getByTestId('mail-queue-walk').click();
+      const bar = page.getByRole('group', { name: 'Durch „Wartet auf mich“ gehen' });
+      await expect(bar).toContainText(`Mail 1 von ${first.length}`);
+      const results = await new AxeBuilder({ page })
+        .disableRules(['label-content-name-mismatch'])
+        .exclude('iframe[title^="Inhalt der Mail"]')
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+        .analyze();
+      expect(
+        results.violations.map((v) => `${v.id}: ${v.help} ${v.nodes[0]?.target.join(' ')}`),
+      ).toEqual([]);
+      await bar.getByRole('button', { name: 'Erledigt' }).click();
+      // The done mail left the queue; the walk shows the next one as „1 von n-1“.
+      await expect(bar).toContainText(`Mail 1 von ${first.length - 1}`);
+      await page.getByRole('button', { name: 'Rückgängig' }).click();
+      await expect(bar).toContainText(`von ${first.length}`);
     });
   }
 });

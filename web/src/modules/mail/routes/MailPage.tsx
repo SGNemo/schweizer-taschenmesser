@@ -75,6 +75,10 @@ import {
 } from '../searchHistory';
 import { focusedThreadId, useMailKeys } from '../useMailKeys';
 import { useMailbox } from '../useMailbox';
+import { KIND_FILTERS, kindFilterOf, kindOf } from '../kinds';
+import { markDone, markLater, readMarks, unmark, waitingThreads, type WaitingRule } from '../queue';
+import { loadThreads } from '../cache';
+import { now } from '@/core/time/now';
 import { useLocalSearch } from '../useLocalSearch';
 import type { HitLine } from '../searchIndex';
 import { Highlight } from '../components/Highlight';
@@ -329,6 +333,19 @@ export default function MailPage() {
   const query = params.get('q') ?? '';
   const threadId = params.get('thread');
   const personalOnly = params.get('personal') === '1';
+  const kind = kindFilterOf(params.get('kind'));
+  // „Wartet auf mich“: the folder entry, or `?view=waiting` (the planner's jump). The address word is read once
+  // and removed (it is untrusted input; only this one value means anything), nothing is written.
+  const [queueOpen, setQueueOpen] = useState(false);
+  const viewParam = params.get('view');
+  if (viewParam === 'waiting' && !queueOpen) setQueueOpen(true);
+  useEffect(() => {
+    if (viewParam === null) return;
+    const p = new URLSearchParams(params);
+    p.delete('view');
+    if (viewParam === 'waiting') p.delete('q');
+    setParams(p, { replace: true });
+  }, [viewParam, params, setParams]);
   const states = useModuleStates();
   const planLabel = states?.planner ? t.mail.plan.action : t.mail.plan.asTodo;
   const canPlan = !!states?.todos;
@@ -360,9 +377,31 @@ export default function MailPage() {
   const box = useMailbox(account, labelId, query);
   // A running search: the hits on this device first (instant, also offline), the mailbox's answer below without them.
   const searching = query.trim() !== '';
+  const inQueue = queueOpen && !searching;
+  const waitingRule = (prefs as { waitingRule?: WaitingRule } | undefined)?.waitingRule ?? 'reply';
+  // The queue reads the cached headers (all folders of this device, newest 200) and the device-local marks.
+  const cachedHeaders = useLiveQuery(
+    () => (account ? loadThreads(account.key, { limit: 200 }) : Promise.resolve([])),
+    [account?.key],
+  );
+  const [marks, setMarks] = useState(readMarks);
+  const waiting = useMemo(
+    () =>
+      account && cachedHeaders
+        ? waitingThreads(cachedHeaders, {
+            rule: waitingRule,
+            marks,
+            accountKey: account.key,
+            me: account.email,
+            at: now(),
+          })
+        : [],
+    [account, cachedHeaders, waitingRule, marks],
+  );
   const local = useLocalSearch(account?.key, query, box.tick);
   const localIds = useMemo(() => new Set(local?.hits.map((h) => h.thread.id)), [local]);
   const listed = useMemo(() => {
+    if (inQueue) return waiting;
     if (!searching) return box.threads;
     // A thread both parts know shows the mailbox's fresh copy (labels, unread) in the device part.
     const fresh = new Map(box.threads.map((th) => [th.id, th]));
@@ -374,7 +413,7 @@ export default function MailPage() {
       }) ?? []),
       ...box.threads.filter((th) => !localIds.has(th.id)),
     ];
-  }, [searching, local, localIds, box.threads]);
+  }, [inQueue, waiting, searching, local, localIds, box.threads]);
   // The device part shows 50 hits at first (a broad word can match hundreds); „N weitere zeigen“ adds more.
   const limitKey = `${account?.key}|${query}`;
   const [deviceLimit, setDeviceLimit] = useState({ q: limitKey, n: DEVICE_PAGE });
@@ -411,8 +450,10 @@ export default function MailPage() {
       const here = listed.filter((th) => localIds.has(th.id)).slice(0, deviceLimit.n);
       return [...here, ...listed.filter((th) => !localIds.has(th.id))];
     }
-    return personalOnly && offerPersonal ? listed.filter((th) => th.personal !== false) : listed;
-  }, [searching, listed, localIds, deviceLimit.n, personalOnly, offerPersonal]);
+    if (inQueue || !offerPersonal) return listed;
+    if (kind) return listed.filter((th) => kindOf(th) === kind);
+    return personalOnly ? listed.filter((th) => th.personal !== false) : listed;
+  }, [inQueue, searching, listed, localIds, deviceLimit.n, personalOnly, kind, offerPersonal]);
   const offerInvoices = (prefs as { offerInvoices?: boolean } | undefined)?.offerInvoices ?? true;
   const invoices = useInvoiceOffers(shown, offerInvoices) ?? NO_OFFERS;
   // Select mode (manage permission): checkboxes on the rows and the batch bar. A new folder, search or
@@ -428,7 +469,7 @@ export default function MailPage() {
   const selected = shown.filter((th) => selection.isSelected(th.id));
   // A batch emptied the list: select mode ends with it (its switch is gone).
   if (selecting && shown.length === 0 && !box.loading) setSelecting(false);
-  const viewKey = `${account?.key}|${labelId}|${query}|${personalOnly}`;
+  const viewKey = `${account?.key}|${labelId}|${query}|${personalOnly}|${kind}|${inQueue}`;
   const [seenView, setSeenView] = useState(viewKey);
   if (seenView !== viewKey) {
     setSeenView(viewKey);
@@ -450,7 +491,11 @@ export default function MailPage() {
   // An unsure invoice row asked for the sheet: the thread opens with it (never a write without a look).
   const [startInvoice, setStartInvoice] = useState<string | undefined>();
   // The filter hides every mail loaded so far: say so and offer the way back, never a bare „empty“.
-  const filteredOut = personalOnly && offerPersonal && box.threads.length > 0;
+  const filteredOut =
+    !inQueue && (personalOnly || !!kind) && offerPersonal && box.threads.length > 0;
+  // Walking through the queue one mail at a time (the step bar above the open mail).
+  const [walking, setWalking] = useState(false);
+  if (walking && !inQueue) setWalking(false);
 
   // `?open=<threadId>` (a link back from a ToDo or the planner) is untrusted: a plain id, and only a
   // thread this account has in its cache, is opened; anything else is dropped without a request.
@@ -605,12 +650,82 @@ export default function MailPage() {
     />
   ) : null;
 
+  const walkIndex = walking && threadId ? waiting.findIndex((th) => th.id === threadId) : -1;
+  /** The next mail of the walk after the open one (the list is read before a mark changes it). */
+  const walkOn = (from: number) => {
+    const next = waiting[from + 1];
+    if (next) return update({ thread: next.id });
+    setWalking(false);
+    update({ thread: null });
+    useUiStore.getState().toast(t.mail.queue.walkEnd);
+  };
+  const doneWith = (th: CachedThreadView, how: 'done' | 'later') => {
+    setMarks(how === 'done' ? markDone(account.key, th.id) : markLater(account.key, th.id));
+    useUiStore.getState().toast(how === 'done' ? t.mail.queue.doneToast : t.mail.queue.laterToast, {
+      label: t.ui.undo,
+      run: () => setMarks(unmark(account.key, th.id)),
+    });
+  };
+  const stepBar =
+    walkIndex >= 0 ? (
+      <div className={styles.stepBar} role="group" aria-label={t.mail.queue.stepBar}>
+        <span className={styles.stepText}>{t.mail.queue.step(walkIndex + 1, waiting.length)}</span>
+        <Button
+          size="sm"
+          onClick={() => {
+            const th = waiting[walkIndex]!;
+            doneWith(th, 'done');
+            walkOn(walkIndex);
+          }}
+        >
+          {t.mail.queue.done}
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => {
+            const th = waiting[walkIndex]!;
+            doneWith(th, 'later');
+            walkOn(walkIndex);
+          }}
+        >
+          {t.mail.queue.later}
+        </Button>
+        {canPlan && !planned.has(waiting[walkIndex]!.id) ? (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              void planMail(account, waiting[walkIndex]!, box.reload);
+              walkOn(walkIndex);
+            }}
+          >
+            {planLabel}
+          </Button>
+        ) : null}
+        <Button size="sm" variant="ghost" onClick={() => walkOn(walkIndex)}>
+          {t.mail.queue.next}
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => {
+            setWalking(false);
+            update({ thread: null });
+          }}
+        >
+          {t.mail.queue.leave}
+        </Button>
+      </div>
+    ) : null;
+
   // Phone and narrow windows: the mail replaces the list. From 58 rem of page both stay (see below).
   if (threadId && !wide)
     return (
       <>
         {header}
         {writeUi}
+        {stepBar}
         {threadView}
         <MailSettingsPanel open={panel} onClose={() => setPanel(false)} />
       </>
@@ -623,6 +738,12 @@ export default function MailPage() {
   const menuFor =
     onPlan || canModify
       ? (th: (typeof box.threads)[number]): RowMenuItem[] => [
+          ...(inQueue
+            ? [
+                { id: 'done', label: t.mail.queue.done, onSelect: () => doneWith(th, 'done') },
+                { id: 'later', label: t.mail.queue.later, onSelect: () => doneWith(th, 'later') },
+              ]
+            : []),
           ...(onPlan && !planned.has(th.id)
             ? [{ id: 'plan', label: planLabel, onSelect: () => onPlan(th) }]
             : []),
@@ -740,6 +861,7 @@ export default function MailPage() {
         onSubmit={(e) => {
           e.preventDefault();
           setRecent(rememberSearch(draft));
+          if (draft.trim()) setQueueOpen(false);
           update({ q: draft.trim(), thread: null });
         }}
         role="search"
@@ -763,14 +885,22 @@ export default function MailPage() {
           <div className={styles.picker}>
             <SelectField
               label={t.mail.page.label}
-              value={savedQuery ? `q:${savedQuery}` : labelId}
+              value={inQueue ? 'view:waiting' : savedQuery ? `q:${savedQuery}` : labelId}
               disabled={query !== '' && !savedQuery}
-              onChange={(e) =>
-                e.target.value.startsWith('q:')
-                  ? update({ q: e.target.value.slice(2), thread: null })
-                  : update({ label: e.target.value, q: null })
-              }
+              onChange={(e) => {
+                const v = e.target.value;
+                setQueueOpen(v === 'view:waiting');
+                if (v === 'view:waiting') update({ q: null, thread: null });
+                else if (v.startsWith('q:')) update({ q: v.slice(2), thread: null });
+                else update({ label: v, q: null });
+              }}
             >
+              {waitingRule !== 'off' ? (
+                <option value="view:waiting">
+                  {t.mail.queue.title}
+                  {waiting.length ? ` (${waiting.length})` : ''}
+                </option>
+              ) : null}
               {labels.map((l) => (
                 <option key={l.id} value={l.id}>
                   {labelName(l)}
@@ -858,16 +988,53 @@ export default function MailPage() {
         </div>
       ) : null}
 
+      {inQueue ? (
+        <div className={styles.queueHead}>
+          <p className={styles.hint}>
+            {waitingRule === 'starred' ? t.mail.queue.ruleStarred : t.mail.queue.ruleReply}{' '}
+            <Link to={settingsPath('module', 'module-mail', 'waitingRule')}>
+              {t.mail.queue.change}
+            </Link>
+          </p>
+          {waiting.length > 0 ? (
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setWalking(true);
+                update({ thread: waiting[0]!.id });
+              }}
+              data-testid="mail-queue-walk"
+            >
+              {t.mail.queue.walk}
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+
       {(offerPersonal || (offerPlanAll && onPlan) || canModify) && box.threads.length > 0 ? (
         <div className={styles.row} ref={selectRow}>
-          {offerPersonal && !searching ? (
-            <Chips>
-              <Chip
-                label={t.mail.plan.personal}
-                selected={personalOnly}
-                onClick={() => update({ personal: personalOnly ? null : '1', thread: null })}
-              />
-            </Chips>
+          {offerPersonal && !searching && !inQueue ? (
+            <div role="group" aria-label={t.mail.kind.filters}>
+              <Chips>
+                <Chip
+                  label={t.mail.plan.personal}
+                  selected={personalOnly && !kind}
+                  onClick={() =>
+                    update({ personal: personalOnly ? null : '1', kind: null, thread: null })
+                  }
+                />
+                {KIND_FILTERS.map((k) => (
+                  <Chip
+                    key={k}
+                    label={t.mail.kind[k]}
+                    selected={kind === k}
+                    onClick={() =>
+                      update({ kind: kind === k ? null : k, personal: null, thread: null })
+                    }
+                  />
+                ))}
+              </Chips>
+            </div>
           ) : null}
           {offerPlanAll && onPlan && shown.length > 0 ? (
             <Button
@@ -975,17 +1142,27 @@ export default function MailPage() {
       ) : shown.length === 0 && !box.error ? (
         <EmptyState
           title={
-            query
-              ? t.mail.page.emptySearch
-              : filteredOut
-                ? t.mail.plan.emptyPersonal
-                : t.mail.page.empty
+            inQueue
+              ? waitingRule === 'off'
+                ? t.mail.queue.off
+                : t.mail.queue.empty
+              : query
+                ? t.mail.page.emptySearch
+                : filteredOut
+                  ? kind === 'invoice'
+                    ? t.mail.kind.emptyInvoice
+                    : kind === 'newsletter'
+                      ? t.mail.kind.emptyNewsletter
+                      : t.mail.plan.emptyPersonal
+                  : t.mail.page.empty
           }
           testId="mail-empty"
           motif={<SignatureMark id="stamp" size={64} />}
         >
           {filteredOut ? (
-            <Button onClick={() => update({ personal: null })}>{t.mail.plan.clearPersonal}</Button>
+            <Button onClick={() => update({ personal: null, kind: null })}>
+              {kind ? t.mail.kind.clear : t.mail.plan.clearPersonal}
+            </Button>
           ) : null}
         </EmptyState>
       ) : (
@@ -1023,13 +1200,34 @@ export default function MailPage() {
       {wide ? (
         <div className={styles.cols} data-testid="mail-columns">
           <nav className={styles.labelCol} aria-label={t.mail.page.labelsNav}>
+            {waitingRule !== 'off' ? (
+              <button
+                type="button"
+                className={styles.labelBtn}
+                aria-current={inQueue ? 'true' : undefined}
+                onClick={() => {
+                  setQueueOpen(true);
+                  update({ q: null, thread: null });
+                }}
+                data-testid="mail-queue"
+              >
+                <span>{t.mail.queue.title}</span>
+                {/* A calm count, like a folder's: no colour, no badge that grows louder. */}
+                {waiting.length ? (
+                  <span className={styles.labelCount}>{waiting.length}</span>
+                ) : null}
+              </button>
+            ) : null}
             {labels.map((l) => (
               <button
                 key={l.id}
                 type="button"
                 className={styles.labelBtn}
-                aria-current={l.id === labelId && !query ? 'true' : undefined}
-                onClick={() => update({ label: l.id, q: null, thread: null })}
+                aria-current={l.id === labelId && !query && !inQueue ? 'true' : undefined}
+                onClick={() => {
+                  setQueueOpen(false);
+                  update({ label: l.id, q: null, thread: null });
+                }}
               >
                 <span>{labelName(l)}</span>
                 {l.unread ? <span className={styles.labelCount}>{l.unread}</span> : null}
@@ -1061,6 +1259,7 @@ export default function MailPage() {
           </nav>
           <div className={styles.listCol}>{listPane}</div>
           <section className={styles.reading} aria-label={t.mail.view.back}>
+            {stepBar}
             {threadView ?? <p className={styles.hint}>{t.mail.page.pickThread}</p>}
           </section>
         </div>
