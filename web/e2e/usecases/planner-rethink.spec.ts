@@ -17,11 +17,12 @@ import { ready } from '../helpers';
  * brought it to the figures below: nothing moves unasked. Laying the week by hand now costs 31 taps instead of 8,
  * because nothing is spread beforehand (things start under „Noch ohne Tag“) – „Woche vorschlagen“ and dragging
  * (packages 5 and 6) bring that down. `TARGET` holds the values the rebuild has to reach (CONCEPT.md §8). Every
- * package re-measures `IST` for the paths it changes (`MEASURE=1` only measures); the last one switches the
- * assertion from `IST` to `TARGET`. The table lands in `test-results/usecase-planner-rethink.md`, the facts next
+ * package re-measured `IST` for the paths it changed (`MEASURE=1` only measures); package 7 (2026-11-22) switched
+ * the assertion to `TARGET` (a count at most its target, a word equal; a figure without a target never above its
+ * `IST`), on the desktop and the phone, light (`SCHEME=dark`: dark). The table lands in `test-results/usecase-planner-rethink.md`, the facts next
  * to it.
  *
- *   npx playwright test e2e/usecases/planner-rethink.spec.ts --project=desktop-chrome --trace off
+ *   npx playwright test e2e/usecases/planner-rethink.spec.ts --trace off   (desktop and phone; SCHEME=dark: dark)
  */
 
 const OUT = 'test-results/usecase-planner-rethink';
@@ -36,7 +37,7 @@ const IN_THREE_WEEKS = day(21);
 
 type Figures = Record<string, number | string>;
 
-/** The measured state; a path fails when the planner behaves differently (then re-measure and say why). */
+/** The last measured state: with `TARGET` it bounds every count (a path that gets worse fails; re-measure and say why). */
 const IST: Record<string, Figures> = {
   'U1 Woche legen, zwei Tage verpassen, zurücklegen': {
     // Package 5 (2026-11-22): 31 → 11 – „Noch ohne Tag“ open once, then one drag per thing onto its day's tile.
@@ -87,6 +88,18 @@ const TARGET: Record<string, Figures> = {
   },
   'U6 Ding fest machen': { taps: 1, locked: 'ja', collateral: 0 },
   'U7 Alle auf heute': { taps: 1, onToday: 'ja', collateral: 0 },
+};
+
+/**
+ * The phone (pixel-7), package 7: where it differs from the desktop, and why.
+ *  - U6: the lock is a control on the row only while it is „fest“ (the phone's stimulus bound, `kopf-leer.spec.ts`
+ *    D, package 2) – locking an open row is ⋯ and „Fest an diesem Tag“: 2 taps, one above `TARGET`.
+ *  - U1 `layTaps`: the phone lays the week by „Verschieben …“ (its long-press drag is covered by
+ *    `e2e/planner-move.spec.ts`; a touch gesture through the emulator is no steady measure).
+ */
+const PHONE_TARGET: Record<string, Figures> = { 'U6 Ding fest machen': { taps: 2 } };
+const PHONE_IST: Record<string, Figures> = {
+  'U1 Woche legen, zwei Tage verpassen, zurücklegen': { layTaps: 31 },
 };
 
 const base = { createdAt: 1, updatedAt: 1, deviceId: 'e2e', deletedAt: null, _f: {} };
@@ -340,36 +353,67 @@ function chipLabel(date: string) {
 
 function record(info: TestInfo, name: string, figures: Figures, facts: unknown) {
   mkdirSync(OUT, { recursive: true });
-  const key = name.slice(0, 2);
-  writeFileSync(`${OUT}/${key}-${info.project.name}.json`, JSON.stringify({ name, figures }));
-  writeFileSync(`${OUT}/${key}-${info.project.name}-facts.json`, JSON.stringify(facts, null, 1));
+  const key = `${name.slice(0, 2)}-${info.project.name}${SCHEME === 'dark' ? '_dark' : ''}`;
+  writeFileSync(`${OUT}/${key}.json`, JSON.stringify({ name, figures }));
+  writeFileSync(`${OUT}/${key}-facts.json`, JSON.stringify(facts, null, 1));
   const lines = readdirSync(OUT)
-    .filter((f) => /^U\d-[^-]+(-[^-]+)?\.json$/.test(f) && !f.endsWith('-facts.json'))
+    .filter((f) => /^U\d-.+\.json$/.test(f) && !f.endsWith('-facts.json'))
     .sort()
     .flatMap((f) => {
       const row = JSON.parse(readFileSync(`${OUT}/${f}`, 'utf8')) as {
         name: string;
         figures: Figures;
       };
+      const where = f.slice(3, -'.json'.length);
       return Object.entries(row.figures).map(
-        ([k, v]) => `| ${row.name} | ${k} | ${v} | ${TARGET[row.name]?.[k] ?? '–'} |`,
+        ([k, v]) => `| ${row.name} | ${where} | ${k} | ${v} | ${TARGET[row.name]?.[k] ?? '–'} |`,
       );
     });
   writeFileSync(
     `${OUT}.md`,
-    ['| Pfad | Messgröße | Ist | Ziel |', '| --- | --- | --- | --- |', ...lines, ''].join('\n'),
+    [
+      '| Pfad | Projekt | Messgröße | Ist | Ziel |',
+      '| --- | --- | --- | --- | --- |',
+      ...lines,
+      '',
+    ].join('\n'),
   );
   info.annotations.push({ type: 'usecase', description: `${name}: ${JSON.stringify(figures)}` });
   console.log(name, JSON.stringify(figures));
-  // MEASURE=1 only measures (a package re-measures before it writes its figures into `IST`).
-  if (process.env.MEASURE !== '1' && IST[name])
-    expect(figures, `${name}: Ist-Zustand`).toEqual(IST[name]);
+  // MEASURE=1 only measures. Package 7: the rebuild is asserted against `TARGET` – a count (taps, unasked or
+  // collateral moves) may be at most the better of its target and its last measured `IST`, a word must match
+  // (nothing is loosened).
+  if (process.env.MEASURE !== '1') reached(name, figures, !!info.project.use.isMobile);
 }
 
-test.beforeEach(async ({ page }, info) => {
-  // Measured with the mouse on the desktop; the phone gets its own figures with the rebuild (package 7).
-  test.skip(info.project.name !== 'desktop-chrome', 'desktop only');
+function reached(name: string, figures: Figures, phone: boolean) {
+  const target: Figures = { ...TARGET[name], ...(phone ? PHONE_TARGET[name] : {}) };
+  const ist: Figures = { ...IST[name], ...(phone ? PHONE_IST[name] : {}) };
+  for (const k of new Set([...Object.keys(target), ...Object.keys(ist)])) {
+    const want = target[k];
+    const was = ist[k];
+    const got = figures[k];
+    if (typeof want === 'string') expect(got, `${name}: ${k} = Ziel`).toBe(want);
+    else {
+      // A count may not grow beyond the better of its target and its last measured value – a named phone deviation
+      // (PHONE_TARGET) is its own bound.
+      const deviation = phone ? PHONE_TARGET[name]?.[k] : undefined;
+      const bound =
+        typeof deviation === 'number'
+          ? deviation
+          : Math.min(...[want, was].filter((v): v is number => typeof v === 'number'));
+      if (Number.isFinite(bound))
+        expect(got, `${name}: ${k} ≤ ${bound}`).toBeLessThanOrEqual(bound);
+    }
+  }
+}
+
+/** Package 7: measured light and dark (`SCHEME=dark`), on the desktop and on the phone. */
+const SCHEME = process.env.SCHEME === 'dark' ? 'dark' : 'light';
+
+test.beforeEach(async ({ page }) => {
   test.setTimeout(240_000);
+  await page.emulateMedia({ colorScheme: SCHEME });
   await page.clock.setFixedTime(new Date(`${MONDAY}T08:00:00`));
 });
 
@@ -401,7 +445,10 @@ test('U1 Woche legen, zwei Tage verpassen, zurücklegen', async ({ page }, info)
   for (const [title, to] of Object.entries(WANT)) {
     const before = await settled(page);
     if (before[title] === to) continue;
-    expect(await lay.drag(title, to), `${title} → ${to}`).toBe(true);
+    // The phone lays by „Verschieben …“: its long-press drag is covered by e2e/planner-move.spec.ts, and a touch
+    // gesture through the emulator is no steady measure.
+    const done = info.project.use.isMobile ? await lay.move(title, to) : await lay.drag(title, to);
+    expect(done, `${title} → ${to}`).toBe(true);
     layCollateral.push(...changed(before, await settled(page), [title]));
   }
   const laid = await settled(page);
@@ -653,7 +700,13 @@ test('U6 Ding fest machen', async ({ page }, info) => {
   const hand = new Hand(page);
   const at = before['Steuer']!.split('+')[0]!;
   await hand.show(at);
-  await hand.tap(page.getByRole('button', { name: 'Fest an diesem Tag: Steuer', exact: true }));
+  const lock = page.getByRole('button', { name: 'Fest an diesem Tag: Steuer', exact: true });
+  // The phone shows the lock only on rows that are „fest“ (its stimulus budget, package 2): ⋯, then the entry.
+  if (await lock.count()) await hand.tap(lock);
+  else {
+    await hand.tap(page.getByRole('button', { name: 'Aktionen für Steuer', exact: true }).first());
+    await hand.tap(page.getByRole('menuitem', { name: 'Fest an diesem Tag' }));
+  }
   await expect(page.getByRole('status').filter({ hasText: /^Fest am / })).toBeVisible();
   const after = await settled(page);
   const locked = (

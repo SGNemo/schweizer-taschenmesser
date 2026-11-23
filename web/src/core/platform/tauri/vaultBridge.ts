@@ -41,6 +41,7 @@ export function createVaultBridge(supported: boolean): VaultBridgeService {
       }
     },
     stop: () => invoke('vault_bridge_stop'),
+    state: () => invoke<'off' | 'running' | 'taken'>('vault_bridge_state'),
     register: () => invoke<VaultBridgeRegistration>('vault_bridge_register'),
     unregister: () => invoke('vault_bridge_unregister'),
     status: () => invoke<VaultBridgeRegistration>('vault_bridge_status'),

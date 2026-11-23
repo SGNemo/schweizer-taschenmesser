@@ -6631,13 +6631,15 @@ export const de = {
       errors: {
         'register-failed': 'Die App konnte sich nicht bei den Browsern eintragen.',
         'channel-taken':
-          'Eine andere Nemo-Instanz belegt die Verbindung. Beende sie und versuche es erneut.',
-        failed: 'Die Verbindung konnte nicht gestartet werden.',
+          'Die Verbindung ist belegt – von einem anderen Programm oder einem zweiten Nemo (z. B. der Dev-Preview). Schließe es und schalte die Verbindung erneut ein; hilft das nicht, melde andere Windows-Konten ab oder starte den PC neu.',
+        failed:
+          'Die Verbindung konnte nicht gestartet werden. Versuche es erneut; hilft das nicht, starte Nemo neu.',
       },
       startErrors: {
         'channel-taken':
-          'Die Verbindung zur Browser-Erweiterung ist von einer anderen Nemo-Instanz belegt.',
-        failed: 'Die Verbindung zur Browser-Erweiterung konnte nicht gestartet werden.',
+          'Die Verbindung zur Browser-Erweiterung ist belegt – von einem anderen Programm oder einem zweiten Nemo (z. B. der Dev-Preview). Schließe es und schalte die Verbindung hier aus und wieder ein; hilft das nicht, melde andere Windows-Konten ab oder starte den PC neu.',
+        failed:
+          'Die Verbindung zur Browser-Erweiterung konnte nicht gestartet werden. Schalte sie hier aus und wieder ein.',
       },
     },
   },

@@ -1172,3 +1172,27 @@ describe('package 6: proposals', () => {
     expect((await itemRepo.get(key('long')))?.splittable).toBeFalsy();
   });
 });
+
+/**
+ * Package 7 (CONCEPT-MIGRATION §3): a done thing's row stays, hidden by the board's selector – never deleted by a tidy
+ * step. Measured: what it costs per done thing, projected over a year of use (the figure is in the PR).
+ */
+describe('package 7: hidden rows of done things', () => {
+  it('50 things laid and done: every row stays, none shows; the bytes per done thing stay small', async () => {
+    const days = [MON, TUE, WED, THU, FRI];
+    for (let i = 0; i < 50; i++) {
+      await addTask(`h${i}`, `Ding ${i} mit einem mittellangen Titel`, 30);
+      expect(await moveTo(await entryOf(`h${i}`), days[i % 5]!, {})).toBe(true);
+    }
+    await runsSettled();
+    for (let i = 0; i < 50; i++) expect(await markDone(await entryOf(`h${i}`), {})).toBe(true);
+    await runsSettled();
+    const rows = await db.table('planner_assignment').toArray();
+    expect(rows.filter((r) => !r.deletedAt)).toHaveLength(50);
+    expect((await boardOn(MON)).days.flatMap((d) => d.rows)).toEqual([]);
+    const bytes = rows.reduce((n, r) => n + JSON.stringify(r).length, 0) / rows.length;
+    // A row is its sync envelope (a clock per field) plus a few fields: about half a kilobyte (measured 516 B).
+    expect(bytes).toBeLessThan(1024);
+    // 516 B × 10 done things a day × 365 ≈ 1.8 MB a year: no clean-up needed (package 7, in the PR).
+  });
+});

@@ -58,12 +58,26 @@ pub fn vault_bridge_start(
             .is_ok()
     })
     .map_err(|e| match e.kind() {
+        // AddrInUse: the name is held by someone else (or served already). PermissionDenied: an
+        // existing pipe of that name refuses this process – held by someone else as well.
         std::io::ErrorKind::AddrInUse | std::io::ErrorKind::PermissionDenied => "channel-taken",
         _ => "failed",
     })?;
     *state.responder.lock().map_err(|_| "failed")? = Some(server.responder());
     *slot = Some(server);
     Ok(())
+}
+
+/// `off`, `running`, or `taken` when another process took the channel while the server ran (X2):
+/// the server has stopped serving then, and Settings shows the channel as taken.
+#[tauri::command(async)]
+pub fn vault_bridge_state(state: State<'_, VaultBridge>) -> &'static str {
+    let slot = state.server.lock().unwrap_or_else(|e| e.into_inner());
+    match slot.as_ref() {
+        None => "off",
+        Some(server) if server.taken() => "taken",
+        Some(_) => "running",
+    }
 }
 
 #[tauri::command]
