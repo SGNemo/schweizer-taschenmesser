@@ -9,6 +9,7 @@ import { tLegal } from '@/strings.legal';
 export const DATA_FLOW_IDS = [
   'local',
   'sync',
+  'lan',
   'push',
   'ics',
   'update',
@@ -22,6 +23,8 @@ export const DATA_FLOW_IDS = [
   'weather',
   'maps',
   'browser',
+  'breach',
+  'previews',
   'downloads',
   'torrent',
   'ip',

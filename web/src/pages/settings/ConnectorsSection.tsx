@@ -28,6 +28,7 @@ import { tSettingsConnect } from '@/strings.settingsConnect';
 import { useUiStore } from '@/stores/ui';
 import { Badge, Button, Card, Checkbox, Dialog, TextField } from '@/ui';
 import { ChoiceList, Facts, StateBanner, Step } from './ConnectParts';
+import { disconnectText } from './disconnectText';
 import styles from './settings.module.css';
 
 const s = t.connectors;
@@ -348,7 +349,7 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
         footer={<Button onClick={() => setConfirm(false)}>{t.actions.cancel}</Button>}
       >
         <div className={styles.form}>
-          <p>{s.disconnectBody}</p>
+          <p>{disconnectText(def)}</p>
           <div className={styles.row}>
             <Button
               onClick={() => {

@@ -39,6 +39,12 @@ export const tLegal = defineBundle(
         to: 'Der Server, dessen Adresse du selbst einträgst und betreibst. Kein Dienst des Betreibers von Nemo. Beim Abgleich im Heimnetz stattdessen direkt deine gekoppelten Geräte im Heimnetz, immer verschlüsselt; der PC meldet sich dafür im Heimnetz, während du ein Gerät koppelst und solange eines gekoppelt ist. Austausch und Fernsteuerung laufen, wenn du sie einschaltest, über denselben Heimnetz-Zugang des PCs (eigene Sitzung).',
         when: 'Nur nach dem Verbinden unter Sync & Backup bzw. nach dem Koppeln im Heimnetz: beim Start, etwa jede Minute, bei Änderungen.',
       },
+      lan: {
+        title: 'Austausch und Fernsteuerung im Heimnetz (optional)',
+        what: 'Austausch: Notizen, Links und Dateien, die du von einem gekoppelten Gerät an ein anderes schickst (Dateien bis 100 MB). Fernsteuerung: vom Handy Medien-, Lautstärke- und Sperrbefehle, mit eigener Freigabe auch Maus- und Tastatureingaben und der Start von Programmen aus der Liste am PC; der PC zeigt dem Handy dafür seinen Stand (z. B. Betriebssystem, Schalter, Namen der freigegebenen Programme). Eingaben werden nie gespeichert oder protokolliert; Austausch-Karten bleiben 30 Tage auf den beiden Geräten, Dateien im gewählten Ordner, nichts davon wird synchronisiert, gesichert oder an die KI gegeben.',
+        to: 'Nur deine gekoppelten Geräte im selben Heimnetz, direkt und verschlüsselt. Kein Server, kein Dienst des Betreibers von Nemo.',
+        when: 'Nur wenn du Austausch bzw. Fernsteuerung einschaltest, das Gerät am PC freigibst und selbst etwas schickst oder steuerst. Eine Freigabe für Maus und Tastatur reicht so weit wie dein Benutzerkonto am PC: das gesteuerte Gerät kann alles, was du dort per Hand könntest.',
+      },
       push: {
         title: 'Web-Push-Erinnerungen (optional)',
         what: 'Titel, Text und Link der Erinnerungen der nächsten zwei Wochen sowie die Push-Adresse deines Browsers. Mit Passwortsatz verschlüsselt.',
@@ -79,7 +85,7 @@ export const tLegal = defineBundle(
         title: 'Spotify (optional, Windows)',
         what: 'Anmeldung mit deiner eigenen Spotify-App (Client-ID, ohne Geheimnis). Danach fragt das Gerät bei Spotify, was gerade läuft (Titel, Interpret), und sendet auf Klick Pause, Weiter, Zurück oder Nächster. Im Player (nur auf Klick) liest es deine Playlists und gespeicherten Songs, sucht nach dem eingetippten Begriff und startet Titel; das Cover lädt es von Spotifys Bild-Server (i.scdn.co). Titel, Interpret, Cover und Suchbegriff bleiben auf dem Gerät: kein Sync, keine KI, keine Fehlerberichte.',
         to: 'Spotify (accounts.spotify.com, api.spotify.com; für Cover die Bildserver i.scdn.co, mosaic.scdn.co und image-cdn-*.spotifycdn.com).',
-        when: 'Nur nach Verbinden und nur bei geöffneter, sichtbarer Übersicht: höchstens alle 30 Sekunden. Trennen unter Verbindungen → Spotify.',
+        when: 'Nur nach Verbinden und nur bei geöffneter, sichtbarer Übersicht: höchstens alle 30 Sekunden. Trennen unter Verbindungen → Spotify löscht die Anmeldung auf diesem Gerät; den Zugriff der App entziehst du in deinem Spotify-Konto (Spotify bietet keinen Widerruf durch die App).',
       },
       supporter: {
         title: 'Supporter-Code und Ko-fi',
@@ -115,7 +121,19 @@ export const tLegal = defineBundle(
         title: 'Browser (optional)',
         what: 'Die Seiten, die du im eingebauten Browser öffnest: Adresse, Cookies und was die Seite sonst anfordert, wie in jedem Browser; bei der Suche der Suchbegriff an die gewählte Suchmaschine. Lesezeichen und Verlauf bleiben auf dem Gerät, gehen nie an die KI und werden nicht synchronisiert. Die Seiten laufen getrennt von deinen Nemo-Daten und sehen sie nicht.',
         to: 'Die Server der Seiten, die du öffnest, und die Suchmaschine deiner Wahl (Standard DuckDuckGo). Sie sehen deine IP-Adresse.',
-        when: 'Nur wenn du das Modul „Browser“ einschaltest und eine Adresse oder einen Suchbegriff abschickst oder einem Link folgst, nie im Hintergrund. Der Blocker hält bekannte Werbe- und Tracker-Server fern (nur Windows).',
+        when: 'Nur wenn du das Modul „Browser“ einschaltest und eine Adresse oder einen Suchbegriff abschickst oder einem Link folgst. Die Tab-Vorschau (aus, siehe „Link- und Tab-Vorschau“) lädt Seiten offener Tabs selbst. Der Blocker hält bekannte Werbe- und Tracker-Server fern (nur Windows).',
+      },
+      breach: {
+        title: 'Leck-Prüfung im Tresor (optional)',
+        what: 'Je Passwort die ersten 5 Zeichen seines SHA-1-Hashwerts (nie das Passwort, nie Benutzername, Titel oder Adresse). Die Antwort, alle bekannten Hash-Endungen zu diesen 5 Zeichen, vergleicht Nemo auf dem Gerät; nichts davon wird gespeichert.',
+        to: 'api.pwnedpasswords.com (Have I Been Pwned). Der Dienst sieht deine IP-Adresse.',
+        when: 'Nur wenn du in den Tresor-Einstellungen den Abgleich mit bekannten Datenlecks einschaltest, und dann nur, wenn du „Passwörter prüfen“ öffnest.',
+      },
+      previews: {
+        title: 'Link- und Tab-Vorschau (optional)',
+        what: 'Die Seite hinter einem gespeicherten Link bzw. einem offenen Browser-Tab und das Vorschaubild, das sie nennt, ohne Cookies und ohne Anmeldung. Gespeichert werden nur Titel, Kurzbeschreibung und ein kleines Bild auf diesem Gerät (nie Sync, nie Backup, nie KI).',
+        to: 'Der Server der Seite und der Server des Vorschaubilds; in der Browser-App über deinen eigenen Sync-Server. Sie sehen deine IP-Adresse (bzw. die des Servers).',
+        when: 'Nur mit eingeschalteter „Linkvorschau laden“ bzw. „Vorschaubilder für offene Tabs“ (beides standardmäßig aus): beim Speichern eines Links oder auf „Vorschau von der Seite holen“ in der Merkliste; für Tabs automatisch für jeden offenen Tab, solange die Tab-Übersicht sichtbar ist (nur Windows).',
       },
       downloads: {
         title: 'Downloads (optional)',
@@ -289,6 +307,12 @@ export const tLegal = defineBundle(
           to: 'The server whose address you enter and run yourself. Not a service run by the maintainer of Nemo. With home-network sync instead straight to your paired devices in the home network, always encrypted; for this the PC announces itself in the home network while you pair a device and as long as one is paired. Device drop and Remote, when you switch them on, go through the PC’s same home-network access (a separate session).',
           when: 'Only after you connect it under Sync & backup, or after pairing in the home network: at start, about every minute, and on changes.',
         },
+        lan: {
+          title: 'Device drop and Remote in the home network (optional)',
+          what: 'Device drop: notes, links and files you send from one paired device to another (files up to 100 MB). Remote: media, volume and lock commands from the phone and, with their own grant, mouse and keyboard input and starting programs from the list on the PC; for this the PC shows the phone its state (e.g. operating system, switches, names of the granted programs). Input is never stored or logged; drop cards stay on both devices for 30 days, files in the folder you chose, and none of it is synced, backed up or given to the AI.',
+          to: 'Only your paired devices in the same home network, directly and encrypted. No server, no service run by the maintainer of Nemo.',
+          when: 'Only when you switch on Device drop or Remote, grant the device on the PC and send or control something yourself. A mouse and keyboard grant reaches as far as your user account on the PC: the controlling device can do whatever you could do there by hand.',
+        },
         push: {
           title: 'Web push reminders (optional)',
           what: 'Title, text and link of the reminders for the next two weeks, plus your browser push address. Encrypted when you use a passphrase.',
@@ -329,7 +353,7 @@ export const tLegal = defineBundle(
           title: 'Spotify (optional, Windows)',
           what: 'Sign-in with your own Spotify app (client ID, no secret). After that the device asks Spotify what is playing (title, artist) and, on a click, sends pause, resume, previous or next. In the player (only on a click) it reads your playlists and saved songs, searches for the term you typed and starts tracks; the cover comes from Spotify’s image server (i.scdn.co). Title, artist, cover and search term stay on the device: no sync, no AI, no error reports.',
           to: 'Spotify (accounts.spotify.com, api.spotify.com; for covers the image servers i.scdn.co, mosaic.scdn.co and image-cdn-*.spotifycdn.com).',
-          when: 'Only after connecting and only while the Overview is open and visible: at most every 30 seconds. Disconnect under Connections → Spotify.',
+          when: 'Only after connecting and only while the Overview is open and visible: at most every 30 seconds. Disconnecting under Connections → Spotify deletes the sign-in on this device; remove the app’s access in your Spotify account (Spotify offers no revoke by the app).',
         },
         supporter: {
           title: 'Supporter code and Ko-fi',
@@ -365,7 +389,19 @@ export const tLegal = defineBundle(
           title: 'Browser (optional)',
           what: 'The pages you open in the built-in browser: address, cookies and whatever else the page requests, as in any browser; for a search, the search term to the chosen search engine. Bookmarks and history stay on the device, never go to the AI and are not synced. The pages run separately from your Nemo data and cannot see it.',
           to: 'The servers of the pages you open and the search engine of your choice (default DuckDuckGo). They see your IP address.',
-          when: 'Only when you switch on the “Browser” module and submit an address or a search term or follow a link, never in the background. The blocker keeps known ad and tracker servers out (Windows only).',
+          when: 'Only when you switch on the “Browser” module and submit an address or a search term or follow a link. The tab preview (off, see “Link and tab previews”) fetches pages of open tabs itself. The blocker keeps known ad and tracker servers out (Windows only).',
+        },
+        breach: {
+          title: 'Leak check in the vault (optional)',
+          what: 'For each password the first 5 characters of its SHA-1 hash (never the password, never user name, title or address). Nemo compares the answer, all known hash endings for those 5 characters, on the device; none of it is stored.',
+          to: 'api.pwnedpasswords.com (Have I Been Pwned). The service sees your IP address.',
+          when: 'Only when you switch on the comparison with known data leaks in the vault settings, and then only when you open “Check passwords”.',
+        },
+        previews: {
+          title: 'Link and tab previews (optional)',
+          what: 'The page behind a saved link or an open browser tab and the preview picture it names, without cookies and without login. Only title, short description and a small picture are kept, on this device (never synced, never backed up, never to the AI).',
+          to: 'The page’s server and the server of the preview picture; in the browser app through your own sync server. They see your IP address (or the server’s).',
+          when: 'Only with “Load link previews” or “Preview pictures for open tabs” switched on (both off by default): when you save a link or click “Fetch a preview from the page” in Saved; for tabs automatically for each open tab while the tab overview is visible (Windows only).',
         },
         downloads: {
           title: 'Downloads (optional)',

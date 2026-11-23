@@ -30,6 +30,14 @@ function hostsInSource(): Map<string, string[]> {
   return found;
 }
 
+/**
+ * Hosts a dependency calls, not our own code (D13: the Claude provider goes through the Anthropic
+ * SDK, whose default base URL is api.anthropic.com). Each is checked in the dependency's source.
+ */
+const FROM_DEPENDENCY: Record<string, string> = {
+  'api.anthropic.com': 'node_modules/@anthropic-ai/sdk/client.js',
+};
+
 const listed = new Map<string, NetReason>(
   NET_CATALOGUE.flatMap((u) => u.hosts.map((h) => [h, u.reason] as const)),
 );
@@ -47,9 +55,17 @@ describe('"Was geht ins Netz" is derived from the code (D09)', () => {
 
   it('lists nothing that is no longer in the code, each under the reason the log uses', () => {
     for (const [host, reason] of listed) {
-      expect([host, source.has(host)]).toEqual([host, true]);
+      const dep = FROM_DEPENDENCY[host];
+      const inCode = dep
+        ? readFileSync(resolve(SRC, '..', dep), 'utf8').includes(`https://${host}`)
+        : source.has(host);
+      expect([host, inCode]).toEqual([host, true]);
       expect([host, reasonOf(host)]).toEqual([host, reason]);
     }
+  });
+
+  it("names the Claude provider's host (D13)", () => {
+    expect(listed.get('api.anthropic.com')).toBe('ai');
   });
 
   it('names every reason of the connection log once', () => {

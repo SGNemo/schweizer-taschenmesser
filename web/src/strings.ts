@@ -6754,6 +6754,8 @@ export const de = {
     disconnectTitle: (name: string) => `${name} trennen?`,
     disconnectBody:
       'Der Zugriff wird beim Dienst widerrufen und die gespeicherten Anmeldedaten werden von diesem Gerät gelöscht.',
+    disconnectBodyNoRevoke:
+      'Die gespeicherten Anmeldedaten werden von diesem Gerät gelöscht. Der Dienst kennt keinen Widerruf durch die App: Den Zugriff entziehst du in deinem Konto beim Dienst (bei Spotify unter „Apps verwalten“).',
     keepData: 'Übernommene Termine behalten',
     deleteData: 'Übernommene Termine löschen',
     accounts: 'Konten',
