@@ -6,7 +6,14 @@ import { today } from '@/core/time/now';
 import { t } from '@/strings';
 import { Button, Checkbox, Dialog, Segmented, TextArea } from '@/ui';
 import { applyPaste, pasteKnown } from '../actions';
-import { matchPaste, readPastedPlan, type Known, type PasteLine, type Place } from '../pastePlan';
+import {
+  goalDays,
+  matchPaste,
+  readPastedPlan,
+  type Known,
+  type PasteLine,
+  type Place,
+} from '../pastePlan';
 import styles from './PasteDialog.module.css';
 
 /** Days first in date order, then this week, then later: the plan reads from now on, not from what is put off. */
@@ -67,11 +74,14 @@ function detailOf(line: PasteLine): string {
  */
 export function PasteDialog({
   initial,
+  goals,
   titles,
   onClose,
 }: {
   /** Text pasted into the planner's field: the preview shows at once. */
   initial: string;
+  /** The goals stored on the days in view (date → goal), so the preview knows what a goal line would change. */
+  goals: Readonly<Record<string, string>>;
   titles: Record<string, string>;
   onClose: () => void;
 }) {
@@ -85,6 +95,8 @@ export function PasteDialog({
   const [missingLater, setMissingLater] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  // The paste's goal line (P2): on by default, for the days the paste names (else today).
+  const [goalOn, setGoalOn] = useState(true);
   const day = today();
 
   useEffect(() => {
@@ -116,7 +128,15 @@ export function PasteDialog({
     setMissingLater(false);
   }
   const toLater = missingLater && laterOk ? movable : [];
-  const writes = chosen.filter((l) => l.change !== 'same').length + toLater.length;
+  const goalDates = goalDays(plan, day, past);
+  // The goal line counts as a change only on days whose goal differs (the same paste twice changes nothing).
+  const goalNew = goalDates.some((d) => (goals[d] ?? '') !== plan.goal);
+  const goal =
+    plan.goal && goalOn && preview && plan.things.length > 0
+      ? { text: plan.goal, dates: goalDates }
+      : undefined;
+  const writes =
+    chosen.filter((l) => l.change !== 'same').length + toLater.length + (goal && goalNew ? 1 : 0);
 
   const groups = useMemo(() => {
     const out = new Map<string, { place: Place; lines: PasteLine[] }>();
@@ -141,9 +161,9 @@ export function PasteDialog({
       const lines = now.lines.filter((l) => ids.has(l.id) && ticked(l));
       const seen = new Set(toLater.map((k) => k.key));
       const later = now.missing.filter((k) => seen.has(k.key) && !k.locked && k.canLater);
-      if (await applyPaste(lines, later, titles)) onClose();
-      // Nothing left to write (a sync did it): the preview shows the plan as it is now.
-      else setKnown(fresh);
+      // Written – or nothing was left to write (a sync or a goal outside the view had it already): done either way.
+      await applyPaste(lines, later, titles, goal);
+      onClose();
     } catch {
       setFailed(true);
     } finally {
@@ -212,6 +232,13 @@ export function PasteDialog({
               { value: 'today', label: p.pastToday },
             ]}
             onChange={setPast}
+          />
+        ) : null}
+        {plan.goal && preview && plan.things.length > 0 ? (
+          <Checkbox
+            label={t.planner.goal.paste(plan.goal, goalDates.map(dayLabel).join(', '))}
+            checked={goalOn}
+            onChange={(e) => setGoalOn(e.target.checked)}
           />
         ) : null}
         {groups.map((g) => (

@@ -9635,6 +9635,18 @@ export const de = {
       openFrom: (days: string) => `Noch offen: Dinge von ${days}`,
       openSince: (day: string) => `Noch offen: Dinge seit ${day}`,
     },
+    goal: {
+      title: 'Ziel',
+      line: (goal: string) => `Ziel: ${goal}`,
+      field: 'Ziel für diesen Tag',
+      fieldHint: 'Ein ruhiger Satz über dem Tag.',
+      save: 'Ziel setzen',
+      remove: 'Ziel entfernen',
+      removeName: (goal: string) => `Ziel entfernen: ${goal}`,
+      set: (goal: string) => `Ziel: ${goal}`,
+      removed: 'Ziel entfernt',
+      paste: (goal: string, days: string) => `Ziel: ${goal} · für ${days}`,
+    },
     smaller: {
       menu: 'Kleiner machen …',
       title: (title: string) => `Kleiner machen: ${title}`,

@@ -932,3 +932,13 @@ section.sheet .headEnd button[aria-expanded='true'] {
   flex-direction: column;
   gap: var(--space-4);
 }
+
+/* The day's goal (P2): one quiet head line, no figure, no colour. */
+.goalLine {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-2);
+  color: var(--text-muted);
+}

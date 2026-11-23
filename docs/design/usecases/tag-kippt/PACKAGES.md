@@ -1,33 +1,13 @@
 # Use case „Tag kippt“ – packages left
 
-Built in this round (2026-11-23): „Plan einfügen“ (T4: 12 → 3 handles, 11 → 0 duplicates) and „Nur das hier …“ with „Nächste Wochen“ and the start line (T1: 9 → 8 handles, 4 → 0 per thing; T2: 31 → 21, 23 → 0). Figures and friction: [ANALYSIS](ANALYSIS.md), target: [TARGET](TARGET.md). P1 „Kleiner machen …“ is built too (T1 `smallerInOneMove`: 4 handles); every `TARGET` figure is reached. Each prompt below is complete; run them in this order, each in its own chat, branch and PR.
+Built in this round (2026-11-23): „Plan einfügen“ (T4: 12 → 3 handles, 11 → 0 duplicates) and „Nur das hier …“ with „Nächste Wochen“ and the start line (T1: 9 → 8 handles, 4 → 0 per thing; T2: 31 → 21, 23 → 0). Figures and friction: [ANALYSIS](ANALYSIS.md), target: [TARGET](TARGET.md). P1 „Kleiner machen …“ and P2 (goal line) are built too (T1 `smallerInOneMove`: 4 handles); every `TARGET` figure is reached. Each prompt below is complete; run them in this order, each in its own chat, branch and PR.
 
 | Package                          | Gains                                                                      | Needs Sven                     |
 | -------------------------------- | -------------------------------------------------------------------------- | ------------------------------ |
-| [P2 Ziel-Zeile](#p2)             | a calm goal head for the weekend                                           | no                             |
 | [P3 Plan als Text kopieren](#p3) | the round trip to a chat without retyping                                  | **yes** – TARGET §5 question 1 |
 | [P4 Kleinkram](#p4)              | K11 checkbox names, K13 board menu, the sentence „heute nur …“ as an alias | no                             |
 
 Folding the list behind the start line (TARGET §4) is **not** a package: measure first now that P1 is in place; only if he still reports the list as the problem, write it.
-
----
-
-## P2
-
-Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
-Routing: Claude Code · Opus · unattended
-
-# A goal line for days („Wohnung frei bekommen“) (use case „Tag kippt“, package P2)
-
-Branch `feat/plan-ziel` from fresh `develop`. Read CLAUDE.md, docs/design/usecases/tag-kippt/TARGET.md §4, `web/src/modules/planner/{schema.ts (daySchema.note),pastePlan.ts,components/DayPage.tsx,components/DaySheet.tsx}`, FOCUS-GUIDELINES.md, FOCUS-WORDING.md. Start with `npm run chats:status`.
-
-**Goal:** a quiet head line on the sheet of the days it covers: „Ziel: Wohnung frei bekommen“ – no progress figure, no bar, no colour.
-
-- Store as the day's existing `note` on each covered day (no new collection, no `db:bump`); the sheet shows it above the start line. Edit and remove in „Tag einstellen“ (DaySheet).
-- „Plan einfügen“ fills it: a line „Ziel …: X“ (today skipped by `GOAL_RE` in `pastePlan.ts`) becomes `goal` on the parsed plan; the preview shows it as a ticked first line „Ziel: X · Sa, So“; „Übernehmen“ writes it into the same undo entry.
-- An off switch is not needed (it only shows what he wrote); it must not show on the widget or in the calendar chip.
-- Tests: parser (goal read, not a thing), one undo includes the notes, the line renders; `tag-kippt.spec.ts` T2 may add `goalShown` (`IST`/`TARGET`).
-- `review loop`, `file-pr`, `babysit-pr`. Change note de+en. Full stop.
 
 ---
 

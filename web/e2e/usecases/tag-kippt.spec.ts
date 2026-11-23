@@ -70,6 +70,7 @@ const IST: Record<string, Figures> = {
     duplicates: 0,
     secondDuplicates: 0,
     swapped: 'ja',
+    goalShown: 'ja',
     lost: 0,
   },
 };
@@ -110,6 +111,7 @@ const TARGET: Record<string, Figures> = {
     duplicates: 0,
     secondDuplicates: 0,
     swapped: 'ja',
+    goalShown: 'ja',
     lost: 0,
   },
 };
@@ -791,6 +793,11 @@ test('T4 Plan von außen übernehmen', async ({ page }, info) => {
     KEEP_SA.filter((x) => after[x]?.split('|').includes(SA)).length +
     KEEP_SO.filter((x) => after[x]?.split('|').includes(SO)).length;
   const first = await duplicates(page);
+  // P2: the chat's „Ziel fürs Wochenende: …“ line stands quietly above the day.
+  const goalShown =
+    (await page.getByTestId('day-goal').filter({ hasText: 'Wohnung frei bekommen' }).count()) > 0
+      ? 'ja'
+      : 'nein';
   // The chat splits again: the same plan, two things swapped between the days. Pasted again.
   await planner(page);
   const again = new Hand(page);
@@ -811,6 +818,7 @@ test('T4 Plan von außen übernehmen', async ({ page }, info) => {
       duplicates: first,
       secondDuplicates: await duplicates(page),
       swapped,
+      goalShown,
       lost: await lost(page),
     },
     { before, after, second },

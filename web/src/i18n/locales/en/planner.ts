@@ -271,6 +271,18 @@ export const planner: Strings['planner'] = {
     openFrom: (days: string) => `Still open: things from ${days}`,
     openSince: (day: string) => `Still open: things since ${day}`,
   },
+  goal: {
+    title: 'Goal',
+    line: (goal: string) => `Goal: ${goal}`,
+    field: 'Goal for this day',
+    fieldHint: 'One calm sentence above the day.',
+    save: 'Set goal',
+    remove: 'Remove goal',
+    removeName: (goal: string) => `Remove goal: ${goal}`,
+    set: (goal: string) => `Goal: ${goal}`,
+    removed: 'Goal removed',
+    paste: (goal: string, days: string) => `Goal: ${goal} · for ${days}`,
+  },
   smaller: {
     menu: 'Make it smaller …',
     title: (title: string) => `Make it smaller: ${title}`,

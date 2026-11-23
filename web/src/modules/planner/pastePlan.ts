@@ -23,6 +23,8 @@ export interface PastedPlan {
   things: PastedThing[];
   /** Lines that are no things (chat prose, other collections, subtasks): the preview says so, without a figure. */
   skipped: number;
+  /** „Ziel fürs Wochenende: Wohnung frei bekommen“ (P2): the goal of the days the paste names, text only. */
+  goal?: string;
 }
 
 /** Titles are the same thing when they read the same: case, spaces and trailing marks do not count. */
@@ -201,6 +203,8 @@ const DAY_ONLY =
 const BULLET_RE = /^(?:[-*•–·+]|\d{1,2}[.)]|\[[ xX]?\])\s+/;
 const DONE_RE = /^\[[xX]\]\s+/;
 const GOAL_RE = /^(ziel|goal)\b[^:]*:/i;
+/** A goal is a head line, not a paragraph. */
+export const GOAL_MAX = 80;
 
 /**
  * A heading line: what it says about the place of the things under it, 'other' for any other marked heading, undefined
@@ -265,10 +269,17 @@ function readText(text: string, today: string): PastedPlan {
   let skipped = 0;
   // The last day heading so far: later weekday names go on from it.
   let lastDay: string | undefined;
+  let goal: string | undefined;
   for (const raw of text.split(/\r?\n/, MAX_THINGS * 10)) {
     const line = raw.trim().slice(0, MAX_LINE);
     if (!line) continue;
-    if (GOAL_RE.test(line.replace(BULLET_RE, '').replace(/^#+\s*|[*_]/g, ''))) continue;
+    const goalLine = line.replace(BULLET_RE, '').replace(/^#+\s*|[*_]/g, '');
+    if (GOAL_RE.test(goalLine)) {
+      // The first goal line counts; its text after the colon, one line, not too long.
+      const text = clean(goalLine.replace(GOAL_RE, ''));
+      if (!goal && text) goal = text.slice(0, GOAL_MAX);
+      continue;
+    }
     const bullet = BULLET_RE.test(line);
     const heading = headingWhen(line, today, bullet, lastDay);
     if (heading === 'other') continue;
@@ -290,7 +301,7 @@ function readText(text: string, today: string): PastedPlan {
     if (!title) continue;
     things.push({ title, when, ...(minutes ? { minutes } : {}) });
   }
-  return { format: 'text', things: dedupe(things), skipped };
+  return { format: 'text', things: dedupe(things), skipped, ...(goal ? { goal } : {}) };
 }
 
 /** One thing per title: the first mention wins (a chat repeats a thing in a summary). */
@@ -345,6 +356,21 @@ export interface PastePreview {
 
 const samePlace = (a: Place, b: Place): boolean =>
   a.kind === b.kind && (a.kind !== 'day' || (b.kind === 'day' && a.date === b.date));
+
+/**
+ * The days a pasted goal line belongs to (P2): the days the paste names under its headings – a passed day only when
+ * the preview's question says „Auf heute“ (then today), else it is left out. Not the days a known thing keeps by
+ * itself. Today when the paste names no day.
+ */
+export function goalDays(plan: PastedPlan, today: string, past: 'today' | 'none'): string[] {
+  const days = new Set<string>();
+  for (const x of plan.things)
+    if (x.when.kind === 'day') {
+      if (x.when.date >= today) days.add(x.when.date);
+      else if (past === 'today') days.add(today);
+    }
+  return days.size ? [...days].sort() : [today];
+}
 
 /**
  * The pasted plan against what the plan holds: the same title (`sameTitle`) is the same thing – it moves, nothing is
