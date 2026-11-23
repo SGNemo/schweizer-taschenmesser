@@ -7654,6 +7654,8 @@ export const de = {
         'Die Signatur des Updates ist ungültig – es wurde deshalb nicht installiert.',
       'version-not-newer':
         'Das Update ist älter als deine installierte Version – es wurde deshalb nicht installiert.',
+      'wrong-app':
+        'Die heruntergeladene Datei gehört nicht zu dieser App – sie wurde deshalb nicht installiert.',
       'version-unreadable':
         'Die Version des Updates ließ sich nicht prüfen – es wurde deshalb nicht installiert. Lade die neue Version von der Website herunter.',
     } as Record<string, string>,

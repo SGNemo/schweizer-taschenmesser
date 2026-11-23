@@ -32,9 +32,10 @@ class InstallArgs {
 }
 
 /**
- * Self-update helper: downloads a release APK into the app cache, verifies its SHA-256 and opens
- * the system package installer. Android additionally verifies the APK signature against the
- * installed app, so only builds signed with our keystore can replace it.
+ * Self-update helper: downloads a release APK into the app cache, verifies its SHA-256, checks that
+ * it carries this app's package name and opens the system package installer. Android additionally
+ * verifies the APK signature against the installed app, so only builds signed with our keystore can
+ * replace it.
  */
 @TauriPlugin
 class ApkInstallerPlugin(private val activity: Activity) : Plugin(activity) {
@@ -139,6 +140,16 @@ class ApkInstallerPlugin(private val activity: Activity) : Plugin(activity) {
         // Only files this plugin downloaded may be installed.
         if (!file.canonicalPath.startsWith(updatesDir.canonicalPath + File.separator) || !file.isFile) {
             invoke.reject("unknown update file")
+            return
+        }
+        // S13 way D (launch review 2026-11): Android checks the certificate only for an APK with this
+        // app's package name; an APK of another app (a changed release) would install as a second
+        // app after the user confirms. So the file must carry exactly this app's package name.
+        @Suppress("DEPRECATION") // the Int-flags overload works on every API level (minSdk 24)
+        val archivePackage = activity.packageManager.getPackageArchiveInfo(file.absolutePath, 0)?.packageName
+        if (archivePackage != activity.packageName) {
+            file.delete()
+            invoke.reject("wrong-app: ${archivePackage ?: "unreadable"}")
             return
         }
         val ret = JSObject()

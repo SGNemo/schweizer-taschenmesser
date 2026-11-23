@@ -190,6 +190,8 @@ describe('installUpdate', () => {
       ['signature-invalid: signature does not match', 'signature-invalid'],
       ['version-not-newer: older than the running app', 'version-not-newer'],
       ['version-unreadable: no version in the payload', 'version-unreadable'],
+      // S13 way D: the Android installer refuses an APK of another app before Android sees it
+      ['wrong-app: io.example.other', 'wrong-app'],
       ['swap-failed: boom', 'install-failed'],
       [new Error('network'), 'install-failed'],
     ];

@@ -15,6 +15,10 @@ The app finds the release on GitHub, reads the expected SHA-256 from the release
 | C. Leave as is | none | – | a GitHub account or TLS break can offer an APK under another package id; it installs as a second app after the user confirms (it cannot replace Nemo or read its data) |
 | D. Before handing the file to Android, check with `PackageManager.getPackageArchiveInfo` that package name and signing certificate equal the running app's | S: a few lines of Kotlin in the plugin, no release change, no key | closes the "second app" path; the update offered is provably the same app | Kotlin in the plugin (Sven merges); needs a hand test on a device |
 
-## Recommendation
+## Decision (2026-11-23)
+
+Sven chose **D**. Built as the smallest form: before the system installer opens, the plugin reads the APK's package name (`getPackageArchiveInfo(path, 0)`) and refuses anything that is not the running app's (`wrong-app`); the certificate is then checked by Android itself, because the package names match. An unreadable file is refused too.
+
+## Recommendation (before the decision)
 
 **D, as a small follow-up package; until then C (accept for 1.0).** Replacing Nemo itself needs the Android signing key, so the data stays safe; what is open is a foreign second app offered through Nemo's own update dialog. D closes that without touching keys or the release job. A and B only protect the digest and touch the updater key (hard limit); worth it only if updates ever come from a second host.
