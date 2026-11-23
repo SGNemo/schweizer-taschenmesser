@@ -52,8 +52,8 @@ Target = the script's `TARGET` (the designed path after the last package of the 
 | | module switches | 5 | 3 (4b; budgets and mail stay trips) → 0 (2) |
 | | handles · per thing | 27 · 17 / 14 · 9 | 28 · 21 / 16 · 13 (4b, price) → 16 · 12 / 10 · 8 (2) |
 | | finished in the planner | 1 | 5 (4b) → 9 / 5 (2; the budget is read only and never counts, no mail on the phone) |
-| | rows after | 1 | 0 (4b) → 1 (2; a budget over its frame keeps the money pile) |
-| | 4c | – | no figure of its own (the mails enter through mail until 2) |
+| | rows after | 1 | 0 (4b; stays 0 with 2: a pile holding only budgets is no row) |
+| | `replySwitches` (desktop: switches until the reply to one planned mail is open) | 1 | 0 (4c: „Antworten“ in the row opens mail's compose dialog over the planner; 2 keeps 0) |
 | C1 household round | create · work · all handles | 12 · 7 · 19 | 12 · 8 · 20 (4a, price) → 11 / 10 · 7 · 18 / 17 (5a) → 1 · 7 · 8 (3) |
 | | per thing | 6 | 7 (from 4a, lasting price) |
 | | module switches | 4 / 5 | 4 / 5 (4a) → 2 (5a: the ToDo with its checklist is made in ToDos) → 0 (3) |
@@ -70,7 +70,7 @@ Target = the script's `TARGET` (the designed path after the last package of the 
 | | handles · per thing | 27 / 22 · 20 / 15 | 22 / 23 · 15 (11; phone handles a price) |
 | D5 waiting | handles · switches · rows off the sheet | 7 · 0 · 3 | unchanged (7 struck) |
 
-**What gets dearer, said plainly.** After 4a the title of a row expands it, so jumping from a row into its module is expand + „Ganz öffnen“: D1 from the planner's side 11 → 15 handles, 5 → 9 per thing, for good; C1 per thing 6 → 7 for good and 7 → 8 work handles until 5a. After 4b every invoice and cancellation is expand + its step while budgets and mail are still trips: B 27 → 28 handles (phone 14 → 16), 17 → 21 per thing (9 → 13) until 2. Bundling an errand round with a shopping list (5b) costs 14 handles (phone 13) once and per thing 5 → 7, because the list has to be asked into the plan in Listen; it buys one row less (2 → 1) and 9 / 8 → 6 working handles, and no module switch fewer. On the phone, giving five things a topic costs one handle more than today (22 → 23: Thursday's invoice waits under the folded „Danach“). After 2 one row stays: the budget over its frame keeps the money pile (`rowsAfter` 0 after 4b, 1 after 2) – the script's header names no price for it.
+**What gets dearer, said plainly.** After 4a the title of a row expands it, so jumping from a row into its module is expand + „Ganz öffnen“: D1 from the planner's side 11 → 15 handles, 5 → 9 per thing, for good; C1 per thing 6 → 7 for good and 7 → 8 work handles until 5a. After 4b every invoice and cancellation is expand + its step while budgets and mail are still trips: B 27 → 28 handles (phone 14 → 16), 17 → 21 per thing (9 → 13) until 2. Bundling an errand round with a shopping list (5b) costs 14 handles (phone 13) once and per thing 5 → 7, because the list has to be asked into the plan in Listen; it buys one row less (2 → 1) and 9 / 8 → 6 working handles, and no module switch fewer. On the phone, giving five things a topic costs one handle more than today (22 → 23: Thursday's invoice waits under the folded „Danach“).
 
 ### Named prices (above `IST` on purpose; the script's header)
 
@@ -89,8 +89,8 @@ Target = the script's `TARGET` (the designed path after the last package of the 
 | Idea | Rows | Switches | Verdict |
 | --- | --- | --- | --- |
 | 10 | – | D1 `tripsToPlanner` 8 → 0 (10b, measured from the module's side); 10a itself moves no figure – it is the base of 10b, 4, 9, 11, 1, 3 | built |
-| 4 | – | B 5 → 3 (4b), → 0 with 2; 4a moves no figure of its own (it is the frame, and it carries the prices of D1 and C1); 4c moves no figure of B by itself (the mails enter through mail until 2) | built |
-| 2 | B 5 → 2 / 1 before; after: 0 (4b) → 1 | B 3 → 0 | built |
+| 4 | – | B 5 → 3 (4b), → 0 with 2; 4a moves no figure of its own (it is the frame, and it carries the prices of D1 and C1); 4c: B `replySwitches` 1 → 0 (the reply opens over the planner; B's other figures wait for 2) | built |
+| 2 | B 5 → 2 / 1 before; after stays 0 | B 3 → 0 | built |
 | 5 | 5a: one row as today (C1 – today's routine is one row too); 5b: C2 2 → 1 | 5a: C1 4 / 5 → 2 (→ 0 with 3); 5b: C2 stays 2 | built – 5b is thin by the figures: one row less for 14 / 13 handles once and per thing 5 → 7 |
 | 1 | – | D2 2 / 3 → 1 | built – **without pictures** (no figure beyond the text path; the one truly new entry surface) |
 | 3 | A1 11 → 7 | C1 2 → 0; A2 3 / 5 → 0 (no longer needed) | built |

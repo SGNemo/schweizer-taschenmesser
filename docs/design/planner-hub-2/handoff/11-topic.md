@@ -35,5 +35,5 @@ Chooser foot: T10 „Themen verwalten …“ → Planer → Einstellungen, secti
 - `linkTarget` of the planner: topic alive / gone; a link label is the topic's title.
 - Two devices: the same thing given two topics offline → both rows exist; the reader takes the later `updatedAt`; the other row is removed only inside the next „Thema …“ action on that thing (never by a background job, never inside another action's undo entry).
 - Write spy: switching the filter writes nothing synced; T12's memory is device-local.
-- „Thema …“ / T12 absent on pile, bundle and non-linkable rows, present on blocker rows; a `topic` link on `plan.requested` is skipped; `planner_topic` in `NEVER_SHARED`.
+- „Thema …“ / T12 absent on pile, bundle and non-linkable rows, present on blocker rows; a `topic` link on `plan.requested` is skipped.
 - e2e seed `e2e/seed/plan-topic.seed.spec.ts`; `planner-hub-2.spec.ts` D4 re-measured (rows 7, taps 22 / phone 23, perThing 15, switches 0, planFilter ja), with `rows` and `planFilter` read after the filter is on.
