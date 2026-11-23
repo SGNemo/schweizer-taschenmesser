@@ -745,14 +745,17 @@ export async function pasteKnown(): Promise<Known[]> {
   const manifests = activeManifests(await loadModuleStates());
   const entries = await collectPlannable({ today: day, until: addDays(day, 60) }, manifests);
   const first = new Map<string, string>();
+  const locked = new Set<string>();
   for (const r of (await assignmentRepo.active().toArray()) as AssignmentRow[]) {
     const had = first.get(r.itemKey);
     if (!had || r.date < had) first.set(r.itemKey, r.date);
+    if (r.locked) locked.add(r.itemKey);
   }
   const out: Known[] = [];
   const canLater = new Set<string>();
   for (const m of manifests) {
-    const s = await plannableSource(m);
+    // A source that fails to load is no candidate (as in `sourceAbilities`), never a stuck preview.
+    const s = await plannableSource(m).catch(() => undefined);
     if (!s?.onLater) continue;
     canLater.add(m.id);
     for (const item of (await s.listLater?.().catch(() => [])) ?? [])
@@ -772,6 +775,8 @@ export async function pasteKnown(): Promise<Known[]> {
       title: e.title,
       place: date ? { kind: 'day', date } : { kind: 'week' },
       canLater: canLater.has(e.moduleId),
+      ...(locked.has(key) ? { locked: true } : {}),
+      ...(e.day ? { dated: true } : {}),
     });
   }
   return out;
@@ -784,11 +789,11 @@ export async function pasteKnown(): Promise<Known[]> {
 async function placeAt(
   ref: { moduleId: string; id: string },
   to: Place,
-  from: Place | undefined,
   minutes?: number,
 ): Promise<void> {
   const s = await source(ref.moduleId);
-  if (from?.kind === 'later' && to.kind !== 'later') await s?.onLater?.(ref.id, false);
+  // Back from later (also when it went there meanwhile on another device: the step is idempotent).
+  if (to.kind !== 'later') await s?.onLater?.(ref.id, false);
   if (to.kind === 'day') {
     await layOn({ ...ref, durationMin: minutes }, to.date);
     return;
@@ -810,9 +815,11 @@ export function applyPaste(
   // Everything is like that already: no action, no toast, no undo entry.
   if (toLater.length === 0 && lines.every((l) => l.change === 'same'))
     return Promise.resolve(false);
+  const toLaterAny =
+    toLater.length > 0 || lines.some((l) => l.change !== 'same' && l.to.kind === 'later');
   return act(
     t.planner.paste.title,
-    t.planner.paste.done,
+    toLaterAny ? `${t.planner.paste.done}\n${t.planner.paste.laterWhere}` : t.planner.paste.done,
     titles,
     async () => {
       const touched: string[] = [];
@@ -824,11 +831,11 @@ export function applyPaste(
               title: line.title,
               ...(line.minutes ? { estimateMin: line.minutes } : {}),
             });
-        await placeAt(ref, line.to, line.known?.place, line.minutes);
+        await placeAt(ref, line.to, line.minutes);
         touched.push(itemKeyOf(ref.moduleId, ref.id));
       }
       for (const k of toLater) {
-        await placeAt(refOf(k.key), { kind: 'later' }, k.place);
+        await placeAt(refOf(k.key), { kind: 'later' });
         touched.push(k.key);
       }
       return { touched };

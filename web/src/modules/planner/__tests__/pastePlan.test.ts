@@ -92,6 +92,49 @@ describe('readPastedPlan – text', () => {
   });
 });
 
+describe('readPastedPlan – council round 1', () => {
+  it('a day written as a marked list item is a heading; an unmarked line with „später“ is a thing', () => {
+    const plan = readPastedPlan(
+      '- **Samstag:**\n  - Wäsche\n1. Montag:\n  - Bad\nOma später anrufen\nDanach einkaufen',
+      SA,
+    );
+    expect(plan.things.map((x) => [x.title, x.when])).toEqual([
+      ['Wäsche', { kind: 'day', date: SA }],
+      ['Bad', { kind: 'day', date: MO }],
+      ['Oma später anrufen', { kind: 'day', date: MO }],
+      ['Danach einkaufen', { kind: 'day', date: MO }],
+    ]);
+  });
+
+  it('yesterday by name is yesterday (the preview asks); an impossible date is no heading', () => {
+    expect(readPastedPlan('Samstag\n- x', SO).things[0]!.when).toEqual({ kind: 'day', date: SA });
+    expect(readPastedPlan('31.11.:\n- x', SA).things.map((x) => x.when)).toEqual([
+      { kind: 'none' },
+    ]);
+  });
+
+  it('a ticked box without a bullet stays out; a closing sentence with an emoji is prose', () => {
+    const plan = readPastedPlan('Samstag\n[x] erledigt\n- Wäsche\nViel Erfolg! 💪', SA);
+    expect(plan.things.map((x) => x.title)).toEqual(['Wäsche']);
+    expect(plan.skipped).toBe(1);
+  });
+
+  it('a very long line of digits is read at once (no runaway pattern)', () => {
+    const started = performance.now();
+    readPastedPlan(`Samstag\n- ${'1'.repeat(5000)}\n- ${'1 '.repeat(3000)}`, SA);
+    expect(performance.now() - started).toBeLessThan(200);
+  });
+
+  it('subtasks of the ToDos JSON stay out', () => {
+    const plan = readPastedPlan(
+      JSON.stringify({ items: [{ title: 'A' }, { title: 'A1', parentId: 'x' }] }),
+      SA,
+    );
+    expect(plan.things.map((x) => x.title)).toEqual(['A']);
+    expect(plan.skipped).toBe(1);
+  });
+});
+
 describe('readPastedPlan – JSON', () => {
   it('reads the ToDos format: plannedFor, someday, estimateMin; other collections and done ones stay out', () => {
     const json = JSON.stringify({
@@ -145,7 +188,7 @@ describe('matchPaste', () => {
     const { lines, missing } = matchPaste(plan, known, SA, 'none');
     expect(lines.map((l) => [l.id, l.change, l.to])).toEqual([
       ['todos:a', 'same', { kind: 'day', date: SA }],
-      ['new:1', 'new', { kind: 'day', date: SA }],
+      ['new:neu kaufen', 'new', { kind: 'day', date: SA }],
       ['todos:b', 'move', { kind: 'day', date: SO }],
       ['todos:c', 'move', { kind: 'day', date: SO }],
       // A source that keeps nothing for later: no day instead.
@@ -162,6 +205,28 @@ describe('matchPaste', () => {
       lines: [{ to: { kind: 'week' }, past: true }],
     });
     expect(matchPaste(plan, known, SA, 'today').lines[0]!.to).toEqual({ kind: 'day', date: SA });
+  });
+
+  it('a thing its source dates keeps its day; a „fest“ thing is marked; new lines are keyed by title', () => {
+    const dated: Known[] = [
+      {
+        key: 'fitness:t',
+        title: 'Training',
+        place: { kind: 'day', date: SA },
+        canLater: false,
+        dated: true,
+      },
+    ];
+    const { lines } = matchPaste(
+      readPastedPlan('Später\n- Training\n- Neu', SA),
+      dated,
+      SA,
+      'none',
+    );
+    expect(lines.map((l) => [l.id, l.change, l.to])).toEqual([
+      ['fitness:t', 'same', { kind: 'day', date: SA }],
+      ['new:neu', 'new', { kind: 'later' }],
+    ]);
   });
 
   it('sameTitle ignores case, spaces, quotes and trailing marks', () => {
@@ -270,7 +335,9 @@ describe('applyPaste', () => {
     expect((await tasks()).find((x) => x.title === 'Pfand sammeln')).toMatchObject({
       estimateMin: 15,
     });
-    expect(useUiStore.getState().toasts.at(-1)?.message).toBe('Plan übernommen.');
+    expect(useUiStore.getState().toasts.at(-1)?.message).toBe(
+      'Plan übernommen.\nWas für später ist, steht in ToDos unter „Irgendwann“.',
+    );
     // One undo brings the whole paste back: no new ToDo, every thing on its old place.
     expect(await undoLast()).toBeTruthy();
     await runsSettled();
