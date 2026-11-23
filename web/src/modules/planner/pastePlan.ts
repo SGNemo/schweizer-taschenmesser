@@ -291,8 +291,9 @@ function readText(text: string, today: string): PastedPlan {
     // A task list („- [ ] …“): the box goes, a ticked one („[x]“) is done and stays out.
     const body = line.replace(BULLET_RE, '');
     if (DONE_RE.test(line) || DONE_RE.test(body)) continue;
-    // A line in brackets is a remark („(18:00–19:30 Training)“ of a copied plan, also when a chat bullets it).
-    if (/^\(.*\)$/.test(line.replace(BULLET_RE, ''))) continue;
+    // A remark of a copied plan – a fixed time in brackets, „(18:00–19:30 Training)“ – also when a chat bullets it.
+    // Any other line in brackets stays a thing („- (Wäsche, falls Zeit)“).
+    if (/^\(\d{1,2}:\d{2}.*\)$/.test(line.replace(BULLET_RE, ''))) continue;
     // Prose of the chat („Hier ist dein neuer Plan.“): a sentence that ends in a stop and is not a bullet.
     if (!bullet && (/[.!?]$/.test(withoutSymbols(line)) || line.length > MAX_TITLE)) {
       skipped++;
@@ -303,8 +304,13 @@ function readText(text: string, today: string): PastedPlan {
     // „…“ is what the copy writes; a chat may turn it into “…”, "…" or «…».
     const quoted =
       /^(?:„([^“”]{1,160})[“”]|“([^”]{1,160})”|"([^"]{1,160})"|«([^»]{1,160})»)\s*(.*)$/.exec(item);
-    const literal = quoted ? (quoted[1] ?? quoted[2] ?? quoted[3] ?? quoted[4])! : undefined;
-    const { rest, minutes } = readDuration(quoted ? quoted[5]! : item);
+    // Literal only when nothing but an effort follows the quote: „"Faust" lesen“ stays the whole title.
+    const after = quoted ? readDuration(quoted[5]!) : undefined;
+    const literal =
+      quoted && !after!.rest.trim()
+        ? (quoted[1] ?? quoted[2] ?? quoted[3] ?? quoted[4])!
+        : undefined;
+    const { rest, minutes } = literal !== undefined ? after! : readDuration(item);
     const title = literal !== undefined ? literal.replace(/\s+/g, ' ').trim() : clean(rest);
     if (!title) continue;
     things.push({ title, when, ...(minutes ? { minutes } : {}) });

@@ -404,6 +404,15 @@ describe('copyInput + planAsText (P3, council round 1)', () => {
       ['Ziel: Ruhe', undefined],
       ['Später:', undefined],
     ]);
+    // A quote that is only part of the title keeps the whole title; a bracket without a time stays a thing.
+    expect(
+      readPastedPlan('Samstag:\n- "Faust" lesen (30 Min)\n- (Wäsche, falls Zeit)', SA).things.map(
+        (x) => [x.title, x.minutes],
+      ),
+    ).toEqual([
+      ['"Faust" lesen', 30],
+      ['(Wäsche, falls Zeit)', undefined],
+    ]);
     const days = [{ date: SA, things: [{ title: 'Wäsche' }] }];
     for (const goal of ['Mail_an_Chef', '**Ruhe**'])
       expect(planAsText({ goal, days, week: [], later: [] }, de)).not.toContain('Ziel:');
