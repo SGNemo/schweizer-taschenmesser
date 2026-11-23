@@ -23,6 +23,15 @@ export const threadSchema = z.object({
   tokensOut: z.number().int().nonnegative().default(0),
   /** USD, only answers of providers with a known price. */
   costUsd: z.number().nonnegative().default(0),
+  /**
+   * The configured provider this chat went to first (AI1). Later turns – with the whole history and
+   * any attached data – go to it only; a different one only when the user picks it.
+   */
+  providerId: z.string().optional(),
+  /** Its name at that time, for the calm "paused" message. */
+  providerLabel: z.string().optional(),
+  /** Its fingerprint (`providerRef`): the same id on another device or re-created is not the same. */
+  providerRef: z.string().optional(),
 });
 export type Thread = z.output<typeof threadSchema>;
 
@@ -33,6 +42,8 @@ export const messageSchema = z.object({
   /** Answers: which stage produced it (`local` = built-in model, `cloud` = a provider). */
   stage: z.enum(['local', 'cloud']).optional(),
   model: z.string().optional(),
+  /** Answers from a provider: its name, shown on the answer. */
+  providerLabel: z.string().optional(),
   tokensIn: z.number().int().nonnegative().optional(),
   tokensOut: z.number().int().nonnegative().optional(),
   /** Questions: the text of the user's own data that was attached to this message (as sent). */

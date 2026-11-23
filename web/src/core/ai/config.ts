@@ -338,13 +338,43 @@ export async function createRouterProvider(
 ): Promise<AiProvider | undefined> {
   const secrets = opts.secrets ?? getPlatform().secrets;
   const members: RouterMember[] = [];
+  for (const { entry, key } of await routerEntries(config, secrets)) {
+    members.push({
+      entry,
+      provider: createProviderFor(entry, key, opts.fetch),
+      ref: providerRef(entry),
+    });
+  }
+  return members.length > 0 ? createRouter({ members, database: opts.database }) : undefined;
+}
+
+/** The entries the router uses: usable and, where needed, with a stored key (in priority order). */
+export async function routerEntries(
+  config: AiConfig,
+  secrets: SecretStore = getPlatform().secrets,
+): Promise<{ entry: ProviderEntry; key: string }[]> {
+  const out: { entry: ProviderEntry; key: string }[] = [];
   for (const entry of config.providers.filter(isEntryUsable)) {
     const key =
       entry.keyRequired || entry.keySet ? ((await secrets.get(keyName(entry.id))) ?? '') : '';
     if (entry.keyRequired && !key) continue; // key lost (site data cleared): skip instead of failing every call
-    members.push({ entry, provider: createProviderFor(entry, key, opts.fetch) });
+    out.push({ entry, key });
   }
-  return members.length > 0 ? createRouter({ members, database: opts.database }) : undefined;
+  return out;
+}
+
+/**
+ * Fingerprint of a provider entry for the chat pin (AI1): ids repeat (`custom`, `openai-2`) across
+ * devices and after delete + re-add, so a pin also checks preset, kind and address. Not a secret.
+ */
+export function providerRef(entry: Pick<ProviderEntry, 'preset' | 'kind' | 'baseUrl'>): string {
+  let h = 0x811c9dc5;
+  const address = entry.baseUrl.trim().toLowerCase().replace(/\/+$/, '');
+  for (const ch of `${entry.preset}|${entry.kind}|${address}`) {
+    h ^= ch.codePointAt(0)!;
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(16).padStart(8, '0');
 }
 
 export { PRESETS };
