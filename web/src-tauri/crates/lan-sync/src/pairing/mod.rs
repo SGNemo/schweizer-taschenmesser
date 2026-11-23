@@ -24,6 +24,8 @@
 //! * `confirm` re-checks the key, adds it to the trust list, reads the data key and seals it with the
 //!   attempt's own transport; a failure at any step removes the entry again. It holds the state lock
 //!   throughout (the only place with store I/O), so nothing else can interleave.
+//! * An open window lives at most [`MAX_OPEN`] from `open()`, renewals included; then it closes
+//!   (an attempt that is running at that moment still ends normally first).
 //! * Nothing here logs; secrets are `Zeroizing`.
 
 pub use crate::qr;
@@ -41,6 +43,8 @@ pub const WINDOW: Duration = Duration::from_secs(120);
 pub const HELLO_WAIT: Duration = Duration::from_secs(10);
 pub const CONFIRM_WAIT: Duration = Duration::from_secs(120);
 pub const CONFIRM_HARD_CAP: Duration = Duration::from_secs(240);
+/// Total lifetime of a window from `open()`, renewals included (H4); the user opens it again.
+pub const MAX_OPEN: Duration = Duration::from_secs(600);
 
 /// Monotonic time source. Only differences matter.
 pub trait Clock: Send + Sync {
@@ -240,6 +244,8 @@ struct Inner {
     state: State,
     gen: u64,
     opened_at: Duration,
+    /// When the user last opened the window (`open()`); renewals and new attempts keep it (H4).
+    first_opened: Duration,
     last_now: Duration,
     events: Vec<PairingEvent>,
 }
@@ -314,6 +320,13 @@ impl Inner {
             }
             _ => {}
         }
+        // H4: an open window (not a running attempt) ends at its total lifetime
+        if matches!(self.state, State::Open { .. })
+            && now >= self.first_opened.saturating_add(MAX_OPEN)
+        {
+            self.state = State::Closed;
+            self.events.push(PairingEvent::Closed);
+        }
         now
     }
 
@@ -338,6 +351,7 @@ impl PairingHost {
                 state: State::Closed,
                 gen: 0,
                 opened_at: Duration::ZERO,
+                first_opened: Duration::ZERO,
                 last_now: Duration::ZERO,
                 events: Vec::new(),
             }),
@@ -366,6 +380,7 @@ impl PairingHost {
         if matches!(g.state, State::AwaitHello(_) | State::AwaitConfirm(..)) {
             return Err(PairError::Busy);
         }
+        g.first_opened = now;
         g.fresh_window(now, true, PairingEvent::Opened)
     }
 
