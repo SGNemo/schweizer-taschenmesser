@@ -115,3 +115,36 @@ describe('LanHubSection: package 8', () => {
     expect(screen.getByTestId('lan-note').textContent).toBe(l.unpaired('Pixel 7'));
   });
 });
+
+describe('LanHubSection: package 8, review', () => {
+  beforeEach(() => {
+    fake.parts = createFakeLanHubParts();
+    useSyncStatus.getState().set({ phase: 'off', via: undefined, encrypted: false, pending: 0 });
+  });
+
+  it('a phone controlling the PC: pairing waits, said calmly', async () => {
+    render(<LanHubSection />);
+    fireEvent.click(screen.getByTestId('lan-pair'));
+    await flush();
+    fake.parts.hooks.knock('Pixel 7', '482913');
+    await poll();
+    fake.parts.hub.pairConfirm = vi.fn(async () => {
+      throw new Error('busy-controlled');
+    });
+    fireEvent.click(screen.getByTestId('lan-pair-confirm'));
+    await flush();
+    expect(screen.getByRole('status').textContent).toBe(l.pairControlled);
+  });
+
+  it('"Abbrechen" at the knock shows a fresh code, never "beendet"', async () => {
+    render(<LanHubSection />);
+    fireEvent.click(screen.getByTestId('lan-pair'));
+    await flush();
+    fake.parts.hooks.knock('Pixel 7', '482913');
+    await poll();
+    fireEvent.click(screen.getByRole('button', { name: 'Abbrechen' }));
+    await poll();
+    expect(screen.queryByTestId('lan-pair-closed')).toBeNull();
+    expect(screen.getByTestId('lan-pair-qr')).toBeTruthy();
+  });
+});

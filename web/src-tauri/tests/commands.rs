@@ -590,10 +590,22 @@ fn remote_widening_takes_a_ticket_before_the_native_dialog() {
     assert!(!body.contains("set_enabled") && !body.contains("set_grant"));
     // the answer comes from a blocking native dialog, never from the page
     let src = source("remote.rs");
-    // F1: through `native_ask`, which counts only the exact "allow" button
-    assert_eq!(src.matches(".blocking_show_with_result()").count(), 1);
-    assert!(!src.contains(".blocking_show()"));
-    assert!(src.contains("crate::native_ask::allowed(&dialog.blocking_show_with_result(), allow)"));
+    // F1: every question goes through `native_ask::ask` (cancel default on Windows, Escape a no)
+    assert!(!src.contains(".blocking_show()") && !src.contains(".blocking_show_with_result()"));
+    assert!(src.contains("crate::native_ask::ask(app, title, text, serious, allow, cancel)"));
+    for file in ["exchange.rs", "lan_sync.rs"] {
+        let other = source(file);
+        assert!(
+            !other.contains(".blocking_show"),
+            "{file} asks around native_ask"
+        );
+        assert!(other.contains("crate::native_ask::ask("), "{file}");
+    }
+    let ask = read("src/native_ask.rs");
+    assert!(ask.contains("rfd::MessageButtons::OkCancelCustom(cancel.into(), allow.into())"));
+    assert!(ask.contains(
+        "tauri_plugin_dialog::MessageDialogButtons::OkCancelCustom(allow.into(), cancel.into())"
+    ));
     assert!(!commands.contains("confirmed: bool") && !commands.contains("confirm: bool"));
 }
 
@@ -858,7 +870,8 @@ fn the_remote_client_only_passes_on_fixed_actions_and_keeps_out_of_sync() {
     }
     // the key and the hub entry are read, never returned: no DTO carries them
     assert_eq!(code.matches("stored_key(").count(), 1);
-    assert_eq!(code.matches("hub_entry(").count(), 1);
+    // through the Wi-Fi gate (H2), which reads the hub entry
+    assert_eq!(code.matches("dial_target(").count(), 1);
     for dto in ["StateDto", "EventDto", "OpenedDto"] {
         let at = code
             .find(&format!("pub struct {dto}"))
@@ -1244,12 +1257,16 @@ fn a_pairing_is_confirmed_in_a_native_question_with_rust_s_own_code() {
         "the page hands over no code: {head}"
     );
     let ask = body.find("asked_to_pair(&app").expect("a native question");
+    // never while a phone controls mouse and keyboard: ticket, check, question, ticket checked
+    let ticket = body.find("remote.ticket()").expect("ticket");
+    let busy = body
+        .find("remote.full_session_open()")
+        .expect("session check");
+    let checked = body.find(".confirm(ticket)").expect("ticket checked");
+    assert!(ticket < busy && busy < ask && ask < checked, "order");
     let helper = &lan[lan.find("fn asked_to_pair(").expect("helper")..];
     let helper = &helper[..helper.find("\n}\n").unwrap()];
-    assert!(helper.contains("crate::native_ask::buttons(allow, cancel)"));
-    assert!(
-        helper.contains("crate::native_ask::allowed(&dialog.blocking_show_with_result(), allow)")
-    );
+    assert!(helper.contains("crate::native_ask::ask(app, title, text, false, allow, cancel)"));
     let confirm = body.find(".confirm_deliver(").expect("the confirm");
     assert!(ask < confirm, "asked before the confirm");
     assert!(
@@ -1271,4 +1288,47 @@ fn pausing_a_device_drops_its_outbox() {
         .expect("the outbox is dropped");
     assert!(set < drop, "after the grant is stored");
     assert!(body.contains("if !grant.on || grant.paused {"));
+}
+
+/// H2 (launch review 2026-11): every phone-side dialer gets its target through the Wi-Fi gate.
+#[test]
+fn every_phone_dialer_goes_through_the_wifi_gate() {
+    for file in ["exchange_client.rs", "remote_client.rs"] {
+        let src = source(file);
+        let code = &src[..src.find("#[cfg(test)]").unwrap_or(src.len())];
+        assert!(code.contains("crate::lan_client::dial_target("), "{file}");
+        assert!(!code.contains("hub_entry("), "{file} dials around the gate");
+    }
+    let lan = source("lan_client.rs");
+    let gate = &lan[lan.find("pub(crate) fn dial_target<").unwrap()..];
+    let gate = &gate[..gate.find("\n}\n").unwrap()];
+    assert!(gate.contains("if !dial_allowed(app.lan_watch().wifi_state()) {"));
+}
+
+/// E3/E4 (launch review 2026-11): off reaches the switch file without a running hub, nothing new
+/// is queued for a paused device, and an exchange answer belongs to the hub that asked.
+#[test]
+fn exchange_off_pause_and_answers_hold() {
+    let src = source("exchange.rs");
+    let body = |name: &str| {
+        let at = src.find(&format!("pub fn {name}(")).unwrap();
+        let b = &src[at..];
+        b[..b.find("\n}\n").unwrap()].to_owned()
+    };
+    let enabled = body("exchange_set_enabled");
+    let early = enabled
+        .find("if !enabled && state.parts().is_err() {")
+        .expect("off without a hub");
+    assert!(early < enabled.find("let parts = state.parts()?;").unwrap());
+    assert!(enabled.contains("switch_at(&dir).set(false)"));
+    let send = body("exchange_send");
+    assert!(send.find("effective()").unwrap() < send.find("outbox.push(").unwrap());
+    let ask = &src[src.find("fn ask(").unwrap()..];
+    let ask = &ask[..ask.find("\n}\n").unwrap()];
+    assert!(
+        ask.find(".confirm(ticket)").unwrap()
+            < ask
+                .find("Arc::ptr_eq(&now.exchange, &parts.exchange)")
+                .unwrap()
+    );
 }

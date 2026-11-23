@@ -218,8 +218,10 @@ export async function sweep(at = now()): Promise<void> {
   await itemRepo.table
     .orderBy('createdAt')
     .reverse()
-    .each((r: { id: string; peer: string; direction: string }) => {
-      if (r.direction !== 'in') return;
+    .each((r: { id: string; peer: string; direction: string; deletedAt: number | null }) => {
+      // removed cards are markers against a late resend: they neither count nor go here.
+      // Unread ones do count: otherwise a flood of unread cards would grow without end.
+      if (r.direction !== 'in' || r.deletedAt !== null) return;
       const n = (kept.get(r.peer) ?? 0) + 1;
       kept.set(r.peer, n);
       if (n > HISTORY_PER_DEVICE) gone.push(r.id);

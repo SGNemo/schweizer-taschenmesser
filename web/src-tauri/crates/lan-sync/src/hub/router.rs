@@ -34,9 +34,11 @@ use std::time::Duration;
 pub const HANDSHAKES_PER_WINDOW: u32 = 20;
 pub const RATE_WINDOW: Duration = Duration::from_secs(60);
 /// TCP connections per address and window (H1): an accept counts before a slot is taken, so a
-/// peer that never finishes a handshake is limited too. Twice the handshakes: a device that
-/// reconnects while a sync round is still open must not hit it.
-pub const ACCEPTS_PER_WINDOW: u32 = 40;
+/// peer that never finishes a handshake is limited too. A silent connection holds its slot for at
+/// most the handshake timeout (5 s) before or after message 2, so one address can keep about
+/// 20 × 5 / 60 ≈ 2 of its 4 slots busy, eight addresses about 13 of the 32. A phone opens a few
+/// connections a minute (sync rounds, exchange, remote control).
+pub const ACCEPTS_PER_WINDOW: u32 = 20;
 /// Addresses tracked at once; a full table of live entries refuses new addresses (fail-closed).
 pub const MAX_TRACKED_ADDRS: usize = 1024;
 

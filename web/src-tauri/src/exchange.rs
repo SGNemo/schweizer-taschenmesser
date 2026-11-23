@@ -28,7 +28,6 @@ use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Emitter as _, Manager as _, State};
-use tauri_plugin_dialog::{DialogExt as _, MessageDialogKind};
 
 const CHANGED: &str = "exchange://changed";
 
@@ -233,16 +232,7 @@ fn confirmed(app: &AppHandle, lang: Lang, names: &str, extra: Option<&str>) -> b
         Some(line) => format!("{}\n\n{line}", texts::exchange_question(lang, names)),
         None => texts::exchange_question(lang, names),
     };
-    let mut dialog = app
-        .dialog()
-        .message(question)
-        .title(title)
-        .kind(MessageDialogKind::Info)
-        .buttons(crate::native_ask::buttons(allow, cancel));
-    if let Some(window) = app.get_webview_window("main") {
-        dialog = dialog.parent(&window);
-    }
-    crate::native_ask::allowed(&dialog.blocking_show_with_result(), allow)
+    crate::native_ask::ask(app, title, question, false, allow, cancel)
 }
 
 /// Takes the "a question is on screen" flag; refused while another one is.
@@ -366,6 +356,11 @@ pub fn exchange_send(
         .find_by_key(&key)
         .filter(|d| !d.revoked)
         .ok_or("not-found")?;
+    // E4: nothing new is queued for a paused or switched-off device (the card stays waiting and goes
+    // out once the device may exchange again), so a pause cannot be undone by a resend
+    if !parts.exchange.grant_of(&key).effective() {
+        return Err("paused".to_owned());
+    }
     let item = Item::new(
         id_from_hex(&id).ok_or("bad-id")?,
         kind_from(&kind).ok_or("bad-kind")?,
@@ -414,6 +409,12 @@ pub fn exchange_set_enabled(
     state: State<'_, ExchangeHost>,
     enabled: bool,
 ) -> Result<(), String> {
+    // E3: off is a narrowing and needs no hub – at app start the hub comes up only with the first
+    // sync round, after the module services. The switch file is written now; the hub reads it.
+    if !enabled && state.parts().is_err() {
+        let dir = exchange_dir(&app).ok_or("no-data-dir")?;
+        return switch_at(&dir).set(false).map_err(|_| "storage".to_owned());
+    }
     let parts = state.parts()?;
     if !enabled || parts.exchange.enabled() {
         return parts
@@ -509,7 +510,15 @@ fn ask(
     parts
         .remote
         .confirm(ticket)
-        .map_err(|_| "busy-controlled".to_owned())
+        .map_err(|_| "busy-controlled".to_owned())?;
+    // F2: a hub restarted while the question was on screen has other controls
+    if !state
+        .parts()
+        .is_ok_and(|now| Arc::ptr_eq(&now.exchange, &parts.exchange))
+    {
+        return Err("changed".to_owned());
+    }
+    Ok(())
 }
 
 #[cfg(test)]

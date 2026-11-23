@@ -10803,7 +10803,7 @@ export const de = {
       copyFailed: 'Kopieren ging nicht',
     },
     empty: 'Noch nichts hier. Schick dir eine Notiz oder einen Link.',
-    footer: 'Karten bleiben 30 Tage.',
+    footer: 'Karten bleiben 30 Tage, je Gerät die neuesten 1000.',
     unsupported: 'Austausch geht in der Desktop-App und auf dem Handy.',
     pc: {
       notPaired:
@@ -10819,7 +10819,7 @@ export const de = {
       setupButton: 'Austausch einschalten',
       deviceOff: 'Austausch ist für dieses Gerät noch aus.',
       enable: 'Einschalten',
-      paused: 'Für dieses Gerät pausiert.',
+      paused: 'Für dieses Gerät pausiert. Was noch wartete, kam nicht an.',
       resume: 'Fortsetzen',
       pause: 'Pausieren',
       lastSeen: (when: string) => `zuletzt gesehen: ${when}`,

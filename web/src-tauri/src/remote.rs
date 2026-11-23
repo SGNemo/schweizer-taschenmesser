@@ -45,7 +45,7 @@ use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tauri::{AppHandle, Manager, State};
-use tauri_plugin_dialog::{DialogExt as _, MessageDialogKind};
+use tauri_plugin_dialog::DialogExt as _;
 
 /// How often the tray is compared with who controls right now (only while the hub runs).
 const WATCH: Duration = Duration::from_millis(250);
@@ -850,21 +850,7 @@ fn asked(
     text: String,
     serious: bool,
 ) -> bool {
-    let kind = if serious {
-        MessageDialogKind::Warning
-    } else {
-        MessageDialogKind::Info
-    };
-    let mut dialog = app
-        .dialog()
-        .message(text)
-        .title(title)
-        .kind(kind)
-        .buttons(crate::native_ask::buttons(allow, cancel));
-    if let Some(window) = app.get_webview_window("main") {
-        dialog = dialog.parent(&window);
-    }
-    crate::native_ask::allowed(&dialog.blocking_show_with_result(), allow)
+    crate::native_ask::ask(app, title, text, serious, allow, cancel)
 }
 
 // ---- commands ----

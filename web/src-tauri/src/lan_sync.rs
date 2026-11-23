@@ -36,7 +36,7 @@ use std::sync::mpsc::{self, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use tauri::{AppHandle, Manager as _, State};
+use tauri::{AppHandle, State};
 use zeroize::Zeroizing;
 
 const TICK: Duration = Duration::from_secs(2);
@@ -698,14 +698,26 @@ pub fn lan_pair_confirm(
         })
     };
     let pending = waiting(&state)?.ok_or("not-awaiting")?;
-    if !asked_to_pair(&app, &pending) {
+    // Like every widening question: never while a phone controls mouse and keyboard (it could
+    // click the answer), checked again after it; one question at a time.
+    let remote = with_core(&state, |core, _| Ok(core.remote.clone()))?;
+    let ticket = remote.ticket();
+    if remote.full_session_open() {
+        return Err("busy-controlled".to_owned());
+    }
+    if PAIR_ASKING.swap(true, std::sync::atomic::Ordering::SeqCst) {
+        return Err("busy".to_owned());
+    }
+    let allowed = asked_to_pair(&app, &pending);
+    PAIR_ASKING.store(false, std::sync::atomic::Ordering::SeqCst);
+    if !allowed {
         return Err("cancelled".to_owned());
     }
-    // the attempt may have ended (or another begun) while the question was on screen
-    let still = waiting(&state)?.ok_or("not-awaiting")?;
-    if still.code != pending.code {
-        return Err("not-awaiting".to_owned());
-    }
+    remote
+        .confirm(ticket)
+        .map_err(|_| "busy-controlled".to_owned())?;
+    // the attempt may have ended while the question was on screen (the attempt id is unique)
+    waiting(&state)?.ok_or("not-awaiting")?;
     let code = pending.code;
     with_core(&state, |core, wake| {
         // the hub lock is not held while the frame is written: take the handle, let go, then confirm
@@ -738,25 +750,19 @@ pub fn lan_pair_confirm(
     })
 }
 
+/// A pairing question is on screen (one at a time).
+static PAIR_ASKING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
 /// The native pairing question; true only for the exact "pair" button.
 fn asked_to_pair(app: &AppHandle, pending: &Pending) -> bool {
-    use tauri_plugin_dialog::{DialogExt as _, MessageDialogKind};
     let lang = crate::capture::native_lang(app);
     let (title, allow, cancel) = crate::texts::pair_dialog(lang);
     let name = match crate::remote::plain(&pending.name) {
         n if n.is_empty() => crate::texts::exchange_unnamed(lang).to_owned(),
         n => n,
     };
-    let mut dialog = app
-        .dialog()
-        .message(crate::texts::pair_question(lang, &name, &pending.code))
-        .title(title)
-        .kind(MessageDialogKind::Info)
-        .buttons(crate::native_ask::buttons(allow, cancel));
-    if let Some(window) = app.get_webview_window("main") {
-        dialog = dialog.parent(&window);
-    }
-    crate::native_ask::allowed(&dialog.blocking_show_with_result(), allow)
+    let text = crate::texts::pair_question(lang, &name, &pending.code);
+    crate::native_ask::ask(app, title, text, false, allow, cancel)
 }
 
 #[tauri::command(async)]
@@ -792,11 +798,11 @@ pub fn lan_devices(state: State<'_, LanSync>) -> Result<Vec<DeviceDto>, String> 
 pub fn lan_revoke(app: AppHandle, state: State<'_, LanSync>, id: String) -> Result<bool, String> {
     with_core(&state, |core, wake| {
         let key = from_hex32(&id).ok_or("bad-id")?;
-        let changed = core
+        let result = core
             .sessions
-            .revoke(&*core.trust, &PublicKey::from_bytes(key))
-            .map_err(|_| "failed")?;
-        // what this PC queued for it goes too
+            .revoke(&*core.trust, &PublicKey::from_bytes(key));
+        // what this PC queued for it goes too – also when the revoke could not be written (H5):
+        // in memory it is revoked already
         let active: Vec<PublicKey> = core
             .trust
             .list()
@@ -806,7 +812,7 @@ pub fn lan_revoke(app: AppHandle, state: State<'_, LanSync>, id: String) -> Resu
             .collect();
         crate::exchange::keep_only(&app, &active);
         let _ = wake.send(());
-        Ok(changed)
+        result.map_err(|_| "failed".to_owned())
     })
 }
 

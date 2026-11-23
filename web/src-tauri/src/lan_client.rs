@@ -180,6 +180,18 @@ pub(crate) fn hub_entry<R: Runtime>(
     Ok((PublicKey::from_bytes(hub), addr, entry.name))
 }
 
+/// The pinned hub, only when this device may dial it now (H2: on Wi-Fi; see [`dial_allowed`]).
+/// Every phone-side dialer – sync, device exchange, remote control – goes through here; off Wi-Fi
+/// it is the calm `network`.
+pub(crate) fn dial_target<R: Runtime>(
+    app: &AppHandle<R>,
+) -> Result<(PublicKey, SocketAddrV4, String), String> {
+    if !dial_allowed(app.lan_watch().wifi_state()) {
+        return Err("network".to_owned());
+    }
+    hub_entry(app)
+}
+
 /// A hub is pinned on this device (it syncs as a client). A keystore that does not answer counts as
 /// "not paired": the hub start then fails on the same keystore anyway.
 pub fn is_paired<R: Runtime>(app: &AppHandle<R>) -> bool {
@@ -216,10 +228,7 @@ fn dial_allowed<E>(wifi: Result<tauri_plugin_lan_watch::WifiState, E>) -> bool {
 }
 
 fn open<R: Runtime>(app: &AppHandle<R>) -> Result<Session, ClientError> {
-    if !dial_allowed(app.lan_watch().wifi_state()) {
-        return Err(ClientError::Network); // calm: the next round tries again
-    }
-    let (hub, addr, name) = hub_entry(app).map_err(missing_or_retry)?;
+    let (hub, addr, name) = dial_target(app).map_err(missing_or_retry)?;
     let key = stored_key(app).map_err(missing_or_retry)?;
     Session::open(addr, &key, &hub, &name)
 }

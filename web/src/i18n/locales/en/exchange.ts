@@ -49,7 +49,7 @@ export const exchange: Strings['exchange'] = {
     copyFailed: 'Could not copy',
   },
   empty: 'Nothing here yet. Send yourself a note or a link.',
-  footer: 'Cards stay for 30 days.',
+  footer: 'Cards stay for 30 days, the newest 1000 per device.',
   unsupported: 'Device drop works in the desktop app and on the phone.',
   pc: {
     notPaired: 'No device paired yet. Pair your phone, then you can send it notes and links.',
@@ -62,7 +62,7 @@ export const exchange: Strings['exchange'] = {
     setupButton: 'Turn on Device drop',
     deviceOff: 'Device drop is still off for this device.',
     enable: 'Turn on',
-    paused: 'Paused for this device.',
+    paused: 'Paused for this device. What was still waiting did not arrive.',
     resume: 'Resume',
     pause: 'Pause',
     lastSeen: (when: string) => `last seen: ${when}`,
