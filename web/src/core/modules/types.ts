@@ -695,7 +695,10 @@ export interface PlannableSource {
    * `list` until `later` is false again (ToDos: „Irgendwann“). Called inside the planner's undoable action only.
    */
   onLater?(id: string, later: boolean): Promise<void>;
-  /** The open things kept for later by `onLater` (same shape as `list`): the planner names them and recognises them. */
+  /**
+   * The open things kept for later by `onLater` (same shape as `list`): the planner names them and recognises them.
+   * Read by the planner's own surfaces only – never an export, data-API or AI path.
+   */
   listLater?(): Promise<PlannableItem[]>;
   /**
    * The planner turned the thing into something that is no task any more („Als Pause …“: a blocker of its day):

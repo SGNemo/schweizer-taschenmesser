@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { formatMinutes } from '@/core/i18n/format';
 import { dayName } from '@/core/plan/explain';
 import { formatDay } from '@/core/time/dates';
+import { addDaysStr } from '@/core/time/dates';
 import { today } from '@/core/time/now';
 import { t } from '@/strings';
 import { Button, Checkbox, Dialog, Segmented, TextArea } from '@/ui';
@@ -9,14 +10,25 @@ import { applyPaste, pasteKnown } from '../actions';
 import { matchPaste, readPastedPlan, type Known, type PasteLine, type Place } from '../pastePlan';
 import styles from './PasteDialog.module.css';
 
-const placeKey = (p: Place) => (p.kind === 'day' ? p.date : p.kind === 'week' ? '~week' : '~later');
+/** Days first in date order, then this week, then later: the plan reads from now on, not from what is put off. */
+const placeKey = (p: Place) =>
+  p.kind === 'day' ? `0:${p.date}` : p.kind === 'week' ? '1:week' : '2:later';
 const dayLabel = (date: string) => `${dayName(date)} ${formatDay(date, 'd.')}`;
-const placeLabel = (p: Place) =>
+/** A group's name: „Heute · Sa 28.“ and „Morgen · So 29.“ as the planner says them, other days by name and date. */
+const placeLabel = (p: Place, day: string) =>
   p.kind === 'day'
-    ? dayLabel(p.date)
+    ? p.date === day
+      ? t.planner.paste.today(dayLabel(p.date))
+      : p.date === addDaysStr(day, 1)
+        ? t.planner.paste.tomorrow(dayLabel(p.date))
+        : dayLabel(p.date)
     : p.kind === 'week'
       ? t.planner.paste.week
       : t.planner.paste.later;
+
+/** A „fest“ thing that would leave its day: off until he ticks it (a chat does not know the lock). */
+const offByDefault = (line: PasteLine) =>
+  line.known?.locked === true && line.change === 'move' && line.to.kind !== 'day';
 
 /** The quiet second line of a preview line: new, stays, or where it was – plus the effort read from the text. */
 function detailOf(line: PasteLine): string {
@@ -34,7 +46,7 @@ function detailOf(line: PasteLine): string {
             : p.fromWeek;
   return [
     what,
-    line.past ? p.wasPast : undefined,
+    line.known?.locked ? p.fixed : undefined,
     line.minutes ? p.minutes(formatMinutes(line.minutes, { compact: true })) : undefined,
   ]
     .filter(Boolean)
@@ -60,14 +72,17 @@ export function PasteDialog({
   const [text, setText] = useState(initial);
   const [known, setKnown] = useState<Known[]>();
   const [past, setPast] = useState<'today' | 'none'>('none');
-  const [off, setOff] = useState<Set<string>>(() => new Set());
+  // The lines whose box he flipped against its default (keyed by thing, so editing the text keeps them).
+  const [flipped, setFlipped] = useState<Set<string>>(() => new Set());
   const [missingLater, setMissingLater] = useState(false);
   const [busy, setBusy] = useState(false);
   const day = today();
 
   useEffect(() => {
     let live = true;
-    void pasteKnown().then((k) => live && setKnown(k));
+    void pasteKnown()
+      .catch(() => [])
+      .then((k) => live && setKnown(k));
     return () => {
       live = false;
     };
@@ -78,8 +93,11 @@ export function PasteDialog({
     () => (known ? matchPaste(plan, known, day, past) : undefined),
     [plan, known, day, past],
   );
-  const chosen = preview?.lines.filter((l) => !off.has(l.id)) ?? [];
-  const toLater = missingLater ? (preview?.missing.filter((k) => k.canLater) ?? []) : [];
+  const ticked = (line: PasteLine) => offByDefault(line) === flipped.has(line.id);
+  const chosen = preview?.lines.filter(ticked) ?? [];
+  // Offered only when every missing thing can go there (the box then says exactly what it does).
+  const laterOk = !!preview?.missing.length && preview.missing.every((k) => k.canLater);
+  const toLater = missingLater && laterOk ? preview.missing : [];
   const writes = chosen.filter((l) => l.change !== 'same').length + toLater.length;
 
   const groups = useMemo(() => {
@@ -89,15 +107,17 @@ export function PasteDialog({
       if (!out.has(key)) out.set(key, { place: line.to, lines: [] });
       out.get(key)!.lines.push(line);
     }
-    return [...out.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([, g]) => g);
+    return [...out.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)).map(([, g]) => g);
   }, [preview]);
 
   const apply = async () => {
     if (!preview || writes === 0) return;
     setBusy(true);
-    const ok = await applyPaste(chosen, toLater, titles);
-    setBusy(false);
-    if (ok) onClose();
+    try {
+      if (await applyPaste(chosen, toLater, titles)) onClose();
+    } finally {
+      setBusy(false);
+    }
   };
 
   const footer = (
@@ -131,7 +151,14 @@ export function PasteDialog({
             {p.empty}
           </p>
         ) : null}
-        {plan.skipped > 0 ? <p className={styles.note}>{p.skipped(plan.skipped)}</p> : null}
+        {text.trim() && !known ? (
+          <p className={styles.note} role="status">
+            {p.reading}
+          </p>
+        ) : null}
+        {plan.skipped > 0 && plan.things.length > 0 ? (
+          <p className={styles.note}>{p.skipped}</p>
+        ) : null}
         {preview?.hasPast ? (
           <Segmented
             label={p.past}
@@ -145,7 +172,7 @@ export function PasteDialog({
         ) : null}
         {groups.map((g) => (
           <fieldset key={placeKey(g.place)} className={styles.group}>
-            <legend>{placeLabel(g.place)}</legend>
+            <legend>{placeLabel(g.place, day)}</legend>
             <ul className={styles.list}>
               {g.lines.map((line) => (
                 <li key={line.id}>
@@ -153,16 +180,15 @@ export function PasteDialog({
                     label={line.title}
                     description={detailOf(line)}
                     tone="neutral"
-                    checked={!off.has(line.id)}
-                    onChange={(e) => {
-                      const on = e.target.checked;
-                      setOff((prev) => {
+                    checked={ticked(line)}
+                    onChange={() =>
+                      setFlipped((prev) => {
                         const next = new Set(prev);
-                        if (on) next.delete(line.id);
+                        if (next.has(line.id)) next.delete(line.id);
                         else next.add(line.id);
                         return next;
-                      });
-                    }}
+                      })
+                    }
                   />
                 </li>
               ))}
@@ -181,7 +207,7 @@ export function PasteDialog({
                 </li>
               ))}
             </ul>
-            {preview.missing.some((k) => k.canLater) ? (
+            {laterOk ? (
               <Checkbox
                 label={p.missingLater}
                 checked={missingLater}

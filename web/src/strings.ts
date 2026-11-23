@@ -9611,15 +9611,15 @@ export const de = {
       menu: 'Plan einfügen …',
       title: 'Plan einfügen',
       label: 'Plan aus einem Chat oder als JSON',
-      hint: 'Überschriften wie „Samstag“, „So 29.11.“ oder „Nächste Wochen“, darunter die Dinge. Wird nur auf diesem Gerät gelesen.',
+      hint: 'Überschriften wie „Samstag“, „So 29.11.“ oder „Nächste Wochen“, darunter die Dinge. Was angehakt ist, wird übernommen. Gelesen wird nur auf diesem Gerät.',
+      reading: 'Wird gelesen …',
       empty: 'Darin stehen noch keine Dinge.',
-      skipped: (n: number) =>
-        n === 1
-          ? '1 Zeile ist kein Ding und bleibt weg.'
-          : `${n} Zeilen sind keine Dinge und bleiben weg.`,
+      skipped: 'Sätze aus dem Chat bleiben weg.',
       past: 'Tage, die schon vorbei sind',
       pastToday: 'Auf heute',
       pastNone: 'Ohne Tag',
+      today: (day: string) => `Heute · ${day}`,
+      tomorrow: (day: string) => `Morgen · ${day}`,
       week: 'Diese Woche, ohne Tag',
       later: 'Nächste Wochen – nicht gestrichen',
       isNew: 'neu',
@@ -9627,7 +9627,7 @@ export const de = {
       from: (where: string) => `war ${where}`,
       fromWeek: 'war ohne Tag',
       fromLater: 'war für später',
-      wasPast: 'Tag ist vorbei',
+      fixed: 'fest',
       minutes: (min: string) => `etwa ${min}`,
       missing: 'Nicht im eingefügten Plan',
       missingHint: 'Bleibt, wie es ist.',
@@ -9635,6 +9635,7 @@ export const de = {
       apply: 'Übernehmen',
       nothing: 'Es ist schon alles so.',
       done: 'Plan übernommen.',
+      laterWhere: 'Was für später ist, steht in ToDos unter „Irgendwann“.',
     },
     open: {
       empty: 'Nichts offen von früher.',
