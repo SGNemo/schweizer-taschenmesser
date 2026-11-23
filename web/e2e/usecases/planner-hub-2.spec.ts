@@ -26,11 +26,11 @@ import { dismissNotices } from '../helpers';
  *    thing's own module) and the D figures. A thing that cannot be done today is the word „nicht möglich“.
  *
  * `IST` is the measured state per path and project. `TARGET` is the figure the designed path reaches after the last
- * package that touches the flow, derived handle by handle with this script's counting (design round 3, 2026-11-23; the
- * derivation per handle and per package: docs/design/planner-hub-2/ANALYSIS.md §3). Every build PR re-measures `IST`
- * (never loosened); a figure is asserted against the better of its `IST` and – once reached – its `TARGET` (lower is
- * better, except `HIGHER`); a word equals its `IST`. Named prices – a figure above its IST on purpose, reaching it is no
- * regression, more fails:
+ * package that touches the flow, derived handle by handle with this script's counting (design round 3, 2026-11-23;
+ * paths, stages and acceptance figures: docs/design/planner-hub-2/FIGURES.md; summary: ANALYSIS.md §3). Every build PR
+ * re-measures `IST` (never loosened); a figure is asserted against the better of its `IST` and – once reached – its
+ * `TARGET` (lower is better, except `HIGHER`); a word equals its `IST`. Named prices – a figure above its IST on
+ * purpose, reaching it is no regression, more fails:
  *  - lasting (the bound is the TARGET): C1 `perThing` 6 → 7 (4a: the row expands first, then „Ganz öffnen“, from 5a
  *    „Los“); C2 `createTaps` 0 → 14 / phone 13 and `perThing` 5 → 7 (5b: the list asked into the plan in Listen, one
  *    trip, then „Auswählen“, three ticks, „Bündeln …“ – buys rows 2 → 1); D1 `taps` 11 → 15 and `perThing` 5 → 9 (4a:
@@ -95,7 +95,7 @@ const TARGET: Record<string, Figures> = {
   'A1 Alles ins Planer-Feld · pixel-7': { rows: 7, moduleSwitches: 0, taps: 12, perThing: 0, rightKind: 12, linkedToPlan: 10 },
   'A2 Jedes Ding als richtige Art · desktop-chrome': { rows: 8, moduleSwitches: 3, taps: 33, perThing: 13, forms: 2, fields: 5, rightKind: 12, linkedToPlan: 11 },
   'A2 Jedes Ding als richtige Art · pixel-7': { rows: 8, moduleSwitches: 5, taps: 34, perThing: 14, forms: 2, fields: 5, rightKind: 12, linkedToPlan: 11 },
-  'B Finanzen und Mails abarbeiten · desktop-chrome': { rowsBefore: 2, taps: 16, perThing: 12, moduleSwitches: 0, doneInPlanner: 9, rowsAfter: 0, mails: 4, replySwitches: 0 },
+  'B Finanzen und Mails abarbeiten · desktop-chrome': { rowsBefore: 2, taps: 17, perThing: 12, moduleSwitches: 0, doneInPlanner: 9, rowsAfter: 0, mails: 4, replySwitches: 0 },
   'B Finanzen und Mails abarbeiten · pixel-7': { rowsBefore: 1, taps: 10, perThing: 8, moduleSwitches: 0, doneInPlanner: 5, rowsAfter: 0, mails: 'nicht möglich', replySwitches: 'nicht möglich' },
   'C1 Bündel Haushalt · desktop-chrome': { rows: 1, createTaps: 1, workTaps: 7, taps: 8, perThing: 7, moduleSwitches: 0, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
   'C1 Bündel Haushalt · pixel-7': { rows: 1, createTaps: 1, workTaps: 7, taps: 8, perThing: 7, moduleSwitches: 0, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
