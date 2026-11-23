@@ -61,11 +61,11 @@
   font-variant-numeric: var(--font-num);
   white-space: nowrap;
 }
+/* The fact breaks between words where a tile is narrow (beside the context column on a laptop), never inside one. */
 .state {
   color: var(--text-muted);
   font-size: var(--text-meta);
   font-variant-numeric: var(--font-num);
-  white-space: nowrap;
 }
 .bar {
   position: absolute;
@@ -104,9 +104,6 @@
   }
   .face {
     align-items: center;
-  }
-  .state {
-    white-space: normal;
   }
   .nav {
     width: var(--space-6);

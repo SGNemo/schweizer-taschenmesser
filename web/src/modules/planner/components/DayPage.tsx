@@ -186,8 +186,15 @@ export function DayPage({
     >
       {top}
       {/* The day itself (its head, its rows, its two steps) – the card around it also holds the line on top and
-          „Noch ohne Tag“ (direction A), which are no rows of this day. */}
-      <div data-testid={`day-${day.date}`} data-today={day.isToday} data-off={day.off}>
+          „Noch ohne Tag“ (direction A), which are no rows of this day. A named group, so the day keeps its name
+          (the seed specs find the sheet as `[data-testid^="day-"][aria-labelledby]`). */}
+      <div
+        role="group"
+        aria-labelledby={`${id}-title`}
+        data-testid={`day-${day.date}`}
+        data-today={day.isToday}
+        data-off={day.off}
+      >
         <div className={styles.sheetHead}>
           <h2 id={`${id}-title`} className={styles.sheetTitle}>
             {dayTitle(day, tomorrow)}
