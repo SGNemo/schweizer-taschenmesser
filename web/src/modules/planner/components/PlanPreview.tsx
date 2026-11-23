@@ -125,12 +125,13 @@ export function PlanPreview({
                       key={m.id}
                       title={nameOf(m.id)}
                       titleFull
-                      meta={[
-                        p.move(dayName(m.from), dayName(m.to)),
-                        due ? p.pastDue(dayName(due)) : cause(m, nameOf),
-                      ]
-                        .filter(Boolean)
-                        .join(' · ')}
+                      meta={(due ? p.pastDue(dayName(due)) : cause(m, nameOf)) || undefined}
+                      // Direction A: the move as a chip at the row's end („Mo → Fr“).
+                      end={
+                        <span className={styles.chipMove}>
+                          {p.move(dayName(m.from), dayName(m.to))}
+                        </span>
+                      }
                     />
                   );
                 })}
@@ -149,7 +150,12 @@ export function PlanPreview({
             children: (
               <ItemList>
                 {added.map((a) => (
-                  <ItemRow key={a.id} title={nameOf(a.id)} titleFull meta={dayName(a.to)} />
+                  <ItemRow
+                    key={a.id}
+                    title={nameOf(a.id)}
+                    titleFull
+                    end={<span className={styles.chipMove}>{dayName(a.to)}</span>}
+                  />
                 ))}
               </ItemList>
             ),

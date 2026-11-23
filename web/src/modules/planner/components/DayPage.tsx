@@ -181,170 +181,171 @@ export function DayPage({
     <Card
       className={styles.sheet}
       aria-labelledby={`${id}-title`}
-      data-testid={`day-${day.date}`}
-      data-today={day.isToday}
-      data-off={day.off}
       onTouchStart={onSwipe ? onTouchStart : undefined}
       onTouchEnd={onSwipe ? onTouchEnd : undefined}
     >
       {top}
-      <div className={styles.sheetHead}>
-        <h2 id={`${id}-title`} className={styles.sheetTitle}>
-          {dayTitle(day, tomorrow)}
-        </h2>
-        {headEnd ? <span className={styles.headEnd}>{headEnd}</span> : null}
-        <span className={styles.capacityLine}>
-          {day.off ? (
-            // A day off has no question to answer: its capacity opens the day's settings.
-            <button
-              type="button"
-              className={styles.capacityButton}
-              aria-label={`${capacityLabel(day)} – ${editName}`}
-              onClick={onEditDay}
+      {/* The day itself (its head, its rows, its two steps) – the card around it also holds the line on top and
+          „Noch ohne Tag“ (direction A), which are no rows of this day. */}
+      <div data-testid={`day-${day.date}`} data-today={day.isToday} data-off={day.off}>
+        <div className={styles.sheetHead}>
+          <h2 id={`${id}-title`} className={styles.sheetTitle}>
+            {dayTitle(day, tomorrow)}
+          </h2>
+          {headEnd ? <span className={styles.headEnd}>{headEnd}</span> : null}
+          <span className={styles.capacityLine}>
+            {day.off ? (
+              // A day off has no question to answer: its capacity opens the day's settings.
+              <button
+                type="button"
+                className={styles.capacityButton}
+                aria-label={`${capacityLabel(day)} – ${editName}`}
+                onClick={onEditDay}
+              >
+                {capacityLabel(day)}
+              </button>
+            ) : (
+              // „Warum?“ (R2, P80): the capacity itself is the one control – no second link beside it.
+              <button
+                type="button"
+                className={styles.capacityButton}
+                data-testid="planner-why"
+                aria-label={t.planner.board.whyName(capacityLabel(day))}
+                aria-expanded={whyOpen}
+                aria-controls={`${id}-why`}
+                onClick={() => setWhyOpen((open) => !open)}
+              >
+                {capacityLabel(day)}
+              </button>
+            )}
+          </span>
+          {/* Direction A: no bar on the sheet – the band's tile carries the day's load as a bar. */}
+          {!day.off ? (
+            <p
+              id={`${id}-why`}
+              className={styles.whyLine}
+              hidden={!whyOpen}
+              data-testid="planner-why-line"
             >
-              {capacityLabel(day)}
-            </button>
-          ) : (
-            // „Warum?“ (R2, P80): the capacity itself is the one control – no second link beside it.
-            <button
-              type="button"
-              className={styles.capacityButton}
-              data-testid="planner-why"
-              aria-label={t.planner.board.whyName(capacityLabel(day))}
-              aria-expanded={whyOpen}
-              aria-controls={`${id}-why`}
-              onClick={() => setWhyOpen((open) => !open)}
-            >
-              {capacityLabel(day)}
-            </button>
-          )}
-        </span>
-        {/* Direction A: no bar on the sheet – the band's tile carries the day's load as a bar. */}
-        {!day.off ? (
-          <p
-            id={`${id}-why`}
-            className={styles.whyLine}
-            hidden={!whyOpen}
-            data-testid="planner-why-line"
-          >
-            {whyOpen ? (
-              <>
-                <span>{capacityWhy(day, dayEnd)}</span>{' '}
-                <button
-                  type="button"
-                  className={styles.textLink}
-                  aria-label={editName}
-                  onClick={onEditDay}
-                >
-                  {t.planner.board.editTime}
-                </button>
-              </>
+              {whyOpen ? (
+                <>
+                  <span>{capacityWhy(day, dayEnd)}</span>{' '}
+                  <button
+                    type="button"
+                    className={styles.textLink}
+                    aria-label={editName}
+                    onClick={onEditDay}
+                  >
+                    {t.planner.board.editTime}
+                  </button>
+                </>
+              ) : null}
+            </p>
+          ) : null}
+        </div>
+
+        {/* A day may hold more than its time and says so in one calm line: a fact, no symbol, no tone (CONCEPT §2). */}
+        {state === 'over' ? (
+          <p className={styles.overLine} data-testid="planner-over-line">
+            <span>{t.planner.head.over(compact(day.over))}</span>
+            {onSpread ? (
+              <button type="button" className={styles.textLink} onClick={onSpread}>
+                {t.planner.rest.link}
+              </button>
             ) : null}
           </p>
         ) : null}
-      </div>
 
-      {/* A day may hold more than its time and says so in one calm line: a fact, no symbol, no tone (CONCEPT §2). */}
-      {state === 'over' ? (
-        <p className={styles.overLine} data-testid="planner-over-line">
-          <span>{t.planner.head.over(compact(day.over))}</span>
-          {onSpread ? (
-            <button type="button" className={styles.textLink} onClick={onSpread}>
-              {t.planner.rest.link}
-            </button>
-          ) : null}
-        </p>
-      ) : null}
-
-      {blocks.length > 0 ? (
-        <ItemList label={t.planner.day.blockers}>
-          {blocks.map((b) => (
-            <Fragment key={b.key}>{b.node}</Fragment>
-          ))}
-        </ItemList>
-      ) : null}
-
-      {hasRows ? (
-        <>
-          <ItemList label={t.planner.sheet.first}>
-            {first.map((row, i) => renderRow(row, i === 0))}
+        {blocks.length > 0 ? (
+          <ItemList label={t.planner.day.blockers}>
+            {blocks.map((b) => (
+              <Fragment key={b.key}>{b.node}</Fragment>
+            ))}
           </ItemList>
-        </>
-      ) : day.rows.length > 0 ? null : (
-        // Only a fixed block on the day: it stands above, no empty line under it.
-        empty
-      )}
+        ) : null}
 
-      {then.length > 0 ? (
-        <>
-          <h3 className={styles.groupHead}>
-            <button
-              type="button"
-              className={styles.fold}
-              aria-expanded={thenOpen}
-              aria-controls={`${id}-then`}
-              onClick={() => onThenToggle(!thenOpen)}
-            >
-              <Icon name={thenOpen ? 'chevronDown' : 'chevronRight'} size={16} />
-              <span className={styles.foldWide}>
-                {t.planner.sheet.then(
-                  then.length,
-                  compact(then.reduce((n, r) => n + r.minutes, 0)),
-                )}
+        {hasRows ? (
+          <>
+            <ItemList label={t.planner.sheet.first}>
+              {first.map((row, i) => renderRow(row, i === 0))}
+            </ItemList>
+          </>
+        ) : day.rows.length > 0 ? null : (
+          // Only a fixed block on the day: it stands above, no empty line under it.
+          empty
+        )}
+
+        {then.length > 0 ? (
+          <>
+            <h3 className={styles.groupHead}>
+              <button
+                type="button"
+                className={styles.fold}
+                aria-expanded={thenOpen}
+                aria-controls={`${id}-then`}
+                onClick={() => onThenToggle(!thenOpen)}
+              >
+                <Icon name={thenOpen ? 'chevronDown' : 'chevronRight'} size={16} />
+                <span className={styles.foldWide}>
+                  {t.planner.sheet.then(
+                    then.length,
+                    compact(then.reduce((n, r) => n + r.minutes, 0)),
+                  )}
+                </span>
+                <span className={styles.foldNarrow}>{t.planner.sheet.thenFold(then.length)}</span>
+              </button>
+            </h3>
+            <div id={`${id}-then`} ref={thenRef} hidden={!thenOpen}>
+              {thenOpen ? (
+                <>
+                  <ItemList label={t.planner.sheet.thenFold(then.length)}>
+                    {shown.map((row) => renderRow(row, false))}
+                  </ItemList>
+                  {folded ? (
+                    <button
+                      type="button"
+                      className={`${styles.fold} ${styles.more}`}
+                      data-testid="planner-more"
+                      onClick={() => {
+                        setAll(true);
+                        // The button goes: the focus moves on to the first row it brought.
+                        requestAnimationFrame(() => {
+                          const rows = thenRef.current?.querySelectorAll<HTMLElement>('[data-row]');
+                          rows?.item(THEN_ROWS)?.focus();
+                        });
+                      }}
+                    >
+                      <Icon name="chevronDown" size={16} />
+                      {t.planner.sheet.more(then.length - THEN_ROWS)}
+                    </button>
+                  ) : null}
+                </>
+              ) : null}
+            </div>
+          </>
+        ) : null}
+
+        {hints}
+
+        {hasRows && (onRest || onSetup) ? (
+          <div className={styles.sheetFoot}>
+            {/* An overbooked day offers „Rest verteilen“ once: on its line above (that day's things that are not fest). */}
+            {hasRows && onRest && !(state === 'over' && onSpread) ? (
+              <span data-testid="rest-link">
+                <button type="button" className={styles.textLink} onClick={onRest}>
+                  {t.planner.rest.link}
+                </button>
               </span>
-              <span className={styles.foldNarrow}>{t.planner.sheet.thenFold(then.length)}</span>
-            </button>
-          </h3>
-          <div id={`${id}-then`} ref={thenRef} hidden={!thenOpen}>
-            {thenOpen ? (
-              <>
-                <ItemList label={t.planner.sheet.thenFold(then.length)}>
-                  {shown.map((row) => renderRow(row, false))}
-                </ItemList>
-                {folded ? (
-                  <button
-                    type="button"
-                    className={`${styles.fold} ${styles.more}`}
-                    data-testid="planner-more"
-                    onClick={() => {
-                      setAll(true);
-                      // The button goes: the focus moves on to the first row it brought.
-                      requestAnimationFrame(() => {
-                        const rows = thenRef.current?.querySelectorAll<HTMLElement>('[data-row]');
-                        rows?.item(THEN_ROWS)?.focus();
-                      });
-                    }}
-                  >
-                    <Icon name="chevronDown" size={16} />
-                    {t.planner.sheet.more(then.length - THEN_ROWS)}
-                  </button>
-                ) : null}
-              </>
+            ) : null}
+            {hasRows && onSetup ? (
+              <button type="button" className={styles.textLink} onClick={onSetup}>
+                {t.planner.daySetup.open}
+              </button>
             ) : null}
           </div>
-        </>
-      ) : null}
-
-      {hints}
+        ) : null}
+      </div>
       {foot}
-
-      {hasRows && (onRest || onSetup) ? (
-        <div className={styles.sheetFoot}>
-          {/* An overbooked day offers „Rest verteilen“ once: on its line above (that day's things that are not fest). */}
-          {hasRows && onRest && !(state === 'over' && onSpread) ? (
-            <span data-testid="rest-link">
-              <button type="button" className={styles.textLink} onClick={onRest}>
-                {t.planner.rest.link}
-              </button>
-            </span>
-          ) : null}
-          {hasRows && onSetup ? (
-            <button type="button" className={styles.textLink} onClick={onSetup}>
-              {t.planner.daySetup.open}
-            </button>
-          ) : null}
-        </div>
-      ) : null}
     </Card>
   );
 }

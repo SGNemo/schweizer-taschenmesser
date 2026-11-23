@@ -133,16 +133,21 @@ export default function PlannerPage() {
   const now = today();
   // The band's week (direction A): Monday to Sunday – this week (its passed days say „offen“), or a later one paged
   // to (`?week=` from the calendar's „Plan“, the week of `?day=`, a calendar chip of a later week).
-  const thisWeek = mondayOf(now);
+  // On the weekend the band starts with today (the eve of the coming week: five or six passed days would leave one
+  // or two ahead) – Saturday or Sunday to the coming Friday or Saturday.
+  const thisWeek = isoWeekday(now) >= 6 ? now : mondayOf(now);
+  /** The band's week that holds `date`: weeks counted from this week's first day. */
+  const weekOf = (date: string) =>
+    addDaysStr(thisWeek, Math.floor(daysBetween(thisWeek, date) / SPAN) * SPAN);
   const [weekStart, setWeekStart] = useState<string>(() => {
     const iso = (v: string | null) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) && v > now ? v : null);
     const asked = iso(searchParams.get('week')) ?? iso(searchParams.get('day'));
-    return asked ? mondayOf(asked) : thisWeek;
+    return asked ? weekOf(asked) : thisWeek;
   });
   const [grid, setGrid] = useState(false);
   // A new week (the page stayed open over Sunday night) never leaves the band on a passed week.
   const start = weekStart < thisWeek ? thisWeek : weekStart;
-  const viewFrom = start;
+  const viewFrom = grid ? mondayOf(start) : start;
   const viewSpan = grid ? GRID_DAYS : SPAN;
   const viewEnd = addDaysStr(viewFrom, viewSpan - 1);
   const data = useBoard(
@@ -1078,7 +1083,7 @@ export default function PlannerPage() {
     setPickedDay(date);
     // The band follows the picked day past its end (a swipe): the week it lies in, lined up from the band's start.
     // The grid stays put – a day does not move under the hand; the band lines up when the week view returns.
-    if (!grid && (date < start || date > addDaysStr(start, SPAN - 1))) setWeekStart(mondayOf(date));
+    if (!grid && (date < start || date > addDaysStr(start, SPAN - 1))) setWeekStart(weekOf(date));
     void setMeta(DAY_KEY, { date, on: data.today });
     setStatus(tileName(day, days?.[1]?.date === date));
   }
@@ -1091,7 +1096,7 @@ export default function PlannerPage() {
       pickedDay >= now &&
       (pickedDay < start || pickedDay > addDaysStr(start, SPAN - 1))
     )
-      setWeekStart(mondayOf(pickedDay));
+      setWeekStart(weekOf(pickedDay));
     setGrid((g) => !g);
   }
 
@@ -1112,22 +1117,23 @@ export default function PlannerPage() {
   const canPrev = start > thisWeek;
   const bandRow = (
     <div className={styles.bandRow} data-testid="band-row">
-      {grid && canPrev ? (
+      {/* The grid, and the phone's week (its tiles need the band's whole width): ‹ › beside the label. */}
+      {(grid || phone) && canPrev ? (
         <IconButton
           className={styles.bandControl}
-          label={t.planner.board.gridPrev}
+          label={grid ? t.planner.board.gridPrev : t.planner.board.prev}
           onClick={() => page(-1)}
         >
           <Icon name="chevronLeft" size={16} />
         </IconButton>
       ) : null}
       <span className={styles.bandLabel}>
-        {grid ? bandRange : t.planner.board.weekNo(isoWeekOf(start))}
+        {grid ? bandRange : t.planner.board.weekNo(isoWeekOf(addDaysStr(start, SPAN - 1)))}
       </span>
-      {grid ? (
+      {grid || phone ? (
         <IconButton
           className={styles.bandControl}
-          label={t.planner.board.gridNext}
+          label={grid ? t.planner.board.gridNext : t.planner.board.next}
           onClick={() => page(1)}
         >
           <Icon name="chevronRight" size={16} />
@@ -1337,9 +1343,11 @@ export default function PlannerPage() {
     waiting.length > 0 ? (
       <div className={styles.waiting}>
         {/* „Woche vorschlagen“ (package 6): reachable with the group folded – a dumped pile is two taps from its days
-            (the link, then „Übernehmen“ in the preview); nothing moves before that. Direction A: on the phone too
-            (its stimulus bound was raised for it). */}
-        {noDay.some(proposable) ? <p className={styles.waitSuggest}>{suggestWeek}</p> : null}
+            (the link, then „Übernehmen“ in the preview); nothing moves before that. On the phone the link stands
+            inside the open group (the page keeps its height: planner-hub M-3, the field whole on arrival). */}
+        {!phone && noDay.some(proposable) ? (
+          <p className={styles.waitSuggest}>{suggestWeek}</p>
+        ) : null}
         <GroupedList
           listId="planner"
           groups={[
@@ -1353,13 +1361,18 @@ export default function PlannerPage() {
                     count: noDay.length,
                     detail: t.planner.wait.calm,
                     // The overload figure once the group is open: neutral text, no tone (CONCEPT §7); on the phone
-                    // „Woche vorschlagen“ beside it.
-                    ...(overflow > 0
+                    // „Woche vorschlagen“ beside it (the phone's page keeps its height: its field stays whole).
+                    ...(overflow > 0 || (phone && noDay.some(proposable))
                       ? {
                           action: (
-                            <p className={styles.reason} data-testid="planner-overload">
-                              {overloadText(overflow)}
-                            </p>
+                            <span className={styles.waitActions}>
+                              {overflow > 0 ? (
+                                <p className={styles.reason} data-testid="planner-overload">
+                                  {overloadText(overflow)}
+                                </p>
+                              ) : null}
+                              {phone && noDay.some(proposable) ? suggestWeek : null}
+                            </span>
                           ),
                         }
                       : {}),
@@ -1574,8 +1587,12 @@ export default function PlannerPage() {
                         onPick={pick}
                         today={data.today}
                         drop
-                        {...(canPrev ? { onPrev: () => page(-1) } : {})}
-                        onNext={() => page(1)}
+                        {...(phone
+                          ? {}
+                          : {
+                              onNext: () => page(1),
+                              ...(canPrev ? { onPrev: () => page(-1) } : {}),
+                            })}
                       />
                     )}
                   </>

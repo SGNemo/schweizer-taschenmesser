@@ -66,28 +66,6 @@ async function enter(page: Page, line: string) {
   await expect(field).toHaveValue('');
 }
 
-/** The contrast of an element's text against the first opaque background behind it (WCAG relative luminance). */
-async function textContrast(page: Page, testId: string): Promise<number> {
-  return page.getByTestId(testId).evaluate((el) => {
-    const rgb = (c: string) => (c.match(/[\d.]+/g) ?? []).map(Number);
-    const lum = ([r, g, b]: number[]) => {
-      const f = (v: number) => {
-        const s = v / 255;
-        return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-      };
-      return 0.2126 * f(r!) + 0.7152 * f(g!) + 0.0722 * f(b!);
-    };
-    let bg: number[] | undefined;
-    for (let n: Element | null = el; n && !bg; n = n.parentElement) {
-      const c = rgb(getComputedStyle(n).backgroundColor);
-      if (c.length >= 3 && (c[3] ?? 1) > 0.99) bg = c;
-    }
-    const fg = lum(rgb(getComputedStyle(el).color));
-    const back = lum(bg ?? [255, 255, 255]);
-    return (Math.max(fg, back) + 0.05) / (Math.min(fg, back) + 0.05);
-  });
-}
-
 for (const scheme of ['light', 'dark'] as const) {
   test(`axe: the lock, the over line, the chips „Vorschlag“ and „In ToDos“, the spread preview (${scheme})`, async ({
     page,
@@ -139,7 +117,7 @@ for (const scheme of ['light', 'dark'] as const) {
     await audit(page, `spread preview (${scheme})`);
   });
 
-  test(`contrast: „… mehr als planbar“ reads at AA, no symbol, no warning colour (${scheme})`, async ({
+  test(`contrast: „… mehr als planbar“ reads at AA in its warm box, no symbol (${scheme})`, async ({
     page,
   }) => {
     await page.emulateMedia({ colorScheme: scheme });
@@ -150,7 +128,7 @@ for (const scheme of ['light', 'dark'] as const) {
     const line = page.getByTestId('planner-over-line');
     await expect(line).toHaveText(/^1 h 48 mehr als planbarRest verteilen$/);
     await expect(line.locator('svg')).toHaveCount(0);
-    expect(await textContrast(page, 'planner-over-line')).toBeGreaterThanOrEqual(4.5);
+    // Direction A: the warm box (a semi-transparent tint) – axe weighs the text against the blended background.
     const results = await new AxeBuilder({ page })
       .include('[data-testid="planner-over-line"]')
       .withRules(['color-contrast'])
@@ -203,7 +181,6 @@ test.describe('phone', () => {
 for (const scheme of ['light', 'dark'] as const) {
   test(`axe: the band's row and the 4-week grid with a passed day (${scheme})`, async ({
     page,
-    isMobile,
   }) => {
     await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' });
     await plannerOn(page);
@@ -214,10 +191,8 @@ for (const scheme of ['light', 'dark'] as const) {
     await page.clock.setFixedTime(new Date('2026-10-04T10:00:00'));
     await page.goto('/planner');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    if (isMobile) {
-      await page.getByRole('button', { name: 'Weitere Optionen', exact: true }).first().click();
-      await page.getByRole('menuitem', { name: '4 Wochen zeigen' }).click();
-    } else await page.getByTestId('grid-switch').click();
+    // Direction A: the switch „Woche | 4 Wochen“ stands in the band's row, on the phone too.
+    await page.getByTestId('grid-switch').getByRole('button', { name: '4 Wochen' }).click();
     await expect(page.getByRole('grid', { name: 'Vier Wochen' })).toBeVisible();
     await expect(page.getByTestId('week-2026-09-29')).toHaveAccessibleName(
       'Dienstag, 29. September: offen',

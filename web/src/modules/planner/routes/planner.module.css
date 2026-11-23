@@ -860,3 +860,20 @@ section.sheet .headEnd button[aria-expanded='true'] {
     display: none;
   }
 }
+/* „Woche | 4 Wochen“: each half a full touch target (planner-hub Designmaße). */
+.bandSwitch :global(button) {
+  min-height: var(--touch);
+}
+/* A proposal's day as a chip (direction A): „Mo → Fr“, „Do“. */
+.chipMove {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: var(--text-meta);
+  font-variant-numeric: var(--font-num);
+  white-space: nowrap;
+}

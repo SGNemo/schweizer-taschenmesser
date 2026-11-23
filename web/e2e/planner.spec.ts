@@ -1280,13 +1280,15 @@ test.describe('Planer (planner rethink, package 4: more than a week)', () => {
     await page.clock.setFixedTime(new Date('2026-11-12T10:00:00'));
     await ready(page, '/planner');
     const row = page.getByTestId('band-row');
-    await expect(row).toContainText('Do 12. – Mi 18. Nov.');
-    await expect(row.getByRole('button', { name: 'Woche davor' })).toHaveCount(0);
-    await row.getByRole('button', { name: 'Woche danach' }).click();
-    await expect(row).toContainText('Do 19. – Mi 25. Nov.');
-    await expect(page.getByTestId('week-2026-11-25')).toBeVisible();
+    // Direction A: the calendar week from Monday – its passed days say „offen“; no week before this one.
+    await expect(row).toContainText('KW 46');
+    await expect(page.getByTestId('week-2026-11-09')).toContainText('offen');
+    await expect(page.getByRole('button', { name: 'Woche davor' })).toBeDisabled();
+    await page.getByRole('button', { name: 'Woche danach' }).click();
+    await expect(row).toContainText('KW 47');
+    await expect(page.getByTestId('week-2026-11-22')).toBeVisible();
     await row.getByRole('button', { name: 'Heute' }).click();
-    await expect(row).toContainText('Do 12. – Mi 18. Nov.');
+    await expect(row).toContainText('KW 46');
 
     await row.getByRole('button', { name: '4 Wochen' }).click();
     await expect(row.getByRole('button', { name: '4 Wochen' })).toHaveAttribute(
@@ -1308,8 +1310,8 @@ test.describe('Planer (planner rethink, package 4: more than a week)', () => {
     await expect(page.getByTestId('week-2026-11-09')).toBeVisible();
     await expect(row.getByRole('button', { name: 'Heute' })).toHaveCount(0);
     // Back in the week view the band shows that day's week.
-    await row.getByRole('button', { name: '4 Wochen' }).click();
-    await expect(row).toContainText(/Do 26\.(?: Nov\.)? – Mi 2\. Dez\./);
+    await row.getByRole('button', { name: 'Woche', exact: true }).click();
+    await expect(row).toContainText('KW 48');
     await row.getByRole('button', { name: 'Heute' }).click();
     await row.getByRole('button', { name: '4 Wochen' }).click();
     await monday.click();

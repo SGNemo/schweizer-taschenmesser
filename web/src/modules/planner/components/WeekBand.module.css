@@ -84,6 +84,7 @@
 .nav {
   height: auto;
   min-height: 100%;
+  min-width: var(--touch);
   background: var(--surface-raised);
 }
 /* Narrow (a phone, a slim column): weekday and number above the fact, centred; a long fact breaks between words. */
