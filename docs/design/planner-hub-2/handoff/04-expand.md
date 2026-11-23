@@ -5,7 +5,7 @@ Concept: [CONCEPT-ROWS, idea 4](../CONCEPT-ROWS.md). Decision between two direct
 ## Structure
 
 ```
-ItemRow  [lead] [title-button ▸ meta · chips] [minutes] [lock] [⋯]
+ItemRow  [lead] [title-button · meta · chips] [minutes] [lock] [⋯]     (closed: no chevron; open: ⌄ after the title)
 └ RowCompartment (only while open)
    └ PlanPanelHost → the module's panel | default panel
       panel body: PanelLine × n, small heads
@@ -26,7 +26,7 @@ ItemRow  [lead] [title-button ▸ meta · chips] [minutes] [lock] [⋯]
 | ToDos | note: first 3 lines, `--text-sm`, clamp; checklist as tick lines (X14) | X2 |
 | Listen | section heads (caps) + open items as tick lines, max 8, then X8 „n weitere“ (a button that shows 8 more) | „Fertig eingekauft“ when none is open (the module's existing step) · X2 |
 | Merkliste | title, host as text | X13 (ghost) · X2 |
-| Rechnungen | nothing the row already says (amount and deadline are in its meta); a reminder line if dunned; then `PayStep` as **one line**, with its own controls as built: label „Bezahlt am“ · `DayField` (default today) · label „Betrag“ · amount field prefilled (10 ch wide) – no chips; the two labels are visible, `--text-meta`, `--text-3` | X9 „Bezahlt“ (secondary) · X2 |
+| Rechnungen | nothing the row already says (amount and deadline are in its meta); a reminder line if dunned; then `PayStep`'s form as **one line** (today `PayStep` is a `Dialog` wrapper whose inner form is not exported: the invoices module exports that form as a non-dialog variant and its panel mounts it), with its own controls as built: label „Bezahlt am“ · `DayField` (default today) · label „Betrag“ · amount field prefilled (10 ch wide) – no chips; the two labels are visible, `--text-meta`, `--text-3` | X9 „Bezahlt“ (secondary) · X2 |
 | Abos | name · price / period; X16 „Kündigen bis Do 10. Dez.“; after a tap on „Gekündigt am …“: `DayField` (default today) and the foot's button becomes „Vermerken“ | X10 „Gekündigt am …“ (secondary) · „Läuft weiter“ (ghost) · X2 |
 | E-Mail | line 1: sender name · day; line 2: subject (600); body: first 6 lines of the newest message, `--text-sm`, clamped, plain text; „Antworten“ opens mail's own compose dialog over the planner (as on the mail page) | X12 „Antworten“ (secondary); when the newest message is his: the text „Beantwortet?“ and the button „Erledigt“ instead · X2 |
 

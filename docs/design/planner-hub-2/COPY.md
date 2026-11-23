@@ -34,6 +34,7 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 | X14 (checklist line, name) | „{Schritt}“ abhaken | Tick “{step}” |
 | X15 (setting + hint) | Zeilen aufklappen · „Ein Tipp auf den Titel zeigt das Ding im Planer. Aus: der Titel öffnet es in seinem Modul.“ | Expand rows · “A tap on the title shows the thing in the planner. Off: the title opens it in its module.” |
 | X16 (subscriptions) | Kündigen bis {Do 10. Dez.} | Cancel by {Thu 10 Dec} |
+| X18 (meta of a passed deadline, as FOCUS-WORDING) | Frist war {So} | was due {Sun} |
 
 ## 2 · collective rows
 
@@ -59,7 +60,7 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 
 | Id | Deutsch | English |
 | --- | --- | --- |
-| B1 (meta; k = done steps) | {n} Schritte · {k} von {n} | {n} steps · {k} of {n} |
+| B1 (meta of a ToDo with a checklist and of a routine; k = done steps; a list keeps its own word „7 Dinge“, then „2 von 7“) | {n} Schritte · {k} von {n} | {n} steps · {k} of {n} |
 | B2 (meta, things) | {n} Dinge · {k} von {n} | {n} things · {k} of {n} |
 | B3 | Los | Go |
 | B4 (focus, eyebrow) | {Haushalt} · Schritt {k} von {n} | {Household} · step {k} of {n} |
@@ -86,23 +87,22 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 
 | Id | Deutsch | English |
 | --- | --- | --- |
-| S1 (target) | In den Planer | Into the planner |
-| S2 (card; with a day chosen) | Landet unter „Noch ohne Tag“. / Landet auf {Di}. | Lands under “No day yet”. / Lands on {Tue}. |
-| S3 | Ablegen | Save |
-| S4 (toast; with a day chosen) | Liegt im Planer unter „Noch ohne Tag“. / Liegt im Planer auf {Di}. — each „· Ansehen · Rückgängig“ | In the planner under “No day yet”. / In the planner on {Tue}. — each “· View · Undo” |
+| S1 (the capture form's word for the type `plan`) | as built: `t.quickCapture.target.plan` („Planer“) | as built (“Planner”) |
+| S2 (line under the form, only while the type is `plan`) | Landet im Planer unter „Noch ohne Tag“. | Lands in the planner under “No day yet”. |
 | S5 | Gekürzt auf 4 000 Zeichen. | Shortened to 4,000 characters. |
-| S6 | Nicht gespeichert. Noch einmal? | Not saved. Try again? |
 | S7 (chip on the row) | Im Browser öffnen · {host} | Open in the browser · {host} |
-| S8 (page after storing; then „Ansehen“ · „Rückgängig“ as in S4, and S9) | Abgelegt. | Saved. |
+| S8 (page after „Speichern“; then „Ansehen“ · „Rückgängig“ · S9) | Abgelegt. | Saved. |
 | S9 | Fertig | Done |
-| S10 (label of the day chips) | Tag | Day |
-| S13 (first of the three day chips: S13 · Heute · Morgen) | ohne Tag | no day |
-| S14 (page after its own „Rückgängig“; replaces S8) | Zurückgenommen. | Taken back. |
+| S14 (page after its own „Rückgängig“; replaces S8, the buttons go) | Zurückgenommen. | Taken back. |
+| S16 (second line under the form, for a shared http/https address ≤ 2 048 characters) | Der Link wird mit abgelegt: {host} | The link is saved with it: {host} |
+| S17 (on the „Geteilt“ card: what it does not show) | + {n} weitere Zeilen | + {n} more lines |
 | K1 (preview) | Wird: {Rechnung} · {Stadtwerke} · {80,00 €} · {Frist Fr 4. Dez.} | Becomes: {invoice} · {Stadtwerke} · {€80.00} · {due Fri 4 Dec} |
-| K2 (kinds) | Rechnung · Einkaufsliste · Termin · Notiz · Merkliste · Bündel | invoice · shopping list · appointment · note · bookmark · bundle |
+| K2 (kinds) | Rechnung · Einkaufsliste · Termin · Notiz · Merkliste · Aufgabe mit Schritten | invoice · shopping list · appointment · note · bookmark · task with steps |
 | K3 | Als Aufgabe eintragen | Enter as a task |
-| K4 (toasts) | Rechnung angelegt, liegt unter „Noch ohne Tag“. / Steht auf der Einkaufsliste. / Termin eingetragen. / Notiz angelegt. · In den Plan / Auf der Merkliste. · In den Plan / Bündel mit {n} Schritten angelegt, liegt auf {Mo}. — each „· Rückgängig“ | Invoice created, under “No day yet”. / On the shopping list. / Appointment entered. / Note created. · Add to plan / Bookmarked. · Add to plan / Bundle with {n} steps created, on {Mon}. — each “· Undo” |
+| K4 (toasts) | Rechnung angelegt, liegt unter „Noch ohne Tag“. / Steht auf der Einkaufsliste. / Termin eingetragen. / Notiz angelegt. · In den Plan / Auf der Merkliste. · In den Plan / Aufgabe mit {n} Schritten angelegt, liegt auf {Mo}. — each „· Rückgängig“ | Invoice created, under “No day yet”. / On the shopping list. / Appointment entered. / Note created. · Add to plan / Bookmarked. · Add to plan / Task with {n} steps created, on {Mon}. — each “· Undo” |
 | K5 (setting + hint) | Arten im Feld erkennen · „Zeigt vor dem Eintragen, was aus der Zeile wird. Ohne die Zeile wird es eine Aufgabe.“ | Recognise kinds in the field · “Shows what the line becomes before you enter it. Without that line it becomes a task.” |
+| K6 (more names in K1, after three) | + {n} | + {n} |
+| K7 (the field's toast for a plain ToDo with a lead chip) | Liegt auf {Mi}, vor {Friseur}. | On {Wed}, before {hairdresser}. |
 
 ## 9 · appointment · 11 · topic · struck: 7 · waiting, 8 · duration, 6 · places
 
@@ -114,16 +114,17 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 | A4 (row chip) | vor {Friseur} · nach {Friseur} | before {hairdresser} · after {hairdresser} |
 | A5 (small heads in the panel) | Vorbereitung · Danach | Preparation · Afterwards |
 | A6 (lead chip: name of its menu button · name of ✕) | {vor Friseur, Mittwoch}. Ändern · Entfernen | {before hairdresser, Wednesday}. Change · Remove |
+| A7 (description of a struck lead chip while K1 shows another kind; `aria-describedby`) | {vor Friseur, Mi} – gilt nicht für {Rechnung} | {before hairdresser, Wed} – does not apply to {invoice} |
 | T1 | Thema … | Topic … |
 | T2 (chooser title · field label · last choice · hint without topics) | Thema wählen oder neu eintippen · Thema · Kein Thema · Ein Thema hält Dinge aus mehreren Modulen zusammen. | Choose a topic or type a new one · Topic · No topic · A topic holds things from several modules together. |
 | T3 (page ⋯) | Nur ein Thema zeigen … | Show one topic only … |
-| T4 (page head while filtered) | Thema: {Umzug} · {n} Dinge · Alles zeigen | Topic: {Move} · {n} things · Show everything |
+| T4 (page head while filtered) | Thema: {Umzug} · {n} Dinge · Alles zeigen | Topic: {Moving house} · {n} things · Show everything |
 | T6 | In diesem Thema liegt gerade nichts im Plan. | Nothing of this topic is in the plan right now. |
-| T8 (toast) | {n} Dinge gehören jetzt zu „{Umzug}“. · Rückgängig | {n} things belong to “{Move}” now. · Undo |
+| T8 (toast) | {n} Dinge gehören jetzt zu „{Umzug}“. · Rückgängig | {n} things belong to “{Moving house}” now. · Undo |
 | T9 | Thema löschen … · „Die Dinge bleiben, nur die Klammer geht.“ | Delete topic … · “The things stay; only the bracket goes.” |
 | T10 (chooser foot · settings section) | Themen verwalten … · Themen | Manage topics … · Topics |
-| T11 (lead chip in the field while filtered) | Thema: {Umzug} | Topic: {Move} |
-| T12 (row ⋯ above T1, after a topic was used once: the last used topic, device-local) | Thema: {Umzug} | Topic: {Move} |
+| T11 (lead chip in the field while filtered) | Thema: {Umzug} | Topic: {Moving house} |
+| T12 (row ⋯ above T1, after a topic was used once: the last used topic, device-local) | Thema: {Umzug} | Topic: {Moving house} |
 | W1 | Warte auf Antwort … | Waiting for an answer … |
 | W2 (dialog) | Wieder zeigen: · 3 Tage · 1 Woche · 2 Wochen · Datum … · Von wem? (optional) | Show again: · 3 days · 1 week · 2 weeks · Date … · From whom? (optional) |
 | W3 (folded line) | Wartet auf Antwort · {n} | Waiting for an answer · {n} |

@@ -130,7 +130,7 @@ perThing = 2 + 5 = **7**. switches **2**. rows **1**: the bundle row; members ar
 
 ### D2 – shared link (1)
 
-Path from /share: 1 „Ablegen“ („In den Planer“ is preselected), 2 „Ansehen“ → `/planner?item=…`. `?item=` unfolds „Noch ohne Tag“, so the row is in view.
+Path from /share: 1 „Speichern“ (the capture form starts as `plan`), 2 „Ansehen“ → `/planner?item=…`. `?item=` unfolds „Noch ohne Tag“, so the row is in view.
 
 taps **2**, switches **1** on both projects, forms 1, inPlanner ja, wayBack ja (the row's URL chip).
 
@@ -225,7 +225,7 @@ The final row of each flow is its `TARGET`. A2 and D5 keep IST.
 - **10b–4a (D1)**: the first half walks expand + „Ganz öffnen“ for every row except the note (chip).
 - **4b / 2 (B)**: walk the panels and then the piles. Set `pileMoney` / `pileMail` before `rowsBefore` is read.
 - **4c (B)**: `replySwitches` waits for mail's compose dialog (`replyEditor` in the facts) instead of the thread pane. If the e2e build still loads no body, give the demo thread a cached message.
-- **5a / 3 (C1)**: create a ToDo with a checklist (5a), then a typed bundle (3). `nextStepOnly` is read from the „Los“ view.
+- **5a / 3 (C1)**: create a ToDo with a checklist (5a), then a typed task with steps (3). `nextStepOnly` is read from the „Los“ view.
 - **5b (C2)**: read `rows` after the bundle exists (as C1 reads `created`). Read `oneRow` from that result; the row ⋯ never offers „Bündeln …“.
 - **1 (D2)**: the way back counts when the row holds a link to the shared host or a control whose accessible name contains the host. Today only `href` and the `aria-label` attribute are checked.
 - **3 (A1)**: the name lookup reads the pantry. The seed holds the three names there.

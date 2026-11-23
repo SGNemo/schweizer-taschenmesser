@@ -15,17 +15,18 @@ Expanded (planner's own panel `PilePanel`):
 
 ```
 RECHNUNGEN OFFEN                                   In Rechnungen ansehen
- [€] Stadtwerke · 80,00 € · Frist Fr 4. Dez.              ▸
- [€] Zahnarzt · 120,00 € · Frist Do 10. Dez.              ▸
- [€] Versicherung · 45,90 € · Frist war So                ▸
+ [€] Stadtwerke · 80,00 € · Frist Fr 4. Dez.     Bezahlt   ▸
+ [€] Zahnarzt · 120,00 € · Frist Do 10. Dez.     Bezahlt   ▸
+ [€] Versicherung · 45,90 € · Frist war So       Bezahlt   ▸
 KÜNDIGUNGSFRISTEN                                     In Abos ansehen
- [↺] Streaming Plus · kündigen bis Mi 9. Dez.             ▸
+ [↺] Streaming Plus · Kündigen bis Mi 9. Dez.             ▸
 BUDGETS ÜBER DEM RAHMEN                            In Budgets ansehen
      Lebensmittel · 40 € über dem Rahmen
 ```
 
+- A passed deadline in a member line reads X18 („Frist war So“).
 - Part head: P7, caps style; its jump P8 is a quiet link at the head's right end (phone: under the part's last line).
-- A member line is the member's panel in its `compact` form (CONCEPT-ROWS, idea 4): title + `detail`, and where the module has a one-tap end („Bezahlt“ for an invoice, the tick for a ToDo) that action at the line's end / lead; `▸` expands the member **inside the pile**: its module panel from hand-off 04 („Bezahlt“ …) follows the line, indented `--space-5`, **without a surface of its own** (a box in a box read as a hole in dark mode); the open member's title is 600; its foot is left-aligned inside the indent (so „Ganz öffnen“ reads as the member's, not the pile's) and `--space-3` separates it from the next member line. One member open at a time.
+- A member line is the member's panel in its `compact` form (CONCEPT-ROWS, idea 4): title + `detail`, and where the module has a one-tap end („Bezahlt“ for an invoice, the tick for a ToDo) that action at the line's end / lead (an invoice: „Bezahlt“ as a ghost button before `▸`; `PanelLine` takes one action plus the expand button); `▸` expands the member **inside the pile**: its module panel from hand-off 04 („Bezahlt“ …) follows the line, indented `--space-5`, **without a surface of its own** (a box in a box read as a hole in dark mode); the open member's title is 600; its foot is left-aligned inside the indent (so „Ganz öffnen“ reads as the member's, not the pile's) and `--space-3` separates it from the next member line. One member open at a time.
 - `▸` is a button named X1 („{Titel}. Aufklappen / Zuklappen“).
 - Budgets: one line per budget over its frame, rendered by budgets' own `compact` panel (the amount goes through `SensitiveValue`; the planner never holds it), ≤ 5 then „n weitere“, no `▸`. Read only: never counted as finished in the planner. They are shown only while the money pile exists: a pile is a row only while it has something to do (members, or a mail queue count). When only budgets remain, an unplaced pile is gone and a placed one reads P9 „nichts wartet“.
 - Mail: the queue part is mail's own one-line panel – P3 „4 warten“ · the button P15 „In den Plan … (4)“ · the jump P8. P15 opens mail's existing `PlanAllDialog` over the planner (mail's code): one tick per mail; bulk mail and mails whose ToDo was deleted stay unticked; nothing is written before that dialog's own button. Afterwards those mails are ToDos: member lines with a tick (mail names them by key, `todos:<id>`). The count is queue threads with no plan ToDo (open or done) + open member ToDos, so a mail put into the plan is not counted twice and a thread whose ToDo is done leaves the count. The mail chat's contract (count + route, no content) is unchanged.
@@ -41,7 +42,7 @@ BUDGETS ÜBER DEM RAHMEN                            In Budgets ansehen
 
 ## The offer (P5)
 
-One line at the top of „Noch ohne Tag“ (inside the group, under its head): text + one quiet button; ✕ at the end (name „Nicht mehr anbieten“). Shown when ≥ 3 single rows of one area wait there and the switch was never set. One offer at a time (money before mail). Tap → setting `pileMoney` / `pileMail` = true, toast P6 („Rückgängig“ sets it back – an explicit inverse, the undo journal does not hold settings). ✕ (name P13) → device-local flag, no toast. Stimulus: the offer is one of the round's three always-visible additions ([DESIGN §5](../DESIGN.md) item 1: the offer until answered, the mark, one chip in the existing chip line) – here two buttons until answered. If the seeded stimulus views show it and `check:stimulus` rises, that rise needs the maintainer's approval like any other (`docs/howto/ci-stimulus-budget.md`): package 2 then ships the switch in the settings only and leaves the offer line for his „ja“ – named in [PACKAGES #common](../PACKAGES.md#common).
+One line at the top of „Noch ohne Tag“ (inside the group, under its head): text + one quiet button; ✕ at the end (name „Nicht mehr anbieten“). Shown when ≥ 3 single rows of one area wait there and the switch was never set. One offer at a time (money before mail). Tap → setting `pileMoney` / `pileMail` = true, toast P6 („Rückgängig“ sets it back – an explicit inverse, the undo journal does not hold settings). ✕ (name P13) → device-local flag, no toast. Stimulus: the offer is one of the round's always-visible additions, listed completely in [DESIGN §5](../DESIGN.md) item 1 (with the mark, one chip in the existing chip line, the steps meta, the pile and bundle lead glyphs) – here two buttons until answered. If the seeded stimulus views show it and `check:stimulus` rises, that rise needs the maintainer's approval like any other (`docs/howto/ci-stimulus-budget.md`): package 2 then ships the switch in the settings only and leaves the offer line for his „ja“ – named in [PACKAGES #common](../PACKAGES.md#common).
 
 ## States
 

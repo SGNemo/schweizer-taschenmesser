@@ -6,7 +6,7 @@ Concept: [CONCEPT-ROWS, idea 5](../CONCEPT-ROWS.md). Decision between two direct
 
 - lead: for a thing with steps the source's own lead (a ToDo keeps its tick); for a bundle (5b) the bundle glyph (three stacked lines), not a button.
 - title: the thing's / bundle's title (expand button).
-- meta: B1 („5 Schritte“, once one is done „1 von 5“ – k is the number of **done** steps) or B2; then the usual meta. No bar, no ring, no percent. („Los“ counts differently on purpose: „Schritt 2 von 5“ is the position of the step he is on.)
+- meta: B1 for a ToDo with a checklist and a routine („5 Schritte“, once one is done „1 von 5“ – k is the number of **done** steps); a list keeps its own word („7 Dinge“, then „2 von 7“) – B1 does not replace it; a bundle B2; then the usual meta. No bar, no ring, no percent. („Los“ counts differently on purpose: „Schritt 2 von 5“ is the position of the step he is on.)
 - ⋯ first entry: B3 „Los“.
 
 ## Expanded (panel of the steps)
@@ -51,7 +51,7 @@ Reuses `FocusPage` (shell hidden, Esc leaves, the round survives a reload). Diff
 - Selection bar (exists) gets B11 after „Verschieben …“; enabled from 2 rows. Dialog B12: one `TextField` (prefilled with the first title, selected), primary „Bündeln“, the shared „Abbrechen“. Toast B13.
 - A member that is a list is open inside the panel: its open items as tick lines (the lists panel's body, max 8 + „n weitere“), `▾` folds it. In „Los“ a list member is one step that shows these tick lines under its title.
 - The bundle takes the day of the first ticked row (or „ohne Tag“ if none had one); minutes = sum of the members'. While it lives, a member's own assignment rows (also one written later on another device) are ignored by board, run, proposals and `plannedDay`: the bundle wins.
-- „Bündeln …“ is only in the selection bar, never in a row's ⋯.
+- „Bündeln …“ is only in the selection bar, never in a row's ⋯, and only while every chosen row belongs to a linkable module (the rule of „Thema …“); a member is resolved by its `entityId` – a member of a module that is not linkable cannot exist (test).
 - The bundle source returns only the title and the member keys in order; the board joins titles, minutes and done state from the entries it already holds. A member no source lists any more is done or gone – `resolveLink` tells (`done` → a done step, `gone` → B17). The planner's own source never calls the collector. A bundled thing is never a pile member (test).
 - Panel ⋯: „Umbenennen …“, „Als Routine speichern“ (only if all members are plain tasks; toast B16), „Auflösen“ (toast B15).
 - A line's ⋯: B20 „Aus dem Bündel nehmen“ (the member is its own row on the bundle's day again), on the phone also B21 „Nach oben“ / „Nach unten“.

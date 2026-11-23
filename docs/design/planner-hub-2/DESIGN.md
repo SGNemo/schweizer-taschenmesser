@@ -11,7 +11,7 @@ Mockups: `mockups/*.html`, rendered by `mockups/render.mjs` (1920 and 412, light
 | Lines inside | `Checkbox`, list type scale | `PanelLine` in `@/ui` – `ItemRow` is too heavy inside a row (no menu, no swipe, no hairline) |
 | Mounting a module's panel | lazy contributions, error boundary of widgets | `PlanPanelHost` (core) – the one place that mounts foreign UI in the planner |
 | Mark | text link, planner glyph | `PlanMark` moves from ToDos to `core/entitylinks` |
-| Dialogs, chips, selection, days | `Dialog`, `DateChips`, `DayField` (pay step, cancel step), `SelectionBar`, `SortableList`, `TextField` | `DateChips` prop `presets` (package 1): a list that may hold a null entry, for the share page's „ohne Tag · Heute · Morgen“ – the fixed presets cannot show „ohne Tag“ |
+| Dialogs, chips, selection, days | `Dialog`, `DateChips`, `DayField` (pay step, cancel step), `SelectionBar`, `SortableList`, `TextField`; the share page's `CaptureForm` as built | – |
 | „Los“ | `FocusPage`, `core/focus` session | a step mode of the same page – no second focus surface |
 | Preview under the field, lead chips | `Capture`, the examples' slot | prop `preview` – the slot is reused, the block does not grow; lead chips (A2, T11) stand before the input |
 | Folded lines | the fold of „Nächste Wochen“ | – |
@@ -32,7 +32,7 @@ Identity: the planner keeps hue `indigo`, head `standard`, no filled action in t
 **B · „Seite daneben“** (`04-expand-b.html`): the row is marked, its panel opens in the right column (1920) or as a bottom sheet (412).
 
 - For: the list never moves; more room for a mail; looks tidy on the desktop.
-- Against: on 1920 it takes the column of „Noch ohne Tag“ / „4 Wochen“ exactly while he works off things that come from there; on 412 it is a sheet over the plan – a second place with its own close, which is the jump he wanted gone; two grammars to build, test and keep accessible.
+- Against: on 1920 it takes the right column – „Termine“ and the deadline groups („Frist vorbei“, „Nächste Fristen“) – while a row is open, exactly while he works off things that come from there; on 412 it is a sheet over the plan – a second place with its own close, which is the jump he wanted gone; two grammars to build, test and keep accessible.
 - Critique folded in: the desktop picture now shows the lost column, because the first draft made B look free.
 
 **Decision: A** (confirmed by the maintainer 2026-11-23). His order was „aufklappen statt hinspringen“, and on the phone B is a jump. A costs one layout shift that he causes himself; the caps keep it small. B's only real gain – room for mail – matters on the one device where „Ganz öffnen“ is a keystroke away.
@@ -59,7 +59,7 @@ Identity: the planner keeps hue `indigo`, head `standard`, no filled action in t
 | Mark (10) | quiet, findable in the meta line | drops the module's second meta item before it wraps | in a list of 20 the marks are slow to scan – by intent (stimulus); the planner is the place to scan |
 | Pile (2) | ten rows become two; the meta carries the facts | phone meta is „6 Dinge · Frist Fr“ (three wrapped lines before); nested member panel lost its box (a hole in dark mode); mail ToDos are members | the offer line is easy to miss – it is meant to be declinable, and the switch is in the settings |
 | „Los“ (5) | one large title, one filled button | keys named under the buttons; step change announced | much empty space at 1920 – that is the point of the page |
-| Share (1) | one card, one choice, one button | targets are a column on 412; page title and empty text stay as built | a long shared title makes the new row three lines tall |
+| Share (1) | the page as built, its form already set to the planner | no new target list, no day chips, no new button – the form's own „Speichern“; two quiet lines say where it lands and that the link goes with it | a long shared title makes the new row three lines tall |
 | Kinds (3) | the line reads like a sentence | only „Wird:“ is muted (was grey on grey); on 412 it stands above the field | two lines above the keyboard on 412 when „Als Aufgabe eintragen“ wraps |
 | Errand (6) | stops read top to bottom | after the council: places and map struck (no figure); what stays is the list ticked inside the bundle (5b) | the drawn version with places is kept for a later „ja“ |
 | Appointment (9) | two quiet buttons where he already looks | the lead chip stands before the input, the preview keeps its line (hand-off 03) | the recessed blocker row is weak among 20 rows (as built); the chips carry the relation |
@@ -69,7 +69,7 @@ Identity: the planner keeps hue `indigo`, head `standard`, no filled action in t
 
 ## 5. FOCUS checklist for the round ([FOCUS-GUIDELINES](../FOCUS-GUIDELINES.md); each package answers it again with figures)
 
-1. **Stimulus:** new and always visible are only the pile offer (until it is answered), the mark (one text link per planned row in ten modules) and one chip in a row's existing chip line (S7, A4); rows fall (flow B 5 → 2, C2 2 → 1, A1 11 → 7, D4 20 → 7); budget files unchanged.
+1. **Stimulus:** new and always visible, completely: the pile offer (until it is answered); the mark (one text link per planned row in ten modules); one chip in a row's existing chip line (S7, A4); the steps meta on ToDos with a checklist and on routines (text in the existing meta line); the pile and bundle lead glyphs (in the lead slot that is always filled). Expected `check:stimulus` effect: text only, no new control – unchanged; each package still runs it; rows fall (flow B 5 → 2, C2 2 → 1, A1 11 → 7, D4 20 → 7); budget files unchanged.
 2. **Off switch:** piles, kinds in the field and expanding rows have switches; steps, bundles and topics exist only when he makes them.
 3. **Next step:** each panel has at most one secondary action; „Los“ has one filled button.
 4. **Wording:** COPY, checked; counts are plain text and fall as he works.

@@ -96,7 +96,7 @@ Target = the script's `TARGET` (the designed path after the last package of the 
 
 | Idea | Rows | Switches | Verdict |
 | --- | --- | --- | --- |
-| 10 | – | D1 `tripsToPlanner` 8 → 0 (10b, measured from the module's side); 10a itself moves no figure – it is the base of 10b, 4, 9, 11, 1, 3 | built |
+| 10 | – | D1 `tripsToPlanner` 8 → 0 (10b, measured from the module's side); 10a itself moves no figure – it is the base of 10b, 9, 11 | built |
 | 4 | – | B 5 → 3 (4b), → 0 with 2; 4a moves no figure of its own (it is the frame, and it carries the prices of D1 and C1); 4c: B `replySwitches` 1 → 0 (the reply opens over the planner; B's other figures wait for 2) | built |
 | 2 | B 5 → 2 / 1 before; after stays 0 | B 3 → 0 | built |
 | 5 | 5a: one row as today (C1 – today's routine is one row too); 5b: C2 2 → 1 | 5a: C1 4 / 5 → 2 (→ 0 with 3); 5b: C2 stays 2 | built – 5b is thin by the figures: one row less for 14 / 13 handles once and per thing 5 → 7 |

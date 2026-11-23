@@ -15,7 +15,7 @@ Concept: [CONCEPT-INTAKE, idea 11](../CONCEPT-INTAKE.md). Common parts: [00-comm
 - Page ⋯ → T3 → the same chooser without the field's „create“; a tap on a topic's line switches the filter on.
 - While on: the page head changes instead of a new line appearing – the figure („1 h 20 frei“) gives its place to T4: „Thema: Umzug“ (the figure's type) with the context „7 Dinge“ and the quiet button „Alles zeigen“. The day's free time stays where it is on the day sheet's own head line.
 - The sheet, „Noch ohne Tag“, „Noch offen“ and the week band's bars show only members. An appointment with the topic stays visible as its blocker row; blockers without the topic are hidden while filtered. The day sheet's „frei“ keeps counting the whole day (the day is as full as it is).
-- The field while filtered: a new thing gets the topic (lead chip T11 „Thema: Umzug“ with ✕ before the input; with A2 present, A2 first – [00-common](00-common.md) „One slot, an order“). Only a plain ToDo and a Bündel take the lead chips (A2 → link and day, T11 → topic). For every other kind (Rechnung, Einkaufsliste, Termin, Notiz, Merkliste) the chips are drawn struck through while K1 shows and are not applied. When a chip gives the day, K1 / the field's toast names that day.
+- The field while filtered: a new thing gets the topic (lead chip T11 „Thema: Umzug“ with ✕ before the input; with A2 present, A2 first – [00-common](00-common.md) „One slot, an order“). Only a plain ToDo – also one with steps – takes the lead chips (A2 → link and day, T11 → topic). For every other kind (Rechnung, Einkaufsliste, Termin, Notiz, Merkliste) the chips are drawn struck through while K1 shows and are not applied. When a chip gives the day, K1 / the field's toast names that day.
 
 ## States
 
@@ -35,5 +35,5 @@ Chooser foot: T10 „Themen verwalten …“ → Planer → Einstellungen, secti
 - `linkTarget` of the planner: topic alive / gone; a link label is the topic's title.
 - Two devices: the same thing given two topics offline → both rows exist; the reader takes the later `updatedAt`; the other row is removed only inside the next „Thema …“ action on that thing (never by a background job, never inside another action's undo entry).
 - Write spy: switching the filter writes nothing synced; T12's memory is device-local.
-- „Thema …“ / T12 absent on pile, bundle and non-linkable rows, present on blocker rows; a `topic` link on `plan.requested` is skipped.
+- „Thema …“ / T12 absent on pile, bundle and non-linkable rows, present on blocker rows.
 - e2e seed `e2e/seed/plan-topic.seed.spec.ts`; `planner-hub-2.spec.ts` D4 re-measured (rows 7, taps 22 / phone 23, perThing 15, switches 0, planFilter ja), with `rows` and `planFilter` read after the filter is on.

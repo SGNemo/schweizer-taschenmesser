@@ -14,7 +14,9 @@ Concept: [CONCEPT-INTAKE, idea 3](../CONCEPT-INTAKE.md). Common parts: [00-commo
 - Right: K3, a quiet text button (ghost), min 44 px target.
 - `aria-live="polite"` on the line: it is read once per change of kind, not per keystroke (debounce 400 ms; the visual line updates at once).
 - Enter stores what the line says; Alt+Enter = K3.
-- Lead chips (A2 from hand-off 09, T11 from hand-off 11) stand before the input, at most two, A2 first; the line keeps its place under the field. Only a plain ToDo and a Bündel take the lead chips (A2 → link and day, T11 → topic). For every other kind (Rechnung, Einkaufsliste, Termin, Notiz, Merkliste) the chips are drawn struck through while K1 shows and are not applied. When a chip gives the day, K1 / the field's toast names that day.
+- Lead chips (A2 from hand-off 09, T11 from hand-off 11) stand before the input, at most two, A2 first; the line keeps its place under the field. Only a plain ToDo – also one with steps – takes the lead chips (A2 → link and day, T11 → topic). For every other kind (Rechnung, Einkaufsliste, Termin, Notiz, Merkliste) the chips are drawn struck through while K1 shows and are not applied. When a chip gives the day, K1 / the field's toast names that day.
+- An Aufgabe mit Schritten needs `CaptureFields.checklist?` and its mapping in the todo capture target – package 3 adds both (`web/src/quickCapture/parser/types.ts`, `web/src/quickCapture/targets/adapters.ts`, with a test).
+- A struck lead chip carries A7 as its description (`aria-describedby`); a plain ToDo with a lead chip gets the field's toast K7.
 - „Einkaufsliste“ by a known name needs the name lookup this package builds in `web/src/quickCapture/targets/lookup.ts` (today it holds only `findOpenInvoice`): pantry item names and shopping-list item names, read through the generic manifest repo as `findOpenInvoice` does (core, no module import), exact, case-blind, local, only while those modules are on.
 
 ## What the line may contain per kind
@@ -22,15 +24,15 @@ Concept: [CONCEPT-INTAKE, idea 3](../CONCEPT-INTAKE.md). Common parts: [00-commo
 | Kind | Line |
 | --- | --- |
 | Rechnung | Wird: **Rechnung** · payee · amount · „Frist Fr 4. Dez.“ (only if said) |
-| Einkaufsliste | Wird: **Einkaufsliste** · Milch, Spülmittel, Batterien AA (≤ 3 names, then „+ n“) |
+| Einkaufsliste | Wird: **Einkaufsliste** · Milch, Spülmittel, Batterien AA (≤ 3 names, then K6 „+ n“) |
 | Termin | Wird: **Termin** · Friseur · Mi 2. Dez. · 15:00 |
 | Notiz | Wird: **Notiz** · Regal im Flur |
 | Merkliste | Wird: **Merkliste** · example.org |
-| Bündel | Wird: **Bündel** · Haushalt · 5 Schritte (lands on the day on the sheet, like any field ToDo) |
+| Aufgabe mit Schritten | Wird: **Aufgabe mit Schritten** · Haushalt · 5 Schritte (lands on the day on the sheet, like any field ToDo; a plain ToDo row: „Thema …“ is offered, no B14) |
 
 ## States
 
-no reading (examples as today) · reading shown · stored (toast K4 for the kind – Rechnung and Einkaufsliste lie „ohne Tag“, a Bündel on the sheet's day and the toast says which; only Notiz and Merkliste offer „In den Plan“, a Termin none; field empty, focus stays in the field) · K3 used · module of the kind off (no line) · target failed (the field's existing error line; text stays; nothing was stored – the thing and its plan row are made inside one undoable action by the planner's own place function, called directly with its toast suppressed; when placing fails the thing is taken back: the place step returns failure instead of throwing, and the action then calls `undoEntry` on its own entry – the pattern of `placeRequested`).
+no reading (examples as today) · reading shown · stored (toast K4 for the kind – Rechnung and Einkaufsliste lie „ohne Tag“, an Aufgabe mit Schritten on the sheet's day and the toast says which; only Notiz and Merkliste offer „In den Plan“, a Termin none; field empty, focus stays in the field) · K3 used · module of the kind off (no line) · target failed (the field's existing error line; text stays; nothing was stored – the thing and its plan row are made inside one undoable action by the planner's own place function, called directly with its toast suppressed; when placing fails the thing is taken back: the place step returns failure instead of throwing, and the action then calls `undoEntry` on its own entry – the pattern of `placeRequested`).
 
 ## 1920 / 412
 
@@ -43,7 +45,7 @@ no reading (examples as today) · reading shown · stored (toast K4 for the kind
 - A date word without a sure kind („Wäsche morgen“): the planner's reading wins; no kind line. A sure kind that uses a date wins over the planner's date reading and takes the date: „Rechnung Stadtwerke 80 € bis Fr“ → invoice with deadline Fr; „Mi 15:00 Friseur“ → appointment on Wednesday. „fest“, „Pause …“, „heute nur …“ and a pasted plan still come first.
 - „Mahnung …“ with an amount: no line (not a sure kind; it would duplicate an open invoice).
 - Pasted block of lines: „Plan einfügen“ as built; no kind line.
-- Two kinds sure at once (URL inside an invoice sentence): the first of the order Rechnung, Termin, Einkaufsliste, Link, Notiz, Bündel.
+- Two kinds sure at once (URL inside an invoice sentence): the first of the order Rechnung, Termin, Einkaufsliste, Link, Notiz, Aufgabe mit Schritten.
 - The local model stage (desktop) runs after this, only for entries without a line, as built.
 
 ## Tests

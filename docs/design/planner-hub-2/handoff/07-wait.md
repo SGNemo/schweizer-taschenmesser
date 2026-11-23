@@ -5,7 +5,7 @@ Concept: [CONCEPT-STRUCK, idea 7](../CONCEPT-STRUCK.md). Common parts: [00-commo
 ## Structure
 
 - Row ⋯ → W1 (group „Mehr“; only for sources with `onWait`).
-- `Dialog` W2: `DateChips` with `presets` (the prop package 1 adds) „3 Tage · 1 Woche · 2 Wochen“ plus `DayField` for „Datum …“ (default 1 Woche); below, optional „Von wem?“: a combobox over people's names (people on; else the field is not drawn). A mail link on the row is shown as a fixed line („Mail: Nebenkosten 2025“) and needs no choice. Primary „Warten“ → toast W6.
+- `Dialog` W2: `DateChips` with an additive `presets` prop (its presets are fixed today) for „3 Tage · 1 Woche · 2 Wochen“, plus `DayField` for „Datum …“ (default 1 Woche); below, optional „Von wem?“: a combobox over people's names (people on; else the field is not drawn). A mail link on the row is shown as a fixed line („Mail: Nebenkosten 2025“) and needs no choice. Primary „Warten“ → toast W6.
 - The row leaves its day. At the end of „Noch ohne Tag“: the folded line W3 „Wartet auf Antwort · 2“ (same component as „Nächste Wochen“, under it). Expanded: `PanelLine`s – title, W4 „bis Mo 7. Dez. · von Vermieter“, end action „Zurückholen“.
 - On the day: the thing is an ordinary row in „Noch ohne Tag“ again with chip W5 „Antwort da? · von Vermieter“ before its other chips. The chip is text (not a button); it goes when he gives the thing a day, ticks it, or parks it again.
 
