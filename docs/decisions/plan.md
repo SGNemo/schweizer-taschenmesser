@@ -12,3 +12,4 @@ New decisions go into the matching topic file as one bullet (not into this index
 - [plan-links](plan-links.md) – One link contract between modules: `EntityLink`, `contributions.linkTarget`, `resolveLink` (planner hub)
 - [plan-sources](plan-sources.md) – Plan sources beyond ToDos: lists on request, pantry links, deadlines (subscriptions, vault with category titles only), time-tracking `ref`, gifts, requested ToDos
 - [plan-rethink](plan-rethink.md) – The plan is laid, not computed: placements stay, the engine proposes on request, tab „Noch offen“, lock on the row, one-time migration
+- [plan-tag-kippt](plan-tag-kippt.md) – Use case „Tag kippt“: „Plan einfügen“, „Nur das hier …“ with „Nächste Wochen“ and the start line, „Kleiner machen …“, the goal line, „Plan als Text kopieren“, „heute nur …“

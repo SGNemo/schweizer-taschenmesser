@@ -1,6 +1,6 @@
 # Use case „Tag kippt“ – analysis (phase 1)
 
-Branch `design/usecase-tag-kippt`, 2026-11-23. Measured on `develop` b62a48e2 (planner rethink packages 1–7 and the look of direction A merged). Target picture: [TARGET](TARGET.md); packages that stay: [PACKAGES](PACKAGES.md). Rules: [FOCUS-GUIDELINES](../../FOCUS-GUIDELINES.md), [FOCUS-WORDING](../../FOCUS-WORDING.md), [decisions/plan-rethink](../../../decisions/plan-rethink.md).
+Branch `design/usecase-tag-kippt`, 2026-11-23. Measured on `develop` b62a48e2 (planner rethink packages 1–7 and the look of direction A merged). Target picture: [TARGET](TARGET.md). All packages are built (P1–P4, 2026-11-23); their prompts were removed and live in the git history. Rules: [FOCUS-GUIDELINES](../../FOCUS-GUIDELINES.md), [FOCUS-WORDING](../../FOCUS-WORDING.md), [decisions/plan-rethink](../../../decisions/plan-rethink.md).
 
 ## 0. The case (neutral, invented things)
 
