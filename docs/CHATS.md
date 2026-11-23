@@ -28,9 +28,8 @@ Not stored in this file: `npm run chats:sync` prints the list from GitHub (`chat
 5. Unterlagen: Titel auf der Übersicht als Opt-in? (nein; #489)
 6. Backup: „Was ging wohin?“ auch ohne „In Arbeit anzeigen“? (#566)
 7. Merkliste und Unterlagen mit demselben Kopf lassen? Akzent-Varianten statt festem 25°-Abstand der Modulfarben? (#485)
-8. „Open questions“ in den PR-Texten von #656 (`disk_delete` nur per Attribut `async`?), #632, #490, #492.
+8. „Open questions“ in den PR-Texten von #656 (`disk_delete` nur per Attribut `async`?), #632, #490, #492, #1070 (Tag kippt).
 9. Planer-Zentrale ([planner-hub](design/planner-hub/README.md)): läuft ohne Stopp durch; ansehen: Richtung A und die zwei zurückgenommenen Entscheidungen D2/D3 (Mockups im PR-Text von #922), Reiz-Budget der Planer-Ansichten für R1. (so lassen)
-10. „Tag kippt“ (#1070–#1072): „Plan als Text kopieren“ per Tipp erlauben (ja)? „Nächste Wochen“ als Gruppe im Planer lassen (ja)?
 10. Austausch Handy ↔ PC ([CONCEPT §11](design/device-exchange/CONCEPT.md)): Handy holt erst beim Öffnen? (ja, v1) · nur Heimnetz? (ja) · Name „Austausch“? (ja) · Regelzeile (Paket R) mergen.
 11. „Werte ausblenden“ (DESIGN-CHECK K2): nur Kopfzahl + Zeile darunter (so gebaut, #752) oder alle Beträge der Geld-Seiten und Karten? (alle Geld-Karten, Wunsch aus Budgets; eigener kleiner PR)
 
