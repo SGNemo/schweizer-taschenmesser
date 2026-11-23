@@ -1628,6 +1628,30 @@ export const de = {
   todos: {
     /** Bald view while the planner is on: the planner put the thing on this day. */
     inPlan: (day: string) => `im Plan: ${day}`,
+    /** Where a task stands in the plan (todos-plan-state): marks, filter, „In den Plan …“ – the planner's words. */
+    plan: {
+      today: 'heute',
+      locked: (label: string) => `${label} · fest`,
+      passed: (day: string) => `im Plan: war ${day}`,
+      unplanned: 'noch nicht im Plan',
+      excluded: 'nicht im Plan',
+      showIn: 'Im Planer zeigen',
+      filter: 'Stand im Plan',
+      filters: { all: 'Alle', unplanned: 'Noch nicht im Plan', planned: 'Im Plan' },
+      filterEmpty: 'Hier ist gerade nichts.',
+      action: 'In den Plan …',
+      title: (title: string) => `In den Plan: ${title}`,
+      titleMany: (n: number) => (n === 1 ? 'In den Plan: 1 Aufgabe' : `In den Plan: ${n} Aufgaben`),
+      hint: 'Es liegt dann an diesem Tag. Sonst bewegt sich nichts.',
+      days: 'Tag',
+      tomorrow: 'Morgen',
+      date: 'Datum',
+      onDate: 'Auf diesen Tag',
+      noDay: 'Noch ohne Tag',
+      noDayHint: 'Ohne Tag liegt es im Planer unter „Noch ohne Tag“.',
+      select: 'Auswählen',
+      selectAll: 'Alle auswählen',
+    },
     meta: {
       name: 'ToDos',
       description: 'Aufgaben in Listen mit Prioritäten, Fälligkeitsdatum und Unteraufgaben.',
@@ -9642,6 +9666,9 @@ export const de = {
       pinned: (day: string) => `Fest am ${day}`,
       unpinned: 'Nicht mehr fest',
       laid: (day: string) => `Liegt auf ${day}`,
+      /** „In den Plan …“ from ToDos without a day (todos-plan-state). */
+      noDayMany: (n: number) =>
+        n === 1 ? 'Liegt unter „Noch ohne Tag“' : `${n} Dinge liegen unter „Noch ohne Tag“`,
       laidLocked: (title: string, day: string) => `${title} liegt auf ${day} · fest`,
       laidOver: (day: string) => `Liegt auf ${day}. Jetzt ist mehr geplant als planbar.`,
       overNow: 'Jetzt ist mehr geplant als planbar.',

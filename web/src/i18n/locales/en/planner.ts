@@ -302,6 +302,7 @@ export const planner: Strings['planner'] = {
     pinned: (day: string) => `Fixed on ${day}`,
     unpinned: 'No longer fixed',
     laid: (day: string) => `On ${day}`,
+    noDayMany: (n: number) => (n === 1 ? 'Under “No day yet”' : `${n} things under “No day yet”`),
     laidLocked: (title: string, day: string) => `${title} is on ${day} · fixed`,
     laidOver: (day: string) => `On ${day}. More is planned now than fits.`,
     overNow: 'More is planned now than fits.',
