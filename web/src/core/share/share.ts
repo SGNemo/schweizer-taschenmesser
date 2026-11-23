@@ -262,13 +262,25 @@ export function followsReceived(range: ShareRange, receivedUpto: string | undefi
   return !range.since || (receivedUpto !== undefined && receivedUpto >= range.since);
 }
 
+/**
+ * The tables a file may write: shareable ones, and – for a pair (R5, launch review 2026-11) – only
+ * those of the modules the pair agreed on, whatever else the partner's file carries.
+ */
+function writableTables(tableNames: string[], modules: readonly string[] | undefined): string[] {
+  const shareable = shareableTables(tableNames);
+  if (!modules) return shareable;
+  const agreed = new Set(modules);
+  return shareable.filter((name) => agreed.has(moduleOfTable(name)));
+}
+
 /** What opening the file would change, computed without writing. */
 export function planShare(
   backup: Backup,
   database: TaschenmesserDB = defaultDb,
   tableNames: string[] = syncedTableNames(allManifests),
+  modules?: readonly string[],
 ): Promise<RestorePlan> {
-  return planRestore(backup, 'merge', database, shareableTables(tableNames));
+  return planRestore(backup, 'merge', database, writableTables(tableNames, modules));
 }
 
 /** Merges the file into this device's data (never deletes, newer fields win, queued for sync). */
@@ -276,7 +288,13 @@ export async function applyShare(
   backup: Backup,
   database: TaschenmesserDB = defaultDb,
   tableNames: string[] = syncedTableNames(allManifests),
+  modules?: readonly string[],
 ): Promise<{ records: number }> {
-  const { records } = await applyBackup(backup, 'merge', database, shareableTables(tableNames));
+  const { records } = await applyBackup(
+    backup,
+    'merge',
+    database,
+    writableTables(tableNames, modules),
+  );
   return { records };
 }

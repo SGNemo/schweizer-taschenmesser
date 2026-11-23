@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
+import { isHlcTooFarAhead } from '@/core/db/hlc';
 import { syncedTableNames } from '@/core/db/schema';
 import { allManifests } from '@/core/modules/registry';
 import type { StorageAdapter } from '@/core/storage/types';
@@ -123,7 +124,11 @@ export function parseBackup(text: string): ParseResult {
     for (const row of rows) {
       const core = coreRowSchema.safeParse(row);
       if (!core.success) return { ok: false, reason: 'invalid' };
-      if (extraRowSchema.safeParse(row).success) good.push(core.data as unknown as SyncRow);
+      // R5: a field stamped beyond the sync drift bound would win against every later edit on all
+      // devices and stall sync; such a row is skipped like any other that fails the checks
+      const future = Object.values(core.data._f).some((stamp) => isHlcTooFarAhead(stamp));
+      if (!future && extraRowSchema.safeParse(row).success)
+        good.push(core.data as unknown as SyncRow);
       else skippedRows++;
     }
     tables[name] = good;
