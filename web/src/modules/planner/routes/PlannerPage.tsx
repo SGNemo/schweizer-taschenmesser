@@ -1144,7 +1144,9 @@ export default function PlannerPage() {
         c.whatMinutes,
         ...(input.days.some((d) => d.fixed.length) ? [c.whatFixed] : []),
         // The goal line is the text's first line when it went in.
-        ...(input.goal && text.startsWith(`${t.planner.goal.line(input.goal)}\n`)
+        ...(input.goal &&
+        (text === t.planner.goal.line(input.goal) ||
+          text.startsWith(`${t.planner.goal.line(input.goal)}\n`))
           ? [c.whatGoal]
           : []),
       ]);
