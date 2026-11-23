@@ -4,14 +4,16 @@ import { dismissNotices } from '../helpers';
 
 /**
  * Use case „Planer als Ablage, kurze Wege“ (planner hub, round 2): one person dumps everything into the planner and
- * wants short ways. Monday 2026-11-30 is „today“; every row is invented and goes straight into IndexedDB. Three
- * flows, each on the best path the app offers today (a new control is used as soon as it is there):
+ * wants short ways. Monday 2026-11-30 is „today“; every row is invented and goes straight into IndexedDB. Four
+ * flows (A–D), each on the best path the app offers today (a new control is used as soon as it is there):
  *  - A „12 gemischte Dinge abladen“: A1 all twelve into the planner's one field; A2 each one made the right kind
  *    (the global quick capture, then the modules' own „In den Plan“) and visible in the planner.
  *  - B „Finanzen checken, E-Mails durchgehen“: 3 open invoices (one late), 2 cancellation deadlines within 14 days,
  *    1 budget over its limit, 4 mails waiting for an answer – seen in the planner, then worked off.
- *  - C „Bündel und Besorgung“: C1 a bundle „Haushalt“ of five steps (and the duration the planner proposes);
+ *  - C „Bündel und Besorgung“: C1 a thing „Haushalt“ with five steps (and the duration the planner proposes);
  *    C2 an errand of two things and a shopping list of three.
+ *  - D five short ones: D1 is a thing in the plan, and when (seen from its module); D2 a shared link into the planner;
+ *    D3 a thing before an appointment; D4 one topic among twenty things; D5 waiting for an answer.
  * Per path the script counts:
  *  - `taps`: handles (a tap, a typed line, a paste each count one; unfolding a group to reach a thing counts),
  *  - `perThing`: handles that act on one single thing beyond typing its own line (the „Einzelgriff je Ding“),
