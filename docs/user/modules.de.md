@@ -85,6 +85,10 @@ Zeigst du auf die Zeile einer Mail, erscheint der Knopf „In den Plan“ („Al
 
 Ein Suchfeld schaut in Absender, Betreff, Text und Anhangsnamen. Die Treffer **auf diesem Gerät** kommen zuerst und gehen auch ohne Netz (die Mails, die die App schon gelistet oder geöffnet hat; ein kleiner Tippfehler im Namen wird verziehen); darunter zeigt **im Postfach**, was Gmail zusätzlich findet. Gefundene Wörter sind markiert. Chips grenzen ein (ungelesen, mit Anhang, letzte 7 Tage, mit Stern, älter als ein Jahr). Suche und Index bleiben auf diesem Gerät: nicht im Sync, nicht im Backup, nie bei einer KI, und „Mail-Cache löschen“ löscht sie mit.
 
+## Wartet auf mich (Windows-App)
+
+Neben den Ordnern zeigt **Wartet auf mich** die Mails, die etwas von dir wollen: an dich, noch ohne Antwort, keine Rechnung und kein Newsletter, aus den letzten 30 Tagen (oder, wenn dir das lieber ist, deine Mails mit Stern – Mail-Einstellungen). **Erledigt** nimmt eine Mail aus der Liste, bis eine neue Nachricht kommt, **Morgen wieder** bis morgen früh; beides lässt sich zurücknehmen und bleibt auf diesem Gerät. **Nacheinander durchgehen** öffnet sie der Reihe nach. Über dem Posteingang bietet **Welche Mails zeigen** alle Mails, **Persönlich**, **Rechnungen** oder **Newsletter**.
+
 ## Kontoauszug importieren
 
 In **Finanzen** (Einstellungen → Module → Finanzen → Startdaten einrichten → _Kontoauszug importieren_) wählst du die Datei, die du im Online-Banking exportiert hast: **OFX**, **QIF**, **CAMT** oder **CSV**. Es wird nichts hochgeladen und kein Login gebraucht; du siehst erst eine Vorschau und kannst den Import rückgängig machen. Bekannte Banken (Sparkasse, ING, DKB, N26, comdirect, Volksbank/GLS) werden an der Datei erkannt und in der Vorschau genannt („Erkannt: DKB“). Bei einer CSV, die die App nicht kennt, ordnest du die Spalten Datum / Betrag / Empfänger / Verwendungszweck einmal zu; die App merkt es sich für den nächsten Export dieser Art. Eine Datei, die du zweimal importierst, bringt nichts Neues, und eine Datei in einer anderen Währung wird nur auf ein Konto dieser Währung gebucht.

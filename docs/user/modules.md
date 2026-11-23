@@ -85,6 +85,10 @@ Point at a mail's row and the button “Add to plan” appears (“As to-do” w
 
 One search field looks at sender, subject, text and attachment names. The hits **on this device** come first and work offline too (the mails the app has already listed or opened; a small typo in a name is forgiven); below, **in the mailbox** lists what Gmail finds on top. Matching words are marked. Chips narrow the search (unread, with attachment, last 7 days, starred, older than a year). The search and its index stay on this device: not synced, not in a backup, never sent to an AI, and deleting the mail cache deletes them too.
 
+## Waiting for me (Windows app)
+
+Beside the folders, **Waiting for me** lists the mails that want something from you: to you, not answered yet, no invoice or newsletter, from the last 30 days (or, if you prefer, your starred mail – Mail settings). **Done** takes a mail off the list until a new message arrives, **Tomorrow again** until tomorrow morning; both can be undone and stay on this device. **Go through one by one** opens them in turn. Above the inbox, **Which mails to show** offers all mail, **Personal**, **Invoices** or **Newsletters**.
+
 ## Importing a bank statement
 
 In **Finances** (Settings → Modules → Finances → Set up starter data → _Import bank statement_) choose the file you exported in online banking: **OFX**, **QIF**, **CAMT** or **CSV**. Nothing is uploaded and no login is needed; you see a preview first and can undo the import. Well-known banks (Sparkasse, ING, DKB, N26, comdirect, Volksbank/GLS) are recognised from the file and named in the preview ("Recognised: DKB"). For a CSV the app does not know, you assign the columns date / amount / payee / purpose once; the app remembers it for the next export of that kind. A file imported twice adds nothing new, and a file in another currency is only booked to an account in that currency.

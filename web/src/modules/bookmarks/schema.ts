@@ -27,7 +27,7 @@ export const itemSchema = z.object({
   inPlan: z.boolean().optional(),
   /** Minutes for the plan when the person changed the estimate there; else a default by kind. */
   planMinutes: z.number().int().min(1).max(1440).optional(),
-  /** What the page said about itself (link preview, only when the setting is on); the picture lives in `_blobs`. */
+  /** What the page said about itself (link preview: on every save with the setting on, else on a click or for a shared link); the picture lives in `_blobs`. */
   preview: z
     .object({
       site: z.string().optional(),

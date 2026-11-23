@@ -1,6 +1,7 @@
 /**
- * Link preview: title, description and a small picture of the page a saved link points to. Only runs
- * when the setting is on; the page is fetched without cookies or login through `fetchPublic`, parsed
+ * Link preview: title, description and a small picture of the page a saved link points to. Runs on
+ * every save only with the setting on; a single one always on the user's click or for a shared link
+ * (privacy text `previews`). The page is fetched without cookies or login through `fetchPublic`, parsed
  * in an inert document (`parsePageMeta`) and reduced to plain data. The picture is a raster image of
  * at most 512 KB kept on this device only (`_blobs`, never synced or exported).
  */

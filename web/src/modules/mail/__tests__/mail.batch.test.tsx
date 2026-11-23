@@ -129,7 +129,11 @@ beforeEach(async () => {
   mocks.trash.mockResolvedValue(undefined);
   mocks.untrash.mockResolvedValue(undefined);
   mocks.threads.mockResolvedValue({
-    threads: [summary('t1', 'Rechnung'), summary('t2', 'Newsletter'), summary('t3', 'Termin')],
+    threads: [
+      summary('t1', 'Rechnung'),
+      summary('t2', 'Angebote der Woche'),
+      summary('t3', 'Termin'),
+    ],
   });
   onBack.mockReset();
   onChanged.mockReset();
@@ -345,7 +349,7 @@ describe('select mode in the list', () => {
     mocks.threads.mockResolvedValue({
       threads: [
         summary('t1', 'Rechnung', ['INBOX', 'UNREAD']),
-        summary('t2', 'Newsletter', ['INBOX']),
+        summary('t2', 'Angebote der Woche', ['INBOX']),
         summary('t3', 'Termin neu', ['INBOX', 'UNREAD']),
       ],
     });
@@ -380,7 +384,7 @@ describe('select mode in the list', () => {
     page();
     await screen.findByText('Termin');
     await user.click(screen.getByTestId('mail-select'));
-    await user.click(screen.getByText('Newsletter'));
+    await user.click(screen.getByText('Angebote der Woche'));
     expect(
       within(await screen.findByRole('region', { name: /Auswahl/ })).getByText('1 ausgewählt'),
     ).toBeInTheDocument();

@@ -764,15 +764,15 @@ test('E Mail: Persönlich, Suche, Rechnung, Antwort in den Plan', async ({
   m.screens += 1;
   await page.goto(`${seed}/mail`);
   await expect(page.getByText('Beispiel-Mails (Testdaten)')).toBeVisible();
-  // „die wichtigen finden“: the chip „Persönlich“.
-  const personal = page
-    .getByRole('button', { name: 'Persönlich' })
-    .or(page.getByRole('link', { name: 'Persönlich' }));
-  const hasPersonal = (await personal.count()) > 0;
+  // „die wichtigen finden“: „Persönlich“ in the choice „Welche Mails zeigen“ (one tap each way, like the old chip).
+  const show = page.getByRole('combobox', { name: 'Welche Mails zeigen' });
+  const hasPersonal = (await show.count()) > 0;
   if (hasPersonal) {
-    await m.tap(personal.first());
+    m.taps += 1;
+    await show.selectOption({ label: 'Persönlich' });
     await page.waitForTimeout(500);
-    await m.tap(personal.first()); // back to all mails for the search
+    m.taps += 1;
+    await show.selectOption({ label: 'Alle Mails' }); // back to all mails for the search
   } else m.detour();
   // „nach einer bestimmten Mail suchen“: the search field.
   const search = page.getByRole('search').getByRole('combobox', { name: 'Suchen' });

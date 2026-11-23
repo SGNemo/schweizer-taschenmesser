@@ -140,12 +140,12 @@ test.describe('mail (demo mails)', () => {
     page,
   }) => {
     await page.goto('/mail');
-    const chip = page.getByRole('button', { name: 'Persönlich' });
-    await chip.click();
-    await expect(chip).toHaveAttribute('aria-pressed', 'true');
+    const show = page.getByRole('combobox', { name: 'Welche Mails zeigen' });
+    await show.selectOption({ label: 'Persönlich' });
+    await expect(show).toHaveValue('personal');
     await expect(page.getByText('Wochenende?')).toBeVisible();
     await expect(page.getByText('Ihre Rechnung für Oktober')).toHaveCount(0);
-    await chip.click();
+    await show.selectOption({ label: 'Alle Mails' });
     await page.getByTestId('mail-plan-all-open').click();
     const dialog = page.getByRole('dialog');
     const list = dialog.getByTestId('mail-plan-all');
