@@ -22,13 +22,20 @@ import type { InstallProgress, UpdateInfo } from './types';
 export const AUTO_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
 export type UpdateErrorCode =
-  'check-failed' | 'backup-failed' | 'install-failed' | 'folder-not-writable' | 'signature-invalid';
+  | 'check-failed'
+  | 'backup-failed'
+  | 'install-failed'
+  | 'folder-not-writable'
+  | 'signature-invalid'
+  | 'version-not-newer';
 
 /** The Rust side prefixes its errors with a code (`folder-not-writable: …`); everything else is generic. */
 export function installErrorCode(e: unknown): UpdateErrorCode {
   const text = e instanceof Error ? e.message : String(e);
   if (text.startsWith('folder-not-writable')) return 'folder-not-writable';
   if (text.startsWith('signature-invalid')) return 'signature-invalid';
+  // NS2: the signed payload is older than the running app (a rollback); nothing was installed
+  if (text.startsWith('version-not-newer')) return 'version-not-newer';
   return 'install-failed';
 }
 

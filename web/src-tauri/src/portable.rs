@@ -28,6 +28,10 @@ pub enum SwapError {
     Failed(String),
     /// The payload is not a Windows executable.
     NotAnExecutable,
+    /// The signed payload is older than the running app (NS2: no rollback).
+    OlderVersion,
+    /// The signed payload carries no readable Windows version block.
+    VersionUnreadable,
 }
 
 impl SwapError {
@@ -36,6 +40,7 @@ impl SwapError {
             Self::FolderNotWritable(_) => "folder-not-writable",
             Self::Failed(_) => "swap-failed",
             Self::NotAnExecutable => "not-an-executable",
+            Self::OlderVersion | Self::VersionUnreadable => "version-not-newer",
         }
     }
 }
@@ -45,6 +50,8 @@ impl fmt::Display for SwapError {
         match self {
             Self::FolderNotWritable(d) | Self::Failed(d) => write!(f, "{}: {d}", self.code()),
             Self::NotAnExecutable => write!(f, "{}", self.code()),
+            Self::OlderVersion => write!(f, "{}: older than the running app", self.code()),
+            Self::VersionUnreadable => write!(f, "{}: no version in the payload", self.code()),
         }
     }
 }
@@ -84,6 +91,45 @@ pub fn sibling(exe: &Path, suffix: &str) -> PathBuf {
 /// A Windows executable starts with the DOS header magic. Catches an HTML error page or an empty body.
 pub fn looks_like_executable(bytes: &[u8]) -> bool {
     bytes.len() >= 2 && &bytes[..2] == b"MZ"
+}
+
+/// Signature of a Windows `VS_FIXEDFILEINFO` block, followed by its structure version 1.0.
+const FIXED_FILE_INFO: [u8; 8] = [0xBD, 0x04, 0xEF, 0xFE, 0x00, 0x00, 0x01, 0x00];
+
+/// `major.minor.patch` of the executable's own version block (`FileVersion`, which the build sets
+/// from the app version). Read from the signed bytes, unlike the manifest's unsigned `version`.
+pub fn payload_version(bytes: &[u8]) -> Option<[u16; 3]> {
+    let at = bytes
+        .windows(FIXED_FILE_INFO.len())
+        .position(|w| w == FIXED_FILE_INFO)?;
+    let word = |i: usize| -> Option<u32> {
+        let b = bytes.get(at + 8 + 4 * i..at + 12 + 4 * i)?;
+        Some(u32::from_le_bytes([b[0], b[1], b[2], b[3]]))
+    };
+    let (ms, ls) = (word(0)?, word(1)?);
+    // the halves of a u32: the casts keep exactly 16 bits
+    Some([(ms >> 16) as u16, (ms & 0xFFFF) as u16, (ls >> 16) as u16])
+}
+
+/// `major.minor.patch` of a version like `1.2.0` or `1.2.0-beta.3` (pre-release ignored).
+fn core_version(version: &str) -> Option<[u16; 3]> {
+    let core = version.split(['-', '+']).next()?;
+    let mut parts = core.split('.').map(|p| p.parse::<u16>().ok());
+    let v = [parts.next()??, parts.next()??, parts.next()??];
+    parts.next().is_none().then_some(v)
+}
+
+/**
+ * NS2 (launch review 2026-11): the update's version comes from the unsigned manifest, so an older,
+ * validly signed executable could be served as "newer". The signed payload must not be older than
+ * the running app; the same version passes (a beta followed by its final release).
+ */
+pub fn not_older(bytes: &[u8], running: &str) -> Result<(), SwapError> {
+    let payload = payload_version(bytes).ok_or(SwapError::VersionUnreadable)?;
+    match core_version(running) {
+        Some(current) if payload < current => Err(SwapError::OlderVersion),
+        _ => Ok(()),
+    }
 }
 
 /// Verifies `bytes` against a minisign signature (base64 of the `.sig` file, as in `latest.json`) with
@@ -199,6 +245,52 @@ pub fn wait_for_previous_instance(fs: &dyn Fs, exe: &Path, limit: Duration) {
 mod tests {
     use super::*;
     use std::cell::Cell;
+
+    /// An executable with a Windows version block (`VS_FIXEDFILEINFO`) for `major.minor.patch.build`.
+    fn exe_with_version(major: u16, minor: u16, patch: u16) -> Vec<u8> {
+        let mut b = b"MZ".to_vec();
+        b.extend_from_slice(&[0u8; 300]);
+        for word in [
+            0xFEEF_04BD_u32,
+            0x0001_0000,
+            (u32::from(major) << 16) | u32::from(minor),
+            u32::from(patch) << 16,
+        ] {
+            b.extend_from_slice(&word.to_le_bytes());
+        }
+        b.extend_from_slice(&[0u8; 40]);
+        b
+    }
+
+    #[test]
+    fn an_update_is_never_older_than_the_running_app() {
+        // NS2 (launch review 2026-11): the manifest's version is unsigned, so the version is read
+        // from the signed payload itself; an older one is refused (rollback), the same or a newer
+        // one passes.
+        assert_eq!(payload_version(&exe_with_version(0, 3, 1)), Some([0, 3, 1]));
+        assert_eq!(not_older(&exe_with_version(1, 2, 0), "1.2.0"), Ok(()));
+        assert_eq!(not_older(&exe_with_version(1, 3, 0), "1.2.9"), Ok(()));
+        assert_eq!(
+            not_older(&exe_with_version(2, 0, 0), "1.9.9-beta.1"),
+            Ok(())
+        );
+        assert_eq!(
+            not_older(&exe_with_version(1, 2, 0), "1.2.0-beta.3"),
+            Ok(())
+        );
+        for running in ["1.2.1", "1.3.0", "2.0.0", "1.2.1-beta.1"] {
+            assert_eq!(
+                not_older(&exe_with_version(1, 2, 0), running),
+                Err(SwapError::OlderVersion),
+                "{running}"
+            );
+        }
+        // no version block: refused, not guessed
+        assert_eq!(
+            not_older(b"MZ plain", "1.0.0"),
+            Err(SwapError::VersionUnreadable)
+        );
+    }
 
     // Throwaway key pair created only for these tests (the private key was discarded).
     const PUBKEY: &str = "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDcyOEU1MEUwOTFBNkI2QTAKUldTZ3RxYVI0RkNPY2tyaHNMVmtOTnlKL2tLR3A3cTBmKzAxYnlQb1RLdmNaaDBnMjE4VjFJMVMK";

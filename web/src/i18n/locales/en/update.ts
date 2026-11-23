@@ -21,6 +21,8 @@ export const update: Strings['update'] = {
     'folder-not-writable':
       'The program file is in a folder the app may not write to (read-only or no permission). Move the program file to a normal folder, such as your user folder, and try again.',
     'signature-invalid': 'The update’s signature is invalid – so it was not installed.',
+    'version-not-newer':
+      'The update is not newer than your installed version – so it was not installed.',
   } as Record<string, string>,
   settings: {
     intro:

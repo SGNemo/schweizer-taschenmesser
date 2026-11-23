@@ -10,14 +10,16 @@ const ANDROID_PACKAGE: &str = "io.github.sgnemo.taschenmesser.apkinstaller";
 
 /// Registers the Kotlin plugin class (`ApkInstallerPlugin`).
 pub fn init<R: Runtime, C: DeserializeOwned>(
-    _app: &AppHandle<R>,
+    app: &AppHandle<R>,
     api: PluginApi<R, C>,
 ) -> Result<ApkInstaller<R>> {
     let handle = api.register_android_plugin(ANDROID_PACKAGE, "ApkInstallerPlugin")?;
-    Ok(ApkInstaller(handle))
+    let dev = validate::is_dev_identifier(&app.config().identifier);
+    Ok(ApkInstaller(handle, dev))
 }
 
-pub struct ApkInstaller<R: Runtime>(PluginHandle<R>);
+/// The plugin handle and whether this is the Dev-Preview build (NS3: which release it may fetch from).
+pub struct ApkInstaller<R: Runtime>(PluginHandle<R>, bool);
 
 impl<R: Runtime> ApkInstaller<R> {
     pub fn can_install(&self) -> Result<CanInstallResponse> {
@@ -27,7 +29,7 @@ impl<R: Runtime> ApkInstaller<R> {
     }
     pub fn download(&self, request: DownloadRequest) -> Result<DownloadResponse> {
         // Same check as the command, for callers that reach the plugin through `ApkInstallerExt`.
-        validate::check_download(&request.url, request.sha256.as_deref())
+        validate::check_download_for(&request.url, request.sha256.as_deref(), self.1)
             .map_err(Error::InvalidRequest)?;
         self.0
             .run_mobile_plugin("download", request)
