@@ -153,7 +153,11 @@ describe('expanding a plan row', () => {
     const tick = await screen.findByRole('checkbox', { name: '„Bad wischen“ abhaken' });
     fireEvent.click(tick);
     await waitFor(async () =>
-      expect((await taskRepo.get(id))?.checklist?.find((c) => c.id === 'c1')?.done).toBe(true),
+      expect(
+        ((await taskRepo.get(id))?.checklist as { id: string; done: boolean }[] | undefined)?.find(
+          (c) => c.id === 'c1',
+        )?.done,
+      ).toBe(true),
     );
     spy.stop();
     expect(spy.writes.length).toBeGreaterThan(0);
@@ -187,6 +191,25 @@ describe('expanding a plan row', () => {
   });
 });
 
+describe('a row that leaves while open', () => {
+  it('closes, and the focus goes to the next row’s title', async () => {
+    const id = await place('Haushalt', 0);
+    await place('Steuer', 1);
+    page();
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Haushalt. Aufklappen' }, { timeout: 5000 }),
+    );
+    const open = await screen.findByRole('button', { name: 'Ganz öffnen' });
+    open.focus();
+    // Finished elsewhere (its own lead, a sync): the row leaves the board.
+    await taskRepo.update(id, { done: true });
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Steuer. Aufklappen' })).toHaveFocus(),
+    );
+    expect(screen.queryByTestId('row-compartment')).toBeNull();
+  });
+});
+
 describe('ThingRow in a selection', () => {
   it('never expands: no disclosure on the title, no compartment', () => {
     const row = {
@@ -216,5 +239,35 @@ describe('ThingRow in a selection', () => {
     );
     expect(document.querySelector('[aria-expanded]')).toBeNull();
     expect(screen.queryByTestId('row-compartment')).toBeNull();
+  });
+
+  it('a thing in parts names its part in the expand button', () => {
+    const row = {
+      unitId: 'todos:a#1',
+      itemKey: 'todos:a',
+      title: 'Steuer',
+      minutes: 30,
+      k: 1,
+      of: 2,
+      pinned: false,
+      entry: { moduleId: 'todos', id: 'a', kind: 'task', title: 'Steuer', to: '/todos?open=a' },
+    } as unknown as BoardRow;
+    render(
+      <MemoryRouter>
+        <ul>
+          <ThingRow
+            row={row}
+            reason=""
+            whyOpen={false}
+            dueClock={NOW}
+            menu={[]}
+            expand={{ open: false, onToggle: () => undefined, onClose: () => undefined }}
+          />
+        </ul>
+      </MemoryRouter>,
+    );
+    expect(
+      screen.getByRole('button', { name: 'Steuer, Teil 2 von 2. Aufklappen' }),
+    ).toBeInTheDocument();
   });
 });

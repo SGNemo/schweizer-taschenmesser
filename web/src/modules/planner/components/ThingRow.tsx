@@ -40,14 +40,18 @@ function expandParts(
   unitId: string,
   title: string,
   links: RowLinkViews,
+  part?: { k: number; of: number },
 ) {
   if (!expand || !entry) return undefined;
   const id = compartmentId(unitId);
+  // The name replaces the visible title: a thing in parts says which part, as its title does.
+  const named =
+    part && part.of > 1 ? `${title}, ${t.planner.row.partAria(part.k + 1, part.of)}` : title;
   return {
     disclosure: {
       open: expand.open,
       controls: id,
-      name: expand.open ? t.planner.panel.collapse(title) : t.planner.panel.expand(title),
+      name: expand.open ? t.planner.panel.collapse(named) : t.planner.panel.expand(named),
     },
     onOpen: expand.onToggle,
     compartment: expand.open ? (
@@ -165,7 +169,7 @@ export function ThingRow({
   const source = entry ? sourceOf(entry) : undefined;
   const action = onDone ? undefined : entry?.action;
   const links = useRowLinks(entry);
-  const opens = expandParts(select ? undefined : expand, entry, row.unitId, row.title, links);
+  const opens = expandParts(select ? undefined : expand, entry, row.unitId, row.title, links, row);
   const linkedMenu = withLinks(menu, useActionMenu(action), useLinkMenu(links));
   // „Noch offen“: the row's steps are on the row itself – no ⋯.
   const fullMenu = onMove ? [] : linkedMenu;
@@ -377,7 +381,7 @@ export function WaitRow({
 }) {
   const links = useRowLinks(row.entry);
   const linkMenu = useLinkMenu(links);
-  const opens = expandParts(expand, row.entry, row.unitId, row.title, links);
+  const opens = expandParts(expand, row.entry, row.unitId, row.title, links, row);
   return (
     <ItemRow
       // `?item=<rowKey>` finds it here too: the page opens the folded group and focuses it (package 10b).

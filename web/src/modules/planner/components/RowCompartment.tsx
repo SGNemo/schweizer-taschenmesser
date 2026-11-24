@@ -6,7 +6,7 @@
  * One row is open at a time (`useOpenRow`, page state – nothing is stored, a reload closes it). Esc anywhere in the
  * row (title or compartment) closes it and gives the focus back to the title.
  */
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import styles from './RowCompartment.module.css';
 
 /** The DOM id of a row's compartment (the title button's `aria-controls`). */
@@ -39,9 +39,23 @@ export function RowCompartment({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const close = useRef(onClose);
-  useEffect(() => {
+  // The row after this one: where the focus goes when this row leaves while the focus is in it (done, taken out).
+  const after = useRef<Element | null>(null);
+  useLayoutEffect(() => {
     close.current = onClose;
+    after.current = ref.current?.closest('li')?.nextElementSibling ?? null;
   });
+  useEffect(
+    () => () => {
+      const next = after.current;
+      // After the commit: only a focus that fell to the page is moved (Esc and „Ganz öffnen“ placed theirs).
+      setTimeout(() => {
+        const lost = !document.activeElement || document.activeElement === document.body;
+        if (lost && next?.isConnected) next.querySelector<HTMLElement>('[data-row]')?.focus();
+      });
+    },
+    [],
+  );
   useEffect(() => {
     const row = ref.current?.closest('li');
     if (!row) return;
@@ -66,6 +80,8 @@ export function RowCompartment({
       aria-label={label}
       className={styles.compartment}
       data-testid="row-compartment"
+      // The row's ⋯ opens on a right-click on the row, never on the panel's own text.
+      onContextMenu={(e) => e.stopPropagation()}
     >
       {children}
     </div>

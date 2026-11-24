@@ -9,21 +9,22 @@ import type { PlanPanelProps } from '@/core/modules/types';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
 import { Button, PanelLine, PanelLines } from '@/ui';
-import { hostOf } from '../logic';
+import { hostOf, linkOf } from '../logic';
 import { itemRepo } from '../repo';
 
 export default function BookmarkPlanPanel({ id, compact }: PlanPanelProps) {
   const item = useLiveQuery(async () => (await itemRepo.get(id)) ?? null, [id]);
   if (item === undefined) return <PanelLoading />;
   if (item === null) return <PanelGone />;
-  const host = hostOf(item.url);
+  const host = hostOf(linkOf(item.url));
   const line = (
     <PanelLines>
       <PanelLine {...(host ? { meta: host } : {})}>{item.title}</PanelLine>
     </PanelLines>
   );
   if (compact) return line;
-  const url = item.url;
+  // http(s) only, as every opener of the module: a synced or imported address never passed the form's check.
+  const url = linkOf(item.url);
   return (
     <>
       {line}

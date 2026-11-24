@@ -151,6 +151,15 @@ for (const [name, viewport, mobile] of [
             .sort(),
         )
         .toEqual(['Milch', 'Spülmittel']);
+      // Bought entries on the list: X8 clears them (Listen's „Gekauftes entfernen“), still in the planner.
+      await box.getByRole('button', { name: 'Fertig eingekauft' }).click();
+      await expect
+        .poll(async () =>
+          (await rows<{ name: string; deletedAt: number | null }>(page, 'lists_item'))
+            .filter((i) => i.deletedAt === null)
+            .map((i) => i.name),
+        )
+        .toEqual(['Batterien AA']);
 
       // Another row opens: the first one closes (one at a time).
       const todo = rowOf(page, 'todos:hh');

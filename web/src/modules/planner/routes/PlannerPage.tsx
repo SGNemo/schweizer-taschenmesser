@@ -67,7 +67,7 @@ import { Capture } from '../components/Capture';
 import { CaptureDialog } from '../components/CaptureDialog';
 import { useAbilities, useRowMenu } from '../components/rowMenu';
 import { type RowExpand, ThingRow, TodoHintRow, WaitRow } from '../components/ThingRow';
-import { useOpenRow } from '../components/RowCompartment';
+import { compartmentId, useOpenRow } from '../components/RowCompartment';
 import { PlanPageFoot } from '@/core/modules/PlanPanelHost';
 import { appointmentsOf, Context, nextDeadlinesOf } from '../components/Context';
 import { DayPage, DayPageLoading } from '../components/DayPage';
@@ -746,6 +746,11 @@ export default function PlannerPage() {
   // „Zeilen aufklappen“ (planner hub 2, package 4a): one row open at a time, page state only (a reload closes it).
   const openRow = useOpenRow();
   const expandOn = data?.settings.expandRows !== false;
+  // The open row is no longer drawn open (it left the board, a selection began, the switch went off): it is closed,
+  // so it does not spring open again later.
+  useEffect(() => {
+    if (openRow.open && !document.getElementById(compartmentId(openRow.open))) openRow.close();
+  });
   const expandOf = (unitId: string, entry: PlannableEntry | undefined): RowExpand | undefined =>
     expandOn && entry
       ? {

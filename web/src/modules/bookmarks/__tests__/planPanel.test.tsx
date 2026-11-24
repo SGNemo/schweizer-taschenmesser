@@ -65,6 +65,25 @@ it('title and host; „Im Browser öffnen“ only on the tap; no tick of its own
   expect((await itemRepo.get('bm1'))?.updatedAt).toBe((await itemRepo.get('bm1'))?.createdAt);
 });
 
+it('an address that is not http(s) (synced, imported) is never offered to the browser', async () => {
+  for (const [i, url] of [
+    'javascript:alert(1)',
+    'file:///etc/passwd',
+    'data:text/html,x',
+  ].entries())
+    await itemRepo.create(
+      { title: `Ding ${i}`, url, kind: 'try', tags: [], done: false, started: false, inPlan: true },
+      { id: `x${i}` },
+    );
+  for (const i of [0, 1, 2]) {
+    const { unmount } = panel(`x${i}`);
+    expect(await screen.findByText(`Ding ${i}`)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Im Browser öffnen' })).toBeNull();
+    unmount();
+  }
+  expect(openUrl).not.toHaveBeenCalled();
+});
+
 it('an entry that is gone: X3', async () => {
   panel('nope');
   expect(await screen.findByText('Gibt es nicht mehr.')).toBeInTheDocument();

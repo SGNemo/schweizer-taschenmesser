@@ -41,6 +41,9 @@ const NEVER = 'accounts';
 interface PanelContext {
   /** The thing's route in its module (`PlannableItem.to`): „Ganz öffnen“, the old jump. */
   to: string;
+  /** What the row knows beyond its title (the source's `detail`, its links): the default panel's body. */
+  detail?: ReactNode;
+  links?: ReactNode;
   /** X4 „Aus dem Plan nehmen“ for a thing that is gone; the planner's own undoable action. */
   onTakeOut?: () => void;
 }
@@ -143,12 +146,25 @@ class PanelBoundary extends Component<
   }
 }
 
-/** The default panel: what the row knows of the thing beyond its title (its `detail`, its links) and „Ganz öffnen“. */
-function DefaultPanel({ detail, links }: { detail?: ReactNode; links?: ReactNode }) {
+/**
+ * What the row knows of the thing beyond its title – its `detail` line and its links. The default panel's body; a
+ * module panel with nothing of its own to show (a ToDo without note or checklist) draws it too.
+ */
+export function PanelDefaultBody() {
+  const ctx = useContext(Ctx);
   return (
     <>
-      {detail ? <p className={styles.line}>{detail}</p> : null}
-      {links}
+      {ctx?.detail ? <p className={styles.line}>{ctx.detail}</p> : null}
+      {ctx?.links}
+    </>
+  );
+}
+
+/** The default panel: the row's detail and links, and „Ganz öffnen“. */
+function DefaultPanel() {
+  return (
+    <>
+      <PanelDefaultBody />
       <PlanPanelFoot />
     </>
   );
@@ -182,12 +198,16 @@ export function PlanPanelHost({
   const states = useModuleStates();
   const manifest = availableManifests().find((m) => m.id === moduleId);
   const loader = manifest?.contributions?.planPanel;
-  const Panel = loader ? panelFor(`panel:${moduleId}`, loader) : undefined;
-  const ctx = useMemo(() => ({ to, ...(onTakeOut ? { onTakeOut } : {}) }), [to, onTakeOut]);
+  const ctx = useMemo(
+    () => ({ to, detail, links, ...(onTakeOut ? { onTakeOut } : {}) }),
+    [to, detail, links, onTakeOut],
+  );
   if (moduleId === NEVER) return null;
   if (!manifest) return <p className={styles.line}>{t.planner.panel.unavailable}</p>;
   if (!states) return <PanelLoading />;
   if (!states[moduleId]) return <p className={styles.line}>{t.planner.panel.unavailable}</p>;
+  // Resolved only for a module that may show here (never cached for `accounts` or a module that is off).
+  const Panel = loader ? panelFor(`panel:${moduleId}`, loader) : undefined;
   return (
     <Ctx.Provider value={ctx}>
       <PanelBoundary moduleId={moduleId}>
@@ -197,7 +217,7 @@ export function PlanPanelHost({
             {createElement<PlanPanelProps>(Panel, { id, compact, ...(onDone ? { onDone } : {}) })}
           </Suspense>
         ) : (
-          <DefaultPanel detail={detail} links={links} />
+          <DefaultPanel />
         )}
       </PanelBoundary>
     </Ctx.Provider>

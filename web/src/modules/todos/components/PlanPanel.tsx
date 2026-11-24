@@ -4,7 +4,13 @@
  * many). Every tick is ToDos' own write with ToDos' own undo toast; the planner writes nothing. Foot: „Ganz öffnen“.
  */
 import { useLiveQuery } from 'dexie-react-hooks';
-import { PanelGone, PanelLoading, PlanPanelFoot } from '@/core/modules/PlanPanelHost';
+import { recordWrite, withoutRecording } from '@/core/db/recorder';
+import {
+  PanelDefaultBody,
+  PanelGone,
+  PanelLoading,
+  PlanPanelFoot,
+} from '@/core/modules/PlanPanelHost';
 import type { PlanPanelProps } from '@/core/modules/types';
 import { undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
@@ -13,7 +19,20 @@ import { taskRepo } from '../repo';
 import type { ChecklistItem } from '../schema';
 import styles from './PlanPanel.module.css';
 
-/** Ticks one checklist line, ToDos' own write with its own undo; nothing when the line is gone meanwhile. */
+/** Sets one checklist line, read fresh: a sync may have changed the other lines meanwhile. */
+async function setLine(taskId: string, itemId: string, done: boolean): Promise<void> {
+  const fresh = await taskRepo.get(taskId);
+  if (!fresh?.checklist?.some((c) => c.id === itemId && c.done !== done)) return;
+  const checklist: ChecklistItem[] = fresh.checklist.map((c) =>
+    c.id === itemId ? { ...c, done } : c,
+  );
+  await taskRepo.update(taskId, { checklist });
+}
+
+/**
+ * Ticks one checklist line: ToDos' own write with its own undo toast. The undo flips only this line back (the field
+ * holds the whole list, and restoring it would also undo a line ticked elsewhere since); nothing when the line is gone.
+ */
 export async function tickChecklist(taskId: string, itemId: string, done: boolean): Promise<void> {
   const task = await taskRepo.get(taskId);
   const item = task?.checklist?.find((c) => c.id === itemId);
@@ -22,13 +41,8 @@ export async function tickChecklist(taskId: string, itemId: string, done: boolea
     ? t.todos.checklist.ticked(item.text)
     : t.todos.checklist.reopened(item.text);
   await undoableWithToast(message, message, async () => {
-    // Read again inside the action: a sync may have changed the other lines meanwhile.
-    const fresh = await taskRepo.get(taskId);
-    if (!fresh?.checklist) return;
-    const checklist: ChecklistItem[] = fresh.checklist.map((c) =>
-      c.id === itemId ? { ...c, done } : c,
-    );
-    await taskRepo.update(taskId, { checklist });
+    await withoutRecording(() => setLine(taskId, itemId, done));
+    recordWrite(() => setLine(taskId, itemId, !done));
   });
 }
 
@@ -47,6 +61,8 @@ export default function TodoPlanPanel({ id, compact }: PlanPanelProps) {
   return (
     <>
       {task.note ? <p className={styles.note}>{task.note}</p> : null}
+      {/* Nothing of its own (the common plain ToDo): what the row knows – its detail and links – as the default. */}
+      {!task.note && checklist.length === 0 ? <PanelDefaultBody /> : null}
       {checklist.length > 0 ? (
         <PanelLines label={t.todos.checklist.title}>
           {checklist.map((c) => (

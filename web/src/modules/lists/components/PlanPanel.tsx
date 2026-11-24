@@ -2,10 +2,11 @@
  * A list's panel under its plan row (planner hub 2, package 4a; hand-off 04): the open entries as tick lines, grouped by
  * section (shopping) or category (packing) under small heads; at most 8, then X19 „n weitere“, which shows 8 more – no
  * scroll box inside a row. Each tick is Listen's own write with its own undo toast. Foot: X8 „Fertig eingekauft“ (the
- * module's existing „Gekauftes entfernen“) once nothing is open on a shopping list, and „Ganz öffnen“.
+ * module's existing „Gekauftes entfernen“) while a shopping list holds ticked entries – a list with nothing open leaves
+ * the plan at once, so „once nothing is open“ would never be seen – and „Ganz öffnen“.
  */
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { PanelGone, PanelHead, PanelLoading, PlanPanelFoot } from '@/core/modules/PlanPanelHost';
 import type { PlanPanelProps } from '@/core/modules/types';
 import { undoableWithToast } from '@/core/undo/withToast';
@@ -49,16 +50,47 @@ export default function ListPlanPanel({ id, compact }: PlanPanelProps) {
   const [shown, setShown] = useState(PANEL_STEP);
   // Ticked here a moment ago: still drawn (ticked, muted), so the line does not vanish under the finger.
   const [held, setHeld] = useState<ReadonlySet<string>>(new Set());
+  const box = useRef<HTMLDivElement>(null);
+  const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+  useEffect(() => {
+    const all = timers.current;
+    return () => all.forEach((x) => clearTimeout(x));
+  }, []);
+  const release = (itemId: string) => {
+    clearTimeout(timers.current.get(itemId));
+    timers.current.delete(itemId);
+    setHeld((cur) => {
+      const next = new Set(cur);
+      next.delete(itemId);
+      return next;
+    });
+  };
+  /** The focused tick's line leaves: the focus goes to the next line's tick, else the one before, else the foot. */
+  const keepFocus = (itemId: string) => {
+    const ticks = [...(box.current?.querySelectorAll<HTMLElement>('input[type="checkbox"]') ?? [])];
+    const at = ticks.findIndex((x) => x === document.activeElement);
+    if (at < 0 || ticks[at]?.dataset.item !== itemId) return;
+    const target =
+      ticks[at + 1] ??
+      ticks[at - 1] ??
+      box.current?.querySelector<HTMLElement>('[data-panel-foot] button');
+    target?.focus();
+  };
   const hold = (itemId: string) => {
     setHeld((cur) => new Set(cur).add(itemId));
-    setTimeout(
-      () =>
-        setHeld((cur) => {
-          const next = new Set(cur);
-          next.delete(itemId);
-          return next;
-        }),
-      PANEL_HOLD_MS,
+    timers.current.set(
+      itemId,
+      setTimeout(() => {
+        keepFocus(itemId);
+        release(itemId);
+      }, PANEL_HOLD_MS),
+    );
+  };
+  const more = (n: number) => {
+    setShown(n + PANEL_STEP);
+    // The button goes once all is shown: the focus goes to the first line it brought.
+    requestAnimationFrame(() =>
+      box.current?.querySelectorAll<HTMLElement>('input[type="checkbox"]')[n]?.focus(),
     );
   };
   if (read === undefined) return <PanelLoading />;
@@ -82,10 +114,10 @@ export default function ListPlanPanel({ id, compact }: PlanPanelProps) {
         : t.lists.noSection
       : gid || t.lists.sections.other!;
   const parts = capped(groups, shown);
-  const more = drawn.length - Math.min(shown, drawn.length);
+  const rest = drawn.length - Math.min(shown, drawn.length);
   const named = groups.length > 1 || groups[0]?.id !== '';
   return (
-    <>
+    <div ref={box}>
       {parts.map((g) => (
         <div key={g.id || '-'}>
           {named ? <PanelHead>{headOf(g.id)}</PanelHead> : null}
@@ -100,9 +132,12 @@ export default function ListPlanPanel({ id, compact }: PlanPanelProps) {
                     tone="neutral"
                     label={t.planner.panel.tick(i.name)}
                     labelHidden
+                    data-item={i.id}
                     checked={i.done || held.has(i.id)}
                     onChange={(e) => {
+                      // Unticked while held: the box says it at once, as the toast does.
                       if (e.target.checked) hold(i.id);
+                      else release(i.id);
                       tick(i.id, i.name, e.target.checked);
                     }}
                   />
@@ -114,13 +149,13 @@ export default function ListPlanPanel({ id, compact }: PlanPanelProps) {
           </PanelLines>
         </div>
       ))}
-      {more > 0 ? (
-        <Button variant="ghost" onClick={() => setShown((n) => n + PANEL_STEP)}>
-          {t.planner.panel.more(more)}
+      {rest > 0 ? (
+        <Button variant="ghost" onClick={() => more(shown)}>
+          {t.planner.panel.more(rest)}
         </Button>
       ) : null}
       <PlanPanelFoot>
-        {isShopping && open.length === 0 && doneCount > 0 ? (
+        {isShopping && doneCount > 0 ? (
           <Button
             variant="secondary"
             onClick={() =>
@@ -133,6 +168,6 @@ export default function ListPlanPanel({ id, compact }: PlanPanelProps) {
           </Button>
         ) : null}
       </PlanPanelFoot>
-    </>
+    </div>
   );
 }

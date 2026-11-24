@@ -76,6 +76,19 @@ it('a tick is Listen’s own write with its own undo', async () => {
   expect((await itemRepo.get('i0'))?.done).toBe(false);
 });
 
+it('X8 is offered while bought entries are on a shopping list (open ones stay); unticking while held shows at once', async () => {
+  await items(['Milch', 'Brot']);
+  panel();
+  expect(await screen.findByText('Milch')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Fertig eingekauft' })).toBeNull();
+  const tick = screen.getByRole('checkbox', { name: '„Milch“ abhaken' });
+  fireEvent.click(tick);
+  expect(await screen.findByRole('button', { name: 'Fertig eingekauft' })).toBeInTheDocument();
+  fireEvent.click(tick);
+  expect(tick).not.toBeChecked();
+  await waitFor(async () => expect((await itemRepo.get('i0'))?.done).toBe(false));
+});
+
 it('nothing open: X8 „Fertig eingekauft“ clears the bought entries, one undo', async () => {
   await items(['Milch', 'Brot'], { done: true });
   panel();
