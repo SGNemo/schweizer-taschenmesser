@@ -22,6 +22,7 @@ import {
   useOpenParam,
   type RowMenuItem,
 } from '@/ui';
+import { usePlanMarks } from '@/core/entitylinks/PlanMark';
 import { BookmarkCard } from '../components/BookmarkCard';
 import { BookmarkRow, bookmarkMenu } from '../components/BookmarkRow';
 import { ItemEditor, type ItemTarget } from '../components/ItemEditor';
@@ -101,6 +102,15 @@ export default function BookmarksPage() {
     () => filterItems(items ?? [], filter, prefs.sort),
     [items, filter, prefs.sort],
   );
+  // The plan mark of every row, read at once from the planner (`inPlan` is its fallback: M3 until the planner has a row).
+  const markThings = useMemo(
+    () =>
+      shown
+        .filter((i) => i.kind !== 'link')
+        .map((i) => ({ id: i.id, done: i.done, fallback: i.inPlan === true })),
+    [shown],
+  );
+  const marks = usePlanMarks('bookmarks', markThings);
   const tags = useMemo(() => tagCounts(items ?? []), [items]);
   const openItems = useMemo(() => (items ?? []).filter((i) => !i.done), [items]);
   // Head context line: the biggest kinds among the open entries ("3 Lesen · 2 Ansehen").
@@ -142,6 +152,7 @@ export default function BookmarksPage() {
                 <BookmarkCard
                   key={i.id}
                   item={i}
+                  mark={marks?.get(i.id)}
                   onEdit={setTarget}
                   onFilterTag={filterTag}
                   onRead={read}
@@ -154,6 +165,7 @@ export default function BookmarksPage() {
                 <BookmarkRow
                   key={i.id}
                   item={i}
+                  mark={marks?.get(i.id)}
                   onEdit={setTarget}
                   onFilterTag={filterTag}
                   onRead={read}
@@ -163,7 +175,7 @@ export default function BookmarksPage() {
           ),
       })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [shown, grouping, prefs.view, prefs.sort],
+    [shown, grouping, prefs.view, prefs.sort, marks],
   );
   const sameTag = (a?: string, b?: string) => !!a && !!b && a.toLowerCase() === b.toLowerCase();
   function filterTag(tag: string) {

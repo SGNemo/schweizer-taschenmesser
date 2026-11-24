@@ -599,4 +599,14 @@ export const planner: Strings['planner'] = {
     groupCount: (n: number) => `Linked · ${n}`,
     actionName: (action: string, title: string) => `${action}: ${title}`,
   },
+  mark: {
+    day: (day: string) => `In the plan · ${day}`,
+    locked: (day: string) => `In the plan · ${day} · fixed`,
+    noDay: 'In the plan · no day yet',
+    passed: (day: string) => `In the plan · was ${day}`,
+    inPile: (day: string, pile: string) => `In the plan · ${day} · in “${pile}”`,
+    name: (text: string, date: string) => `${text} – ${date}. Show in the planner`,
+    nameNoDate: (text: string) => `${text}. Show in the planner`,
+    today: 'today',
+  },
 };

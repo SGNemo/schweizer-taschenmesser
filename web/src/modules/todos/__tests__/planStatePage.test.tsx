@@ -65,6 +65,24 @@ afterEach(() => {
   bus.clear();
 });
 
+/** The planner's placement row of a task (the shared mark reads these, package 10b). */
+const placed = (id: string, date: string) =>
+  db.table('planner_assignment').put({
+    id: `todos:${id}#0`,
+    itemKey: `todos:${id}`,
+    k: 0,
+    of: 1,
+    date,
+    minutes: 30,
+    order: 0,
+    reason: 'new',
+    createdAt: 1,
+    updatedAt: 1,
+    deviceId: 't',
+    deletedAt: null,
+    _f: {},
+  });
+
 async function seed() {
   await taskRepo.create({ ...base, title: 'Heute im Plan', ...mark('2026-11-18') }, { id: 'a' });
   await taskRepo.create({ ...base, title: 'Freitag im Plan', ...mark('2026-11-20') }, { id: 'b' });
@@ -74,31 +92,31 @@ async function seed() {
   await taskRepo.create({ ...base, title: 'Lose zwei', plannedFor: '2026-11-19' }, { id: 'f' });
   await taskRepo.create({ ...base, title: 'Irgendwann', someday: true }, { id: 'g' });
   await taskRepo.create({ ...base, title: 'Unteraufgabe', parentId: 'e' }, { id: 'h' });
+  await placed('a', '2026-11-18');
+  await placed('b', '2026-11-20');
+  await placed('c', '2026-12-02');
+  await placed('d', '2026-11-16');
 }
 
 describe('the plan state in ToDos', () => {
-  it('marks every open task in the list with the planner’s words; none for someday and subtasks', async () => {
+  it('marks every planned task with the shared mark, read from the planner; none for the rest, someday and subtasks', async () => {
     await planner(true);
     await seed();
     draw('/todos');
-    await waitFor(() => expect(screen.getAllByTestId('plan-mark').length).toBe(2));
-    expect(within(rowOf('Heute im Plan')).getByTestId('in-plan')).toHaveTextContent(
-      'im Plan: heute',
-    );
-    expect(within(rowOf('Freitag im Plan')).getByTestId('in-plan')).toHaveTextContent(
-      'im Plan: Fr',
-    );
-    expect(within(rowOf('Weit weg')).getByTestId('in-plan')).toHaveTextContent(
-      /^im Plan: Mi 2\.12\.?$/,
-    );
-    expect(within(rowOf('War Montag')).getByTestId('in-plan')).toHaveTextContent('im Plan: war Mo');
-    // A date set in ToDos is no day in the plan.
-    expect(within(rowOf('Lose zwei')).getByTestId('plan-mark')).toHaveTextContent(
-      'noch nicht im Plan',
-    );
+    await waitFor(() => expect(screen.getAllByTestId('plan-mark').length).toBe(4));
+    const markOf = (title: string) => within(rowOf(title)).getByTestId('plan-mark');
+    expect(markOf('Heute im Plan')).toHaveTextContent('Im Plan · heute');
+    expect(markOf('Freitag im Plan')).toHaveTextContent('Im Plan · Fr');
+    expect(markOf('Weit weg')).toHaveTextContent(/^Im Plan · Mi 2\.12\.?$/);
+    expect(markOf('War Montag')).toHaveTextContent('Im Plan · war Mo');
+    // Words in the meta line, no control of its own (the page's stimulus budget): the way is ⋯ and the detail.
+    expect(markOf('Freitag im Plan').tagName).toBe('SPAN');
+    // Not in the plan (a date set in ToDos is no day in the plan): no mark – the entry is in ⋯.
+    expect(within(rowOf('Lose zwei')).queryByTestId('plan-mark')).toBeNull();
+    expect(within(rowOf('Lose eins')).queryByTestId('plan-mark')).toBeNull();
     expect(within(rowOf('Unteraufgabe')).queryByTestId('plan-mark')).toBeNull();
     // No colour: the marks carry no tone of their own.
-    expect(within(rowOf('War Montag')).getByTestId('in-plan').className).not.toMatch(/overdue/);
+    expect(markOf('War Montag').className).not.toMatch(/overdue/);
   });
 
   it('the filter shows its number, keeps its choice on this device and works with the views', async () => {
@@ -138,7 +156,6 @@ describe('the plan state in ToDos', () => {
     await waitFor(() => expect(rowOf('Freitag im Plan')).toBeTruthy());
     expect(rowOf('Lose eins')).toBeTruthy();
     expect(screen.queryByTestId('plan-mark')).toBeNull();
-    expect(screen.queryByTestId('in-plan')).toBeNull();
     expect(screen.queryByTestId('plan-filter-all')).toBeNull();
     expect(screen.queryByTestId('todos-select')).toBeNull();
   });
@@ -148,8 +165,8 @@ describe('the plan state in ToDos', () => {
     await seed();
     const show = async (title: string) => {
       const row = await waitFor(() => rowOf(title));
-      // The mark is words in the meta line, not a control of its own (stimulus budget).
-      expect(within(row).getByTestId('in-plan').tagName).toBe('SPAN');
+      // The mark is words in the meta line; ⋯ „Im Planer zeigen“ leads to the row it matched.
+      expect((await within(row).findByTestId('plan-mark')).tagName).toBe('SPAN');
       await userEvent.click(within(row).getAllByRole('button', { name: 'Weitere Aktionen' })[0]!);
       await userEvent.click(await screen.findByRole('menuitem', { name: 'Im Planer zeigen' }));
     };
@@ -192,14 +209,14 @@ describe('the plan state in ToDos', () => {
     await waitFor(() => expect(screen.queryByTestId('todos-to-plan')).toBeNull());
   });
 
-  it('„noch nicht im Plan“ is plain text; ⋯ → „In den Plan …“ → „Noch ohne Tag“ asks without a day', async () => {
+  it('not in the plan: no mark; ⋯ → „In den Plan …“ → „Noch ohne Tag“ asks without a day', async () => {
     await planner(true);
     await seed();
     const seen: EventMap['plan.requested'][] = [];
     bus.on('plan.requested', (req) => void seen.push(req));
     draw('/todos');
     const row = await waitFor(() => rowOf('Lose eins'));
-    expect(within(row).getByTestId('plan-mark').tagName).toBe('SPAN');
+    expect(within(row).queryByTestId('plan-mark')).toBeNull();
     await userEvent.click(within(row).getAllByRole('button', { name: 'Weitere Aktionen' })[0]!);
     await userEvent.click(await screen.findByRole('menuitem', { name: 'In den Plan …' }));
     const dialog = await screen.findByRole('dialog', { name: 'In den Plan: Lose eins' });

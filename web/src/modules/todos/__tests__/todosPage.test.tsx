@@ -389,19 +389,34 @@ describe('with the planner module on', () => {
     await waitFor(() => expect(screen.queryByText('Vom Planer später')).toBeNull());
   });
 
-  it('shows „im Plan: <Tag>“ in Bald for a planner-set date, never for the user’s own', async () => {
+  it('shows the mark „Im Plan · <Tag>“ in Bald for a day the planner gave, never for the user’s own date', async () => {
     await plannerOn();
-    await taskRepo.create({
+    const planned = await taskRepo.create({
       ...base,
       title: 'Vom Planer',
       plannedFor: '2026-11-05',
       planMark: { date: '2026-11-05', order: 0 },
     });
+    await db.table('planner_assignment').put({
+      id: `todos:${planned.id}#0`,
+      itemKey: `todos:${planned.id}`,
+      k: 0,
+      of: 1,
+      date: '2026-11-05',
+      minutes: 30,
+      order: 0,
+      reason: 'new',
+      createdAt: 1,
+      updatedAt: 1,
+      deviceId: 't',
+      deletedAt: null,
+      _f: {},
+    });
     await taskRepo.create({ ...base, title: 'Selbst gesetzt', plannedFor: '2026-11-06' });
     draw('/todos?view=soon');
     await screen.findByText('Vom Planer');
-    const labels = await screen.findAllByTestId('in-plan');
+    const labels = await screen.findAllByTestId('plan-mark');
     expect(labels).toHaveLength(1);
-    expect(labels[0]).toHaveTextContent('im Plan: Do');
+    expect(labels[0]).toHaveTextContent('Im Plan · Do');
   });
 });

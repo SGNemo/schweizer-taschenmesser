@@ -37,9 +37,12 @@ export function ListSummary({
   testId,
   note,
   mark,
+  plan,
   children,
 }: {
   testId?: string;
+  /** The plan mark „Im Plan · Mi“ (planner hub 2, package 10b): the line's last item, after „ · “. */
+  plan?: ReactNode;
   /** The list's own icon and colour (`ListMark`), in front of the line. */
   mark?: ReactNode;
   /** A quiet addition at the end of the line ("Nur Artikel mit Preis"). */
@@ -51,6 +54,12 @@ export function ListSummary({
       {mark ? <span className={styles.mark}>{mark}</span> : null}
       {children}
       {note ? <span className={styles.note}> ({note})</span> : null}
+      {plan ? (
+        <>
+          {' · '}
+          {plan}
+        </>
+      ) : null}
     </p>
   );
 }

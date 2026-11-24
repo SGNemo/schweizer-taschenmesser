@@ -14,12 +14,11 @@
 import { useMemo } from 'react';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
 import { createCollectionRepo } from '@/core/db/repo';
-import { loadModuleStates } from '@/core/modules/activation';
 import { resolveLink, useResolvedLinks } from '@/core/modules/contributions';
-import { getManifest, visibleManifests } from '@/core/modules/registry';
+import { getManifest } from '@/core/modules/registry';
 import { useSharedLiveQuery } from '@/core/modules/sharedQuery';
 import type { ResolvedState } from '@/core/modules/types';
-import { today } from '@/core/time/now';
+import { planMarkOf } from './planMark';
 import {
   carrierStamp,
   linkId,
@@ -246,36 +245,14 @@ export function useLinks(ref: EntityRef): ResolvedLink[] | undefined {
 }
 
 /**
- * „Im Plan · Di“: the earliest day from today on that the planner gave the thing – the earliest live
- * `planner_assignment` of `<module>:<id>`. A thing that is no plan item itself has the day of a ToDo linking to
- * it. `undefined` while the planner module is off (or not in this build). A core read through the generic
- * manifest repo, like `modules/mail/planMail.ts` and `quickCapture/targets/lookup.ts`; nothing is written.
+ * „Im Plan · Di“: the earliest day from today on that the planner gave the thing – its own rows (`<module>:<id>` or an
+ * occurrence `<module>:<id>:…`) first, then a ToDo linking to it with `origin` / `about` (`planMark.ts`). `undefined`
+ * while the planner module is off (or not in this build). Dexie reads only; nothing is written.
  */
 export async function plannedDay(
   ref: EntityRef,
   database: TaschenmesserDB = defaultDb,
 ): Promise<string | undefined> {
-  const planner = getManifest('planner');
-  if (!planner?.dataSchema.collections.assignment) return undefined;
-  if (!(await loadModuleStates(visibleManifests, database)).planner) return undefined;
-  const assignments = createCollectionRepo(planner, 'assignment', database);
-  const from = today();
-  const earliest = async (itemKey: string): Promise<string | undefined> => {
-    const rows = await assignments.table.where('itemKey').equals(itemKey).toArray();
-    const days = rows
-      .filter((r) => r.deletedAt === null && typeof r.date === 'string' && r.date >= from)
-      .map((r) => r.date as string)
-      .sort();
-    return days[0];
-  };
-  const own = await earliest(refKey(ref));
-  if (own) return own;
-  // Not a plan item itself: the ToDos that link to it are (a note, a mail thread, an event).
-  const days: string[] = [];
-  for (const entry of await linkEntries(ref, database)) {
-    if (entry.direction !== 'in' || entry.other.module !== 'todos') continue;
-    const day = await earliest(refKey(entry.other));
-    if (day) days.push(day);
-  }
-  return days.sort()[0];
+  const mark = await planMarkOf(ref.module, { id: ref.id }, database);
+  return mark?.kind === 'day' ? mark.date : undefined;
 }

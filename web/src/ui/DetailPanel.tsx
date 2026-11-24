@@ -14,6 +14,7 @@ export function DetailPanel({
   eyebrow,
   title,
   figure,
+  mark,
   facts = [],
   children,
   actions,
@@ -24,6 +25,8 @@ export function DetailPanel({
   title: string;
   /** The entry's one number (an amount), already formatted. */
   figure?: ReactNode;
+  /** A line of its own under the title block: the plan mark „Im Plan · Mi“ (`core/entitylinks/PlanMark.tsx`). */
+  mark?: ReactNode;
   facts?: readonly { label: string; value: ReactNode }[];
   children?: ReactNode;
   actions?: ReactNode;
@@ -42,6 +45,7 @@ export function DetailPanel({
           <Icon name="close" />
         </IconButton>
       </div>
+      {mark}
       {figure ? <p className={styles.figure}>{figure}</p> : null}
       {facts.length > 0 ? (
         <dl className={styles.facts}>

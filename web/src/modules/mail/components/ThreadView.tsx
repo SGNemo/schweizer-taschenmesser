@@ -12,6 +12,7 @@ import type {
   ThreadChange,
 } from '@/core/mail/types';
 import { getPlatform } from '@/core/platform';
+import { PlanMarkLink, usePlanMarks } from '@/core/entitylinks/PlanMark';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Button, Dialog, Icon, Skeleton } from '@/ui';
@@ -567,6 +568,9 @@ export function ThreadView({
   const web = mailWebUrl(account, threadId);
   const states = useModuleStates();
   const planned = useLiveQuery(() => plannedThreads(account.key), [account.key]);
+  const planMarks = usePlanMarks('mail', [{ id: threadId, fallback: true }]);
+  const threadMark = planMarks?.get(threadId);
+  const planDay = threadMark && threadMark.kind !== 'noDay' ? threadMark : undefined;
   // What entries store: the same thread without the account's address (U17); „In Gmail öffnen“ keeps it.
   const stored = mailWebUrl(account, threadId, { forStorage: true });
   return (
@@ -585,9 +589,15 @@ export function ThreadView({
         ) : null}
         {states?.todos && messages?.length ? (
           planned?.has(threadId) ? (
-            <span className={styles.planMark} data-testid="mail-in-plan">
-              {states.planner ? t.mail.plan.thread : t.mail.plan.todo.thread}
-            </span>
+            states.planner && planDay ? (
+              // „Im Plan · Mi“ (package 10b): the day of the ToDo made from the thread, a link to its plan row.
+              <PlanMarkLink state={planDay} variant="detail" />
+            ) : (
+              // Without a day yet: the thread's own words, as before 10b.
+              <span className={styles.planMark} data-testid="mail-in-plan">
+                {states.planner ? t.mail.plan.thread : t.mail.plan.todo.thread}
+              </span>
+            )
           ) : (
             <Button
               data-testid="mail-plan-thread"

@@ -158,14 +158,9 @@
   color: var(--warning);
   font-weight: var(--weight-semibold);
 }
-.warn svg,
-.planned svg {
+.warn svg {
   margin-right: var(--space-1);
   vertical-align: -0.125em;
-}
-.planned {
-  color: var(--text-muted);
-  font-size: var(--text-sm);
 }
 .more summary {
   min-height: var(--touch);

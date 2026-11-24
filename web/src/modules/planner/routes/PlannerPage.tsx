@@ -194,6 +194,11 @@ export default function PlannerPage() {
     () => params.get('day') ?? undefined,
   );
   const lookFor = useRef(params.get('item') ?? undefined);
+  const lookSince = useRef<number | undefined>(undefined);
+  const holdFocus = useRef<{ key: string; until: number } | undefined>(undefined);
+  // `?item=` of a row in the folded „Danach“ of the shown day (the phone folds it): open for this visit, his own
+  // toggle ends it (package 10b).
+  const [revealThen, setRevealThen] = useState(() => params.get('item') ?? undefined);
   const storedPick = useLiveQuery(
     async () => (await getMeta<{ date: string; on: string }>(DAY_KEY)) ?? null,
     [],
@@ -1034,19 +1039,49 @@ export default function PlannerPage() {
         firstDayWithRows(week ?? []) ??
         days[0]);
 
-  // `?item=<module>:<id>` (a ToDo's „im Plan: Mi“, todos-plan-state): that thing's row is brought into view and gets the
-  // focus once the board shows it; read once, the other parameters are cleared as before.
+  // `?item=<rowKey>` (the mark „Im Plan · Mi“ of any module, `core/entitylinks/PlanMark.tsx`): that row is brought into
+  // view and gets the focus once the board shows it – on the day of `?day=`, in „Noch offen“ with `?tab=open`, or under
+  // „Noch ohne Tag“, which unfolds for it. Read once, the other parameters are cleared as before.
   useEffect(() => {
+    // For a moment after the jump the board may still draw its rows anew (a slow device): while nothing else holds
+    // the focus, it goes back to the row – never taken from anything the person focused (UI timing only).
+    const held = holdFocus.current;
+    if (held && performance.now() < held.until) {
+      const lost = !document.activeElement || document.activeElement === document.body;
+      if (lost)
+        document
+          .querySelector<HTMLElement>(`[data-row-key="${CSS.escape(held.key)}"] [data-row]`)
+          ?.focus({ preventScroll: true });
+    }
     // Once what holds the row is drawn: the day sheet on „Plan“, the board's open rows on „Noch offen“.
     if (!lookFor.current || !(tab === 'open' ? data : shownDay)) return;
-    const row = document.querySelector<HTMLElement>(
-      `[data-row-key="${CSS.escape(lookFor.current)}"]`,
-    );
-    // Asked once: the board is drawn, so a row that is not there (taken off meanwhile) is not waited for.
+    const rows = [
+      ...document.querySelectorAll<HTMLElement>(`[data-row-key="${CSS.escape(lookFor.current)}"]`),
+    ];
+    // A copy in sight first (a row can be drawn twice, the band beside the sheet); else the one in a folded group.
+    const row = rows.find((r) => !r.closest('[hidden]')) ?? rows[0];
+    // The rows arrive with the board's reads: a short wait for the row before it counts as gone (UI timing only).
+    lookSince.current ??= performance.now();
+    if (!row && performance.now() - lookSince.current < 3000) return;
+    // Asked once: the board is drawn, so a row that is not there (taken off meanwhile) is not waited for longer.
+    const key = lookFor.current;
     lookFor.current = undefined;
     if (!row) return;
-    row.scrollIntoView?.({ block: 'center' });
-    row.querySelector<HTMLElement>('[data-row]')?.focus({ preventScroll: true });
+    holdFocus.current = { key, until: performance.now() + 2000 };
+    const bring = () => {
+      row.scrollIntoView?.({ block: 'center' });
+      row.querySelector<HTMLElement>('[data-row]')?.focus({ preventScroll: true });
+    };
+    // A row in a folded group („Noch ohne Tag“, the foot of the sheet): the group opens as by his tap, and the row is
+    // brought into view once it is shown (planner hub 2, package 10b – the mark's M3).
+    const fold = row.closest<HTMLElement>('[hidden]');
+    if (fold) {
+      fold
+        .closest('section')
+        ?.querySelector<HTMLButtonElement>('button[aria-expanded="false"]')
+        ?.click();
+      requestAnimationFrame(bring);
+    } else bring();
   });
 
   // A row a drag or „Auswählen“ can move: a thing of a source that is not a fixed block or left out.
@@ -1876,11 +1911,16 @@ export default function PlannerPage() {
                     renderRow={(row, next) => renderRow(row, shownDay, next)}
                     onEditDay={() => setSheetDate(shownDay.date)}
                     // While choosing („Auswählen“, „Nur das hier …“) every row of the day is in reach.
-                    thenOpen={thenOpen || dayPicking === shownDay.date}
-                    choosing={dayPicking === shownDay.date}
-                    onThenToggle={(open) =>
-                      void setMeta(phone ? THEN_NARROW_KEY : THEN_WIDE_KEY, open)
+                    thenOpen={
+                      thenOpen ||
+                      dayPicking === shownDay.date ||
+                      (!!revealThen && shownDay.rows.some((r) => r.itemKey === revealThen))
                     }
+                    choosing={dayPicking === shownDay.date}
+                    onThenToggle={(open) => {
+                      setRevealThen(undefined);
+                      void setMeta(phone ? THEN_NARROW_KEY : THEN_WIDE_KEY, open);
+                    }}
                     empty={emptySheet}
                     // „Rest verteilen“ only where something can go (a day of dated turns and locks alone has nothing).
                     onRest={

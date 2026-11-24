@@ -1,3 +1,4 @@
+import { PlanMark } from '@/core/entitylinks/PlanMark';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 import {
@@ -221,6 +222,10 @@ function EditorForm({
 
   return (
     <form onSubmit={save} className={styles.form}>
+      {/* The editor's head: where the task stands in the plan, one link to its row (package 10b). */}
+      {isSub ? null : (
+        <PlanMark module="todos" id={task.id} variant="detail" done={task.done} onGo={onClose} />
+      )}
       <TextField
         label={t.form.title}
         value={title}

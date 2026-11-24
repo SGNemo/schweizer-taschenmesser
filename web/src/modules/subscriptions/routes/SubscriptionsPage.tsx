@@ -22,7 +22,13 @@ import {
   useAdvancedMenuItem,
   useOpenParam,
 } from '@/ui';
-import { SubscriptionEditor, type SubscriptionTarget } from '../components/SubscriptionEditor';
+import {
+  plannedKey,
+  plannedNow,
+  SubscriptionEditor,
+  type SubscriptionTarget,
+} from '../components/SubscriptionEditor';
+import { usePlanMarks } from '@/core/entitylinks/PlanMark';
 import {
   changePercent,
   monthlyEquivalent,
@@ -113,6 +119,15 @@ export default function SubscriptionsPage() {
   const rawSort = params.get('sort');
   const sort: SortKey = isSortKey(rawSort) ? rawSort : 'next';
   const rows = sortList(subs ?? [], day, sort);
+  // The plan marks for the overview's deadline card (hand-off 10), read at once; `plannedDeadline` is the fallback (M3).
+  // (`usePlanMarks` keys its query by the ids and fallbacks, so a new array per render starts nothing new.)
+  const marks = usePlanMarks(
+    'subscriptions',
+    (subs ?? []).map((s) => {
+      const key = plannedKey(s);
+      return { id: s.id, fallback: plannedNow(s, day), ...(key ? { fallbackKey: key } : {}) };
+    }),
+  );
   const plannerOn = useModuleStates()?.planner === true;
 
   const advancedItem = useAdvancedMenuItem('subscriptions');
@@ -206,6 +221,7 @@ export default function SubscriptionsPage() {
         <OverviewView
           subs={subs}
           day={day}
+          marks={marks}
           onOpen={(s) => setTarget(s)}
           onPlan={plannerOn ? (s, deadline) => void planDeadline(s, deadline) : undefined}
         />
@@ -354,6 +370,8 @@ export default function SubscriptionsPage() {
                     </>
                   )
                 }
+                // No plan mark on the row: it broke the page's stimulus budget, so „Im Plan · Mi“ is in the detail
+                // and on the overview's deadline card only (package 10b, hand-off 10 „Stimulus“).
                 onOpen={() => setTarget(s)}
                 onSwipeLeft={remove}
                 swipeLeftLabel={t.actions.delete}

@@ -1,7 +1,9 @@
-import { useLiveQuery } from 'dexie-react-hooks';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
-import { plannedDay, removeLink, useLinks, type ResolvedLink } from '@/core/entitylinks';
+import { removeLink, useLinks, type ResolvedLink } from '@/core/entitylinks';
+import { PlanMarkLink } from '@/core/entitylinks/PlanMark';
+import { planMarkOf, type PlanMarkState } from '@/core/entitylinks/planMark';
+import { useSharedLiveQuery } from '@/core/modules/sharedQuery';
 import { getPlatform } from '@/core/platform';
 import { formatDay } from '@/core/time/dates';
 import { undoableWithToast } from '@/core/undo/withToast';
@@ -16,7 +18,7 @@ export interface LinkFact {
 
 /**
  * Where an invoice came from and where it stands (planner hub S1, CONCEPT-LINKS §2 step 4): „Aus Mail“,
- * „Mahnung aus Mail vom 3. Nov.“ and „Im Plan“ as fact rows. Read through the link table and each target's own
+ * „Mahnung aus Mail vom 3. Nov.“ as fact rows; where it stands in the plan is the shared mark (`InvoicePlanMark`). Read through the link table and each target's own
  * module (`useLinks`): a thread in this device's mail cache opens in the app with one tap, a thread that is not
  * here (another desktop, the phone) offers the provider's web mail, and a target that cannot exist says so and
  * can be removed. The label is the subject of the time, rendered as text. Nothing is shown while loading, and
@@ -26,13 +28,6 @@ export interface LinkFact {
  */
 export function useInvoiceLinkFacts(invoiceId: string, onLeave?: () => void): LinkFact[] {
   const links = useLinks({ module: 'invoices', id: invoiceId });
-  // Only while the planner is on (`plannedDay` answers nothing otherwise). Dexie reads only. A native `async`
-  // function: a plain wrapper loses Dexie's read tracking after the first `await`, so a day the planner gives
-  // the invoice while the page is open (a noted reminder takes it out of „Frist vorbei“) would never show.
-  const planned = useLiveQuery(
-    async () => plannedDay({ module: 'invoices', id: invoiceId }),
-    [invoiceId],
-  );
   const l = t.invoices.links;
 
   const byLabel = new Map<string, ReactNode[]>();
@@ -55,22 +50,6 @@ export function useInvoiceLinkFacts(invoiceId: string, onLeave?: () => void): Li
     label,
     value: values.length === 1 ? values[0] : <div className={styles.linkValues}>{values}</div>,
   }));
-  if (planned) {
-    const day = formatDay(planned, 'EEE, d. MMM');
-    facts.push({
-      label: l.plan,
-      value: (
-        <Link
-          to={`/planner?day=${planned}`}
-          aria-label={l.planDay(day)}
-          onClick={onLeave}
-          data-testid="invoice-planned"
-        >
-          {day}
-        </Link>
-      ),
-    });
-  }
   return facts;
 }
 
@@ -117,18 +96,64 @@ function LinkValue({ link, onLeave }: { link: ResolvedLink; onLeave?: () => void
   );
 }
 
-/** The same facts as a small list, for the invoice's dialog (the phone and narrow pages have no detail panel). */
-export function InvoiceLinks({ invoiceId, onLeave }: { invoiceId: string; onLeave?: () => void }) {
-  const facts = useInvoiceLinkFacts(invoiceId, onLeave);
-  if (facts.length === 0) return null;
+/** The invoice's plan mark, read live (planner hub 2, package 10b); a paid invoice has none. */
+function useInvoicePlanMark(invoiceId: string, done?: boolean) {
+  return useSharedLiveQuery(`planMark|invoices:${invoiceId}|${done ? 1 : 0}0`, () =>
+    planMarkOf('invoices', { id: invoiceId, ...(done ? { done } : {}) }),
+  );
+}
+
+/**
+ * The mark „Im Plan · Mi“ of the invoice: its own line, nothing while loading, while the planner is off and when the
+ * invoice is not in the plan. Live: a day the planner gives the invoice while the page is open shows at once.
+ */
+export function InvoicePlanMark({
+  invoiceId,
+  done,
+  onLeave,
+}: {
+  invoiceId: string;
+  done?: boolean;
+  onLeave?: () => void;
+}) {
+  const state = useInvoicePlanMark(invoiceId, done);
+  return state ? <PlanLine state={state} onLeave={onLeave} /> : null;
+}
+
+function PlanLine({ state, onLeave }: { state: PlanMarkState; onLeave?: () => void }) {
   return (
-    <dl className={styles.linkFacts} data-testid="invoice-links">
-      {facts.map((f) => (
-        <div key={f.label}>
-          <dt>{f.label}</dt>
-          <dd>{f.value}</dd>
-        </div>
-      ))}
-    </dl>
+    <div data-testid="invoice-planned">
+      <PlanMarkLink state={state} variant="detail" {...(onLeave ? { onGo: onLeave } : {})} />
+    </div>
+  );
+}
+
+/** The same facts as a small list, for the invoice's dialog (the phone and narrow pages have no detail panel). */
+export function InvoiceLinks({
+  invoiceId,
+  done,
+  onLeave,
+}: {
+  invoiceId: string;
+  done?: boolean;
+  onLeave?: () => void;
+}) {
+  const facts = useInvoiceLinkFacts(invoiceId, onLeave);
+  const state = useInvoicePlanMark(invoiceId, done);
+  if (facts.length === 0 && !state) return null;
+  return (
+    <div data-testid="invoice-links">
+      {state ? <PlanLine state={state} onLeave={onLeave} /> : null}
+      {facts.length > 0 ? (
+        <dl className={styles.linkFacts}>
+          {facts.map((f) => (
+            <div key={f.label}>
+              <dt>{f.label}</dt>
+              <dd>{f.value}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
+    </div>
   );
 }

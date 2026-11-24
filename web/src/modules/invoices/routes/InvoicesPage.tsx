@@ -201,6 +201,8 @@ export default function InvoicesPage() {
       <ItemRow
         key={i.id}
         title={i.payee}
+        // No plan mark on the row: it broke the page's stimulus budget, so „Im Plan · Mi“ is in the detail only
+        // (package 10b, hand-off 10 „Stimulus“).
         tone={urgent ? (state.tone as 'overdue' | 'today') : undefined}
         meta={
           i.status === 'paid' ? (

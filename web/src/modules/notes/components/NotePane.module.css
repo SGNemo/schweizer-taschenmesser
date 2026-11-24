@@ -90,3 +90,10 @@
     display: none;
   }
 }
+/* The mark „Im Plan · Mi“ under the head; empty (no height) while not in the plan. */
+.planMark {
+  padding-inline: var(--space-3);
+}
+.planMark:empty {
+  display: none;
+}

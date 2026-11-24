@@ -2,6 +2,7 @@ import type { Stored } from '@/core/db/types';
 import { formatDay, relativeDayLabel } from '@/core/time/dates';
 import { t } from '@/strings';
 import { tDeadline } from '@/strings.deadline';
+import { PlanMark } from '@/core/entitylinks/PlanMark';
 import { Button, DetailPanel } from '@/ui';
 import { cancelDeadline, endOf, formatSize, statusOf } from '../logic';
 import type { VaultDocument } from '../schema';
@@ -71,6 +72,8 @@ export function DocumentDetail({
       eyebrow={categoryName}
       title={d.title}
       facts={facts}
+      // „Im Plan · Mi“ (planner hub 2, 10b): its cancel or end occurrence's day; it names a day, not the document.
+      mark={<PlanMark module="vault" id={d.id} variant="detail" />}
       onClose={onClose}
       actions={
         <Button onClick={onEdit} data-row-edit>

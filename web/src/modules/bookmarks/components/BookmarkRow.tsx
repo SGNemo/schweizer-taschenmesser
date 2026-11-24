@@ -1,4 +1,6 @@
 import type { Stored } from '@/core/db/types';
+import { PlanMarkLink } from '@/core/entitylinks/PlanMark';
+import type { PlanMarkState } from '@/core/entitylinks/planMark';
 import { copyData } from '@/core/db/copy';
 import { bus } from '@/core/events';
 import { loadModuleStates, useModuleStates } from '@/core/modules/activation';
@@ -167,20 +169,25 @@ export function bookmarkMenu(
  * without opens the editor), one context line (type, domain, tags as text), the done box and a "⋯"
  * menu for everything else. On the phone the line leaves the tags out (0b-8 follow-up 15: they wrapped it to a
  * second line, rows 104 px); the "⋯" menu filters by them, the editor and the wide list show them.
+ * Under the line: the shared mark „Im Plan · Mi“ (`mark`, read by the page for all rows from the planner, with
+ * `inPlan` as its fallback) – in `below`, since the line is inside the row's link or button.
  */
 export function BookmarkRow({
   item,
   onEdit,
   onFilterTag,
   onRead,
+  mark,
 }: {
   item: Stored<BookmarkItem>;
+  /** The plan mark of this item (`usePlanMarks`); nothing while loading, off or not in the plan. */
+  mark?: PlanMarkState | null;
   onEdit: (item: Stored<BookmarkItem>) => void;
   onFilterTag: (tag: string) => void;
   onRead?: (item: Stored<BookmarkItem>) => void;
 }) {
   const narrow = usePageWidthAtLeast(48) === false;
-  // "im Plan" is only true while there is a plan: the mark stays stored when the planner is switched off.
+  // „In den Plan“ in ⋯ only while there is a plan: the field stays stored when the planner is switched off.
   const planner = useModuleStates()?.planner === true;
   return (
     <ItemRow
@@ -199,14 +206,12 @@ export function BookmarkRow({
       meta={[
         t.bookmarks.kinds[item.kind],
         statusOf(item) === 'started' ? t.bookmarks.statuses.started : undefined,
-        planner && item.inPlan && !item.done && item.kind !== 'link'
-          ? t.bookmarks.inPlan
-          : undefined,
         hostOf(item.url),
         ...(narrow ? [] : item.tags.map((x) => `#${x}`)),
       ]
         .filter(Boolean)
         .join(' · ')}
+      below={mark && item.kind !== 'link' && !item.done ? <PlanMarkLink state={mark} /> : undefined}
       menu={bookmarkMenu(item, {
         edit: onEdit,
         filterTag: onFilterTag,

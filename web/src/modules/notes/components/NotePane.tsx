@@ -1,3 +1,4 @@
+import { PlanMark } from '@/core/entitylinks/PlanMark';
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { now } from '@/core/time/now';
@@ -301,6 +302,12 @@ export function NotePane(props: NotePaneProps) {
           ) : null}
         </div>
       </div>
+      {/* „Im Plan · Mi“ (planner hub 2, 10b): its own line under the head, nothing while not in the plan. */}
+      {!scratch && pageId ? (
+        <div className={styles.planMark}>
+          <PlanMark module="notes" id={pageId} variant="detail" />
+        </div>
+      ) : null}
       {initial.restored ? (
         <p className={styles.note} role="status">
           {t.notes.restored}

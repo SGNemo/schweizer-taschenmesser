@@ -74,6 +74,10 @@ describe('„Im Plan“ on the invoice page', () => {
     const planned = await within(await screen.findByTestId('invoice-links')).findByTestId(
       'invoice-planned',
     );
-    expect(planned).toHaveAttribute('href', '/planner?day=2026-09-29');
+    expect(within(planned).getByRole('link')).toHaveAttribute(
+      'href',
+      `/planner?day=2026-09-29&item=${encodeURIComponent(key)}`,
+    );
+    expect(planned).toHaveTextContent('Im Plan · heute');
   });
 });

@@ -24,6 +24,7 @@ import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
 import { createCollectionRepo } from '@/core/db/repo';
 import { getManifest } from '@/core/modules/registry';
 import { plannedDay } from './index';
+import { placementsOf } from './planMark';
 import { NEVER_LINKED, refKey, type EntityRef } from './types';
 
 const PLANNER = 'planner';
@@ -97,8 +98,9 @@ export interface PlanFacts {
 }
 
 /**
- * „fest“ and „Nicht planen“ of several things of one module (the ToDo list's marks, todos-plan-state), read like
- * `isRequested`: the planner's item rows (`excluded`) and its live placement rows (`locked`), nothing written. Only
+ * „fest“ and „Nicht planen“ of several things of one module (the ToDo list's filter, todos-plan-state), read like
+ * `isRequested`: the planner's item rows (`excluded`) and its live placement rows (`locked`) – the thing's own, an
+ * occurrence's (`<module>:<id>:…`) and an `origin` / `about` carrier ToDo's, as the mark reads them. Nothing written. Only
  * things with a fact are in the map; empty while the planner is off or not in this build.
  */
 export async function planFacts(
@@ -118,15 +120,9 @@ export async function planFacts(
   for (const row of items)
     if (row && row.deletedAt === null && row.excluded === true)
       out.set(idOf(row.id as string), { excluded: true });
-  const rows = await createCollectionRepo(planner, 'assignment', database)
-    .table.where('itemKey')
-    .anyOf(keys)
-    .toArray();
-  for (const r of rows) {
-    if (r.deletedAt !== null || r.locked !== true || typeof r.itemKey !== 'string') continue;
-    const id = idOf(r.itemKey);
-    out.set(id, { ...out.get(id), locked: true });
-  }
+  // „fest“ read like the mark: its own rows, exact or per occurrence, and its `origin` / `about` carriers' rows.
+  for (const [id, rows] of await placementsOf(module, ids, database))
+    if (rows.some((r) => r.locked)) out.set(id, { ...out.get(id), locked: true });
   return out;
 }
 

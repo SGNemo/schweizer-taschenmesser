@@ -1,3 +1,4 @@
+import { PlanMarkLink, usePlanMarks } from '@/core/entitylinks/PlanMark';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
@@ -66,6 +67,11 @@ export default function RoutinesPage() {
     [sorted],
   );
   const none = !!routines && routines.length === 0;
+  // „Im Plan · Mi“ (planner hub 2, 10b): one read for every routine (its turns are planned as `<id>:<due>`).
+  const marks = usePlanMarks(
+    'routines',
+    sorted.map((r) => ({ id: r.id })),
+  );
 
   const row = (r: StoredRoutine) => {
     const who = whoseTurn(r);
@@ -90,6 +96,7 @@ export default function RoutinesPage() {
           .filter(Boolean)
           .join(' · ')}
         onOpen={() => setTarget(r)}
+        below={marks?.get(r.id) ? <PlanMarkLink state={marks.get(r.id)} /> : undefined}
         end={
           <>
             {/* "dran" is a calm word on a neutral badge: no red, no count of days. */}

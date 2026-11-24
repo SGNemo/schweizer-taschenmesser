@@ -5,7 +5,9 @@ import { bus } from '@/core/events';
 import type { EventMap } from '@/core/events/events';
 import { getManifest } from '@/core/modules/registry';
 import { setNow } from '@/core/time/now';
-import { planRowAction, planRowEntries, planRowState, requestIntoPlan } from './planRow';
+import { addLink, plannedDay } from './index';
+import { planMarkName, planMarkOf, planMarkPath, planMarks, planMarkText } from './planMark';
+import { planFacts, planRowAction, planRowEntries, planRowState, requestIntoPlan } from './planRow';
 
 const planner = getManifest('planner')!;
 const assignments = createCollectionRepo(planner, 'assignment');
@@ -150,5 +152,244 @@ describe('planRowEntries („Nicht mehr planen“)', () => {
       vi.fn(),
     );
     expect(entries.map((e) => e.label)).toEqual(['Im Plan · Di', 'Nicht mehr planen']);
+  });
+});
+
+/** A placement row of any plan item key (the planner writes `<itemKey>#<k>`). */
+const place = (itemKey: string, date: string, extra: { locked?: boolean; k?: number } = {}) =>
+  assignments.create(
+    {
+      itemKey,
+      k: extra.k ?? 0,
+      of: 1,
+      date,
+      minutes: 30,
+      order: 0,
+      reason: 'new',
+      ...(extra.locked ? { locked: true } : {}),
+    },
+    { id: `${itemKey}#${extra.k ?? 0}` },
+  );
+const todos = getManifest('todos')!;
+const tasks = createCollectionRepo(todos, 'task');
+const carrier = (
+  taskId: string,
+  to: { module: string; id: string },
+  rel: 'origin' | 'about' | 'before' | 'after',
+) => addLink({ from: { module: 'todos', id: taskId }, to, rel, label: 'x' });
+
+describe('the plan mark (package 10b)', () => {
+  beforeEach(async () => {
+    await db.table('todos_task').clear();
+    await plannerOn(true);
+  });
+
+  it('nothing while the planner is off; nothing for the vault', async () => {
+    await plannerOn(false);
+    await place('invoices:i1', '2026-11-18');
+    expect(await planMarkOf('invoices', { id: 'i1' })).toBeUndefined();
+    await plannerOn(true);
+    expect(await planMarkOf('accounts', { id: 'a1' })).toBeUndefined();
+  });
+
+  it('M1 / M2: the earliest day from today on, its lock, and the row it matched', async () => {
+    await place('invoices:i1', '2026-11-20', { k: 1 });
+    await place('invoices:i1', '2026-11-18', { locked: true });
+    const mark = await planMarkOf('invoices', { id: 'i1' });
+    expect(mark).toEqual({ kind: 'day', date: '2026-11-18', locked: true, rowKey: 'invoices:i1' });
+    expect(planMarkText(mark!)).toBe('Im Plan · Mi · fest');
+    expect(planMarkName(mark!)).toBe(
+      'Im Plan · Mi · fest – Mittwoch, 18. November. Im Planer zeigen',
+    );
+    expect(planMarkPath(mark!)).toBe('/planner?day=2026-11-18&item=invoices%3Ai1');
+  });
+
+  it('a subscription placed from the planner (an occurrence key) shows M1 and lands on its occurrence row', async () => {
+    await place('subscriptions:s1:2026-11-25', '2026-11-18');
+    const mark = await planMarkOf('subscriptions', { id: 's1' });
+    expect(mark).toMatchObject({
+      kind: 'day',
+      date: '2026-11-18',
+      rowKey: 'subscriptions:s1:2026-11-25',
+    });
+    expect(planMarkPath(mark!)).toBe(
+      '/planner?day=2026-11-18&item=subscriptions%3As1%3A2026-11-25',
+    );
+    expect(await plannedDay({ module: 'subscriptions', id: 's1' })).toBe('2026-11-18');
+  });
+
+  it('`todos:ab` never matches `todos:abc` (nor the other way round)', async () => {
+    await place('todos:abc', '2026-11-18');
+    expect(await planMarkOf('todos', { id: 'ab' })).toBeNull();
+    await place('todos:ab:x', '2026-11-19');
+    const marks = await planMarks('todos', [{ id: 'ab' }, { id: 'abc' }]);
+    expect(marks!.get('ab')).toMatchObject({ date: '2026-11-19', rowKey: 'todos:ab:x' });
+    expect(marks!.get('abc')).toMatchObject({ date: '2026-11-18', rowKey: 'todos:abc' });
+  });
+
+  it('a thing that is no plan row has the day of a ToDo linking to it with origin / about, and lands on that row', async () => {
+    const note = { module: 'notes', id: 'n1' };
+    await tasks.create(
+      { listId: 'inbox', title: 'Regal', done: false, priority: 0, order: 0 },
+      { id: 'nt' },
+    );
+    await carrier('nt', note, 'about');
+    await place('todos:nt', '2026-11-19');
+    const mark = await planMarkOf('notes', { id: 'n1' });
+    expect(mark).toEqual({ kind: 'day', date: '2026-11-19', locked: false, rowKey: 'todos:nt' });
+    expect(planMarkPath(mark!)).toBe('/planner?day=2026-11-19&item=todos%3Ant');
+  });
+
+  it("a preparation the day before (`before`) does not move the appointment's mark", async () => {
+    const event = { module: 'calendar', id: 'e1' };
+    await tasks.create(
+      { listId: 'inbox', title: 'Unterlagen', done: false, priority: 0, order: 0 },
+      { id: 'prep' },
+    );
+    await carrier('prep', event, 'before');
+    await place('todos:prep', '2026-11-17');
+    expect(await planMarkOf('calendar', { id: 'e1' })).toBeNull();
+    await tasks.create(
+      { listId: 'inbox', title: 'Termin', done: false, priority: 0, order: 0 },
+      { id: 'it' },
+    );
+    await carrier('it', event, 'origin');
+    await place('todos:it', '2026-11-18');
+    expect(await planMarkOf('calendar', { id: 'e1' })).toMatchObject({
+      date: '2026-11-18',
+      rowKey: 'todos:it',
+    });
+    expect(await plannedDay(event)).toBe('2026-11-18');
+  });
+
+  it('M4: only a passed day – the latest one before today, to „Noch offen“; a done thing has no mark', async () => {
+    await place('invoices:i1', '2026-11-10', { k: 1 });
+    await place('invoices:i1', '2026-11-13');
+    const mark = await planMarkOf('invoices', { id: 'i1' });
+    expect(mark).toEqual({ kind: 'passed', date: '2026-11-13', rowKey: 'invoices:i1' });
+    expect(planMarkText(mark!)).toBe('Im Plan · war Fr');
+    expect(planMarkPath(mark!)).toBe('/planner?tab=open&item=invoices%3Ai1');
+    expect(await planMarkOf('invoices', { id: 'i1', done: true })).toBeNull();
+    // A day from today on wins over a passed one.
+    await place('invoices:i1', '2026-11-16', { k: 2 });
+    expect(await planMarkOf('invoices', { id: 'i1' })).toMatchObject({
+      kind: 'day',
+      date: '2026-11-16',
+    });
+    expect(planMarkText((await planMarkOf('invoices', { id: 'i1' }))!)).toBe('Im Plan · heute');
+  });
+
+  it('a passed occurrence says nothing (done turns keep their rows) – unless the module names it as its request', async () => {
+    await place('subscriptions:s1:2026-10-25', '2026-10-20');
+    expect(await planMarkOf('subscriptions', { id: 's1' })).toBeNull();
+    // Laid before its deadline, the day passed, the deadline is still the one asked in: M4, to „Noch offen“.
+    await place('subscriptions:s1:2026-11-20', '2026-11-13');
+    const mark = await planMarkOf('subscriptions', {
+      id: 's1',
+      fallback: true,
+      fallbackKey: 'subscriptions:s1:2026-11-20',
+    });
+    expect(mark).toEqual({
+      kind: 'passed',
+      date: '2026-11-13',
+      rowKey: 'subscriptions:s1:2026-11-20',
+    });
+  });
+
+  it('M3 only from the exact item row: an occurrence row (a pin, an estimate, a skipped day) is no request', async () => {
+    await items.create(
+      { source: { module: 'routines', id: 'r1' }, order: 0, durationMin: 20 },
+      { id: 'routines:r1:2026-11-10' },
+    );
+    expect(await planMarkOf('routines', { id: 'r1' })).toBeNull();
+    await items.create(
+      { source: { module: 'lists', id: 'l9' }, order: 0, skipped: '2026-11-10' },
+      { id: 'lists:l9' },
+    );
+    expect(await planMarkOf('lists', { id: 'l9' })).toBeNull();
+  });
+
+  it('a done carrier no longer marks the thing; a fallback with only done carriers gives nothing', async () => {
+    const note = { module: 'notes', id: 'n5' };
+    await tasks.create(
+      { listId: 'inbox', title: 'Erledigt', done: true, priority: 0, order: 0 },
+      { id: 'dn' },
+    );
+    await carrier('dn', note, 'origin');
+    await place('todos:dn', '2026-11-18');
+    expect(await planMarkOf('notes', { id: 'n5' })).toBeNull();
+    await carrier('dn', { module: 'mail', id: 'th9' }, 'origin');
+    expect(await planMarkOf('mail', { id: 'th9', fallback: true })).toBeNull();
+  });
+
+  it("M3: asked in without a day, or the module's own field as fallback while the planner has no row", async () => {
+    await askIn();
+    const mark = await planMarkOf('lists', { id: 'shopping-default' });
+    expect(mark).toEqual({ kind: 'noDay', rowKey: 'lists:shopping-default' });
+    expect(planMarkText(mark!)).toBe('Im Plan · noch ohne Tag');
+    expect(planMarkName(mark!)).toBe('Im Plan · noch ohne Tag. Im Planer zeigen');
+    expect(planMarkPath(mark!)).toBe('/planner?item=lists%3Ashopping-default');
+    expect(await planMarkOf('bookmarks', { id: 'bm1' })).toBeNull();
+    expect(await planMarkOf('bookmarks', { id: 'bm1', fallback: true })).toEqual({
+      kind: 'noDay',
+      rowKey: 'bookmarks:bm1',
+    });
+    // A fallback with an open carrier ToDo (a mail thread planned as a ToDo) leads to that ToDo's row.
+    await tasks.create(
+      { listId: 'inbox', title: 'Antworten', done: false, priority: 0, order: 0 },
+      { id: 'mt' },
+    );
+    await carrier('mt', { module: 'mail', id: 'th1' }, 'origin');
+    expect(await planMarkOf('mail', { id: 'th1', fallback: true })).toEqual({
+      kind: 'noDay',
+      rowKey: 'todos:mt',
+    });
+    // The planner's row wins over the fallback once it has one.
+    await place('bookmarks:bm1', '2026-11-18');
+    expect(await planMarkOf('bookmarks', { id: 'bm1', fallback: true })).toMatchObject({
+      kind: 'day',
+    });
+    // „Nicht planen“: no mark.
+    await items.update('lists:shopping-default', { excluded: true });
+    expect(await planMarkOf('lists', { id: 'shopping-default' })).toBeNull();
+  });
+
+  it('`planFacts` reads „fest“ with the same prefix and carrier read', async () => {
+    await place('subscriptions:s1:2026-11-25', '2026-11-18', { locked: true });
+    await place('subscriptions:s10', '2026-11-18', { locked: true });
+    expect((await planFacts('subscriptions', ['s1'])).get('s1')).toEqual({ locked: true });
+    await tasks.create(
+      { listId: 'inbox', title: 'Notiz', done: false, priority: 0, order: 0 },
+      { id: 'nt' },
+    );
+    await carrier('nt', { module: 'notes', id: 'n1' }, 'origin');
+    await place('todos:nt', '2026-11-19', { locked: true });
+    expect((await planFacts('notes', ['n1', 'n2'])).get('n1')).toEqual({ locked: true });
+    expect((await planFacts('notes', ['n2'])).size).toBe(0);
+  });
+
+  it('reading marks writes nothing', async () => {
+    await place('invoices:i1', '2026-11-18');
+    await askIn();
+    const writes: string[] = [];
+    const off = db.tables.map((table) => {
+      const note = () => void writes.push(table.name);
+      table.hook('creating', note);
+      table.hook('updating', note);
+      table.hook('deleting', note);
+      return () => {
+        table.hook('creating').unsubscribe(note);
+        table.hook('updating').unsubscribe(note);
+        table.hook('deleting').unsubscribe(note);
+      };
+    });
+    try {
+      await planMarks('invoices', [{ id: 'i1' }, { id: 'i2', fallback: true }]);
+      await planMarkOf('lists', { id: 'shopping-default' });
+      await planFacts('invoices', ['i1']);
+    } finally {
+      off.forEach((f) => f());
+    }
+    expect(writes).toEqual([]);
   });
 });

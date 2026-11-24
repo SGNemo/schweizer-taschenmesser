@@ -313,6 +313,8 @@ export function WaitRow({
   const linkMenu = useLinkMenu(links);
   return (
     <ItemRow
+      // `?item=<rowKey>` finds it here too: the page opens the folded group and focuses it (package 10b).
+      rowKey={row.itemKey}
       title={
         <span data-drag-unit={draggable ? row.unitId : undefined}>
           {row.title}

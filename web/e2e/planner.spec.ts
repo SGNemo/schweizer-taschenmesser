@@ -499,7 +499,7 @@ test.describe('Planer (week board, package 1)', () => {
     await expect(toast(page)).toContainText('Liegt auf Di');
     await expect(await day(page, '2026-11-10')).toContainText('Angebot');
     await ready(page, '/todos?view=soon');
-    await expect(page.getByTestId('in-plan').first()).toHaveText('im Plan: Di');
+    await expect(page.getByTestId('plan-mark').first()).toHaveText('Im Plan · Di');
     await expect(page.getByRole('button', { name: 'Neu planen' })).toHaveCount(0);
   });
 

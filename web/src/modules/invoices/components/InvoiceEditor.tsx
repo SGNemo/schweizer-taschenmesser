@@ -194,7 +194,7 @@ function Form({
         ))}
       </SelectField>
       {/* Where it came from (a mail, a reminder's mail) and its plan day: the phone has no detail panel. */}
-      {existing ? <InvoiceLinks invoiceId={existing.id} onLeave={onClose} /> : null}
+      {existing ? <InvoiceLinks invoiceId={existing.id} done={isPaid} onLeave={onClose} /> : null}
       {existing && !isPaid ? (
         <PaymentsSection invoiceId={existing.id} currency={existing.currency} onPaid={onClose} />
       ) : null}

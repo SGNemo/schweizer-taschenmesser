@@ -375,6 +375,8 @@ export default function VaultPage() {
                       title={d.title}
                       current={wide && detail?.id === d.id}
                       onOpen={() => (wide ? setPicked(d.id) : setTarget(d))}
+                      // No plan mark on the row: it broke the page's stimulus budget, so „Im Plan · Mi“ is in the
+                      // detail only (package 10b, hand-off 10 „Stimulus“).
                       meta={metaLine([
                         nameOf(categoryOfDoc(d, live)),
                         d.provider,

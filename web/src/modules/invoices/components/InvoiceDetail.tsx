@@ -7,7 +7,7 @@ import { t } from '@/strings';
 import { Button, DetailPanel, NoReadAid } from '@/ui';
 import { remainingMinor } from '../logic';
 import type { Invoice } from '../schema';
-import { useInvoiceLinkFacts } from './InvoiceLinks';
+import { InvoicePlanMark, useInvoiceLinkFacts } from './InvoiceLinks';
 
 /**
  * The invoice picked in the list, in the panel of the wide page (master–detail): payee, what is still open, the
@@ -63,6 +63,8 @@ export function InvoiceDetail({
       title={i.payee}
       figure={<span data-testid="invoice-detail-amount">{money(open ? rest : i.amountMinor)}</span>}
       facts={facts}
+      // „Im Plan · Mi“ (package 10b): its own line under the title; nothing while the invoice is not in the plan.
+      mark={<InvoicePlanMark invoiceId={i.id} done={!open} />}
       onClose={onClose}
       actions={
         <>

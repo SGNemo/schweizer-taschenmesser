@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
+import { PlanMarkLink } from '@/core/entitylinks/PlanMark';
+import type { PlanMarkState } from '@/core/entitylinks/planMark';
 import { useModuleStates } from '@/core/modules/activation';
 import { t } from '@/strings';
 import { RowMenu } from '@/ui';
@@ -26,8 +28,11 @@ export function BookmarkCard({
   onEdit,
   onFilterTag,
   onRead,
+  mark,
 }: {
   item: Stored<BookmarkItem>;
+  /** The plan mark „Im Plan · Mi“ (`usePlanMarks`), last on the context line. */
+  mark?: PlanMarkState | null;
   onEdit: (item: Stored<BookmarkItem>) => void;
   onFilterTag: (tag: string) => void;
   onRead?: (item: Stored<BookmarkItem>) => void;
@@ -77,13 +82,16 @@ export function BookmarkCard({
           {[
             t.bookmarks.kinds[item.kind],
             status === 'open' ? undefined : t.bookmarks.statuses[status],
-            planner && item.inPlan && !item.done && item.kind !== 'link'
-              ? t.bookmarks.inPlan
-              : undefined,
             site,
           ]
             .filter(Boolean)
             .join(' · ')}
+          {mark && item.kind !== 'link' && !item.done ? (
+            <>
+              {' · '}
+              <PlanMarkLink state={mark} />
+            </>
+          ) : null}
         </p>
         {item.preview?.description ? (
           <p className={styles.description}>{item.preview.description}</p>
