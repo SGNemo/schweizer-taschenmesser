@@ -195,6 +195,7 @@ export default function PlannerPage() {
   );
   const lookFor = useRef(params.get('item') ?? undefined);
   const lookSince = useRef<number | undefined>(undefined);
+  const holdFocus = useRef<{ key: string; until: number } | undefined>(undefined);
   // `?item=` of a row in the folded „Danach“ of the shown day (the phone folds it): open for this visit, his own
   // toggle ends it (package 10b).
   const [revealThen, setRevealThen] = useState(() => params.get('item') ?? undefined);
@@ -1042,6 +1043,16 @@ export default function PlannerPage() {
   // view and gets the focus once the board shows it – on the day of `?day=`, in „Noch offen“ with `?tab=open`, or under
   // „Noch ohne Tag“, which unfolds for it. Read once, the other parameters are cleared as before.
   useEffect(() => {
+    // For a moment after the jump the board may still draw its rows anew (a slow device): while nothing else holds
+    // the focus, it goes back to the row – never taken from anything the person focused (UI timing only).
+    const held = holdFocus.current;
+    if (held && performance.now() < held.until) {
+      const lost = !document.activeElement || document.activeElement === document.body;
+      if (lost)
+        document
+          .querySelector<HTMLElement>(`[data-row-key="${CSS.escape(held.key)}"] [data-row]`)
+          ?.focus({ preventScroll: true });
+    }
     // Once what holds the row is drawn: the day sheet on „Plan“, the board's open rows on „Noch offen“.
     if (!lookFor.current || !(tab === 'open' ? data : shownDay)) return;
     const rows = [
@@ -1053,8 +1064,10 @@ export default function PlannerPage() {
     lookSince.current ??= performance.now();
     if (!row && performance.now() - lookSince.current < 3000) return;
     // Asked once: the board is drawn, so a row that is not there (taken off meanwhile) is not waited for longer.
+    const key = lookFor.current;
     lookFor.current = undefined;
     if (!row) return;
+    holdFocus.current = { key, until: performance.now() + 2000 };
     const bring = () => {
       row.scrollIntoView?.({ block: 'center' });
       row.querySelector<HTMLElement>('[data-row]')?.focus({ preventScroll: true });
