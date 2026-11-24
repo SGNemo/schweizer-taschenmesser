@@ -3,6 +3,9 @@ import type { Strings } from '@/strings';
 
 export const lists: Strings['lists'] = {
   copyOf: (name: string) => `Copy of ${name}`,
+  panel: {
+    doneShopping: 'Done shopping',
+  },
   templateDetail: (kind: string, n: number) => `${kind}, ${n}`,
   routines: {
     title: 'From template',

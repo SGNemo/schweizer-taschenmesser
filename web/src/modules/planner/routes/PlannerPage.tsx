@@ -43,6 +43,7 @@ import {
   addFromField,
   allToday,
   applyOps,
+  exclude,
   layHere,
   moveTo,
   later,
@@ -65,7 +66,9 @@ import type { BoardDay, BoardRow, OpenRow } from '../board';
 import { Capture } from '../components/Capture';
 import { CaptureDialog } from '../components/CaptureDialog';
 import { useAbilities, useRowMenu } from '../components/rowMenu';
-import { ThingRow, TodoHintRow, WaitRow } from '../components/ThingRow';
+import { type RowExpand, ThingRow, TodoHintRow, WaitRow } from '../components/ThingRow';
+import { useOpenRow } from '../components/RowCompartment';
+import { PlanPageFoot } from '@/core/modules/PlanPanelHost';
 import { appointmentsOf, Context, nextDeadlinesOf } from '../components/Context';
 import { DayPage, DayPageLoading } from '../components/DayPage';
 import { LateGroup, LateRow } from '../components/LateGroup';
@@ -740,6 +743,19 @@ export default function PlannerPage() {
   };
   const dragHost = useDragMove((unitId) => movers.get(unitId));
 
+  // „Zeilen aufklappen“ (planner hub 2, package 4a): one row open at a time, page state only (a reload closes it).
+  const openRow = useOpenRow();
+  const expandOn = data?.settings.expandRows !== false;
+  const expandOf = (unitId: string, entry: PlannableEntry | undefined): RowExpand | undefined =>
+    expandOn && entry
+      ? {
+          open: openRow.open === unitId,
+          onToggle: () => openRow.toggle(unitId),
+          onClose: openRow.close,
+          onTakeOut: () => void exclude(entry, titles),
+        }
+      : undefined;
+
   const renderRow = (row: BoardRow, day: BoardDay, next: boolean) => {
     const reason = explainAssignment(
       { reason: row.reason, bumpedBy: row.bumpedBy },
@@ -762,6 +778,7 @@ export default function PlannerPage() {
         row={row}
         next={next}
         draggable={!row.fixed && mover(row, menu, day.date)}
+        expand={expandOf(row.unitId, row.entry)}
         select={
           dayPicking === day.date && canMove(row)
             ? {
@@ -816,6 +833,7 @@ export default function PlannerPage() {
         menu={[]}
         // No day is in sight on this tab: `M` and the move button, no drag.
         draggable={mover(row, undefined, row.date, false)}
+        expand={expandOf(row.unitId, row.entry)}
         lock={lockOf(row, row.date)}
         onMove={
           row.entry ? () => setChoice({ kind: 'move', entry: row.entry!, on: row.date }) : undefined
@@ -1001,6 +1019,7 @@ export default function PlannerPage() {
         menu={menu}
         noDuration
         draggable={mover(row, menu)}
+        expand={expandOf(row.unitId, row.entry)}
       />
     );
   };
@@ -1555,6 +1574,7 @@ export default function PlannerPage() {
             menu={menu}
             chip={chipOf(w)}
             draggable={mover(w, menu)}
+            expand={expandOf(w.unitId, w.entry)}
           />
         );
       })}
@@ -2032,6 +2052,8 @@ export default function PlannerPage() {
           onClose={() => setChecking(false)}
         />
       ) : null}
+      {/* A module's quiet strip at the page's foot (`contributions.planPageFoot`, first user: mail in package 4c). */}
+      <PlanPageFoot />
     </>
   );
 }

@@ -97,6 +97,8 @@ const manifest: ModuleManifest = {
     ],
     calendarItems: () => import('./calendar'),
     plannable: () => import('./plannable'),
+    // Its panel under an expanded plan row (planner hub 2, package 4a); mounted by `core/modules/PlanPanelHost` only.
+    planPanel: () => import('./components/PlanPanel'),
     // What a link to one of these says about its target (alive, gone); read through `resolveLink` only.
     linkTarget: () => import('./linkTarget'),
     aiCreateDefaults: () => import('./aiDefaults'),

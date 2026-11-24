@@ -32,3 +32,51 @@ export function ListSurface({
     </Tag>
   );
 }
+
+/**
+ * The lines inside a plan panel (planner hub 2, hand-off 00): a plain list, no hairline, lines `--space-1` apart.
+ * Holds `PanelLine`s.
+ */
+export function PanelLines({ label, children }: { label?: string; children: ReactNode }) {
+  return (
+    <ul className={styles.panelLines} aria-label={label}>
+      {children}
+    </ul>
+  );
+}
+
+/**
+ * One line inside a plan panel (planner hub 2, hand-off 00 „PanelLine“): an optional tick (`Checkbox` in a 44 px
+ * target), the text, a muted meta, at most one action and the expand button (`▸`) of a member. Lighter than `ItemRow`:
+ * no menu, no swipe, no hairline. The tick is the only write a line knows; its owner says what it does.
+ */
+export function PanelLine({
+  tick,
+  children,
+  meta,
+  action,
+  expand,
+  done,
+}: {
+  tick?: ReactNode;
+  children: ReactNode;
+  meta?: ReactNode;
+  /** One end action (a ghost button); every other action of a panel sits in its foot. */
+  action?: ReactNode;
+  /** The `▸` of a pile or bundle member (packages 2, 5); after `action`. */
+  expand?: ReactNode;
+  /** Ticked: quieter text, the tick says it too (never colour alone). */
+  done?: boolean;
+}) {
+  return (
+    <li className={done ? `${styles.panelLine} ${styles.panelLineDone}` : styles.panelLine}>
+      {tick ? <span className={styles.panelTick}>{tick}</span> : null}
+      <span className={styles.panelText}>
+        <span>{children}</span>
+        {meta ? <span className={styles.panelMeta}>{meta}</span> : null}
+      </span>
+      {action}
+      {expand}
+    </li>
+  );
+}

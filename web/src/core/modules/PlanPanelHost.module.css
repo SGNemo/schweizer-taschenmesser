@@ -1,0 +1,58 @@
+/* Plan panel parts (planner hub 2, hand-off 00 „Measures and tokens“): no border, no shadow, no new token. */
+.line {
+  margin: 0;
+  max-width: var(--measure);
+  font-size: var(--text-sm);
+  color: var(--text);
+}
+
+.head {
+  margin: var(--space-3) 0 0;
+  font-size: var(--text-caps);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  /* `--text-3` on `--surface-2` is 4.5 : 1 by token (A11Y): no lighter colour inside a compartment. */
+  color: var(--text-3);
+}
+.head:first-child {
+  margin-top: 0;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* One row, at most three controls: the module's actions left, „Ganz öffnen“ last on the right. */
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+.footStart {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-right: auto;
+}
+
+/* Phone: left-aligned, wraps. */
+@media (max-width: 700px) {
+  .foot {
+    justify-content: flex-start;
+  }
+  .footStart {
+    margin-right: 0;
+  }
+}
+
+.pageFoot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}

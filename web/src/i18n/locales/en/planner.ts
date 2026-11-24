@@ -50,9 +50,23 @@ export const planner: Strings['planner'] = {
         'Once a week, as soon as there is more to do than free time: one line after you add something. The figure always sits next to “No day yet”.',
       allDayBlocks: 'All-day appointments block time',
       allDayBlocksHelp: 'Off: an all-day appointment costs no plannable time.',
+      expandRows: 'Expand rows',
+      expandRowsHelp:
+        'A tap on the title shows the thing in the planner. Off: the title opens it in its module.',
     },
   },
   title: 'Planner',
+  panel: {
+    expand: (title: string) => `${title}. Expand`,
+    collapse: (title: string) => `${title}. Collapse`,
+    open: 'Open',
+    gone: 'No longer exists.',
+    takeOut: 'Take out of the plan',
+    unavailable: 'Not available on this device.',
+    failed: 'That did not work. Nothing was changed.',
+    tick: (step: string) => `Tick “${step}”`,
+    more: (n: number) => `${n} more`,
+  },
   head: {
     free: (min: string) => `${min} free`,
     full: 'Enough is planned for today.',

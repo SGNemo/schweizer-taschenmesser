@@ -1,0 +1,25 @@
+/* Hand-off 00 „Measures and tokens“: --surface-2, --radius-md, no border, no shadow (the stimulus budget holds both at
+   0); desktop from the title's left edge (lead 44 px + --space-3) to the row's right edge; phone the card's width. */
+.compartment {
+  margin: 0 0 var(--space-3) calc(var(--touch) + var(--space-3));
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  animation: compartmentIn var(--dur-fast) var(--ease);
+}
+
+@keyframes compartmentIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 700px) {
+  .compartment {
+    margin-left: 0;
+    padding: var(--space-3);
+  }
+}

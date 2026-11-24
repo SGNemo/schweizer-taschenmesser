@@ -1114,6 +1114,23 @@ async function minutesOf(page: Page, title: string): Promise<number> {
   return m ? Number(m[1]) : 0;
 }
 
+/**
+ * A row's way into its module (package 4a): the title opens the compartment (one handle), „Ganz öffnen“ in it is the old
+ * jump (one more) – both act on that one thing. Before 4a the title itself was the jump; the fallback keeps the script
+ * readable on such a build.
+ */
+async function openWhole(hand: Hand, row: Locator, title: string) {
+  const head = row.locator('button[data-row]').first();
+  const expands = (await head.getAttribute('aria-expanded')) !== null;
+  await hand.tap(head, expands ? `Aufklappen: ${title}` : `Öffnen: ${title}`, title);
+  if (expands)
+    await hand.tap(
+      row.getByTestId('row-compartment').getByRole('button', { name: 'Ganz öffnen' }),
+      `Ganz öffnen: ${title}`,
+      title,
+    );
+}
+
 test('C1 Bündel Haushalt', async ({ page, isMobile }, info) => {
   const name = 'C1 Bündel Haushalt';
   await prepare(page, isMobile);
@@ -1140,15 +1157,15 @@ test('C1 Bündel Haushalt', async ({ page, isMobile }, info) => {
   const created = await plannerRows(page);
   const createTaps = hand.taps;
   const createSwitches = hand.moduleSwitches;
-  // Working through it: the row's title opens the routine's steps („Los“) in Routinen; five ticks, the last one is
-  // „Erledigt“ for the routine; back to the planner.
+  // Working through it: the row's title opens its compartment (package 4a), whose „Ganz öffnen“ opens the routine's
+  // steps („Los“) in Routinen; five ticks, the last one is „Erledigt“ for the routine; back to the planner.
   const row = page
     .getByTestId(`day-${TODAY}`)
     .locator('li')
     .filter({ hasText: 'Haushalt' })
     .first();
   await expect(row).toBeVisible();
-  await hand.tap(row.locator('button[data-row]').first(), 'Haushalt öffnen', 'Haushalt');
+  await openWhole(hand, row, 'Haushalt');
   const run = page.getByRole('dialog', { name: 'Haushalt' });
   await expect(run).toBeVisible();
   const stepsShown = await run.getByRole('checkbox').count();
@@ -1442,12 +1459,15 @@ test('D1 Steht es im Plan, und wann', async ({ page, isMobile }, info) => {
     if (!(await appears(row, 1500)) && (await then.count()))
       await hand.tap(then, 'Danach aufklappen');
     await expect(row).toBeVisible();
-    // The note is reached through its ToDo's chip („Zur Notiz“), everything else through the row's title.
-    const way =
-      thing.module === 'notes'
-        ? row.getByRole('button', { name: /Notiz/ }).first()
-        : row.locator('button[data-row]').first();
-    await hand.tap(way, `Öffnen: ${thing.title}`, thing.title);
+    // The note is reached through its ToDo's chip („Zur Notiz“), everything else through the row: since package 4a
+    // its title opens the compartment and „Ganz öffnen“ there is the jump.
+    if (thing.module === 'notes')
+      await hand.tap(
+        row.getByRole('button', { name: /Notiz/ }).first(),
+        `Öffnen: ${thing.title}`,
+        thing.title,
+      );
+    else await openWhole(hand, row, thing.title);
     await expect(page).toHaveURL(new RegExp(`/${thing.module}`));
     await expect(page.locator('main h1')).toBeVisible();
     const said = await planMarks(page);

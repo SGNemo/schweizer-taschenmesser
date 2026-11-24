@@ -4,7 +4,7 @@ import { type PlannableEntry, useResolvedLinks } from '@/core/modules/contributi
 import type { ResolvedState } from '@/core/modules/types';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
-import { Icon, type IconName, type RowMenuItem } from '@/ui';
+import { Icon, type IconName, PanelLine, PanelLines, type RowMenuItem } from '@/ui';
 import styles from '../routes/planner.module.css';
 
 /**
@@ -178,6 +178,20 @@ export function LinkChips({ views }: { views: RowLinkViews }) {
         </span>
       ))}
     </div>
+  );
+}
+
+/**
+ * The default panel's links (planner hub 2, package 4a): one `PanelLine` each with its chip word and label, shown only
+ * – the way to a link stays its chip and ⋯ (a panel's actions live in its foot).
+ */
+export function PanelLinks({ views }: { views: RowLinkViews }) {
+  return (
+    <PanelLines label={t.planner.links.group}>
+      {views.map((v) => (
+        <PanelLine key={v.key}>{v.name}</PanelLine>
+      ))}
+    </PanelLines>
   );
 }
 

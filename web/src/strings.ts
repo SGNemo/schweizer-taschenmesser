@@ -1705,6 +1705,8 @@ export const de = {
       add: 'Punkt hinzufügen',
       remove: (text: string) => `${text} entfernen`,
       progress: (done: number, total: number) => `${done} von ${total}`,
+      ticked: (text: string) => `„${text}“ abgehakt.`,
+      reopened: (text: string) => `„${text}“ wieder offen.`,
     },
     links: {
       title: 'Verknüpft',
@@ -4416,6 +4418,10 @@ export const de = {
     },
   },
   bookmarks: {
+    /** The Merkliste's panel in the planner (planner hub 2, package 4a; COPY X13). */
+    panel: {
+      openInBrowser: 'Im Browser öffnen',
+    },
     meta: {
       name: 'Merkliste',
       description:
@@ -5877,6 +5883,10 @@ export const de = {
   },
   lists: {
     copyOf: (name: string) => `Kopie von ${name}`,
+    /** The list's panel in the planner (planner hub 2, package 4a; COPY X8). */
+    panel: {
+      doneShopping: 'Fertig eingekauft',
+    },
     templateDetail: (kind: string, n: number) => `${kind}, ${n}`,
     routines: {
       title: 'Aus Vorlage',
@@ -9482,9 +9492,25 @@ export const de = {
           'Einmal je Woche, sobald mehr zu tun ist, als Zeit frei ist: eine Zeile nach dem Eintragen. Die Zahl steht immer bei „Noch ohne Tag“.',
         allDayBlocks: 'Ganztägige Termine blocken Zeit',
         allDayBlocksHelp: 'Aus: ein ganztägiger Termin kostet keine planbare Zeit.',
+        // Planner hub 2, package 4a (COPY X15).
+        expandRows: 'Zeilen aufklappen',
+        expandRowsHelp:
+          'Ein Tipp auf den Titel zeigt das Ding im Planer. Aus: der Titel öffnet es in seinem Modul.',
       },
     },
     title: 'Planer',
+    /** The expanded row (planner hub 2, package 4a; COPY X1–X5, X7, X14, X19). */
+    panel: {
+      expand: (title: string) => `${title}. Aufklappen`,
+      collapse: (title: string) => `${title}. Zuklappen`,
+      open: 'Ganz öffnen',
+      gone: 'Gibt es nicht mehr.',
+      takeOut: 'Aus dem Plan nehmen',
+      unavailable: 'Auf diesem Gerät nicht verfügbar.',
+      failed: 'Das hat nicht geklappt. Es ist nichts verändert.',
+      tick: (step: string) => `„${step}“ abhaken`,
+      more: (n: number) => `${n} weitere`,
+    },
     head: {
       free: (min: string) => `${min} frei`,
       full: 'Für heute ist genug geplant.',

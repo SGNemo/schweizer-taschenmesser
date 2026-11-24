@@ -76,6 +76,11 @@ export const plannerSettingsSchema = z.object({
    * it – how much lands on a day stays the day's minutes, and no session is timed after the window's end.
    */
   dayEnd: timeField(),
+  /**
+   * „Zeilen aufklappen“ (planner hub 2, package 4a; COPY X15): a tap on a row's title opens its compartment with the
+   * thing's panel; off, the title opens the thing in its module as before. Read by the planner page only.
+   */
+  expandRows: z.boolean(),
 });
 export type PlannerSettings = z.output<typeof plannerSettingsSchema>;
 
@@ -97,6 +102,7 @@ export const DEFAULT_PLANNER_SETTINGS: PlannerSettings = {
   calendarChips: true,
   overloadToast: true,
   dayEnd: '',
+  expandRows: true,
 };
 
 /** The day end of the settings as 'HH:mm'; `undefined` = none (empty or not readable). */
@@ -268,6 +274,16 @@ export const settings: ModuleSettings = {
       },
       get help() {
         return s().minSessionMinHelp;
+      },
+    },
+    {
+      key: 'expandRows',
+      type: 'boolean',
+      get label() {
+        return s().expandRows;
+      },
+      get help() {
+        return s().expandRowsHelp;
       },
     },
     {
