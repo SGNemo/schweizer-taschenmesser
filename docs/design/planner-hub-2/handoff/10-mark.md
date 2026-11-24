@@ -4,11 +4,12 @@ Concept: [CONCEPT §1.4](../CONCEPT.md). Common parts: [00-common](00-common.md)
 
 ## Structure
 
-`PlanMark({ module, id, variant })` in `core/entitylinks`: reads `planRowState` + `planFacts` (lock) (+ the bundle name from 5b); renders nothing while loading, while the planner is off, and when the thing is not in the plan. Two reads are new in `planRow.ts` / `plannedDay`: an item key matches the entity when it equals `<module>:<id>` or starts with `<module>:<id>:` (subscriptions, routines and Unterlagen plan per occurrence), and for M4 the latest live assignment before today when none lies from today on. The day of a thing that is no plan row comes only from ToDos linking to it with `origin` / `about`. Bookmarks and subscriptions pass their own field as `fallback` (shown as M3 while the planner has no row yet).
+`PlanMark({ module, id, variant })` in `core/entitylinks`: reads `planRowState` + `planFacts` (lock) (+ the bundle name from 5b); renders nothing while loading, while the planner is off, and when the thing is not in the plan. Two reads are new in `planRow.ts` / `plannedDay`, and `planFacts` gets the same prefix and carrier read: an item key matches the entity when it equals `<module>:<id>` or starts with `<module>:<id>:` (subscriptions, routines and Unterlagen plan per occurrence), and for M4 the latest live assignment before today when none lies from today on. The day of a thing that is no plan row comes only from ToDos linking to it with `origin` / `about`. Bookmarks and subscriptions pass their own field as `fallback` (shown as M3 while the planner has no row yet).
 
 - `variant="meta"` (rows): inline in the row's meta line, **last** item, separated by „ · “. Planner glyph 16 px + text M1–M5, `--text-meta`, `--text-3`; the whole mark is one link (underline on hover / focus only).
 - `variant="detail"` (detail panels, dialogs): its own line under the title block, same type, min-height 44 px.
-- Target: `/planner?item=<module>:<id>`.
+- Target: **the plan row it matched** (`rowKey` = the occurrence key, the carrier ToDo's key, the bundle's or the pile's key): M1 / M2 / M5 `/planner?day=<d>&item=<rowKey>`, M4 `/planner?tab=open&item=<rowKey>`, M3 `/planner?item=<rowKey>` – it stays on the „Plan“ tab and unfolds the group „Noch ohne Tag“ (the foot of the day's sheet) and focuses the row. Today the `?item` effect only scrolls and focuses while the group stays folded, so the unfold is a must-do of 10b with a test; `?tab=open` is only M4's route (exists today). `?item=` matches `data-row-key` exactly on the sheet shown and does not pick the day – the day is in the URL, as `todos/planState.ts` does.
+- Accessible name M6: the visible text first, then the full date: „Im Plan · Mi – Mittwoch, 2. Dezember. Im Planer zeigen“.
 
 ## Where (10b touches each module's row and detail once)
 
@@ -27,7 +28,7 @@ Concept: [CONCEPT §1.4](../CONCEPT.md). Common parts: [00-common](00-common.md)
 
 ## States
 
-not in plan (nothing) · M1 · M2 · M3 · M4 (plain, never a tone) · M5 (in a bundle) · planner off (nothing) · loading (nothing; no layout jump: the meta line already has its height).
+not in plan (nothing) · M1 · M2 · M3 · M4 (plain, never a tone) · M5 (in a bundle; from 2 also a member folded into a placed pile: „Im Plan · Mi · in „Finanzen checken““, linking to the pile's row `?day=<d>&item=planner:pile-money`) · M3 for a member of an unplaced pile (linking to the pile row) · planner off (nothing) · loading (nothing; no layout jump: the meta line already has its height).
 
 ## 1920 / 412
 
@@ -44,5 +45,5 @@ Same. On 412 a meta line that would wrap drops the module's own second meta item
 
 - `PlanMark.test.tsx`: the six states; nothing rendered while the planner is off.
 - `planRow.test.ts` grows: the prefix match (a subscription placed from the planner shows M1; `todos:ab` never matches `todos:abc`), the passed-day read, the fallback; write spy: app start and rendering marks write nothing.
-- e2e seed (new file `e2e/seed/plan-mark.seed.spec.ts`): an invoice, a list, a note, a subscription, a bookmark placed on Wednesday show M1 and the link lands on the row.
-- `planner-hub-2.spec.ts` D1 re-measured.
+- e2e seed (new file `e2e/seed/plan-mark.seed.spec.ts`): an invoice, a list, a note, a subscription, a bookmark placed on Wednesday show M1 and the link lands on the row – the subscription on its occurrence row on Wednesday, the note on its carrier ToDo's row; from 5b a bundle member lands on the bundle's row; from 2 a folded pile member lands on the pile's row (M5 on a placed pile, M3 on an unplaced one). 10b only prepares the prop for bundle and pile names; packages 5b and 2 extend the read.
+- `planner-hub-2.spec.ts` D1 re-measured (markVisible 5, markAgrees 5, tripsToPlanner 0; taps 11, perThing 5, switches 10 unchanged).

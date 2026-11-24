@@ -13,9 +13,11 @@ Read with the package's own hand-off. Words: [COPY](../COPY.md) (ids `M1` …). 
 | `PlanMark` | `core/entitylinks/PlanMark.tsx` | the mark M1–M6, a text link | 10b |
 | Compartment | `planner/components/RowCompartment.tsx` | the box under a row that holds a panel | 4a |
 | `PlanPanelHost` | `core/modules/PlanPanelHost.tsx` | lazy mount + boundary + default panel | 4a |
-| `PanelLine` | `@/ui` (in `ListSurface.tsx`, additive) | one line inside a panel: optional tick, text, meta, one end action | 4a |
+| `PanelLine` | `@/ui` (in `ListSurface.tsx`, additive) | one line inside a panel: optional tick, text, meta, **one action plus the expand button** (`▸`) – e.g. a compact invoice member: „Bezahlt“ (ghost) before `▸` | 4a |
 | Step mode | `planner/routes/FocusPage.tsx` | „Los“ | 5a |
-| Preview line | `planner/components/Capture.tsx` (additive prop `preview`) | K1 + K3, also A2's lead chip | 3 / 9 |
+| Preview line, lead chips | `planner/components/Capture.tsx` (additive props) | K1 + K3 under the field; lead chips A2 / T11 before the input (rule below) | 3 / 9 / 11 |
+
+**One slot, an order (field).** Lead chips stand before the input: A2 from „Vorbereiten …“, T11 while a topic filter is on; at most two, A2 first. The K1 preview line still shows under the field. Only a plain ToDo – also one with steps – takes the lead chips (A2 → link and day, T11 → topic). For every other kind (Rechnung, Einkaufsliste, Termin, Notiz, Merkliste) the chips are drawn struck through while K1 shows and are not applied. When a chip gives the day, K1 / the field's toast names that day.
 
 No new token, no new colour, no new icon family. Glyphs come from `ui/icons.tsx`; a missing one is drawn in the same 24 px, 1.75 stroke grid and named in the PR.
 
@@ -25,6 +27,7 @@ No new token, no new colour, no new icon family. Glyphs come from `ui/icons.tsx`
 | --- | --- |
 | Compartment, desktop (≥ 701 px) | starts at the title's left edge (lead 44 px + `--space-3`), ends at the row's right edge; padding `--space-3` `--space-4`; margin-bottom `--space-3` |
 | Compartment, phone (≤ 700 px) | full inner width of the card; padding `--space-3` |
+| Chevron | none on a closed row; the open row shows one, 16 px after the title, `--text-3`, pointing down; on the desktop a closed title shows it on hover / keyboard focus only (not in the DOM otherwise) |
 | Compartment surface | `--surface-2`, radius `--radius-md`, **no border, no shadow** (the stimulus budget counts both and holds them at 0) |
 | `PanelLine` | min-height `--row-h` (44 px); text `--text-sm` / `--text`; meta `--text-meta` / `--text-3`; lines separated by `--space-1`, no hairline |
 | Tick in a panel | the shared `Checkbox`, 22 px glyph inside a 44 × 44 target |
@@ -42,11 +45,11 @@ No new token, no new colour, no new icon family. Glyphs come from `ui/icons.tsx`
 
 ## States every surface has
 
-loading (shared `Skeleton`, 2 lines, no spinner) · empty (one sentence, one next step) · many (cap + „n weitere“; never a scroll box inside a row) · error (X7 in the place where he acted, `role="alert"`; what he typed stays) · module off (the part is not drawn, or X5 where he asked for it).
+loading (shared `Skeleton`, 2 lines, no spinner) · empty (one sentence, one next step) · many (cap + X19 „n weitere“; never a scroll box inside a row) · error (X7 in the place where he acted, `role="alert"`; what he typed stays) · module off (the part is not drawn, or X5 where he asked for it).
 
 ## Breakpoints
 
-1920: the planner's two columns as built (sheet left, „Noch ohne Tag“ / 4 Wochen right). 412: one column; row actions are in ⋯; the field is the page's last row. Nothing new changes the columns.
+1920: the planner's two columns as built – the day's sheet left with „Noch ohne Tag“ as its foot; the right column holds „Frist vorbei“, „Termine“ and „Nächste Fristen“. 412: one column; row actions are in ⋯; the field is the page's last row. Nothing new changes the columns.
 
 ## Tests every package brings
 
