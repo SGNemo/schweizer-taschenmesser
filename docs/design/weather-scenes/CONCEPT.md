@@ -122,14 +122,14 @@ Heights by hints (desktop / phone): none 280 / 272 · one 280 / 272 · two ≤ 2
 - **Several:** at most two (as today), one per line in the same pill, the suffix once at the end. On the day of a solar eclipse the safety pill (package 3) takes one of the two places: then only the first weather hint stays in the stage, a second one appears under the head like a late hint.
 - **Phone:** the suffix wraps to its own line inside the pill; the pill takes the stage's width.
 - **Late forecast** (the frame stopped waiting): unchanged – the hint appears under the head in the polite live region, so nothing painted moves.
-- **An official warning** (drawn, not built – there is no source): a filled pill above the computed one, "Amtliche Warnung · Frost" with "Quelle", without the suffix. The two never share a pill, so the difference stays visible.
+- **An official warning** (package 3b, [CONCEPT-SOURCES §3](CONCEPT-SOURCES.md)): its own filled pill, "Amtliche Warnung: Frost · bis Mi. 10:00 · Quelle: DWD", without the suffix; it replaces today's computed hints. The two never share a pill, so the difference stays visible.
 - The scene does not illustrate the hint: it shows the weather now. A frost hint for tonight over a mild afternoon stays a line.
 
 ## 8. Small versions
 
 | Where | Version | Decision |
 | --- | --- | --- |
-| Overview widget | **the scene as the card's background** (the maintainer's wish of 2026-11-24): the same SVG sliced into the card, text on the quiet left with the scene's ink, no motion; "Ruhig" and "Modulfarben: Aus" fall back to the plain card with the porthole | chosen, as the one named exception to "a widget is a tone step" (MODULE-IDENTITY "Widgets") – the sky is this module's identity as the cover is the music's; needs the maintainer's yes because it bends a design rule (label `stimulus-raise` if the home budget moves) |
+| Overview widget | **the scene as the card's background** (the maintainer's wish of 2026-11-24): the same SVG sliced into the card, text on the quiet left with the scene's ink, no motion; "Ruhig" and "Modulfarben: Aus" fall back to the plain card with the porthole | **decided: yes** (maintainer, 2026-11-24), as the one named exception to "a widget is a tone step" (MODULE-IDENTITY "Widgets") – the sky is this module's identity as the cover is the music's; a budget hit of the home pages is named in package 4's PR |
 | Overview widget, alternative | porthole: a round crop of 64 px (sky, body with the true phase, clouds, one ridge, a few marks of rain or snow) on the plain card | fallback if the exception is declined; always the "Ruhig" look |
 | Overview line | porthole 28 px | built |
 | Forecast day row | the line icon stays (seven coloured discs in a list would raise the stimulus load for no information); **new: moon glyph 18 px in `currentColor` + phase name** at the end of the row | built |
@@ -146,4 +146,4 @@ Heights by hints (desktop / phone): none 280 / 272 · one 280 / 272 · two ≤ 2
 | trees (wind ≥ 2) | sway ±2° | three times in 5 s | leaning |
 | body, stars, bolt, rainbow, eclipse, meteors, ridges | never | – | – |
 
-Plays once when the weather page is opened (and again after the page was hidden for more than a minute), pauses while `document.hidden` or the stage is scrolled away. Widgets, portholes and glyphs never move. **Why motion is on by default** although FOCUS says "no extra animation except feedback to an action": it is the 5-second answer to opening the page, ends by itself, and is one of three options – recorded as a decision of the round for the maintainer to overturn (then the default is "Standbild").
+Plays once when the weather page is opened (and again after the page was hidden for more than a minute), pauses while `document.hidden` or the stage is scrolled away. Widgets, portholes and glyphs never move. **Why motion is on by default** although FOCUS says "no extra animation except feedback to an action": it is the 5-second answer to opening the page, ends by itself, and is one of three options – confirmed by the maintainer on 2026-11-24 ("Bewegung an, aber abschaltbar zu Standbild").

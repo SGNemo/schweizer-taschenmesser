@@ -44,6 +44,7 @@
       snow: '#eef3f8', 'snow-shade': '#cfdbe8', rime: '#e8f3fb', ice: '#cfeeff', rain: '#d6e4f2', fog: '#ffffff',
       bolt: '#ffe9a6', 'hail-edge': '#b8c6d6', 'heat-haze': '#fbe7b0', 'dust-sun': '#f6e7c0',
       'eclipse-disc': '#0b0f22', 'eclipse-red': '#c8694a', 'eclipse-red-dark': '#8f3d2e', 'eclipse-umbra': '#5a2a25',
+      'aurora-1': '#7fe0a8', 'aurora-2': '#58c7b0', 'aurora-3': '#a98be0', // aurora: base green, mid teal, violet top
       'rb-1': '#e8807a', 'rb-2': '#f2b56b', 'rb-3': '#f1dd7a', 'rb-4': '#8fcf9a', 'rb-5': '#7fb2e6',
       window: '#ffd98a', 'dry-meadow': '#8a8a4a', trunk: '#4a3b30', roof: '#8c4a3a', wall: '#e9e2d4',
       'dim-target': '#1b2340', // one step dimmer (solar partial > .6)

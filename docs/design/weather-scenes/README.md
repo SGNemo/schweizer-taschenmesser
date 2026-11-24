@@ -8,6 +8,7 @@ Brief (maintainer, 2026-11-24, with a picture of the head at 02:50, −4°): "ni
 | [CONCEPT](CONCEPT.md) | eight sentences every package keeps, layers and their data, weather × time of day → layers, landscape, size and place, the hint in the head, small versions, motion |
 | [CONCEPT-MOON](CONCEPT-MOON.md) | phase and light, tilt, names, full moon, rise and set, the calculation with its measured accuracy and test data |
 | [CONCEPT-EVENTS](CONCEPT-EVENTS.md) | every sky event with its source, when it shows, visibility at the place; what is struck |
+| [CONCEPT-SOURCES](CONCEPT-SOURCES.md) | aurora (NOAA SWPC) and official warnings (DWD): the two new hosts, what leaves the device, rules, words – allowed by the maintainer after the design PR |
 | [COPY](COPY.md) | every new word, German and English |
 | [A11Y](A11Y.md) | contrast per scene, text alternatives, motion rules, render cost ceiling |
 | `handoff/` | one hand-off per package (`00-common` first: layers, tokens, building blocks) |
