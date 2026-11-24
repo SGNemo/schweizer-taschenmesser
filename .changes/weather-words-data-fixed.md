@@ -10,5 +10,5 @@ type: added
 area: weather
 breaking: false
 de: Neuer Wetterhinweis bei gefrierendem Regen („es kann glatt sein“), auch in „Jetzt wichtig“ und der Benachrichtigung.
-en: A new weather hint for freezing rain ("it may be slippery"), also in "Jetzt wichtig" and the notification.
+en: A new weather hint for freezing rain ("it may be slippery"), also in "Needs attention" and the notification.
 ---

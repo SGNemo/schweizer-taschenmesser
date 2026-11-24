@@ -265,12 +265,22 @@ describe('recorded response shapes (fixtures follow the documented Open-Meteo JS
         time: '2026-11-24T02:50',
         temperature_2m: -4.2,
         weather_code: 1,
-        snow_depth: 0.034,
+        snow_depth: 0.039,
       },
     });
     const out = await fetchForecast(52.52, 13.41, f);
     expect(out).toMatchObject({ tz: 'Europe/Berlin', code: 1, group: 'partly' });
     expect(out.now?.snowDepth).toBe(0.03);
+    // Rounded down to whole centimetres: 5 mm is no "snow on the ground", 29 cm stay 29 cm.
+    for (const [raw, kept] of [
+      [0.005, 0],
+      [0.29, 0.29],
+    ] as const) {
+      const g = ok({
+        current: { time: '2026-11-24T02:50', temperature_2m: 1, weather_code: 0, snow_depth: raw },
+      });
+      expect((await fetchForecast(1, 2, g)).now?.snowDepth).toBe(kept);
+    }
     const bare = await fetchForecast(
       52.52,
       13.41,

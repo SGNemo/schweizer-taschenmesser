@@ -91,7 +91,7 @@ export interface NowDetail {
   hpa?: number;
   dir?: number;
   night?: boolean;
-  /** Snow on the ground, metres (two decimals). */
+  /** Snow on the ground, metres, rounded down to whole centimetres. */
   snowDepth?: number;
 }
 
@@ -282,7 +282,7 @@ function nowOf(c: Current): NowDetail | undefined {
     hpa: round(c.pressure_msl),
     dir: round(c.wind_direction_10m),
     night: c.is_day == null ? undefined : c.is_day === 0,
-    snowDepth: c.snow_depth == null ? undefined : Math.round(c.snow_depth * 100) / 100,
+    snowDepth: c.snow_depth == null ? undefined : Math.floor(c.snow_depth * 100 + 1e-9) / 100,
   };
   return Object.values(out).some((v) => v !== undefined) ? out : undefined;
 }
