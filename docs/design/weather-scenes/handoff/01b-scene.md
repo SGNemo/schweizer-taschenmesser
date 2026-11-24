@@ -25,7 +25,7 @@ The stage keeps its height while loading (`useKeepHeadRoom`, as today).
 ## The hint (replaces `HeroSlot area="notice"`)
 
 - Markup: `div role="note" aria-label={tp.warnLabel} data-testid="weather-warning"` → `ul > li (Icon 16 + text)` → `span.computed` with `tp.warnComputed` after the last line (desktop: same line, preceded by " · "; phone: own line).
-- Look: `background: color-mix(in srgb, var(--warning) 14%, var(--surface))` (opaque), `border-radius: var(--radius-md)`, padding `--space-1` `--space-3`, text `--text` 600 at the chip size, `.computed` `--text-muted` at the meta size, icon `--warning-ink`. `width: fit-content` on the desktop, full width on the phone.
+- Look: `background: color-mix(in srgb, var(--warning) 14%, var(--surface))` (opaque), `border-radius: var(--radius-md)`, padding `--space-1` `--space-3`, text `var(--ink-theme)` 600 at the chip size, `.computed` `var(--ink-theme-muted)` at the meta size (never `--text`: inside the stage that is the scene's ink), icon `--warning-ink`. `width: fit-content` on the desktop, full width on the phone.
 - Icons and kinds as built in 1a.
 - Late path unchanged: `WarningNotice` under the head in the polite live region, same pill look, full width.
 - `AreaFrame`'s notice slot is no longer used by weather; the slot itself stays (other modules).
@@ -50,7 +50,7 @@ Phone: two chips in the stage (rain / dry, wind); the third chip's fact (UV or s
 | stale ("Stand 02:10") | drawn from the stale values; phase from the clock, so a stale forecast at night is a night | detail line ends with `tx.asOf` |
 | old cache without `code` | from `group`, intensity 2, no snow depth | word from `tx.codes` |
 | "Standbild" / reduced motion / "Modulfarben: Aus" | no `data-motion` | – |
-| "Schlicht" | layers `sky` + `body` (the sun; at night sky and stars are not drawn – a plain night gradient) | – |
+| "Schlicht" | layers `sky` + `body` (by day the sun; at night the sky only, no stars) | – |
 | "Ruhig" / "Modulfarben: Aus" | greys (`Scene` `calm: true`), ink by theme | – |
 | polar day / night | `day` / `night` from `is_day` | – |
 
@@ -61,10 +61,10 @@ Phone: two chips in the stage (rain / dry, wind); the third chip's fact (UV or s
 ## Tests (acceptance)
 
 1. `scene.test.ts`: every WMO code of [CONCEPT §3](../CONCEPT.md) × `day` and `night` → `cond`, `intensity`, sky key, cloud kind, precipitation kind, landscape state, as a table (`it.each`); every modifier threshold at and below its edge; every phase boundary (minute before / at / after); season × hemisphere.
-2. `WeatherScene.test.tsx`: layers present per state (`data-layer`), `aria-hidden`, no element left of x = 900 in the layers `body`, `clouds`, `event` (read the transforms / attributes), element count of the heaviest preset ≤ the ceiling.
+2. `WeatherScene.test.tsx`: layers present per state (`data-layer`), `aria-hidden`, no element left of x = 900 in the layers `body`, `clouds`, `event` except the overcast deck (`data-part="deck"`, one flat tone that may cross) – read the transforms / attributes, element count of the heaviest preset ≤ the ceiling.
 3. `contrast.test.ts` ([00-common](00-common.md)).
 4. Detail-line additions by priority at their limits.
 5. Hint pill: suffix once, the note's name, one and two hints, the late path.
 6. e2e (`e2e/weather.spec.ts` grows, new cases appended): the fixture of the analysis → no element with `data-testid="weather-warning"` above the stage, the pill inside it; stage height by hints (0, 1, 2) at 1920 and 412 as in the layout table, and the 1280 window; `prefers-reduced-motion` → no `data-motion`; "Schlicht" → two layers; axe on `/weather` **with** a place in both themes, at night and by day.
-7. Protected tests as in [00-common](00-common.md) (hits named in the PR): the old head-height check still passes through the kept `data-sky` + first `span`, the new body-box check is appended; `identity.test.tsx` is not touched (it tests `Sky`, which still exists); `weather.test.tsx` (not protected) asserts `data-phase` / `data-cond` beside `data-sky`.
+7. Protected tests as in [00-common](00-common.md) (hits named in the PR): the old head-height check still passes through the kept `data-sky` + first `span`, the new body-box check is appended; `identity.test.tsx` is not touched (it tests `Sky`, which still exists); `weather.test.tsx` and `e2e/weather.spec.ts` (not protected) keep finding `data-testid="sky"` on the kept wrapper and additionally assert `data-phase` / `data-cond` on `weather-scene`.
 8. `check:stimulus`: weather pages unchanged except `shadows` 1 → 0 (baseline lowered).

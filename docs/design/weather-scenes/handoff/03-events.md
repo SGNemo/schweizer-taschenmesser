@@ -24,7 +24,7 @@ Concept: [CONCEPT-EVENTS](../CONCEPT-EVENTS.md). Common: [00-common](00-common.m
 | Element | Spec |
 | --- | --- |
 | Event chip | replaces the hero's third chip while an event of §2 is live; a 16 px glyph from the mockup (`10-karte.html`) + the short words of [COPY §5](../COPY.md). Phone: it takes the wind chip's place, the wind goes to the rest line |
-| Safety pill | on the day of a visible solar eclipse, from the morning to its end: a pill in the hint's place (the hint pill's look, icon `eye`, text `tp.ev.solarSafety`, no "berechnet" suffix, `role="note"`), above a weather hint if there is one; counts toward the stage heights of two hints |
+| Safety pill | on the day of a visible solar eclipse, from the morning to its end: a pill in the hint's place (the hint pill's look, icon `eye`, text `tp.ev.solarSafety`, no "berechnet" suffix, `role="note"`), above a weather hint if there is one. The stage holds the safety pill plus at most **one** weather hint (heights as for two hints); a second weather hint goes under the head like a late hint |
 | Card block "Als Nächstes" | last block of "Mond & Himmel": small heading `tp.ev.next`, one event: line 1 name and time, line 2 the local facts, optional line 3 (rises late / sets early / moon bright / clouds); a solar eclipse always ends with `tp.ev.solarSafety` in `--text` (not muted) |
 | Solstice / equinox | line with the small glyph, on that local day only |
 | Dust | one row in `WeatherAir` under the particle rows |

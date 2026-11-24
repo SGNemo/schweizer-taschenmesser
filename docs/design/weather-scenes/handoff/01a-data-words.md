@@ -6,7 +6,7 @@ No picture yet: everything the scene needs underneath, and the finds that are wr
 
 | Field | Where | From |
 | --- | --- | --- |
-| `tz?: string` | `Forecast` | the response's `timezone` (IANA name; `timezone=auto` is already requested) |
+| `tz?: string` | `Forecast` | the response's `timezone` (IANA name; `timezone=auto` is already requested) – add `timezone: z.string().optional()` to the response schema in `api.ts`, which parses only `current` / `hourly` / `daily` today |
 | `code?: number` | `Forecast`, `HourRow`, `DayRow` | the WMO code already fetched (`weather_code`), kept beside `group` |
 | `now.snowDepth?: number` (m) | `NowDetail` | new variable `snow_depth` in `current` of the existing forecast request |
 | cache | `core/weather/cache.ts` `forecastSchema` | add the fields as optional, or they are stripped on read; an entry without them stays valid; no refetch rule for the new fields |

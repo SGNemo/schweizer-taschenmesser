@@ -109,17 +109,17 @@ Cloud count by `cloud_cover` (where the row says "by cover"): ≤ 10 none · ≤
 
 | | 1920 (stage 1650 wide) | 1280 (stage ~1010) | 412 |
 | --- | --- | --- | --- |
-| Stage height | **280 px** (today 174; limit 320) | 280 px | **≤ 312 px** (today 278) |
+| Stage height | **280 px** (today 174; limit 320) | 280 px | **272 px**, ≤ 300 with two hints (today 278) |
 | Title row | 56 px: plate, eyebrow, place as h1, gear at the right end – on sky and stars only | same | 44 px, then the module row 44 px on its own opaque backing |
 | Scene | all 1600 units; body and peaks in the right third | the right ~1150 units (slice) | the right ~570 units; the body sits below the module row |
 | Text | temperature, detail line, hint, chips, rest line in the left half, ending above the left ridges (y ≤ 250) | same; the rest line may wrap once; `quietX` at the text column's edge | temperature and detail line left of the body; hint; one row of two chips (rain / dry and wind – on an event day the event chip takes the wind chip's place and the wind goes to the rest line); the rest line in the page below the stage begins with the third chip's fact (UV, sunrise or the moon) |
 
-Heights by hints (desktop / phone): none 280 / 272 · one 280 / 272 · two ≤ 290 / ≤ 300; the guard stays 320. The stage grows by 106 px on the desktop – the price for "larger"; the page below starts lower by that much minus the 86 px the hint bar no longer takes (74 px + 12 px margin; net +20 px with a hint, +106 px without). On the phone the stage may grow by up to 34 px while the 107 px of the hint bar (95 + 12) go away.
+Heights by hints (desktop / phone): none 280 / 272 · one 280 / 272 · two ≤ 290 / ≤ 300; the guard stays 320. The stage grows by 106 px on the desktop – the price for "larger"; the page below starts lower by that much minus the 86 px the hint bar no longer takes (74 px + 12 px margin; net +20 px with a hint, +106 px without). On the phone the stage shrinks by 6 px (or grows by up to 22 px with two hints) while the 107 px of the hint bar (95 + 12) go away.
 
 ## 7. The hint in the head
 
-- **Where:** one pill in the stage, directly under the detail line: icon · "Heute: Frost bis −6°" · quieter suffix "berechnet, keine amtliche Warnung". Opaque backing (`--warning` 14 % over `--surface`), ink `--text`, icon `--warning-ink`; readable on any sky. `role="note"`, name "Wetterhinweis" (as today).
-- **Several:** at most two (as today), one per line in the same pill, the suffix once at the end.
+- **Where:** one pill in the stage, directly under the detail line: icon · "Heute: Frost bis −6°" · quieter suffix "berechnet, keine amtliche Warnung". Opaque backing (`--warning` 14 % over `--surface`), ink `--ink-theme` (the theme's text colour, not the stage's), suffix `--ink-theme-muted`, icon `--warning-ink`; readable on any sky. `role="note"`, name "Wetterhinweis" (as today).
+- **Several:** at most two (as today), one per line in the same pill, the suffix once at the end. On the day of a solar eclipse the safety pill (package 3) takes one of the two places: then only the first weather hint stays in the stage, a second one appears under the head like a late hint.
 - **Phone:** the suffix wraps to its own line inside the pill; the pill takes the stage's width.
 - **Late forecast** (the frame stopped waiting): unchanged – the hint appears under the head in the polite live region, so nothing painted moves.
 - **An official warning** (drawn, not built – there is no source): a filled pill above the computed one, "Amtliche Warnung · Frost" with "Quelle", without the suffix. The two never share a pill, so the difference stays visible.

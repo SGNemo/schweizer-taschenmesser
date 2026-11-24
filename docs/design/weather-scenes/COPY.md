@@ -53,8 +53,7 @@ Additions the picture needs a word for (appended to the detail line under the te
 | `tp.warnComputed` | berechnet, keine amtliche Warnung | calculated, not an official warning | suffix inside the hint, once per hint block |
 | `tp.warnLabel` | Wetterhinweis | Weather notice | name of the `role="note"`; unchanged |
 | `tp.warn.ice({day})` | {day}: gefrierender Regen, es kann glatt sein | {day}: freezing rain, it may be slippery | new hint kind `ice` (a day whose code is 56, 57, 66 or 67) |
-
-| `tp.warnNotifyHelp` | Eine Benachrichtigung bei Gewitter, Sturm, Starkregen, Glätte, Hitze oder Frost am Hauptort. | One notification for thunderstorms, gales, heavy rain, ice, heat or frost at your main place. | replaces today's help text, which does not know `ice` (keep any further sentence of the existing text) |
+| `tp.warnNotifyHelp` | Aus. Nemo meldet Gewitter, Sturm, Starkregen, Glätte, Hitze oder Frost für deinen Hauptort mit einer einzigen Benachrichtigung am Morgen (heute) oder Abend davor (morgen). Es sind eigene Hinweise aus der Vorhersage, keine amtlichen Warnungen. Sie funktioniert nur, solange die App läuft. | Off. Nemo reports thunderstorms, storm, heavy rain, ice, heat or frost for your main place with a single notification in the morning (today) or the evening before (tomorrow). These are own hints from the forecast, not official warnings. It only works while the app is running. | today's text with „Gewitter“ and „Glätte“ added; nothing else changes |
 
 The existing lines `tp.warn.storm|wind|rain|heat|frost` keep their words (German and English as they are). `tp.warnSource` (the sentence under the old bar) is replaced by `tp.warnComputed`. The frost hint's icon becomes `thermometer` (nothing falls), `ice` takes `cloudDrizzle`.
 

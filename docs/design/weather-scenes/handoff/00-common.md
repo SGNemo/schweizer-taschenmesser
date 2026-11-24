@@ -38,10 +38,11 @@ Shared scope `weather` (`core/weather/settings.ts`, synced, Zod; UI in `pages/se
 
 | Package | File | Why |
 | --- | --- | --- |
-| 1b | `e2e/seed/head-height.seed.spec.ts` | the "first `span` in `[data-sky]` clear of the module row" check has no span to find; appended check: the box of `[data-layer="body"]` is clear of the module row. To keep the old check passing, the scene's wrapper keeps `data-sky` and one empty first `span` laid over the body's box |
+| 1b | `e2e/seed/head-height.seed.spec.ts` | the "first `span` in `[data-sky]` clear of the module row" check has no span to find; appended check: the box of `[data-layer="body"]` is clear of the module row. To keep the old check passing, the scene's wrapper keeps `data-testid="sky"`, `data-sky` (the old kind) and one first `span`, absolutely positioned and **sized to the body's box** in percent of the stage (computed from the scene state: the arc position on the desktop, the `bodyAt` position on the phone – no measuring, no effect); a 0 × 0 span would read as "no sun" |
 | 1b | `ui/tokens.test.ts` | new `--scene-*` and `--ink-*` tokens, if the test lists tokens |
 | 1b | `e2e/stimulus-budget.json` | `shadows` 1 → 0 for the weather pages (lowering is free, listed for completeness) |
 | 4 | `ui/identity/identity.test.tsx`, `ui/tokens.test.ts` | `Sky`, `skyKind` and `--sky-*` are removed |
+| 2 | `e2e/stimulus-budget.json` (`icons`, weather pages) | the budget counts every visible `svg`: seven day-row moon glyphs, the card's glyph and the chip's add about 9 (desktop 84 → ~93, limit 92; phone 57 → ~66, limit 62). A raise is a hit that waits for the maintainer; do not hide the glyphs or draw them as non-SVG to dodge the count |
 | 4 (variant B only) | `e2e/stimulus-budget.json` for the home pages | only if the widget background moves a number |
 
 ## Rules for every package
@@ -49,5 +50,5 @@ Shared scope `weather` (`core/weather/settings.ts`, synced, Zod; UI in `pages/se
 - The scene never carries information alone: before a layer ships, its word is on the page ([COPY](../COPY.md)).
 - Nothing asks the network that does not ask today, except the added variables in the existing requests (`snow_depth` in 1a, `dust` in 3; `timezone` is already in the response). `privacy.test.ts` and the DATA-FLOWS row stay as they are.
 - Ceilings (measured on the mockup, [A11Y §4](../A11Y.md)): elements per scene, bytes, animated groups, main-thread time. A unit test counts the elements of the heaviest preset.
-- `check:stimulus` for `d1920--weather`, `p412--weather` and the home pages: unchanged or lower (the scene is one SVG; no `box-shadow` on it).
+- `check:stimulus` for `d1920--weather`, `p412--weather` and the home pages: unchanged or lower (the scene is one SVG; no `box-shadow` on it) – except the named `icons` hit of package 2.
 - Screens for the PR text: the six situations of `mockups/07-kopf.html`, 1920 and 412, light and dark, with the fixture of [ANALYSIS](../ANALYSIS.md) (invented place "Lindenau").
