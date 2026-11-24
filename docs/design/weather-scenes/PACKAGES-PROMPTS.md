@@ -1,6 +1,6 @@
 # Weather scenes – package prompts
 
-Paste one block into a new chat. Shared rules: [PACKAGES #common](PACKAGES.md#common). Order 1a → 1b → 2 → 3 → 4, each after the previous merge.
+Paste one block into a new chat. Shared rules: [PACKAGES #common](PACKAGES.md#common). Order 1a → 1b → 2 → 3 → 3b → 4, each after the previous merge.
 
 ## Package 1a – data, words, hint logic
 
@@ -135,6 +135,38 @@ Polarlicht, amtliche Warnungen, Planeten, ISS (brauchen eine neue Quelle – nur
 design:accessibility-review, design:design-critique, review loop, file-pr, babysit-pr, leaving-pr-comments. Full stop.
 ```
 
+## Package 3b – aurora and official warnings
+
+```
+Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
+Routing: Claude Code · Wetter-Szenen 3b: Polarlicht und amtliche Warnungen · Opus
+
+# Wetter-Szenen, Paket 3b: Polarlicht (NOAA SWPC) und amtliche Warnungen (DWD) – zwei neue Netzziele, von Sven erlaubt. Unbeaufsichtigt.
+
+Branch `feat/weather-sources` von frischem `develop` (nach dem Merge von Paket 3). Gemeinsame Regeln: docs/design/weather-scenes/PACKAGES.md#common; lies zuerst „as built“ der Vorgänger in PACKAGES.md und trage deinen Absatz nach. Konzept: CONCEPT-SOURCES.md. Übergabe: handoff/00-common.md, handoff/03b-sources.md. Wörter: COPY.md §7 – wörtlich übernehmen, nicht neu gestalten. Lies docs/rules/core-privacy.md und docs/legal/DATA-FLOWS.md.
+
+## Pflicht
+1. Zuerst beide Quellen im echten Browser und über den Desktop-Abruf prüfen (Layer-Name, Felder, JSON, CORS beim DWD-GeoServer; Aufbau und CORS der SWPC-Datei) und das Ergebnis in den PR schreiben; wo die Tatsachen vom Konzept abweichen, gelten die Tatsachen. Ohne CORS fragt die Web-App gar nicht (nicht „senden und scheitern“); die Funktion läuft dann nur in Desktop- und Android-App; kein Proxy.
+2. Polarlicht: Kp-Vorhersage (eine allgemeine Datei, kein Ort wird gesendet), Regel nach geomagnetischer Breite lokal; Chip, Karten-Zeile „Als Nächstes“, Bild (mockups/05-ereignisse.html), nie bewegt.
+3. Amtliche Warnungen nur für den Hauptort und nur, wenn er in Deutschland liegt (Grenz-Polygon, kein Rechteck): Abruf mit der gerundeten Position, ab DWD-Stufe 2, ohne Vorabinformationen und UV; eigene Pille im Kopf (mockups/07-kopf.html 7a, 7b); ersetzt den berechneten Hinweis derselben Art von heute – auch in „Jetzt wichtig“ und für die Benachrichtigung; höchstens zwei Hinweis-Zeilen in der Bühne (Zählregel CONCEPT-SOURCES §3); nie über das Ablaufende hinaus und nie, wenn der letzte gelungene Abruf älter als 60 Minuten ist.
+4. Schalter „Amtliche Warnungen (Deutschland)“ (ab Werk an) im gemeinsamen `weather`-Bereich; Polarlicht hängt an „Mond und Himmelsereignisse“. Beide Abrufe über `getPlatform().fetch`, aus bei „Netzwerk sperren“ und offline, eigene Cache-Schlüssel.
+5. Jede Stelle, die sagt, wohin Wetterdaten gehen, de und en – die ganze Tabelle aus CONCEPT-SOURCES §4: `docs/legal/DATA-FLOWS.md` (zwei Zeilen), `strings.legal.ts` (Flüsse, Hinweis), Wetter-Texte und Quellenangaben, `core/net/netlog.ts` + `catalogue.ts`, Website (`site/`), `docs/user/security*.md`, `docs/features/connection-log.md`, `docs/features/weather.md`.
+
+## Nicht in diesem Paket
+Warnungen anderer Länder (MeteoAlarm) · Benachrichtigung zu amtlichen Warnungen oder Polarlicht · Warn-Karte · Beschreibungstexte der Warnungen in der App · kleine Fassungen (4).
+
+## Abnahme
+- Abrufe: die DWD-Adresse trägt nur die gerundete Position, die SWPC-Adresse nichts; kein Abruf bei Schalter aus, außerhalb der Region, offline, „Netzwerk sperren“; der Verbindungsprotokoll-Test kennt genau zwei neue Ziele; `privacy.test.ts` unverändert grün.
+- `inGermany` mit Grenzorten auf beiden Seiten (Konstanz ja, Zürich nein …). Ersetz-Regel je Art (amtlicher Wind heute verdrängt berechneten Wind heute, nicht Regen heute und nicht Wind morgen; ohne amtliche Antwort bleiben die berechneten), gleich in „Jetzt wichtig“ und Benachrichtigung.
+- Texte: jede Zeile der Tabelle aus CONCEPT-SOURCES §4 geändert; `legal.test.ts`, `netlog.test.ts`, Katalog-Test, `check:readme` grün.
+- Polarlicht-Regel: geomagnetische Breite für fünf Orte, nötiges Kp (Beispielort 7, Tromsø 0, Singapur nie), beide JSON-Formen.
+- Kopf: Reihenfolge der Pillen, Bühnenhöhe ≤ 290 / ≤ 300, Kontrast der amtlichen Pille und der Szene ≥ 4,5 : 1, axe; `prefers-reduced-motion`.
+- Bilder nur im PR-Text (amtliche Warnung, Polarlicht; 1920 und 412, hell und dunkel).
+
+## Skills
+design:accessibility-review, design:design-critique, council, file-pr, babysit-pr, leaving-pr-comments. Full stop.
+```
+
 ## Package 4 – small versions and performance
 
 ```
@@ -143,11 +175,11 @@ Routing: Claude Code · Wetter-Szenen 4: kleine Fassungen und Leistung · Opus
 
 # Wetter-Szenen, Paket 4: Übersicht, Widget, Android – und der Leistungs-Durchgang. Unbeaufsichtigt.
 
-Branch `feat/weather-scene-small` von frischem `develop` (nach dem Merge von Paket 3). Gemeinsame Regeln: docs/design/weather-scenes/PACKAGES.md#common; lies zuerst „as built“ der Vorgänger in PACKAGES.md und trage deinen Absatz nach. Konzept: CONCEPT.md §8. Übergabe: handoff/00-common.md, handoff/04-small.md. Zeichnung: mockups/06-klein.html – übernehmen, nicht neu gestalten. Hotspots vorher ankündigen: `ui/tokens.css`, `home/**`.
+Branch `feat/weather-scene-small` von frischem `develop` (nach dem Merge von Paket 3b). Gemeinsame Regeln: docs/design/weather-scenes/PACKAGES.md#common; lies zuerst „as built“ der Vorgänger in PACKAGES.md und trage deinen Absatz nach. Konzept: CONCEPT.md §8. Übergabe: handoff/00-common.md, handoff/04-small.md. Zeichnung: mockups/06-klein.html – übernehmen, nicht neu gestalten. Hotspots vorher ankündigen: `ui/tokens.css`, `home/**`.
 
 ## Pflicht
 1. Bullauge (`ScenePorthole`) in der Übersichtszeile (28 px) und im Widget (64 px); gleiche Lage wie der Kopf, nie bewegt; folgt den Einstellungen „Bild im Wetter-Kopf“ und „Mond und Himmelsereignisse“.
-2. Widget mit der Szene als Kartenhintergrund (Variante B) **nur, wenn Sven im Design-PR oder in docs/decisions/weather.md Ja gesagt hat** – dann als benannte Ausnahme mit geändertem Absatz in MODULE-IDENTITY „Widgets“; sonst Variante A bauen und B unter „Noch offen“ lassen. „Ruhig“ und „Modulfarben: Aus“ immer Variante A.
+2. Widget mit der Szene als Kartenhintergrund (Variante B – von Sven am 2026-11-24 entschieden: ja), als benannte Ausnahme mit geändertem Absatz in MODULE-IDENTITY „Widgets“. „Ruhig“ und „Modulfarben: Aus“ zeigen Variante A (Bullauge).
 3. `Sky`, `skyKind`, `--sky-*`, das behaltene `data-sky` samt `span` und ihre Tests entfernen, sobald nichts mehr sie nutzt – geschützte Dateien als „Ratchet hits“ im PR nennen; das Label `stimulus-raise` setzt nur Sven.
 4. Leistungs-Durchgang nach handoff/04 (Desktop und Handy-Profil, CPU ×4): Zahlen in den PR und nach `docs/perf/`; ein Handtest mit Id für MANUAL-TESTS.md (echtes Android-Gerät).
 5. Runde schließen: Arbeitsdokumente unter `docs/design/weather-scenes/` löschen, den Link in `docs/decisions/weather.md` auf `docs/features/weather.md` umstellen; CHATS-Zeile „Wetter-Szenen“ entfernen.

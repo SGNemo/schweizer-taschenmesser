@@ -71,6 +71,9 @@
     bolt: [[1296, 190], [1316, 190], [1305, 222], [1321, 222], [1288, 280], [1298, 236], [1283, 236]],
     skew: [0, 6, 12, 20], // trees lean with the wind (degrees, by wind 0..3)
     shelter: { x1: 1300, op: 0.75, y0: 196, y1: 252 }, // widened after the contrast measurement (was x1 1120, op .62) // haze wash over the low ridges left, where the text lies
+    // aurora curtains: x0, x1, base y, height share, wave phase; top = base − h(amount); only the first `few` at amount < .6
+    aurora: { bands: [[985, 1290, 198, 1, 0], [1100, 1490, 190, 0.85, 1.7], [1310, 1630, 200, 0.7, 3.1], [1020, 1210, 206, 0.5, 4.4]], few: 2,
+      h: 128, top: 70, op: [0.2, 0.3], glow: [1260, 206, 520, 90] },
     meteors: [[1214, 76, 108], [1430, 116, 72], [1010, 66, 62]], // head x, y, tail length (up and to the right)
     motion: { drift: 16, rain: 2.4, rainHeavy: 1.6, snow: [10, 15], total: 12, fog: 20 },
     windStrokes: [[1150, 156, 190], [1238, 188, 210], [1330, 132, 170]], // start x, y, length
@@ -540,6 +543,7 @@
       'S' + f(cx + rx * 0.5) + ',' + K.y1 + ' ' + cx + ',' + K.y1 + 'S' + K.x0 + ',' + (K.y1 - 2) + ' ' + K.x0 + ',' + cy + 'Z', frozen = s.frost === 2 || (s.season === 'winter' && s.frost > 0);
     var col = frozen ? mix(PAL.c.rime, LC.bottom, LC.night ? 0.6 : 0.35) : mix(LC.bottom, LC.mid, 1 - K.sky);
     if (s.heat && !frozen) col = mix(X.skyMid, LC.mid, 0.3); // heat: still water, not sand
+    if (s.event === 'aurora') col = mix(col, PAL.c['aurora-1'], 0.3 * s.eventAmount); // a faint green in the lake
     if (LC.wet) col = mix(col, '#000000', 0.1);
     var out = el('path', { d: d, fill: X.c(mix(LC.mid, '#000000', 0.12)), transform: 'translate(0 2)' }) + el('path', { d: d, fill: X.c(col) }); // shore, water
     if (frozen) out += el('path', { d: d, fill: 'none', stroke: X.c('rime'), 'stroke-width': 1.5, opacity: 0.8 });
@@ -763,6 +767,27 @@
     }
     return out;
   }
+  function auroraLayer(X) { // never animated; nothing left of the shelter / quiet zone except the faint glow
+    var s = X.s, A = G.aurora, amt = Math.max(0, Math.min(1, s.eventAmount)), left = Math.max(G.shelterX, X.quiet || 0), out = '';
+    var op = A.op[0] + A.op[1] * amt, gl = A.glow;
+    out += el('ellipse', { cx: Math.max(gl[0], left + 200), cy: gl[1], rx: gl[2] * (0.6 + 0.4 * amt), ry: gl[3] * (0.5 + 0.5 * amt), fill: X.grad([[0, 'aurora-1', 0.3 * amt + 0.08], [1, 'aurora-1', 0]], { radial: true }) });
+    var fill = X.grad([[0, 'aurora-3', 0], [0.35, 'aurora-3', 0.45], [0.7, 'aurora-2', 0.85], [1, 'aurora-1', 1]], { x1: 0, y1: 0, x2: 0, y2: 1 });
+    A.bands.slice(0, amt < 0.6 ? A.few : A.bands.length).forEach(function (b, bi) {
+      var x0 = Math.max(b[0], left), x1 = b[1];
+      if (x1 - x0 < 90) return;
+      var h = Math.min(A.h * Math.pow(amt, 1.15) * b[3] + 14, b[2] - A.top), n = 16, top = '', base = '';
+      for (var i = 0; i <= n; i++) {
+        var u = i / n, x = x0 + (x1 - x0) * u, env = Math.pow(Math.sin(Math.PI * u), 0.55);
+        var yb = b[2] + 7 * Math.sin(u * 7 + b[4]), yt = yb - h * env * (0.82 + 0.18 * Math.sin(u * 11 + b[4] * 2));
+        top += (i ? 'L' : 'M') + f(x) + ',' + f(yt);
+        base = 'L' + f(x) + ',' + f(yb) + base;
+      }
+      // two overlapping translucent copies (the second narrower and shifted) give the curtain its soft fold
+      out += el('path', { d: top + base + 'Z', fill: fill, opacity: f(op * 100) / 100 });
+      out += el('path', { d: top + base + 'Z', fill: fill, opacity: f(op * 60) / 100, transform: 'translate(' + f(x0 + (x1 - x0) * 0.5) + ' ' + b[2] + ') scale(0.62 0.8) translate(' + f(-(x0 + (x1 - x0) * 0.42)) + ' ' + -b[2] + ')' });
+    });
+    return out;
+  }
   function windLayer(X, LC) {
     var s = X.s, out = '';
     if (s.wind < 2) return '';
@@ -822,10 +847,11 @@
       body += el('g', { opacity: D.op }, moonBody(X, D.x, D.y, D.r, s.moon, { glow: false, darkFill: X.c(skyAt(stops, D.y)), maria: true }).replace(/fill="[^"]*" opacity="0.5"/, 'fill="none"'));
     }
     L.push(layer('body', body));
+    if (s.event === 'aurora' && !plain) L.push(layer('aurora', auroraLayer(X)));
     if (!plain) {
       var LC = landColours(X, stops), cl = cloudLayers(X, bp, skyInfo);
       L.push(layer('cloudsFar', cl.far));
-      if (alp) L.push(layer('ridgeAlp', mountain(X, alp, LC, G.alpPeaks, LC.alp, 'alp')));
+      if (alp) L.push(layer('ridgeAlp', mountain(X, alp, LC, G.alpPeaks, LC.alp, 'alp') + (s.event === 'aurora' ? edges(X, alp.crest, X.c('aurora-1'), 1.6, f(0.45 * s.eventAmount * 100) / 100) : '')));
       L.push(layer('ridgeFar', mountain(X, far, LC, s.landscape === 'mountains' ? G.farPeaks : [], LC.far, 'far')));
       L.push(layer('fog', fogBands(X, 'far')));
       var midOut = el('path', { d: mid.fill, fill: s.snowGround ? X.grad([[0, LC.mid], [1, mix(LC.snowShade, bottom, 0.3)]], { x1: 0, y1: 220, x2: 0, y2: 300, gradientUnits: 'userSpaceOnUse' }) : X.c(LC.mid) }) + ridgeTrims(X, mid, LC, 'mid');

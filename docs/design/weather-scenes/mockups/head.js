@@ -24,6 +24,7 @@
     rainbow: '<path d="M1.5 12.5a6.5 6.5 0 0 1 13 0"/><path d="M4 12.5a4 4 0 0 1 8 0"/>',
     meteor: '<path d="M13.5 2.5L6 10"/><path d="M11 2.5L7.5 6"/><circle cx="4.5" cy="11.5" r="1.8" fill="currentColor"/>',
     solstice: '<path d="M1.5 12.5h13"/><path d="M3 12.5a5 3.5 0 0 1 10 0" stroke-dasharray="1.6 1.8"/><circle cx="11.4" cy="10.4" r="1.6" fill="currentColor"/>',
+    aurora: '<path d="M1.5 6.5c2-3 4 3 6.5 0s4.5 3 6.5 0"/><path d="M1.5 11c2-3 4 3 6.5 0s4.5 3 6.5 0"/>',
     dust: '<path d="M2 5h8M4 8h10M2 11h7"/><circle cx="12.5" cy="5" r=".6" fill="currentColor"/><circle cx="11" cy="11" r=".6" fill="currentColor"/>',
   };
   function icon(n, size) {
@@ -33,11 +34,14 @@
     var ic = c.moon ? Scene.moonGlyph(Object.assign({ size: 16, mono: true }, c.moon)) : c.icon ? icon(c.icon) : '';
     return '<li class="key"' + (c.kind ? ' data-kind="' + c.kind + '"' : '') + '>' + ic + c.text + '</li>';
   }
+  /* Official warning (drawn for a real source): a pill that looks more official than the computed hint – 22 % warning tint,
+     a hairline in --warning, theme ink – and replaces today's computed hints. Computed hints for other days follow. */
   function hintPill(h) {
-    if (!h.hints || !h.hints.length) return '';
-    var off = h.official ? '<div class="official">' + icon('warn') + '<b>Amtliche Warnung · ' + h.official + '</b><a href="#">Quelle</a></div>' : '';
-    return off + '<div class="hint"><ul>' + h.hints.map(function (x) { return '<li>' + icon(x.icon) + '<span>' + x.text + '</span></li>'; }).join('') +
+    var out = '', o = h.official;
+    if (o) out += '<div class="official">' + icon('warn') + '<span class="ot"><b>' + o.title + '</b> <span class="om">' + o.until + ' · Quelle: <a href="#">' + o.source + '</a></span></span></div>';
+    if (h.hints && h.hints.length) out += '<div class="hint"><ul>' + h.hints.map(function (x) { return '<li>' + icon(x.icon) + '<span>' + x.text + '</span></li>'; }).join('') +
       '</ul><span class="suffix">· berechnet, keine amtliche Warnung</span></div>';
+    return out ? '<div class="pills">' + out + '</div>' : '';
   }
   function stateOf(h) {
     var st = Object.assign({}, h.state);
@@ -61,7 +65,7 @@
   /* Phone: redraw the scene for the measured stage. Scale k: the summits (alpine crest ≈ y 140 at the body's x)
      stay below the body; the body sits between the rows and the first pill or chip. */
   function fitPhone(el, h) {
-    var H = el.offsetHeight, W = el.offsetWidth, first = el.querySelector('.hint, .official, .keys');
+    var H = el.offsetHeight, W = el.offsetWidth, first = el.querySelector('.pills, .keys');
     var below = first ? first.getBoundingClientRect().top - el.getBoundingClientRect().top : H - 40, yc = (PHONE.rowsBottom + below) / 2;
     var st = stateOf(h), r = (st.body && st.body.kind === 'moon' ? 42 * ((st.moon && st.moon.size) || 1) : 46);
     var k = Math.min(PHONE.k, (H - yc - 6) / (320 - 140 + r)), ext = H / k - 320;

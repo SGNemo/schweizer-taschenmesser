@@ -37,12 +37,12 @@ Meteor table (IMO Meteor Shower Calendar values, written from memory in this rou
 - **Safety:** every solar eclipse line in the card is followed by "Nur mit Sonnenfinsternis-Brille hinsehen, nie mit bloßem Auge oder Sonnenbrille." On the day of a solar eclipse (from the morning until its end) the same sentence also stands **in the stage**, as a pill in the hint's place (same look, icon `eye`, without the "berechnet" suffix; above a weather hint if there is one) – on the phone the card is far below the picture.
 - **Phone:** the event chip takes the place of the wind chip (two chips fit); the wind goes to the rest line.
 
+Aurora and official warnings were struck in the first version for lack of a source; the maintainer allowed the sources on 2026-11-24: [CONCEPT-SOURCES](CONCEPT-SOURCES.md), package 3b. In the order above, an aurora chip ranks after a running eclipse and before rainbow weather.
+
 ## 3. Struck, with the reason
 
 | Wished or considered | Why not | What would change it |
 | --- | --- | --- |
-| **Aurora** | needs the planetary K index or an aurora forecast (NOAA SWPC, GFZ): a new network destination | the maintainer's decision for a new data flow – listed in the PR under "Noch offen" |
-| **Official weather warnings** | Open-Meteo has none; DWD or MeteoAlarm would be a new destination and a per-country source | same |
 | Penumbral lunar eclipses | the eye sees almost nothing; a picture would promise what the sky does not show | – |
 | Partial eclipses below the limits (sun < 5 %, moon < 10 %) | not noticeable without knowing where to look | – |
 | Leoniden, Ursiden | 10–15 an hour under a perfect sky: a promise the night rarely keeps | an outburst year would need a source |

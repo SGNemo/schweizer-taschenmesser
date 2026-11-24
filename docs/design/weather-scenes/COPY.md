@@ -57,7 +57,7 @@ Additions the picture needs a word for (appended to the detail line under the te
 
 The existing lines `tp.warn.storm|wind|rain|heat|frost` keep their words (German and English as they are). `tp.warnSource` (the sentence under the old bar) is replaced by `tp.warnComputed`. The frost hint's icon becomes `thermometer` (nothing falls), `ice` takes `cloudDrizzle`.
 
-Drawn only, not built (no source for official warnings): „Amtliche Warnung · {Art}“ / "Official warning · {kind}", link „Quelle“ / "Source".
+Official warnings: §7 (package 3b).
 
 ## 3. Settings (package 1b, moon switch package 2) – both in the shared `weather` scope, shown in Einstellungen → Verbindungen → Wetter
 
@@ -144,6 +144,30 @@ Meteor shower names (`tp.ev.shower.<id>`, German genitive plural as written / En
 
 South of the equator the solstice and equinox lines swap (June = winter solstice, March = start of autumn).
 
+## 7. Aurora and official warnings (package 3b)
+
+| Key | German | English |
+| --- | --- | --- |
+| `tp.ev.auroraChip` | Polarlicht möglich | Aurora possible |
+| `tp.ev.aurora` | Heute Nacht: Polarlicht möglich | Tonight: an aurora is possible |
+| `tp.ev.auroraLine({from}, {to})` | Blick nach Norden, abseits von Licht. Am ehesten zwischen {from} und {to} Uhr. | Look north, away from lights. Most likely between {from} and {to}. |
+| `tp.ev.auroraLineSouth({from}, {to})` | Blick nach Süden, abseits von Licht. Am ehesten zwischen {from} und {to} Uhr. | Look south, away from lights. Most likely between {from} and {to}. |
+| `tp.ev.auroraSource({kp})` | Quelle: NOAA SWPC, Vorhersage Kp {kp} | Source: NOAA SWPC, forecast Kp {kp} |
+| `tp.officialLabel` | Amtliche Warnung | Official warning |
+| `tp.official({event})` | Amtliche Warnung: {event} | Official warning: {event} |
+| `tp.officialSevere({event})` | Amtliche Unwetterwarnung: {event} | Official severe weather warning: {event} |
+| `tp.officialUntil({day}, {time})` | bis {day} {time} | until {day} {time} |
+| `tp.officialUntilToday({time})` | bis {time} | until {time} |
+| `tp.officialSource` | Quelle: DWD | Source: DWD |
+| `tp.officialMore({n})` | + {n} weitere | + {n} more |
+| `tp.officialSetting` | Amtliche Warnungen (Deutschland) | Official warnings (Germany) |
+| `tp.officialSettingHelp` | Zeigt Warnungen des Deutschen Wetterdienstes für deinen Hauptort, wenn er in Deutschland liegt. Dafür geht seine ungefähre Position an den DWD, nie deine Einträge. | Shows warnings of the German weather service for your main place if it lies in Germany. For this its approximate position goes to the DWD, never your entries. |
+| `tx.creditWarnings` | Warnungen: Deutscher Wetterdienst | Warnings: Deutscher Wetterdienst |
+| `tx.creditAurora` | Polarlicht-Vorhersage: NOAA SWPC | Aurora forecast: NOAA SWPC |
+| `tx.privacy` (replaces today's sentence) | Nur der Ortsname (beim Suchen) und die ungefähre Position des gewählten Orts gehen an open-meteo.com und, für amtliche Warnungen in Deutschland, an den Deutschen Wetterdienst – nie deine Einträge. Die Polarlicht-Vorhersage ist eine allgemeine Datei von NOAA SWPC, dabei wird kein Ort gesendet. Abfrage etwa alle 30 Minuten, solange die Übersicht offen ist. | Only the place name (when searching) and the approximate position of the chosen place go to open-meteo.com and, for official warnings in Germany, to the Deutscher Wetterdienst – never your entries. The aurora forecast is a general file from NOAA SWPC; no place is sent for it. Requested about every 30 minutes while the overview is open. |
+
+The switch "Mond und Himmelsereignisse" gets a new help text (`tp.skySettingHelp`, replaces the text of §3): „Mondphase, Finsternisse, Sternschnuppen-Nächte und Polarlicht. Mond und Finsternisse werden auf diesem Gerät berechnet; für Polarlicht wird eine allgemeine Vorhersage-Datei von NOAA SWPC geladen, ohne deinen Ort.“ / "Moon phase, eclipses, meteor nights and aurora. Moon and eclipses are calculated on this device; for the aurora a general forecast file is loaded from NOAA SWPC, without your place."
+
 ## 6. Rejected words
 
 | Rejected | Why |
@@ -151,6 +175,6 @@ South of the equator the solstice and equinox lines swap (June = winter solstice
 | „heiter“ for WMO 1 | wrong at night; „überwiegend klar“ works at any hour |
 | „Blutmond“, „Jahrhundert-…“, „spektakulär“ | fake urgency; the line says what is seen |
 | „Erstes / Letztes Viertel“ | the picture shows half a moon; „Halbmond“ is the common word |
-| „Warnung“ for a computed hint | reserved for an official source; the hint says „berechnet, keine amtliche Warnung“ |
+| „Warnung“ for a computed hint | reserved for the official source (package 3b); the hint says „berechnet, keine amtliche Warnung“ |
 | „Regenbogen heute“ | a rainbow cannot be promised; „möglich“ |
 | „Schlechte Sicht“ for clouds | says what is missed; „Wolken verdecken den Himmel hier wahrscheinlich.“ states the fact |
