@@ -60,7 +60,8 @@ export function RowCompartment({
         for (const r of rows)
           if (r?.isConnected) {
             const title = r.querySelector<HTMLElement>('[data-row]');
-            if (title) return title.focus();
+            // Never a scroll the person did not ask for.
+            if (title) return title.focus({ preventScroll: true });
           }
       });
     },

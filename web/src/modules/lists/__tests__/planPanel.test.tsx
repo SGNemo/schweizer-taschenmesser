@@ -103,6 +103,23 @@ it('an undo from elsewhere (Ctrl+Z) while the line is held shows it open again',
   await waitFor(() => expect(tick).not.toBeChecked());
 });
 
+it('tick, untick, tick again: the line is held again (no stale mark of the first hold)', async () => {
+  await items(['Milch', 'Brot']);
+  panel();
+  const box = () => screen.getByRole('checkbox', { name: '„Milch“ abhaken' });
+  await screen.findByRole('checkbox', { name: '„Milch“ abhaken' });
+  fireEvent.click(box());
+  await waitFor(async () => expect((await itemRepo.get('i0'))?.done).toBe(true));
+  fireEvent.click(box());
+  await waitFor(async () => expect((await itemRepo.get('i0'))?.done).toBe(false));
+  await waitFor(() => expect(box()).not.toBeChecked());
+  fireEvent.click(box());
+  await waitFor(async () => expect((await itemRepo.get('i0'))?.done).toBe(true));
+  // Still drawn, ticked, during its hold.
+  await new Promise((r) => setTimeout(r, 100));
+  expect(box()).toBeChecked();
+});
+
 it('nothing open: X8 „Fertig eingekauft“ clears the bought entries, one undo', async () => {
   await items(['Milch', 'Brot'], { done: true });
   panel();

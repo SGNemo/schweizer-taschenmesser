@@ -57,7 +57,10 @@ export default function ListPlanPanel({ id, compact }: PlanPanelProps) {
     const all = timers.current;
     return () => all.forEach((x) => clearTimeout(x));
   }, []);
+  const seenDone = useRef(new Set<string>());
   const release = useCallback((itemId: string) => {
+    // A hold ends whole: a later tick of the same line starts with nothing seen.
+    seenDone.current.delete(itemId);
     clearTimeout(timers.current.get(itemId));
     timers.current.delete(itemId);
     setHeld((cur) => {
@@ -69,7 +72,6 @@ export default function ListPlanPanel({ id, compact }: PlanPanelProps) {
   }, []);
   // A held line whose entry was seen ticked and reads open again (Ctrl+Z, an undo on another device) is open: it
   // stays as an open line, unticked, and nothing moves the focus away from it.
-  const seenDone = useRef(new Set<string>());
   const items = read?.items;
   useEffect(() => {
     for (const i of items ?? []) {
@@ -179,14 +181,18 @@ export default function ListPlanPanel({ id, compact }: PlanPanelProps) {
             onClick={() =>
               void undoableWithToast(t.lists.cleared(doneCount), t.lists.cleared(doneCount), () =>
                 clearDone(list.id),
-              ).then(() =>
-                // The button leaves with the bought entries: the focus goes to „Ganz öffnen“.
-                box.current?.querySelector<HTMLElement>('[data-panel-open]')?.focus(),
-              )
+              ).then(() => {
+                // The button leaves with the bought entries: a focus that fell to the page goes to „Ganz öffnen“.
+                if (!document.activeElement || document.activeElement === document.body)
+                  box.current?.querySelector<HTMLElement>('[data-panel-open]')?.focus();
+              })
             }
           >
             {/* X8 says the trip is over only when it is; with entries still open the module's own words. */}
-            {open.length === 0 ? t.lists.panel.doneShopping : t.lists.clearBought(doneCount)}
+            {/* No flash on the last tick: while a ticked line is still held the words stay. */}
+            {open.length === 0 && held.size === 0
+              ? t.lists.panel.doneShopping
+              : t.lists.clearBought(doneCount)}
           </Button>
         ) : null}
       </PlanPanelFoot>
