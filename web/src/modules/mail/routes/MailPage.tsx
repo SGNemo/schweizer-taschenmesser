@@ -7,6 +7,7 @@ import type { MailAccountRef, MailLabel } from '@/core/mail/types';
 import { useSettings } from '@/core/settings/settings';
 import { settingsPath } from '@/core/settings/registry/paths';
 import { useUiStore } from '@/stores/ui';
+import { PlanMarkLink, usePlanMarks } from '@/core/entitylinks/PlanMark';
 import { t } from '@/strings';
 import { useModuleStates } from '@/core/modules/activation';
 import {
@@ -156,6 +157,15 @@ function ThreadList({
   onAnswered: (todoId: string) => void;
 }) {
   const hover = useMediaQuery('(hover: hover)');
+  // „Im Plan · Mi“ (planner hub 2, package 10b): one read for every row shown, the day of the ToDo made from the
+  // thread (its `origin` link). A thread with a ToDo but no plan row yet reads „Im Plan · noch ohne Tag“.
+  const listed = sections ? sections.flatMap((sec) => sec.threads) : threads;
+  const marks = usePlanMarks(
+    'mail',
+    plannerOn
+      ? listed.map((th) => ({ id: th.id, ...(planned.has(th.id) ? { fallback: true } : {}) }))
+      : [],
+  );
   const rowsOf = (rows: CachedThreadView[]) => (
     <ItemList>
       {rows.map((th) => (
@@ -180,9 +190,10 @@ function ThreadList({
                     <Icon name="star" size={14} />{' '}
                   </span>
                 ) : null}
-                {planned.has(th.id) ? (
+                {/* Planner off: „als ToDo da“; with the planner on the shared mark stands under the meta line. */}
+                {planned.has(th.id) && !plannerOn ? (
                   <span className={styles.planMark} data-testid="mail-in-plan">
-                    {plannerOn ? t.mail.plan.mark : t.mail.plan.todo.mark} ·{' '}
+                    {t.mail.plan.todo.mark} ·{' '}
                   </span>
                 ) : null}
                 {shortWhen(th.date)}
@@ -201,6 +212,9 @@ function ThreadList({
                 </span>
               ) : null}
             </span>
+          }
+          below={
+            plannerOn && marks?.get(th.id) ? <PlanMarkLink state={marks.get(th.id)} /> : undefined
           }
           onOpen={() => onOpen(th.id)}
           selectable={!!selection}

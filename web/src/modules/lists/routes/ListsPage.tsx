@@ -1,7 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
+import { PlanMarkLink } from '@/core/entitylinks/PlanMark';
+import { planMarkOf } from '@/core/entitylinks/planMark';
 import { usePlanRowEntries } from '@/core/entitylinks/planRow';
+import { useSharedLiveQuery } from '@/core/modules/sharedQuery';
 import { bus } from '@/core/events';
 import { useModuleStates } from '@/core/modules/activation';
 import { whenServicesSettled } from '@/core/modules/servicesReady';
@@ -356,6 +359,13 @@ export default function ListsPage() {
     },
     (to) => void navigate(to),
   ).filter((e) => openCount > 0 || e.id === 'not-in-plan');
+  // „Im Plan · Mi“ (package 10b): the list's first line ends with the shared mark, read from the planner's rows (a
+  // list placed from the planner's side shows it too); the ⋯ entries above stay.
+  const planId = planTarget?.ref.id ?? '';
+  const planState = useSharedLiveQuery(`planMark|lists:${planId}|00`, () =>
+    planId ? planMarkOf('lists', { id: planId }) : undefined,
+  );
+  const plan = planState ? <PlanMarkLink state={planState} /> : undefined;
   const pageMenu = current
     ? [
         // On an empty list the field stands right under the empty state: no second way to it.
@@ -530,12 +540,15 @@ export default function ListsPage() {
               has no such line; its empty state says it. */}
           {shown.length === 0 ? (
             tripLine ? (
-              <ListSummary mark={mark}>{tripLine}</ListSummary>
+              <ListSummary mark={mark} plan={plan}>
+                {tripLine}
+              </ListSummary>
             ) : null
           ) : isShopping ? (
             <ListSummary
               testId="lists-sums"
               mark={mark}
+              plan={plan}
               note={sums.priced > 0 ? t.lists.sumNote : undefined}
             >
               {sums.priced > 0 ? (
@@ -553,7 +566,7 @@ export default function ListsPage() {
             </ListSummary>
           ) : (
             <div className={styles.progress} data-testid="lists-progress">
-              <ListSummary mark={mark}>
+              <ListSummary mark={mark} plan={plan}>
                 {[
                   isPacking
                     ? t.lists.progressPacked(stats.done, stats.total)

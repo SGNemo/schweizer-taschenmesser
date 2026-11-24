@@ -3,6 +3,8 @@ import { useHideValues } from '@/core/focus/hideValues';
 import { relativeDays } from '@/core/i18n/format';
 import { currencyOf, formatMoney, formatTotals } from '@/core/money';
 import { addDaysStr, formatDay } from '@/core/time/dates';
+import { PlanMarkLink } from '@/core/entitylinks/PlanMark';
+import type { PlanMarkState } from '@/core/entitylinks/planMark';
 import { t } from '@/strings';
 import { Button, Card, Icon } from '@/ui';
 import { cancelTone, changePercent } from '../logic';
@@ -49,18 +51,21 @@ function CardRow({
 /**
  * „Kündigungsfristen“: the next deadline of each subscription within 90 days, earliest first. A near one is
  * marked like in the list (warning colour, clock, „in n Tagen“; never red). „In den Plan“ only while the planner
- * is on (`onPlan`); a planned one says „Im Plan“. Hidden when no subscription has a notice period.
+ * is on (`onPlan`); a planned one shows the shared mark „Im Plan · Mi“ (`marks`, read from the planner with
+ * `plannedDeadline` as its fallback), a link to its plan row. Hidden when no subscription has a notice period.
  */
 export function DeadlinesCard<R extends Row>({
   subs,
   day,
   onOpen,
   onPlan,
+  marks,
 }: {
   subs: readonly R[];
   day: string;
   onOpen: (s: R) => void;
   onPlan?: (s: R, deadline: string) => void;
+  marks?: ReadonlyMap<string, PlanMarkState>;
 }) {
   const w = t.subscriptions.ext.deadlines;
   const { money } = useAmount();
@@ -82,12 +87,9 @@ export function DeadlinesCard<R extends Row>({
             name={r.sub.name}
             onOpen={() => onOpen(r.sub)}
             end={
-              r.planned ? (
-                <span className={styles.planned}>
-                  <Icon name="check" size={16} />
-                  {w.planned}
-                </span>
-              ) : onPlan ? (
+              marks?.get(r.sub.id) ? (
+                <PlanMarkLink state={marks.get(r.sub.id)} />
+              ) : onPlan && !r.planned ? (
                 <Button
                   variant="ghost"
                   aria-label={w.planFor(r.sub.name)}

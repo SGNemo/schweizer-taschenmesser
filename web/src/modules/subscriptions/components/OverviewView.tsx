@@ -6,6 +6,7 @@ import { relativeDays } from '@/core/i18n/format';
 import { t } from '@/strings';
 import { Card, Segmented } from '@/ui';
 import { Bars, Donut } from '@/ui/charts';
+import type { PlanMarkState } from '@/core/entitylinks/planMark';
 import type { Subscription } from '../schema';
 import {
   byDay,
@@ -38,12 +39,15 @@ export function OverviewView<R extends Row>({
   day,
   onOpen,
   onPlan,
+  marks,
 }: {
   subs: readonly R[];
   day: string;
   onOpen: (s: R) => void;
   /** „In den Plan“ for a deadline; absent while the planner is off. */
   onPlan?: (s: R, deadline: string) => void;
+  /** The plan marks of the subscriptions (`usePlanMarks`): a planned deadline shows its mark instead of a button. */
+  marks?: ReadonlyMap<string, PlanMarkState>;
 }) {
   const v = t.subscriptions.ext.overview;
   const [by, setBy] = useState<ShareBy>('category');
@@ -87,7 +91,7 @@ export function OverviewView<R extends Row>({
       </Card>
 
       <UpcomingCard subs={subs} day={day} onOpen={onOpen} />
-      <DeadlinesCard subs={subs} day={day} onOpen={onOpen} onPlan={onPlan} />
+      <DeadlinesCard subs={subs} day={day} onOpen={onOpen} onPlan={onPlan} marks={marks} />
 
       <Card title={v.yearTitle} className={styles.card}>
         <Bars

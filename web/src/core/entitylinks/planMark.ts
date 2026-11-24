@@ -10,7 +10,8 @@
  *  - **Order.** The earliest live day from today on (own rows first, then carriers) → M1 / M2; else the latest live
  *    day before today of the exact key or an open carrier → M4 (an occurrence that passed is gone – its next one is
  *    a new key); else the planner's own item row asked in and not excluded → M3; else the module's `fallback`
- *    (bookmarks `inPlan`, subscriptions `plannedDeadline`: their request while the planner has no row yet) → M3.
+ *    (bookmarks `inPlan`, subscriptions `plannedDeadline`, a mail thread with its ToDo: their request while the
+ *    planner has no row yet) → M3, leading to an open carrier ToDo's row when there is one.
  *  - `rowKey` is the plan row that was matched (the occurrence key, the carrier ToDo's key), so a tap lands on it.
  */
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
@@ -82,7 +83,12 @@ async function placements(
   const table = createCollectionRepo(planner, 'assignment', database).table;
   const [exact, pre] = await Promise.all([
     keys.length ? table.where('itemKey').anyOf(keys).toArray() : [],
-    prefixes.length ? table.where('itemKey').startsWithAnyOf(prefixes).toArray() : [],
+    prefixes.length
+      ? table
+          .where('itemKey')
+          .startsWithAnyOf([...prefixes])
+          .toArray()
+      : [],
   ]);
   const out: Placed[] = [];
   const seen = new Set<string>();
@@ -243,7 +249,12 @@ export async function planMarks(
     }
     const askedKey = asked.get(id);
     if (askedKey) out.set(id, { kind: 'noDay', rowKey: askedKey });
-    else if (thing.fallback) out.set(id, { kind: 'noDay', rowKey: key });
+    else if (thing.fallback) {
+      // The module's own field: the planner lists it without a day – as the thing itself, or as its open carrier
+      // ToDo (a mail thread planned as a ToDo), whose row under „Noch ohne Tag“ is then the target.
+      const via = (carriersOf.get(id) ?? []).find((k) => !doneCarriers.has(k));
+      out.set(id, { kind: 'noDay', rowKey: via ?? key });
+    }
   }
   return out;
 }

@@ -1,4 +1,5 @@
 import type { Stored } from '@/core/db/types';
+import { PlanMark } from '@/core/entitylinks/PlanMark';
 import { describeRecurrence } from '@/core/recurrence/describe';
 import { formatDay, relativeDayLabel } from '@/core/time/dates';
 import { t } from '@/strings';
@@ -92,6 +93,11 @@ export function TaskDetail({
       testId="task-detail"
       eyebrow={listName}
       title={task.title}
+      mark={
+        task.parentId ? undefined : (
+          <PlanMark module="todos" id={task.id} variant="detail" done={task.done} />
+        )
+      }
       facts={facts}
       onClose={onClose}
       actions={

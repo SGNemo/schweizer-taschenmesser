@@ -11,6 +11,7 @@ import {
 } from '@/core/money';
 import { formatDay } from '@/core/time/dates';
 import { NoticeField } from '@/core/deadline/NoticeField';
+import { PlanMark } from '@/core/entitylinks/PlanMark';
 import { tDeadline } from '@/strings.deadline';
 import { tDraft } from '@/strings.draft';
 import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
@@ -37,6 +38,10 @@ import { SUBSCRIPTION_CATEGORIES, type Subscription, type SubscriptionCategory }
 import styles from '../routes/subscriptions.module.css';
 import { deleteWithUndo } from '@/core/undo/withToast';
 
+/** The deadline asked into the plan from this module is still the next one (as the planner source reads it). */
+export const plannedNow = (s: Subscription, day: string = today()): boolean =>
+  !!s.plannedDeadline && nextCancelDeadline(s, day)?.deadline === s.plannedDeadline;
+
 export type SubscriptionTarget = Stored<Subscription> | { draft: true } | null;
 
 export function SubscriptionEditor({
@@ -56,6 +61,17 @@ export function SubscriptionEditor({
       onClose={onClose}
       title={existing ? t.subscriptions.edit : t.subscriptions.add}
     >
+      {/* The plan mark „Im Plan · Mi“ under the title (hand-off 10): read from the planner, with the deadline asked
+          in from here (`plannedDeadline`) as its fallback while the planner has no row yet. */}
+      {existing ? (
+        <PlanMark
+          module="subscriptions"
+          id={existing.id}
+          variant="detail"
+          fallback={plannedNow(existing)}
+          onGo={onClose}
+        />
+      ) : null}
       {target ? (
         <Form
           key={existing?.id ?? 'new'}

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { compareText } from '@/core/i18n/format';
+import { PlanMarkLink, usePlanMarks } from '@/core/entitylinks/PlanMark';
+import type { PlanMarkState } from '@/core/entitylinks/planMark';
 import { t } from '@/strings';
 import {
   Button,
@@ -91,6 +93,11 @@ export function PageList(p: PageListProps) {
   );
   const scratch = shown.find(isScratch);
   const rest = shown.filter((n) => !isScratch(n));
+  // „Im Plan · Mi“ (planner hub 2, 10b): the day of a ToDo that points to the page; one read for the list.
+  const marks = usePlanMarks(
+    'notes',
+    rest.map((n) => ({ id: n.id })),
+  );
   const total = (pages ?? []).filter((n) => !isScratch(n)).length;
   const manual = sort === 'manual' && !query.trim();
   const openPages = p.openIds
@@ -268,12 +275,24 @@ export function PageList(p: PageListProps) {
             getLabel={titleOf}
             onReorder={(ids) => p.onReorder(orderPatches(ids, rest))}
             renderItem={(n, _i, handle) => (
-              <PageRow page={n} handle={handle} book={bookOf.get(n.notebookId ?? '')} {...p} />
+              <PageRow
+                page={n}
+                handle={handle}
+                book={bookOf.get(n.notebookId ?? '')}
+                mark={marks?.get(n.id)}
+                {...p}
+              />
             )}
           />
         ) : (
           rest.map((n) => (
-            <PageRow key={n.id} page={n} book={bookOf.get(n.notebookId ?? '')} {...p} />
+            <PageRow
+              key={n.id}
+              page={n}
+              book={bookOf.get(n.notebookId ?? '')}
+              mark={marks?.get(n.id)}
+              {...p}
+            />
           ))
         )}
       </div>
@@ -300,8 +319,14 @@ function PageRow({
   page,
   book,
   handle,
+  mark,
   ...p
-}: PageListProps & { page: Page; book: Book | undefined; handle?: React.ReactNode }) {
+}: PageListProps & {
+  page: Page;
+  book: Book | undefined;
+  handle?: React.ReactNode;
+  mark?: PlanMarkState | undefined;
+}) {
   const [open, setOpen] = useState(false);
   const items = pageMenuItems(page, p);
   return (
@@ -313,6 +338,7 @@ function PageRow({
       book={book}
       active={p.activeId === page.id}
       handle={handle}
+      mark={mark}
       onOpen={() => p.onOpen(page)}
       menu={<RowMenu label={t.notes.pageMenu} items={items} open={open} onOpenChange={setOpen} />}
     />
@@ -327,9 +353,12 @@ function Row({
   active,
   handle,
   menu,
+  mark,
   onOpen,
 }: {
   id: string;
+  /** „Im Plan · Mi“: a link of its own under the row's button (never inside it). */
+  mark?: PlanMarkState | undefined;
   title: string;
   meta: string;
   pinned?: boolean;
@@ -339,6 +368,16 @@ function Row({
   menu?: React.ReactNode;
   onOpen: () => void;
 }) {
+  const main = (
+    <RowMain
+      title={title}
+      meta={meta}
+      {...(pinned ? { pinned } : {})}
+      {...(book ? { book } : {})}
+      active={active}
+      onOpen={onOpen}
+    />
+  );
   return (
     <div
       className={active ? `${styles.row} ${styles.rowActive}` : styles.row}
@@ -346,29 +385,58 @@ function Row({
       style={book ? ({ '--strip': categoryColor(book.tone) } as React.CSSProperties) : undefined}
     >
       {handle}
-      <button
-        type="button"
-        className={styles.main}
-        aria-current={active ? 'page' : undefined}
-        onClick={onOpen}
-      >
-        <span className={styles.title} title={title}>
-          {pinned ? <Icon name="pin" size={14} /> : null}
-          <span className={styles.titleText}>{title}</span>
-        </span>
-        {book ? (
-          <span className={styles.bookTag}>
-            <span
-              className={styles.dot}
-              style={{ background: categoryColor(book.tone) }}
-              aria-hidden="true"
-            />
-            {book.name}
-          </span>
-        ) : null}
-        {meta ? <span className={styles.meta}>{meta}</span> : null}
-      </button>
+      {mark ? (
+        <div className={styles.stack}>
+          {main}
+          <div className={styles.markLine}>
+            <PlanMarkLink state={mark} />
+          </div>
+        </div>
+      ) : (
+        main
+      )}
       {menu}
     </div>
+  );
+}
+
+function RowMain({
+  title,
+  meta,
+  pinned,
+  book,
+  active,
+  onOpen,
+}: {
+  title: string;
+  meta: string;
+  pinned?: boolean;
+  book?: Book;
+  active: boolean;
+  onOpen: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={styles.main}
+      aria-current={active ? 'page' : undefined}
+      onClick={onOpen}
+    >
+      <span className={styles.title} title={title}>
+        {pinned ? <Icon name="pin" size={14} /> : null}
+        <span className={styles.titleText}>{title}</span>
+      </span>
+      {book ? (
+        <span className={styles.bookTag}>
+          <span
+            className={styles.dot}
+            style={{ background: categoryColor(book.tone) }}
+            aria-hidden="true"
+          />
+          {book.name}
+        </span>
+      ) : null}
+      {meta ? <span className={styles.meta}>{meta}</span> : null}
+    </button>
   );
 }

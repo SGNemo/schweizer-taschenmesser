@@ -6,6 +6,7 @@ import type { Stored } from '@/core/db/types';
 import { formatDay, today } from '@/core/time/dates';
 import { dueState } from '@/core/time/due';
 import { groupByTime } from '@/core/time/groups';
+import { PlanMarkLink, usePlanMarks } from '@/core/entitylinks/PlanMark';
 import { t } from '@/strings';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import { isTypingTarget } from '@/core/keyboard/typing';
@@ -182,6 +183,12 @@ export default function InvoicesPage() {
   )?.id;
   const openRow = (i: Stored<Invoice>) => (wide ? setPicked({ id: i.id }) : setTarget(i));
 
+  // One read for every row's plan mark; a paid invoice has none.
+  const marks = usePlanMarks(
+    'invoices',
+    shown.map((i) => ({ id: i.id, ...(i.status === 'paid' ? { done: true } : {}) })),
+  );
+
   function renderRow(i: Stored<Invoice>) {
     const state = dueState(i.dueDate, day, { done: i.status === 'paid' });
     const inv = invoiceState(i, day);
@@ -201,6 +208,8 @@ export default function InvoicesPage() {
       <ItemRow
         key={i.id}
         title={i.payee}
+        // „Im Plan · Mi“ (package 10b): under the meta line – a link never sits inside the row's button.
+        below={marks?.get(i.id) ? <PlanMarkLink state={marks.get(i.id)} /> : undefined}
         tone={urgent ? (state.tone as 'overdue' | 'today') : undefined}
         meta={
           i.status === 'paid' ? (

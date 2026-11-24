@@ -8,6 +8,8 @@ import { skipSuggestion } from '@/core/focus/state';
 import { usePageChrome } from '@/core/shell/pageChrome';
 import { useWriteAvailable, useWriteLabel } from '@/core/shell/writeAvailable';
 import { useModuleStates } from '@/core/modules/activation';
+import { PlanMarkLink, usePlanMarks } from '@/core/entitylinks/PlanMark';
+import { planMarkPath, type PlanMarkState } from '@/core/entitylinks/planMark';
 import { planFacts, requestManyIntoPlan } from '@/core/entitylinks/planRow';
 import { useFocusSettings } from '@/core/settings/focus';
 import { useSettings } from '@/core/settings/settings';
@@ -44,12 +46,10 @@ import { BoardView } from '../components/BoardView';
 import { InboxSorter } from '../components/InboxSorter';
 import { TodayCard } from '../components/TodayCard';
 import { PlanDayDialog } from '../components/PlanDayDialog';
-import { PlanWords } from '../components/PlanMark';
 import {
   PLAN_FILTERS,
   passesPlanFilter,
   planStateOf,
-  plannerPath,
   readPlanFilter,
   writePlanFilter,
   type PlanFilter,
@@ -107,8 +107,10 @@ interface RowProps {
   quickTomorrow?: boolean;
   /** While the planner is on: where the task stands in the plan (a quiet line under the title; todos-plan-state). */
   plan?: PlanState;
+  /** The shared mark „Im Plan · Mi“, read from the planner's rows (`core/entitylinks/PlanMark.tsx`); a link under the meta. */
+  mark?: PlanMarkState;
   /** „im Plan: Mi“ → the planner on that day; „noch nicht im Plan“ / „In den Plan …“ → the day choice. */
-  onPlanShow?: (task: StoredTask, plan: PlanState) => void;
+  onPlanShow?: (mark: PlanMarkState) => void;
   onPlanChoose?: (task: StoredTask) => void;
   /** The selection of „Auswählen“: a checkbox on the row. */
   selectable?: boolean;
@@ -134,6 +136,7 @@ function TaskRow({
   calm,
   quickTomorrow,
   plan,
+  mark,
   onPlanShow,
   onPlanChoose,
   selectable,
@@ -190,8 +193,8 @@ function TaskRow({
         void changeWithUndo(() => taskRepo.update(task.id, { priority: p }), t.todos.changed),
     }));
   const planItem: RowMenuItem[] = [
-    ...(plan && (plan.kind === 'planned' || plan.kind === 'passed') && onPlanShow
-      ? [{ id: 'in-planner', label: t.todos.plan.showIn, onSelect: () => onPlanShow(task, plan) }]
+    ...(mark && onPlanShow
+      ? [{ id: 'in-planner', label: t.todos.plan.showIn, onSelect: () => onPlanShow(mark) }]
       : []),
     ...(plan && plan.kind !== 'none' && onPlanChoose
       ? [{ id: 'to-plan', label: t.todos.plan.action, onSelect: () => onPlanChoose(task) }]
@@ -209,6 +212,7 @@ function TaskRow({
       tone={tone === 'overdue' && !waiting ? 'overdue' : tone === 'today' ? 'today' : undefined}
       className={sub ? styles.sub : undefined}
       onOpen={() => onOpen(task)}
+      below={mark ? <PlanMarkLink state={mark} /> : undefined}
       onSwipeRight={() => onToggle(task, !task.done)}
       swipeRightLabel={task.done ? t.todos.markedOpen : t.todos.markedDone}
       onSwipeLeft={task.done ? undefined : () => postpone(task, day)}
@@ -314,7 +318,6 @@ function TaskRow({
               })()}
             </span>
           ) : null}
-          {plan ? <PlanWords state={plan} day={day} /> : null}
           {task.startDate && task.startDate > day ? (
             <span>{t.todos.startsOn(formatDay(task.startDate, 'EEE, d. MMM'))}</span>
           ) : null}
@@ -482,6 +485,12 @@ export default function TodosPage() {
     () => (plannerOn ? planFacts('todos', openIds ? openIds.split(',') : []) : undefined),
     [plannerOn, openIds],
   );
+  // The mark „Im Plan · Mi“ of every open top-level task, read from the planner in one go (package 10b).
+  const markThings = useMemo(
+    () => (openIds ? openIds.split(',').map((id) => ({ id })) : []),
+    [openIds],
+  );
+  const marks = usePlanMarks('todos', markThings);
   const planOf = useMemo(
     () =>
       (x: StoredTask): PlanState =>
@@ -618,9 +627,8 @@ export default function TodosPage() {
     setSelecting(false);
     selection.clear();
   }
-  function showInPlanner(task: StoredTask, plan: PlanState) {
-    const to = plannerPath(plan, task.id);
-    if (to) void navigate(to);
+  function showInPlanner(mark: PlanMarkState) {
+    void navigate(planMarkPath(mark));
   }
   function intoPlan(ids: readonly string[], date: string | null) {
     stopSelecting();
@@ -643,6 +651,7 @@ export default function TodosPage() {
         calm={focus.calmAttention}
         quickTomorrow={pageView === 'today'}
         plan={planOf(task)}
+        mark={marks?.get(task.id)}
         onPlanShow={showInPlanner}
         onPlanChoose={(x) => setPlanFor({ ids: [x.id], title: t.todos.plan.title(x.title) })}
         selectable={selecting && planOf(task).kind !== 'none'}

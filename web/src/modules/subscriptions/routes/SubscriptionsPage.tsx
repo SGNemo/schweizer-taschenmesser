@@ -22,7 +22,12 @@ import {
   useAdvancedMenuItem,
   useOpenParam,
 } from '@/ui';
-import { SubscriptionEditor, type SubscriptionTarget } from '../components/SubscriptionEditor';
+import {
+  plannedNow,
+  SubscriptionEditor,
+  type SubscriptionTarget,
+} from '../components/SubscriptionEditor';
+import { PlanMarkLink, usePlanMarks } from '@/core/entitylinks/PlanMark';
 import {
   changePercent,
   monthlyEquivalent,
@@ -113,6 +118,12 @@ export default function SubscriptionsPage() {
   const rawSort = params.get('sort');
   const sort: SortKey = isSortKey(rawSort) ? rawSort : 'next';
   const rows = sortList(subs ?? [], day, sort);
+  // The plan mark of every row (hand-off 10), read at once; `plannedDeadline` is its fallback (M3).
+  // (`usePlanMarks` keys its query by the ids and fallbacks, so a new array per render starts nothing new.)
+  const marks = usePlanMarks(
+    'subscriptions',
+    (subs ?? []).map((s) => ({ id: s.id, fallback: plannedNow(s, day) })),
+  );
   const plannerOn = useModuleStates()?.planner === true;
 
   const advancedItem = useAdvancedMenuItem('subscriptions');
@@ -206,6 +217,7 @@ export default function SubscriptionsPage() {
         <OverviewView
           subs={subs}
           day={day}
+          marks={marks}
           onOpen={(s) => setTarget(s)}
           onPlan={plannerOn ? (s, deadline) => void planDeadline(s, deadline) : undefined}
         />
@@ -354,6 +366,8 @@ export default function SubscriptionsPage() {
                     </>
                   )
                 }
+                // The meta is inside the row's button: the mark is the line right under it.
+                below={marks?.get(s.id) ? <PlanMarkLink state={marks.get(s.id)} /> : undefined}
                 onOpen={() => setTarget(s)}
                 onSwipeLeft={remove}
                 swipeLeftLabel={t.actions.delete}

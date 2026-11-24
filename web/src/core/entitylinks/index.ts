@@ -14,9 +14,8 @@
 import { useMemo } from 'react';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
 import { createCollectionRepo } from '@/core/db/repo';
-import { loadModuleStates } from '@/core/modules/activation';
 import { resolveLink, useResolvedLinks } from '@/core/modules/contributions';
-import { getManifest, visibleManifests } from '@/core/modules/registry';
+import { getManifest } from '@/core/modules/registry';
 import { useSharedLiveQuery } from '@/core/modules/sharedQuery';
 import type { ResolvedState } from '@/core/modules/types';
 import { planMarkOf } from './planMark';

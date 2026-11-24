@@ -12,6 +12,7 @@ import type {
   ThreadChange,
 } from '@/core/mail/types';
 import { getPlatform } from '@/core/platform';
+import { PlanMark } from '@/core/entitylinks/PlanMark';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Button, Dialog, Icon, Skeleton } from '@/ui';
@@ -585,9 +586,14 @@ export function ThreadView({
         ) : null}
         {states?.todos && messages?.length ? (
           planned?.has(threadId) ? (
-            <span className={styles.planMark} data-testid="mail-in-plan">
-              {states.planner ? t.mail.plan.thread : t.mail.plan.todo.thread}
-            </span>
+            states.planner ? (
+              // „Im Plan · Mi“ (package 10b): the day of the ToDo made from the thread, a link to its plan row.
+              <PlanMark module="mail" id={threadId} variant="detail" fallback />
+            ) : (
+              <span className={styles.planMark} data-testid="mail-in-plan">
+                {t.mail.plan.todo.thread}
+              </span>
+            )
           ) : (
             <Button
               data-testid="mail-plan-thread"

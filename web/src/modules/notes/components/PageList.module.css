@@ -165,3 +165,17 @@
   padding-top: var(--space-1);
   padding-right: var(--space-1);
 }
+/* A row with the mark „Im Plan · Mi“: the button, then the mark's line under it (a link never nests in the button). */
+.stack {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.stack > .main {
+  flex: none;
+}
+.markLine {
+  min-width: 0;
+  padding: 0 var(--space-2) var(--space-2);
+}

@@ -1,3 +1,4 @@
+import { PlanMark } from '@/core/entitylinks/PlanMark';
 import { useId, useState } from 'react';
 import { useModuleStates } from '@/core/modules/activation';
 import type { NotificationPermissionState } from '@/core/notifications/service';
@@ -201,6 +202,10 @@ function Fields({
 
   return (
     <Form onSubmit={() => void save()}>
+      {/* „Im Plan · Mi“ (planner hub 2, 10b): its own line under the dialog's title; the dialog closes on the tap. */}
+      {existing ? (
+        <PlanMark module="routines" id={existing.id} variant="detail" onGo={onClose} />
+      ) : null}
       {existing ? null : (
         <fieldset className={styles.fieldset}>
           <legend className={styles.legend}>{t.routines.starts.label}</legend>

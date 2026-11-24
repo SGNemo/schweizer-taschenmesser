@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
 import { useUiStore } from '@/stores/ui';
@@ -28,7 +29,7 @@ beforeEach(async () => {
 });
 
 describe('notice periods card', () => {
-  it('offers „In den Plan“ per deadline while the planner is on; a planned one says „Im Plan“', async () => {
+  it('offers „In den Plan“ per deadline while the planner is on; a planned one shows the plan mark', async () => {
     const onPlan = vi.fn();
     const a = sub({ name: 'Zeitung', cancelNoticeDays: 7 });
     const b = sub({
@@ -37,7 +38,17 @@ describe('notice periods card', () => {
       cancelNoticeDays: 7,
       plannedDeadline: '2026-11-23',
     });
-    render(<DeadlinesCard subs={[a, b]} day={DAY} onOpen={() => {}} onPlan={onPlan} />);
+    render(
+      <MemoryRouter>
+        <DeadlinesCard
+          subs={[a, b]}
+          day={DAY}
+          onOpen={() => {}}
+          onPlan={onPlan}
+          marks={new Map([[b.id, { kind: 'noDay', rowKey: `subscriptions:${b.id}` } as const]])}
+        />
+      </MemoryRouter>,
+    );
     const card = screen.getByTestId('subscriptions-deadlines');
     // 18 Nov is three days away: marked like in the list, never red.
     expect(
@@ -49,7 +60,8 @@ describe('notice periods card', () => {
     fireEvent.click(within(card).getByRole('button', { name: 'Zeitung kündigen: in den Plan' }));
     expect(onPlan).toHaveBeenCalledWith(a, '2026-11-18');
     expect(within(card).getAllByRole('button', { name: /in den Plan/ })).toHaveLength(1);
-    within(card).getByText('Im Plan');
+    const mark = within(card).getByRole('link', { name: /^Im Plan · noch ohne Tag/ });
+    expect(mark).toHaveAttribute('href', `/planner?item=subscriptions%3A${b.id}`);
   });
 
   it('shows the next 30 days and folds later deadlines (up to 90) behind one line', () => {

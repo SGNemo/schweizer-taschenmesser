@@ -38,6 +38,7 @@ import { recentSlots } from '../recentSlots';
 import { eventRepo } from '../repo';
 import { useCalendars } from './CalendarsBar';
 import { EventTodos } from './EventTodos';
+import { PlanMark } from '@/core/entitylinks/PlanMark';
 import { LeadRow, NOTIFY_LEADS, leadLabel } from './LeadRow';
 import { eventSchema, type CalendarEvent, type EventKind } from '../schema';
 import styles from '../routes/calendar.module.css';
@@ -234,6 +235,11 @@ function Form({
   const saveOnce = useSubmitOnce(save);
   return (
     <form onSubmit={saveOnce} className={styles.form}>
+      {/* „Im Plan · Mi“ (planner hub 2, 10b): the day of a ToDo that points to the appointment with origin / about –
+          never a preparation's (`before`). The dialog closes as the route changes. */}
+      {existing && !reminder ? (
+        <PlanMark module="calendar" id={existing.id} variant="detail" onGo={onClose} />
+      ) : null}
       {draft.restored ? (
         <p role="status" data-testid="draft-restored">
           {dr.restored}{' '}

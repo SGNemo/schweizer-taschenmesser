@@ -9,7 +9,7 @@
  *
  * Lists read all their rows at once with `usePlanMarks` and draw `PlanMarkLink`; a single thing uses `PlanMark`.
  */
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { useSharedLiveQuery } from '@/core/modules/sharedQuery';
 import { today } from '@/core/time/now';
 import { Icon } from '@/ui/icons';
