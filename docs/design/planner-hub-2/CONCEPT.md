@@ -1,6 +1,6 @@
 # Planner hub 2 – concept: the frame and the link contract (idea 10)
 
-Ideas 4, 2, 5: [CONCEPT-ROWS](CONCEPT-ROWS.md). Ideas 1, 3, 6, 9, 11: [CONCEPT-INTAKE](CONCEPT-INTAKE.md). Struck 8 and 7: [CONCEPT-STRUCK](CONCEPT-STRUCK.md). Figures: [ANALYSIS](ANALYSIS.md). Sample day everywhere: Monday 2026-11-30, invented things only.
+Ideas 4, 2, 5, 8: [CONCEPT-ROWS](CONCEPT-ROWS.md). Ideas 1, 3, 6, 9, 11: [CONCEPT-INTAKE](CONCEPT-INTAKE.md). Struck 7: [CONCEPT-STRUCK](CONCEPT-STRUCK.md). Figures: [ANALYSIS](ANALYSIS.md). Sample day everywhere: Monday 2026-11-30, invented things only.
 
 ## 0. Seven sentences every package keeps
 
@@ -9,7 +9,7 @@ Ideas 4, 2, 5: [CONCEPT-ROWS](CONCEPT-ROWS.md). Ideas 1, 3, 6, 9, 11: [CONCEPT-I
 3. **The four rules of planner rethink** ([CONCEPT-MIGRATION §7](../planner-rethink/CONCEPT-MIGRATION.md)) hold for every new action: no row changes its day or disappears without an action that names it; midnight, start, focus, sync and edits elsewhere write nothing in the planner; every writing action is one undo entry; a closed preview changed nothing.
 4. **A link carries two keys, a relation and a title** (`EntityLink`, ≤ 120 characters) – never an amount, a text, a sender address or a picture. What the row shows beyond the title is read live from the target module on this device.
 5. **No new read path.** Planner: `dataApi: false`, no `aiSchema`, no search entry, no new automation event (it emits `planner.overloaded` as today), no export other than „Plan als Text kopieren“ (backups carry it as they carry every table); a partner share file holds planner tables only when he chooses them in the share preview, as today. The new collections inherit that and get canary rows in `core/entitylinks/exclusion.test.ts`; the new collections are planner tables like the others, so nothing changes there and no package adds a share exclusion. `accounts` is never a source, a target, a label, a pile, a step, a topic member or a share target. Nothing here calls a model or a network.
-6. **Stimulus budget.** Every new control lives inside an expanded row, a ⋯ menu, a preview or the selection bar – except what is new and always visible, completely: the pile offer (until it is answered); the mark (one text link per planned row in ten modules); one chip in a row's existing chip line (S7, A4); the steps meta on ToDos with a checklist and on routines (text in the existing meta line); the pile and bundle lead glyphs (in the lead slot that is always filled). Expected `check:stimulus` effect: text only, no new control – unchanged; each package still runs it. The counts of `d1920--planner` and `p412--planner` in `web/e2e/stimulus-budget.json` do not rise; a package that cannot keep that says so in its PR and waits.
+6. **Stimulus budget.** Every new control lives inside an expanded row, a ⋯ menu, a preview or the selection bar – except what is new and always visible, completely: the pile offer (until it is answered); the mark (one text link per planned row in ten modules); one chip in a row's existing chip line (S7, A4); the steps meta on ToDos with a checklist and on routines (text in the existing meta line); the pile lead glyph (and the bundle's, should 5b be built; in the lead slot that is always filled). Expected `check:stimulus` effect: text only, no new control – unchanged; each package still runs it. The counts of `d1920--planner` and `p412--planner` in `web/e2e/stimulus-budget.json` do not rise; a package that cannot keep that says so in its PR and waits.
 7. **Everything new that changes what he sees without his doing can be switched off** in Planer → Einstellungen (piles, kinds in the field, expanding rows); what exists only when he makes it (bundles, topics) needs no switch. Everything is a proposal until he taps.
 
 ### 0.1 Data that is new (all in the planner module, synced like its other collections, written through `createRepo`)
@@ -18,10 +18,10 @@ Ideas 4, 2, 5: [CONCEPT-ROWS](CONCEPT-ROWS.md). Ideas 1, 3, 6, 9, 11: [CONCEPT-I
 | --- | --- | --- |
 | the planner as a plan source of itself | `planner/plannable.ts`, registered in its manifest: lists piles, later bundles (keys `planner:<id>`); no write-back steps | 2 |
 | settings `pileMoney`, `pileMail` | two flat optional booleans in the synced planner settings (undefined = never asked; flat because settings merge per top-level field) | 2 |
-| `planner_item.bundle`, `.step` | id of a bundle, order inside it (integer) | 5b |
-| `planner_bundle` | `title`; record id `b_<uuid>` | 5b |
+| `planner_item.bundle`, `.step` | id of a bundle, order inside it (integer) | 5b (parked) |
+| `planner_bundle` | `title`; record id `b_<uuid>` | 5b (parked) |
 | `planner_topic` | `title` (≤ 60); record id `t_<uuid>`, so its link ref is `planner:t_<uuid>` and the purge sweep finds it | 11 |
-| `planner_measure` | `key`, `minutes`, `on` – one row per measurement | 8 (struck, [ANALYSIS §4](ANALYSIS.md)) |
+| `planner_measure` | `key`, `minutes`, `on` – one row per measurement | 8 (built on the maintainer's decision, [ANALYSIS §4](ANALYSIS.md)) |
 
 Everything else is derived or lives in the source module. Each new collection: `npm run db:bump`, previous stores into `core/db/schema-history.json`, `manifest.version` + empty migration step.
 
@@ -77,9 +77,9 @@ Not added: `wait` (idea 7, struck) and `place` (the errand's places, struck with
 One component in `core/entitylinks` (`PlanMark`, replacing the ToDos-only one): a muted text link in the row's meta line, after the module's own meta.
 
 - States: nothing (not in the plan: **no mark**, the entry is in ⋯) · „Im Plan · Mi“ · „Im Plan · Mi · fest“ · „Im Plan · noch ohne Tag“ · „Im Plan · war Mo“ (only a passed day: plain text, never a tone; `planRowState` gets this one new read – the latest live assignment before today when none lies from today on) · planner off: nothing.
-- The day of a thing that is no plan row itself is the day of a ToDo that links to it with `origin` or `about` – never `before`, `after` or `topic` (a preparation the day before must not move the appointment's mark); a member of a bundle has its bundle's day (5b); a member folded into a pile has the pile's day (2).
+- The day of a thing that is no plan row itself is the day of a ToDo that links to it with `origin` or `about` – never `before`, `after` or `topic` (a preparation the day before must not move the appointment's mark); a member of a bundle would have its bundle's day (5b, parked); a member folded into a pile has the pile's day (2).
 - Tap → **the plan row it matched** (`rowKey` = the occurrence key, the carrier ToDo's key, the bundle's or the pile's key): M1 / M2 / M5 `/planner?day=<d>&item=<rowKey>`, M4 `/planner?tab=open&item=<rowKey>`, M3 `/planner?item=<rowKey>` – it stays on the „Plan“ tab and unfolds the group „Noch ohne Tag“ (the foot of the day's sheet) and focuses the row. Today the `?item` effect only scrolls and focuses while the group stays folded, so the unfold is a must-do of 10b with a test; `?tab=open` is only M4's route (exists today). `?item=` (since #1069) matches `data-row-key` exactly on the sheet shown and does not pick the day, so the day is in the URL, as `todos/planState.ts` does. One handle back and forth.
-- A thing in a bundle reads „Im Plan · Mi · in „Haushalt““ (from 5b; it reads the bundle's title through the planner's rows, not a link). A member folded into a pile that lies on a day reads M5 with the pile's title („Im Plan · Mi · in „Finanzen checken““) and links to the pile's row (`?day=<d>&item=planner:pile-money`); the members of an unplaced pile read M3 and link to the pile row (from 2; 10b prepares the prop as for bundles); a thing with a topic adds nothing here (the topic shows in its ⋯ „Verknüpft“).
+- A thing in a bundle would read „Im Plan · Mi · in „Haushalt““ (only with 5b, parked; it reads the bundle's title through the planner's rows, not a link). A member folded into a pile that lies on a day reads M5 with the pile's title („Im Plan · Mi · in „Finanzen checken““) and links to the pile's row (`?day=<d>&item=planner:pile-money`); the members of an unplaced pile read M3 and link to the pile row (from 2; 10b prepares the prop); a thing with a topic adds nothing here (the topic shows in its ⋯ „Verknüpft“).
 - Colour: none. It is text with the planner glyph (16 px) in `--text-muted`.
 
 ### 1.5 Risk, target, not part of it

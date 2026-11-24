@@ -30,8 +30,8 @@ Measured 2026-11-23 on `develop` (69b217cf) by `web/e2e/usecases/planner-hub-2.s
 | H06 | Rows under „Noch ohne Tag“ have no tick; „Nicht planen“ leaves the row there. | B | 4 (panel tick); the second half: reported, not designed here |
 | H07 | Mail is a desktop module: nothing of it can be done on the phone. | B | stays (said on the row, COPY X6) |
 | H08 | A household round is a routine made in another module (4 / 5 switches, 12 handles); its run shows all steps at once. | C1 | 5a, 3 |
-| H09 | A new thing is 30 minutes, also after it was done in 12. | C1 | 8 (struck) |
-| H10 | An errand is two rows plus a list that is not in the plan; nothing bundles, no place, no map. | C2 | 5b (places and map: struck) |
+| H09 | A new thing is 30 minutes, also after it was done in 12. | C1 | 8 (built on the maintainer's decision) |
+| H10 | An errand is two rows plus a list that is not in the plan; nothing bundles, no place, no map. | C2 | 5b (parked by the figures; places and map: struck) |
 | H11 | Placed from the planner, a thing shows nothing in its module: 1 of 5 marks visible, 2 of 5 agree (subscription and bookmark read their own field). | D1 | 10 |
 | H12 | Share → ToDo drops the URL; the thing lands in ToDos, the planner is two stops away. | D2 | 1 |
 | H13 | A thing prepared for an appointment: 14 handles through calendar and ToDos. | D3 | 9 |
@@ -62,10 +62,8 @@ Target = the script's `TARGET` (the designed path after the last package of the 
 | | per thing | 6 | 7 (from 4a, lasting price) |
 | | module switches | 4 / 5 | 4 / 5 (4a) → 2 (5a: the ToDo with its checklist is made in ToDos) → 0 (3) |
 | | only the next step · rows | no · 1 | yes (5a) · 1 |
-| C2 errand round | rows · one row | 2 · no | 1 · yes (5b) |
-| | create handles | 0 | 14 / 13 (5b, price) |
-| | work handles | 9 / 8 | 6 (5b) |
-| | per thing · switches | 5 · 2 | 7 (price) · 2 (5b: the list is asked into the plan in Listen) |
+| | learned (a measured duration proposed) | no | yes (8) |
+| C2 errand round | all figures | rows 2, one row no, create 0, work 9 / 8, per thing 5, switches 2 | unchanged in this round – 5b is parked; the script keeps `TARGET` for the day 5b is built (rows 1, create 14 / 13 – a price, work 6, per thing 7 – a price, switches 2) |
 | D1 is it in the plan | mark visible · agrees | 1 · 2 of 5 | 5 · 5 (10b) |
 | | `tripsToPlanner` (from the module's side) | 8 | 0 (10b) |
 | | handles · per thing (from the planner's side) | 11 · 5 | 11 · 5 (10b) → 15 · 9 (4a, price) |
@@ -78,7 +76,7 @@ Target = the script's `TARGET` (the designed path after the last package of the 
 | | per thing | 20 / 15 | 15 (11) |
 | D5 waiting | handles · switches · rows off the sheet | 7 · 0 · 3 | unchanged (7 struck) |
 
-**What gets dearer, said plainly.** After 4a the title of a row expands it, so jumping from a row into its module is expand + „Ganz öffnen“: D1 from the planner's side 11 → 15 handles, 5 → 9 per thing, for good; C1 per thing 6 → 7 for good and 7 → 8 work handles until 5a. After 4b every invoice and cancellation is expand + its step while budgets and mail are still trips: B handles 27 / 14 → 28 / 16, per thing 17 / 9 → 21 / 13 until 2. Bundling an errand round with a shopping list (5b) costs 14 handles (phone 13) once and per thing 5 → 7, because the list has to be asked into the plan in Listen; it buys one row less (2 → 1) and 9 / 8 → 6 working handles, and no module switch fewer. On the phone, giving five things a topic costs one handle more than today (22 → 23: Thursday's invoice waits under the folded „Danach“).
+**What gets dearer, said plainly.** After 4a the title of a row expands it, so jumping from a row into its module is expand + „Ganz öffnen“: D1 from the planner's side 11 → 15 handles, 5 → 9 per thing, for good; C1 per thing 6 → 7 for good and 7 → 8 work handles until 5a. After 4b every invoice and cancellation is expand + its step while budgets and mail are still trips: B handles 27 / 14 → 28 / 16, per thing 17 / 9 → 21 / 13 until 2. Bundling an errand round with a shopping list (5b) would cost 14 handles (phone 13) once and per thing 5 → 7, because the list has to be asked into the plan in Listen; it would buy one row less (2 → 1) and 9 / 8 → 6 working handles, and no module switch fewer – which is why 5b is parked. On the phone, giving five things a topic costs one handle more than today (22 → 23: Thursday's invoice waits under the folded „Danach“).
 
 ### Named prices (above `IST` on purpose; the script's header)
 
@@ -88,7 +86,7 @@ Target = the script's `TARGET` (the designed path after the last package of the 
 | B perThing | 17 / 9 → 21 / 13 | 4b (4c) | 2 (`PRICE`) |
 | C1 workTaps · taps | 7 → 8 · 19 → 20 | 4a | 5a (`PRICE`, while `nextStepOnly` reads nein) |
 | C1 perThing | 6 → 7 | 4a | lasting (`TARGET`) |
-| C2 createTaps · perThing | 0 → 14 / 13 · 5 → 7 | 5b | lasting |
+| C2 createTaps · perThing | 0 → 14 / 13 · 5 → 7 | 5b (parked) | lasting, should 5b be built |
 | D1 taps · perThing | 11 → 15 · 5 → 9 | 4a | lasting |
 | D4 taps (phone only) | 22 → 23 | 11 | lasting |
 
@@ -99,13 +97,13 @@ Target = the script's `TARGET` (the designed path after the last package of the 
 | 10 | – | D1 `tripsToPlanner` 8 → 0 (10b, measured from the module's side); 10a itself moves no figure – it is the base of 10b, 9, 11 | built |
 | 4 | – | B 5 → 3 (4b), → 0 with 2; 4a moves no figure of its own (it is the frame, and it carries the prices of D1 and C1); 4c: B `replySwitches` 1 → 0 (the reply opens over the planner; B's other figures wait for 2) | built |
 | 2 | B 5 → 2 / 1 before; after stays 0 | B 3 → 0 | built |
-| 5 | 5a: one row as today (C1 – today's routine is one row too); 5b: C2 2 → 1 | 5a: C1 4 / 5 → 2 (→ 0 with 3); 5b: C2 stays 2 | built – 5b is thin by the figures: one row less for 14 / 13 handles once and per thing 5 → 7 |
+| 5 | 5a: one row as today (C1 – today's routine is one row too); 5b: C2 2 → 1 | 5a: C1 4 / 5 → 2 (→ 0 with 3); 5b: C2 stays 2 | 5a built; **5b parked** by the figures (one row and three working handles less against 14 / 13 handles once and a trip to Listen) – only on the maintainer's „ja“ |
 | 1 | – | D2 2 / 3 → 1 | built – **without pictures** (no figure beyond the text path; the one truly new entry surface) |
 | 3 | A1 11 → 7 (right kind 4 → 12) | C1 2 → 0 | built |
-| 6 | C2 2 → 1 – but that is the bundle of 5b | C2 stays 2 | **shrunk:** what the script rewards is built in 5b (a list member is ticked inside the bundle). **Struck:** a place per stop, the map jump, a map in the planner – `mapShown` stays „nicht möglich“, no figure moves. |
+| 6 | C2 2 → 1 – but that is the bundle of the parked 5b | C2 stays 2 | **parked with 5b:** what the script rewards lived in 5b (a list member ticked inside the bundle). **Struck:** a place per stop, the map jump, a map in the planner – `mapShown` stays „nicht möglich“, no figure moves. |
 | 9 | – | D3 4 → 0 | built |
 | 11 | D4 20 → 7 | D4 2 → 0 | built |
-| **8** | none | none | **struck.** It lowers per-thing handles („Dauer …“) and booked minutes only. Concept, hand-off and prompt are kept so one „ja“ starts it. My recommendation is to say that „ja“ after 5a: wrong 30-minute rows make days look full, which the script cannot count. |
+| **8** | none | none | **lowers neither rows nor switches; built on the maintainer's decision of 2026-11-24** (after 5a). It lowers per-thing handles („Dauer …“) and booked minutes only (C1 `learned` nein → ja); wrong 30-minute rows make days look full, which the script cannot count. |
 | **7** | none (today's move takes the three rows off the sheet as well) | none (0 today) | **struck.** Today: 7 handles, no switch, comes back by itself (H15). What it would add is the reason on the row („Antwort da? · von Vermieter“), not fewer rows. It was also the one idea the maintainer had not confirmed. Concept, hand-off and prompt are kept. |
 
 ## 5. Critique of today's planner in the three flows

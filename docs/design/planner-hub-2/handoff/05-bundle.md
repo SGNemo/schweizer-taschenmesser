@@ -1,10 +1,10 @@
-# Hand-off 05 – bundles and „Los“ (packages 5a, 5b)
+# Hand-off 05 – steps and „Los“ (package 5a); bundles of things (5b, parked)
 
 Concept: [CONCEPT-ROWS, idea 5](../CONCEPT-ROWS.md). Decision between two directions: [DESIGN §3](../DESIGN.md). Mockups: `../mockups/05-bundle-a.html` (chosen), `05-bundle-b.html` (rejected), `05-los.html`.
 
 ## Closed row
 
-- lead: for a thing with steps the source's own lead (a ToDo keeps its tick); for a bundle (5b) the bundle glyph (three stacked lines), not a button.
+- lead: for a thing with steps the source's own lead (a ToDo keeps its tick); for a bundle (5b, parked) the bundle glyph (three stacked lines), not a button.
 - title: the thing's / bundle's title (expand button).
 - meta: B1 for a ToDo with a checklist and a routine („5 Schritte“, once one is done „1 von 5“ – k is the number of **done** steps); a list keeps its own word („7 Dinge“, then „2 von 7“) – B1 does not replace it; a bundle B2; then the usual meta. No bar, no ring, no percent. („Los“ counts differently on purpose: „Schritt 2 von 5“ is the position of the step he is on.)
 - ⋯ first entry: B3 „Los“.
@@ -21,7 +21,6 @@ Concept: [CONCEPT-ROWS, idea 5](../CONCEPT-ROWS.md). Decision between two direct
 ```
 
 - Steps are tick `PanelLine`s in order; done ones stay in place (struck), so the order never jumps.
-- 5b: a member line has **one** lead column: the tick where the member takes one, else its source glyph (an invoice) – never both; `▸` at the end when it has a panel; drag handle on desktop hover / focus (`SortableList` from `@/ui`), „Nach oben / Nach unten“ in the line's ⋯ on the phone.
 - Foot: B3 „Los“ (secondary) · ⋯ (5a: the single entry „Als Routine speichern“ – B14 is the 5b bundle's menu; two handles (⋯, the entry) – for a ToDo only when it is a plain task – no legacy `links[]` entry and no `origin` link row; lists and routines as they are; only while the routines module is on; the name is looked up first – exists: B25, nothing emitted; else the emit inside the planner's `act`, then the lookup confirms: B16 (one undo entry), or X7; „Ansehen“ opens `/routines`) · X2 (5a only: opens the ToDo / list / routine).
 - `▸` on a member line and `▾` on a list member are buttons named X1.
 - More than 12 steps: 12 + X19 „n weitere“.
@@ -39,14 +38,15 @@ Reuses `FocusPage` (shell hidden, Esc leaves, the round survives a reload). Diff
 
 - No ring and no clock in step mode (a step has no minutes). No list of the other steps – **only the next one**. The stage is: eyebrow, title, buttons, „Verlassen“.
 - „Fertig · weiter“: the step's own done (`onStepDone` in its own `act`, one undo entry, quiet toast B26 „Schritt erledigt. · Rückgängig“; or the member's `onDone`; a member without a tick shows its panel under the title and advances when the thing is done there), then the next open step fades in (opacity, `--dur`).
-- On the last open step the filled button reads B23 „Fertig“: it finishes the step and ticks the carrying thing (5a) in **one** `act` – one undo entry brings back both – and **returns to the plan** with the thing's toast („Erledigt.“ + undo). No end page. 5b: after the last member the same return, nothing to tick – the bundle is done when its members are.
+- On the last open step the filled button reads B23 „Fertig“: it finishes the step and ticks the carrying thing (5a) in **one** `act` – one undo entry brings back both – and **returns to the plan** with the thing's toast („Erledigt.“ + undo). No end page. (Parked with 5b: after the last member the same return, nothing to tick – the bundle is done when its members are.)
 - Skipped steps: at the end B10; „Später“ returns to the plan with the steps open.
 - 412: the same, actions stacked full width in the order B5, B6, B7.
 - Keys: Enter is the focused button's own activation (B5 has focus by default); `S` = B6 and `P` = B7 only while focus is on one of the stage's buttons (not globally, so they never fire in a text field or a member's panel); Esc = back to the plan (the round keeps its place); one line under the buttons names them (B19, `--text-meta`, `--text-3`), not drawn on touch devices.
 - A step change is announced politely with B24 („Schritt 3 von 5: Bad wischen“); focus stays on B5. A member step without a tick has no B5: focus goes to its panel's first control; `S` / `P` work only while focus is on one of the stage's buttons (B6, B7).
 
-## 5b: making and unmaking
+## 5b: making and unmaking – parked with 5b (build only on the maintainer's „ja“)
 
+- A member line has **one** lead column: the tick where the member takes one, else its source glyph (an invoice) – never both; `▸` at the end when it has a panel; drag handle on desktop hover / focus (`SortableList` from `@/ui`), „Nach oben / Nach unten“ in the line's ⋯ on the phone.
 - Selection bar (exists) gets B11 after „Verschieben …“; enabled from 2 rows. Dialog B12: one `TextField` (prefilled, selected, only from a plain-task member – the first one in the selection; with none the field is empty and „Bündeln“ waits for a typed name), primary „Bündeln“, the shared „Abbrechen“. Toast B13.
 - A member that is a list is open inside the panel: its open items as tick lines (the lists panel's body, max 8 + X19 „n weitere“), `▾` folds it. In „Los“ a list member is one step that shows these tick lines under its title.
 - The bundle takes the day of the first ticked row (or „ohne Tag“ if none had one); minutes = sum of the members'. While it lives, a member's own assignment rows (also one written later on another device) are ignored by board, run, proposals and `plannedDay`: the bundle wins.
@@ -57,11 +57,17 @@ Reuses `FocusPage` (shell hidden, Esc leaves, the round survives a reload). Diff
 
 ## States
 
-closed · k of n · expanded · sorting · in „Los“ · paused · all done (derived: drawn as done, nothing written) · step gone (B17, struck, skipped by „Los“) · member's module off (B18, skipped) · empty bundle after the last member left (the bundle row is removed in that same action).
+closed · k of n · expanded · sorting · in „Los“ · paused · all done (derived: drawn as done, nothing written) · step gone (B17, struck, skipped by „Los“) · member's module off (B18, skipped) · parked with 5b: empty bundle after the last member left (the bundle row is removed in that same action).
 
 ## Tests
 
 - 5a: `steps` handed over by ToDos / Listen / Routinen (unit, per source); `onStepDone` round trip; steps never part of the input hash (`linksDisplayOnly`-style test); focus step mode: advance, skip, pause, reload mid-step, last step (B23 ticks the thing and returns to the plan); „Als Routine speichern“ not offered for a ToDo with a legacy `links[]` entry or an `origin` link row (a mail ToDo with `links[]` but no `_links` row); module off → no entry; duplicate → B25 and no write; handler throws → X7; success → one undo entry; each step tick is one undo entry, and B23 on the last step is one undo entry that brings back the step and the thing (§7 rule test for step mode, last step included).
-- 5b: bundle / unbundle are one undo each and restore every assignment (snapshot test of all planner rows before / after undo); a member with `bundle` set is not on the board and its own assignment rows are ignored by run, proposals and `plannedDay`; two-device merge of `bundle` / `step` (field LWW) converges; device A bundles X while device B moves X to Thursday → X is in the bundle, shown on the bundle's day, „Auflösen“ puts it there; deleting a bundle deletes no member. „Bündeln …“ never offered for a row of kind `pile` or `bundle`; B12 prefilled only from a plain-task member (a mail ToDo first → empty field).
-- Rule tests of planner rethink §7 extended to „Bündeln“, „Auflösen“, „Aus dem Bündel nehmen“, step ticks; write spy: a member done or deleted in its own module writes nothing in the planner's tables.
-- e2e seed `e2e/seed/plan-bundle.seed.spec.ts`; `planner-hub-2.spec.ts` re-measured – 5a: C1 (create 11 / phone 10, work 7, taps 18 / 17, perThing 7, switches 2, `nextStepOnly` ja); 5b: C2 (rows 1, `oneRow` ja, create 14 / 13, work 6, perThing 7, switches 2), with `rows` and `oneRow` read after the bundle exists.
+- Rule tests of planner rethink §7 extended to step ticks; write spy: a member done or deleted in its own module writes nothing in the planner's tables.
+- `planner-hub-2.spec.ts` re-measured – 5a: C1 (create 11 / phone 10, work 7, taps 18 / 17, perThing 7, switches 2, `nextStepOnly` ja).
+
+
+## Tests – parked with 5b
+
+- Bundle / unbundle are one undo each and restore every assignment (snapshot test of all planner rows before / after undo); a member with `bundle` set is not on the board and its own assignment rows are ignored by run, proposals and `plannedDay`; two-device merge of `bundle` / `step` (field LWW) converges; device A bundles X while device B moves X to Thursday → X is in the bundle, shown on the bundle's day, „Auflösen“ puts it there; deleting a bundle deletes no member. „Bündeln …“ never offered for a row of kind `pile` or `bundle`; B12 prefilled only from a plain-task member (a mail ToDo first → empty field).
+- Rule tests of planner rethink §7 extended to „Bündeln“, „Auflösen“, „Aus dem Bündel nehmen“.
+- e2e seed `e2e/seed/plan-bundle.seed.spec.ts`; `planner-hub-2.spec.ts` C2 (rows 1, `oneRow` ja, create 14 / 13, work 6, perThing 7, switches 2), with `rows` and `oneRow` read after the bundle exists. While 5b is parked, C2 keeps its `IST`.

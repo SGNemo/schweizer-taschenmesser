@@ -1,4 +1,4 @@
-# Planner hub 2 – prompts, packages 5a to 1
+# Planner hub 2 – prompts, packages 5a, 8 and 1
 
 Plan, order, target figures, the shared block `#common` and „as built“: [PACKAGES](PACKAGES.md). One prompt per chat, pasted as it stands. Model: Claude Opus.
 
@@ -33,37 +33,32 @@ Tests der Übergabe (5a); Mess-Skript C1 neu gemessen mit einem ToDo samt Checkl
 `council` (Manifest-Vertrag), `design:accessibility-review`, `file-pr`, `babysit-pr`, `leaving-pr-comments`. Full stop.
 ```
 
-## Prompt – package 5b: bundling things (`feat/plan-bundles`)
+## Prompt – package 8: measured duration (`feat/plan-measure`)
 
 ```
-# Aufgabe: Planer-Zentrale 2, Paket 5b – mehrere Dinge zu einem Bündel: eine Zeile, ein Startpunkt, ein Undo
-Routing: Claude Code · Planer-Zentrale 2 Paket 5b · Opus
+# Aufgabe: Planer-Zentrale 2, Paket 8 – echte Dauer: „Los“ misst, ein neues gleiches Ding schlägt die gemessene Zeit vor
+Routing: Claude Code · Planer-Zentrale 2 Paket 8 · Opus
 Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
 Gemeinsamer Block (gilt ganz): docs/design/planner-hub-2/PACKAGES.md#common
-Branch `feat/plan-bundles` von frischem `develop`, nach dem Merge von 5a. Hotspots ansagen: Dexie-Version / `schema.snapshot.json`, `PlannerPage.tsx`, `strings.ts`.
+Branch `feat/plan-measure` von frischem `develop`, nach dem Merge von 5a. Hotspots ansagen: Dexie-Version / `schema.snapshot.json`.
 
 ## Ausgangslage
-CONCEPT.md §0.1; CONCEPT-ROWS.md „Idea 5“ (5b); handoff/05-bundle.md („5b: making and unmaking“, Zustände); COPY.md B2, B11–B18, B20, B21, B25, M5.
+CONCEPT-ROWS.md „Idea 8“ (ganz; „The same thing“ ist die Regel); handoff/08-duration.md; COPY.md Z1–Z3. Vom Maintainer am 2026-11-24 freigegeben, obwohl es weder Zeilen noch Modulwechsel senkt. Frühere Entscheidung: nichts ändert eine Schätzung von selbst – das bleibt: nur ein **neues** Ding bekommt den Vorschlag als Startwert.
 
 ## Pflichtliste
-- Daten: Sammlung `planner_bundle` (`title`; Datensatz-id `b_<uuid>`), Felder `bundle`, `step` auf `planner_item`; `npm run db:bump`, vorherige Stores nach `core/db/schema-history.json`, `manifest.version` + leerer Migrationsschritt; `dataApi: false` bleibt für das ganze Modul.
-- Die eigene Quelle des Planers (`planner/plannable.ts` aus Paket 2) listet Bündel (Art `bundle`, Schlüssel `planner:<Datensatz-id>`) und liefert nur den Titel des Bündels und die Schlüssel seiner Mitglieder in Reihenfolge – das Blatt, das die Einträge aller Quellen schon hält, fügt Titel, Minuten und Erledigt-Stand hinzu; ein Mitglied, das keine Quelle mehr listet, ist erledigt oder weg, unterschieden über `resolveLink` (`done` / `gone`); die eigene Quelle ruft nie den Sammler; ein gebündeltes Ding ist nie Mitglied eines Stapels (Test); ein Mitglied mit `bundle` steht nicht selbst auf dem Blatt, solange das Bündel lebt, fehlt in den Eingaben des Laufs und in jedem Vorschlag (seine Minuten zählen einmal, in der Summe des Bündels) und gilt als geplant am Tag des Bündels (`plannedDay`, Plan-Stand in ToDos, Marke M5) – Tests für alle drei. Solange das Bündel lebt, werden eigene Zuweisungs-Zeilen eines Mitglieds von Blatt, Lauf, Vorschlägen und `plannedDay` übergangen: das Bündel gewinnt. Kein Link-Ziel für Bündel (Mitgliedschaft ist kein Link).
-- „Alle Schritte erledigt“ ist abgeleitet (gezeichnet wie erledigt), nie geschrieben; Schreib-Spion: ein Mitglied, das in seinem Modul erledigt oder gelöscht wird, schreibt nichts in Planer-Tabellen.
-- Besorgungsrunde (Idee 6, hier eingebaut): ein Mitglied, das eine Liste ist, zeigt im Panel des Bündels seine offenen Einträge als Haken-Zeilen (Körper des Listen-Panels aus 4a); in „Los“ ist die Liste ein Schritt mit diesen Zeilen.
-- „Bündeln …“ nur für Zeilen verknüpfbarer Module (dieselbe Regel wie „Thema …“) und nie für eine Zeile der Art `pile` oder `bundle` (keine Verschachtelung; Test); Dialog B12 belegt den Namen nur aus einem Mitglied vor, das eine einfache Aufgabe ist (das erste in der Auswahl), sonst ist das Feld leer und „Bündeln“ wartet auf einen getippten Namen (Test: ein Mail-ToDo zuerst → leeres Feld); ein Mitglied wird über seine `entityId` aufgelöst, sonst über seine Item-id – ein Mitglied eines nicht verknüpfbaren Moduls kann es nicht geben (Test).
-- Aktionen, je genau ein Undo-Eintrag: „Bündeln …“ (Auswahlleiste, Dialog B12), „Auflösen“, „Aus dem Bündel nehmen“, „Umbenennen …“, Sortieren. Die Regel-Tests von planner-rethink CONCEPT-MIGRATION §7 um diese Aktionen erweitern (Schnappschuss aller Planer-Zeilen vor/nach jedem Undo).
-- „Los“ über Mitglieder (ein Mitglied ohne Haken zeigt sein Panel als Schritt; nach dem letzten Mitglied dieselbe Rückkehr in den Plan, nichts abzuhaken); „Als Routine speichern“ nur, wenn alle Mitglieder einfache Aufgaben sind (ToDos ohne alten `links[]`-Eintrag und ohne `origin`-Link-Zeile: der Titel eines Mail-ToDos ist der Betreff und darf nicht in Routinen wandern; Test mit einem Mail-ToDo, das `links[]` hat, aber keine `_links`-Zeile), mit Nachschlagen, Senden und Toasts B16 / B25 / X7 wie in 5a, nur solange Routinen an ist.
-- `PlanMark` zeigt M5 für Mitglieder.
-- Zwei Geräte: `bundle`/`step` konvergieren feldweise (Test in der Art von `core/entitylinks/sync.test.ts`); Gerät A bündelt X, während Gerät B X auf Donnerstag legt → X ist im Bündel und steht am Tag des Bündels, „Auflösen“ legt es auf den Tag des Bündels (Sync-Test); ein Bündel löschen löscht kein Mitglied.
+- `planner_measure` (`key`, `minutes`, `on`), `db:bump`, Schema-Historie, `manifest.version`; aufgezeichnet in der Aktion „Erledigt“ / „Fertig · weiter“ einer Fokus-Runde (Pausen abgezogen; < 1 Min und > 8 h nicht), dort auch auf 5 je Schlüssel gekürzt.
+- Schlüssel: stabile Quell-id vor Titel; Titel-Normalisierung = die von `pastePlan.ts`; kein unscharfer Treffer.
+- Vorschlag: Median der letzten 5 bei ≥ 2, auf 5 gerundet, nur beim Anlegen ohne Minuten; Anzeige Z1, Zeile Z2 in „Dauer …“; Schalter und „Gemessene Zeiten löschen“ (Z3).
+- Ausschluss-Test: die Sammlung erreicht keinen Export, keinen Kopiertext, keine Daten-API, kein Assistenten-Schema, keine Diagnose.
 
 ## Nicht in diesem Paket
-Orte und Karte (gestrichen), Thema (11), Bündel in Bündeln, ein automatischer Vorschlag zu bündeln.
+Zeiterfassung an- oder einschalten, bestehende Schätzungen ändern, Statistik-Ansichten, Vergleiche „geplant gegen gebraucht“.
 
 ## Abnahme
-Tests der Übergabe (5b); `e2e/seed/plan-bundle.seed.spec.ts`; Mess-Skript C2: `rows` 2 → 1, `oneRow` ja, `workTaps` 9 / 8 → 6; gemessen `createTaps` 14 (Handy 13) und `perThing` 7 – im Skript-Kopf benannte Preise, dauerhaft; `IST` bleibt 0 / 5 (darin der eine Weg nach Listen für „In den Plan“: eine Einkaufsliste ist nur auf Anfrage eine Planzeile, docs/decisions/plan-sources.md – das bleibt so; `moduleSwitches` bleiben 2). Lesart des Skripts ändern: `rows` nach dem Anlegen des Bündels lesen (wie C1 `created` liest) und `oneRow` aus diesem Ergebnis (eine Zeile hält die Runde); das ⋯ der Zeile bietet nie „Bündeln …“. Dünn nach den Zahlen: vor dem Start entscheiden, ob es das wert ist. Herleitung je Griff, Stufen und Lesart des Skripts: docs/design/planner-hub-2/FIGURES.md.
+Tests der Übergabe; Mess-Skript C1: `learned` ja, `durationProposed` beim zweiten Mal = gemessen.
 
 ## Skills
-`council` (Daten, Migration, zwei Geräte), `design:accessibility-review`, `file-pr`, `babysit-pr`, `leaving-pr-comments`. Full stop.
+`council` (Daten, Privatsphäre), `design:accessibility-review`, `file-pr`, `babysit-pr`, `leaving-pr-comments`. Full stop.
 ```
 
 ## Prompt – package 1: share into the planner (`feat/share-planner`)
@@ -73,7 +68,7 @@ Tests der Übergabe (5b); `e2e/seed/plan-bundle.seed.spec.ts`; Mess-Skript C2: `
 Routing: Claude Code · Planer-Zentrale 2 Paket 1 · Opus
 Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
 Gemeinsamer Block (gilt ganz): docs/design/planner-hub-2/PACKAGES.md#common
-Branch `feat/share-planner` von frischem `develop`, nach dem Merge von 5b (teilt den Planer-Block von `strings.ts` mit 5b: nicht parallel). Hotspots ansagen: `web/src/pages/ShareTarget.tsx`, `web/src/core/modules/types.ts`, `strings.ts`.
+Branch `feat/share-planner` von frischem `develop`, nach dem Merge von 8. Hotspots ansagen: `web/src/pages/ShareTarget.tsx`, `web/src/core/modules/types.ts`, `strings.ts`.
 
 ## Ausgangslage
 CONCEPT-INTAKE.md „Idea 1“ (ganz, mit dem Abschnitt gegen docs/security/LAUNCH-REVIEW-2026-11.md); handoff/01-share.md; COPY.md S1, S2, S5, S7–S9, S14, S16, S19. Bestand – darauf wird gebaut, nicht daneben: `web/src/pages/ShareTarget.tsx` (Karte „Geteilt“, Karte „Vorschlag“ mit `CaptureForm` – `oneEntry`, `initialText`, `initialType?`, `extra`, speichert auf seinem eigenen „Speichern“ seit U17 und ruft `onSaved(saved)` mit `id`, `type`, `moduleId`, `undo()`; Haken „Text als Notiz“ → `extra.note`; „oder im Modul öffnen“), `quickCapture/ui/announceSaved.ts`, das Erfassungsziel `plan` in `quickCapture/targets/adapters.ts`, `web/src/quickCapture/nativeShare.ts`, `web/src-tauri/plugins/share-intent/**`.

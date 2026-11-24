@@ -43,7 +43,7 @@ import { dismissNotices } from '../helpers';
  *    that ends it): B `taps` 27 → 28 / phone 14 → 16 and `perThing` 17 → 21 / phone 9 → 13 from 4b (and 4c) until 2
  *    (each invoice and cancellation is expand + its step; budgets and mail are still trips); C1 `workTaps` 7 → 8 and
  *    `taps` 19 → 20 from 4a until 5a (expand, „Ganz öffnen“, the routine's run as today).
- * Re-measured by the packages: 10b: D1 · 4a: D1, C1 · 4b/2: B · 4c: B `replySwitches` · 5a: C1 · 5b: C2 · 1: D2 · 3: A1, C1 · 9: D3 · 11: D4.
+ * Re-measured by the packages: 10b: D1 · 4a: D1, C1 · 4b/2: B · 4c: B `replySwitches` · 5a: C1 · 8: C1 `learned` · 1: D2 · 3: A1, C1 · 9: D3 · 11: D4.
  * `MEASURE=1` only measures. Facts (the click path, the module routes passed) land beside the table in
  * `test-results/usecase-planner-hub-2/`.
  *
@@ -91,7 +91,8 @@ const IST: Record<string, Figures> = {
 };
 
 // TARGET: the designed path after the last package of the flow, counted as this script counts (header). A2 is no longer
-// needed (A1 does it) and D5 is struck: both keep their IST.
+// needed (A1 does it) and D5 is struck: both keep their IST. C2 is package 5b's flow, which is parked: its TARGET
+// stands for the day 5b is built.
 // prettier-ignore
 const TARGET: Record<string, Figures> = {
   'A1 Alles ins Planer-Feld · desktop-chrome': { rows: 7, moduleSwitches: 0, taps: 12, perThing: 0, rightKind: 12, linkedToPlan: 10 },
@@ -100,8 +101,8 @@ const TARGET: Record<string, Figures> = {
   'A2 Jedes Ding als richtige Art · pixel-7': { rows: 8, moduleSwitches: 5, taps: 34, perThing: 14, forms: 2, fields: 5, rightKind: 12, linkedToPlan: 11 },
   'B Finanzen und Mails abarbeiten · desktop-chrome': { rowsBefore: 2, taps: 17, perThing: 12, moduleSwitches: 0, doneInPlanner: 9, rowsAfter: 0, mails: 4, replySwitches: 0 },
   'B Finanzen und Mails abarbeiten · pixel-7': { rowsBefore: 1, taps: 10, perThing: 8, moduleSwitches: 0, doneInPlanner: 5, rowsAfter: 0, mails: 'nicht möglich', replySwitches: 'nicht möglich' },
-  'C1 Bündel Haushalt · desktop-chrome': { rows: 1, createTaps: 1, workTaps: 7, taps: 8, perThing: 7, moduleSwitches: 0, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
-  'C1 Bündel Haushalt · pixel-7': { rows: 1, createTaps: 1, workTaps: 7, taps: 8, perThing: 7, moduleSwitches: 0, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
+  'C1 Bündel Haushalt · desktop-chrome': { rows: 1, createTaps: 1, workTaps: 7, taps: 8, perThing: 7, moduleSwitches: 0, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'ja' },
+  'C1 Bündel Haushalt · pixel-7': { rows: 1, createTaps: 1, workTaps: 7, taps: 8, perThing: 7, moduleSwitches: 0, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'ja' },
   'C2 Besorgung · desktop-chrome': { rows: 1, createTaps: 14, workTaps: 6, perThing: 7, moduleSwitches: 2, oneRow: 'ja', mapShown: 'nicht möglich' },
   'C2 Besorgung · pixel-7': { rows: 1, createTaps: 13, workTaps: 6, perThing: 7, moduleSwitches: 2, oneRow: 'ja', mapShown: 'nicht möglich' },
   'D1 Steht es im Plan, und wann · desktop-chrome': { taps: 15, perThing: 9, moduleSwitches: 10, markVisible: 5, markAgrees: 5, tripsToPlanner: 0 },
