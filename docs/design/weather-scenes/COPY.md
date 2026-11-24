@@ -157,15 +157,16 @@ South of the equator the solstice and equinox lines swap (June = winter solstice
 | `tp.official({event})` | Amtliche Warnung: {event} | Official warning: {event} |
 | `tp.officialSevere({event})` | Amtliche Unwetterwarnung: {event} | Official severe weather warning: {event} |
 | `tp.officialUntil({day}, {time})` | bis {day} {time} | until {day} {time} |
+| `tp.officialUntilToday({time})` | bis {time} | until {time} |
 | `tp.officialSource` | Quelle: DWD | Source: DWD |
 | `tp.officialMore({n})` | + {n} weitere | + {n} more |
 | `tp.officialSetting` | Amtliche Warnungen (Deutschland) | Official warnings (Germany) |
-| `tp.officialSettingHelp` | Zeigt Warnungen des Deutschen Wetterdienstes für deinen Ort. Dafür geht die ungefähre Position des Orts an den DWD, nie deine Einträge. | Shows warnings of the German weather service for your place. For this the approximate position of the place goes to the DWD, never your entries. |
+| `tp.officialSettingHelp` | Zeigt Warnungen des Deutschen Wetterdienstes für deinen Hauptort, wenn er in Deutschland liegt. Dafür geht seine ungefähre Position an den DWD, nie deine Einträge. | Shows warnings of the German weather service for your main place if it lies in Germany. For this its approximate position goes to the DWD, never your entries. |
 | `tx.creditWarnings` | Warnungen: Deutscher Wetterdienst | Warnings: Deutscher Wetterdienst |
 | `tx.creditAurora` | Polarlicht-Vorhersage: NOAA SWPC | Aurora forecast: NOAA SWPC |
 | `tx.privacy` (replaces today's sentence) | Nur der Ortsname (beim Suchen) und die ungefähre Position des gewählten Orts gehen an open-meteo.com und, für amtliche Warnungen in Deutschland, an den Deutschen Wetterdienst – nie deine Einträge. Die Polarlicht-Vorhersage ist eine allgemeine Datei von NOAA SWPC, dabei wird kein Ort gesendet. Abfrage etwa alle 30 Minuten, solange die Übersicht offen ist. | Only the place name (when searching) and the approximate position of the chosen place go to open-meteo.com and, for official warnings in Germany, to the Deutscher Wetterdienst – never your entries. The aurora forecast is a general file from NOAA SWPC; no place is sent for it. Requested about every 30 minutes while the overview is open. |
 
-With `tp.sceneSettingHelp` of §3 the switch "Mond und Himmelsereignisse" gets one more sentence in its help (`tp.skySettingHelp`, replaces the text of §3): „Mondphase, Finsternisse, Sternschnuppen-Nächte und Polarlicht. Mond und Finsternisse werden auf diesem Gerät berechnet; für Polarlicht wird eine allgemeine Vorhersage-Datei von NOAA SWPC geladen, ohne deinen Ort.“ / "Moon phase, eclipses, meteor nights and aurora. Moon and eclipses are calculated on this device; for the aurora a general forecast file is loaded from NOAA SWPC, without your place."
+The switch "Mond und Himmelsereignisse" gets a new help text (`tp.skySettingHelp`, replaces the text of §3): „Mondphase, Finsternisse, Sternschnuppen-Nächte und Polarlicht. Mond und Finsternisse werden auf diesem Gerät berechnet; für Polarlicht wird eine allgemeine Vorhersage-Datei von NOAA SWPC geladen, ohne deinen Ort.“ / "Moon phase, eclipses, meteor nights and aurora. Moon and eclipses are calculated on this device; for the aurora a general forecast file is loaded from NOAA SWPC, without your place."
 
 ## 6. Rejected words
 

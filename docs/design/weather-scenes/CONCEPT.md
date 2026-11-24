@@ -10,7 +10,7 @@ Moon: [CONCEPT-MOON](CONCEPT-MOON.md). Sky events: [CONCEPT-EVENTS](CONCEPT-EVEN
 4. **What the picture shows is also a word.** The scene is `aria-hidden`; phase, weather, frost, event stand as text.
 5. **One head.** No bar above it; the hint of the day lives in the stage and still says "berechnet, keine amtliche Warnung".
 6. **It comes to rest.** Motion is the answer to opening the page: it runs **5 s**, then stands still; none with `prefers-reduced-motion`, `data-motion="reduce"`, "Standbild", "Schlicht", "Ruhig", "Modulfarben: Aus", a hidden page, or in any small version. Nothing blinks – a bolt is a still shape.
-7. **Local and cheap.** Moon and events are calculated on the device or read from a shipped table; no new network destination. One SVG per scene, at most 220 elements, animation only as `transform` (and one `opacity` fade of the precipitation) on at most 9 groups ([A11Y §4](A11Y.md)).
+7. **Local and cheap.** Moon and events are calculated on the device or read from a shipped table; no new network destination – except the two the maintainer allowed for package 3b ([CONCEPT-SOURCES](CONCEPT-SOURCES.md)). One SVG per scene, at most 220 elements, animation only as `transform` (and one `opacity` fade of the precipitation) on at most 9 groups ([A11Y §4](A11Y.md)).
 8. **Off is one tap.** "Bild im Wetter-Kopf": Mit Bewegung · Standbild · Schlicht (nur Himmel); "Mond und Himmelsereignisse" on / off. Both live in the shared `weather` settings scope (`core/weather/settings.ts`, Einstellungen → Verbindungen → Wetter), because the overview reads them too.
 
 ## 1. Layers and the data they read

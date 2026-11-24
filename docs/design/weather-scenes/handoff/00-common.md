@@ -48,7 +48,7 @@ Shared scope `weather` (`core/weather/settings.ts`, synced, Zod; UI in `pages/se
 ## Rules for every package
 
 - The scene never carries information alone: before a layer ships, its word is on the page ([COPY](../COPY.md)).
-- Nothing asks the network that does not ask today, except the added variables in the existing requests (`snow_depth` in 1a, `dust` in 3; `timezone` is already in the response). `privacy.test.ts` and the DATA-FLOWS row stay as they are.
+- Nothing asks the network that does not ask today, except the added variables in the existing requests (`snow_depth` in 1a, `dust` in 3; `timezone` is already in the response). `privacy.test.ts` and the DATA-FLOWS row stay as they are. The one exception is package 3b with its two allowed hosts ([CONCEPT-SOURCES](../CONCEPT-SOURCES.md)).
 - Ceilings (measured on the mockup, [A11Y §4](../A11Y.md)): elements per scene, bytes, animated groups, main-thread time. A unit test counts the elements of the heaviest preset.
 - `check:stimulus` for `d1920--weather`, `p412--weather` and the home pages: unchanged or lower (the scene is one SVG; no `box-shadow` on it) – except the named `icons` hit of package 2.
 - Screens for the PR text: the six situations of `mockups/07-kopf.html`, 1920 and 412, light and dark, with the fixture of [ANALYSIS](../ANALYSIS.md) (invented place "Lindenau").
