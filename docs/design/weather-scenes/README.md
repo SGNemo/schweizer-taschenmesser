@@ -14,4 +14,4 @@ Brief (maintainer, 2026-11-24, with a picture of the head at 02:50, −4°): "ni
 | [PACKAGES](PACKAGES.md) | order, branches, hotspots, the shared block, "as built"; prompts in `PACKAGES-PROMPTS.md` |
 | `mockups/` | `scene.js` (the drawing: one function, state → SVG; the template the packages port), `palette.js`, gallery pages, `render.mjs` (pictures go into the PR text, never into the repo) |
 
-Sample data everywhere: the invented place "Lindenau" (49.6° N, 11.0° E), Tuesday 2026-11-24. When the round closes (after package 4), the working documents are deleted in that PR; the decisions live in `docs/decisions/modules-zeit.md`.
+Sample data everywhere: the invented place "Lindenau" (49.6° N, 11.0° E), Tuesday 2026-11-24. When the round closes (after package 4), the working documents are deleted in that PR; the decisions live in `docs/decisions/weather.md`.
