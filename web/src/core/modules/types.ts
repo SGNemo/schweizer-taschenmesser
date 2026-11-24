@@ -590,6 +590,13 @@ export type AttentionSource = (ctx: { today: string }) => Promise<AttentionItem[
 export interface PlannableItem {
   /** Unique within its source; the planner's item key is `<moduleId>:<id>`. */
   id: string;
+  /**
+   * The thing behind the row, where the row is one occurrence of it (subscriptions `<id>:<date>`, Unterlagen
+   * `<id>:cancel:<date>`, routines `<id>:<due>`): the subscription's, document's or routine's own id. A link from
+   * or to the row stores `<moduleId>:<entityId>` (`entityRefOf`), which the module's `linkTarget` resolves.
+   * Missing = the row is the thing itself (`id`).
+   */
+  entityId?: string;
   /** What kind of thing it is (`task`, `invoice`, …), for the row's icon and wording. */
   kind: string;
   title: string;

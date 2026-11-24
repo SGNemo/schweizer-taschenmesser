@@ -75,6 +75,7 @@ const manifest: ModuleManifest = {
   order: 150,
   area: 'vault',
   contributions: {
+    linkTarget: () => import('./linkTarget'),
     attention: () => import('./attention'),
     onboarding,
     quickAdd: [

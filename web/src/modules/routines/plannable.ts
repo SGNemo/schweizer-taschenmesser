@@ -27,6 +27,8 @@ const source: PlannableSource = {
     return due.map((r): PlannableItem => ({
       // One item per turn (`<id>:<due day>`): a pin or "Nicht planen" of this turn never carries over to the next.
       id: `${r.id}:${r.dueDate}`,
+      // The row is one turn of the routine: a link from or to it stores the routine.
+      entityId: r.id,
       kind: 'routine',
       title: t.routines.planTitle(r.name, whoseTurn(r)),
       to: `/routines?open=${encodeURIComponent(r.id)}`,

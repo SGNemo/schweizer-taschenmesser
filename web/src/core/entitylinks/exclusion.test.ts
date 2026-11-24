@@ -53,7 +53,49 @@ const LABEL = 'Quittenkompottrechnung7391';
 const THREAD = 'thrquittenfaden0042';
 const TASK = 'aufgabequittenstrauch55';
 const DAY = '2031-03-04';
-const CANARIES = [LABEL, THREAD, TASK, DAY];
+// Planner hub 2 (10a): the three new relations and the four new targets, each with its own canaries.
+const LABEL2 = 'Quittensaftkanister8274';
+const SUB = 'aboquittenmarmelade31';
+const BOOK = 'merkquittenbrot34';
+const DOC = 'unterlagequittengelee32';
+const ROUTINE = 'routinequittenbaum33';
+const EVENT = 'terminquittenpresse35';
+const CANARIES = [LABEL, THREAD, TASK, DAY, LABEL2, SUB, BOOK, DOC, ROUTINE, EVENT];
+const NEW_TARGETS = [
+  { module: 'subscriptions', id: SUB },
+  { module: 'bookmarks', id: BOOK },
+  { module: 'vault', id: DOC },
+  { module: 'routines', id: ROUTINE },
+];
+const NEW_RELS = ['before', 'after', 'topic'] as const;
+const newLinks: EntityLink[] = [
+  {
+    from: { module: 'todos', id: TASK },
+    to: { module: 'calendar', id: EVENT },
+    rel: 'before',
+    label: LABEL2,
+  },
+  {
+    from: { module: 'todos', id: TASK },
+    to: { module: 'calendar', id: EVENT },
+    rel: 'after',
+    label: LABEL2,
+  },
+  ...NEW_TARGETS.map((to, i): EntityLink => ({
+    from: { module: 'todos', id: TASK },
+    to,
+    rel: NEW_RELS[i % NEW_RELS.length]!,
+    label: LABEL2,
+    on: DAY,
+  })),
+  // A new target as the carrier, too.
+  {
+    from: { module: 'routines', id: ROUTINE },
+    to: { module: 'subscriptions', id: SUB },
+    rel: 'topic',
+    label: LABEL2,
+  },
+];
 
 const link: EntityLink = {
   from: { module: 'todos', id: TASK },
@@ -91,6 +133,9 @@ beforeEach(async () => {
   // A second, removed one: a tombstone must not leak either.
   await addLink({ ...link, to: { module: 'notes', id: `${THREAD}n` } });
   await removeLink(await linkId({ ...link, to: { module: 'notes', id: `${THREAD}n` } }));
+  for (const l of newLinks) await addLink(l);
+  // …and a removed one of the new kind.
+  await removeLink(await linkId(newLinks[0]!));
   clearCooldown();
 });
 afterEach(() => {
@@ -297,13 +342,13 @@ describe('a `_links` row reaches no surface', () => {
 
 describe('the vault is never an end of a link', () => {
   const vault = { module: 'accounts', id: 'entry-1' };
-  const rawRow = (id: string, from: EntityLink['from'], to: EntityLink['to']) =>
+  const rawRow = (id: string, from: EntityLink['from'], to: EntityLink['to'], rel = 'about') =>
     // As sync, a restore or an older copy would leave it: not through `addLink`.
     db.table(LINKS_TABLE).put({
       id,
       from,
       to,
-      rel: 'about',
+      rel,
       label: 'Bank-Login',
       fromKey: `${from.module}:${from.id}`,
       toKey: `${to.module}:${to.id}`,
@@ -327,6 +372,36 @@ describe('the vault is never an end of a link', () => {
     expect(JSON.stringify(await db.table(LINKS_TABLE).toArray())).not.toContain('accounts');
   });
 
+  it('write: every new relation and every new target refuses the vault, both ways (10a)', async () => {
+    const before = await db.table(LINKS_TABLE).count();
+    const ends = [{ module: 'todos', id: TASK }, { module: 'calendar', id: EVENT }, ...NEW_TARGETS];
+    for (const rel of [...NEW_RELS, 'about'] as const)
+      for (const end of ends)
+        for (const bad of [
+          { from: end, to: vault, rel, label: 'Bank-Login' },
+          { from: vault, to: end, rel, label: 'Bank-Login' },
+        ]) {
+          await expect(addLink(bad)).rejects.toThrow(/vault/);
+          await expect(addLinkIfAbsent(bad)).rejects.toThrow(/vault/);
+          expect(await addLinksIfAbsent([bad])).toBe(0);
+        }
+    expect(await db.table(LINKS_TABLE).count()).toBe(before);
+    expect(JSON.stringify(await db.table(LINKS_TABLE).toArray())).not.toContain('Bank-Login');
+  });
+
+  it('read: a synced row of a new relation between a new target and the vault is dropped (10a)', async () => {
+    for (const [i, end] of NEW_TARGETS.entries()) {
+      await rawRow(`raw-new-to-${i}`, end, vault, NEW_RELS[i % 3]);
+      await rawRow(`raw-new-from-${i}`, vault, end, NEW_RELS[i % 3]);
+      const seen = await linksOf(end);
+      expect(seen.map((l) => l.other.module)).not.toContain('accounts');
+      expect(JSON.stringify(seen)).not.toContain('Bank-Login');
+    }
+    expect(await linkEntries(vault)).toEqual([]);
+    for (const row of await db.table(LINKS_TABLE).where('id').startsWith('raw-new-').toArray())
+      expect(readLink(row)).toBeUndefined();
+  });
+
   it('write: a module that is no link target is refused as well', async () => {
     expect(isLinkable('accounts')).toBe(false);
     expect(getManifest('accounts')?.contributions?.linkTarget).toBeUndefined();
@@ -343,7 +418,15 @@ describe('the vault is never an end of a link', () => {
     await rawRow('raw-unknown', { module: 'nosuchmodule', id: 'x' }, { module: 'todos', id: TASK });
 
     const ofTask = await linksOf({ module: 'todos', id: TASK });
-    expect(ofTask.map((l) => l.other.module).sort()).toEqual(['mail']);
+    // The links of `beforeEach` only: none of the raw rows.
+    expect(ofTask.map((l) => l.other.module).sort()).toEqual([
+      'bookmarks',
+      'calendar',
+      'mail',
+      'routines',
+      'subscriptions',
+      'vault',
+    ]);
     expect(JSON.stringify(ofTask)).not.toContain('Bank-Login');
     expect(await linkEntries(vault)).toEqual([]);
     expect(await linksOf(vault)).toEqual([]);

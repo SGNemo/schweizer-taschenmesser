@@ -36,6 +36,16 @@ export const documentRoute = (id: string): string => `/vault?open=${encodeURICom
 /** The wording key of a category: a built-in key, else '' (a custom category's name is the person's text). */
 const wordingOf = (category: string): string => (isBuiltin(category) ? category : '');
 
+/**
+ * The one title a document has outside its own page: the plan row's and a link's (`linkTarget.ts`) – the category's
+ * wording only („Vertrag kündigen“, „Ausweis verlängern“), never the document's name, a file name or a custom
+ * category's name. A document with a notice period reads as its cancellation, every other one as its end.
+ */
+export const docTitle = (d: Parameters<typeof cancelDeadline>[0] & { category: string }): string =>
+  cancelDeadline(d) !== undefined
+    ? t.vault.planCancel(wordingOf(d.category))
+    : t.vault.planRenew(wordingOf(d.category));
+
 const source: PlannableSource = {
   async list(ctx) {
     const prefs = await getSettings('module.vault', settings.schema, settings.defaults);
@@ -47,8 +57,9 @@ const source: PlannableSource = {
       const end = endOf(d);
       if (!end) continue;
       const deadline = cancelDeadline(d);
-      const wording = wordingOf(d.category);
       const base = {
+        // The row is one date of the document: a link from or to it stores the document.
+        entityId: d.id,
         to: documentRoute(d.id),
         durationMin: DOC_MINUTES,
         // Display only, on the planner page: the one place the name may stand.
@@ -63,7 +74,7 @@ const source: PlannableSource = {
           ...base,
           id: `${d.id}:cancel:${deadline}`,
           kind: 'cancel',
-          title: t.vault.planCancel(wording),
+          title: docTitle(d),
           priority: CANCEL_PRIORITY,
           due: { date: deadline, hard: true },
         });
@@ -72,7 +83,7 @@ const source: PlannableSource = {
           ...base,
           id: `${d.id}:end:${end}`,
           kind: 'renew',
-          title: t.vault.planRenew(wording),
+          title: docTitle(d),
           priority: RENEW_PRIORITY,
           due: { date: end, hard: true },
         });

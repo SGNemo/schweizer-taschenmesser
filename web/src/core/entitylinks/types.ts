@@ -11,9 +11,21 @@ export interface EntityRef {
   id: string;
 }
 
-/** Why the link exists. Stored as a plain string: unknown values read as `about` (`linkRel`). */
-export type LinkRel = 'origin' | 'dunning' | 'about';
-export const LINK_RELS: readonly LinkRel[] = ['origin', 'dunning', 'about'];
+/**
+ * Why the link exists. Stored as a plain string: unknown values read as `about` (`linkRel`), so an older app
+ * shows a newer relation as a plain link. `before` / `after`: a ToDo that prepares or follows up an appointment;
+ * `topic`: a planner topic (`planner:t_<id>`) → any thing (docs/design/planner-hub-2/CONCEPT.md §1.1). Every
+ * writer of these three is the planner's own undoable action calling `addLink`, never a request event.
+ */
+export type LinkRel = 'origin' | 'dunning' | 'about' | 'before' | 'after' | 'topic';
+export const LINK_RELS: readonly LinkRel[] = [
+  'origin',
+  'dunning',
+  'about',
+  'before',
+  'after',
+  'topic',
+];
 
 export interface EntityLink {
   /** The thing that carries the link (ToDo, invoice). */
@@ -73,6 +85,19 @@ export function refOfKey(key: unknown): EntityRef | undefined {
 /** A stored `rel` is a plain string: anything unknown (a newer app's value) reads as `about`. */
 export const linkRel = (raw: unknown): LinkRel =>
   LINK_RELS.includes(raw as LinkRel) ? (raw as LinkRel) : 'about';
+
+/**
+ * The thing behind a plan row: `<module>:<entityId>` where the source names one (its rows are occurrences – a
+ * subscription's deadline, a document's end, a routine's turn), else `<module>:<id>`. A link from or to such a row
+ * stores this ref, never the occurrence key (CONCEPT §1.2 „Occurrence keys“).
+ */
+export const entityRefOf = (
+  module: string,
+  item: { id: string; entityId?: string },
+): EntityRef => ({
+  module,
+  id: item.entityId ?? item.id,
+});
 
 /** A legacy link as the target half of an `EntityLink`: every writer of today records where the thing came from. */
 export function fromLegacy(link: LegacyLink): Omit<EntityLink, 'from'> {

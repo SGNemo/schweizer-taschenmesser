@@ -64,6 +64,7 @@ const manifest: ModuleManifest = {
   order: 92,
   area: 'household',
   contributions: {
+    linkTarget: () => import('./linkTarget'),
     // Start templates to tick; no text importer: a routine is typed in a few seconds (name, Enter).
     onboarding,
     quickAdd: [
