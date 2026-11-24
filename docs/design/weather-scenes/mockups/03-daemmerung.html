@@ -6,7 +6,7 @@ var P = [['Morgendämmerung', { phase: 'dawn' }], ['Goldene Stunde, Morgen', { p
   ['Goldene Stunde, Abend', { phase: 'golden', body: { kind: 'sun', t: 0.92 } }], ['Abenddämmerung', { phase: 'dusk' }]];
 var C = [['klar', { cond: 'clear' }], ['teils bewölkt', { cond: 'partly' }], ['Regen', { cond: 'rain', intensity: 2, season: 'autumn' }]];
 var items = [];
-P.forEach(function (p) { C.forEach(function (c) { items.push({ label: p[0] + ', ' + c[1], state: Object.assign({}, p[1], c[1]) }); }); });
+P.forEach(function (p) { C.forEach(function (c) { items.push({ label: p[0] + ', ' + c[0], state: Object.assign({}, p[1], c[1]) }); }); });
 Gallery.tiles('#a', items);
 Gallery.tiles('#b', [['Frühling', 'spring'], ['Sommer', 'summer'], ['Herbst', 'autumn'], ['Winter', 'winter']].map(function (x) {
   return { label: x[0], state: { phase: 'day', cond: 'partly', season: x[1] } }; }));

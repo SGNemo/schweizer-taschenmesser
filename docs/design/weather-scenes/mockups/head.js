@@ -33,7 +33,7 @@
     var chips = phone ? h.chips.slice(0, 2) : h.chips;
     var restLine = phone ? [h.chips[2] && h.chips[2].text].concat(h.rest).filter(Boolean).join(' · ') : h.rest.join(' · ');
     return '<div class="whead ' + (phone ? 'phone' : 'desk') + '" data-ink="' + ink + '">' +
-      '<div class="backdrop">' + Scene.svg(st) + '</div>' +
+      '<div class="backdrop">' + Scene.svg(st, phone ? { quietX: 1300, extendTop: 90 } : null) + '</div>' +
       '<div class="titleRow"><span class="plate">' + icon('cloudSun', 18) + '</span><h1>Lindenau</h1><span class="sp"></span>' +
       '<button class="gear" aria-label="Einstellungen">' + icon('gear', 20) + '</button></div>' +
       (phone ? '<nav class="modrow"><span>Kalender</span><span>Planer</span><span>ToDos</span><span class="on">Wetter</span><span>…</span></nav>' : '') +

@@ -177,7 +177,7 @@
   /* ============================== context: colours, defs ============================== */
   function context(s, idSeed) {
     var surface = PAL.surface[s.theme === 'dark' ? 'dark' : 'light'];
-    var X = { s: s, defs: [], id: 'sc' + hash(idSeed), n: 0 };
+    var X = { s: s, defs: [], id: 'sc' + hash(idSeed), n: 0, ext: 0 };
     X.c = function (h) {
       if (PAL.c[h]) h = PAL.c[h];
       return s.calm ? mix(greyOf(h), surface, 0.6) : h;
@@ -211,8 +211,9 @@
   function layer(name, inner, extra) { return inner ? '<g data-layer="' + name + '"' + attrs(extra || {}) + '>' + inner + '</g>' : ''; }
 
   function skyLayer(X, sky, stops, bodyPos) {
-    X.skyFill = X.grad(stops.map(function (p) { return [p[0], p[1]]; }), { x1: 0, y1: 0, x2: 0, y2: G.H, gradientUnits: 'userSpaceOnUse' });
-    var out = el('rect', { width: G.W, height: G.H, fill: X.skyFill });
+    var t0 = -X.ext; // extra sky above y 0 (opts.extendTop)
+    X.skyFill = X.grad(stops.map(function (p) { return [p[0], p[1]]; }), { x1: 0, y1: t0, x2: 0, y2: G.H, gradientUnits: 'userSpaceOnUse' });
+    var out = el('rect', { y: t0, width: G.W, height: G.H - t0, fill: X.skyFill });
     if (sky.glow) {
       var gx = X.s.phase === 'dawn' ? 1210 : X.s.phase === 'dusk' ? 1480 : bodyPos ? bodyPos[0] : 1300;
       var gl = X.grad([[0, sky.glow.colour, 0.75 * sky.glow.strength], [0.5, sky.glow.colour, 0.28 * sky.glow.strength], [1, sky.glow.colour, 0]],
@@ -277,8 +278,9 @@
     if (!lit) out += el('circle', { r: r - 0.75, fill: 'none', stroke: X.c('moon-dark'), 'stroke-width': 1.5, opacity: 0.9 });
     if (o.glow && lit && ev !== 'lunarTotal') {
       var gop = G.moon.haloOp * illum * (m.size >= 1.2 ? 1.25 : 1);
-      var gg = X.grad([[0, 'moon', 0], [0.4, 'moon', 0.9], [1, 'moon', 0]], { radial: true });
-      out += el('circle', { r: r * G.moon.halo, fill: gg, opacity: f(gop * 100) / 100 });
+      // glow centred a little toward the lit side, so the unlit part of the disc shows no ring of its own
+      var gg = X.grad([[0, 'moon', 0.8], [0.4, 'moon', 0.9], [1, 'moon', 0]], { radial: true }), gx = (m.waxing ? 1 : -1) * r * (1 - illum) * 0.9;
+      out += el('circle', { cx: gx, r: r * G.moon.halo, fill: gg, opacity: f(gop * 100) / 100 });
       if (m.size >= 1.2) out += el('circle', { r: r * G.moon.ring, fill: 'none', stroke: X.c('moon'), 'stroke-width': 1.2, opacity: G.moon.ringOp });
     }
     if (ev === 'lunarTotal') {
@@ -311,10 +313,9 @@
     if (ev === 'solarTotal') {
       var cg = X.grad([[0, '#ffffff', 0.85], [0.36, '#ffffff', 0.45], [1, '#ffffff', 0]], { radial: true }), petals = '';
       for (var i = 0; i < 6; i++) {
-        var a = i * 60 + 18 + (i % 2) * 9, L = r * (i % 2 ? 1.7 : 2.1);
-        petals += 'M0,' + f(-r * 0.3) + 'Q' + f(L * 0.55) + ',' + f(-r * 0.22) + ' ' + f(L) + ',0Q' + f(L * 0.55) + ',' + f(r * 0.22) + ' 0,' + f(r * 0.3) + 'Z';
-        petals = petals.replace(/Z$/, 'Z'); // one subpath per petal, rotated below
-        out += el('path', { d: petals, transform: 'rotate(' + a + ')', fill: '#ffffff', opacity: 0.8 });
+        var a = i * 60 + 18 + (i % 2) * 9, L = r * (i % 2 ? 1.55 : 1.85), w = r * 0.55; // soft, rounded petals
+        petals += 'M0,' + f(-w) + 'C' + f(L * 0.6) + ',' + f(-w) + ' ' + f(L) + ',' + f(-w * 0.25) + ' ' + f(L) + ',0C' + f(L) + ',' + f(w * 0.25) + ' ' + f(L * 0.6) + ',' + f(w) + ' 0,' + f(w) + 'Z';
+        out += el('path', { d: petals, transform: 'rotate(' + a + ')', fill: '#ffffff', opacity: 0.42 });
         petals = '';
       }
       out = el('circle', { r: r * 2.8, fill: cg }) + out + el('circle', { r: r, fill: X.c('eclipse-disc') });
@@ -365,7 +366,9 @@
     return { b: b, sh: sh, op: op, rim: rim };
   }
   function cloud(X, tone, t, x, y, sc, cls) {
-    var s = X.s, sx = sc * (s.wind >= 2 ? G.stretch : 1), T = G.tpl[t], d = cloudPath(t), out = '';
+    var s = X.s, T = G.tpl[t], d = cloudPath(t), out = '';
+    if (X.quiet && x < X.quiet) { x = X.quiet + (x - G.shelterX) * 0.25; sc *= 0.7; y += 8; } // small crops: clouds out of the text
+    var sx = sc * (s.wind >= 2 ? G.stretch : 1);
     var fill = X.grad([[0, tone.b], [G.shadeAt, tone.b], [G.shadeAt, tone.sh], [1, tone.sh]], { x1: 0, y1: 0, x2: 0, y2: 1 });
     if (tone.rim) out += el('path', { d: d, fill: tone.rim, transform: 'translate(0 ' + f(-2 / sc) + ')' });
     out += el('path', { d: d, fill: fill });
@@ -378,7 +381,7 @@
     return s.motion ? el('g', { class: cls || 'sc-drift' }, g) : g;
   }
   function deck(X, tone, sky) {
-    var s = X.s, r = prng(s.seed * 7 + 3), D = G.deck, x = G.W, d = 'M0,0H' + G.W + 'V' + D.y;
+    var s = X.s, r = prng(s.seed * 7 + 3), D = G.deck, x = G.W, d = 'M0,' + -X.ext + 'H' + G.W + 'V' + D.y;
     while (x > 0) {
       var w = D.arcs[0] + r() * (D.arcs[1] - D.arcs[0]), dep = D.depth[0] + r() * (D.depth[1] - D.depth[0]);
       var nx = Math.max(0, x - w), yy = D.y + (r() - 0.5) * 8;
@@ -412,7 +415,7 @@
         far += cloud(X, tone, 's', 1450, 66, 1);
         main += cloud(X, tone, 'l', 960, 92, 1);
       } else if (cov > 10) {
-        far += cloud(X, tone, 's', 980, 74, 1) + cloud(X, tone, 's', bx > 1380 ? 1210 : 1450, 92, 0.95);
+        far += cloud(X, tone, 's', 980, 74, 1) + cloud(X, tone, 's', bx > 1380 && !s.dayMoon ? 1210 : 1450, 92, 0.95);
       }
     }
     return { far: far, main: main };
@@ -435,7 +438,7 @@
       night: night, bottom: bottom, base: base, wet: wet,
       near: snow ? snowTone : near,
       mid: mix(snow ? snowTone : base, bottom, 0.3),
-      far: mix(base, bottom, s.event === 'dust' ? 0.82 : 0.62),
+      far: night ? mix(mix(base, bottom, 0.62), '#6a7aae', 0.2) : mix(base, bottom, s.event === 'dust' ? 0.82 : 0.62),
       crowns: night ? [mix(base, '#000000', 0.15), mix(base, '#000000', 0.2), mix(base, '#000000', 0.1)] : L.crowns.map(function (c) { return s.theme === 'dark' ? mix(c, PAL.land.night, 0.4) : c; }),
       snowTone: snowTone, snowShade: night ? mix(PAL.c['snow-shade'], bottom, 0.55) : s.theme === 'dark' ? mix(PAL.c['snow-shade'], bottom, 0.45) : PAL.c['snow-shade'],
     };
@@ -469,7 +472,7 @@
         }
         reg += 'V0Z';
       });
-      var capCol = mix(X.c(LC.snowTone), X.c(LC.bottom), LC.night ? 0.3 : 0.28);
+      var capCol = mix(X.c(LC.snowTone), X.c(LC.bottom), LC.night ? 0.3 : s.theme === 'dark' ? 0.45 : 0.28);
       out += el('path', { d: R.fill, fill: capCol, opacity: s.cond === 'fog' ? 0.4 : 1, 'clip-path': X.clip(el('path', { d: reg })) });
     }
     return out + ridgeTrims(X, R, LC, 'far');
@@ -580,7 +583,7 @@
   }
   function fogBands(X, which) {
     if (X.s.cond !== 'fog') return '';
-    var out = '', op = X.s.phase === 'night' ? 0.28 : 0.55;
+    var out = '', op = X.s.phase === 'night' ? 0.28 : X.s.theme === 'dark' ? 0.3 : 0.55;
     var g = X.grad([[0, 'fog', 0], [0.25, 'fog', 1], [0.75, 'fog', 1], [1, 'fog', 0]], { x1: 0, y1: 0, x2: 1, y2: 0 });
     G.fog.forEach(function (b) { if (b[4] === which) out += el('rect', { x: b[0], y: b[2], width: b[1], height: b[3], rx: b[3] / 2, fill: g, opacity: op }); });
     return X.s.motion && out ? el('g', { class: 'sc-fog' }, out) : out;
@@ -646,7 +649,7 @@
       out += el('path', { d: hd, fill: X.c('#ffffff') }) + el('path', { d: he, fill: X.c('hail-edge') });
     }
     // left of x 1000 at 30 %, clipped below the title row (and under the shower cloud)
-    var mk = X.mask(el('rect', { width: G.W, height: G.H, fill: X.grad([[0, '#ffffff', P.leftOp], [1, '#ffffff', 1]], { x1: P.mask[0], x2: P.mask[1], y1: 0, y2: 0, gradientUnits: 'userSpaceOnUse' }) }));
+    var mk = X.mask(el('rect', { width: G.W, height: G.H, fill: X.grad([[0, '#ffffff', P.leftOp], [1, '#ffffff', 1]], { x1: X.quiet ? X.quiet - 150 : P.mask[0], x2: X.quiet || P.mask[1], y1: 0, y2: 0, gradientUnits: 'userSpaceOnUse' }) }));
     var cy = showers ? 178 : curtain ? 96 : top;
     var clipD = 'M' + x0 + ',' + cy + 'H' + x1 + 'L' + f(x1 + k * (G.H - cy)) + ',' + G.H + 'H' + f(x0 + k * (G.H - cy)) + 'Z';
     if (!showers && !curtain) clipD = 'M0,' + top + 'H' + G.W + 'V' + G.H + 'H0Z';
@@ -703,7 +706,9 @@
   function svg(input, opts) {
     var s = state(input);
     opts = opts || {};
-    var X = context(s, JSON.stringify(s)), sky = skyOf(s), stops = skyStops(X, sky);
+    var X = context(s, JSON.stringify(s) + JSON.stringify(opts)), sky = skyOf(s), stops = skyStops(X, sky);
+    X.quiet = opts.quietX || null;
+    X.ext = opts.extendTop || 0; // short, narrow boxes (phone head): more sky above, so the landscape stays low
     X.skyMid = skyAt(stops, 120);
     var top = stops[0][1], bottom = stops[stops.length - 1][1];
     var skyInfo = { top: top, bottom: bottom };
@@ -735,7 +740,7 @@
       L.push(layer('ridgeFar', farRidge(X, far, LC)));
       L.push(layer('fog', fogBands(X, 'far')));
       var midOut = el('path', { d: mid.fill, fill: s.snowGround ? X.grad([[0, LC.mid], [1, mix(LC.snowShade, bottom, 0.3)]], { x1: 0, y1: 220, x2: 0, y2: 300, gradientUnits: 'userSpaceOnUse' }) : X.c(LC.mid) }) + ridgeTrims(X, mid, LC, 'mid');
-      if (s.heat && !LC.night) midOut += el('rect', { y: 200, width: G.W, height: 50, fill: X.grad([[0, 'heat-haze', 0], [0.5, 'heat-haze', 1], [1, 'heat-haze', 0]], { x1: 0, y1: 0, x2: 0, y2: 1 }), opacity: 0.5 });
+      if (s.heat && !LC.night) midOut += el('rect', { y: 200, width: G.W, height: 50, fill: X.grad([[0, 'heat-haze', 0], [0.5, 'heat-haze', 1], [1, 'heat-haze', 0]], { x1: 0, y1: 0, x2: 0, y2: 1 }), opacity: s.theme === 'dark' ? 0.16 : 0.5 });
       midOut += s.landscape === 'village' ? village(X, mid, LC) : conifers(X, mid, LC);
       L.push(layer('ridgeMid', midOut));
       L.push(layer('fog', fogBands(X, 'near'), { 'data-part': 'front' }));
@@ -748,7 +753,7 @@
       var vm = X.mask(el('rect', { width: G.W, height: G.H, fill: X.grad([[0, '#ffffff', 0], [1, '#ffffff', 1]], { x1: 0, x2: 0, y1: S.y0, y2: S.y1, gradientUnits: 'userSpaceOnUse' }) }));
       L.push(layer('shelter', el('rect', { y: S.y0, width: S.x1, height: G.H - S.y0, fill: wash, mask: vm })));
     }
-    var a = { xmlns: 'http://www.w3.org/2000/svg', viewBox: '0 0 ' + G.W + ' ' + G.H, preserveAspectRatio: opts.align || 'xMaxYMax slice', 'aria-hidden': 'true',
+    var a = { xmlns: 'http://www.w3.org/2000/svg', viewBox: '0 ' + -X.ext + ' ' + G.W + ' ' + (G.H + X.ext), preserveAspectRatio: opts.align || 'xMaxYMax slice', 'aria-hidden': 'true',
       class: 'scene' + (s.motion && !s.calm ? ' scene-motion' : ''), 'data-ink': ink(s), width: opts.width || '100%', height: opts.height || '100%' };
     var body2 = L.join('');
     if (!s.motion || s.calm) body2 = body2.replace(/ class="sc-[a-z]+"/g, '');
@@ -757,7 +762,7 @@
 
   /* ============================== Scene.porthole (round crop, 40–64 px) ============================== */
   function porthole(input, px) {
-    var s = state(input), X = context(s, 'p' + JSON.stringify(s)), sky = skyOf(s), stops = skyStops(X, sky);
+    var s = state(input), X = context(s, 'p' + px + JSON.stringify(s)), sky = skyOf(s), stops = skyStops(X, sky);
     X.skyMid = skyAt(stops, 120);
     var bottom = stops[stops.length - 1][1], out = '';
     out += el('rect', { width: 100, height: 100, fill: X.grad(stops, { x1: 0, y1: 0, x2: 0, y2: 1 }) });
