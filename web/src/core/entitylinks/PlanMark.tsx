@@ -53,6 +53,19 @@ export function PlanMarkLink({
   );
 }
 
+/**
+ * The mark as plain words, for a list whose view broke its stimulus budget with a link and a glyph per row (ToDos):
+ * „Im Plan · Mi“ in the row's meta line, no control of its own; the way to the planner is the row's ⋯ and its detail.
+ */
+export function PlanMarkWords({ state }: { state: PlanMarkState | null | undefined }) {
+  if (!state) return null;
+  return (
+    <span data-testid="plan-mark" data-plan={state.kind}>
+      {planMarkText(state)}
+    </span>
+  );
+}
+
 /** The live marks of a list's rows; `undefined` while loading or while the planner is off. */
 export function usePlanMarks(
   module: string,

@@ -8,7 +8,7 @@ import { skipSuggestion } from '@/core/focus/state';
 import { usePageChrome } from '@/core/shell/pageChrome';
 import { useWriteAvailable, useWriteLabel } from '@/core/shell/writeAvailable';
 import { useModuleStates } from '@/core/modules/activation';
-import { PlanMarkLink, usePlanMarks } from '@/core/entitylinks/PlanMark';
+import { PlanMarkWords, usePlanMarks } from '@/core/entitylinks/PlanMark';
 import { planMarkPath, type PlanMarkState } from '@/core/entitylinks/planMark';
 import { planFacts, requestManyIntoPlan } from '@/core/entitylinks/planRow';
 import { useFocusSettings } from '@/core/settings/focus';
@@ -107,7 +107,7 @@ interface RowProps {
   quickTomorrow?: boolean;
   /** While the planner is on: where the task stands in the plan (a quiet line under the title; todos-plan-state). */
   plan?: PlanState;
-  /** The shared mark „Im Plan · Mi“, read from the planner's rows (`core/entitylinks/PlanMark.tsx`); a link under the meta. */
+  /** The shared mark „Im Plan · Mi“, read from the planner's rows (`core/entitylinks/PlanMark.tsx`); words in the meta. */
   mark?: PlanMarkState;
   /** „im Plan: Mi“ → the planner on that day; „noch nicht im Plan“ / „In den Plan …“ → the day choice. */
   onPlanShow?: (mark: PlanMarkState) => void;
@@ -212,7 +212,6 @@ function TaskRow({
       tone={tone === 'overdue' && !waiting ? 'overdue' : tone === 'today' ? 'today' : undefined}
       className={sub ? styles.sub : undefined}
       onOpen={() => onOpen(task)}
-      below={mark ? <PlanMarkLink state={mark} /> : undefined}
       onSwipeRight={() => onToggle(task, !task.done)}
       swipeRightLabel={task.done ? t.todos.markedOpen : t.todos.markedDone}
       onSwipeLeft={task.done ? undefined : () => postpone(task, day)}
@@ -318,6 +317,9 @@ function TaskRow({
               })()}
             </span>
           ) : null}
+          {/* „Im Plan · Mi“ as words: a link and a glyph per row broke the page's stimulus budget, so the way to the
+              plan row is ⋯ „Im Planer zeigen“ and the mark in the detail (package 10b, hand-off 10 „Stimulus“). */}
+          {mark ? <PlanMarkWords state={mark} /> : null}
           {task.startDate && task.startDate > day ? (
             <span>{t.todos.startsOn(formatDay(task.startDate, 'EEE, d. MMM'))}</span>
           ) : null}

@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { setNow } from '@/core/time/now';
-import { PlanMark, PlanMarkLink } from './PlanMark';
+import { PlanMark, PlanMarkLink, PlanMarkWords } from './PlanMark';
 
 const NOW = new Date(2026, 10, 30, 10, 0).getTime(); // Monday 2026-11-30
 const stamp = { createdAt: 1, updatedAt: 1, deviceId: 't', deletedAt: null, _f: {} };
@@ -89,6 +89,15 @@ describe('PlanMarkLink (the states as drawn)', () => {
       </>,
     );
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it('the words variant (a list over its stimulus budget) is plain text: no link, no glyph', () => {
+    draw(<PlanMarkWords state={{ kind: 'passed', date: '2026-11-23', rowKey: 'todos:t1' }} />);
+    const words = screen.getByTestId('plan-mark');
+    expect(words.tagName).toBe('SPAN');
+    expect(words).toHaveTextContent('Im Plan · war Mo');
+    expect(words.querySelector('svg')).toBeNull();
+    expect(screen.queryByRole('link')).toBeNull();
   });
 
   it('the detail variant is its own line', () => {

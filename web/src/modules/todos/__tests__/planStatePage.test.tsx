@@ -109,15 +109,8 @@ describe('the plan state in ToDos', () => {
     expect(markOf('Freitag im Plan')).toHaveTextContent('Im Plan · Fr');
     expect(markOf('Weit weg')).toHaveTextContent(/^Im Plan · Mi 2\.12\.?$/);
     expect(markOf('War Montag')).toHaveTextContent('Im Plan · war Mo');
-    // M6: the visible words first, then the full date.
-    expect(markOf('Freitag im Plan')).toHaveAccessibleName(
-      'Im Plan · Fr – Freitag, 20. November. Im Planer zeigen',
-    );
-    // One link to the row it matched.
-    expect(markOf('Freitag im Plan')).toHaveAttribute(
-      'href',
-      '/planner?day=2026-11-20&item=todos%3Ab',
-    );
+    // Words in the meta line, no control of its own (the page's stimulus budget): the way is ⋯ and the detail.
+    expect(markOf('Freitag im Plan').tagName).toBe('SPAN');
     // Not in the plan (a date set in ToDos is no day in the plan): no mark – the entry is in ⋯.
     expect(within(rowOf('Lose zwei')).queryByTestId('plan-mark')).toBeNull();
     expect(within(rowOf('Lose eins')).queryByTestId('plan-mark')).toBeNull();
@@ -172,8 +165,8 @@ describe('the plan state in ToDos', () => {
     await seed();
     const show = async (title: string) => {
       const row = await waitFor(() => rowOf(title));
-      // The mark is one quiet link under the meta; ⋯ keeps „Im Planer zeigen“ for the same row.
-      expect((await within(row).findByTestId('plan-mark')).tagName).toBe('A');
+      // The mark is words in the meta line; ⋯ „Im Planer zeigen“ leads to the row it matched.
+      expect((await within(row).findByTestId('plan-mark')).tagName).toBe('SPAN');
       await userEvent.click(within(row).getAllByRole('button', { name: 'Weitere Aktionen' })[0]!);
       await userEvent.click(await screen.findByRole('menuitem', { name: 'Im Planer zeigen' }));
     };
