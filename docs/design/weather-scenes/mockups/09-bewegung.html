@@ -1,0 +1,17 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wetterszene – Bewegung</title><link rel="stylesheet" href="mock.css"><script src="palette.js"></script><script src="scene.js"></script><script src="gallery.js"></script><link rel="stylesheet" href="scene-motion.css">
+<style>.mrow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:24px}.btn{min-height:44px;padding:0 16px;border-radius:8px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font:inherit}@media(max-width:700px){.mrow{grid-template-columns:1fr}}</style></head>
+<body><h1>Bewegung</h1><p class="intro">Links mit Bewegung (die echten CSS-Animationen; jede läuft 5 s und kommt dann zur Ruhe), rechts still. Bei „Bewegung reduzieren“ bleibt alles still; ist die Seite verdeckt, pausiert die Bewegung.</p>
+<button class="btn" id="again">nochmal</button><div id="m"></div>
+<script>
+var M = [['Regen', { cond: 'rain', intensity: 2, season: 'autumn' }], ['Schneefall', { cond: 'snow', intensity: 2, season: 'winter' }], ['leicht bewölkt · windig', { cond: 'partly', wind: 2 }]];
+function draw() {
+  document.getElementById('m').innerHTML = M.map(function (x) {
+    var s = Gallery.withTheme(x[1]);
+    return '<p class="label">' + x[0] + '</p><div class="mrow"><figure class="tile"><div class="crops"><div class="box wide">' + Scene.svg(Object.assign({ motion: true }, s)) + '</div></div><figcaption>mit Bewegung</figcaption></figure>' +
+      '<figure class="tile"><div class="crops"><div class="box wide">' + Scene.svg(s) + '</div></div><figcaption>still</figcaption></figure></div>';
+  }).join('');
+}
+draw();
+document.getElementById('again').onclick = draw;
+document.addEventListener('visibilitychange', function () { document.documentElement.classList.toggle('scene-paused', document.hidden); });
+</script></body></html>
