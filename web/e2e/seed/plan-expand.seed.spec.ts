@@ -164,7 +164,7 @@ for (const [name, viewport, mobile] of [
 
       // Another row opens: the first one closes (one at a time).
       const todo = rowOf(page, 'todos:hh');
-      await todo.getByRole('button', { name: 'Haushalt. Aufklappen' }).click();
+      await todo.getByRole('button', { name: /^Haushalt\s*\. Aufklappen$/ }).click();
       await expect(page.getByTestId('row-compartment')).toHaveCount(1);
       const panel = todo.getByTestId('row-compartment');
       await expect(panel).toContainText('Vor dem Besuch am Abend.');
@@ -188,7 +188,7 @@ for (const [name, viewport, mobile] of [
       await panel.getByRole('checkbox', { name: '„Wäsche anstellen“ abhaken' }).focus();
       await page.keyboard.press('Escape');
       await expect(page.getByTestId('row-compartment')).toHaveCount(0);
-      await expect(todo.getByRole('button', { name: 'Haushalt. Aufklappen' })).toBeFocused();
+      await expect(todo.getByRole('button', { name: /^Haushalt\s*\. Aufklappen$/ })).toBeFocused();
 
       // „Ganz öffnen“ is the old jump.
       await page.keyboard.press('Enter');
@@ -208,7 +208,9 @@ for (const scheme of ['light', 'dark'] as const)
     await page.setViewportSize(DESKTOP);
     await page.emulateMedia({ colorScheme: scheme });
     await prepare(page);
-    await rowOf(page, 'todos:hh').getByRole('button', { name: 'Haushalt. Aufklappen' }).click();
+    await rowOf(page, 'todos:hh')
+      .getByRole('button', { name: /^Haushalt\s*\. Aufklappen$/ })
+      .click();
     await expect(page.getByRole('checkbox', { name: '„Bad wischen“ abhaken' })).toBeVisible();
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
