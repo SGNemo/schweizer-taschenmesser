@@ -19,10 +19,10 @@ import type { PlannableItem, PlannableSource } from '@/core/modules/types';
 import { getSettings } from '@/core/settings/settings';
 import { addDaysStr } from '@/core/time/dates';
 import { t } from '@/strings';
-import { isBuiltin } from './categories';
 import { cancelDeadline, endOf } from './logic';
 import { documentRepo } from './repo';
 import { settings } from './settings';
+import { docTitle } from './titles';
 
 export const DOC_MINUTES = 15;
 export const CANCEL_PRIORITY = 3;
@@ -32,19 +32,6 @@ export const LATE_DAYS = 7;
 
 /** The route of „Zum Dokument“: the document's own dialog; the page checks the id. */
 export const documentRoute = (id: string): string => `/vault?open=${encodeURIComponent(id)}`;
-
-/** The wording key of a category: a built-in key, else '' (a custom category's name is the person's text). */
-const wordingOf = (category: string): string => (isBuiltin(category) ? category : '');
-
-/**
- * The one title a document has outside its own page: the plan row's and a link's (`linkTarget.ts`) – the category's
- * wording only („Vertrag kündigen“, „Ausweis verlängern“), never the document's name, a file name or a custom
- * category's name. A document with a notice period reads as its cancellation, every other one as its end.
- */
-export const docTitle = (d: Parameters<typeof cancelDeadline>[0] & { category: string }): string =>
-  cancelDeadline(d) !== undefined
-    ? t.vault.planCancel(wordingOf(d.category))
-    : t.vault.planRenew(wordingOf(d.category));
 
 const source: PlannableSource = {
   async list(ctx) {

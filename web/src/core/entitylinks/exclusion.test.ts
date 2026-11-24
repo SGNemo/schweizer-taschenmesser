@@ -53,7 +53,10 @@ const LABEL = 'Quittenkompottrechnung7391';
 const THREAD = 'thrquittenfaden0042';
 const TASK = 'aufgabequittenstrauch55';
 const DAY = '2031-03-04';
-// Planner hub 2 (10a): the three new relations and the four new targets, each with its own canaries.
+// Planner hub 2 (10a): the three new relations and the four new targets, each with its own canaries. The refs have
+// no records behind them: this pins keys and labels; that a resolved title holds no document name is pinned in
+// `modules/vault/__tests__/vault.plannable.test.ts`. `topic` from a ToDo only stands in for the planner's topic rows
+// (package 11; `planner` is no link target yet) – `toRow` checks ends, not which relation joins them.
 const LABEL2 = 'Quittensaftkanister8274';
 const SUB = 'aboquittenmarmelade31';
 const BOOK = 'merkquittenbrot34';
@@ -92,7 +95,7 @@ const newLinks: EntityLink[] = [
   {
     from: { module: 'routines', id: ROUTINE },
     to: { module: 'subscriptions', id: SUB },
-    rel: 'topic',
+    rel: 'about',
     label: LABEL2,
   },
 ];

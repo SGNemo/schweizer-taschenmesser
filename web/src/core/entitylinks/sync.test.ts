@@ -292,23 +292,24 @@ describe('the new relations between two devices (planner hub 2, 10a)', () => {
   const count = async (db: TaschenmesserDB) =>
     (await linkEntries(before.to, db)).filter((e) => e.link.rel === 'before').length;
 
-  it('both devices add the same `before` link: one row everywhere, read as `before`', async () => {
-    const a = device();
-    const b = device();
-    await addLink(before, a.db);
-    await addLink({ ...before, label: 'Zahnarzt (B)' }, b.db);
-    await a.sync();
-    await b.sync();
-    await a.sync();
-    for (const d of [a, b]) {
-      expect(await d.db.table(LINKS_TABLE).count()).toBe(1);
-      expect(await count(d.db)).toBe(1);
-      expect((await linkEntries(before.from, d.db))[0]!.link.rel).toBe('before');
-    }
-    // Not the same row as an `after` or `about` link between the same ends: the relation is part of the id.
-    expect(await linkId(before)).not.toBe(await linkId({ ...before, rel: 'after' }));
-    expect(await linkId(before)).not.toBe(await linkId({ ...before, rel: 'about' }));
-  });
+  for (const rel of ['before', 'after', 'topic'] as const)
+    it(`both devices add the same \`${rel}\` link: one row everywhere, read as \`${rel}\``, async () => {
+      const a = device();
+      const b = device();
+      const l = { ...before, rel };
+      await addLink(l, a.db);
+      await addLink({ ...l, label: 'Zahnarzt (B)' }, b.db);
+      await a.sync();
+      await b.sync();
+      await a.sync();
+      for (const d of [a, b]) {
+        expect(await d.db.table(LINKS_TABLE).count()).toBe(1);
+        expect((await linkEntries(l.from, d.db)).map((e) => e.link.rel)).toEqual([rel]);
+      }
+      // Not the same row as another relation between the same ends: the relation is part of the id.
+      for (const other of ['origin', 'dunning', 'about', 'before', 'after', 'topic'] as const)
+        if (other !== rel) expect(await linkId(l)).not.toBe(await linkId({ ...l, rel: other }));
+    });
 
   it('a removal wins over a later silent re-add on the other device', async () => {
     const a = device();
@@ -319,10 +320,10 @@ describe('the new relations between two devices (planner hub 2, 10a)', () => {
     await removeLink(await linkId(before), b.db);
     await b.sync();
     clock += 3_600_000; // later by the clock
-    // A has not pulled yet: a writer that is no tap adds the same link.
-    expect(await addLinkIfAbsent(before, a.db)).toBe(false); // A still holds the live row: nothing written
     await a.sync();
-    expect(await addLinkIfAbsent(before, a.db)).toBe(false); // the tombstone arrived: counts as present
+    // Later, on both devices, a writer that is no tap adds the same link: the tombstone counts as present.
+    expect(await addLinkIfAbsent(before, a.db)).toBe(false);
+    expect(await addLinkIfAbsent(before, b.db)).toBe(false);
     await a.sync();
     await b.sync();
     for (const d of [a, b]) expect(await count(d.db)).toBe(0);

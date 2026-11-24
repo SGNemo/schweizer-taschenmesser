@@ -35,6 +35,21 @@ describe('bookmarks as a link target', () => {
     expect(await target.resolve(done.id)).toMatchObject({ state: 'alive', done: true });
   });
 
+  it('an untitled import (its title is the URL) reads as its kind, never the address', async () => {
+    const i = await add({ title: URL });
+    expect(await target.resolve(i.id)).toMatchObject({ state: 'alive', title: 'Film/Serie' });
+  });
+
+  it('a hostile id of a stored row is encoded in the route', async () => {
+    const i = await itemRepo.create(
+      { title: 'Dune', kind: 'watch', tags: [], done: false, started: false } as never,
+      { id: 'a&do=x/../c' },
+    );
+    expect(await target.resolve(i.id)).toMatchObject({
+      to: `/bookmarks?open=${encodeURIComponent('a&do=x/../c')}`,
+    });
+  });
+
   it('gone: soft-deleted, never here, malformed', async () => {
     const i = await add();
     await itemRepo.remove(i.id);
