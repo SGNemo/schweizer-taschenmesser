@@ -2,11 +2,12 @@
  * A list's panel under its plan row (planner hub 2, package 4a; hand-off 04): the open entries as tick lines, grouped by
  * section (shopping) or category (packing) under small heads; at most 8, then X19 „n weitere“, which shows 8 more – no
  * scroll box inside a row. Each tick is Listen's own write with its own undo toast. Foot: X8 „Fertig eingekauft“ (the
- * module's existing „Gekauftes entfernen“) while a shopping list holds ticked entries – a list with nothing open leaves
- * the plan at once, so „once nothing is open“ would never be seen – and „Ganz öffnen“.
+ * module's existing „Gekauftes entfernen“, named so while entries are still open) while a shopping list holds ticked
+ * entries – a list with nothing open leaves the plan at once, so „once nothing is open“ alone would never be seen –
+ * and „Ganz öffnen“.
  */
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { PanelGone, PanelHead, PanelLoading, PlanPanelFoot } from '@/core/modules/PlanPanelHost';
 import type { PlanPanelProps } from '@/core/modules/types';
 import { undoableWithToast } from '@/core/undo/withToast';
@@ -56,15 +57,30 @@ export default function ListPlanPanel({ id, compact }: PlanPanelProps) {
     const all = timers.current;
     return () => all.forEach((x) => clearTimeout(x));
   }, []);
-  const release = (itemId: string) => {
+  const release = useCallback((itemId: string) => {
     clearTimeout(timers.current.get(itemId));
     timers.current.delete(itemId);
     setHeld((cur) => {
+      if (!cur.has(itemId)) return cur;
       const next = new Set(cur);
       next.delete(itemId);
       return next;
     });
-  };
+  }, []);
+  // A held line whose entry was seen ticked and reads open again (Ctrl+Z, an undo on another device) is open: it
+  // stays as an open line, unticked, and nothing moves the focus away from it.
+  const seenDone = useRef(new Set<string>());
+  const items = read?.items;
+  useEffect(() => {
+    for (const i of items ?? []) {
+      if (!held.has(i.id)) continue;
+      if (i.done) seenDone.current.add(i.id);
+      else if (seenDone.current.has(i.id)) {
+        seenDone.current.delete(i.id);
+        release(i.id);
+      }
+    }
+  }, [items, held, release]);
   /** The focused tick's line leaves: the focus goes to the next line's tick, else the one before, else the foot. */
   const keepFocus = (itemId: string) => {
     const ticks = [...(box.current?.querySelectorAll<HTMLElement>('input[type="checkbox"]') ?? [])];
@@ -86,19 +102,21 @@ export default function ListPlanPanel({ id, compact }: PlanPanelProps) {
       }, PANEL_HOLD_MS),
     );
   };
-  const more = (n: number) => {
+  const more = (n: number, all: number) => {
     setShown(n + PANEL_STEP);
-    // The button goes once all is shown: the focus goes to the first line it brought.
-    requestAnimationFrame(() =>
-      box.current?.querySelectorAll<HTMLElement>('input[type="checkbox"]')[n]?.focus(),
-    );
+    // The button goes once everything is shown: then the focus goes to the first line it brought.
+    if (n + PANEL_STEP >= all)
+      requestAnimationFrame(() =>
+        box.current?.querySelectorAll<HTMLElement>('input[type="checkbox"]')[n]?.focus(),
+      );
   };
   if (read === undefined) return <PanelLoading />;
   if (read === null) return <PanelGone />;
-  const { list, items } = read;
-  const open = items.filter((i) => !i.done);
-  const doneCount = items.length - open.length;
-  const drawn = items.filter((i) => !i.done || held.has(i.id));
+  const { list } = read;
+  const all = read.items;
+  const open = all.filter((i) => !i.done);
+  const doneCount = all.length - open.length;
+  const drawn = all.filter((i) => !i.done || held.has(i.id));
   if (compact)
     return (
       <PanelLines>
@@ -150,7 +168,7 @@ export default function ListPlanPanel({ id, compact }: PlanPanelProps) {
         </div>
       ))}
       {rest > 0 ? (
-        <Button variant="ghost" onClick={() => more(shown)}>
+        <Button variant="ghost" onClick={() => more(shown, drawn.length)}>
           {t.planner.panel.more(rest)}
         </Button>
       ) : null}
@@ -161,10 +179,14 @@ export default function ListPlanPanel({ id, compact }: PlanPanelProps) {
             onClick={() =>
               void undoableWithToast(t.lists.cleared(doneCount), t.lists.cleared(doneCount), () =>
                 clearDone(list.id),
+              ).then(() =>
+                // The button leaves with the bought entries: the focus goes to „Ganz öffnen“.
+                box.current?.querySelector<HTMLElement>('[data-panel-open]')?.focus(),
               )
             }
           >
-            {t.lists.panel.doneShopping}
+            {/* X8 says the trip is over only when it is; with entries still open the module's own words. */}
+            {open.length === 0 ? t.lists.panel.doneShopping : t.lists.clearBought(doneCount)}
           </Button>
         ) : null}
       </PlanPanelFoot>

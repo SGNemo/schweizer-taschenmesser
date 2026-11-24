@@ -76,17 +76,31 @@ it('a tick is Listen’s own write with its own undo', async () => {
   expect((await itemRepo.get('i0'))?.done).toBe(false);
 });
 
-it('X8 is offered while bought entries are on a shopping list (open ones stay); unticking while held shows at once', async () => {
+it('bought entries with open ones left: the module’s „Gekauftes entfernen (n)“; unticking while held shows at once', async () => {
   await items(['Milch', 'Brot']);
   panel();
   expect(await screen.findByText('Milch')).toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Fertig eingekauft' })).toBeNull();
+  expect(
+    screen.queryByRole('button', { name: /Gekauftes entfernen|Fertig eingekauft/ }),
+  ).toBeNull();
   const tick = screen.getByRole('checkbox', { name: '„Milch“ abhaken' });
   fireEvent.click(tick);
-  expect(await screen.findByRole('button', { name: 'Fertig eingekauft' })).toBeInTheDocument();
+  expect(
+    await screen.findByRole('button', { name: 'Gekauftes entfernen (1)' }),
+  ).toBeInTheDocument();
   fireEvent.click(tick);
   expect(tick).not.toBeChecked();
   await waitFor(async () => expect((await itemRepo.get('i0'))?.done).toBe(false));
+});
+
+it('an undo from elsewhere (Ctrl+Z) while the line is held shows it open again', async () => {
+  await items(['Milch', 'Brot']);
+  panel();
+  const tick = await screen.findByRole('checkbox', { name: '„Milch“ abhaken' });
+  fireEvent.click(tick);
+  await waitFor(async () => expect((await itemRepo.get('i0'))?.done).toBe(true));
+  await undoLast();
+  await waitFor(() => expect(tick).not.toBeChecked());
 });
 
 it('nothing open: X8 „Fertig eingekauft“ clears the bought entries, one undo', async () => {

@@ -4,7 +4,6 @@
  * many). Every tick is ToDos' own write with ToDos' own undo toast; the planner writes nothing. Foot: „Ganz öffnen“.
  */
 import { useLiveQuery } from 'dexie-react-hooks';
-import { recordWrite, withoutRecording } from '@/core/db/recorder';
 import {
   PanelDefaultBody,
   PanelGone,
@@ -40,10 +39,12 @@ export async function tickChecklist(taskId: string, itemId: string, done: boolea
   const message = done
     ? t.todos.checklist.ticked(item.text)
     : t.todos.checklist.reopened(item.text);
-  await undoableWithToast(message, message, async () => {
-    await withoutRecording(() => setLine(taskId, itemId, done));
-    recordWrite(() => setLine(taskId, itemId, !done));
-  });
+  await undoableWithToast(
+    message,
+    message,
+    () => setLine(taskId, itemId, done),
+    () => setLine(taskId, itemId, !done),
+  );
 }
 
 export default function TodoPlanPanel({ id, compact }: PlanPanelProps) {
@@ -61,8 +62,8 @@ export default function TodoPlanPanel({ id, compact }: PlanPanelProps) {
   return (
     <>
       {task.note ? <PanelNote>{task.note}</PanelNote> : null}
-      {/* Nothing of its own (the common plain ToDo): what the row knows – its detail and links – as the default. */}
-      {!task.note && checklist.length === 0 ? <PanelDefaultBody /> : null}
+      {/* No checklist (the common plain ToDo): what the row knows – its detail and links – as the default. */}
+      {checklist.length === 0 ? <PanelDefaultBody /> : null}
       {checklist.length > 0 ? (
         <PanelLines label={t.todos.checklist.title}>
           {checklist.map((c) => (

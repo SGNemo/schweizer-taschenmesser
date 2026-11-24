@@ -55,7 +55,7 @@ function expandParts(
     },
     onOpen: expand.onToggle,
     compartment: expand.open ? (
-      <RowCompartment id={id} label={title} onClose={expand.onClose}>
+      <RowCompartment id={id} label={named} onClose={expand.onClose}>
         <PlanPanelHost
           moduleId={entry.moduleId}
           id={entry.id}

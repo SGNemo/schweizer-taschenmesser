@@ -137,3 +137,43 @@ describe('undo journal', () => {
     expect(undoDepth()).toBe(1);
   });
 });
+
+describe('an action with its own inverse (planner hub 2, package 4a)', () => {
+  it('replaces the recorded steps of that action only; a nested call keeps the outer steps', async () => {
+    const calls: string[] = [];
+    const a = await repo.create({ title: 'A', done: false });
+    const { entry } = await undoable(
+      'own',
+      () => repo.update(a.id, { title: 'B' }),
+      undefined,
+      async () => void calls.push('inverse'),
+    );
+    expect(entry?.steps).toHaveLength(1);
+    await undoLast();
+    // The own inverse ran; the recorded restore of the field did not.
+    expect(calls).toEqual(['inverse']);
+    expect((await repo.get(a.id))?.title).toBe('B');
+    // Nothing written: no entry.
+    const none = await undoable(
+      'none',
+      async () => undefined,
+      undefined,
+      async () => undefined,
+    );
+    expect(none.entry).toBeUndefined();
+    // Nested: part of the outer action, with the outer recorded steps.
+    await undoable('outer', () =>
+      undoable(
+        'inner',
+        () => repo.update(a.id, { title: 'C' }),
+        undefined,
+        async () => {
+          calls.push('x');
+        },
+      ),
+    );
+    await undoLast();
+    expect((await repo.get(a.id))?.title).toBe('B');
+    expect(calls).toEqual(['inverse']);
+  });
+});

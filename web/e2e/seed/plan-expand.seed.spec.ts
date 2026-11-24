@@ -151,8 +151,9 @@ for (const [name, viewport, mobile] of [
             .sort(),
         )
         .toEqual(['Milch', 'Spülmittel']);
-      // Bought entries on the list: X8 clears them (Listen's „Gekauftes entfernen“), still in the planner.
-      await box.getByRole('button', { name: 'Fertig eingekauft' }).click();
+      // Bought entries on the list, one still open: Listen's own „Gekauftes entfernen“ clears them, still in the
+      // planner (X8 „Fertig eingekauft“ once nothing is open).
+      await box.getByRole('button', { name: 'Gekauftes entfernen (2)' }).click();
       await expect
         .poll(async () =>
           (await rows<{ name: string; deletedAt: number | null }>(page, 'lists_item'))

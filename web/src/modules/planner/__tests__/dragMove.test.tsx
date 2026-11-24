@@ -30,6 +30,10 @@ function Harness() {
             <span data-drag-unit={row.unitId}>Saugen</span>
           </button>
           <button type="button">⋯</button>
+          <div data-row-compartment="">
+            <p>Notiz im Fach</p>
+            <button type="button">Ganz öffnen</button>
+          </div>
         </li>
       </ul>
       <div data-drop-date="2026-11-18" data-testid="wed">
@@ -169,5 +173,20 @@ describe('dragging a row onto a day', () => {
     expect(onMoveKey).toHaveBeenCalledTimes(1);
     fireEvent.keyDown(main, { key: 'm', ctrlKey: true });
     expect(onMoveKey).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('an open row’s compartment (package 4a)', () => {
+  it('its text never lifts the row, and M inside it is no move', () => {
+    render(<Harness />);
+    const note = screen.getByText('Notiz im Fach');
+    pointer('pointerdown', note, 0);
+    pointer('pointermove', window, 20);
+    under = screen.getByTestId('wed');
+    pointer('pointermove', window, 40);
+    pointer('pointerup', window, 40);
+    expect(onDrop).not.toHaveBeenCalled();
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Ganz öffnen' }), { key: 'm' });
+    expect(onMoveKey).not.toHaveBeenCalled();
   });
 });

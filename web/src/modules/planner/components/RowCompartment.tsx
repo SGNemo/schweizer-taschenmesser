@@ -39,19 +39,29 @@ export function RowCompartment({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const close = useRef(onClose);
-  // The row after this one: where the focus goes when this row leaves while the focus is in it (done, taken out).
-  const after = useRef<Element | null>(null);
+  // The rows beside this one: where the focus goes when this row leaves while the focus is in it (done, taken out) –
+  // the next row's title, else the one before.
+  const beside = useRef<(Element | null)[]>([]);
+  // The focus is in this row (title or compartment); a tap that focuses nothing (Safari) never sets it.
+  const inside = useRef(false);
   useLayoutEffect(() => {
     close.current = onClose;
-    after.current = ref.current?.closest('li')?.nextElementSibling ?? null;
+    const li = ref.current?.closest('li');
+    beside.current = [li?.nextElementSibling ?? null, li?.previousElementSibling ?? null];
   });
   useEffect(
     () => () => {
-      const next = after.current;
+      if (!inside.current) return;
+      const rows = beside.current;
       // After the commit: only a focus that fell to the page is moved (Esc and „Ganz öffnen“ placed theirs).
       setTimeout(() => {
         const lost = !document.activeElement || document.activeElement === document.body;
-        if (lost && next?.isConnected) next.querySelector<HTMLElement>('[data-row]')?.focus();
+        if (!lost) return;
+        for (const r of rows)
+          if (r?.isConnected) {
+            const title = r.querySelector<HTMLElement>('[data-row]');
+            if (title) return title.focus();
+          }
       });
     },
     [],
@@ -69,8 +79,22 @@ export function RowCompartment({
       row.querySelector<HTMLElement>('[data-row]')?.focus();
       close.current();
     };
+    const onIn = () => {
+      inside.current = true;
+    };
+    // Only a focus that went somewhere else ends it; the row leaving the page takes it with it (no target).
+    const onOut = (e: FocusEvent) => {
+      if (e.relatedTarget instanceof Node && !row.contains(e.relatedTarget)) inside.current = false;
+    };
+    if (row.contains(document.activeElement)) inside.current = true;
     row.addEventListener('keydown', onKey);
-    return () => row.removeEventListener('keydown', onKey);
+    row.addEventListener('focusin', onIn);
+    row.addEventListener('focusout', onOut);
+    return () => {
+      row.removeEventListener('keydown', onKey);
+      row.removeEventListener('focusin', onIn);
+      row.removeEventListener('focusout', onOut);
+    };
   }, []);
   return (
     <div
@@ -80,6 +104,7 @@ export function RowCompartment({
       aria-label={label}
       className={styles.compartment}
       data-testid="row-compartment"
+      data-row-compartment=""
       // The row's ⋯ opens on a right-click on the row, never on the panel's own text.
       onContextMenu={(e) => e.stopPropagation()}
     >
