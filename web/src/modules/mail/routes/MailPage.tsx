@@ -158,7 +158,7 @@ function ThreadList({
 }) {
   const hover = useMediaQuery('(hover: hover)');
   // „Im Plan · Mi“ (planner hub 2, package 10b): one read for every row shown, the day of the ToDo made from the
-  // thread (its `origin` link). A thread with a ToDo but no plan row yet reads „Im Plan · noch ohne Tag“.
+  // thread (its `origin` link). Without a day yet the row keeps its own „im Plan“ (as before 10b).
   const listed = sections ? sections.flatMap((sec) => sec.threads) : threads;
   const marks = usePlanMarks(
     'mail',
@@ -166,6 +166,10 @@ function ThreadList({
       ? listed.map((th) => ({ id: th.id, ...(planned.has(th.id) ? { fallback: true } : {}) }))
       : [],
   );
+  const dayOf = (id: string) => {
+    const mark = marks?.get(id);
+    return mark && mark.kind !== 'noDay' ? mark : undefined;
+  };
   const rowsOf = (rows: CachedThreadView[]) => (
     <ItemList>
       {rows.map((th) => (
@@ -190,10 +194,11 @@ function ThreadList({
                     <Icon name="star" size={14} />{' '}
                   </span>
                 ) : null}
-                {/* Planner off: „als ToDo da“; with the planner on the shared mark stands under the meta line. */}
-                {planned.has(th.id) && !plannerOn ? (
+                {/* „als ToDo da“ / „im Plan“ until the plan gives the ToDo a day: then the shared mark stands under
+                    the meta line instead. */}
+                {planned.has(th.id) && !(plannerOn && dayOf(th.id)) ? (
                   <span className={styles.planMark} data-testid="mail-in-plan">
-                    {t.mail.plan.todo.mark} ·{' '}
+                    {plannerOn ? t.mail.plan.mark : t.mail.plan.todo.mark} ·{' '}
                   </span>
                 ) : null}
                 {shortWhen(th.date)}
@@ -213,9 +218,7 @@ function ThreadList({
               ) : null}
             </span>
           }
-          below={
-            plannerOn && marks?.get(th.id) ? <PlanMarkLink state={marks.get(th.id)} /> : undefined
-          }
+          below={plannerOn && dayOf(th.id) ? <PlanMarkLink state={dayOf(th.id)} /> : undefined}
           onOpen={() => onOpen(th.id)}
           selectable={!!selection}
           selected={selection?.isSelected(th.id)}
