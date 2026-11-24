@@ -64,6 +64,7 @@ const manifest: ModuleManifest = {
   contributions: {
     // Open things for the planner (read only; nothing is written back).
     plannable: () => import('./plannable'),
+    linkTarget: () => import('./linkTarget'),
     onboarding: onboarding,
     quickAdd: [
       {

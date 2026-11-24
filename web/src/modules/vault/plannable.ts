@@ -19,10 +19,10 @@ import type { PlannableItem, PlannableSource } from '@/core/modules/types';
 import { getSettings } from '@/core/settings/settings';
 import { addDaysStr } from '@/core/time/dates';
 import { t } from '@/strings';
-import { isBuiltin } from './categories';
 import { cancelDeadline, endOf } from './logic';
 import { documentRepo } from './repo';
 import { settings } from './settings';
+import { docTitle } from './titles';
 
 export const DOC_MINUTES = 15;
 export const CANCEL_PRIORITY = 3;
@@ -32,9 +32,6 @@ export const LATE_DAYS = 7;
 
 /** The route of „Zum Dokument“: the document's own dialog; the page checks the id. */
 export const documentRoute = (id: string): string => `/vault?open=${encodeURIComponent(id)}`;
-
-/** The wording key of a category: a built-in key, else '' (a custom category's name is the person's text). */
-const wordingOf = (category: string): string => (isBuiltin(category) ? category : '');
 
 const source: PlannableSource = {
   async list(ctx) {
@@ -47,8 +44,9 @@ const source: PlannableSource = {
       const end = endOf(d);
       if (!end) continue;
       const deadline = cancelDeadline(d);
-      const wording = wordingOf(d.category);
       const base = {
+        // The row is one date of the document: a link from or to it stores the document.
+        entityId: d.id,
         to: documentRoute(d.id),
         durationMin: DOC_MINUTES,
         // Display only, on the planner page: the one place the name may stand.
@@ -63,7 +61,7 @@ const source: PlannableSource = {
           ...base,
           id: `${d.id}:cancel:${deadline}`,
           kind: 'cancel',
-          title: t.vault.planCancel(wording),
+          title: docTitle(d),
           priority: CANCEL_PRIORITY,
           due: { date: deadline, hard: true },
         });
@@ -72,7 +70,7 @@ const source: PlannableSource = {
           ...base,
           id: `${d.id}:end:${end}`,
           kind: 'renew',
-          title: t.vault.planRenew(wording),
+          title: docTitle(d),
           priority: RENEW_PRIORITY,
           due: { date: end, hard: true },
         });

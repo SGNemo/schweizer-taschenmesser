@@ -4,6 +4,8 @@ import type { PlannableItem } from '@/core/modules/types';
 import type { CaptureFields } from '@/quickCapture/parser/types';
 import {
   LINK_KINDS,
+  LINK_RELS,
+  entityRefOf,
   fromLegacy,
   linkRel,
   refKey,
@@ -61,7 +63,40 @@ describe('link contract: helpers', () => {
     expect(linkRel('dunning')).toBe('dunning');
     expect(linkRel('origin')).toBe('origin');
     expect(linkRel('something-newer')).toBe('about');
+    // `wait` and `place` belonged to struck ideas: a row that carries one reads as a plain link.
+    expect(linkRel('wait')).toBe('about');
+    expect(linkRel('place')).toBe('about');
+    expect(linkRel('BEFORE')).toBe('about');
     expect(linkRel(undefined)).toBe('about');
+  });
+});
+
+describe('link contract: planner hub 2 (10a)', () => {
+  it('three relations join, and only those', () => {
+    expect(LINK_RELS).toEqual(['origin', 'dunning', 'about', 'before', 'after', 'topic']);
+    for (const rel of ['before', 'after', 'topic'] as const) expect(linkRel(rel)).toBe(rel);
+  });
+
+  it('a row that is an occurrence links its thing; any other row is the thing itself', () => {
+    expect(entityRefOf('subscriptions', { id: 's1:2026-12-01', entityId: 's1' })).toEqual({
+      module: 'subscriptions',
+      id: 's1',
+    });
+    expect(entityRefOf('routines', { id: 'r1:2026-12-01', entityId: 'r1' })).toEqual({
+      module: 'routines',
+      id: 'r1',
+    });
+    expect(entityRefOf('invoices', { id: 'i1' })).toEqual({ module: 'invoices', id: 'i1' });
+  });
+
+  it('the request events get nothing new: no links, no reply – the planner writes the new relations itself', () => {
+    expectTypeOf<keyof EventMap['plan.requested']>().toEqualTypeOf<
+      'title' | 'durationMin' | 'priority' | 'due' | 'link' | 'ref' | 'refs' | 'day'
+    >();
+    expectTypeOf<EventMap['plan.requested']['day']>().toEqualTypeOf<string | null | undefined>();
+    expectTypeOf<keyof EventMap['todo.requested']>().toEqualTypeOf<
+      'title' | 'note' | 'dueDate' | 'link'
+    >();
   });
 });
 

@@ -77,6 +77,7 @@ const manifest: ModuleManifest = {
   order: 70,
   area: 'knowledge',
   contributions: {
+    linkTarget: () => import('./linkTarget'),
     onboarding: onboarding,
     quickAdd: [
       {

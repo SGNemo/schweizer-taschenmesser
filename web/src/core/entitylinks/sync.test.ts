@@ -281,6 +281,55 @@ describe('links between two devices', () => {
   });
 });
 
+describe('the new relations between two devices (planner hub 2, 10a)', () => {
+  // „Vorbereiten“ (package 9): a new ToDo → an appointment. Both ends are linkable today.
+  const before: EntityLink = {
+    from: { module: 'todos', id: 'task-prep' },
+    to: { module: 'calendar', id: 'evt-zahnarzt' },
+    rel: 'before',
+    label: 'Zahnarzt',
+  };
+  const count = async (db: TaschenmesserDB) =>
+    (await linkEntries(before.to, db)).filter((e) => e.link.rel === 'before').length;
+
+  for (const rel of ['before', 'after', 'topic'] as const)
+    it(`both devices add the same \`${rel}\` link: one row everywhere, read as \`${rel}\``, async () => {
+      const a = device();
+      const b = device();
+      const l = { ...before, rel };
+      await addLink(l, a.db);
+      await addLink({ ...l, label: 'Zahnarzt (B)' }, b.db);
+      await a.sync();
+      await b.sync();
+      await a.sync();
+      for (const d of [a, b]) {
+        expect(await d.db.table(LINKS_TABLE).count()).toBe(1);
+        expect((await linkEntries(l.from, d.db)).map((e) => e.link.rel)).toEqual([rel]);
+      }
+      // Not the same row as another relation between the same ends: the relation is part of the id.
+      for (const other of ['origin', 'dunning', 'about', 'before', 'after', 'topic'] as const)
+        if (other !== rel) expect(await linkId(l)).not.toBe(await linkId({ ...l, rel: other }));
+    });
+
+  it('a removal wins over a later silent re-add on the other device', async () => {
+    const a = device();
+    const b = device();
+    await addLink(before, a.db);
+    await a.sync();
+    await b.sync();
+    await removeLink(await linkId(before), b.db);
+    await b.sync();
+    clock += 3_600_000; // later by the clock
+    await a.sync();
+    // Later, on both devices, a writer that is no tap adds the same link: the tombstone counts as present.
+    expect(await addLinkIfAbsent(before, a.db)).toBe(false);
+    expect(await addLinkIfAbsent(before, b.db)).toBe(false);
+    await a.sync();
+    await b.sync();
+    for (const d of [a, b]) expect(await count(d.db)).toBe(0);
+  });
+});
+
 describe('the table goes where every synced table goes', () => {
   it('is a synced table: sync, backup, restore and the tombstone purge take it from that one list', () => {
     expect(syncedTableNames(allManifests)).toContain(LINKS_TABLE);
