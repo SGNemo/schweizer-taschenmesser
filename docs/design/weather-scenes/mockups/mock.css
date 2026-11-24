@@ -83,9 +83,16 @@ h1 { font-size: 22px; margin: 0 0 4px; }
 .hint .suffix { color: var(--text-muted); font-size: var(--text-meta); line-height: 22px; }
 .phone .hint { flex-direction: column; align-items: flex-start; }
 .phone .hint .suffix { padding-left: 24px; }
-.official { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: var(--radius-md); background: var(--warning); color: var(--surface); font-size: var(--text-sm); }
-.official .ic { color: inherit; }
-.official a { color: inherit; text-underline-offset: 3px; margin-left: 8px; }
+.official { display: flex; align-items: flex-start; gap: 8px; padding: 6px 12px; border-radius: var(--radius-md); font-size: var(--text-sm); color: var(--text);
+  background: color-mix(in srgb, var(--warning) 22%, var(--surface)); border: 1px solid var(--warning); }
+.official .ic { color: var(--warning-ink); margin-top: 2px; }
+.official .om { color: var(--text-muted); font-size: var(--text-meta); white-space: nowrap; }
+.official a { color: inherit; text-underline-offset: 3px; }
+.pills { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px 8px; }
+.phone .pills { flex-direction: column; gap: 4px; }
+.phone .official .ot { display: flex; flex-direction: column; }
+.phone .hint, .phone .official { padding: 3px 10px; font-size: var(--text-meta); }
+.phone .hint li { min-height: 18px; } .phone .hint .suffix { line-height: 18px; }
 .keys { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 2px 0 0; padding: 0; list-style: none; }
 .key { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 2.25rem; padding: 0 var(--space-3); border-radius: var(--radius-md);
   background: var(--chip-bg); color: var(--text); font-size: var(--text-sm); font-weight: 600; white-space: nowrap; }
@@ -108,3 +115,4 @@ h1 { font-size: 22px; margin: 0 0 4px; }
 .whead .warn-ink { color: var(--warning-ink); }
 .phone .fig { max-width: calc(100% - 96px); } /* the body sits right of the figure; a long detail line wraps */
 .wide2 { display: flex; } @media (max-width: 800px) { .wide2 { display: none; } }
+.phone .stageBody { gap: 4px; padding-top: 6px; } .phone .keys { margin-top: 0; } .whead.phone { padding-bottom: 10px; }

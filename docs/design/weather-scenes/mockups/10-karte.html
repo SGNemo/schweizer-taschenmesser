@@ -27,9 +27,9 @@
 .row2 .ic { color: var(--text-3); flex: none; margin-top: 2px; }
 .row2.muted { color: var(--text-3); }
 </style></head>
-<body><h1>Karte „Mond & Himmel“</h1><p class="intro">Die Karte in der Seitenspalte (wie „Atemwege & Allergie“, ~366 px). Darunter sechs Fassungen des letzten Blocks „Als Nächstes“, die Chips im Kopf an Ereignistagen und die Zeile für Saharastaub. Texte nach COPY.md §4–5.</p>
+<body><h1>Karte „Mond & Himmel“</h1><p class="intro">Die Karte in der Seitenspalte (wie „Atemwege & Allergie“, ~366 px). Darunter acht Fassungen des letzten Blocks „Als Nächstes“, die Chips im Kopf an Ereignistagen und die Zeile für Saharastaub. Texte nach COPY.md §4–5.</p>
 <p class="label">Die Karte</p><div class="aside" id="card"></div>
-<p class="label">„Als Nächstes“ – sechs Fassungen</p><div class="aside" id="next"></div>
+<p class="label">„Als Nächstes“ – acht Fassungen</p><div class="aside" id="next"></div>
 <p class="label">Chips im Kopf an Ereignistagen</p><div id="chips"></div>
 <p class="label">„Atemwege & Allergie“</p><div class="aside" id="air"></div>
 <script>
@@ -41,9 +41,10 @@ var EV = {
   c: ['meteor', 'Heute Nacht: Sternschnuppen der Geminiden, am besten am späten Abend.', 'Der helle Mond überstrahlt die schwächeren.'],
   d: ['solstice', 'Wintersonnenwende: der kürzeste Tag. Ab morgen werden die Tage länger.'],
   e: [null, 'Dunkle Nacht ohne Mond: gute Sicht auf die Sterne.'],
+  g: ['aurora', '<b>Heute Nacht: Polarlicht möglich</b>', null, 'Blick nach Norden, abseits von Licht. Am ehesten zwischen 22 und 2 Uhr.', 'Quelle: NOAA SWPC, Vorhersage Kp 7'],
 };
 function ev(e, clouds) {
-  var g = e[0] ? ic(e[0]) : STARS, h = '<div class="ev">' + g + '<span>' + e[1] + '</span>' + (e[2] ? '<span class="m">' + e[2] + '</span>' : '') + (e[3] ? '<span class="safe">' + e[3] + '</span>' : '') + '</div>';
+  var g = e[0] ? ic(e[0]) : STARS, h = '<div class="ev">' + g + '<span>' + e[1] + '</span>' + (e[2] ? '<span class="m">' + e[2] + '</span>' : '') + (e[3] ? '<span class="safe">' + e[3] + '</span>' : '') + (e[4] ? '<span class="m">' + e[4] + '</span>' : '') + '</div>';
   if (clouds) h += '<div class="ev">' + ic('cloud') + '<span class="m" style="grid-column:2">Wolken verdecken den Himmel hier wahrscheinlich.</span></div>';
   return h;
 }
@@ -53,7 +54,7 @@ var cardTop = '<div class="moonTop">' + Scene.moonGlyph({ illum: 0.99, waxing: t
   '<div class="line"><b>Supermond</b><small>Vollmond in Erdnähe: er wirkt etwas größer und heller.</small></div>';
 document.getElementById('card').innerHTML = card(cardTop + '<p class="caps">Als Nächstes</p>' + ev(EV.a));
 document.getElementById('next').innerHTML = [['(a) Sonnenfinsternis', ev(EV.a)], ['(b) Mondfinsternis heute Nacht', ev(EV.b)], ['(c) Sternschnuppen bei hellem Mond', ev(EV.c)],
-  ['(d) Wintersonnenwende', ev(EV.d)], ['(e) dunkle Nacht', ev(EV.e)], ['(f) wie (a), mit Wolken', ev(EV.a, true)]].map(function (v) {
+  ['(d) Wintersonnenwende', ev(EV.d)], ['(e) dunkle Nacht', ev(EV.e)], ['(f) wie (a), mit Wolken', ev(EV.a, true)], ['(g) Polarlicht möglich', ev(EV.g)], ['(g) mit Wolken', ev(EV.g, true)]].map(function (v) {
   return '<div><p class="tag">' + v[0] + '</p><div class="acard"><p class="caps">Als Nächstes</p>' + v[1] + '</div></div>';
 }).join('');
 var dry = '<li class="key">' + ic('umbrella') + 'Kein Regen in Sicht</li>', wind = '<li class="key">' + ic('wind') + 'Wind 9 km/h W</li>';
@@ -62,6 +63,7 @@ document.getElementById('chips').innerHTML = [
   [{ phase: 'night', cond: 'clear', event: 'lunarTotal', moon: { illum: 1, size: 1.2 }, body: { kind: 'moon', t: 0.3 } }, 'lunar', 'Mondfinsternis 16:07–19:36'],
   [{ phase: 'golden', cond: 'showers', event: 'rainbow', cloud: 40, body: { kind: 'sun', t: 0.9 } }, 'rainbow', 'Regenbogen möglich'],
   [{ phase: 'night', cond: 'clear', event: 'meteors', moon: { illum: 0.7 }, body: { kind: 'moon', t: 0.8 } }, 'meteor', 'Sternschnuppen: Geminiden'],
+  [{ phase: 'night', cond: 'clear', event: 'aurora', eventAmount: 0.7, body: { kind: 'none' } }, 'aurora', 'Polarlicht möglich'],
 ].map(function (r) {
   var s = Gallery.withTheme(r[0]);
   return '<div class="strip"><div class="bg">' + Scene.svg(s) + '</div><ul class="keys">' + dry + wind + '<li class="key">' + ic(r[1]) + r[2] + '</li></ul></div>';

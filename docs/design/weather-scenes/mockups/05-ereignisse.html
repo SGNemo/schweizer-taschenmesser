@@ -1,5 +1,5 @@
 <!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wetterszene – Ereignisse</title><link rel="stylesheet" href="mock.css"><script src="palette.js"></script><script src="scene.js"></script><script src="gallery.js"></script></head>
-<body><h1>Ereignisse am Himmel</h1><p class="intro">Finsternisse, Sternschnuppen, Sternennacht, Regenbogen, Staub – jeweils breit und als Handy-Ausschnitt.</p>
+<body><h1>Ereignisse am Himmel</h1><p class="intro">Finsternisse, Sternschnuppen, Sternennacht, Regenbogen, Staub, Polarlicht – jeweils breit und als Handy-Ausschnitt.</p>
 <div id="a"></div>
 <script>
 Gallery.tiles('#a', [
@@ -9,5 +9,6 @@ Gallery.tiles('#a', [
   ['Totale Mondfinsternis', { phase: 'night', event: 'lunarTotal', moon: { illum: 1, size: 1.2 } }],
   ['Sternschnuppen', { phase: 'night', event: 'meteors', body: { kind: 'none' } }], ['Sternennacht (Milchstraße)', { phase: 'night', event: 'starNight', body: { kind: 'none' } }],
   ['Regenbogen', { event: 'rainbow', cond: 'partly', cloud: 30 }], ['Staub in der Luft', { event: 'dust', cond: 'clear' }],
+  ['Polarlicht möglich (schwach, tief im Norden)', { phase: 'night', event: 'aurora', eventAmount: 0.4, body: { kind: 'none' } }], ['Polarlicht', { phase: 'night', event: 'aurora', eventAmount: 1, body: { kind: 'none' } }],
 ].map(function (e) { return { label: e[0], state: Object.assign({ phase: 'day', cond: 'clear', body: { t: 0.5 } }, e[1]) }; }), { crops: ['wide', 'phone'], cols: 'one' });
 </script></body></html>
