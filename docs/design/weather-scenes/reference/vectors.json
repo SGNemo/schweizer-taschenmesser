@@ -1,0 +1,1003 @@
+{
+ "source": "astronomy-engine 2.1.19, deltaT = Espenak-Meeus; geometric (airless) topocentric altitudes unless stated; place erlangen = 49.6N 11.0E, h = 0 m; local days in Europe/Berlin",
+ "conventions": {
+  "illumPct": "geocentric illuminated fraction x 100",
+  "tiltDeg": "bright-limb midpoint direction minus zenith direction (chi - q), -180..180, + = lit side towards the left (counter-clockwise from up), null if illumination outside 3..97 %",
+  "phaseName": "rule (ii)"
+ },
+ "special": {
+  "utc": "2026-11-24T01:50:00Z",
+  "illumPct": 99.37,
+  "elongDeg": 172.39,
+  "waxing": true,
+  "phaseName": "full",
+  "distKm": 362230,
+  "erlangen": {
+   "moonAltDeg": 41.99,
+   "moonAzDeg": 255.97,
+   "tiltDeg": null,
+   "sunAltDeg": -45.97
+  },
+  "lightCheck": {
+   "illumPct": 99.37,
+   "moonAltDeg": 41.99,
+   "tiltDeg": -119
+  },
+  "tiltDegUnfiltered": -119,
+  "local": "2026-11-24 02:50 CET",
+  "nextFull": "2026-11-24T14:54:04Z",
+  "nextNew": "2026-12-09T00:52:31Z"
+ },
+ "spread": [
+  {
+   "utc": "2026-03-23T18:40:00Z",
+   "illumPct": 27.56,
+   "elongDeg": 63.09,
+   "waxing": true,
+   "phaseName": "waxingCrescent",
+   "distKm": 367624,
+   "erlangen": {
+    "moonAltDeg": 45.44,
+    "moonAzDeg": 256.75,
+    "tiltDeg": -147.6,
+    "sunAltDeg": -11.45
+   },
+   "lightCheck": {
+    "illumPct": 27.57,
+    "moonAltDeg": 45.44,
+    "tiltDeg": -147.6
+   }
+  },
+  {
+   "utc": "2026-06-27T23:00:00Z",
+   "illumPct": 96.11,
+   "elongDeg": 157.71,
+   "waxing": true,
+   "phaseName": "waxingGibbous",
+   "distKm": 406212,
+   "erlangen": {
+    "moonAltDeg": 10.07,
+    "moonAzDeg": 198.07,
+    "tiltDeg": -109.9,
+    "sunAltDeg": -16.99
+   },
+   "lightCheck": {
+    "illumPct": 96.11,
+    "moonAltDeg": 10.07,
+    "tiltDeg": -109.9
+   }
+  },
+  {
+   "utc": "2026-12-15T05:08:00Z",
+   "illumPct": 30.61,
+   "elongDeg": 67.04,
+   "waxing": true,
+   "phaseName": "waxingCrescent",
+   "distKm": 399471,
+   "erlangen": {
+    "moonAltDeg": -48.39,
+    "moonAzDeg": 29.67,
+    "tiltDeg": -91.6,
+    "sunAltDeg": -17.97
+   },
+   "lightCheck": {
+    "illumPct": 30.61,
+    "moonAltDeg": -48.39,
+    "tiltDeg": -91.6
+   }
+  },
+  {
+   "utc": "2027-07-01T02:34:00Z",
+   "illumPct": 12.85,
+   "elongDeg": 318.33,
+   "waxing": false,
+   "phaseName": "waningCrescent",
+   "distKm": 370264,
+   "erlangen": {
+    "moonAltDeg": 20.31,
+    "moonAzDeg": 76.77,
+    "tiltDeg": 125,
+    "sunAltDeg": -5.48
+   },
+   "lightCheck": {
+    "illumPct": 12.85,
+    "moonAltDeg": 20.31,
+    "tiltDeg": 125
+   }
+  },
+  {
+   "utc": "2027-10-02T22:38:00Z",
+   "illumPct": 10.29,
+   "elongDeg": 37.03,
+   "waxing": true,
+   "phaseName": "waxingCrescent",
+   "distKm": 380290,
+   "erlangen": {
+    "moonAltDeg": -48.19,
+    "moonAzDeg": 296.28,
+    "tiltDeg": -104.1,
+    "sunAltDeg": -43.81
+   },
+   "lightCheck": {
+    "illumPct": 10.3,
+    "moonAltDeg": -48.19,
+    "tiltDeg": -104.1
+   }
+  },
+  {
+   "utc": "2028-01-28T07:52:00Z",
+   "illumPct": 2.58,
+   "elongDeg": 18.31,
+   "waxing": true,
+   "phaseName": "waxingCrescent",
+   "distKm": 406340,
+   "erlangen": {
+    "moonAltDeg": 2.48,
+    "moonAzDeg": 110.96,
+    "tiltDeg": null,
+    "sunAltDeg": 6.95
+   },
+   "lightCheck": {
+    "illumPct": 2.57,
+    "moonAltDeg": 2.48,
+    "tiltDeg": -75.5
+   }
+  },
+  {
+   "utc": "2028-07-29T23:03:00Z",
+   "illumPct": 63.44,
+   "elongDeg": 105.51,
+   "waxing": true,
+   "phaseName": "waxingGibbous",
+   "distKm": 380253,
+   "erlangen": {
+    "moonAltDeg": -9.51,
+    "moonAzDeg": 244.5,
+    "tiltDeg": -115.8,
+    "sunAltDeg": -21.83
+   },
+   "lightCheck": {
+    "illumPct": 63.46,
+    "moonAltDeg": -9.51,
+    "tiltDeg": -115.8
+   }
+  },
+  {
+   "utc": "2028-12-20T03:39:00Z",
+   "illumPct": 17.09,
+   "elongDeg": 48.65,
+   "waxing": true,
+   "phaseName": "waxingCrescent",
+   "distKm": 395987,
+   "erlangen": {
+    "moonAltDeg": -51.51,
+    "moonAzDeg": 25.29,
+    "tiltDeg": -93,
+    "sunAltDeg": -32.79
+   },
+   "lightCheck": {
+    "illumPct": 17.08,
+    "moonAltDeg": -51.51,
+    "tiltDeg": -93
+   }
+  },
+  {
+   "utc": "2029-01-10T23:05:00Z",
+   "illumPct": 15.45,
+   "elongDeg": 313.92,
+   "waxing": false,
+   "phaseName": "waningCrescent",
+   "distKm": 377353,
+   "erlangen": {
+    "moonAltDeg": -47.28,
+    "moonAzDeg": 71.59,
+    "tiltDeg": 139.5,
+    "sunAltDeg": -61.95
+   },
+   "lightCheck": {
+    "illumPct": 15.46,
+    "moonAltDeg": -47.28,
+    "tiltDeg": 139.5
+   }
+  },
+  {
+   "utc": "2029-10-01T07:51:00Z",
+   "illumPct": 45.56,
+   "elongDeg": 275.25,
+   "waxing": false,
+   "phaseName": "waningCrescent",
+   "distKm": 390596,
+   "erlangen": {
+    "moonAltDeg": 50.36,
+    "moonAzDeg": 236.51,
+    "tiltDeg": 60.1,
+    "sunAltDeg": 22.52
+   },
+   "lightCheck": {
+    "illumPct": 45.55,
+    "moonAltDeg": 50.36,
+    "tiltDeg": 60.1
+   }
+  },
+  {
+   "utc": "2029-10-30T09:37:00Z",
+   "illumPct": 50.97,
+   "elongDeg": 269.03,
+   "waxing": false,
+   "phaseName": "lastQuarter",
+   "distKm": 385725,
+   "erlangen": {
+    "moonAltDeg": 26.12,
+    "moonAzDeg": 262.25,
+    "tiltDeg": 62.4,
+    "sunAltDeg": 23.91
+   },
+   "lightCheck": {
+    "illumPct": 50.99,
+    "moonAltDeg": 26.12,
+    "tiltDeg": 62.4
+   }
+  },
+  {
+   "utc": "2030-03-14T03:21:00Z",
+   "illumPct": 67.01,
+   "elongDeg": 109.76,
+   "waxing": true,
+   "phaseName": "waxingGibbous",
+   "distKm": 394730,
+   "erlangen": {
+    "moonAltDeg": -7.13,
+    "moonAzDeg": 312.84,
+    "tiltDeg": -115.9,
+    "sunAltDeg": -21.59
+   },
+   "lightCheck": {
+    "illumPct": 67.02,
+    "moonAltDeg": -7.14,
+    "tiltDeg": -115.9
+   }
+  },
+  {
+   "utc": "2030-11-15T14:27:00Z",
+   "illumPct": 75.68,
+   "elongDeg": 239.16,
+   "waxing": false,
+   "phaseName": "waningGibbous",
+   "distKm": 403263,
+   "erlangen": {
+    "moonAltDeg": -22.65,
+    "moonAzDeg": 348.62,
+    "tiltDeg": 94.2,
+    "sunAltDeg": 7.98
+   },
+   "lightCheck": {
+    "illumPct": 75.68,
+    "moonAltDeg": -22.65,
+    "tiltDeg": 94.2
+   }
+  },
+  {
+   "utc": "2030-11-24T16:18:00Z",
+   "illumPct": 0.56,
+   "elongDeg": 351.49,
+   "waxing": false,
+   "phaseName": "waningCrescent",
+   "distKm": 358923,
+   "erlangen": {
+    "moonAltDeg": -14.75,
+    "moonAzDeg": 255.29,
+    "tiltDeg": null,
+    "sunAltDeg": -8.68
+   },
+   "lightCheck": {
+    "illumPct": 0.57,
+    "moonAltDeg": -14.75,
+    "tiltDeg": 49.5
+   }
+  },
+  {
+   "utc": "2031-05-25T04:00:00Z",
+   "illumPct": 13.22,
+   "elongDeg": 42.4,
+   "waxing": true,
+   "phaseName": "waxingCrescent",
+   "distKm": 405708,
+   "erlangen": {
+    "moonAltDeg": -18.78,
+    "moonAzDeg": 26.39,
+    "tiltDeg": -60.5,
+    "sunAltDeg": 4.72
+   },
+   "lightCheck": {
+    "illumPct": 13.22,
+    "moonAltDeg": -18.78,
+    "tiltDeg": -60.5
+   }
+  },
+  {
+   "utc": "2031-08-21T16:12:00Z",
+   "illumPct": 11.77,
+   "elongDeg": 39.9,
+   "waxing": true,
+   "phaseName": "waxingCrescent",
+   "distKm": 391501,
+   "erlangen": {
+    "moonAltDeg": 24.24,
+    "moonAzDeg": 221.94,
+    "tiltDeg": -87.3,
+    "sunAltDeg": 19.98
+   },
+   "lightCheck": {
+    "illumPct": 11.78,
+    "moonAltDeg": 24.24,
+    "tiltDeg": -87.3
+   }
+  },
+  {
+   "utc": "2032-01-11T08:39:00Z",
+   "illumPct": 3.39,
+   "elongDeg": 339.11,
+   "waxing": false,
+   "phaseName": "waningCrescent",
+   "distKm": 360854,
+   "erlangen": {
+    "moonAltDeg": 17.52,
+    "moonAzDeg": 161.59,
+    "tiltDeg": 109.3,
+    "sunAltDeg": 9.76
+   },
+   "lightCheck": {
+    "illumPct": 3.37,
+    "moonAltDeg": 17.52,
+    "tiltDeg": 109.3
+   }
+  },
+  {
+   "utc": "2032-08-17T17:49:00Z",
+   "illumPct": 84.16,
+   "elongDeg": 133.16,
+   "waxing": true,
+   "phaseName": "waxingGibbous",
+   "distKm": 367278,
+   "erlangen": {
+    "moonAltDeg": 14.49,
+    "moonAzDeg": 146.56,
+    "tiltDeg": -68,
+    "sunAltDeg": 5.29
+   },
+   "lightCheck": {
+    "illumPct": 84.18,
+    "moonAltDeg": 14.49,
+    "tiltDeg": -68
+   }
+  },
+  {
+   "utc": "2033-02-04T23:57:00Z",
+   "illumPct": 32.92,
+   "elongDeg": 69.89,
+   "waxing": true,
+   "phaseName": "waxingCrescent",
+   "distKm": 369735,
+   "erlangen": {
+    "moonAltDeg": -12.41,
+    "moonAzDeg": 300.68,
+    "tiltDeg": -145.4,
+    "sunAltDeg": -55.85
+   },
+   "lightCheck": {
+    "illumPct": 32.93,
+    "moonAltDeg": -12.41,
+    "tiltDeg": -145.4
+   }
+  },
+  {
+   "utc": "2033-06-06T07:02:00Z",
+   "illumPct": 62.4,
+   "elongDeg": 104.22,
+   "waxing": true,
+   "phaseName": "waxingGibbous",
+   "distKm": 404266,
+   "erlangen": {
+    "moonAltDeg": -41.61,
+    "moonAzDeg": 16.06,
+    "tiltDeg": -56.8,
+    "sunAltDeg": 34.29
+   },
+   "lightCheck": {
+    "illumPct": 62.41,
+    "moonAltDeg": -41.61,
+    "tiltDeg": -56.8
+   }
+  },
+  {
+   "utc": "2033-10-11T21:35:00Z",
+   "illumPct": 83.38,
+   "elongDeg": 228.08,
+   "waxing": false,
+   "phaseName": "waningGibbous",
+   "distKm": 367114,
+   "erlangen": {
+    "moonAltDeg": 24.77,
+    "moonAzDeg": 93.36,
+    "tiltDeg": 127.8,
+    "sunAltDeg": -43.98
+   },
+   "lightCheck": {
+    "illumPct": 83.39,
+    "moonAltDeg": 24.77,
+    "tiltDeg": 127.8
+   }
+  },
+  {
+   "utc": "2033-11-25T01:41:00Z",
+   "illumPct": 8.89,
+   "elongDeg": 34.29,
+   "waxing": true,
+   "phaseName": "waxingCrescent",
+   "distKm": 392243,
+   "erlangen": {
+    "moonAltDeg": -58.93,
+    "moonAzDeg": 5.14,
+    "tiltDeg": -96.3,
+    "sunAltDeg": -47.52
+   },
+   "lightCheck": {
+    "illumPct": 8.9,
+    "moonAltDeg": -58.93,
+    "tiltDeg": -96.3
+   }
+  },
+  {
+   "utc": "2034-06-25T23:24:00Z",
+   "illumPct": 72,
+   "elongDeg": 116,
+   "waxing": true,
+   "phaseName": "waxingGibbous",
+   "distKm": 404518,
+   "erlangen": {
+    "moonAltDeg": 6.64,
+    "moonAzDeg": 246.31,
+    "tiltDeg": -105.7,
+    "sunAltDeg": -17.04
+   },
+   "lightCheck": {
+    "illumPct": 71.99,
+    "moonAltDeg": 6.64,
+    "tiltDeg": -105.7
+   }
+  },
+  {
+   "utc": "2034-10-24T05:05:00Z",
+   "illumPct": 85.34,
+   "elongDeg": 134.88,
+   "waxing": true,
+   "phaseName": "waxingGibbous",
+   "distKm": 372999,
+   "erlangen": {
+    "moonAltDeg": -31.43,
+    "moonAzDeg": 302.65,
+    "tiltDeg": -145.7,
+    "sunAltDeg": -8.17
+   },
+   "lightCheck": {
+    "illumPct": 85.34,
+    "moonAltDeg": -31.43,
+    "tiltDeg": -145.7
+   }
+  },
+  {
+   "utc": "2035-01-29T04:15:00Z",
+   "illumPct": 69.82,
+   "elongDeg": 246.76,
+   "waxing": false,
+   "phaseName": "waningGibbous",
+   "distKm": 393286,
+   "erlangen": {
+    "moonAltDeg": 35.49,
+    "moonAzDeg": 189.17,
+    "tiltDeg": 105.8,
+    "sunAltDeg": -25.51
+   },
+   "lightCheck": {
+    "illumPct": 69.82,
+    "moonAltDeg": 35.49,
+    "tiltDeg": 105.8
+   }
+  },
+  {
+   "utc": "2035-09-17T10:31:00Z",
+   "illumPct": 99.95,
+   "elongDeg": 178.04,
+   "waxing": true,
+   "phaseName": "full",
+   "distKm": 386238,
+   "erlangen": {
+    "moonAltDeg": -44.88,
+    "moonAzDeg": 347.84,
+    "tiltDeg": null,
+    "sunAltDeg": 41.88
+   },
+   "lightCheck": {
+    "illumPct": 99.95,
+    "moonAltDeg": -44.88,
+    "tiltDeg": -163.6
+   }
+  },
+  {
+   "utc": "2035-10-11T15:02:00Z",
+   "illumPct": 70.68,
+   "elongDeg": 114.3,
+   "waxing": true,
+   "phaseName": "waxingGibbous",
+   "distKm": 399221,
+   "erlangen": {
+    "moonAltDeg": 6.79,
+    "moonAzDeg": 124.51,
+    "tiltDeg": -72.1,
+    "sunAltDeg": 13.24
+   },
+   "lightCheck": {
+    "illumPct": 70.69,
+    "moonAltDeg": 6.79,
+    "tiltDeg": -72.1
+   }
+  },
+  {
+   "utc": "2036-06-05T02:31:00Z",
+   "illumPct": 85.6,
+   "elongDeg": 135.5,
+   "waxing": true,
+   "phaseName": "waxingGibbous",
+   "distKm": 385430,
+   "erlangen": {
+    "moonAltDeg": -8.17,
+    "moonAzDeg": 267.43,
+    "tiltDeg": -106.6,
+    "sunAltDeg": -5.7
+   },
+   "lightCheck": {
+    "illumPct": 85.61,
+    "moonAltDeg": -8.17,
+    "tiltDeg": -106.6
+   }
+  },
+  {
+   "utc": "2036-07-22T04:04:00Z",
+   "illumPct": 2.48,
+   "elongDeg": 342.17,
+   "waxing": false,
+   "phaseName": "waningCrescent",
+   "distKm": 359973,
+   "erlangen": {
+    "moonAltDeg": 13.76,
+    "moonAzDeg": 76.54,
+    "tiltDeg": null,
+    "sunAltDeg": 3.32
+   },
+   "lightCheck": {
+    "illumPct": 2.48,
+    "moonAltDeg": 13.76,
+    "tiltDeg": 125.4
+   }
+  },
+  {
+   "utc": "2036-11-19T19:40:00Z",
+   "illumPct": 3.76,
+   "elongDeg": 21.98,
+   "waxing": true,
+   "phaseName": "waxingCrescent",
+   "distKm": 389557,
+   "erlangen": {
+    "moonAltDeg": -25.56,
+    "moonAzDeg": 269.04,
+    "tiltDeg": -137.3,
+    "sunAltDeg": -40.24
+   },
+   "lightCheck": {
+    "illumPct": 3.76,
+    "moonAltDeg": -25.56,
+    "tiltDeg": -137.3
+   }
+  },
+  {
+   "utc": "2037-07-09T04:46:00Z",
+   "illumPct": 17.76,
+   "elongDeg": 310.42,
+   "waxing": false,
+   "phaseName": "waningCrescent",
+   "distKm": 387894,
+   "erlangen": {
+    "moonAltDeg": 38.23,
+    "moonAzDeg": 115.57,
+    "tiltDeg": 110.1,
+    "sunAltDeg": 11.37
+   },
+   "lightCheck": {
+    "illumPct": 17.76,
+    "moonAltDeg": 38.23,
+    "tiltDeg": 110.1
+   }
+  },
+  {
+   "utc": "2037-11-26T05:19:00Z",
+   "illumPct": 88.73,
+   "elongDeg": 219.33,
+   "waxing": false,
+   "phaseName": "waningGibbous",
+   "distKm": 383964,
+   "erlangen": {
+    "moonAltDeg": 40.62,
+    "moonAzDeg": 254.97,
+    "tiltDeg": 54.8,
+    "sunAltDeg": -13.38
+   },
+   "lightCheck": {
+    "illumPct": 88.71,
+    "moonAltDeg": 40.62,
+    "tiltDeg": 54.8
+   }
+  },
+  {
+   "utc": "2038-04-29T05:35:00Z",
+   "illumPct": 22.44,
+   "elongDeg": 303.68,
+   "waxing": false,
+   "phaseName": "waningCrescent",
+   "distKm": 402246,
+   "erlangen": {
+    "moonAltDeg": 21.88,
+    "moonAzDeg": 143.75,
+    "tiltDeg": 86.8,
+    "sunAltDeg": 14.46
+   },
+   "lightCheck": {
+    "illumPct": 22.45,
+    "moonAltDeg": 21.88,
+    "tiltDeg": 86.8
+   }
+  },
+  {
+   "utc": "2038-09-06T22:58:00Z",
+   "illumPct": 59.9,
+   "elongDeg": 101.28,
+   "waxing": true,
+   "phaseName": "waxingGibbous",
+   "distKm": 375703,
+   "erlangen": {
+    "moonAltDeg": -9.35,
+    "moonAzDeg": 245.3,
+    "tiltDeg": -127.6,
+    "sunAltDeg": -34.17
+   },
+   "lightCheck": {
+    "illumPct": 59.92,
+    "moonAltDeg": -9.35,
+    "tiltDeg": -127.6
+   }
+  },
+  {
+   "utc": "2039-01-24T10:09:00Z",
+   "illumPct": 0.08,
+   "elongDeg": 358.12,
+   "waxing": false,
+   "phaseName": "new",
+   "distKm": 372566,
+   "erlangen": {
+    "moonAltDeg": 15.33,
+    "moonAzDeg": 162.21,
+    "tiltDeg": null,
+    "sunAltDeg": 19.01
+   },
+   "lightCheck": {
+    "illumPct": 0.08,
+    "moonAltDeg": 15.33,
+    "tiltDeg": 26.4
+   }
+  },
+  {
+   "utc": "2039-05-28T14:33:00Z",
+   "illumPct": 25.71,
+   "elongDeg": 60.73,
+   "waxing": true,
+   "phaseName": "waxingCrescent",
+   "distKm": 396783,
+   "erlangen": {
+    "moonAltDeg": 59.11,
+    "moonAzDeg": 149.47,
+    "tiltDeg": -55.9,
+    "sunAltDeg": 41.86
+   },
+   "lightCheck": {
+    "illumPct": 25.7,
+    "moonAltDeg": 59.1,
+    "tiltDeg": -55.9
+   }
+  },
+  {
+   "utc": "2039-07-07T19:59:00Z",
+   "illumPct": 95.57,
+   "elongDeg": 204.05,
+   "waxing": false,
+   "phaseName": "waningGibbous",
+   "distKm": 367004,
+   "erlangen": {
+    "moonAltDeg": -9.16,
+    "moonAzDeg": 113.84,
+    "tiltDeg": 124.2,
+    "sunAltDeg": -5.11
+   },
+   "lightCheck": {
+    "illumPct": 95.57,
+    "moonAltDeg": -9.16,
+    "tiltDeg": 124.2
+   }
+  },
+  {
+   "utc": "2040-01-02T06:39:00Z",
+   "illumPct": 93.2,
+   "elongDeg": 210.01,
+   "waxing": false,
+   "phaseName": "waningGibbous",
+   "distKm": 402325,
+   "erlangen": {
+    "moonAltDeg": 23.74,
+    "moonAzDeg": 275.04,
+    "tiltDeg": 56,
+    "sunAltDeg": -5.42
+   },
+   "lightCheck": {
+    "illumPct": 93.2,
+    "moonAltDeg": 23.74,
+    "tiltDeg": 56
+   }
+  },
+  {
+   "utc": "2040-04-22T09:29:00Z",
+   "illumPct": 76.23,
+   "elongDeg": 121.65,
+   "waxing": true,
+   "phaseName": "waxingGibbous",
+   "distKm": 394156,
+   "erlangen": {
+    "moonAltDeg": -22.6,
+    "moonAzDeg": 27.11,
+    "tiltDeg": -47.6,
+    "sunAltDeg": 47
+   },
+   "lightCheck": {
+    "illumPct": 76.23,
+    "moonAltDeg": -22.6,
+    "tiltDeg": -47.6
+   }
+  },
+  {
+   "utc": "2040-11-15T00:34:00Z",
+   "illumPct": 84.57,
+   "elongDeg": 133.76,
+   "waxing": true,
+   "phaseName": "waxingGibbous",
+   "distKm": 377364,
+   "erlangen": {
+    "moonAltDeg": 13.57,
+    "moonAzDeg": 250.95,
+    "tiltDeg": -155.1,
+    "sunAltDeg": -53.78
+   },
+   "lightCheck": {
+    "illumPct": 84.56,
+    "moonAltDeg": 13.57,
+    "tiltDeg": -155.1
+   }
+  }
+ ],
+ "principalPhases2027": [
+  {
+   "kind": "new",
+   "utc": "2027-01-07T20:25:05Z",
+   "distKm": 406514,
+   "berlinDate": "2027-01-07"
+  },
+  {
+   "kind": "full",
+   "utc": "2027-01-22T12:17:50Z",
+   "distKm": 357635,
+   "berlinDate": "2027-01-22"
+  },
+  {
+   "kind": "new",
+   "utc": "2027-02-06T15:56:47Z",
+   "distKm": 402700,
+   "berlinDate": "2027-02-06"
+  },
+  {
+   "kind": "full",
+   "utc": "2027-02-20T23:24:07Z",
+   "distKm": 363296,
+   "berlinDate": "2027-02-21"
+  },
+  {
+   "kind": "new",
+   "utc": "2027-03-08T09:30:07Z",
+   "distKm": 394330,
+   "berlinDate": "2027-03-08"
+  },
+  {
+   "kind": "full",
+   "utc": "2027-03-22T10:44:19Z",
+   "distKm": 372518,
+   "berlinDate": "2027-03-22"
+  },
+  {
+   "kind": "new",
+   "utc": "2027-04-06T23:51:45Z",
+   "distKm": 383628,
+   "berlinDate": "2027-04-07"
+  },
+  {
+   "kind": "full",
+   "utc": "2027-04-20T22:27:44Z",
+   "distKm": 383421,
+   "berlinDate": "2027-04-21"
+  },
+  {
+   "kind": "new",
+   "utc": "2027-05-06T10:59:10Z",
+   "distKm": 372964,
+   "berlinDate": "2027-05-06"
+  },
+  {
+   "kind": "full",
+   "utc": "2027-05-20T10:59:39Z",
+   "distKm": 393893,
+   "berlinDate": "2027-05-20"
+  },
+  {
+   "kind": "new",
+   "utc": "2027-06-04T19:40:51Z",
+   "distKm": 364247,
+   "berlinDate": "2027-06-04"
+  },
+  {
+   "kind": "full",
+   "utc": "2027-06-19T00:45:01Z",
+   "distKm": 401943,
+   "berlinDate": "2027-06-19"
+  }
+ ],
+ "seasons": [
+  {
+   "year": 2027,
+   "kind": "marchEquinox",
+   "utc": "2027-03-20T20:24:43Z"
+  },
+  {
+   "year": 2027,
+   "kind": "juneSolstice",
+   "utc": "2027-06-21T14:10:33Z"
+  },
+  {
+   "year": 2027,
+   "kind": "septemberEquinox",
+   "utc": "2027-09-23T06:01:18Z"
+  },
+  {
+   "year": 2027,
+   "kind": "decemberSolstice",
+   "utc": "2027-12-22T02:42:18Z"
+  },
+  {
+   "year": 2028,
+   "kind": "marchEquinox",
+   "utc": "2028-03-20T02:17:01Z"
+  },
+  {
+   "year": 2028,
+   "kind": "juneSolstice",
+   "utc": "2028-06-20T20:01:42Z"
+  },
+  {
+   "year": 2028,
+   "kind": "septemberEquinox",
+   "utc": "2028-09-22T11:45:24Z"
+  },
+  {
+   "year": 2028,
+   "kind": "decemberSolstice",
+   "utc": "2028-12-21T08:20:05Z"
+  }
+ ],
+ "riseSetErlangen": [
+  {
+   "localDate": "2026-11-24",
+   "rise": "2026-11-24T14:43Z",
+   "set": "2026-11-24T06:45Z",
+   "light": {
+    "rise": "2026-11-24T14:43Z",
+    "set": "2026-11-24T06:45Z"
+   }
+  },
+  {
+   "localDate": "2027-03-21",
+   "rise": "2027-03-21T16:38Z",
+   "set": "2027-03-21T04:39Z",
+   "light": {
+    "rise": "2027-03-21T16:38Z",
+    "set": "2027-03-21T04:39Z"
+   }
+  },
+  {
+   "localDate": "2027-06-21",
+   "rise": "2027-06-21T21:19Z",
+   "set": "2027-06-21T05:02Z",
+   "light": {
+    "rise": "2027-06-21T21:19Z",
+    "set": "2027-06-21T05:02Z"
+   }
+  },
+  {
+   "localDate": "2028-12-24",
+   "rise": "2028-12-24T10:47Z",
+   "set": "2028-12-23T23:37Z",
+   "light": {
+    "rise": "2028-12-24T10:47Z",
+    "set": "2028-12-23T23:37Z"
+   }
+  },
+  {
+   "localDate": "2027-01-28",
+   "rise": null,
+   "set": "2027-01-28T09:03Z",
+   "light": {
+    "rise": null,
+    "set": "2027-01-28T09:03Z"
+   }
+  },
+  {
+   "localDate": "2027-01-14",
+   "rise": "2027-01-14T09:32Z",
+   "set": null,
+   "light": {
+    "rise": "2027-01-14T09:32Z",
+    "set": null
+   }
+  }
+ ],
+ "nextTotalLunarEclipseVisibleCentralEurope": {
+  "kind": "total",
+  "P1": "2028-12-31T14:03:27Z",
+  "U1": "2028-12-31T15:07:09Z",
+  "U2": "2028-12-31T16:15:46Z",
+  "max": "2028-12-31T16:51:54Z",
+  "U3": "2028-12-31T17:28:02Z",
+  "U4": "2028-12-31T18:36:39Z",
+  "P4": "2028-12-31T19:40:21Z",
+  "umbralMagnitude": 1.252,
+  "penumbralMagnitude": 2.28,
+  "obscuration": 1,
+  "erlangen": {
+   "altU1": -1,
+   "altMax": 12.4,
+   "altU4": 28.3,
+   "verdict": "partly",
+   "verdictWithL2": "partly"
+  }
+ },
+ "nextSolarEclipseErlangen": {
+  "kind": "partial",
+  "obscuration": 0.453,
+  "partialBegin": {
+   "t": "2027-08-02T08:10Z",
+   "alt": 40.1
+  },
+  "totalBegin": null,
+  "peak": {
+   "t": "2027-08-02T09:11Z",
+   "alt": 48.7
+  },
+  "totalEnd": null,
+  "partialEnd": {
+   "t": "2027-08-02T10:14Z",
+   "alt": 55.3
+  }
+ }
+}

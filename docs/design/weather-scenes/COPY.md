@@ -1,6 +1,6 @@
 # Weather scenes – words (German and English, taken literally)
 
-German goes into `web/src/strings.weather.ts` / `strings.weatherPage.ts`, English into the catalogue under the same key. Keys are proposals in the existing bundles (`tx` = `tWeather`, `tp` = `tWeatherPage`); a package may rename a key, never a word. Tone: [FOCUS-WORDING](../FOCUS-WORDING.md) – what is there, no exclamation marks, no superlatives ("Blutmond", "Jahrhundert-Finsternis" are not used). Numbers and dates through `core/i18n/format`; `{…}` are parameters. The picture is `aria-hidden`: every word below is also what a screen reader gets.
+German and English both go into `web/src/strings.weather.ts` / `strings.weatherPage.ts` (these bundles hold the languages inline; es / fr / pt-BR are frozen and not touched). Keys are proposals in the existing bundles (`tx` = `tWeather`, `tp` = `tWeatherPage`); a package may rename a key, never a word. Tone: [FOCUS-WORDING](../FOCUS-WORDING.md) – what is there, no exclamation marks, no superlatives ("Blutmond", "Jahrhundert-Finsternis" are not used). Numbers and dates through `core/i18n/format`; `{…}` are parameters. The picture is `aria-hidden`: every word below is also what a screen reader gets.
 
 ## 1. Weather words (package 1)
 
@@ -51,10 +51,10 @@ Additions the picture needs a word for (appended to the detail line under the te
 | `tp.keyUv` | UV {n} | UV {n} | unchanged; shown only between sunrise and sunset |
 | `tp.keySunrise` | Sonnenaufgang {time} | Sunrise {time} | third chip at night until package 2 brings the moon chip |
 | `tp.warnComputed` | berechnet, keine amtliche Warnung | calculated, not an official warning | suffix inside the hint, once per hint block |
-| `tp.warnLabel` | Hinweise aus der Vorhersage | Hints from the forecast | name of the `role="note"`; unchanged if it exists with this meaning |
+| `tp.warnLabel` | Wetterhinweis | Weather notice | name of the `role="note"`; unchanged |
 | `tp.warn.ice({day})` | {day}: gefrierender Regen, es kann glatt sein | {day}: freezing rain, it may be slippery | new hint kind `ice` (a day whose code is 56, 57, 66 or 67) |
 
-The existing lines `tp.warn.storm|wind|rain|heat|frost` keep their words. `tp.warnSource` (the sentence under the old bar) is replaced by `tp.warnComputed`.
+The existing lines `tp.warn.storm|wind|rain|heat|frost` keep their words (German and English as they are). `tp.warnSource` (the sentence under the old bar) is replaced by `tp.warnComputed`. The frost hint's icon becomes `thermometer` (nothing falls), `ice` takes `cloudDrizzle`.
 
 Drawn only, not built (no source for official warnings): „Amtliche Warnung · {Art}“ / "Official warning · {kind}", link „Quelle“ / "Source".
 
@@ -130,13 +130,15 @@ Dates as `{date}` = weekday short + day + month ("Mo., 2. Aug."), times local `H
 | `tp.ev.moonBright` | Der helle Mond überstrahlt die schwächeren. | The bright moon outshines the fainter ones. |
 | `tp.ev.starNight` | Dunkle Nacht ohne Mond: gute Sicht auf die Sterne. | A dark night without a moon: a good view of the stars. |
 | `tp.ev.rainbow` | Regenbogen möglich: Regen bei tiefer Sonne. Schau mit der Sonne im Rücken. | A rainbow is possible: rain with a low sun. Look with the sun behind you. |
-| `tp.ev.dust` | Saharastaub in der Luft: der Himmel wirkt milchig. | Saharan dust in the air: the sky looks milky. |
+| `tp.ev.rainbowChip` | Regenbogen möglich | Rainbow possible |
+| `tp.ev.dust({n})` | Saharastaub in der Luft ({n} µg/m³): der Himmel wirkt milchig. | Saharan dust in the air ({n} µg/m³): the sky looks milky. |
+| `tp.ev.next` | Als Nächstes | Next |
 | `tp.ev.solsticeWinter` | Wintersonnenwende: der kürzeste Tag. Ab morgen werden die Tage länger. | Winter solstice: the shortest day. From tomorrow the days get longer. |
 | `tp.ev.solsticeSummer` | Sommersonnenwende: der längste Tag. | Summer solstice: the longest day. |
 | `tp.ev.equinoxSpring` | Tagundnachtgleiche: astronomischer Frühlingsanfang. | Equinox: the astronomical start of spring. |
 | `tp.ev.equinoxAutumn` | Tagundnachtgleiche: astronomischer Herbstanfang. | Equinox: the astronomical start of autumn. |
 
-Meteor shower names (`tp.ev.shower.<id>`, German genitive plural as written / English): Quadrantiden / Quadrantid · Lyriden / Lyrid · Eta-Aquariiden / Eta Aquariid · Perseiden / Perseid · Orioniden / Orionid · Leoniden / Leonid · Geminiden / Geminid · Ursiden / Ursid.
+Meteor shower names (`tp.ev.shower.<id>`, German genitive plural as written / English): Quadrantiden / Quadrantid · Lyriden / Lyrid · Eta-Aquariiden / Eta Aquariid · Perseiden / Perseid · Orioniden / Orionid · Geminiden / Geminid. The chip on a meteor night: „Sternschnuppen: {name}“ / "Meteors: {name}" (`tp.ev.meteorsChip`); the chip on an eclipse day: „{name} {from}–{to}“ with the short names „Sonnenfinsternis“ / "Solar eclipse" and „Mondfinsternis“ / "Lunar eclipse" (`tp.ev.solarShort`, `tp.ev.lunarShort`). `tp.ev.dust` is a row in „Atemwege & Allergie“, not a chip.
 
 South of the equator the solstice and equinox lines swap (June = winter solstice, March = start of autumn).
 

@@ -1,0 +1,32 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wetterszene – Kopf</title><link rel="stylesheet" href="mock.css">
+<script src="palette.js"></script><script src="scene.js"></script><script src="gallery.js"></script><script src="head.js"></script></head>
+<body><h1>Der Wetterkopf</h1><p class="intro">Breit: Bühne 1650 × 280 px (Titelzeile 56 + Körper 224). Handy: 412 px, Titelzeile 44 + Modulzeile 44 + Körper, höchstens 312 px; die dritte Angabe und die Zeile weiterer Werte stehen auf dem Handy unter dem Kopf.</p>
+<div id="heads"></div>
+<script>
+var moonChip = { moon: { illum: 0.99, waxing: true }, text: 'Vollmond · 99 %' };
+var frost = { title: 'Klare Frostnacht bei Vollmond, −4°', state: { phase: 'night', cond: 'mostlyClear', cloud: 15, frost: 2, season: 'winter', body: { kind: 'moon', t: 0.85 }, moon: { illum: 0.99, waxing: true, size: 1.2 } },
+  temp: '−4°', detail: 'gefühlt −9° · überwiegend klar', hints: [{ icon: 'thermo', text: 'Heute: Frost bis −6°' }],
+  chips: [{ icon: 'umbrella', text: 'Trocken' }, { icon: 'wind', text: 'Wind 8 km/h NO' }, moonChip],
+  rest: ['−6° bis 1°', 'Luftfeuchte 86 %', 'Böen 15 km/h', 'Wolken 10 %', '1031 hPa', 'Sonne 08:02–16:09'] };
+Head.render('#heads', [
+  frost,
+  { title: 'Sonniger Sommertag, 24°', state: { phase: 'day', cond: 'clear', season: 'summer', body: { kind: 'sun', t: 0.84 } },
+    temp: '24°', detail: 'gefühlt 25° · sonnig', chips: [{ icon: 'umbrella', text: 'Trocken' }, { icon: 'wind', text: 'Wind 9 km/h W' }, { icon: 'sun', text: 'UV 6' }],
+    rest: ['13° bis 26°', 'Luftfeuchte 48 %', 'Böen 21 km/h', 'Wolken 5 %', '1019 hPa', 'Sonne 05:21–21:34', 'Beste Zeit 18–21 Uhr'] },
+  { title: 'Regen im Herbst mit Wind, 9°', state: { phase: 'day', cond: 'rain', intensity: 2, wind: 2, season: 'autumn' },
+    temp: '9°', detail: 'gefühlt 5° · Regen', chips: [{ icon: 'rain', kind: 'rain', text: 'Regen bis 18 Uhr' }, { icon: 'wind', text: 'Wind 38 km/h SW' }, { icon: 'sun', text: 'UV 1' }],
+    rest: ['7° bis 11°', 'Luftfeuchte 94 %', 'Böen 62 km/h', 'Wolken 100 %', '998 hPa', 'Sonne 07:31–17:02'] },
+  { title: 'Schnee in der Abenddämmerung, −1°', state: { phase: 'dusk', cond: 'snow', intensity: 1, cloud: 90, season: 'winter' },
+    temp: '−1°', detail: 'gefühlt −5° · leichter Schneefall', chips: [{ icon: 'snow', kind: 'rain', text: 'Schnee bis 21 Uhr' }, { icon: 'wind', text: 'Wind 14 km/h O' }, { moon: { illum: 0.32, waxing: true }, text: 'Zunehmender Mond · 32 %' }],
+    rest: ['−3° bis 1°', 'Luftfeuchte 91 %', 'Böen 25 km/h', 'Wolken 95 %', '1008 hPa', 'Sonne 08:11–16:02'] },
+  { title: 'Gewitter, 19°, zwei Hinweise', state: { phase: 'day', cond: 'thunder', intensity: 2, wind: 1, season: 'summer' },
+    temp: '19°', detail: 'gefühlt 20° · Gewitter', hints: [{ icon: 'bolt', text: 'Heute: Gewitter' }, { icon: 'wind', text: 'Freitag: Sturmböen bis 75 km/h' }],
+    chips: [{ icon: 'rain', kind: 'rain', text: 'Regen ab 16 Uhr' }, { icon: 'wind', text: 'Wind 22 km/h SW' }, { icon: 'sun', text: 'UV 3' }],
+    rest: ['15° bis 27°', 'Luftfeuchte 71 %', 'Böen 48 km/h', 'Wolken 90 %', '1006 hPa', 'Sonne 05:40–21:12'] },
+  { title: 'Bedeckter Morgen, 6°', state: { phase: 'day', cond: 'overcast', season: 'autumn', body: { kind: 'sun', t: 0.2 } },
+    temp: '6°', detail: 'gefühlt 3° · bedeckt', chips: [{ icon: 'umbrella', text: 'Trocken' }, { icon: 'wind', text: 'Wind 11 km/h W' }, { icon: 'sun', text: 'UV 1' }],
+    rest: ['4° bis 9°', 'Luftfeuchte 88 %', 'Böen 24 km/h', 'Wolken 100 %', '1014 hPa', 'Sonne 07:44–16:31'] },
+  Object.assign({}, frost, { n: 7, title: 'Wie (1), mit einer amtlichen Warnung (falls es eine Quelle gäbe)', official: 'Frost' }),
+]);
+</script></body></html>

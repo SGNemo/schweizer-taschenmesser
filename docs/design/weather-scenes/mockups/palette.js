@@ -34,7 +34,7 @@
     sky: sky,
     inkOf: inkOf,
     glow: glow,
-    ink: { light: '#f3f5f8', dark: '#1b1f24' },
+    ink: { light: '#eceff1', dark: '#171f24' }, // coordinator 2026-11-24: the app's own inks (spec had #f3f5f8 / #1b1f24)
     surface: { light: '#f4f5f7', dark: '#1c1f24' }, // "Ruhig": greys mixed toward this
     c: {
       sun: '#ffd36a', 'sun-core': '#fff5c8', 'sun-low': '#ffb25e',

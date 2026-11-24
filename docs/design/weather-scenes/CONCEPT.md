@@ -118,7 +118,7 @@ The stage grows by 106 px on the desktop – the price for "larger"; the page be
 
 ## 7. The hint in the head
 
-- **Where:** one pill in the stage, directly under the detail line: icon · "Heute: Frost bis −6°" · quieter suffix "berechnet, keine amtliche Warnung". Opaque backing (`--warning` 14 % over `--surface`), ink `--text`, icon `--warning-ink`; readable on any sky. `role="note"`, name "Hinweise aus der Vorhersage".
+- **Where:** one pill in the stage, directly under the detail line: icon · "Heute: Frost bis −6°" · quieter suffix "berechnet, keine amtliche Warnung". Opaque backing (`--warning` 14 % over `--surface`), ink `--text`, icon `--warning-ink`; readable on any sky. `role="note"`, name "Wetterhinweis" (as today).
 - **Several:** at most two (as today), one per line in the same pill, the suffix once at the end.
 - **Phone:** the suffix wraps to its own line inside the pill; the pill takes the stage's width.
 - **Late forecast** (the frame stopped waiting): unchanged – the hint appears under the head in the polite live region, so nothing painted moves.
