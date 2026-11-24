@@ -44,14 +44,14 @@ function expandParts(
 ) {
   if (!expand || !entry) return undefined;
   const id = compartmentId(unitId);
-  // The name replaces the visible title: a thing in parts says which part, as its title does.
+  // The compartment's name: a thing in parts says which part, as its title does (the button's name is what it shows).
   const named =
     part && part.of > 1 ? `${title}, ${t.planner.row.partAria(part.k + 1, part.of)}` : title;
   return {
     disclosure: {
       open: expand.open,
       controls: id,
-      name: expand.open ? t.planner.panel.collapse(named) : t.planner.panel.expand(named),
+      hint: expand.open ? t.planner.panel.collapseHint : t.planner.panel.expandHint,
     },
     onOpen: expand.onToggle,
     compartment: expand.open ? (

@@ -266,8 +266,9 @@ describe('ThingRow in a selection', () => {
         </ul>
       </MemoryRouter>,
     );
+    // The name is what the button shows (the title, its part for the screen reader), then „. Aufklappen“ (WCAG 2.5.3).
     expect(
-      screen.getByRole('button', { name: 'Steuer, Teil 2 von 2. Aufklappen' }),
+      screen.getByRole('button', { name: /^Steuer\s*Teil 2 von 2\. Aufklappen$/ }),
     ).toBeInTheDocument();
   });
 });

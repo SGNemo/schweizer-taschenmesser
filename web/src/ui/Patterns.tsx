@@ -1,13 +1,5 @@
 /** Small layout building blocks shared by the module pages (headers, filters, lists, forms). */
-import {
-  Children,
-  useEffect,
-  useId,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react';
+import { Children, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { t } from '@/strings';
 import { useSubmitOnce } from '@/core/forms/submitOnce';
@@ -335,12 +327,12 @@ export function ItemRow({
 }: {
   title: ReactNode;
   /**
-   * The title is a disclosure button instead of a link (planner hub 2, package 4a): `aria-expanded`, `aria-controls`
-   * and its name `name` (COPY X1); the meta stays its description. The open row shows a 16 px chevron after the title;
-   * a closed one shows it on the desktop under the mouse and keyboard focus only – otherwise it is not in the DOM.
-   * The click is still `onOpen`.
+   * The title is a disclosure button instead of a link (planner hub 2, package 4a): `aria-expanded`, `aria-controls`;
+   * its name is what it shows (title and meta, WCAG 2.5.3) followed by `hint` for the screen reader only (COPY X1:
+   * „. Aufklappen“ / „. Zuklappen“). The open row shows a 16 px chevron after the title; a closed one shows it on the
+   * desktop under the mouse and keyboard focus only – otherwise it is not in the DOM. The click is still `onOpen`.
    */
-  disclosure?: { open: boolean; controls: string; name: string };
+  disclosure?: { open: boolean; controls: string; hint: string };
   /** A stable key of the thing on the row (`data-row-key`), for a page that brings a row into view by its key. */
   rowKey?: string;
   /** Wrap a long title in full instead of ending it in "…" after two lines (lists the user reads and ticks). */
@@ -398,7 +390,6 @@ export function ItemRow({
   below?: ReactNode;
   children?: ReactNode;
 }) {
-  const metaId = useId();
   // A closed disclosure peeks its chevron while the mouse is on it or the keyboard focus (desktop only).
   const [peek, setPeek] = useState(false);
   const chevron = disclosure && (disclosure.open || peek);
@@ -416,11 +407,7 @@ export function ItemRow({
         ) : null}
       </span>
       {meta ? (
-        <span
-          className={styles.muted}
-          id={disclosure ? metaId : undefined}
-          title={typeof meta === 'string' ? meta : undefined}
-        >
+        <span className={styles.muted} title={typeof meta === 'string' ? meta : undefined}>
           {typeof meta === 'string' && isTeaser(meta) ? (
             <ReadableText text={meta} kind="list" />
           ) : (
@@ -428,6 +415,7 @@ export function ItemRow({
           )}
         </span>
       ) : null}
+      {disclosure ? <span className="sr-only">{disclosure.hint}</span> : null}
     </>
   );
   const swipe = useSwipeRow({ onSwipeRight, onSwipeLeft });
@@ -446,8 +434,6 @@ export function ItemRow({
         ? {
             'aria-expanded': disclosure.open,
             'aria-controls': disclosure.controls,
-            'aria-label': disclosure.name,
-            ...(meta ? { 'aria-describedby': metaId } : {}),
             onPointerEnter: (e: { pointerType: string }) => {
               if (e.pointerType === 'mouse') setPeek(true);
             },

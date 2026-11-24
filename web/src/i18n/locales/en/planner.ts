@@ -57,8 +57,8 @@ export const planner: Strings['planner'] = {
   },
   title: 'Planner',
   panel: {
-    expand: (title: string) => `${title}. Expand`,
-    collapse: (title: string) => `${title}. Collapse`,
+    expandHint: '. Expand',
+    collapseHint: '. Collapse',
     open: 'Open',
     gone: 'No longer exists.',
     takeOut: 'Take out of the plan',

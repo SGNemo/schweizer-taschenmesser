@@ -9501,8 +9501,9 @@ export const de = {
     title: 'Planer',
     /** The expanded row (planner hub 2, package 4a; COPY X1–X5, X7, X14, X19). */
     panel: {
-      expand: (title: string) => `${title}. Aufklappen`,
-      collapse: (title: string) => `${title}. Zuklappen`,
+      // X1 „{Titel}. Aufklappen“: the button's name is its visible text, this follows for the screen reader only.
+      expandHint: '. Aufklappen',
+      collapseHint: '. Zuklappen',
       open: 'Ganz öffnen',
       gone: 'Gibt es nicht mehr.',
       takeOut: 'Aus dem Plan nehmen',
