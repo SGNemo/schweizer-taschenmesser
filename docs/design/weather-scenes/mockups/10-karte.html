@@ -1,0 +1,71 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wetterszene – Mond-Karte</title><link rel="stylesheet" href="mock.css">
+<script src="palette.js"></script><script src="scene.js"></script><script src="gallery.js"></script><script src="head.js"></script>
+<style>
+.aside { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+.acard { width: 366px; max-width: 100%; background: var(--surface-raised); border-radius: var(--radius-lg); padding: 4px 20px 18px; color: var(--text); }
+.acard h2 { font-size: 16px; font-weight: 600; margin: 0; min-height: 48px; display: flex; align-items: center; gap: 10px; }
+.acard h2 .ic { color: var(--text-3); }
+.moonTop { display: flex; gap: 16px; align-items: center; padding: 4px 0 12px; }
+.moonTop b { display: block; font-size: 18px; font-weight: 600; }
+.moonTop span { color: var(--text-muted); font-size: 14px; }
+.line { font-size: 14px; padding: 6px 0; border-top: 1px solid var(--border); }
+.line.first { border-top: 0; }
+.line small { display: block; color: var(--text-muted); font-size: 13px; }
+.caps { font: 600 11px var(--font-sans); letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin: 14px 0 6px; }
+.ev { display: grid; grid-template-columns: 20px 1fr; gap: 2px 10px; font-size: 14px; align-items: start; }
+.ev .ic { color: var(--text-3); margin-top: 2px; }
+.ev b { font-weight: 600; }
+.ev .m { grid-column: 2; color: var(--text-muted); font-size: 13px; }
+.ev .safe { grid-column: 2; font-size: 13px; margin-top: 4px; }
+.ev + .ev { margin-top: 10px; }
+.tag { font: 600 12px var(--font-sans); color: var(--text-3); margin: 0 0 6px; }
+.strip { position: relative; width: 760px; max-width: 100%; height: 150px; border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 12px; }
+.strip .bg { position: absolute; inset: 0; }
+.strip .keys { position: absolute; left: 20px; bottom: 16px; }
+.row2 { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; padding: 8px 0; border-top: 1px solid var(--border); }
+.row2 .ic { color: var(--text-3); flex: none; margin-top: 2px; }
+.row2.muted { color: var(--text-3); }
+</style></head>
+<body><h1>Karte „Mond & Himmel“</h1><p class="intro">Die Karte in der Seitenspalte (wie „Atemwege & Allergie“, ~366 px). Darunter sechs Fassungen des letzten Blocks „Als Nächstes“, die Chips im Kopf an Ereignistagen und die Zeile für Saharastaub. Texte nach COPY.md §4–5.</p>
+<p class="label">Die Karte</p><div class="aside" id="card"></div>
+<p class="label">„Als Nächstes“ – sechs Fassungen</p><div class="aside" id="next"></div>
+<p class="label">Chips im Kopf an Ereignistagen</p><div id="chips"></div>
+<p class="label">„Atemwege & Allergie“</p><div class="aside" id="air"></div>
+<script>
+var ic = Head.icon;
+var STARS = '<svg class="ic" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 2l.9 2.6L11.5 5.5 8.9 6.4 8 9l-.9-2.6L4.5 5.5l2.6-.9z"/><circle cx="12.5" cy="11" r="1"/><circle cx="4" cy="12" r=".8"/></svg>';
+var EV = {
+  a: ['eclipse', '<b>Partielle Sonnenfinsternis am Mo., 2. Aug. · 10:10–12:14</b>', 'Höhepunkt 11:11 · hier bis 45 % der Sonne bedeckt', 'Nur mit Sonnenfinsternis-Brille hinsehen, nie mit bloßem Auge oder Sonnenbrille.'],
+  b: ['lunar', '<b>Heute Nacht: Totale Mondfinsternis · 16:07–19:36</b>', 'ganz im Schatten 17:15–18:28', 'Der Mond geht hier erst um 16:22 auf, den Anfang sieht man nicht.'],
+  c: ['meteor', 'Heute Nacht: Sternschnuppen der Geminiden, am besten am späten Abend.', 'Der helle Mond überstrahlt die schwächeren.'],
+  d: ['solstice', 'Wintersonnenwende: der kürzeste Tag. Ab morgen werden die Tage länger.'],
+  e: [null, 'Dunkle Nacht ohne Mond: gute Sicht auf die Sterne.'],
+};
+function ev(e, clouds) {
+  var g = e[0] ? ic(e[0]) : STARS, h = '<div class="ev">' + g + '<span>' + e[1] + '</span>' + (e[2] ? '<span class="m">' + e[2] + '</span>' : '') + (e[3] ? '<span class="safe">' + e[3] + '</span>' : '') + '</div>';
+  if (clouds) h += '<div class="ev">' + ic('cloud') + '<span class="m" style="grid-column:2">Wolken verdecken den Himmel hier wahrscheinlich.</span></div>';
+  return h;
+}
+function card(body) { return '<div class="acard"><h2>' + Scene.moonGlyph({ illum: 0.99, waxing: true, size: 18, mono: true }).replace('class="moon-glyph"', 'class="moon-glyph ic"') + 'Mond &amp; Himmel</h2>' + body + '</div>'; }
+var cardTop = '<div class="moonTop">' + Scene.moonGlyph({ illum: 0.99, waxing: true, size: 64 }) + '<div><b>Vollmond</b><span>99 % beleuchtet</span></div></div>' +
+  '<div class="line first">Mondaufgang 15:43 · Monduntergang 07:45</div><div class="line">Neumond am Mi., 9. Dez.</div>' +
+  '<div class="line"><b>Supermond</b><small>Vollmond in Erdnähe: er wirkt etwas größer und heller.</small></div>';
+document.getElementById('card').innerHTML = card(cardTop + '<p class="caps">Als Nächstes</p>' + ev(EV.a));
+document.getElementById('next').innerHTML = [['(a) Sonnenfinsternis', ev(EV.a)], ['(b) Mondfinsternis heute Nacht', ev(EV.b)], ['(c) Sternschnuppen bei hellem Mond', ev(EV.c)],
+  ['(d) Wintersonnenwende', ev(EV.d)], ['(e) dunkle Nacht', ev(EV.e)], ['(f) wie (a), mit Wolken', ev(EV.a, true)]].map(function (v) {
+  return '<div><p class="tag">' + v[0] + '</p><div class="acard"><p class="caps">Als Nächstes</p>' + v[1] + '</div></div>';
+}).join('');
+var dry = '<li class="key">' + ic('umbrella') + 'Kein Regen in Sicht</li>', wind = '<li class="key">' + ic('wind') + 'Wind 9 km/h W</li>';
+document.getElementById('chips').innerHTML = [
+  [{ phase: 'day', cond: 'clear', event: 'solarPartial', eventAmount: 0.45, body: { kind: 'sun', t: 0.55 } }, 'eclipse', 'Sonnenfinsternis 10:10–12:14'],
+  [{ phase: 'night', cond: 'clear', event: 'lunarTotal', moon: { illum: 1, size: 1.2 }, body: { kind: 'moon', t: 0.3 } }, 'lunar', 'Mondfinsternis 16:07–19:36'],
+  [{ phase: 'golden', cond: 'showers', event: 'rainbow', cloud: 40, body: { kind: 'sun', t: 0.9 } }, 'rainbow', 'Regenbogen möglich'],
+  [{ phase: 'night', cond: 'clear', event: 'meteors', moon: { illum: 0.7 }, body: { kind: 'moon', t: 0.8 } }, 'meteor', 'Sternschnuppen: Geminiden'],
+].map(function (r) {
+  var s = Gallery.withTheme(r[0]);
+  return '<div class="strip"><div class="bg">' + Scene.svg(s) + '</div><ul class="keys">' + dry + wind + '<li class="key">' + ic(r[1]) + r[2] + '</li></ul></div>';
+}).join('');
+document.getElementById('air').innerHTML = '<div class="acard"><h2>' + ic('wind') + 'Atemwege &amp; Allergie</h2><div class="row2 muted">… die bestehenden Zeilen (Luftqualität, Pollen)</div>' +
+  '<div class="row2">' + ic('dust') + '<span>Saharastaub in der Luft (86 µg/m³): der Himmel wirkt milchig.</span></div></div>';
+</script></body></html>
