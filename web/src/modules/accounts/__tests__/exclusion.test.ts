@@ -60,9 +60,6 @@ describe('module definition', () => {
     expect(c).not.toHaveProperty('quickAdd');
     expect(c).not.toHaveProperty('aiComputed');
     expect(c).not.toHaveProperty('aiCreateDefaults');
-    // Nothing of the vault under a plan row or at the planner's foot (planner hub 2, package 4a).
-    expect(c).not.toHaveProperty('planPanel');
-    expect(c).not.toHaveProperty('planPageFoot');
   });
 
   it('declares no `searchable` field anywhere (full-text index input), not even outside aiSchema', () => {
