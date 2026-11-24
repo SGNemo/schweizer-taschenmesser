@@ -22,12 +22,11 @@ UI-Audit 4.0 ist abgenommen: Identity 4.0 gilt seit 0b-8 (2026-11-14, [REPORT �
 - **UI schärfen, Runde 6** ([qa/round-6/STATUS.md](qa/round-6/STATUS.md)): alle Fix-PRs und der Sammel-PR (#877) auf `develop`; offen U41 Kopfbandhöhen (nicht begonnen); übrige Restpunkte: Ernte [qa/harvest-2026-11.md](qa/harvest-2026-11.md).
 - **Modul-Runde „Tiefe & Politur“, Routinen** (Plan `design/routines-deep/PLAN.md`): Routinen = der eine Ort für „Routine“ (Schritte, Vorlagen, „Los“); #936, #954, #957 auf `develop`.
 - **Modul-Runde „Tiefe & Politur“, Übersicht** (#955, Plan `design/home-deep/PLAN.md`): Reihen gleicher Höhe, Kopf-Symbole bündig, leere Karten ohne Fisch; auf `develop`.
-- **Wetter-Szenen** (Entwurf #1098, Pakete 1a → 1b → 2 → 3 → 3b → 4, [PACKAGES](design/weather-scenes/PACKAGES.md)): 1a (Wort nach WMO-Code, Zeitzone/Code/Schneehöhe, Hinweis „Glätte“, Chips nachts) in #1102; danach 1b (Bild und Kopf).
 
 ## Abgeschlossene Runden (je eine Zeile; alles auf `develop`)
 
 - Planer neu gedacht (Pakete 1–7, #1034–#1055): nichts wandert von selbst; „Tag kippt“ #1070–#1072; gemessen gegen `TARGET` ([decisions/plan-rethink.md](decisions/plan-rethink.md)).
-- Nur Entwurf: Planer-Zentrale 2 (#1084).
+- Nur Entwurf: Planer-Zentrale 2 (#1084), Wetter-Szenen (#1098; Bau läuft, 1a in #1102).
 - Rechnungen „Tiefe“: Überblick mit Torte, Suche, mehrere bezahlen (#999, #1000).
 - Gerätestatus „Tiefe“ (#927–#929) und Dieser PC „Tiefe“ (#933–#968); offen: Handtests GS-10–14, PC-A, DO-A, DO3, PC-E.
 - Use case „Wochenende retten“ (`docs/design/usecases/wochenende/`, nachgemessen in #940): Samstagmorgen A–G 29 statt 56 Taps, ≈ 176 statt 240 s (ANALYSIS §5, TARGET §4); nicht gebaut W08, W15, W16, neue Reibung W23–W25; offen für Sven: Handtest FU-W1 ([MANUAL-TESTS](MANUAL-TESTS.md)).
