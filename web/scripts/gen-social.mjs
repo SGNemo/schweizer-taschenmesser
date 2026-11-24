@@ -46,13 +46,13 @@ const TEXT = {
   en: {
     file: 'social-preview.png',
     claim: 'Calendar, to-dos, money and passwords.',
-    sub: 'Your data stays on your device.',
+    sub: 'Your data lives on your device; only what you set up goes online.',
     alt: 'Windows · Android · PWA',
   },
   de: {
     file: 'social-preview.de.png',
     claim: 'Kalender, ToDos, Geld und Passwörter.',
-    sub: 'Deine Daten bleiben auf deinem Gerät.',
+    sub: 'Deine Daten liegen auf deinem Gerät; ins Netz geht nur, was du einrichtest.',
     alt: 'Windows · Android · PWA',
   },
 };
