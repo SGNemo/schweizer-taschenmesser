@@ -1,6 +1,7 @@
 import { dateTimeFormat } from '@/core/i18n/format';
 import { useWeatherSettings } from '@/core/weather/settings';
 import { useWeather } from '@/core/weather/useWeather';
+import { conditionId } from '@/core/weather/scene';
 import { tWeather } from '@/strings.weather';
 import { tWeatherPage } from '@/strings.weatherPage';
 import { KpiWidget } from '@/ui';
@@ -34,7 +35,7 @@ export default function WeatherWidget() {
         context={
           weather
             ? [
-                tx.codes[weather.forecast.group],
+                tx.conditions[conditionId(weather.forecast.code, weather.forecast.group)],
                 weather.forecast.rainFrom && !weather.stale
                   ? tp.widgetRain(weather.forecast.rainFrom)
                   : tp.widgetDry,

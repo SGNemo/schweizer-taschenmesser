@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { requireNotice } from '@/core/legal/notices';
 import { daysBetween, today } from '@/core/time/dates';
 import { fetchForecast, searchPlaces, type DayRow } from '@/core/weather/api';
+import { conditionId } from '@/core/weather/scene';
 import { tWeather } from '@/strings.weather';
 import { t } from '@/strings';
 import { Button } from '@/ui';
@@ -67,7 +68,7 @@ export function TripWeather({ place, tripDate }: { place: string; tripDate: stri
       {state.kind === 'day' ? (
         <p role="status">
           {[
-            w.codes[state.day.group],
+            w.conditions[conditionId(state.day.code, state.day.group)],
             w.range(Math.round(state.day.min), Math.round(state.day.max)),
             w.rainChance(Math.round(state.day.rain)),
             packingHint(state.day),

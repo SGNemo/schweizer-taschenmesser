@@ -1,6 +1,7 @@
 import { dateTimeFormat } from '@/core/i18n/format';
 import type { HourRow } from '@/core/weather/api';
 import { RAIN_SHOWN_PERCENT, rateHour } from '@/core/weather/logic';
+import { conditionId } from '@/core/weather/scene';
 import { tWeather } from '@/strings.weather';
 import { Icon } from '@/ui';
 import styles from '../routes/weather.module.css';
@@ -38,7 +39,7 @@ export function HourCards({ hours }: { hours: readonly HourRow[] }) {
             <span className={styles.hourTemp} data-tone={tone(h.temp)}>
               {tx.temp(h.temp)}
             </span>
-            <span className={styles.hourWord}>{tx.codes[h.group]}</span>
+            <span className={styles.hourWord}>{tx.conditions[conditionId(h.code, h.group)]}</span>
             {h.wind != null ? (
               <span className={styles.hourWind}>{tx.windSpeed(h.wind)}</span>
             ) : null}

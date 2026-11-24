@@ -33,6 +33,7 @@ const hourSchema = z.object({
   time: z.string(),
   temp: z.number().finite(),
   group: groupSchema,
+  code: num,
   rain: z.number().finite(),
   feels: num,
   mm: num,
@@ -50,6 +51,7 @@ const daySchema = z.object({
   min: z.number().finite(),
   max: z.number().finite(),
   group: groupSchema,
+  code: num,
   rain: z.number().finite(),
   feelsMin: num,
   feelsMax: num,
@@ -72,6 +74,7 @@ const nowSchema = z.object({
   hpa: num,
   dir: num,
   night: z.boolean().optional(),
+  snowDepth: num,
 });
 // Only known pollen types: a foreign key would reach `pollenLevel()` without limits and crash the
 // open preview from a tampered value (a foreign value reads as absent, like everything else here).
@@ -85,6 +88,8 @@ const airSchema = z.object({
 const forecastSchema = z.object({
   temp: z.number().finite(),
   group: groupSchema,
+  code: num,
+  tz: z.string().optional(),
   rainFrom: z.string().optional(),
   time: z.string().optional(),
   hours: z.array(hourSchema).optional(),

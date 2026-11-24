@@ -4,12 +4,12 @@ import type { DayRow } from '@/core/weather/api';
  * Hints worth a line above the weather: computed from the forecast days, not an official warning (Open-Meteo offers none).
  * Thresholds are deliberately high so the line stays rare; each kind appears once, on its first day.
  */
-export type WarningKind = 'storm' | 'wind' | 'rain' | 'heat' | 'frost';
+export type WarningKind = 'storm' | 'wind' | 'ice' | 'rain' | 'heat' | 'frost';
 
 export interface WeatherWarning {
   kind: WarningKind;
   date: string;
-  /** km/h (wind), mm (rain), °C (heat, frost); none for a thunderstorm. */
+  /** km/h (wind), mm (rain), °C (heat, frost); none for a thunderstorm or ice. */
   value?: number;
 }
 
@@ -17,7 +17,9 @@ export const GUST_WARN_KMH = 70;
 export const RAIN_WARN_MM = 20;
 export const HEAT_WARN_C = 32;
 export const FROST_WARN_C = -5;
-const ORDER: readonly WarningKind[] = ['storm', 'wind', 'rain', 'heat', 'frost'];
+/** WMO codes of freezing drizzle and freezing rain: it may be slippery. */
+export const ICE_CODES: readonly number[] = [56, 57, 66, 67];
+const ORDER: readonly WarningKind[] = ['storm', 'wind', 'ice', 'rain', 'heat', 'frost'];
 
 export function weatherWarnings(days: readonly DayRow[], limit = 2): WeatherWarning[] {
   const out: WeatherWarning[] = [];
@@ -31,6 +33,7 @@ export function weatherWarnings(days: readonly DayRow[], limit = 2): WeatherWarn
     if (d.group === 'thunder') add({ kind: 'storm', date: d.date });
     if (d.gust != null && d.gust >= GUST_WARN_KMH)
       add({ kind: 'wind', date: d.date, value: Math.round(d.gust) });
+    if (d.code != null && ICE_CODES.includes(d.code)) add({ kind: 'ice', date: d.date });
     if (d.mm != null && d.mm >= RAIN_WARN_MM)
       add({ kind: 'rain', date: d.date, value: Math.round(d.mm) });
     if (d.max >= HEAT_WARN_C) add({ kind: 'heat', date: d.date, value: Math.round(d.max) });
