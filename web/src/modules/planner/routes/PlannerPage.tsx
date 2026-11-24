@@ -1034,8 +1034,9 @@ export default function PlannerPage() {
         firstDayWithRows(week ?? []) ??
         days[0]);
 
-  // `?item=<module>:<id>` (a ToDo's „im Plan: Mi“, todos-plan-state): that thing's row is brought into view and gets the
-  // focus once the board shows it; read once, the other parameters are cleared as before.
+  // `?item=<rowKey>` (the mark „Im Plan · Mi“ of any module, `core/entitylinks/PlanMark.tsx`): that row is brought into
+  // view and gets the focus once the board shows it – on the day of `?day=`, in „Noch offen“ with `?tab=open`, or under
+  // „Noch ohne Tag“, which unfolds for it. Read once, the other parameters are cleared as before.
   useEffect(() => {
     // Once what holds the row is drawn: the day sheet on „Plan“, the board's open rows on „Noch offen“.
     if (!lookFor.current || !(tab === 'open' ? data : shownDay)) return;
@@ -1045,8 +1046,20 @@ export default function PlannerPage() {
     // Asked once: the board is drawn, so a row that is not there (taken off meanwhile) is not waited for.
     lookFor.current = undefined;
     if (!row) return;
-    row.scrollIntoView?.({ block: 'center' });
-    row.querySelector<HTMLElement>('[data-row]')?.focus({ preventScroll: true });
+    const bring = () => {
+      row.scrollIntoView?.({ block: 'center' });
+      row.querySelector<HTMLElement>('[data-row]')?.focus({ preventScroll: true });
+    };
+    // A row in a folded group („Noch ohne Tag“, the foot of the sheet): the group opens as by his tap, and the row is
+    // brought into view once it is shown (planner hub 2, package 10b – the mark's M3).
+    const fold = row.closest<HTMLElement>('[hidden]');
+    if (fold) {
+      fold
+        .closest('section')
+        ?.querySelector<HTMLButtonElement>('button[aria-expanded="false"]')
+        ?.click();
+      requestAnimationFrame(bring);
+    } else bring();
   });
 
   // A row a drag or „Auswählen“ can move: a thing of a source that is not a fixed block or left out.

@@ -1,0 +1,90 @@
+/**
+ * The mark „Im Plan · Mi“ (planner hub 2, hand-off 10, COPY M1–M6): one muted text link with the planner glyph that
+ * leads to the plan row it matched (`planMark.ts`). Nothing is drawn while loading, while the planner is off and when
+ * the thing is not in the plan – no colour, no tone, no count.
+ *
+ *  - `variant="meta"`: a row's line – inside an `ItemRow` it goes into `below`, the line directly under the meta (the
+ *    meta sits inside the row's button, and a link never nests in a button).
+ *  - `variant="detail"`: its own line under the title block of a detail panel or dialog, 44 px high.
+ *
+ * Lists read all their rows at once with `usePlanMarks` and draw `PlanMarkLink`; a single thing uses `PlanMark`.
+ */
+import { Link } from 'react-router-dom';
+import { useSharedLiveQuery } from '@/core/modules/sharedQuery';
+import { today } from '@/core/time/now';
+import { Icon } from '@/ui/icons';
+import {
+  planMarkName,
+  planMarkOf,
+  planMarkPath,
+  planMarks,
+  planMarkText,
+  type PlanMarkInput,
+  type PlanMarkState,
+} from './planMark';
+import styles from './PlanMark.module.css';
+
+export type PlanMarkVariant = 'meta' | 'detail';
+
+/** The mark of a read state; nothing for none. `onGo` runs before the route changes (a dialog closes itself). */
+export function PlanMarkLink({
+  state,
+  variant = 'meta',
+  onGo,
+}: {
+  state: PlanMarkState | null | undefined;
+  variant?: PlanMarkVariant;
+  onGo?: () => void;
+}) {
+  if (!state) return null;
+  const day = today();
+  return (
+    <Link
+      to={planMarkPath(state)}
+      className={variant === 'detail' ? `${styles.mark} ${styles.detail}` : styles.mark}
+      aria-label={planMarkName(state, day)}
+      data-testid="plan-mark"
+      data-plan={state.kind}
+      onClick={onGo}
+    >
+      <Icon name="chartGantt" size={16} />
+      <span className={styles.text}>{planMarkText(state, day)}</span>
+    </Link>
+  );
+}
+
+/** The live marks of a list's rows; `undefined` while loading or while the planner is off. */
+export function usePlanMarks(
+  module: string,
+  things: readonly PlanMarkInput[],
+): Map<string, PlanMarkState> | undefined {
+  const sig = things
+    .map((x) => `${x.id}${x.done ? '!' : ''}${x.fallback ? '+' : ''}`)
+    .sort()
+    .join(',');
+  return useSharedLiveQuery(`planMarks|${module}|${sig}`, () => planMarks(module, things));
+}
+
+/** The live mark of one thing (a detail panel, a single row). */
+export function PlanMark({
+  module,
+  id,
+  variant = 'meta',
+  fallback,
+  done,
+  onGo,
+}: {
+  module: string;
+  id: string;
+  variant?: PlanMarkVariant;
+  /** The module's own „im Plan“ field: M3 while the planner has no row yet. */
+  fallback?: boolean;
+  done?: boolean;
+  onGo?: () => void;
+}) {
+  const state = useSharedLiveQuery(
+    `planMark|${module}:${id}|${done ? 1 : 0}${fallback ? 1 : 0}`,
+    () => planMarkOf(module, { id, ...(fallback ? { fallback } : {}), ...(done ? { done } : {}) }),
+  );
+  return <PlanMarkLink state={state} variant={variant} {...(onGo ? { onGo } : {})} />;
+}

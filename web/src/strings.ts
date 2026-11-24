@@ -10041,6 +10041,23 @@ export const de = {
       groupCount: (n: number) => `Verknüpft · ${n}`,
       actionName: (action: string, title: string) => `${action}: ${title}`,
     },
+    /** The mark „Im Plan · Mi“ on a thing in its own module (hub-2 COPY M1–M6, `core/entitylinks/PlanMark.tsx`). */
+    mark: {
+      /** M1 */
+      day: (day: string) => `Im Plan · ${day}`,
+      /** M2 */
+      locked: (day: string) => `Im Plan · ${day} · fest`,
+      /** M3 */
+      noDay: 'Im Plan · noch ohne Tag',
+      /** M4: plain text, never a tone. */
+      passed: (day: string) => `Im Plan · war ${day}`,
+      /** M5 (package 2: a member folded into a placed pile). */
+      inPile: (day: string, pile: string) => `Im Plan · ${day} · in „${pile}“`,
+      /** M6: the name for screen readers – the visible text, then the full date where there is one. */
+      name: (text: string, date: string) => `${text} – ${date}. Im Planer zeigen`,
+      nameNoDate: (text: string) => `${text}. Im Planer zeigen`,
+      today: 'heute',
+    },
   },
   fitness: {
     meta: {
