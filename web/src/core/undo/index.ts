@@ -29,7 +29,8 @@ let active: UndoStep[] | null = null;
  * Runs `fn` and remembers the writes it made as one undoable action. Returns the entry (if any write happened) and the
  * result. `inverse`: an action whose recorded inverse would be too wide (a ToDo's checklist is one field – restoring it
  * would also undo a line a sync changed since) names its own narrower one; it replaces this action's recorded steps
- * once `fn` wrote anything. A nested call stays part of the outer action and its recorded steps.
+ * once `fn` wrote anything, so it must undo everything `fn` writes. A nested call stays part of the outer action and
+ * its recorded steps (its `inverse` is not used).
  */
 export async function undoable<R>(
   label: string,
