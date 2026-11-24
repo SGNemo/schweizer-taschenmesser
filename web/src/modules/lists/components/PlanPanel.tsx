@@ -190,7 +190,10 @@ export default function ListPlanPanel({ id, compact }: PlanPanelProps) {
               refocus.current = true;
               void undoableWithToast(t.lists.cleared(doneCount), t.lists.cleared(doneCount), () =>
                 clearDone(list.id),
-              );
+              ).catch(() => {
+                // Nothing left the list: the next change of the bought entries is no answer to this tap.
+                refocus.current = false;
+              });
             }}
           >
             {/* X8 says the trip is over only when it is; with entries still open the module's own words. */}

@@ -133,8 +133,11 @@ it('after clearing the bought entries the focus is on „Ganz öffnen“', async
 it('nothing open: X8 „Fertig eingekauft“ clears the bought entries, one undo', async () => {
   await items(['Milch', 'Brot'], { done: true });
   panel();
-  fireEvent.click(await screen.findByRole('button', { name: 'Fertig eingekauft' }));
+  const done = await screen.findByRole('button', { name: 'Fertig eingekauft' });
+  done.focus();
+  fireEvent.click(done);
   await waitFor(async () => expect(await itemRepo.get('i0')).toBeUndefined());
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Ganz öffnen' })).toHaveFocus());
   await undoLast();
   expect((await itemRepo.get('i0'))?.done).toBe(true);
 });
