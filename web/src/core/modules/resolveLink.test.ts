@@ -46,13 +46,17 @@ describe('resolveLink', () => {
     expect(getManifest('accounts')!.contributions).not.toHaveProperty('linkTarget');
     const targets = allManifests.filter((m) => m.contributions?.linkTarget).map((m) => m.id);
     expect(targets.sort()).toEqual([
+      'bookmarks',
       'calendar',
       'invoices',
       'lists',
       'mail',
       'notes',
       'pantry',
+      'routines',
+      'subscriptions',
       'todos',
+      'vault',
     ]);
   });
 

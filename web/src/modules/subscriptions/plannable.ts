@@ -83,6 +83,8 @@ function item(s: { id: string; name: string; createdAt: number }, first: Deadlin
   return {
     // The deadline is part of the id: the next period is a new thing to plan.
     id: first.trial ? `${s.id}:trial:${first.date}` : `${s.id}:${first.date}`,
+    // The row is one deadline of the subscription: a link from or to it stores the subscription.
+    entityId: s.id,
     kind: 'cancel',
     title: first.trial ? t.subscriptions.planTrialTitle(s.name) : t.subscriptions.planTitle(s.name),
     to: `/subscriptions?open=${encodeURIComponent(s.id)}`,
