@@ -10,7 +10,7 @@ Moon: [CONCEPT-MOON](CONCEPT-MOON.md). Sky events: [CONCEPT-EVENTS](CONCEPT-EVEN
 4. **What the picture shows is also a word.** The scene is `aria-hidden`; phase, weather, frost, event stand as text.
 5. **One head.** No bar above it; the hint of the day lives in the stage and still says "berechnet, keine amtliche Warnung".
 6. **It comes to rest.** Motion runs about 12 s when the page appears, then stands still; none with `prefers-reduced-motion`, `data-motion="reduce"`, "Standbild", "Ruhig", a hidden page, or in any small version. Nothing blinks – a bolt is a still shape.
-7. **Local and cheap.** Moon and events are calculated on the device or read from a shipped table; no new network destination. One SVG per scene, at most 260 elements, animation only as `transform` / `opacity` on at most 6 groups.
+7. **Local and cheap.** Moon and events are calculated on the device or read from a shipped table; no new network destination. One SVG per scene, at most 220 elements, animation only as `transform` on at most 9 groups ([A11Y §4](A11Y.md)).
 8. **Off is one tap.** "Bild im Wetter-Kopf": Mit Bewegung · Standbild · Schlicht (nur Himmel); "Mond und Himmelsereignisse" on / off.
 
 ## 1. Layers and the data they read

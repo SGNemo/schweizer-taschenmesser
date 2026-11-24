@@ -13,23 +13,23 @@
 <p class="label">Widget A – Bullauge auf der Karte</p><div class="wrow" id="wa"></div>
 <p class="label">Widget B – Szene als Kartenhintergrund (379 × 205)</p><div class="wrow" id="wb"></div>
 <p class="label">Widget B – Handy (380 × 192)</p><div class="wrow" id="wp"></div>
-<p class="label">Widget B – zweispaltig (774 × 205)</p><div class="wrow" id="w2"></div>
+<div class="wide2" style="flex-direction:column"><p class="label">Widget B – zweispaltig (774 × 205, nur breit)</p><div class="wrow" id="w2"></div></div>
 <p class="label">„Ruhig“ – A und B</p><div class="wrow" id="wc"></div>
 <script>
 var T = Gallery.withTheme;
-var PS = [['Klar', { cond: 'clear' }], ['Teils bewölkt', { cond: 'partly' }], ['Bedeckt', { cond: 'overcast' }], ['Nebel', { cond: 'fog' }], ['Niesel', { cond: 'drizzle' }], ['Regen', { cond: 'rain', intensity: 2 }],
-  ['Schauer', { cond: 'showers' }], ['Schnee', { cond: 'snow', season: 'winter' }], ['Gewitter', { cond: 'thunder' }], ['Klare Nacht', { phase: 'night', cond: 'clear', moon: { illum: 0.6 } }],
-  ['Vollmondnacht', { phase: 'night', cond: 'mostlyClear', moon: { illum: 1, size: 1.2 } }], ['Goldene Stunde', { phase: 'golden', cond: 'clear', body: { kind: 'sun', t: 0.92 } }]];
+var PS = [['klar', { cond: 'clear' }], ['leicht bewölkt', { cond: 'partly' }], ['bedeckt', { cond: 'overcast' }], ['Nebel', { cond: 'fog' }], ['Nieselregen', { cond: 'drizzle' }], ['Regen', { cond: 'rain', intensity: 2 }],
+  ['Schauer', { cond: 'showers' }], ['Schneefall', { cond: 'snow', season: 'winter' }], ['Gewitter', { cond: 'thunder' }], ['klar, Nacht', { phase: 'night', cond: 'clear', moon: { illum: 0.6 } }],
+  ['überwiegend klar, Vollmond', { phase: 'night', cond: 'mostlyClear', moon: { illum: 1, size: 1.2 } }], ['klar, goldene Stunde', { phase: 'golden', cond: 'clear', body: { kind: 'sun', t: 0.92 } }]];
 document.getElementById('p').innerHTML = PS.map(function (p) { var s = T(p[1]); return '<div class="port"><div class="row">' + Scene.porthole(s, 64) + Scene.porthole(s, 40) + Scene.porthole(s, 28) + '</div>' + p[0] + '</div>'; }).join('');
-var DAYS = [['Mo', 'sun', 'Sonnig', -2, 6, 0.55, true, 'Zunehmender Mond'], ['Di', 'cloudSun', 'Teils bewölkt', 0, 7, 0.66, true, 'Zunehmender Mond'], ['Mi', 'rain', 'Regen', 3, 8, 0.76, true, 'Zunehmender Mond'],
-  ['Do', 'rain', 'Schauer', 2, 9, 0.86, true, 'Zunehmender Mond'], ['Fr', 'wind', 'Sturmböen', 4, 11, 0.94, true, 'Fast Vollmond'], ['Sa', 'cloudSun', 'Wolkig', 1, 6, 1, true, 'Vollmond'], ['So', 'snow', 'Schnee', -3, 1, 0.97, false, 'Abnehmender Mond']];
+var DAYS = [['Mo', 'sun', 'klar', -2, 6, 0.5, true, 'Zunehmender Halbmond'], ['Di', 'cloudSun', 'leicht bewölkt', 0, 7, 0.62, true, 'Zunehmender Mond'], ['Mi', 'rain', 'Regen', 3, 8, 0.73, true, 'Zunehmender Mond'],
+  ['Do', 'rain', 'Schauer', 2, 9, 0.84, true, 'Zunehmender Mond'], ['Fr', 'rain', 'starker Regen', 4, 11, 0.93, true, 'Zunehmender Mond'], ['Sa', 'cloud', 'bedeckt', 1, 6, 1, true, 'Vollmond'], ['So', 'snow', 'Schneefall', -3, 1, 0.97, false, 'Abnehmender Mond']];
 document.getElementById('d').innerHTML = DAYS.map(function (d) {
   var lo = (d[3] + 6) / 20 * 100, hi = (d[4] + 6) / 20 * 100;
   return '<div class="day"><span class="wd">' + d[0] + '</span>' + Head.icon(d[1], 20) + '<span class="w2">' + d[2] + '</span><span class="range">' + d[3] + '°<span class="bar"><i style="left:' + lo + '%;right:' + (100 - hi) + '%"></i></span>' + d[4] + '°</span>' +
     '<span style="color:var(--text-3)">' + Scene.moonGlyph({ illum: d[5], waxing: d[6], size: 18, mono: true }) + '</span><span class="mw">' + d[7] + '</span></div>';
 }).join('');
-var WS = [['Lindenau', '14°', 'Teils bewölkt', 'Regen ab 15 Uhr', { cond: 'partly', season: 'spring' }], ['Lindenau', '9°', 'Regen', 'Regen bis 18 Uhr', { cond: 'rain', season: 'autumn' }],
-  ['Lindenau', '−4°', 'Klar', 'Trocken', { phase: 'night', cond: 'clear', season: 'winter', frost: 1, moon: { illum: 1, size: 1.2 }, body: { kind: 'moon', t: 0.8 } }]];
+var WS = [['Lindenau', '14°', 'leicht bewölkt', 'Regen ab 15 Uhr', { cond: 'partly', season: 'spring' }], ['Lindenau', '9°', 'Regen', 'Regen bis 18 Uhr', { cond: 'rain', season: 'autumn' }],
+  ['Lindenau', '−4°', 'klar', 'Kein Regen in Sicht', { phase: 'night', cond: 'clear', season: 'winter', frost: 1, moon: { illum: 1, size: 1.2 }, body: { kind: 'moon', t: 0.8 } }]];
 function cardA(w, calm, wd, ht) { var s = T(Object.assign({ calm: calm }, w[4])); return '<div class="card" style="width:' + (wd || 379) + 'px;height:' + (ht || 205) + 'px"><span class="pt">' + Scene.porthole(s, 64) + '</span><div class="tx"><span class="eb">' + w[0] + '</span><span class="t">' + w[1] + '</span><span class="wd">' + w[2] + '</span><span class="rn">' + w[3] + '</span></div></div>'; }
 function quiet(wd, ht, textPx) { var k = Math.max(wd / 1600, ht / 320); return Math.round(1600 - wd / k + textPx / k); }
 function cardB(w, calm, wd, ht) { var s = T(Object.assign({ calm: calm, body: { t: 0.8 } }, w[4])); return '<div class="card scene" data-ink="' + Scene.ink(s) + '" style="width:' + wd + 'px;height:' + ht + 'px"><div class="bg">' + Scene.svg(s, { quietX: quiet(wd, ht, 170) }) + '</div><div class="tx"><span class="eb">' + w[0] + '</span><span class="t">' + w[1] + '</span><span class="wd">' + w[2] + '</span><span class="rn">' + w[3] + '</span></div></div>'; }

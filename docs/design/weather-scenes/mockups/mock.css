@@ -56,7 +56,7 @@ h1 { font-size: 22px; margin: 0 0 4px; }
 .whead .backdrop svg { display: block; }
 .whead > :not(.backdrop) { position: relative; }
 .whead.desk { width: 1650px; max-width: 100%; min-height: 280px; padding: 0 24px 16px; }
-.whead.phone { width: 412px; max-width: 100%; min-height: 0; max-height: 312px; padding: 0 16px 12px; border-radius: 0; }
+.whead.phone { width: 412px; max-width: 100%; min-height: 272px; max-height: 312px; padding: 0 16px 12px; border-radius: 0; }
 .titleRow { display: flex; align-items: center; gap: var(--space-4); height: var(--head-row); }
 .phone .titleRow { height: 44px; gap: var(--space-3); }
 .titleRow h1 { margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.15; color: var(--ink); }
@@ -95,3 +95,16 @@ h1 { font-size: 22px; margin: 0 0 4px; }
 .sit { margin-bottom: 8px; }
 .phonebox { margin-top: 16px; display: inline-block; vertical-align: top; }
 @media (max-width: 700px) { .whead.desk { display: none; } .phonebox { margin: 0 -16px; } }
+/* A forced theme for one block (07-kopf (12): "Ruhig" in the other theme than the page). */
+.theme-light { --bg: #f3f4f4; --surface: #ffffff; --surface-2: #eaecee; --surface-raised: #ffffff; --border: #e2e5e8; --text: #171f24;
+  --text-muted: #55636b; --text-3: #5f6c75; --warning: #8a5a00; --info: #1f5fa8; --module-color: #755fbb;
+  --chip-bg: color-mix(in srgb, var(--surface) 92%, transparent); color-scheme: light; }
+.theme-dark { --bg: #0f1316; --surface: #171c20; --surface-2: #1f2529; --surface-raised: #1b2126; --border: #262d32; --text: #eceff1;
+  --text-muted: #aab4bb; --text-3: #88939b; --warning: #e8b85a; --info: #7cc7e8; --module-color: #cec0fe;
+  --chip-bg: color-mix(in srgb, var(--surface) 88%, transparent); color-scheme: dark; }
+.theme-light, .theme-dark { --warning-ink: color-mix(in srgb, var(--warning) 85%, var(--text)); --info-ink: color-mix(in srgb, var(--info) 85%, var(--text)); }
+.theme-light .plate { color: #ffffff; } .theme-dark .plate { color: #0f1316; }
+.restBelow.theme-light, .restBelow.theme-dark { background: var(--bg); padding-block: 6px; margin-top: 0; }
+.whead .warn-ink { color: var(--warning-ink); }
+.phone .fig { max-width: calc(100% - 96px); } /* the body sits right of the figure; a long detail line wraps */
+.wide2 { display: flex; } @media (max-width: 800px) { .wide2 { display: none; } }

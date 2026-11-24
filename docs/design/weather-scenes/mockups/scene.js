@@ -11,15 +11,19 @@
     W: 1600, H: 320,
     shelterX: 900, // nothing with hard contrast left of this (text lies there)
     titleY: 60, // nothing but sky and stars above this (title row)
-    arc: { x0: 1180, dx: 320, y0: 232, dy: 108 }, // x(t) = x0 + dx·t, y(t) = y0 − dy·sin(πt)
-    sun: { r: 40, rHeat: 46, core: 0.62, halo: 2.6, haloOp: 0.35, low: 0.12 },
-    moon: { r: 34, halo: 2.4, haloOp: 0.25, ring: 1.9, ringOp: 0.18, earthshine: 0.35, darkOp: 0.5 },
+    arc: { x0: 1180, dx: 320, y0: 236, dy: 132 }, // x(t) = x0 + dx·t, y(t) = y0 − dy·sin(πt)
+    sun: { r: 46, rHeat: 52, core: 0.62, halo: 2.6, haloOp: 0.35, low: 0.12 },
+    moon: { r: 42, halo: 2.4, haloOp: 0.25, ring: 1.9, ringOp: 0.18, earthshine: 0.35, darkOp: 0.5 },
     dayMoon: { x: 1240, y: 120, r: 22, op: 0.55 },
     peek: 0.35, // a body that would sink behind the far ridge is lifted so its centre stays peek·r below the crest
     ridges: {
       mountains: {
-        far: [[0, 262], [300, 255], [600, 246], [800, 236], [960, 228], [1080, 214], [1170, 186], [1228, 160], [1270, 150],
-          [1312, 159], [1368, 184], [1412, 196], [1450, 183], [1480, 176], [1514, 181], [1560, 193], [1600, 200]],
+        // farthest, pale alpine range: 5 summits (the highest moved right of the arc, see alpPeaks)
+        alp: [[0, 248], [480, 240], [640, 226], [712, 204], [760, 190], [800, 200], [860, 198], [915, 178], [960, 165],
+          [995, 176], [1035, 158], [1062, 136], [1085, 128], [1110, 140], [1160, 170], [1230, 186], [1310, 190], [1380, 182],
+          [1440, 160], [1468, 145], [1490, 140], [1512, 146], [1530, 142], [1552, 114], [1575, 100], [1592, 104], [1600, 108]],
+        far: [[0, 262], [300, 255], [600, 246], [800, 238], [960, 232], [1080, 224], [1150, 208], [1205, 178], [1240, 158],
+          [1270, 150], [1300, 157], [1340, 180], [1390, 204], [1425, 200], [1455, 180], [1480, 170], [1505, 177], [1550, 198], [1600, 210]],
         mid: [[0, 282], [220, 277], [440, 275], [640, 268], [860, 262], [1040, 251], [1180, 244], [1300, 236], [1420, 241],
           [1520, 231], [1600, 228]],
         near: [[0, 304], [500, 301], [900, 296], [1050, 290], [1200, 277], [1320, 266], [1420, 262], [1510, 268], [1600, 276]],
@@ -30,10 +34,17 @@
         near: [[0, 304], [500, 301], [900, 296], [1100, 288], [1260, 276], [1420, 270], [1600, 280]],
       },
     },
-    caps: [[1270, 150, 24, 120], [1480, 176, 13, 80]], // snow caps: peak x, peak y, depth, half width
+    alpPeaks: [[760, 190], [960, 165], [1085, 128], [1490, 140], [1575, 100]], // summits: x, y
+    farPeaks: [[1270, 150], [1480, 170]],
+    alpFade: [560, 820], // the alpine range fades into the haze left of here
+    facet: { alp: 46, far: 58, dark: 0.08 }, // flat rock facet on the side away from the body: width, darkening
+    capDepth: { high: 22, low: 15, far: 20, highY: 130 }, // snow caps: depth under the summit; "high" summits y ≤ highY
+    lake: { x0: 930, x1: 1260, y0: 268, y1: 284, sky: 0.85 },
+    bushes: [[1062, 7], [1236, 6], [1298, 8], [1452, 6], [1578, 9]], // x, r on the near ridge
+    crestBand: { h: 11, lift: 0.1 }, // lighter band along the near crest
     conifers: { n: 34, from: 620, hMin: 14, hMax: 26, left: 6, leftFrom: 150, leftH: [8, 11], topMin: 250, w: 0.62 },
     crowns: [[1120, 14], [1176, 18], [1530, 24]], // deciduous trees on the near ridge: x, crown r
-    grass: { n: 9, from: 1240, to: 1590 },
+    grass: { n: 9, from: 1110, to: 1590 },
     village: {
       church: 1322, houses: [[1238, 18], [1260, 16], [1284, 20], [1356, 18], [1380, 22], [1405, 16], [1428, 20]],
       rows: [[1150, 1222, 6], [1452, 1530, 5]], path: 'M1238,322 C1300,306 1236,296 1290,286 S1350,276 1338,268',
@@ -49,14 +60,16 @@
     shadeAt: 0.66, // the lower third of a cloud is cloud-shade
     deck: { y: 104, arcs: [90, 150], depth: [9, 17] },
     stretch: 1.25, // clouds at wind ≥ 2
-    precip: { top: 60, mask: [900, 1050], leftOp: 0.3, rain: [45, 80, 120], snow: [60, 100, 150], drizzle: 50, hail: 40,
-      slant: [10, 10, 28, 42], showers: [1150, 1500], curtain: [1400, 1600, 34] },
+    // precipitation; leftOp = the part left of x 1000 (was .3, .2 after the contrast measurement)
+    precip: { top: 60, mask: [900, 1050], leftOp: 0.2, rain: [45, 80, 120], snow: [60, 100, 150], drizzle: 50, hail: 40,
+      slant: [10, 10, 28, 42], showers: [1150, 1500], curtain: [1400, 1600, 34], len: 18, width: 2, op: 0.75, hailFrom: 1000,
+      mass: [1130, 74, 1.35], veils: [[1180, 46], [1290, 60], [1400, 40]] }, // rain: one cloud mass x, y, scale; heavy-rain veils x, w
     fog: [[1040, 560, 192, 18, 'far'], [640, 700, 226, 22, 'far'], [240, 620, 262, 24, 'near'], [940, 660, 252, 26, 'near'],
       [1260, 380, 234, 16, 'near']], // x, width, y, height, in front of which ridge
     rainbow: { cx: 1180, cy: 330, r: 196, w: 5, op: 0.7, fade: [214, 274] },
     bolt: [[1296, 190], [1316, 190], [1305, 222], [1321, 222], [1288, 280], [1298, 236], [1283, 236]],
     skew: [0, 6, 12, 20], // trees lean with the wind (degrees, by wind 0..3)
-    shelter: { x1: 1120, op: 0.62, y0: 196, y1: 252 }, // haze wash over the low ridges left, where the text lies
+    shelter: { x1: 1300, op: 0.75, y0: 196, y1: 252 }, // widened after the contrast measurement (was x1 1120, op .62) // haze wash over the low ridges left, where the text lies
     meteors: [[1214, 76, 108], [1430, 116, 72], [1010, 66, 62]], // head x, y, tail length (up and to the right)
     motion: { drift: 16, rain: 2.4, rainHeavy: 1.6, snow: [10, 15], total: 12, fog: 20 },
     windStrokes: [[1150, 156, 190], [1238, 188, 210], [1330, 132, 170]], // start x, y, length
@@ -180,7 +193,7 @@
     var X = { s: s, defs: [], id: 'sc' + hash(idSeed), n: 0, ext: 0 };
     X.c = function (h) {
       if (PAL.c[h]) h = PAL.c[h];
-      return s.calm ? mix(greyOf(h), surface, 0.6) : h;
+      return s.calm ? mix(greyOf(h), surface, s.theme === 'dark' ? 0.45 : 0.6) : h;
     };
     X.uid = function (p) { return X.id + p + X.n++; };
     X.grad = function (stops, o) { // stops: [offset, colour, opacity?]; o: attributes (x1..y2 or cx/cy/r…), o.radial
@@ -221,7 +234,7 @@
       out += el('rect', { width: G.W, height: G.H, fill: gl });
     }
     if (X.s.event === 'solarTotal') {
-      out += el('rect', { y: 170, width: G.W, height: 100, fill: X.grad([[0, PAL.glow['eclipse-sky'], 0], [0.6, PAL.glow['eclipse-sky'], 0.5], [1, PAL.glow['eclipse-sky'], 0]], { x1: 0, y1: 0, x2: 0, y2: 1 }) });
+      out += el('rect', { y: 170, width: G.W, height: 100, fill: X.grad([[0, PAL.glow['eclipse-sky'], 0], [0.6, PAL.glow['eclipse-sky'], 0.35], [1, PAL.glow['eclipse-sky'], 0]], { x1: 0, y1: 0, x2: 0, y2: 1 }) });
     }
     return out;
   }
@@ -239,6 +252,9 @@
     for (var i = 0; i < total; i++) {
       var x = r() * G.W, y = S.yMin + r() * (S.yMax - S.yMin), rr = S.rMin + r() * (S.rMax - S.rMin), b = r();
       if (i >= n || (X.bp && Math.hypot(x - X.bp[0], y - X.bp[1]) < X.br * 1.15)) continue;
+      var qx = X.quiet || 760;
+      if (x < qx && y > (X.quiet ? -X.ext : 64) && (b < 0.85 || x < qx - 200)) continue; // hardly any stars behind the text
+      if (x < qx) b = 0;
       if (i < S.sparkles && x > 700) {
         var q = S.sparkR, w = q * 0.22;
         sp += 'M' + f(x) + ',' + f(y - q) + 'Q' + f(x + w) + ',' + f(y - w) + ' ' + f(x + q) + ',' + f(y) + 'Q' + f(x + w) + ',' + f(y + w) + ' ' + f(x) + ',' + f(y + q) +
@@ -274,7 +290,7 @@
     var flip = m.waxing ? '' : ' scale(-1 1)';
     var lit = litPath(r, illum);
     // dark side: earthshine when thin, else the sky's own colour (it hides the stars behind the moon)
-    if (!ev && illum < G.moon.earthshine) out += el('circle', { r: r, fill: o.darkFill ? mix(X.c('moon-dark'), o.darkFill, 0.15) : X.c('moon-dark'), opacity: o.darkFill ? 0.85 : G.moon.darkOp });
+    if (!ev && lit && illum < G.moon.earthshine) out += el('circle', { r: r, fill: o.darkFill ? mix(X.c('moon-dark'), o.darkFill, 0.15) : X.c('moon-dark'), opacity: o.darkFill ? 0.85 : G.moon.darkOp });
     if (!lit) out += el('circle', { r: r - 0.75, fill: 'none', stroke: X.c('moon-dark'), 'stroke-width': 1.5, opacity: 0.9 });
     if (o.glow && lit && ev !== 'lunarTotal') {
       var gop = G.moon.haloOp * illum * (m.size >= 1.2 ? 1.25 : 1);
@@ -318,12 +334,12 @@
         out += el('path', { d: petals, transform: 'rotate(' + a + ')', fill: '#ffffff', opacity: 0.42 });
         petals = '';
       }
-      out = el('circle', { r: r * 2.8, fill: cg }) + out + el('circle', { r: r, fill: X.c('eclipse-disc') });
+      out = el('circle', { r: r * 2.8 * (X.haloK || 1), fill: cg }) + out + el('circle', { r: r, fill: X.c('eclipse-disc') });
       return '<g transform="translate(' + f(x) + ' ' + f(y) + ')">' + out.replace(/fill="#ffffff"/g, 'fill="' + X.c('#ffffff') + '"') + '</g>';
     }
     var amt = ev === 'solarPartial' ? s.eventAmount : ev === 'solarAnnular' ? 0.85 : 0;
     var hg = X.grad([[0, low ? 'sun-low' : 'sun', 0.9], [0.4, low ? 'sun-low' : 'sun', 0.45], [1, low ? 'sun-low' : 'sun', 0]], { radial: true });
-    out += el('circle', { cx: x, cy: y, r: r * G.sun.halo, fill: hg, opacity: f(G.sun.haloOp * (1 - amt * 0.7) * (s.dayMoon ? 0.8 : 1) * 100) / 100 });
+    out += el('circle', { cx: x, cy: y, r: r * G.sun.halo * (X.haloK || 1), fill: hg, opacity: f(G.sun.haloOp * (1 - amt * 0.7) * (s.dayMoon ? 0.8 : 1) * 100) / 100 });
     out += el('circle', { cx: x, cy: y, r: r, fill: ring });
     if (ev !== 'solarAnnular') out += el('circle', { cx: x, cy: y, r: r * G.sun.core, fill: core });
     if (ev === 'solarPartial') {
@@ -391,7 +407,7 @@
     d += 'Z';
     var top = mix(tone.b, X.c(sky.top), 0.45);
     var g = X.grad([[0, top], [0.7, tone.b], [1, tone.sh]], { x1: 0, y1: 0, x2: 0, y2: 1 });
-    return el('path', { d: d, fill: g, opacity: X.s.theme === 'dark' && tone.op < 1 ? 0.7 : 1 });
+    return el('path', { d: d, fill: g, opacity: X.s.theme === 'dark' && !/night|dawn|dusk/.test(X.s.phase) ? 0.5 : 1 }); // dark theme: a quieter deck (contrast)
   }
   function cloudLayers(X, bp, sky) {
     var s = X.s, c = s.cond, cov = s.cloud, tone = cloudTone(X), far = '', main = '';
@@ -406,14 +422,16 @@
       main += cloud(X, tone, 'l', G.precip.showers[0], 82, 1.25);
       far += cloud(X, Object.assign({}, tone, { op: tone.op * 0.8 }), 's', 960, 92, 0.9);
     } else if (PRECIP[c]) {
-      main += cloud(X, tone, 'l', 1000, isDeck ? 94 : 80, 1.1) + cloud(X, tone, 'm', 1380, isDeck ? 112 : 96, 1.15);
+      var M = G.precip.mass;
+      main += cloud(X, tone, 'l', M[0], isDeck ? M[1] + 8 : M[1], M[2]);
     } else if (!isDeck) {
       if (cov > 60) {
         far += cloud(X, tone, 'm', 1040, 66, 0.9);
         main += cloud(X, tone, 'l', 930, 118, 1) + cloud(X, tone, 'l', bx - 124, by - 4, 1);
       } else if (cov > 35) {
         far += cloud(X, tone, 's', 1450, 66, 1);
-        main += cloud(X, tone, 'l', 960, 92, 1);
+        var low = bp && (s.body.t < G.sun.low || s.body.t > 1 - G.sun.low), lx = low && bx < 1300 ? Math.min(bx + 70, 1310) : 960;
+        main += cloud(X, tone, 'l', lx, low ? 70 : 92, low ? 0.8 : 1);
       } else if (cov > 10) {
         far += cloud(X, tone, 's', 980, 74, 1) + cloud(X, tone, 's', bx > 1380 && !s.dayMoon ? 1210 : 1450, 92, 0.95);
       }
@@ -433,12 +451,13 @@
     if (wet) near = mix(near, '#000000', 0.12);
     if (s.frost === 2) near = mix(near, PAL.c.rime, night ? 0.12 : 0.25);
     if (s.event === 'rainbow') near = mix(near, PAL.glow.golden, 0.12);
-    var snow = s.snowGround, snowTone = night ? mix(PAL.c.snow, bottom, 0.5) : s.theme === 'dark' ? mix(PAL.c.snow, bottom, 0.4) : PAL.c.snow;
+    var snow = s.snowGround, snowTone = night ? mix(PAL.c.snow, bottom, 0.6) : s.theme === 'dark' ? mix(PAL.c.snow, bottom, 0.62) : PAL.c.snow; // dark theme .4 → .62 (contrast)
     var o = {
       night: night, bottom: bottom, base: base, wet: wet,
       near: snow ? snowTone : near,
       mid: mix(snow ? snowTone : base, bottom, 0.3),
       far: night ? mix(mix(base, bottom, 0.62), '#6a7aae', 0.2) : mix(base, bottom, s.event === 'dust' ? 0.82 : 0.62),
+      alp: night ? mix(mix(base, bottom, 0.78), '#6a7aae', 0.22) : mix(base, bottom, s.event === 'dust' ? 0.9 : 0.78),
       crowns: night ? [mix(base, '#000000', 0.15), mix(base, '#000000', 0.2), mix(base, '#000000', 0.1)] : L.crowns.map(function (c) { return s.theme === 'dark' ? mix(c, PAL.land.night, 0.4) : c; }),
       snowTone: snowTone, snowShade: night ? mix(PAL.c['snow-shade'], bottom, 0.55) : s.theme === 'dark' ? mix(PAL.c['snow-shade'], bottom, 0.45) : PAL.c['snow-shade'],
     };
@@ -458,24 +477,62 @@
     if (s.body.kind === 'moon' && s.moon.size >= 1.2 && LC.night && !s.event) out += edges(X, R.crest, mix(X.c(LC[which]), X.c('moon'), 0.35), 1.5, 0.9);
     return out;
   }
-  function farRidge(X, R, LC) {
-    var s = X.s, out = el('path', { d: R.fill, fill: X.c(LC.far), opacity: s.cond === 'fog' ? 0.4 : 1 });
-    var capped = s.landscape === 'mountains' && (s.frost > 0 || s.snowGround || /snow/i.test(s.cond) || s.season === 'winter');
-    if (capped) {
-      var r = prng(s.seed * 5 + 11), reg = '';
-      G.caps.forEach(function (c) {
-        var x0 = c[0] - c[3], x1 = c[0] + c[3], n = 7, w = (x1 - x0) / n, yb = c[1] + c[2];
-        reg += 'M' + x0 + ',0H' + x1 + 'V' + f(yb + 6);
-        for (var i = 0; i < n; i++) {
-          var x = x1 - i * w, dip = 4 + r() * 7, up = (i % 2 ? -1 : 1) * (2 + r() * 4);
-          reg += 'Q' + f(x - w / 2) + ',' + f(yb + up + dip) + ' ' + f(x - w) + ',' + f(yb + up * 0.3);
-        }
-        reg += 'V0Z';
+  function capPath(X, R, peaks, depth) { // clean scalloped caps: the cap line meets the crest exactly on both sides
+    var reg = '', r = prng(X.s.seed * 5 + 11);
+    peaks.forEach(function (p) {
+      var d = depth(p);
+      if (!d || (X.quiet && p[0] < X.quiet)) return; // no bright cap behind the text of a narrow crop
+      var px = p[0];
+      for (var q = p[0] - 15; q <= p[0] + 15; q++) if (R.y(q) < R.y(px)) px = q; // the spline's real summit
+      var line = R.y(px) + d, xl = px, xr = px;
+      while (R.y(xl - 1) < line && R.y(xl - 1) >= R.y(xl) - 0.01 && xl > p[0] - 220) xl--; // walk down the flank only
+      while (R.y(xr + 1) < line && R.y(xr + 1) >= R.y(xr) - 0.01 && xr < p[0] + 220 && xr < G.W) xr++;
+      if (R.y(xl - 1) < line || (xr < G.W && R.y(xr + 1) < line)) return; // the line runs into the next summit: no cap
+      if (xr - xl < 6) return;
+      var n = Math.max(2, Math.round((xr - xl) / 15)), w = (xr - xl) / n;
+      reg += 'M' + xl + ',' + f(line) + 'V-300H' + xr + 'V' + f(line);
+      for (var i = 0; i < n; i++) reg += 'Q' + f(xr - i * w - w / 2) + ',' + f(line + (i % 2 ? 3 : 6 + r() * 4)) + ' ' + f(xr - (i + 1) * w) + ',' + f(line);
+      reg += 'Z';
+    });
+    return reg;
+  }
+  function mountain(X, R, LC, peaks, col, which) { // fill, one flat facet per summit (away from the body), caps, trims
+    var s = X.s, op = s.cond === 'fog' ? 0.4 : 1, out = el('path', { d: R.fill, fill: X.c(col) }), fac = '', W = G.facet[which];
+    if (s.landscape === 'mountains') {
+      peaks.forEach(function (p) {
+        var side = X.bodyX != null && X.bodyX > p[0] ? -1 : 1, d = 'M' + p[0] + ',' + p[1];
+        for (var i = 1; i <= 6; i++) { var x = p[0] + (side * W * i) / 6; d += 'L' + f(x) + ',' + f(R.y(x)); }
+        fac += d + 'L' + f(p[0] + side * W * 0.18) + ',' + f(R.y(p[0] + side * W) + 18) + 'Z';
       });
-      var capCol = mix(X.c(LC.snowTone), X.c(LC.bottom), LC.night ? 0.3 : s.theme === 'dark' ? 0.45 : 0.28);
-      out += el('path', { d: R.fill, fill: capCol, opacity: s.cond === 'fog' ? 0.4 : 1, 'clip-path': X.clip(el('path', { d: reg })) });
+      out += el('path', { d: fac, fill: X.c(mix(col, '#000000', G.facet.dark)), 'clip-path': X.clip(el('path', { d: R.fill })) });
+      var C = G.capDepth, wintry = s.frost > 0 || s.snowGround || /snow/i.test(s.cond) || s.season === 'winter';
+      var reg = capPath(X, R, peaks, function (p) {
+        if (which === 'far') return wintry ? C.far * (p[1] < 160 ? 1 : 0.7) : 0;
+        return s.heat ? 0 : p[1] <= C.highY ? C.high : wintry ? C.low : 0;
+      });
+      if (reg) out += el('path', { d: R.fill, fill: mix(X.c(LC.snowTone), X.c(LC.bottom), which === 'alp' ? 0.45 : LC.night ? 0.3 : s.theme === 'dark' ? 0.45 : 0.25), 'clip-path': X.clip(el('path', { d: reg })) });
     }
-    return out + ridgeTrims(X, R, LC, 'far');
+    out = el('g', { opacity: op }, out) + (which === 'far' ? ridgeTrims(X, R, LC, 'far') : '');
+    if (which === 'alp') out = el('g', { mask: X.mask(el('rect', { y: -300, width: G.W, height: 700, fill: X.grad([[0, '#ffffff', 0], [1, '#ffffff', 1]], { x1: G.alpFade[0], x2: G.alpFade[1], y1: 0, y2: 0, gradientUnits: 'userSpaceOnUse' }) })) }, out);
+    return out;
+  }
+  function lake(X, LC, bp) {
+    var s = X.s, K = G.lake;
+    if (s.landscape !== 'mountains') return '';
+    var cx = (K.x0 + K.x1) / 2, cy = (K.y0 + K.y1) / 2, rx = (K.x1 - K.x0) / 2, ry = (K.y1 - K.y0) / 2;
+    var d = 'M' + K.x0 + ',' + cy + 'C' + K.x0 + ',' + (K.y0 - 1) + ' ' + f(cx - rx * 0.4) + ',' + K.y0 + ' ' + cx + ',' + K.y0 + 'S' + K.x1 + ',' + (K.y0 + 2) + ' ' + K.x1 + ',' + cy +
+      'S' + f(cx + rx * 0.5) + ',' + K.y1 + ' ' + cx + ',' + K.y1 + 'S' + K.x0 + ',' + (K.y1 - 2) + ' ' + K.x0 + ',' + cy + 'Z', frozen = s.frost === 2 || (s.season === 'winter' && s.frost > 0);
+    var col = frozen ? mix(PAL.c.rime, LC.bottom, LC.night ? 0.6 : 0.35) : mix(LC.bottom, LC.mid, 1 - K.sky);
+    if (LC.wet) col = mix(col, '#000000', 0.1);
+    var out = el('path', { d: d, fill: X.c(mix(LC.mid, '#000000', 0.12)), transform: 'translate(0 2)' }) + el('path', { d: d, fill: X.c(col) }); // shore, water
+    if (frozen) out += el('path', { d: d, fill: 'none', stroke: X.c('rime'), 'stroke-width': 1.5, opacity: 0.8 });
+    var lowSun = s.body.kind === 'sun' && (s.body.t < 0.15 || s.body.t > 0.85);
+    if (bp && !frozen && (s.body.kind === 'moon' || lowSun) && bp[0] < 1330 && !(s.cloud > 85)) { // soft vertical light path
+      var x = Math.min(bp[0], K.x1 - 30), lp = '', lc = X.c(s.body.kind === 'moon' ? 'moon' : 'sun-low');
+      [[0, 26], [4, 20], [8, 15], [12, 9]].forEach(function (q) { lp += rrect(x - q[1] / 2, K.y0 + 1.5 + q[0], q[1], 2.4, 1.2); });
+      out += el('path', { d: lp, fill: lc, opacity: 0.55, 'clip-path': X.clip(el('path', { d: d })) });
+    }
+    return out;
   }
   function conifers(X, R, LC) {
     var s = X.s, C = G.conifers, r = prng(s.seed * 3 + 5), k = Math.tan((G.skew[s.wind] * Math.PI) / 180), body = '', caps = '', trunks = '', list = [];
@@ -528,6 +585,10 @@
     var s = X.s, out = '';
     var fill = s.snowGround ? X.grad([[0, LC.snowTone], [0.45, LC.snowTone], [1, LC.snowShade]], { x1: 0, y1: 255, x2: 0, y2: 320, gradientUnits: 'userSpaceOnUse' }) : X.c(LC.near);
     out += el('path', { d: R.fill, fill: fill });
+    var B = G.crestBand, band = 'M900,' + f(R.y(900));
+    for (var bx = 920; bx <= G.W; bx += 20) band += 'L' + bx + ',' + f(R.y(bx));
+    for (var bx2 = G.W; bx2 >= 900; bx2 -= 20) band += 'L' + bx2 + ',' + f(R.y(bx2) + B.h * (0.6 + 0.4 * Math.sin(bx2 / 37)));
+    out += el('path', { d: band + 'Z', fill: X.c(mix(s.snowGround ? LC.snowTone : LC.near, LC.night ? '#8090c0' : '#ffffff', B.lift)), mask: rightMask(X) });
     if (s.landscape === 'village') {
       out += el('path', { d: G.village.path, fill: 'none', stroke: X.c(mix(LC.near, LC.night ? '#3b4766' : PAL.c.wall, LC.night ? 0.25 : 0.4)), 'stroke-width': 5, 'stroke-linecap': 'round', 'clip-path': X.clip(el('path', { d: R.fill })) });
     }
@@ -545,6 +606,15 @@
       }
       out += el('path', { d: gt, fill: 'none', stroke: X.c(mix(LC.near, s.heat ? '#c9b46a' : '#000000', s.heat ? 0.4 : 0.22)), 'stroke-width': 1.4, 'stroke-linecap': 'round' });
     }
+    var bu = '', bt = '';
+    G.bushes.forEach(function (b, i) {
+      var y = R.y(b[0]) + 2;
+      bu += circ(b[0], y - b[1] * 0.55, b[1]) + circ(b[0] + b[1] * 0.85, y - b[1] * 0.3, b[1] * 0.7);
+      bt += 'M' + f(b[0] - b[1] * 0.8) + ',' + f(y - b[1] * 0.9) + 'A' + b[1] + ',' + b[1] + ' 0 0 1 ' + f(b[0] + b[1] * 0.8) + ',' + f(y - b[1] * 0.9);
+    });
+    var bcol = s.snowGround ? mix(LC.trees, LC.snowTone, 0.3) : mix(LC.crowns[1], LC.near, 0.45);
+    out += el('path', { d: bu, fill: X.c(bcol) });
+    if (s.snowGround || s.frost) out += el('path', { d: bt, fill: 'none', stroke: X.c(s.snowGround ? LC.snowTone : 'rime'), 'stroke-width': 2, 'stroke-linecap': 'round', opacity: 0.9 });
     G.crowns.forEach(function (c, i) { out += crownTree(X, LC, R, c[0], s.season === 'winter' ? c[1] * 0.85 : c[1], i); });
     if (s.frost === 2) {
       var rs = prng(s.seed * 19 + 4), sp = '';
@@ -565,7 +635,7 @@
       var yb = R.y(x + w / 2) + 3;
       walls += 'M' + f(x) + ',' + f(yb) + 'V' + f(yb - hw) + 'H' + f(x + w) + 'V' + f(yb) + 'Z';
       roofs += 'M' + f(x - 2) + ',' + f(yb - hw + 0.5) + 'L' + f(x + w / 2) + ',' + f(yb - hw - hr) + 'L' + f(x + w + 2) + ',' + f(yb - hw + 0.5) + 'Z';
-      wins += 'M' + f(x + w * 0.25) + ',' + f(yb - hw * 0.62) + 'h3v3h-3z' + (w > 17 ? 'M' + f(x + w * 0.62) + ',' + f(yb - hw * 0.62) + 'h3v3h-3z' : '');
+      wins += 'M' + f(x + w * 0.25) + ',' + f(yb - hw * 0.62) + 'h4v4h-4z' + (w > 17 ? 'M' + f(x + w * 0.62) + ',' + f(yb - hw * 0.62) + 'h4v4h-4z' : '');
     }
     V.houses.forEach(function (h, i) { house(h[0], h[1], 10 + (i % 3) * 1.5, 7 + (i % 2) * 2); });
     var cx = V.church, yb = R.y(cx + 12) + 3;
@@ -583,7 +653,7 @@
   }
   function fogBands(X, which) {
     if (X.s.cond !== 'fog') return '';
-    var out = '', op = X.s.phase === 'night' ? 0.28 : X.s.theme === 'dark' ? 0.3 : 0.55;
+    var out = '', op = X.s.phase === 'night' ? 0.28 : X.s.theme === 'dark' ? 0.22 : 0.55;
     var g = X.grad([[0, 'fog', 0], [0.25, 'fog', 1], [0.75, 'fog', 1], [1, 'fog', 0]], { x1: 0, y1: 0, x2: 1, y2: 0 });
     G.fog.forEach(function (b) { if (b[4] === which) out += el('rect', { x: b[0], y: b[2], width: b[1], height: b[3], rx: b[3] / 2, fill: g, opacity: op }); });
     return X.s.motion && out ? el('g', { class: 'sc-fog' }, out) : out;
@@ -597,7 +667,7 @@
     if (!rainy && !snowy && !curtain) return '';
     var slant = P.slant[s.wind], k = Math.tan((slant * Math.PI) / 180), top = P.top, Ht = G.H - top, r = prng(s.seed * 29 + 7);
     var light = ink(s) === 'dark';
-    var rainCol = light ? X.c(mix(PAL.c.rain, PAL.c['cloud-rain-shade'], 0.55)) : X.c('rain');
+    var rainCol = X.c(mix(X.skyMid || PAL.c.rain, '#ffffff', light ? 0.45 : 0.55)); // slightly lighter than the sky
     function region(n, len, x0, x1) { // n strokes in a tile [x0,x1]×[top, H], shifted copy above for the loop
       var d = '', dc = '';
       for (var j = 0; j < n; j++) {
@@ -630,26 +700,31 @@
       var drizzle = /rizzle/.test(c), n = drizzle ? P.drizzle : P.rain[i - 1];
       if (showers) n = Math.round(n * 0.8);
       if (hail) n = Math.round(n * 0.5);
-      out += fall(el('path', { d: region(n, drizzle ? 6 : 14, x0, x1), stroke: rainCol, 'stroke-width': drizzle ? 1.2 : 1.6, 'stroke-linecap': 'round', opacity: light ? 0.75 : 0.6 }), drizzle ? rdur * 1.5 : rdur, drizzle ? Math.round(rn / 1.5) : rn);
+      out += fall(el('path', { d: region(n, drizzle ? 6 : P.len, x0, x1), stroke: rainCol, 'stroke-width': drizzle ? 1.2 : i >= 2 ? P.width : 1.6, 'stroke-linecap': 'round', opacity: P.op }), drizzle ? rdur * 1.5 : rdur, drizzle ? Math.round(rn / 1.5) : rn);
+      if (i === 3 && !showers && !drizzle) P.veils.forEach(function (v) { // heavy rain: soft slanted veils under the cloud mass
+        var yt = P.mass[1] + 100;
+        var vg = X.grad([[0, rainCol, 0], [0.25, rainCol, 0.11], [1, rainCol, 0]], { x1: 0, y1: 0, x2: 0, y2: 1 });
+        out += el('path', { d: 'M' + (v[0] + 8) + ',' + yt + 'h' + (v[1] - 16) + 'Q' + (v[0] + v[1]) + ',' + yt + ' ' + f(v[0] + v[1] + k * (G.H - yt)) + ',' + G.H + 'h' + -v[1] + 'Q' + v[0] + ',' + yt + ' ' + (v[0] + 8) + ',' + yt + 'Z', fill: vg });
+      });
     }
     if (snowy) {
       var sn = P.snow[i - 1];
       if (showers) sn = Math.round(sn * 0.6);
       var farCol = light ? X.c(mix(PAL.c['snow-shade'], PAL.c['cloud-rain'], 0.3)) : X.c(mix(PAL.c.snow, sky.bottom, 0.25));
       out += fall(el('path', { d: dots(Math.round(sn * 0.55), 1.6, 2.2, x0, x1), fill: farCol, opacity: 0.8 }), G.motion.snow[1], 1);
-      out += fall(el('path', { d: dots(Math.round(sn * 0.45), 2.2, 3, x0, x1), fill: X.c('#ffffff'), opacity: 0.95 }), G.motion.snow[0], 1);
+      out += fall(el('path', { d: dots(Math.round(sn * 0.45), 2.2, 3, x0, x1), fill: X.c('#ffffff'), opacity: s.theme === 'dark' || !light ? 0.75 : 0.95 }), G.motion.snow[0], 1);
     }
     if (hail) {
       var hd = '', he = '';
       for (var j = 0; j < P.hail; j++) {
-        var hx = r() * G.W, hy = top + 10 + r() * (Ht - 10), hr = 3.2;
+        var hx = P.hailFrom + r() * (G.W - P.hailFrom), hy = top + 10 + r() * (Ht - 10), hr = 3.2;
         hd += circ(hx, hy, hr);
         he += 'M' + f(hx - hr) + ',' + f(hy) + 'a' + hr + ',' + hr + ' 0 0 0 ' + f(2 * hr) + ',0z';
       }
       out += el('path', { d: hd, fill: X.c('#ffffff') }) + el('path', { d: he, fill: X.c('hail-edge') });
     }
     // left of x 1000 at 30 %, clipped below the title row (and under the shower cloud)
-    var mk = X.mask(el('rect', { width: G.W, height: G.H, fill: X.grad([[0, '#ffffff', P.leftOp], [1, '#ffffff', 1]], { x1: X.quiet ? X.quiet - 150 : P.mask[0], x2: X.quiet || P.mask[1], y1: 0, y2: 0, gradientUnits: 'userSpaceOnUse' }) }));
+    var mk = X.mask(el('rect', { width: G.W, height: G.H, fill: X.grad([[0, '#ffffff', snowy && !light ? P.leftOp * 0.4 : P.leftOp], [1, '#ffffff', 1]], { x1: X.quiet ? X.quiet - 150 : P.mask[0], x2: X.quiet || P.mask[1], y1: 0, y2: 0, gradientUnits: 'userSpaceOnUse' }) }));
     var cy = showers ? 178 : curtain ? 96 : top;
     var clipD = 'M' + x0 + ',' + cy + 'H' + x1 + 'L' + f(x1 + k * (G.H - cy)) + ',' + G.H + 'H' + f(x0 + k * (G.H - cy)) + 'Z';
     if (!showers && !curtain) clipD = 'M0,' + top + 'H' + G.W + 'V' + G.H + 'H0Z';
@@ -708,17 +783,20 @@
     opts = opts || {};
     var X = context(s, JSON.stringify(s) + JSON.stringify(opts)), sky = skyOf(s), stops = skyStops(X, sky);
     X.quiet = opts.quietX || null;
+    X.haloK = opts.bodyAt ? 0.75 : 1; // a body placed for a narrow crop: a tighter halo, clear of the text
     X.ext = opts.extendTop || 0; // short, narrow boxes (phone head): more sky above, so the landscape stays low
     X.skyMid = skyAt(stops, 120);
     var top = stops[0][1], bottom = stops[stops.length - 1][1];
     var skyInfo = { top: top, bottom: bottom };
     var RS = G.ridges[s.landscape] || G.ridges.mountains;
-    var far = spline(RS.far), mid = spline(RS.mid), near = spline(RS.near);
+    var far = spline(RS.far), mid = spline(RS.mid), near = spline(RS.near), alp = RS.alp ? spline(RS.alp) : null;
+    var crest = { y: function (x) { return alp ? Math.min(alp.y(x), far.y(x)) : far.y(x); } };
     var plain = s.level === 'plain';
     var deckOn = s.cloud > 85 && s.cond !== 'fog';
     var moonUp = s.body.kind === 'moon', sunUp = s.body.kind === 'sun';
     var br = moonUp ? G.moon.r * s.moon.size : s.heat ? G.sun.rHeat : G.sun.r;
-    var bp = s.body.kind === 'none' || s.event === 'rainbow' ? null : bodyPos(s, far, br);
+    var bp = s.body.kind === 'none' || s.event === 'rainbow' ? null : opts.bodyAt || bodyPos(s, crest, br); // bodyAt: a fixed spot (phone head)
+    X.bodyX = bp ? bp[0] : null;
     var L = [];
     X.bp = s.body.kind === 'moon' ? bp : null; X.br = br;
     L.push(layer('sky', skyLayer(X, sky, stops, bp)));
@@ -737,7 +815,8 @@
     if (!plain) {
       var LC = landColours(X, stops), cl = cloudLayers(X, bp, skyInfo);
       L.push(layer('cloudsFar', cl.far));
-      L.push(layer('ridgeFar', farRidge(X, far, LC)));
+      if (alp) L.push(layer('ridgeAlp', mountain(X, alp, LC, G.alpPeaks, LC.alp, 'alp')));
+      L.push(layer('ridgeFar', mountain(X, far, LC, s.landscape === 'mountains' ? G.farPeaks : [], LC.far, 'far')));
       L.push(layer('fog', fogBands(X, 'far')));
       var midOut = el('path', { d: mid.fill, fill: s.snowGround ? X.grad([[0, LC.mid], [1, mix(LC.snowShade, bottom, 0.3)]], { x1: 0, y1: 220, x2: 0, y2: 300, gradientUnits: 'userSpaceOnUse' }) : X.c(LC.mid) }) + ridgeTrims(X, mid, LC, 'mid');
       if (s.heat && !LC.night) midOut += el('rect', { y: 200, width: G.W, height: 50, fill: X.grad([[0, 'heat-haze', 0], [0.5, 'heat-haze', 1], [1, 'heat-haze', 0]], { x1: 0, y1: 0, x2: 0, y2: 1 }), opacity: s.theme === 'dark' ? 0.16 : 0.5 });
@@ -747,9 +826,10 @@
       L.push(layer('clouds', cl.main));
       L.push(layer('event', eventLayer(X, LC)));
       L.push(layer('precip', precip(X, skyInfo)));
+      L.push(layer('lake', lake(X, LC, bp)));
       L.push(layer('ridgeNear', nearRidge(X, near, LC)));
       L.push(layer('wind', windLayer(X, LC)));
-      var S = G.shelter, wash = X.grad([[0, bottom, S.op], [0.65, bottom, S.op * 0.45], [1, bottom, 0]], { x1: 0, x2: S.x1, y1: 0, y2: 0, gradientUnits: 'userSpaceOnUse' });
+      var S = G.shelter, wash = X.grad([[0, bottom, S.op], [0.72, bottom, S.op * 0.6], [1, bottom, 0]], { x1: 0, x2: S.x1, y1: 0, y2: 0, gradientUnits: 'userSpaceOnUse' });
       var vm = X.mask(el('rect', { width: G.W, height: G.H, fill: X.grad([[0, '#ffffff', 0], [1, '#ffffff', 1]], { x1: 0, x2: 0, y1: S.y0, y2: S.y1, gradientUnits: 'userSpaceOnUse' }) }));
       L.push(layer('shelter', el('rect', { y: S.y0, width: S.x1, height: G.H - S.y0, fill: wash, mask: vm })));
     }

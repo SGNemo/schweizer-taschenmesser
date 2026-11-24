@@ -5,8 +5,8 @@
 <p class="label">Mondzeichen</p><div id="g"></div>
 <p class="label">Neigung, Größe, Lage</p><div id="b"></div>
 <script>
-var PH = [[0, true, 'Neumond'], [0.18, true, 'Zunehmende Sichel'], [0.5, true, 'Erstes Viertel'], [0.82, true, 'Zunehmender Mond'], [1, true, 'Vollmond'], [0.82, false, 'Abnehmender Mond'], [0.5, false, 'Letztes Viertel'], [0.18, false, 'Abnehmende Sichel']];
-Gallery.tiles('#a', PH.map(function (p) { return { label: p[2], note: 'Beleuchtung ' + Math.round(p[0] * 100) + ' %', state: { phase: 'night', cond: 'clear', body: { kind: 'moon', t: 0.62 }, moon: { illum: p[0], waxing: p[1], size: p[0] === 1 ? 1.2 : 1 } } }; }));
+var PH = [[0, true, 'Neumond'], [0.18, true, 'Zunehmende Sichel'], [0.5, true, 'Zunehmender Halbmond'], [0.82, true, 'Zunehmender Mond'], [1, true, 'Vollmond'], [0.82, false, 'Abnehmender Mond'], [0.5, false, 'Abnehmender Halbmond'], [0.18, false, 'Abnehmende Sichel']];
+Gallery.tiles('#a', PH.map(function (p) { return { label: p[2], note: Math.round(p[0] * 100) + ' % beleuchtet', state: { phase: 'night', cond: 'clear', body: { kind: 'moon', t: 0.62 }, moon: { illum: p[0], waxing: p[1], size: p[0] === 1 ? 1.2 : 1 } } }; }));
 var g = '';
 [['', false], ['night', false], ['', true]].forEach(function (v) {
   g += '<div class="glyphs ' + v[0] + '">' + PH.map(function (p) { return '<div class="h">' + p[2] + '</div>'; }).join('');
@@ -21,6 +21,6 @@ Gallery.tiles('#b', [
   { label: 'Sichel geneigt +35°', state: m({}, { tilt: 35 }) }, { label: 'Vollmond (Größe 1,2)', note: 'Halo-Ring, Kanten im Mondlicht, Himmel eine Stufe heller', state: m({}, { illum: 1, size: 1.2 }) },
   { label: 'Supermond (Größe 1,35)', state: m({}, { illum: 1, size: 1.35 }) }, { label: 'Mond tief am Horizont', state: m({}, { illum: 0.9, size: 1.2 }, { t: 0.06 }) },
   { label: 'Tagmond', note: 'blasser Mond am Taghimmel', state: { phase: 'day', cond: 'mostlyClear', dayMoon: true, moon: { illum: 0.55, waxing: false }, body: { kind: 'sun', t: 0.78 } } },
-  { label: 'Mond hinter geschlossener Wolkendecke', state: m({ cond: 'overcast' }, { illum: 0.8 }) },
+  { label: 'Mond hinter geschlossener Wolkendecke (bedeckt)', state: m({ cond: 'overcast' }, { illum: 0.8 }) },
 ], { crops: ['wide', 'phone'], cols: 'one' });
 </script></body></html>
