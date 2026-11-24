@@ -29,10 +29,10 @@ Not stored in this file: `npm run chats:sync` prints the list from GitHub (`chat
 6. Backup: „Was ging wohin?“ auch ohne „In Arbeit anzeigen“? (#566)
 7. Merkliste und Unterlagen mit demselben Kopf lassen? Akzent-Varianten statt festem 25°-Abstand der Modulfarben? (#485)
 8. „Open questions“ in den PR-Texten von #656 (`disk_delete` nur per Attribut `async`?), #632, #490, #492, #1070.
-9. Planer-Zentrale ([planner-hub](design/planner-hub/README.md) „Waits on the maintainer“): D2/D3, Reiz-Budget R1. (so lassen) · Zentrale 2 (#1084): Mockups ansehen, dann Paket 10a (Opus) starten.
+9. Planer-Zentrale ([planner-hub](design/planner-hub/README.md) „Waits on the maintainer“): D2/D3, Reiz-Budget R1. (so lassen)
 10. Austausch Handy ↔ PC ([CONCEPT §11](design/device-exchange/CONCEPT.md)): Handy holt erst beim Öffnen? (ja, v1) · nur Heimnetz? (ja) · Name „Austausch“? (ja) · Regelzeile (Paket R) mergen.
 11. „Werte ausblenden“ (DESIGN-CHECK K2): nur Kopfzahl + Zeile darunter (so gebaut, #752) oder alle Beträge der Geld-Seiten und Karten? (alle Geld-Karten, Wunsch aus Budgets; eigener kleiner PR)
-12. Wetter-Szenen (#1098): Galerie im PR ansehen, dann Paket 1 (Opus) starten ([PACKAGES](design/weather-scenes/PACKAGES.md)). Widget mit Bild als Hintergrund? (ja)
+12. Wetter-Szenen (#1098): Galerie im PR ansehen, dann Paket 1 (Opus) starten. Widget mit Bild als Hintergrund? (ja)
 
 **Handgriffe:**
 
@@ -63,6 +63,7 @@ Not stored in this file: `npm run chats:sync` prints the list from GitHub (`chat
 | images under `docs/`                                                                     | none ([DOCS-GUIDE](meta/DOCS-GUIDE.md#images)); screenshots go into the PR text             |
 | `docs/STATUS.md`                                                                         | only in a `docs(status)` PR of its own (docs only), never in a feature PR                   |
 | `docs/DECISIONS.md`, `docs/HOW-TO.md`, `docs/ARCHITECTURE-MAP.md`, `README.md`           | touch only on real change; one line / one block, no reformatting                            |
+| `web/src/modules/mail/**`, `web/src/core/mail/**`, `strings.ts` (mail block)             | `feat/mail-find-overview` (+ follow-up `feat/mail-*`)                                       |
 
 ## Hand-over conventions
 
