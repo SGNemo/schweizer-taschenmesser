@@ -120,6 +120,16 @@ it('tick, untick, tick again: the line is held again (no stale mark of the first
   expect(box()).toBeChecked();
 });
 
+it('after clearing the bought entries the focus is on „Ganz öffnen“', async () => {
+  await items(['Milch'], { done: true });
+  await itemRepo.create({ listId: LIST, name: 'Brot', done: false, order: 1 }, { id: 'i1' });
+  panel();
+  const clear = await screen.findByRole('button', { name: 'Gekauftes entfernen (1)' });
+  clear.focus();
+  fireEvent.click(clear);
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Ganz öffnen' })).toHaveFocus());
+});
+
 it('nothing open: X8 „Fertig eingekauft“ clears the bought entries, one undo', async () => {
   await items(['Milch', 'Brot'], { done: true });
   panel();

@@ -77,12 +77,20 @@ export default function ListPlanPanel({ id, compact }: PlanPanelProps) {
     for (const i of items ?? []) {
       if (!held.has(i.id)) continue;
       if (i.done) seenDone.current.add(i.id);
-      else if (seenDone.current.has(i.id)) {
-        seenDone.current.delete(i.id);
-        release(i.id);
-      }
+      else if (seenDone.current.has(i.id)) release(i.id);
     }
   }, [items, held, release]);
+  // „Gekauftes entfernen“ / X8 leaves with the bought entries, after the list re-read: then a focus that fell to the
+  // page (or stayed on the gone button) goes to „Ganz öffnen“.
+  const refocus = useRef(false);
+  const bought = items?.some((i) => i.done) ?? false;
+  useEffect(() => {
+    if (!refocus.current || bought) return;
+    refocus.current = false;
+    const active = document.activeElement;
+    if (!active || active === document.body || !active.isConnected)
+      box.current?.querySelector<HTMLElement>('[data-panel-open]')?.focus({ preventScroll: true });
+  }, [bought]);
   /** The focused tick's line leaves: the focus goes to the next line's tick, else the one before, else the foot. */
   const keepFocus = (itemId: string) => {
     const ticks = [...(box.current?.querySelectorAll<HTMLElement>('input[type="checkbox"]') ?? [])];
@@ -178,15 +186,12 @@ export default function ListPlanPanel({ id, compact }: PlanPanelProps) {
         {isShopping && doneCount > 0 ? (
           <Button
             variant="secondary"
-            onClick={() =>
+            onClick={() => {
+              refocus.current = true;
               void undoableWithToast(t.lists.cleared(doneCount), t.lists.cleared(doneCount), () =>
                 clearDone(list.id),
-              ).then(() => {
-                // The button leaves with the bought entries: a focus that fell to the page goes to „Ganz öffnen“.
-                if (!document.activeElement || document.activeElement === document.body)
-                  box.current?.querySelector<HTMLElement>('[data-panel-open]')?.focus();
-              })
-            }
+              );
+            }}
           >
             {/* X8 says the trip is over only when it is; with entries still open the module's own words. */}
             {/* No flash on the last tick: while a ticked line is still held the words stay. */}
