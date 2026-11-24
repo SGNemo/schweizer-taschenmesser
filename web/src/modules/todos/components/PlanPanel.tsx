@@ -9,6 +9,7 @@ import {
   PanelDefaultBody,
   PanelGone,
   PanelLoading,
+  PanelNote,
   PlanPanelFoot,
 } from '@/core/modules/PlanPanelHost';
 import type { PlanPanelProps } from '@/core/modules/types';
@@ -17,7 +18,6 @@ import { t } from '@/strings';
 import { Checkbox, PanelLine, PanelLines } from '@/ui';
 import { taskRepo } from '../repo';
 import type { ChecklistItem } from '../schema';
-import styles from './PlanPanel.module.css';
 
 /** Sets one checklist line, read fresh: a sync may have changed the other lines meanwhile. */
 async function setLine(taskId: string, itemId: string, done: boolean): Promise<void> {
@@ -60,7 +60,7 @@ export default function TodoPlanPanel({ id, compact }: PlanPanelProps) {
     );
   return (
     <>
-      {task.note ? <p className={styles.note}>{task.note}</p> : null}
+      {task.note ? <PanelNote>{task.note}</PanelNote> : null}
       {/* Nothing of its own (the common plain ToDo): what the row knows – its detail and links – as the default. */}
       {!task.note && checklist.length === 0 ? <PanelDefaultBody /> : null}
       {checklist.length > 0 ? (

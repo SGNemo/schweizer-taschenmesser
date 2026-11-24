@@ -68,6 +68,11 @@ export function PlanPanelFoot({ children }: { children?: ReactNode }) {
   );
 }
 
+/** A note inside a panel: its first three lines, small, at most the reading measure (a ToDo's note). */
+export function PanelNote({ children }: { children: ReactNode }) {
+  return <p className={`${styles.line} ${styles.note}`}>{children}</p>;
+}
+
 /** A small head inside a panel (a list's section): caps, 600, muted. */
 export function PanelHead({ children }: { children: ReactNode }) {
   return <p className={styles.head}>{children}</p>;
