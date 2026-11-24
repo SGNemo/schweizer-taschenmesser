@@ -4,14 +4,16 @@ import { dismissNotices } from '../helpers';
 
 /**
  * Use case „Planer als Ablage, kurze Wege“ (planner hub, round 2): one person dumps everything into the planner and
- * wants short ways. Monday 2026-11-30 is „today“; every row is invented and goes straight into IndexedDB. Three
- * flows, each on the best path the app offers today (a new control is used as soon as it is there):
+ * wants short ways. Monday 2026-11-30 is „today“; every row is invented and goes straight into IndexedDB. Four
+ * flows (A–D), each on the best path the app offers today (a new control is used as soon as it is there):
  *  - A „12 gemischte Dinge abladen“: A1 all twelve into the planner's one field; A2 each one made the right kind
  *    (the global quick capture, then the modules' own „In den Plan“) and visible in the planner.
  *  - B „Finanzen checken, E-Mails durchgehen“: 3 open invoices (one late), 2 cancellation deadlines within 14 days,
  *    1 budget over its limit, 4 mails waiting for an answer – seen in the planner, then worked off.
- *  - C „Bündel und Besorgung“: C1 a bundle „Haushalt“ of five steps (and the duration the planner proposes);
+ *  - C „Bündel und Besorgung“: C1 a thing „Haushalt“ with five steps (and the duration the planner proposes);
  *    C2 an errand of two things and a shopping list of three.
+ *  - D five short ones: D1 is a thing in the plan, and when (seen from its module); D2 a shared link into the planner;
+ *    D3 a thing before an appointment; D4 one topic among twenty things; D5 waiting for an answer.
  * Per path the script counts:
  *  - `taps`: handles (a tap, a typed line, a paste each count one; unfolding a group to reach a thing counts),
  *  - `perThing`: handles that act on one single thing beyond typing its own line (the „Einzelgriff je Ding“),
@@ -20,17 +22,28 @@ import { dismissNotices } from '../helpers';
  *  - `rows`: thing rows the planner shows for the flow: today's sheet + „Noch ohne Tag“ + „Frist vorbei“ (counted
  *    from what the page names: the week tile's „· n Dinge“ and the groups' counts),
  *  - flow figures: `rightKind`, `linkedToPlan` (A), `forms`, `fields` (A2), `rowsBefore`, `rowsAfter`,
- *    `doneInPlanner` (B), `nextStepOnly`, `savedAsRoutine`, `durationProposed`, `learned` (C1), `oneRow`, `mapShown`
+ *    `doneInPlanner`, `replySwitches` (B: route changes from the planner to the reply of one
+ *    planned mail, desktop), `nextStepOnly`, `savedAsRoutine`, `durationProposed`, `learned` (C1), `oneRow`, `mapShown`
  *    (C2), `markVisible`, `markAgrees`, `tripsToPlanner` (D1: route changes to read the planned day starting in the
  *    thing's own module) and the D figures. A thing that cannot be done today is the word „nicht möglich“.
  *
- * `IST` is the measured state per path and project. `TARGET` is docs/design/planner-hub-2/ANALYSIS.md §3. Every build PR
- * re-measures `IST` (never loosened); a figure is asserted against the better of its `IST` and – once reached – its
- * `TARGET` (lower is better, except `HIGHER`); a word equals its `IST`. Three figures have their TARGET above their IST
- * on purpose – named prices, the bound is the TARGET (reaching it is no regression, more fails): C2 `createTaps` (0 → 8:
- * getting a round together is a choice, incl. one trip to Listen, and buys rows 2 → 1), D1 `taps` (11 → 16) and D1
- * `perThing` (5 → 10): from package 4a on a row's title expands it, so the jump into the module is two handles.
- * Re-measured by the packages: 10b: D1 · 4a: D1, C1 · 4b/4c/2: B · 5a: C1 · 5b: C2 · 1: D2 · 3: A1, C1 · 9: D3 · 11: D4.
+ * `IST` is the measured state per path and project. `TARGET` is the figure the designed path reaches after the last
+ * package that touches the flow, derived handle by handle with this script's counting (design round 3, 2026-11-23;
+ * paths, stages and acceptance figures: docs/design/planner-hub-2/FIGURES.md; summary: ANALYSIS.md §3). Every build PR
+ * re-measures `IST` (never loosened: write into `IST` only figures that improved, and what a `PRICE` entry names as its
+ * `until` key – a figure with a named price keeps its `IST`); a figure is asserted against the better of its `IST` and – once reached – its
+ * `TARGET` (lower is better, except `HIGHER`); a word equals its `IST`. Named prices – a figure above its IST on
+ * purpose, reaching it is no regression, more fails:
+ *  - lasting (the bound is the TARGET): C1 `perThing` 6 → 7 (4a: the row expands first, then „Ganz öffnen“, from 5a
+ *    „Los“); C2 `createTaps` 0 → 14 / phone 13 and `perThing` 5 → 7 (5b: the list asked into the plan in Listen, one
+ *    trip, then „Auswählen“, three ticks, „Bündeln …“ – buys rows 2 → 1); D1 `taps` 11 → 15 and `perThing` 5 → 9 (4a:
+ *    the jump into a module is expand + „Ganz öffnen“; the note keeps its one-handle chip); D4 phone `taps` 22 → 23
+ *    (11: Thursday's invoice waits under the phone's folded „Danach“ – one unfold; buys rows 20 → 7, switches 2 → 0);
+ *  - for a while (the bound is `PRICE`, valid while the named IST word or figure still reads as before the package
+ *    that ends it): B `taps` 27 → 28 / phone 14 → 16 and `perThing` 17 → 21 / phone 9 → 13 from 4b (and 4c) until 2
+ *    (each invoice and cancellation is expand + its step; budgets and mail are still trips); C1 `workTaps` 7 → 8 and
+ *    `taps` 19 → 20 from 4a until 5a (expand, „Ganz öffnen“, the routine's run as today).
+ * Re-measured by the packages: 10b: D1 · 4a: D1, C1 · 4b/2: B · 4c: B `replySwitches` · 5a: C1 · 5b: C2 · 1: D2 · 3: A1, C1 · 9: D3 · 11: D4.
  * `MEASURE=1` only measures. Facts (the click path, the module routes passed) land beside the table in
  * `test-results/usecase-planner-hub-2/`.
  *
@@ -50,7 +63,8 @@ const HIGHER = ['rightKind', 'linkedToPlan', 'doneInPlanner', 'markVisible', 'ma
 /**
  * The measured state: 2026-11-23 on `develop` (design/planner-hub-2), keyed `<path> · <project>`. The phone differs
  * where its navigation does (area in the bottom bar, the module used last there) and where a module is desktop-only
- * (mail).
+ * (mail). B `replySwitches` (added 2026-11-23, round 3): the demo mailbox loads no message body offline, so there is
+ * no „Antworten“ to press today – its IST counts the way to the open thread (row chip „Aus Mail“ → /mail: 1).
  */
 // prettier-ignore
 const IST: Record<string, Figures> = {
@@ -58,8 +72,8 @@ const IST: Record<string, Figures> = {
   'A1 Alles ins Planer-Feld · pixel-7': { rows: 11, moduleSwitches: 0, taps: 12, perThing: 0, rightKind: 4, linkedToPlan: 4 },
   'A2 Jedes Ding als richtige Art · desktop-chrome': { rows: 8, moduleSwitches: 3, taps: 33, perThing: 13, forms: 2, fields: 5, rightKind: 12, linkedToPlan: 11 },
   'A2 Jedes Ding als richtige Art · pixel-7': { rows: 8, moduleSwitches: 5, taps: 34, perThing: 14, forms: 2, fields: 5, rightKind: 12, linkedToPlan: 11 },
-  'B Finanzen und Mails abarbeiten · desktop-chrome': { rowsBefore: 5, taps: 27, perThing: 17, moduleSwitches: 5, doneInPlanner: 1, rowsAfter: 1, mails: 4 },
-  'B Finanzen und Mails abarbeiten · pixel-7': { rowsBefore: 5, taps: 14, perThing: 9, moduleSwitches: 5, doneInPlanner: 1, rowsAfter: 1, mails: 'nicht möglich' },
+  'B Finanzen und Mails abarbeiten · desktop-chrome': { rowsBefore: 5, taps: 27, perThing: 17, moduleSwitches: 5, doneInPlanner: 1, rowsAfter: 1, mails: 4, replySwitches: 1 },
+  'B Finanzen und Mails abarbeiten · pixel-7': { rowsBefore: 5, taps: 14, perThing: 9, moduleSwitches: 5, doneInPlanner: 1, rowsAfter: 1, mails: 'nicht möglich', replySwitches: 'nicht möglich' },
   'C1 Bündel Haushalt · desktop-chrome': { rows: 1, createTaps: 12, workTaps: 7, taps: 19, perThing: 6, moduleSwitches: 4, nextStepOnly: 'nein', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
   'C1 Bündel Haushalt · pixel-7': { rows: 1, createTaps: 12, workTaps: 7, taps: 19, perThing: 6, moduleSwitches: 5, nextStepOnly: 'nein', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
   'C2 Besorgung · desktop-chrome': { rows: 2, createTaps: 0, workTaps: 9, perThing: 5, moduleSwitches: 2, oneRow: 'nein', mapShown: 'nicht möglich' },
@@ -76,29 +90,57 @@ const IST: Record<string, Figures> = {
   'D5 Warte auf Antwort · pixel-7': { taps: 7, perThing: 3, moduleSwitches: 0, rowsOffSheet: 3, comesBackByItself: 'ja' },
 };
 
-// TARGET: docs/design/planner-hub-2/ANALYSIS.md §3 (set by the design lead). Struck ideas (D5, C1 learned) keep their IST.
+// TARGET: the designed path after the last package of the flow, counted as this script counts (header). A2 is no longer
+// needed (A1 does it) and D5 is struck: both keep their IST.
 // prettier-ignore
 const TARGET: Record<string, Figures> = {
   'A1 Alles ins Planer-Feld · desktop-chrome': { rows: 7, moduleSwitches: 0, taps: 12, perThing: 0, rightKind: 12, linkedToPlan: 10 },
   'A1 Alles ins Planer-Feld · pixel-7': { rows: 7, moduleSwitches: 0, taps: 12, perThing: 0, rightKind: 12, linkedToPlan: 10 },
   'A2 Jedes Ding als richtige Art · desktop-chrome': { rows: 8, moduleSwitches: 3, taps: 33, perThing: 13, forms: 2, fields: 5, rightKind: 12, linkedToPlan: 11 },
   'A2 Jedes Ding als richtige Art · pixel-7': { rows: 8, moduleSwitches: 5, taps: 34, perThing: 14, forms: 2, fields: 5, rightKind: 12, linkedToPlan: 11 },
-  'B Finanzen und Mails abarbeiten · desktop-chrome': { rowsBefore: 2, taps: 13, perThing: 11, moduleSwitches: 0, doneInPlanner: 10, rowsAfter: 0, mails: 4 },
-  'B Finanzen und Mails abarbeiten · pixel-7': { rowsBefore: 1, taps: 8, perThing: 7, moduleSwitches: 0, doneInPlanner: 6, rowsAfter: 0, mails: 'nicht möglich' },
-  'C1 Bündel Haushalt · desktop-chrome': { rows: 1, createTaps: 1, workTaps: 7, taps: 8, perThing: 5, moduleSwitches: 0, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
-  'C1 Bündel Haushalt · pixel-7': { rows: 1, createTaps: 1, workTaps: 7, taps: 8, perThing: 5, moduleSwitches: 0, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
-  'C2 Besorgung · desktop-chrome': { rows: 1, createTaps: 8, workTaps: 6, perThing: 5, moduleSwitches: 2, oneRow: 'ja', mapShown: 'nicht möglich' },
-  'C2 Besorgung · pixel-7': { rows: 1, createTaps: 8, workTaps: 6, perThing: 5, moduleSwitches: 2, oneRow: 'ja', mapShown: 'nicht möglich' },
-  'D1 Steht es im Plan, und wann · desktop-chrome': { taps: 16, perThing: 10, moduleSwitches: 10, markVisible: 5, markAgrees: 5, tripsToPlanner: 0 },
-  'D1 Steht es im Plan, und wann · pixel-7': { taps: 16, perThing: 10, moduleSwitches: 10, markVisible: 5, markAgrees: 5, tripsToPlanner: 0 },
+  'B Finanzen und Mails abarbeiten · desktop-chrome': { rowsBefore: 2, taps: 17, perThing: 12, moduleSwitches: 0, doneInPlanner: 9, rowsAfter: 0, mails: 4, replySwitches: 0 },
+  'B Finanzen und Mails abarbeiten · pixel-7': { rowsBefore: 1, taps: 10, perThing: 8, moduleSwitches: 0, doneInPlanner: 5, rowsAfter: 0, mails: 'nicht möglich', replySwitches: 'nicht möglich' },
+  'C1 Bündel Haushalt · desktop-chrome': { rows: 1, createTaps: 1, workTaps: 7, taps: 8, perThing: 7, moduleSwitches: 0, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
+  'C1 Bündel Haushalt · pixel-7': { rows: 1, createTaps: 1, workTaps: 7, taps: 8, perThing: 7, moduleSwitches: 0, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
+  'C2 Besorgung · desktop-chrome': { rows: 1, createTaps: 14, workTaps: 6, perThing: 7, moduleSwitches: 2, oneRow: 'ja', mapShown: 'nicht möglich' },
+  'C2 Besorgung · pixel-7': { rows: 1, createTaps: 13, workTaps: 6, perThing: 7, moduleSwitches: 2, oneRow: 'ja', mapShown: 'nicht möglich' },
+  'D1 Steht es im Plan, und wann · desktop-chrome': { taps: 15, perThing: 9, moduleSwitches: 10, markVisible: 5, markAgrees: 5, tripsToPlanner: 0 },
+  'D1 Steht es im Plan, und wann · pixel-7': { taps: 15, perThing: 9, moduleSwitches: 10, markVisible: 5, markAgrees: 5, tripsToPlanner: 0 },
   'D2 Geteilter Link in den Planer · desktop-chrome': { taps: 2, moduleSwitches: 1, forms: 1, inPlanner: 'ja', wayBack: 'ja' },
   'D2 Geteilter Link in den Planer · pixel-7': { taps: 2, moduleSwitches: 1, forms: 1, inPlanner: 'ja', wayBack: 'ja' },
-  'D3 Vor einem Termin · desktop-chrome': { taps: 3, perThing: 0, moduleSwitches: 0, linked: 'ja', onWednesday: 'ja' },
-  'D3 Vor einem Termin · pixel-7': { taps: 3, perThing: 0, moduleSwitches: 0, linked: 'ja', onWednesday: 'ja' },
-  'D4 Ein Thema · desktop-chrome': { rows: 7, taps: 11, perThing: 5, moduleSwitches: 0, planFilter: 'ja' },
-  'D4 Ein Thema · pixel-7': { rows: 7, taps: 11, perThing: 5, moduleSwitches: 0, planFilter: 'ja' },
+  'D3 Vor einem Termin · desktop-chrome': { taps: 4, perThing: 0, moduleSwitches: 0, linked: 'ja', onWednesday: 'ja' },
+  'D3 Vor einem Termin · pixel-7': { taps: 4, perThing: 0, moduleSwitches: 0, linked: 'ja', onWednesday: 'ja' },
+  'D4 Ein Thema · desktop-chrome': { rows: 7, taps: 22, perThing: 15, moduleSwitches: 0, planFilter: 'ja' },
+  'D4 Ein Thema · pixel-7': { rows: 7, taps: 23, perThing: 15, moduleSwitches: 0, planFilter: 'ja' },
   'D5 Warte auf Antwort · desktop-chrome': { taps: 7, perThing: 3, moduleSwitches: 0, rowsOffSheet: 3, comesBackByItself: 'ja' },
   'D5 Warte auf Antwort · pixel-7': { taps: 7, perThing: 3, moduleSwitches: 0, rowsOffSheet: 3, comesBackByItself: 'ja' },
+};
+
+/**
+ * Named prices for a while (header): `figure` may reach `max`, never more, as long as `IST[path][until[0]]` still
+ * equals `until[1]` – the package that ends the price re-measures that IST (B: package 2 moves `rowsBefore`; C1: 5a
+ * moves `nextStepOnly`), and from then on the usual bound holds again.
+ */
+type Price = { figure: string; max: number; until: [string, number | string] };
+const untilPiles: [string, number] = ['rowsBefore', 5];
+const untilLos: [string, string] = ['nextStepOnly', 'nein'];
+const PRICE: Record<string, Price[]> = {
+  'B Finanzen und Mails abarbeiten · desktop-chrome': [
+    { figure: 'taps', max: 28, until: untilPiles },
+    { figure: 'perThing', max: 21, until: untilPiles },
+  ],
+  'B Finanzen und Mails abarbeiten · pixel-7': [
+    { figure: 'taps', max: 16, until: untilPiles },
+    { figure: 'perThing', max: 13, until: untilPiles },
+  ],
+  'C1 Bündel Haushalt · desktop-chrome': [
+    { figure: 'workTaps', max: 8, until: untilLos },
+    { figure: 'taps', max: 20, until: untilLos },
+  ],
+  'C1 Bündel Haushalt · pixel-7': [
+    { figure: 'workTaps', max: 8, until: untilLos },
+    { figure: 'taps', max: 20, until: untilLos },
+  ],
 };
 
 const base = { createdAt: 1, updatedAt: 1, deviceId: 'e2e', deletedAt: null, _f: {} };
@@ -488,7 +530,8 @@ function record(info: TestInfo, name: string, figures: Figures, facts: unknown) 
 
 /**
  * A count may not get worse than the better of its `IST` and its `TARGET` – the target only binds once it is reached
- * (a build PR moves `IST` there); lower is better except for `HIGHER`. A word equals its `IST`.
+ * (a build PR moves `IST` there); lower is better except for `HIGHER`; a named price lifts the bound to its `TARGET`
+ * (lasting) or to its `PRICE` (while it holds). A word equals its `IST`.
  */
 function reached(id: string, figures: Figures) {
   const ist = IST[id];
@@ -506,7 +549,11 @@ function reached(id: string, figures: Figures) {
       const bound = typeof want === 'number' && want <= was ? want : was;
       expect(got, `${id}: ${k} ≥ ${bound}`).toBeGreaterThanOrEqual(bound);
     } else {
-      const bound = typeof want === 'number' && was <= want ? want : was;
+      const price = PRICE[id]?.find((p) => p.figure === k && ist![p.until[0]] === p.until[1]);
+      const bound = Math.max(
+        typeof want === 'number' && was <= want ? want : was,
+        price?.max ?? -Infinity,
+      );
       expect(got, `${id}: ${k} ≤ ${bound}`).toBeLessThanOrEqual(bound);
     }
   }
@@ -540,6 +587,15 @@ const TASKS = [
   'Paket abholen',
 ];
 const SHOPPING = ['Milch', 'Spülmittel', 'Batterien AA'];
+/**
+ * A person who shops regularly: the three shopping words are things the pantry holds (in stock, no minimum, no date –
+ * nothing for any plan or list). The pantry is what the field's local name lookup (package 3) reads; `kinds()` never
+ * reads it, so the A1 figures of today stay as measured.
+ */
+const KNOWN_NAMES = {
+  _modules: [...MODULES, 'pantry'].map((id) => ({ id, enabled: true, dataPolicy: null })),
+  pantry_item: SHOPPING.map((name, i) => ({ id: `p${i}`, name, place: 'pantry', count: 1 })),
+};
 
 interface Task {
   id: string;
@@ -622,7 +678,7 @@ async function kinds(page: Page) {
 
 test('A1 Alles ins Planer-Feld', async ({ page, isMobile }, info) => {
   const name = 'A1 Alles ins Planer-Feld';
-  await prepare(page, isMobile);
+  await prepare(page, isMobile, KNOWN_NAMES);
   await planner(page);
   const hand = new Hand(page, isMobile);
   hand.start();
@@ -891,6 +947,9 @@ test('B Finanzen und Mails abarbeiten', async ({ page, isMobile }, info) => {
   ).toBeVisible();
   // 4 The mails: no source of the plan – „Alle in den Plan…“ in the mailbox makes four ToDos (desktop only).
   let mails: number | string = 'nicht möglich';
+  let replySwitches: number | string = 'nicht möglich';
+  let replyEditor = false;
+  let replyPath: string[] = [];
   if (!isMobile) {
     await go(hand, page, isMobile, 'mail');
     await hand.tap(page.getByRole('button', { name: 'Alle in den Plan…' }), 'Alle in den Plan…');
@@ -907,6 +966,47 @@ test('B Finanzen und Mails abarbeiten', async ({ page, isMobile }, info) => {
         (x) => !x.done && x.links?.some((l) => l.kind === 'mail'),
       );
     await expect.poll(async () => (await fromMail()).length).toBe(MAILS.length);
+    // Answering one planned mail (package 4c): route changes from the planner until the reply editor of the first one
+    // is open – its row's link chip („Aus Mail“, else ⋯ · „Öffnen“), then „Antworten“; nothing is sent. Its own hand:
+    // the flow's figures stay as they were (its routes are taken back off the flow's list, the page returns unseen).
+    const mark = hand.places.length;
+    const reply = new Hand(page, isMobile);
+    reply.start();
+    await openNoDay(reply, page);
+    const first = (await fromMail())[0]!;
+    const mailRow = page
+      .locator('main li')
+      .filter({
+        has: page.getByRole('button', { name: `Aktionen für ${first.title}`, exact: true }),
+      })
+      .first();
+    const chip = mailRow.locator('[data-link-chip]').first();
+    if (await chip.count()) await reply.tap(chip, 'Chip Aus Mail');
+    else {
+      await reply.tap(
+        mailRow.getByRole('button', { name: `Aktionen für ${first.title}`, exact: true }),
+        `⋯ ${first.title}`,
+      );
+      await reply.tap(page.getByRole('menuitem', { name: 'Öffnen', exact: true }), 'Öffnen');
+    }
+    // The thread on screen (mail's reading pane). The demo mailbox has no message body offline („Die Mail konnte nicht
+    // geladen werden.“), so there may be no „Antworten“ to press: then the figure counts the way to the open thread.
+    await expect(page).toHaveURL(/\/mail/);
+    await expect(page.getByRole('button', { name: 'Zur Liste' }).first()).toBeVisible();
+    const answer = page.getByRole('button', { name: 'Antworten', exact: true }).first();
+    if (await appears(answer, 1500)) {
+      await reply.tap(answer, 'Antworten');
+      replyEditor = await appears(page.getByRole('dialog').first());
+    }
+    replySwitches = reply.moduleSwitches;
+    replyPath = reply.path;
+    await page.goto('/planner');
+    await expect(page.getByTestId(`day-${TODAY}`)).toBeVisible();
+    // „Noch ohne Tag“ as the flow found it: folded (the reply's unfolding is remembered).
+    const opened = page.getByRole('button', { name: 'Noch ohne Tag einklappen' });
+    if (await opened.count()) await opened.click();
+    await expect(page.getByRole('button', { name: 'Noch ohne Tag ausklappen' })).toBeVisible();
+    hand.places = hand.places.slice(0, mark);
     // They wait under „Noch ohne Tag“, where a row has no tick: each one onto today first, then ticked.
     const head = page.getByRole('button', { name: 'Noch ohne Tag ausklappen' });
     if (await head.count()) await hand.tap(head, 'Noch ohne Tag aufklappen');
@@ -977,8 +1077,10 @@ test('B Finanzen und Mails abarbeiten', async ({ page, isMobile }, info) => {
       doneInPlanner: hand.onlyInPlanner(things),
       rowsAfter: after.all,
       mails,
+      replySwitches,
     },
     {
+      reply: { editor: replyEditor, path: replyPath },
       before,
       after,
       places: hand.places,

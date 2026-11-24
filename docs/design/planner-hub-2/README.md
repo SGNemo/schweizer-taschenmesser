@@ -5,6 +5,7 @@ Brief (maintainer, 2026-11-23): everything goes from the head into one field, un
 | File | What |
 | --- | --- |
 | [ANALYSIS](ANALYSIS.md) | idea × „exists / partly / missing“, the three flows measured, friction H01 …, critique of today's planner, the gate (what principle 1 strikes) |
+| [FIGURES](FIGURES.md) | every `TARGET` of the script derived handle by handle, the figures after each package, the named prices, what each package changes in the script's reading |
 | [CONCEPT](CONCEPT.md) | seven sentences every package keeps, new data, **the link contract** (idea 10) with the table per module |
 | [CONCEPT-ROWS](CONCEPT-ROWS.md) | expand (4), collective rows (2), bundles and „Los“ (5) |
 | [CONCEPT-INTAKE](CONCEPT-INTAKE.md) | share (1), kinds in the field (3), errands (6, shrunk), appointment (9), topic (11) |
@@ -17,4 +18,4 @@ Brief (maintainer, 2026-11-23): everything goes from the head into one field, un
 | `mockups/` | HTML mockups + `render.mjs` (look only; pictures in the PR text) |
 | [`planner-hub-2.spec.ts`](../../../web/e2e/usecases/planner-hub-2.spec.ts) | the measuring script: `IST` (green on `develop`), `TARGET` (asserted as packages land) |
 
-Decisions of the round: [decisions/plan-hub-2](../../decisions/plan-hub-2.md). Sample data everywhere: Monday 2026-11-30, invented things. Never a source, target, label, pile, step or topic member: `accounts`.
+When the round closes, package M moves the struck material (prompts 7, 8, 6, hand-offs and mockups 06–08, `mock.css`, `render.mjs`, CONCEPT-STRUCK) into `struck/`, together with copies of PACKAGES' `#common` block and `handoff/00-common.md` (the struck prompts cite them), and deletes the other working documents; FIGURES stays. Decisions of the round: [decisions/plan-hub-2](../../decisions/plan-hub-2.md). Sample data everywhere: Monday 2026-11-30, invented things. Never a source, target, label, pile, step or topic member: `accounts`.

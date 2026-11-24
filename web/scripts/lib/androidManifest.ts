@@ -88,3 +88,42 @@ export function withLanWatch(xml: string): string {
     );
   return out;
 }
+
+/** Resource name of the rules below (`res/xml/data_extraction_rules.xml`, next to the manifest). */
+export const DATA_EXTRACTION_RULES_FILE = 'res/xml/data_extraction_rules.xml';
+
+const DOMAINS = ['root', 'file', 'database', 'sharedpref', 'external'] as const;
+const excludeAll = DOMAINS.map((d) => `        <exclude domain="${d}" path="." />`).join('\n');
+
+/**
+ * NS5 (launch review 2026-11): Android 12+ ignores `allowBackup` for a device-to-device transfer and
+ * would copy the app's database to the new phone. These rules exclude every domain from cloud
+ * backup and from the transfer; Nemo's own encrypted backup is the way to move data.
+ */
+export const DATA_EXTRACTION_RULES = `<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+${excludeAll}
+    </cloud-backup>
+    <device-transfer>
+${excludeAll}
+    </device-transfer>
+</data-extraction-rules>
+`;
+
+/** Points `<application>` at the rules above (replacing any other value) and verifies it. Idempotent. */
+export function withDataExtractionRules(xml: string): string {
+  const tag = APPLICATION_TAG.exec(xml)?.[0];
+  if (!tag) throw new Error('AndroidManifest.xml: no <application> element');
+  const set = tag
+    .replace(/\s+android:dataExtractionRules="[^"]*"/, '')
+    .replace(
+      /^<application\b/,
+      '<application android:dataExtractionRules="@xml/data_extraction_rules"',
+    );
+  const out = xml.replace(tag, set);
+  const check = APPLICATION_TAG.exec(out)?.[0] ?? '';
+  if ((check.match(/android:dataExtractionRules="/g) ?? []).length !== 1)
+    throw new Error('AndroidManifest.xml: dataExtractionRules not set once after hardening');
+  return out;
+}
