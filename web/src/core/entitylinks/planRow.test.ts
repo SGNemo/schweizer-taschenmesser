@@ -279,9 +279,47 @@ describe('the plan mark (package 10b)', () => {
     expect(planMarkText((await planMarkOf('invoices', { id: 'i1' }))!)).toBe('Im Plan · heute');
   });
 
-  it('a passed occurrence is gone (its next one is a new key): no M4 from it', async () => {
+  it('a passed occurrence says nothing (done turns keep their rows) – unless the module names it as its request', async () => {
     await place('subscriptions:s1:2026-10-25', '2026-10-20');
     expect(await planMarkOf('subscriptions', { id: 's1' })).toBeNull();
+    // Laid before its deadline, the day passed, the deadline is still the one asked in: M4, to „Noch offen“.
+    await place('subscriptions:s1:2026-11-20', '2026-11-13');
+    const mark = await planMarkOf('subscriptions', {
+      id: 's1',
+      fallback: true,
+      fallbackKey: 'subscriptions:s1:2026-11-20',
+    });
+    expect(mark).toEqual({
+      kind: 'passed',
+      date: '2026-11-13',
+      rowKey: 'subscriptions:s1:2026-11-20',
+    });
+  });
+
+  it('M3 only from the exact item row: an occurrence row (a pin, an estimate, a skipped day) is no request', async () => {
+    await items.create(
+      { source: { module: 'routines', id: 'r1' }, order: 0, durationMin: 20 },
+      { id: 'routines:r1:2026-11-10' },
+    );
+    expect(await planMarkOf('routines', { id: 'r1' })).toBeNull();
+    await items.create(
+      { source: { module: 'lists', id: 'l9' }, order: 0, skipped: '2026-11-10' },
+      { id: 'lists:l9' },
+    );
+    expect(await planMarkOf('lists', { id: 'l9' })).toBeNull();
+  });
+
+  it('a done carrier no longer marks the thing; a fallback with only done carriers gives nothing', async () => {
+    const note = { module: 'notes', id: 'n5' };
+    await tasks.create(
+      { listId: 'inbox', title: 'Erledigt', done: true, priority: 0, order: 0 },
+      { id: 'dn' },
+    );
+    await carrier('dn', note, 'origin');
+    await place('todos:dn', '2026-11-18');
+    expect(await planMarkOf('notes', { id: 'n5' })).toBeNull();
+    await carrier('dn', { module: 'mail', id: 'th9' }, 'origin');
+    expect(await planMarkOf('mail', { id: 'th9', fallback: true })).toBeNull();
   });
 
   it("M3: asked in without a day, or the module's own field as fallback while the planner has no row", async () => {

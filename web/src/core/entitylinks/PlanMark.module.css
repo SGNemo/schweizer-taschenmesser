@@ -1,5 +1,8 @@
 /* The mark „Im Plan · Mi“: muted text with the planner glyph, one link, underline on hover / focus only. */
 .mark {
+  /* Above a card's stretched link (`::after` over the whole card, e.g. a Merkliste tile): the mark is its own link. */
+  position: relative;
+  z-index: var(--z-raised);
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
@@ -27,9 +30,6 @@
 }
 /* Touch: a 44 px hit strip over its line, so the row keeps its height (as `ui/global.css` does for a text link). */
 @media (any-pointer: coarse) {
-  .mark {
-    position: relative;
-  }
   .mark::after {
     content: '';
     position: absolute;

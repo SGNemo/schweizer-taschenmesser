@@ -8,10 +8,11 @@
  *    with `origin` or `about` – never `before`, `after` or `topic`: a preparation the day before must not move the
  *    appointment's mark.
  *  - **Order.** The earliest live day from today on (own rows first, then carriers) → M1 / M2; else the latest live
- *    day before today of the exact key or an open carrier → M4 (an occurrence that passed is gone – its next one is
- *    a new key); else the planner's own item row asked in and not excluded → M3; else the module's `fallback`
- *    (bookmarks `inPlan`, subscriptions `plannedDeadline`, a mail thread with its ToDo: their request while the
- *    planner has no row yet) → M3, leading to an open carrier ToDo's row when there is one.
+ *    day before today of the exact key, of the occurrence the module names (`fallbackKey`) or of an open carrier → M4
+ *    (other occurrences keep their rows when done, so their passed days say nothing); else the planner's own item
+ *    row `<module>:<id>` asked in and not excluded → M3; else the module's `fallback` (bookmarks `inPlan`,
+ *    subscriptions `plannedDeadline`, a mail thread with its ToDo: their request while the planner has no row yet)
+ *    → M3, leading to `fallbackKey` or an open carrier ToDo's row; nothing when every carrier is done.
  *  - `rowKey` is the plan row that was matched (the occurrence key, the carrier ToDo's key), so a tap lands on it.
  */
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
@@ -158,7 +159,9 @@ async function gather(module: string, ids: ReadonlySet<string>, database: Tasche
       carrierKeys.map((k) => k.slice('todos:'.length)),
     );
     tasks.forEach((task, i) => {
-      if (!task || task.deletedAt !== null || task.done === true) doneCarriers.add(carrierKeys[i]!);
+      // Ticked off or deleted; a ToDo not on this device (yet) is not known to be done.
+      if (task && (task.deletedAt !== null || task.done === true))
+        doneCarriers.add(carrierKeys[i]!);
     });
   }
 
@@ -203,26 +206,22 @@ export async function planMarks(
   if (open.length === 0) return out;
   const ids = new Set(open.map((x) => x.id));
   const keys = open.map((x) => refKey({ module, id: x.id }));
-  const prefixes = keys.map((k) => `${k}:`);
   const from = today();
 
   const { own, carriersOf, carrierRows, doneCarriers } = await gather(module, ids, database);
 
-  // The planner's own item rows: asked in (M3) or „Nicht planen“.
+  // The planner's own item row `<module>:<id>`: asked in (M3) or „Nicht planen“. Only the exact key, as
+  // `isRequested` reads it: occurrence rows also hold pins, estimates or a skipped day and stay after their turn; an
+  // occurrence asked in from its module comes through `fallbackKey`.
   const items = createCollectionRepo(planner, 'item', database).table;
-  const [exactItems, occItems] = await Promise.all([
-    items.bulkGet(keys),
-    items.where(':id').startsWithAnyOf(prefixes).toArray(),
-  ]);
   const excluded = new Set<string>();
   const asked = new Map<string, string>();
-  for (const row of [...exactItems, ...occItems]) {
+  for (const row of await items.bulkGet(keys)) {
     if (!row || row.deletedAt !== null) continue;
     const id = ownerOf(module, row.id, ids);
     if (id === undefined) continue;
-    if (row.excluded === true) {
-      if (row.id === refKey({ module, id })) excluded.add(id);
-    } else if (!asked.has(id)) asked.set(id, row.id);
+    if (row.excluded === true) excluded.add(id);
+    else if (row.skipped === undefined) asked.set(id, row.id);
   }
 
   for (const thing of open) {
@@ -230,21 +229,23 @@ export async function planMarks(
     if (excluded.has(id)) continue;
     const key = refKey({ module, id });
     const mine = own.get(id) ?? [];
-    const carried = (carriersOf.get(id) ?? []).flatMap((k) => carrierRows.get(k) ?? []);
+    // A done carrier no longer stands for the thing (its row may stay until the planner's next run).
+    const carried = (carriersOf.get(id) ?? [])
+      .filter((k) => !doneCarriers.has(k))
+      .flatMap((k) => carrierRows.get(k) ?? []);
     const day = earliestFrom(mine, from) ?? earliestFrom(carried, from);
     if (day) {
       out.set(id, { kind: 'day', date: day.date, locked: day.locked, rowKey: day.key });
       continue;
     }
+    // A passed day: of the exact key, of the occurrence the module itself still names (`fallbackKey`: its request
+    // is the current one), or of an open carrier. Other occurrences keep their rows when done (`run.ts writeRows`:
+    // nothing tidies them), so their passed days say nothing.
     const passed =
       latestBefore(
-        mine.filter((p) => p.key === key),
+        mine.filter((p) => p.key === key || (thing.fallback && p.key === thing.fallbackKey)),
         from,
-      ) ??
-      latestBefore(
-        carried.filter((p) => !doneCarriers.has(p.key)),
-        from,
-      );
+      ) ?? latestBefore(carried, from);
     if (passed) {
       out.set(id, { kind: 'passed', date: passed.date, rowKey: passed.key });
       continue;
@@ -254,7 +255,10 @@ export async function planMarks(
     else if (thing.fallback) {
       // The module's own field: the planner lists it without a day – as the thing itself, or as its open carrier
       // ToDo (a mail thread planned as a ToDo), whose row under „Noch ohne Tag“ is then the target.
-      const via = (carriersOf.get(id) ?? []).find((k) => !doneCarriers.has(k));
+      // Every carrier done (the thread's ToDo ticked off): nothing is in the plan any more.
+      const carriers = carriersOf.get(id) ?? [];
+      const via = carriers.find((k) => !doneCarriers.has(k));
+      if (!thing.fallbackKey && carriers.length > 0 && !via) continue;
       out.set(id, { kind: 'noDay', rowKey: thing.fallbackKey ?? via ?? key });
     }
   }
