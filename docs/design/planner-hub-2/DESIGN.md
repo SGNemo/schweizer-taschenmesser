@@ -37,11 +37,11 @@ Identity: the planner keeps hue `indigo`, head `standard`, no filled action in t
 
 **Decision: A** (confirmed by the maintainer 2026-11-23). His order was „aufklappen statt hinspringen“, and on the phone B is a jump. A costs one layout shift that he causes himself; the caps keep it small. B's only real gain – room for mail – matters on the one device where „Ganz öffnen“ is a keystroke away.
 
-## 3. The bundle – two directions, one decision
+## 3. The bundle – two directions, one decision (built as 5a; the bundle of things, 5b, is parked)
 
 **A · „Eine Zeile, ‚Los‘ auf der Fokus-Seite“** (`05-bundle-a.html`, `05-los.html`): closed, a bundle is one row with „1 von 5“ as text; expanded, its steps are tick lines; „Los“ opens the focus page with only the next step.
 
-- For: a round is one row whether it is typed, bundled or a routine (C2: 2 → 1), and a round is worked through without a module switch (C1: 4 / 5 → 2 with 5a, 0 once it is typed in the field, package 3); „Los“ reuses the page that already hides everything else and survives a reload; nothing new on the sheet.
+- For: a round is one row whether it is typed or a routine (and bundled, should 5b be built: C2 2 → 1), and a round is worked through without a module switch (C1: 4 / 5 → 2 with 5a, 0 once it is typed in the field, package 3); „Los“ reuses the page that already hides everything else and survives a reload; nothing new on the sheet.
 - Against: the steps are invisible until he opens the row; „Los“ leaves the sheet (not the module); bundling an errand round with a shopping list costs 14 handles (phone 13) once and per thing 5 → 7, and the module switches stay 2 (the list is asked into the plan in Listen) – it buys one row less and 9 / 8 → 6 working handles.
 - Critique folded in: member lines have one lead column (tick or source glyph – the draft had both, ragged); „k von n“ counts done steps on the row and the position in „Los“, said in the hand-off; a member without a tick shows its panel as the step.
 
@@ -50,7 +50,7 @@ Identity: the planner keeps hue `indigo`, head `standard`, no filled action in t
 - For: he sees all steps without a tap; he never leaves the sheet.
 - Against: it shows every step as a row (six rows where A shows one); the stage competes with every other row of the day while he should see one thing; the header row carries a fifth control.
 
-**Decision: A** (confirmed by the maintainer 2026-11-23). B fails principle 1 by its own picture, and „‚Los‘ zeigt nur den nächsten Schritt“ is only true when nothing else is on screen.
+**Decision: A** (confirmed by the maintainer 2026-11-23); it holds for 5a – „one row, ‚Los‘ on the focus page“ for a thing with steps. Direction A's bundle of several things (5b) is parked by the figures (2026-11-24). B fails principle 1 by its own picture, and „‚Los‘ zeigt nur den nächsten Schritt“ is only true when nothing else is on screen.
 
 ## 4. Critique of every other surface (first impression · what was changed · what stays weak)
 
@@ -61,15 +61,15 @@ Identity: the planner keeps hue `indigo`, head `standard`, no filled action in t
 | „Los“ (5) | one large title, one filled button | keys named under the buttons; step change announced | much empty space at 1920 – that is the point of the page |
 | Share (1) | the page as built, its form already set to the planner | no new target list, no day chips, no new button – the form's own „Speichern“; two quiet lines say where it lands and that the link goes with it | a long shared title makes the new row three lines tall |
 | Kinds (3) | the line reads like a sentence | only „Wird:“ is muted (was grey on grey); on 412 it stands above the field | two lines above the keyboard on 412 when „Als Aufgabe eintragen“ wraps |
-| Errand (6) | stops read top to bottom | after the council: places and map struck (no figure); what stays is the list ticked inside the bundle (5b) | the drawn version with places is kept for a later „ja“ |
+| Errand (6) | stops read top to bottom | after the council: places and map struck (no figure); the list ticked inside the bundle is parked with 5b | the drawn version with places is kept for a later „ja“ |
 | Appointment (9) | two quiet buttons where he already looks | the lead chip stands before the input, the preview keeps its line (hand-off 03) | the recessed blocker row is weak among 20 rows (as built); the chips carry the relation |
 | Topic (11) | 20 rows against 7 is the whole argument | the page head carries the filter (a line above the sheet plus a head figure for the whole day confused); „Alles zeigen“ once | a topic is invisible on the row by design – he finds it in ⋯ „Verknüpft“ |
 | Waiting (7, struck) | the row is gone, which is the wish | – | the folded line at the end of a long „Noch ohne Tag“ is easy to overlook; the thing returns by itself, so nothing is lost |
-| Duration (8) | „· wie zuletzt“ is nearly invisible | – | that it is a guess is hard to see – one more reason it is struck |
+| Duration (8, built on the maintainer's decision) | „· wie zuletzt“ is nearly invisible | – | that it is a guess is hard to see – the row says „wie zuletzt“, and only a new thing gets it |
 
 ## 5. FOCUS checklist for the round ([FOCUS-GUIDELINES](../FOCUS-GUIDELINES.md); each package answers it again with figures)
 
-1. **Stimulus:** new and always visible, completely: the pile offer (until it is answered); the mark (one text link per planned row in ten modules); one chip in a row's existing chip line (S7, A4); the steps meta on ToDos with a checklist and on routines (text in the existing meta line); the pile and bundle lead glyphs (in the lead slot that is always filled). Expected `check:stimulus` effect: text only, no new control – unchanged; each package still runs it; rows fall (flow B 5 → 2, C2 2 → 1, A1 11 → 7, D4 20 → 7); budget files unchanged.
+1. **Stimulus:** new and always visible, completely: the pile offer (until it is answered); the mark (one text link per planned row in ten modules); one chip in a row's existing chip line (S7, A4); the steps meta on ToDos with a checklist and on routines (text in the existing meta line); the pile lead glyph (and the bundle's, should 5b be built; in the lead slot that is always filled). Expected `check:stimulus` effect: text only, no new control – unchanged; each package still runs it; rows fall (flow B 5 → 2, A1 11 → 7, D4 20 → 7; C2 2 → 1 only with the parked 5b); budget files unchanged.
 2. **Off switch:** piles, kinds in the field and expanding rows have switches; steps, bundles and topics exist only when he makes them.
 3. **Next step:** each panel has at most one secondary action; „Los“ has one filled button.
 4. **Wording:** COPY, checked; counts are plain text and fall as he works.

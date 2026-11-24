@@ -84,7 +84,7 @@ Phone result: taps 16, perThing 13, switches 3 (planner → finance → budgets 
 - IST: unfold „Noch ohne Tag“, then the row chip „Aus Mail“ opens the thread on /mail: **1**. The demo mailbox has no body offline, so it shows no „Antworten“; the figure therefore ends at the open thread.
 - From 4c: expand the row, then „Antworten“ opens mail's compose dialog over the planner: **0**.
 
-### C1 – the household round (4a, 5a, 3)
+### C1 – the household round (4a, 5a, 8, 3)
 
 - **4a**: creation as IST, a routine made in Routinen (12 handles). Work:
   - 1 expand (Haushalt), 2 „Ganz öffnen“ (Haushalt) → routines.
@@ -102,7 +102,7 @@ Phone result: taps 16, perThing 13, switches 3 (planner → finance → budgets 
   - Work 7. taps **8**, perThing **7**, switches **0**.
 - „Als Routine speichern“ (2 handles) is not walked: `savedAsRoutine` is a constant, like the duration probe.
 
-### C2 – the errand round (5b)
+### C2 – the errand round (5b, parked)
 
 **Create, desktop:**
 
@@ -177,14 +177,14 @@ The tables list only flows the package changes. Values are d / p where they diff
 | 4c | B | after 4b: as 4b; before it: as IST; `replySwitches` 0 |
 | 2 | B | rowsBefore 2 / 1, taps 17 / 10, perThing 12 / 8, switches 0, done 9 / 5, rowsAfter 0, mails 4 / –, replySwitches 0 / – |
 | 5a | C1 | create 11 / 10, work 7, taps 18 / 17, **perThing 7**, switches 2, nextStepOnly ja |
-| 5b | C2 | rows 1, **create 14 / 13**, work 6, **perThing 7**, switches 2, oneRow ja |
+| 8 | C1 | as 5a; learned ja (the second time `durationProposed` = measured) |
 | 1 | D2 | taps 2, switches 1, forms 1, inPlanner ja, wayBack ja |
 | 3 | A1 | rows 7, taps 12, perThing 0, switches 0, rightKind 12, linkedToPlan 10 |
-| 3 | C1 | rows 1, create 1, work 7, taps 8, **perThing 7**, switches 0, nextStepOnly ja |
+| 3 | C1 | rows 1, create 1, work 7, taps 8, **perThing 7**, switches 0, nextStepOnly ja, learned ja |
 | 9 | D3 | taps 4, perThing 0, switches 0, linked ja, onWednesday ja |
 | 11 | D4 | rows 7, taps 22 / **23**, perThing 15, switches 0, planFilter ja |
 
-The final row of each flow is its `TARGET`. A2 and D5 keep IST.
+The final row of each flow is its `TARGET`. A2 and D5 keep IST. C2 keeps its IST in this round: 5b is parked (released 8, parked 5b – the maintainer, 2026-11-24); the script keeps C2's `TARGET` for the day 5b is built – parked stage: rows 1, **create 14 / 13**, work 6, **perThing 7**, switches 2, oneRow ja.
 
 ## 4. Named prices
 
@@ -193,8 +193,8 @@ The final row of each flow is its `TARGET`. A2 and D5 keep IST.
 | figure | IST → price | from |
 | --- | --- | --- |
 | C1 perThing | 6 → 7 | 4a |
-| C2 createTaps | 0 → 14 / p 13 | 5b |
-| C2 perThing | 5 → 7 | 5b |
+| C2 createTaps | 0 → 14 / p 13 | 5b (parked) |
+| C2 perThing | 5 → 7 | 5b (parked) |
 | D1 taps | 11 → 15 | 4a |
 | D1 perThing | 5 → 9 | 4a |
 | D4 taps (phone) | 22 → 23 | 11 |
@@ -225,8 +225,8 @@ The final row of each flow is its `TARGET`. A2 and D5 keep IST.
 - **10b–4a (D1)**: the first half walks expand + „Ganz öffnen“ for every row except the note (chip).
 - **4b / 2 (B)**: walk the panels and then the piles. Set `pileMoney` / `pileMail` before `rowsBefore` is read.
 - **4c (B)**: `replySwitches` waits for mail's compose dialog (`replyEditor` in the facts) instead of the thread pane. If the e2e build still loads no body, give the demo thread a cached message.
-- **5a / 3 (C1)**: create a ToDo with a checklist (5a), then a typed task with steps (3). `nextStepOnly` is read from the „Los“ view.
-- **5b (C2)**: read `rows` after the bundle exists (as C1 reads `created`). Read `oneRow` from that result; the row ⋯ never offers „Bündeln …“.
+- **5a / 8 / 3 (C1)**: create a ToDo with a checklist (5a), then a typed task with steps (3). `nextStepOnly` is read from the „Los“ view; `learned` (8) from the second proposal.
+- **5b (C2, parked)**: read `rows` after the bundle exists (as C1 reads `created`). Read `oneRow` from that result; the row ⋯ never offers „Bündeln …“.
 - **1 (D2)**: the way back counts when the row holds a link to the shared host or a control whose accessible name contains the host. Today only `href` and the `aria-label` attribute are checked.
 - **3 (A1)**: the name lookup reads the pantry. The seed holds the three names there.
 - **9 (D3)**: `linked` reads `_links` (`before`, ToDo → `calendar:ev1`), because hand-off 09 leaves `todo.links[]` empty.

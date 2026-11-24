@@ -10,7 +10,7 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 | M2 | Im Plan · {Mi} · fest | In the plan · {Wed} · fixed |
 | M3 | Im Plan · noch ohne Tag | In the plan · no day yet |
 | M4 | Im Plan · war {Mo} | In the plan · was {Mon} |
-| M5 | Im Plan · {Mi} · in „{Haushalt}“ | In the plan · {Wed} · in “{Household}” |
+| M5 (a member folded into a placed pile, package 2; a bundle member only with the parked 5b) | Im Plan · {Mi} · in „{Finanzen checken}“ | In the plan · {Wed} · in “{Check finances}” |
 | M6 (name for screen readers: the visible text M1–M5, then the full date where there is one) | Im Plan · {Mi} – {Mittwoch, 2. Dezember}. Im Planer zeigen | In the plan · {Wed} – {Wednesday, 2 December}. Show in the planner |
 | M7 (⋯) | In den Plan · Nicht mehr planen | Add to plan · Stop planning |
 
@@ -57,33 +57,41 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 | P14 (budget line, by budgets; amount through `SensitiveValue`) | {Lebensmittel} · {40 €} über dem Rahmen | {Groceries} · {€40} over budget |
 | P15 (mail's queue line in the mail pile, by mail: the count P3, then this button; it opens mail's `PlanAllDialog`) | In den Plan … ({n}) | Add to plan … ({n}) |
 
-## 5 · bundles and „Los“
+## 5 · steps and „Los“ (5a) · bundles (5b, parked)
 
 | Id | Deutsch | English |
 | --- | --- | --- |
 | B1 (meta of a ToDo with a checklist and of a routine; k = done steps; a list keeps its own word „7 Dinge“, then „2 von 7“) | {n} Schritte · {k} von {n} | {n} steps · {k} of {n} |
-| B2 (meta, things) | {n} Dinge · {k} von {n} | {n} things · {k} of {n} |
+| B2 (meta, things; parked with 5b) | {n} Dinge · {k} von {n} | {n} things · {k} of {n} |
 | B3 | Los | Go |
 | B4 (focus, eyebrow) | {Haushalt} · Schritt {k} von {n} | {Household} · step {k} of {n} |
 | B5 | Fertig · weiter | Done · next |
 | B6 | Überspringen | Skip |
 | B7 (while paused the built `t.focus.mode.resume`, as built) | Pause · Weiter | Pause · Resume |
 | B10 (after a skip, last step; „Jetzt“ walks the skipped steps again, „Später“ returns to the plan with them open) | {n} übersprungen. Jetzt oder später? · Jetzt · Später | {n} skipped. Now or later? · Now · Later |
-| B11 (selection bar) | Bündeln … | Bundle … |
-| B12 (dialog; cancel = the shared „Abbrechen“) | Ein Name für das Bündel · Bündeln | A name for the bundle · Bundle |
-| B13 (toast) | {n} Dinge sind jetzt „{Wohnung}“. · Rückgängig | {n} things are now in “{Flat}”. · Undo |
-| B14 (panel ⋯) | Auflösen · Als Routine speichern · Umbenennen … | Unbundle · Save as routine · Rename … |
-| B15 (toast) | Aufgelöst. Die Dinge liegen wieder einzeln auf {Mo}. · Rückgängig | Unbundled. The things are back on {Mon} one by one. · Undo |
+| B11 (selection bar; parked with 5b) | Bündeln … | Bundle … |
+| B12 (dialog; cancel = the shared „Abbrechen“; parked with 5b) | Ein Name für das Bündel · Bündeln | A name for the bundle · Bundle |
+| B13 (toast; parked with 5b) | {n} Dinge sind jetzt „{Wohnung}“. · Rückgängig | {n} things are now in “{Flat}”. · Undo |
+| B14 (panel ⋯; parked with 5b) | Auflösen · Als Routine speichern · Umbenennen … | Unbundle · Save as routine · Rename … |
+| B15 (toast; parked with 5b) | Aufgelöst. Die Dinge liegen wieder einzeln auf {Mo}. · Rückgängig | Unbundled. The things are back on {Mon} one by one. · Undo |
 | B16 (toast after the lookup confirms the new routine; „Ansehen“ opens `/routines`) | Routine „{Haushalt}“ angelegt. · Ansehen · Rückgängig | Routine “{Household}” created. · View · Undo |
-| B17 (step gone) | Gibt es nicht mehr | No longer exists |
-| B18 (module off) | {Modul} ist ausgeschaltet – „Los“ lässt diesen Schritt aus. | {module} is switched off – “Go” skips this step. |
+| B17 (step gone; parked with 5b) | Gibt es nicht mehr | No longer exists |
+| B18 (module off; parked with 5b) | {Modul} ist ausgeschaltet – „Los“ lässt diesen Schritt aus. | {module} is switched off – “Go” skips this step. |
 | B19 (key hint under the buttons, not on touch; the corner's „Verlassen“ is as built, `t.focus.mode.leave`) | Enter: fertig · S: überspringen · P: Pause · Esc: zum Plan | Enter: done · S: skip · P: pause · Esc: to the plan |
-| B20 (line ⋯) | Aus dem Bündel nehmen | Take out of the bundle |
-| B21 (line ⋯, phone) | Nach oben · Nach unten | Move up · Move down |
+| B20 (line ⋯; parked with 5b) | Aus dem Bündel nehmen | Take out of the bundle |
+| B21 (line ⋯, phone; parked with 5b) | Nach oben · Nach unten | Move up · Move down |
 | B23 (the filled button on the last step: finishes it, ticks the carrying thing, returns to the plan with the thing's toast) | Fertig | Done |
 | B24 (the announced step change, polite live region) | Schritt {k} von {n}: {Schritt} | Step {k} of {n}: {step} |
 | B25 (toast when the lookup finds a routine of that name before emitting; nothing is emitted; „Ansehen“ opens `/routines`) | Die Routine „{Haushalt}“ gibt es schon. · Ansehen | The routine “{Household}” already exists. · View |
 | B26 (quiet toast in „Los“ after a step) | Schritt erledigt. · Rückgängig | Step done. · Undo |
+
+## 8 · measured duration
+
+| Id | Deutsch | English |
+| --- | --- | --- |
+| Z1 (row) | {20} Min · wie zuletzt | {20} min · as last time |
+| Z2 („Dauer …“) | zuletzt {20}, {25}, {15} Min | last {20}, {25}, {15} min |
+| Z3 (settings) | Aus gemessener Zeit vorschlagen · Gemessene Zeiten löschen | Propose from measured time · Delete measured times |
 
 ## 1 · share · 3 · kinds in the field
 
@@ -109,7 +117,7 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 | K8 (the field's toast for a ToDo with only T11) | Liegt auf {Mo}, in „{Umzug}“. | On {Mon}, in “{Moving house}”. |
 | K9 (end of the toast for a thing made while a topic filter is on that does not take T11; „Alles zeigen“ ends the filter) | Nicht im Thema „{Umzug}“ · Alles zeigen | Not in topic “{Moving house}” · Show everything |
 
-## 9 · appointment · 11 · topic · struck: 7 · waiting, 8 · duration, 6 · places
+## 9 · appointment · 11 · topic · struck: 7 · waiting, 6 · places
 
 | Id | Deutsch | English |
 | --- | --- | --- |
@@ -137,9 +145,6 @@ Take these literally into `web/src/strings.ts` (planner block, or the block of t
 | W5 (chip when back) | Antwort da? · von {Vermieter} | Got an answer? · from {landlord} |
 | W6 (toast) | Kommt am {Mo 7. Dez.} wieder. · Rückgängig | Comes back on {Mon 7 Dec}. · Undo |
 | E1–E3 (struck with the map: stops, place, map jump) | {n} Stopps · {k} von {n} · Ort … · Ort · Ort suchen · Kein Ort · Auf der Karte ansehen | {n} stops · {k} of {n} · Place … · Place · Search places · No place · View on the map |
-| R1 (row) | {20} Min · wie zuletzt | {20} min · as last time |
-| R2 („Dauer …“) | zuletzt {20}, {25}, {15} Min | last {20}, {25}, {15} min |
-| R3 (settings) | Aus gemessener Zeit vorschlagen · Gemessene Zeiten löschen | Propose from measured time · Delete measured times |
 
 ## Rejected, and why
 

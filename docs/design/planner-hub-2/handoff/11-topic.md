@@ -4,7 +4,7 @@ Concept: [CONCEPT-INTAKE, idea 11](../CONCEPT-INTAKE.md). Common parts: [00-comm
 
 ## Giving a topic
 
-- Row ⋯ → T1 „Thema …“ (in the group „Mehr“); selection bar: T1 after B11. Offered only on rows whose module is linkable (`isLinkable`) and on appointment (blocker) rows; never on pile and bundle rows.
+- Row ⋯ → T1 „Thema …“ (in the group „Mehr“); selection bar: T1 after „Verschieben …“ (after B11, should 5b be built). Offered only on rows whose module is linkable (`isLinkable`) and on appointment (blocker) rows; never on pile rows (and bundle rows, should 5b ever be built).
 - After a topic was used once, the row's ⋯ offers it directly: T12 „Thema: Umzug“ (the last used topic; device-local memory, not synced), one entry above T1; a tap gives the topic at once (toast T8, one undo).
 - Chooser = `Dialog`, title T2: one `TextField` (combobox: typing filters, Enter on a new name creates it), below it his topics as a list of radio lines (≤ 8, then scroll inside the dialog), „Kein Thema“ last. A tap on a line chooses it. The planner never reads ToDo tags.
 - A thing has one topic. Toast T8, one undo. The link stores the thing (`entityId` for occurrence rows); `topic` links are written only by this action, never through the bus.
@@ -36,5 +36,5 @@ Chooser foot: T10 „Themen verwalten …“ → Planer → Einstellungen, secti
 - Two devices: the same thing given two topics offline → both rows exist; the reader takes the later `updatedAt`; the other row is removed only inside the next „Thema …“ action on that thing (never by a background job, never inside another action's undo entry).
 - K9 on a Rechnung typed while filtered; its „Alles zeigen“ ends the filter.
 - Write spy: switching the filter writes nothing synced; T12's memory is device-local.
-- „Thema …“ / T12 absent on pile, bundle and non-linkable rows, present on blocker rows.
+- „Thema …“ / T12 absent on pile and non-linkable rows, present on blocker rows.
 - e2e seed `e2e/seed/plan-topic.seed.spec.ts`; `planner-hub-2.spec.ts` D4 re-measured (rows 7, taps 22 / phone 23, perThing 15, switches 0, planFilter ja), with `rows` and `planFilter` read after the filter is on.
