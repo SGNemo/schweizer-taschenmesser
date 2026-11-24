@@ -59,7 +59,7 @@ export function usePlanMarks(
   things: readonly PlanMarkInput[],
 ): Map<string, PlanMarkState> | undefined {
   const sig = things
-    .map((x) => `${x.id}${x.done ? '!' : ''}${x.fallback ? '+' : ''}`)
+    .map((x) => `${x.id}${x.done ? '!' : ''}${x.fallback ? `+${x.fallbackKey ?? ''}` : ''}`)
     .sort()
     .join(',');
   return useSharedLiveQuery(`planMarks|${module}|${sig}`, () => planMarks(module, things));
@@ -71,6 +71,7 @@ export function PlanMark({
   id,
   variant = 'meta',
   fallback,
+  fallbackKey,
   done,
   onGo,
 }: {
@@ -79,12 +80,19 @@ export function PlanMark({
   variant?: PlanMarkVariant;
   /** The module's own „im Plan“ field: M3 while the planner has no row yet. */
   fallback?: boolean;
+  /** The occurrence row the fallback stands for (`<module>:<id>:<date>`). */
+  fallbackKey?: string;
   done?: boolean;
   onGo?: () => void;
 }) {
   const state = useSharedLiveQuery(
-    `planMark|${module}:${id}|${done ? 1 : 0}${fallback ? 1 : 0}`,
-    () => planMarkOf(module, { id, ...(fallback ? { fallback } : {}), ...(done ? { done } : {}) }),
+    `planMark|${module}:${id}|${done ? 1 : 0}${fallback ? `1${fallbackKey ?? ''}` : 0}`,
+    () =>
+      planMarkOf(module, {
+        id,
+        ...(fallback ? { fallback, ...(fallbackKey ? { fallbackKey } : {}) } : {}),
+        ...(done ? { done } : {}),
+      }),
   );
   return <PlanMarkLink state={state} variant={variant} {...(onGo ? { onGo } : {})} />;
 }

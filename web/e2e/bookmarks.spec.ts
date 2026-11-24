@@ -211,7 +211,7 @@ test.describe('Plan and widget (round 2026-11, package 3)', () => {
     await add(page, 'Dune', '', '', 'Film/Serie');
     await (await rowMenu(page, 'Dune')).getByRole('menuitem', { name: 'In den Plan' }).click();
     await expect(page.getByText('Steht jetzt im Plan.')).toBeVisible();
-    await expect(rowOf(page, 'Dune')).toContainText('im Plan');
+    await expect(rowOf(page, 'Dune')).toContainText('Im Plan · noch ohne Tag');
     await ready(page, '/planner');
     // A wish has no day: nothing is spread unasked (planner rethink, package 1), so it sits in the folded group
     // „Noch ohne Tag“ until the person lays it on a day or applies „Neu verteilen“.
@@ -226,7 +226,7 @@ test.describe('Plan and widget (round 2026-11, package 3)', () => {
     )
       .getByRole('menuitem', { name: 'Aus dem Plan nehmen' })
       .click();
-    await expect(rowOf(page, 'Dune')).not.toContainText('im Plan');
+    await expect(rowOf(page, 'Dune')).not.toContainText('Im Plan');
     await expect(rowOf(page, 'Dune')).toBeVisible();
   });
 

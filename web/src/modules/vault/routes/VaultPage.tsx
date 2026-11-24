@@ -3,7 +3,6 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router';
 import { blobKeys, getBlob, pruneBlobs } from '@/core/blobs';
-import { PlanMarkLink, usePlanMarks } from '@/core/entitylinks/PlanMark';
 import { getPlatform } from '@/core/platform';
 import { formatDay, today } from '@/core/time/dates';
 import { StartDataMenu } from '@/core/importer/StartDataMenu';
@@ -170,11 +169,6 @@ export default function VaultPage() {
         day,
       ),
     [docs, category, query, day, live, labels],
-  );
-  // „Im Plan · Mi“ (planner hub 2, 10b): one read for the shown documents (their occurrence keys `<id>:cancel:…`).
-  const marks = usePlanMarks(
-    'vault',
-    shown.map((d) => ({ id: d.id })),
   );
 
   const counts = countByResolved(docs ?? [], cats);
@@ -381,9 +375,8 @@ export default function VaultPage() {
                       title={d.title}
                       current={wide && detail?.id === d.id}
                       onOpen={() => (wide ? setPicked(d.id) : setTarget(d))}
-                      below={
-                        marks?.get(d.id) ? <PlanMarkLink state={marks.get(d.id)} /> : undefined
-                      }
+                      // No plan mark on the row: it broke the page's stimulus budget, so „Im Plan · Mi“ is in the
+                      // detail only (package 10b, hand-off 10 „Stimulus“).
                       meta={metaLine([
                         nameOf(categoryOfDoc(d, live)),
                         d.provider,

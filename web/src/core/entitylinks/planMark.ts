@@ -45,6 +45,8 @@ export interface PlanMarkInput {
   id: string;
   /** The module's own „im Plan“ field (bookmarks `inPlan`, subscriptions `plannedDeadline`). */
   fallback?: boolean;
+  /** The plan row the fallback stands for when it is an occurrence (`<module>:<id>:<date>`); else `<module>:<id>`. */
+  fallbackKey?: string;
   /** A done thing has no mark. */
   done?: boolean;
 }
@@ -253,7 +255,7 @@ export async function planMarks(
       // The module's own field: the planner lists it without a day – as the thing itself, or as its open carrier
       // ToDo (a mail thread planned as a ToDo), whose row under „Noch ohne Tag“ is then the target.
       const via = (carriersOf.get(id) ?? []).find((k) => !doneCarriers.has(k));
-      out.set(id, { kind: 'noDay', rowKey: via ?? key });
+      out.set(id, { kind: 'noDay', rowKey: thing.fallbackKey ?? via ?? key });
     }
   }
   return out;

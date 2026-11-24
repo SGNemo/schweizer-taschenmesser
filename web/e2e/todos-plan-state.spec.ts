@@ -113,6 +113,8 @@ const markedTasks = (page: Page) =>
   );
 
 const unplanned = (page: Page) => page.getByTestId('plan-filter-unplanned');
+/** The marks on the list's rows (a wide page also shows the picked task's mark in its detail panel). */
+const rowMarks = (page: Page) => page.locator('main li [data-testid="plan-mark"]');
 
 test('20 imported, 5 laid in the planner → 15 not in the plan; three into the plan tomorrow → 12; undo → 15', async ({
   page,
@@ -126,13 +128,16 @@ test('20 imported, 5 laid in the planner → 15 not in the plan; three into the 
 
   await ready(page, '/todos');
   await expect(unplanned(page)).toHaveText('Noch nicht im Plan · 15');
-  await expect(page.getByTestId('in-plan')).toHaveCount(5);
-  await expect(page.getByTestId('in-plan').first()).toHaveText('im Plan: Mi');
+  // The shared mark (package 10b), read from the planner: only the five laid things carry one.
+  await expect(rowMarks(page)).toHaveCount(5);
+  await expect(rowMarks(page).first()).toHaveText('Im Plan · Mi');
 
   // Only what still needs a day.
   await unplanned(page).click();
   await expect(page.getByRole('checkbox', { name: 'Ding 01', exact: true })).toHaveCount(0);
-  await expect(page.getByTestId('plan-mark')).toHaveCount(15);
+  await expect(page.getByRole('checkbox', { name: 'Ding 06', exact: true })).toHaveCount(1);
+  // Not in the plan: no mark (the entry is in ⋯).
+  await expect(rowMarks(page)).toHaveCount(0);
 
   await page.getByTestId('todos-select').click();
   for (const name of ['Ding 06', 'Ding 07', 'Ding 08'])
@@ -143,21 +148,20 @@ test('20 imported, 5 laid in the planner → 15 not in the plan; three into the 
   await expect(page.getByRole('status').last()).toContainText('3 Dinge liegen auf Mi');
   await expect(unplanned(page)).toHaveText('Noch nicht im Plan · 12');
   // The filter still shows what needs a day: the three left it.
-  await expect(page.getByTestId('plan-mark')).toHaveCount(12);
   await expect(page.getByRole('checkbox', { name: 'Ding 06', exact: true })).toHaveCount(0);
 
   await page.getByTestId('plan-filter-planned').click();
-  await expect(page.getByTestId('in-plan')).toHaveCount(8);
+  await expect(rowMarks(page)).toHaveCount(8);
 
   // One undo takes the three back.
   await page.getByRole('button', { name: 'Rückgängig' }).last().click();
   await expect(unplanned(page)).toHaveText('Noch nicht im Plan · 15');
-  await expect(page.getByTestId('in-plan')).toHaveCount(5);
+  await expect(rowMarks(page)).toHaveCount(5);
 
   // The jump: ⋯ → „Im Planer zeigen“ opens the planner on Wednesday with the row in view.
   await page
     .getByRole('listitem')
-    .filter({ has: page.getByTestId('in-plan') })
+    .filter({ has: page.getByTestId('plan-mark') })
     .first()
     .getByRole('button', { name: 'Weitere Aktionen' })
     .first()

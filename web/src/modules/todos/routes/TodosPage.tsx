@@ -716,6 +716,7 @@ export default function TodosPage() {
     split,
     detail?.id,
     planOf,
+    marks,
     selecting,
     selection.selected,
   ]);

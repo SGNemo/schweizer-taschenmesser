@@ -4,7 +4,7 @@
  * placed from the planner's side (an occurrence key) shows „Im Plan · Mi“ – and `plannedDeadline` stays what it is,
  * the module's request: its fallback (M3) while the planner has no row. Drawing writes nothing.
  */
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
@@ -60,7 +60,7 @@ afterEach(() => {
 });
 
 describe('Abos: the plan mark', () => {
-  it('a deadline placed from the planner shows M1 on the row and in the dialog; nothing is written', async () => {
+  it('a deadline placed from the planner shows M1 in the dialog (not on the row: the stimulus budget); nothing is written', async () => {
     const s = await add();
     await assignments.create(
       {
@@ -89,23 +89,24 @@ describe('Abos: the plan mark', () => {
     expect(inDialog).toHaveAccessibleName(
       'Im Plan · Mi – Mittwoch, 18. November. Im Planer zeigen',
     );
-    await waitFor(() =>
-      expect(screen.getAllByRole('link', { name: /^Im Plan · Mi – / })).toHaveLength(2),
-    );
+    // The row has no mark: the list broke its stimulus budget with it (hand-off 10 „Stimulus“).
+    await new Promise((r) => setTimeout(r, 100));
+    expect(screen.getAllByRole('link', { name: /^Im Plan · Mi – / })).toHaveLength(1);
     expect(await snapshot()).toBe(before);
   });
 
   it('`plannedDeadline` is the fallback (M3) while the planner has no row; off → no mark', async () => {
     const s = await add({ plannedDeadline: '2026-11-18' });
     const view = render(
-      <MemoryRouter initialEntries={['/subscriptions']}>
+      <MemoryRouter initialEntries={[`/subscriptions?open=${s.id}`]}>
         <SubscriptionsPage />
       </MemoryRouter>,
     );
     const mark = await screen.findByRole('link', { name: /^Im Plan · noch ohne Tag/ });
+    // To the planner's row of that deadline (its occurrence key) under „Noch ohne Tag“.
     expect(mark).toHaveAttribute(
       'href',
-      `/planner?item=${encodeURIComponent(`subscriptions:${s.id}`)}`,
+      `/planner?item=${encodeURIComponent(`subscriptions:${s.id}:2026-11-18`)}`,
     );
     // The field stays as it was.
     expect((await subscriptionRepo.get(s.id))?.plannedDeadline).toBe('2026-11-18');

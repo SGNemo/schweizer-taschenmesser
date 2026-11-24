@@ -7,18 +7,19 @@ import { DESKTOP, PHONE } from './guards';
  * The mark „Im Plan · Mi“ (planner hub 2, package 10b, hand-off 10): an invoice, a list, a note (through its plan
  * ToDo), a subscription (an occurrence the planner laid) and a Merkliste entry, all placed on Wednesday, show M1 in
  * their own module – and the mark lands on the plan row it matched: the subscription on its occurrence row, the note
- * on its carrier ToDo's row. Invented rows only (no seed data needed).
+ * on its carrier ToDo's row. Rechnungen and Abos carry the mark in their detail only (their lists broke the stimulus
+ * budget with it), so they are opened with `?open=`. Invented rows only (no seed data needed).
  */
 const TODAY = '2026-11-30'; // Monday
 const WEDNESDAY = '2026-12-02';
 const base = { createdAt: 1, updatedAt: 1, deviceId: 'e2e', deletedAt: null, _f: {} };
 
 const THINGS = [
-  { path: '/invoices', title: 'Musikschule Beispiel', rowKey: 'invoices:i3' },
+  { path: '/invoices?open=i3', title: 'Musikschule Beispiel', rowKey: 'invoices:i3' },
   { path: '/lists', title: 'Einkauf', rowKey: 'lists:shopping-default' },
   { path: '/notes', title: 'Regal im Flur', rowKey: 'todos:nt' },
   {
-    path: '/subscriptions',
+    path: '/subscriptions?open=s1',
     title: 'Streamingdienst Beispiel',
     rowKey: 'subscriptions:s1:2026-12-03',
   },
@@ -147,8 +148,11 @@ for (const [name, viewport, mobile] of [
       for (const thing of THINGS) {
         await page.goto(thing.path);
         await expect(page.locator('main h1')).toBeVisible();
-        const mark = page
-          .locator('main')
+        // In the page, or in the detail dialog the page opened (`?open=`).
+        const scope = thing.path.includes('?open=')
+          ? page.getByRole('dialog')
+          : page.locator('main');
+        const mark = scope
           .getByRole('link', { name: /^Im Plan · Mi – Mittwoch, 2\. Dezember\. Im Planer zeigen$/ })
           .first();
         await expect(mark, thing.path).toBeVisible();

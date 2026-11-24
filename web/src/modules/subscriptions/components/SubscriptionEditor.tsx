@@ -42,6 +42,10 @@ import { deleteWithUndo } from '@/core/undo/withToast';
 export const plannedNow = (s: Subscription, day: string = today()): boolean =>
   !!s.plannedDeadline && nextCancelDeadline(s, day)?.deadline === s.plannedDeadline;
 
+/** The planner row of that deadline (its occurrence key, as `plannable.ts` names it). */
+export const plannedKey = (s: Pick<Subscription, 'plannedDeadline'> & { id: string }) =>
+  s.plannedDeadline ? `subscriptions:${s.id}:${s.plannedDeadline}` : undefined;
+
 export type SubscriptionTarget = Stored<Subscription> | { draft: true } | null;
 
 export function SubscriptionEditor({
@@ -69,6 +73,7 @@ export function SubscriptionEditor({
           id={existing.id}
           variant="detail"
           fallback={plannedNow(existing)}
+          fallbackKey={plannedKey(existing)}
           onGo={onClose}
         />
       ) : null}

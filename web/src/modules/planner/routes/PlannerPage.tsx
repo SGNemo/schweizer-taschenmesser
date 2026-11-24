@@ -194,6 +194,10 @@ export default function PlannerPage() {
     () => params.get('day') ?? undefined,
   );
   const lookFor = useRef(params.get('item') ?? undefined);
+  const lookSince = useRef<number | undefined>(undefined);
+  // `?item=` of a row in the folded „Danach“ of the shown day (the phone folds it): open for this visit, his own
+  // toggle ends it (package 10b).
+  const [revealThen, setRevealThen] = useState(() => params.get('item') ?? undefined);
   const storedPick = useLiveQuery(
     async () => (await getMeta<{ date: string; on: string }>(DAY_KEY)) ?? null,
     [],
@@ -1040,10 +1044,17 @@ export default function PlannerPage() {
   useEffect(() => {
     // Once what holds the row is drawn: the day sheet on „Plan“, the board's open rows on „Noch offen“.
     if (!lookFor.current || !(tab === 'open' ? data : shownDay)) return;
-    const row = document.querySelector<HTMLElement>(
-      `[data-row-key="${CSS.escape(lookFor.current)}"]`,
-    );
-    // Asked once: the board is drawn, so a row that is not there (taken off meanwhile) is not waited for.
+    const rows = [
+      ...document.querySelectorAll<HTMLElement>(
+        `[data-row-key="${CSS.escape(lookFor.current)}"]`,
+      ),
+    ];
+    // A copy in sight first (a row can be drawn twice, the band beside the sheet); else the one in a folded group.
+    const row = rows.find((r) => !r.closest('[hidden]')) ?? rows[0];
+    // The rows arrive with the board's reads: a short wait for the row before it counts as gone (UI timing only).
+    lookSince.current ??= performance.now();
+    if (!row && performance.now() - lookSince.current < 3000) return;
+    // Asked once: the board is drawn, so a row that is not there (taken off meanwhile) is not waited for longer.
     lookFor.current = undefined;
     if (!row) return;
     const bring = () => {
@@ -1889,11 +1900,16 @@ export default function PlannerPage() {
                     renderRow={(row, next) => renderRow(row, shownDay, next)}
                     onEditDay={() => setSheetDate(shownDay.date)}
                     // While choosing („Auswählen“, „Nur das hier …“) every row of the day is in reach.
-                    thenOpen={thenOpen || dayPicking === shownDay.date}
-                    choosing={dayPicking === shownDay.date}
-                    onThenToggle={(open) =>
-                      void setMeta(phone ? THEN_NARROW_KEY : THEN_WIDE_KEY, open)
+                    thenOpen={
+                      thenOpen ||
+                      dayPicking === shownDay.date ||
+                      (!!revealThen && shownDay.rows.some((r) => r.itemKey === revealThen))
                     }
+                    choosing={dayPicking === shownDay.date}
+                    onThenToggle={(open) => {
+                      setRevealThen(undefined);
+                      void setMeta(phone ? THEN_NARROW_KEY : THEN_WIDE_KEY, open);
+                    }}
                     empty={emptySheet}
                     // „Rest verteilen“ only where something can go (a day of dated turns and locks alone has nothing).
                     onRest={
