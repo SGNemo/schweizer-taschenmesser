@@ -28,7 +28,8 @@ export type UpdateErrorCode =
   | 'folder-not-writable'
   | 'signature-invalid'
   | 'version-not-newer'
-  | 'version-unreadable';
+  | 'version-unreadable'
+  | 'wrong-app';
 
 /** The Rust side prefixes its errors with a code (`folder-not-writable: …`); everything else is generic. */
 export function installErrorCode(e: unknown): UpdateErrorCode {
@@ -38,6 +39,8 @@ export function installErrorCode(e: unknown): UpdateErrorCode {
   // NS2: the signed payload is older than the running app (a rollback); nothing was installed
   if (text.startsWith('version-not-newer')) return 'version-not-newer';
   if (text.startsWith('version-unreadable')) return 'version-unreadable';
+  // S13 way D: the downloaded APK belongs to another app (package name differs); nothing was offered
+  if (text.startsWith('wrong-app')) return 'wrong-app';
   return 'install-failed';
 }
 
