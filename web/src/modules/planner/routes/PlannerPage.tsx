@@ -1045,9 +1045,7 @@ export default function PlannerPage() {
     // Once what holds the row is drawn: the day sheet on „Plan“, the board's open rows on „Noch offen“.
     if (!lookFor.current || !(tab === 'open' ? data : shownDay)) return;
     const rows = [
-      ...document.querySelectorAll<HTMLElement>(
-        `[data-row-key="${CSS.escape(lookFor.current)}"]`,
-      ),
+      ...document.querySelectorAll<HTMLElement>(`[data-row-key="${CSS.escape(lookFor.current)}"]`),
     ];
     // A copy in sight first (a row can be drawn twice, the band beside the sheet); else the one in a folded group.
     const row = rows.find((r) => !r.closest('[hidden]')) ?? rows[0];
