@@ -72,7 +72,7 @@
     skew: [0, 6, 12, 20], // trees lean with the wind (degrees, by wind 0..3)
     shelter: { x1: 1300, op: 0.75, y0: 196, y1: 252 }, // widened after the contrast measurement (was x1 1120, op .62) // haze wash over the low ridges left, where the text lies
     // aurora curtains: x0, x1, base y, height share, wave phase; top = base − h(amount); only the first `few` at amount < .6
-    aurora: { bands: [[900, 1270, 198, 1, 0], [1090, 1490, 190, 0.85, 1.7], [1310, 1630, 200, 0.7, 3.1], [990, 1200, 206, 0.5, 4.4]], few: 2,
+    aurora: { bands: [[985, 1290, 198, 1, 0], [1100, 1490, 190, 0.85, 1.7], [1310, 1630, 200, 0.7, 3.1], [1020, 1210, 206, 0.5, 4.4]], few: 2,
       h: 128, top: 70, op: [0.2, 0.3], glow: [1260, 206, 520, 90] },
     meteors: [[1214, 76, 108], [1430, 116, 72], [1010, 66, 62]], // head x, y, tail length (up and to the right)
     motion: { drift: 16, rain: 2.4, rainHeavy: 1.6, snow: [10, 15], total: 12, fog: 20 },
