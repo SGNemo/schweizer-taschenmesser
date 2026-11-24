@@ -23,7 +23,7 @@ Not measured: speed on a phone (package 2 measures: one day's values – now, ri
 
 ## 2. What is calculated, from what
 
-Input: the place's latitude and longitude (the same rounded position the forecast uses; never leaves the device for this) and the time. No network.
+Input: the place's latitude and longitude (the same rounded position the forecast uses; never leaves the device for this), the real instant (`now()`), and the place's zone name (`Forecast.tz`, added in package 1a) for the bounds of its local day – computed with `Intl.DateTimeFormat` in that zone, so clock-change days are right. A forecast cached without `tz` uses the device's zone. No network.
 
 | Value | Use | Reference function |
 | --- | --- | --- |
@@ -44,7 +44,7 @@ Input: the place's latitude and longitude (the same rounded position the forecas
 
 - **Shape:** lit disc with four flat maria; the lit part is a half disc plus the terminator's half ellipse with `rx = r · |1 − 2k|` (k = illuminated fraction): concave below half, convex above. Below 35 % the dark side shows faintly (earthshine); below 2 % only a thin ring.
 - **Tilt:** the whole shape is rotated so that the lit side points where it does in the sky at the place and time (`crescentTilt`: + = lit side to the left of "up"). No waxing flag is needed in the scene, and the southern hemisphere is right by itself. Asserted in tests only for 3–97 % lit and altitude < 85°.
-- **Position:** drawn only while the moon is above the horizon. `t` on the arc from the azimuth (east = left end, south = top, west = right end; mirrored south of the equator), height from the altitude (0° at the ridge line, ≥ 60° at the top of the arc). Below the horizon at night: stars only – the chip and the card still say the phase.
+- **Position:** drawn only while the moon is above the horizon – at night, at dawn and at dusk alike (the full moon rises at dusk). `t` on the arc from the azimuth (east = left end, south = top, west = right end; mirrored south of the equator), height from the altitude (0° at the ridge line, ≥ 60° at the top of the arc). Below the horizon at night: stars only – the chip and the card still say the phase.
 - **Light:** stars thin out with the moon's light (× (1 − 0.6 k)); clouds get a lit upper edge; under an overcast deck a pale glow marks the place.
 - **Day moon:** by day, moon up, 20–97 % lit, cloud ≤ 60 %: a small pale moon (r 22, 55 % opacity), no glow.
 - **Small versions:** the porthole draws the same shape with the same tilt. The glyph in a day row has no moment: upright, lit on the right when waxing north of the equator, on the left south of it, in `currentColor` (lit = filled, dark = a 1 px ring).
@@ -59,16 +59,16 @@ Input: the place's latitude and longitude (the same rounded position the forecas
 
 | Where | What |
 | --- | --- |
-| Hero, third chip at night | moon glyph + "{Phase} · {n} %" (by day the chip is UV as before) |
-| New card "Mond & Himmel" in the aside, under "Atemwege & Allergie" | glyph 64 px, name, "{n} % beleuchtet", moonrise and moonset of the local day (or "Der Mond geht heute nicht auf"), next full moon and next new moon with date, supermoon line; from package 3 the next sky event |
+| Hero, third chip at night | moon glyph + "{Phase} · {n} %" (by day the chip is UV as before); on the phone, where the third chip lives in the rest line below the stage, that line begins with "{Phase} · {n} %" |
+| New card "Mond & Himmel" in the aside, under "Atemwege & Allergie" (the aside's landmark name becomes "Luft, Mond & Himmel") | glyph 64 px, name, "{n} % beleuchtet", moonrise and moonset of the local day (or "Der Mond geht heute nicht auf"), next full moon and next new moon with date, supermoon line; from package 3 the next sky event |
 | Every forecast day row | glyph 18 px + name at the end of the row; accessible name "Mond: {Phase}" |
 | Overview widget, overview line | the porthole shows the phase; no extra word |
 
-Switch "Mond und Himmelsereignisse" (module setting, on by default): off removes chip, card, row glyphs and events; the scene then draws the moon as a plain disc at a fixed place, as today.
+Switch "Mond und Himmelsereignisse" (shared `weather` scope, on by default): off removes chip, card, row glyphs and events; the scene then draws **no moon at all** (stars only), because a plain disc would claim a phase and a place it does not know. The same holds for package 1b, before the moon module exists.
 
 ## 7. Test data (from `reference/vectors.json`; tolerances for the product tests)
 
-At 49.6° N, 11.0° E; times UTC. The first row is the moment of the maintainer's picture.
+At the sample place of the round (49.6° N, 11.0° E; key `lindenau` in the fixtures); times UTC. The first row is the moment of the maintainer's picture.
 
 | UTC | lit % | waxing | name of the local day | distance km | altitude | tilt |
 | --- | --- | --- | --- | --- | --- | --- |

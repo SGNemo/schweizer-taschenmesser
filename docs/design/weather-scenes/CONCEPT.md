@@ -9,9 +9,9 @@ Moon: [CONCEPT-MOON](CONCEPT-MOON.md). Sky events: [CONCEPT-EVENTS](CONCEPT-EVEN
 3. **Text wins.** Every text on the sky has AA contrast in every scene; the scene keeps a shelter free for it. Chips, pills and the hint carry their own opaque backing and ink.
 4. **What the picture shows is also a word.** The scene is `aria-hidden`; phase, weather, frost, event stand as text.
 5. **One head.** No bar above it; the hint of the day lives in the stage and still says "berechnet, keine amtliche Warnung".
-6. **It comes to rest.** Motion runs about 12 s when the page appears, then stands still; none with `prefers-reduced-motion`, `data-motion="reduce"`, "Standbild", "Ruhig", a hidden page, or in any small version. Nothing blinks – a bolt is a still shape.
-7. **Local and cheap.** Moon and events are calculated on the device or read from a shipped table; no new network destination. One SVG per scene, at most 220 elements, animation only as `transform` on at most 9 groups ([A11Y §4](A11Y.md)).
-8. **Off is one tap.** "Bild im Wetter-Kopf": Mit Bewegung · Standbild · Schlicht (nur Himmel); "Mond und Himmelsereignisse" on / off.
+6. **It comes to rest.** Motion is the answer to opening the page: it runs **5 s**, then stands still; none with `prefers-reduced-motion`, `data-motion="reduce"`, "Standbild", "Schlicht", "Ruhig", "Modulfarben: Aus", a hidden page, or in any small version. Nothing blinks – a bolt is a still shape.
+7. **Local and cheap.** Moon and events are calculated on the device or read from a shipped table; no new network destination. One SVG per scene, at most 220 elements, animation only as `transform` (and one `opacity` fade of the precipitation) on at most 9 groups ([A11Y §4](A11Y.md)).
+8. **Off is one tap.** "Bild im Wetter-Kopf": Mit Bewegung · Standbild · Schlicht (nur Himmel); "Mond und Himmelsereignisse" on / off. Both live in the shared `weather` settings scope (`core/weather/settings.ts`, Einstellungen → Verbindungen → Wetter), because the overview reads them too.
 
 ## 1. Layers and the data they read
 
@@ -23,17 +23,17 @@ One SVG, `viewBox 0 0 1600 320`, `preserveAspectRatio="xMaxYMax slice"`: a wide 
 | 2 | `stars` | up to 60 points, 6 sparkles; fewer with cloud and moonlight | phase, `cloud_cover`, moon light and altitude |
 | 3 | `body` | sun (two rings + halo) or moon (true phase, tilt, maria) on an arc in the right third; a pale day moon | `is_day`, sunrise / sunset (position on the arc); moon: [CONCEPT-MOON](CONCEPT-MOON.md) |
 | 4 | `cloudsFar`, `clouds` | none … overcast deck by cover; rain and storm clouds darker and flat-based | `cloud_cover`, condition, wind level |
-| 5 | `ridgeFar` | two soft peaks, snow caps | season; caps: temperature ≤ 0°, snow falling or lying |
+| 5 | `ridgeAlp`, `ridgeFar` | a pale far range and a nearer mountain with two peaks, each summit with one darker flank; snow caps | season; caps: winter, temperature ≤ 0°, snow falling or lying |
 | 6 | `fog` | five soft bands between the ridges | WMO 45, 48 |
 | 7 | `ridgeMid` | forested hills, conifers | season, snow lying, wind level (lean) |
 | 8 | `event` | rainbow, meteors, bolt, eclipse parts | [CONCEPT-EVENTS](CONCEPT-EVENTS.md); bolt: WMO 95–99 |
 | 9 | `precip` | rain strokes, drizzle, snow dots, hail pellets; 30 % strength over the text shelter | WMO code (kind, intensity), wind level (slant) |
-| 10 | `ridgeNear` | foreground hill, three trees; wet, snowy, rimed, dry | condition, `snow_depth`, temperature, season |
+| 10 | `water`, `ridgeNear`, `shelter` | a small lake (reflects a low body, freezes at hard frost), foreground hill with three trees and bushes (wet, snowy, rimed, dry), the haze that keeps the left quiet | condition, `snow_depth`, temperature, season |
 | 11 | `wind` | three curled strokes, leaves in a storm | wind, gusts |
 
-**Text shelter:** nothing with hard contrast (body, clouds, bolt, rainbow, trees above the ridge line) left of x = 900; nothing but sky and stars above y = 60 (the title row with the gear). The overcast deck may cross: it is one flat tone.
+**Text shelter:** nothing with hard contrast (body, clouds, bolt, rainbow, trees above the ridge line) left of x = 900; nothing but sky and stars above y = 60 (the title row with the gear). The overcast deck may cross: it is one flat tone. **The shelter follows the crop:** whenever the stage shows fewer than 1600 units, `quietX` is set to the right edge of the text column (in scene units), so clouds, caps and full-strength precipitation stay right of the text at 1280 as at 412; the body keeps its own box.
 
-New data, all optional and additive in `Forecast` and in the cache schema: `code` (raw WMO, now / hour / day), `now.snowDepth` (m; one more variable `snow_depth` in the existing forecast request), `air.dust` (µg/m³; one more variable in the existing air request). Same host, same rounded position, no new data flow ([DATA-FLOWS](../../legal/DATA-FLOWS.md) row unchanged). A forecast cached without `code` draws from the group (intensity 2).
+New data, all optional and additive in `Forecast` and in the cache schema: `tz` (the IANA zone name the forecast response already carries as `timezone`; needed for the place's day bounds), `code` (raw WMO, now / hour / day), `now.snowDepth` (m; one more variable `snow_depth` in the existing forecast request), `air.dust` (µg/m³; one more variable in the existing air request). Same host, same rounded position, no new data flow ([DATA-FLOWS](../../legal/DATA-FLOWS.md) row unchanged). A forecast cached without `code` draws from the group (intensity 2).
 
 ## 2. Time of day (phase)
 
@@ -41,11 +41,11 @@ From today's `sunrise` / `sunset` at the place and the place's local time; witho
 
 | Phase | When | Sky | Body |
 | --- | --- | --- | --- |
-| `night` | more than 40 min before sunrise or after sunset | deep blue | moon if above the horizon, stars |
-| `dawn` | 40 min before sunrise → sunrise | dark above, warm glow at the horizon | glow only, last stars |
+| `night` | more than 40 min before sunrise or after sunset | deep blue | stars; from package 2 the moon while it is above the horizon |
+| `dawn` | 40 min before sunrise → sunrise | dark above, warm glow at the horizon | no sun, last stars; the moon if it is up (package 2) |
 | `golden` | sunrise → +45 min, and 60 min before sunset → sunset | pale blue to warm | low warm sun, partly behind the far ridge |
 | `day` | between | blue | sun on its arc: `t = (now − sunrise) / (sunset − sunrise)` |
-| `dusk` | sunset → +40 min | dark above, rose glow | glow only, first stars |
+| `dusk` | sunset → +40 min | dark above, rose glow | no sun, first stars; the moon if it is up (package 2) |
 
 Polar day / night (no sunrise or sunset in the data): `day` or `night` all along. With more than 85 % cloud or precipitation, twilight falls back to the grey sky of the condition and keeps the horizon glow at 40 %.
 
@@ -74,16 +74,16 @@ Polar day / night (no sunrise or sunset in the data): `day` or `night` all along
 
 Cloud count by `cloud_cover` (where the row says "by cover"): ≤ 10 none · ≤ 35 two small · ≤ 60 large + small · ≤ 85 two large + medium, body half covered · > 85 deck.
 
-**Strength and modifiers** (all thresholds are existing ones from `core/weather/logic.ts` `rate()` and `modules/weather/warnings.ts`):
+**Strength and modifiers** (wind 2 and 3 use the limits of `core/weather/logic.ts` `rate()`, hard frost the −5° of `modules/weather/warnings.ts`; wind 1, frost at 0° and heat at 30° are new limits of the picture only – they change no rating and no hint):
 
 | Modifier | Rule | Picture | Word |
 | --- | --- | --- | --- |
 | wind 1 | wind ≥ 20 or gusts ≥ 35 km/h | trees lean 6° | – |
 | wind 2 | wind ≥ 35 or gusts ≥ 50 | lean 12°, clouds stretched with streaks, wind strokes, rain slanted 28° | windig |
-| wind 3 | gusts ≥ 70 | lean 20°, leaves, rain 42° | Sturmböen |
-| frost 1 | temperature ≤ 0°, nothing falling | rime edge on crests and tree tops, caps on the peaks | Frost |
+| wind 3 | wind ≥ 50 or gusts ≥ 70 | lean 20°, leaves, rain 42° | Sturmböen |
+| frost 1 | temperature ≤ 0°, nothing falling | rime line on the crests, light conifer tops, caps on the peaks | Frost (only when neither a snow word nor "Schnee liegt" stands) |
 | frost 2 | temperature ≤ −5° | plus sparkles, paler meadow | Frost |
-| snow lies | `snow_depth` ≥ 1 cm, or it snows | white ridges, capped conifers | Schnee liegt |
+| snow lies | picture: `snow_depth` ≥ 1 cm, or it snows | white ridges, capped conifers | Schnee liegt (only when `snow_depth` ≥ 1 cm and the weather word is not a snow word) |
 | heat | temperature ≥ 30° by day | larger sun, warm haze band, dry meadow | Hitze |
 | season | month and hemisphere of the place (tropics: summer) | meadow and crown colours; winter crowns bare | – |
 
@@ -99,11 +99,11 @@ Cloud count by `cloud_cover` (where the row says "by cover"): ≤ 10 none · ≤
 
 ## 5. Building blocks
 
-- **Weather gets its own scene; `Sky` does not grow.** New `ui/weather-scene/` (`WeatherScene`, `ScenePorthole`, `MoonGlyph`; pure SVG, no state of its own) and a pure model `core/weather/scene.ts` (`sceneOf(forecast, nowIso, place, moon?, event?) → SceneState`), tested as a table. The music head never used `Sky`; when package 4 lands, `Sky` has no caller left and is removed with its `--sky-*` tokens.
+- **Weather gets its own scene; `Sky` does not grow.** New `ui/weather-scene/` (`WeatherScene`, `ScenePorthole`, `MoonGlyph`; pure SVG, no state of its own) and a pure model `core/weather/scene.ts` (`sceneOf(input) → SceneState`, signature in [handoff/00-common](handoff/00-common.md)), tested as a table. `core/` and `ui/` are importable from the module and from `home/`; nothing imports the weather module. The music head never used `Sky`; when package 4 lands, `Sky` has no caller left and is removed with its `--sky-*` tokens.
 - Colours as `--scene-*` tokens in `ui/tokens.css` ([handoff/00-common](handoff/00-common.md)); ridge tones are mixed from a base and the sky's bottom stop (`color-mix`), so one palette per phase suffices.
 - The scene sets the stage's ink: `data-ink="light|dark"` on the stage replaces `HeadSurface`'s `:has([data-sky='night'])`.
 - **"Ruhig" / "Modulfarben: Aus":** the same shapes in greys at low contrast (no colour, no motion), ink by the theme – the picture stays a picture, the head stays readable (A7).
-- **"Schlicht":** layers 1 and 3 only (sky and body with the true phase).
+- **"Schlicht":** layers 1 and 3 only (sky and body: the sun by day, from package 2 the moon in its true phase).
 
 ## 6. Size and place
 
@@ -112,9 +112,9 @@ Cloud count by `cloud_cover` (where the row says "by cover"): ≤ 10 none · ≤
 | Stage height | **280 px** (today 174; limit 320) | 280 px | **≤ 312 px** (today 278) |
 | Title row | 56 px: plate, eyebrow, place as h1, gear at the right end – on sky and stars only | same | 44 px, then the module row 44 px on its own opaque backing |
 | Scene | all 1600 units; body and peaks in the right third | the right ~1150 units (slice) | the right ~570 units; the body sits below the module row |
-| Text | temperature, detail line, hint, chips, rest line in the left half, ending above the left ridges (y ≤ 250) | same; the rest line may wrap once | temperature and detail line left of the body; hint; one row of two chips; the rest line (with the third chip's fact) in the page below the stage |
+| Text | temperature, detail line, hint, chips, rest line in the left half, ending above the left ridges (y ≤ 250) | same; the rest line may wrap once; `quietX` at the text column's edge | temperature and detail line left of the body; hint; one row of two chips (rain / dry and wind – on an event day the event chip takes the wind chip's place and the wind goes to the rest line); the rest line in the page below the stage begins with the third chip's fact (UV, sunrise or the moon) |
 
-The stage grows by 106 px on the desktop – the price for "larger"; the page below starts lower by that much minus the 86 px the hint bar no longer takes (net +20 px with a hint, +106 px without). On the phone the stage grows by at most 34 px while the 107 px of the hint bar above it go away.
+Heights by hints (desktop / phone): none 280 / 272 · one 280 / 272 · two ≤ 290 / ≤ 300; the guard stays 320. The stage grows by 106 px on the desktop – the price for "larger"; the page below starts lower by that much minus the 86 px the hint bar no longer takes (74 px + 12 px margin; net +20 px with a hint, +106 px without). On the phone the stage may grow by up to 34 px while the 107 px of the hint bar (95 + 12) go away.
 
 ## 7. The hint in the head
 
@@ -140,10 +140,10 @@ The stage grows by 106 px on the desktop – the price for "larger"; the page be
 
 | Layer | Moves | How long | Still picture |
 | --- | --- | --- | --- |
-| clouds | drift 16 units to the lee | once, 12 s, ease-out | at the end position |
-| precip | rain tile loop 2.4 s (heavy 1.6 s), snow 10 s / 15 s | 12 s, then fades into the drawn marks | marks in place |
-| fog | bands ±20 units | once, 12 s | in place |
-| trees (wind ≥ 2) | sway ±2° | three times | leaning |
+| clouds | drift 16 units to the lee | once, 5 s, ease-out | at the end position |
+| precip | rain tile loop 2.4 s (heavy 1.6 s), snow 10 s / 15 s | 5 s (a fractional loop: both tiles are drawn, so any stop is a whole picture) | marks in place |
+| fog | bands ±20 units | once, 5 s | in place |
+| trees (wind ≥ 2) | sway ±2° | three times in 5 s | leaning |
 | body, stars, bolt, rainbow, eclipse, meteors, ridges | never | – | – |
 
-Plays when the weather page becomes visible (and again after the page was hidden for more than a minute), pauses while `document.hidden` or the stage is scrolled away. Widgets, portholes and glyphs never move.
+Plays once when the weather page is opened (and again after the page was hidden for more than a minute), pauses while `document.hidden` or the stage is scrolled away. Widgets, portholes and glyphs never move. **Why motion is on by default** although FOCUS says "no extra animation except feedback to an action": it is the 5-second answer to opening the page, ends by itself, and is one of three options – recorded as a decision of the round for the maintainer to overturn (then the default is "Standbild").

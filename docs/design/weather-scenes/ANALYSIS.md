@@ -9,8 +9,8 @@ Measured on `develop` at b62c7a6 in the e2e build, Open-Meteo answered by a fixt
 | Place | Use | Size |
 | --- | --- | --- |
 | Weather head (`modules/weather/components/WeatherHero.tsx`) | backdrop of the stage | moon 56 px, cloud 160 × 52 px in a stage of 1650 × 174 px (1920) · moon 36 px, cloud 72 × 24 px in 412 × 278 px (phone) |
-| Weather page without a place (`routes/WeatherPage.tsx`) | `Sky kind="clear"` | same |
-| Overview widget (`widgets/WeatherWidget.tsx`) | round swatch `compact` | 56 px in a card of 379 × 205 px |
+| Weather page without a place (`modules/weather/routes/WeatherPage.tsx`) | `Sky kind="clear"` | same |
+| Overview widget (`modules/weather/widgets/WeatherWidget.tsx`) | round swatch `compact` | 56 px in a card of 379 × 205 px |
 | Overview line (`home/WeatherGlance.tsx`) | the swatch, scaled | 28 px; only when no weather card is on the overview |
 | Music head | **not used** – `MusicHero` has its own cover tone and only cites `Sky` as the precedent for the calm rule | – |
 
@@ -48,7 +48,7 @@ The cached forecast (`core/weather/cache.ts`, `tm-weather`) has no version and s
 | A7 | **"Ruhig" / "Modulfarben: Aus" at night, light theme:** grey wash with light ink, 1.1 : 1 – the whole head is invisible | critical | the calm scene carries its own ink |
 | A8 | Rain sky, light theme: dark ink on the top stop 3.2 : 1 (eyebrow fails AA) | medium | every sky is either light enough for dark ink or dark enough for light ink, measured |
 | A9 | No test guards the contrast on the sky (`tokens.test.ts` has no `--sky-*`; axe runs on `/weather` only without a place) | medium | contrast table per scene as a unit test |
-| A10 | The moon is a plain disc: no phase, same place every night; nothing tells a snowy night from a clear one | medium | packages 1 and 2 |
+| A10 | The moon is a plain disc: no phase, same place every night; nothing tells a snowy night from a clear one | medium | packages 1b and 2 |
 | A11 | Frost hint uses the icon `cloudSnow` although nothing falls | low | `thermometer` for frost (no snowflake in the icon set) |
 | A12 | "fühlt sich an wie -9°": the minus is a hyphen, the figure uses a different one | low | not part of this round; noted for the wording pass |
 
@@ -59,8 +59,9 @@ The cached forecast (`core/weather/cache.ts`, `tm-weather`) has no version and s
 ## 4. Limits the scene has to live with
 
 - Stage ≤ 320 px on both windows (`head-height.seed.spec.ts`); today 174 / 278 px.
-- Stimulus budget (`e2e/stimulus-budget.json`, `d1920--weather`, `p412--weather`): counts coloured `background-color` and skips SVG – a scene drawn as one SVG adds nothing; a `box-shadow` on a scene element would count (today's cloud is the one shadow).
+- **Ratchet-protected tests pin today's picture** (`web/scripts/ratchet.mjs`, [howto/ci-ratchet](../../howto/ci-ratchet.md)): everything under `e2e/seed/**` (the head-height spec with its "first span in `[data-sky]`" check), `ui/identity/identity.test.tsx` (`skyKind`, `data-sky`) and `ui/tokens.test.ts`. A package that must change them names the hit in its PR and waits for the maintainer; it never sets the label `stimulus-raise` itself.
+- Stimulus budget (`e2e/stimulus-budget.json`, `d1920--weather`, `p412--weather`): counts coloured `background-color` and skips SVG – a scene drawn as one SVG adds nothing; a `box-shadow` on a scene element would count (today's cloud is the one shadow, so `shadows` falls from 1 to 0 and the baseline is lowered – lowering is free).
 - Bundle: the weather page is lazy, but whatever the overview widget imports is on the critical path (budget 691 978 B gzip, 5 %).
 - Motion: `data-motion="reduce"` (device-local) and `prefers-reduced-motion` already zero every animation in `ui/global.css`; there is no shared page-visibility hook.
 - Widget rule (MODULE-IDENTITY "Widgets"): a card is a tone step without wash; a picture as the card's background is a named exception to decide ([CONCEPT §8](CONCEPT.md)).
-- `docs/features/weather.md` is partly stale (names files that no longer exist); package 1 refreshes it.
+- `docs/features/weather.md` is partly stale (names files that no longer exist); package 1a refreshes it.

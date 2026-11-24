@@ -703,7 +703,7 @@
     }
     function fall(inner, dur, n) {
       if (!s.motion) return inner;
-      return el('g', { class: 'sc-fall', style: '--fx:' + f(k * Ht) + 'px;--fy:' + Ht + 'px;--dur:' + dur + 's;--n:' + n }, inner);
+      return el('g', { class: 'sc-fall', style: '--fx:' + f(k * Ht) + 'px;--fy:' + Ht + 'px;--dur:' + dur + 's;--n:' + (5 / dur).toFixed(2) }, inner); // every motion ends after 5 s (fractional loop: both tiles are drawn)
     }
     var showers = c === 'showers' || c === 'snowShowers', x0 = 0, x1 = G.W, out = '';
     if (showers) { x0 = P.showers[0]; x1 = P.showers[1]; }

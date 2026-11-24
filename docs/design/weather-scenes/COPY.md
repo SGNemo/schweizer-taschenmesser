@@ -2,7 +2,7 @@
 
 German and English both go into `web/src/strings.weather.ts` / `strings.weatherPage.ts` (these bundles hold the languages inline; es / fr / pt-BR are frozen and not touched). Keys are proposals in the existing bundles (`tx` = `tWeather`, `tp` = `tWeatherPage`); a package may rename a key, never a word. Tone: [FOCUS-WORDING](../FOCUS-WORDING.md) – what is there, no exclamation marks, no superlatives ("Blutmond", "Jahrhundert-Finsternis" are not used). Numbers and dates through `core/i18n/format`; `{…}` are parameters. The picture is `aria-hidden`: every word below is also what a screen reader gets.
 
-## 1. Weather words (package 1)
+## 1. Weather words (package 1a; head, overview line, widget, hour cards and day rows alike)
 
 The word follows the WMO code, not the group of nine, so the word and the picture agree. `codeGroup` and the rating keep their nine groups. Key `tx.conditions.<id>`; `tx.codes` stays until nothing reads it.
 
@@ -31,19 +31,19 @@ The word follows the WMO code, not the group of nine, so the word and the pictur
 | `thunder` | 95 | Gewitter | thunderstorm |
 | `thunderHail` | 96, 99 | Gewitter mit Hagel | thunderstorm with hail |
 
-A forecast cached before package 1 has no code: the word falls back to `tx.codes[group]`.
+A forecast cached before package 1a has no code: the word is the id nearest to its group (`conditionId(undefined, group)`).
 
 Additions the picture needs a word for (appended to the detail line under the temperature, after the weather word, at most one, in this order of priority):
 
 | Key | When | German | English |
 | --- | --- | --- | --- |
-| `tp.sceneStorm` | gusts ≥ 70 km/h | Sturmböen | gale-force gusts |
+| `tp.sceneStorm` | wind ≥ 50 or gusts ≥ 70 km/h | Sturmböen | gale-force gusts |
 | `tp.sceneWindy` | gusts ≥ 50 km/h or wind ≥ 35 km/h | windig | windy |
-| `tp.sceneSnowLies` | snow depth ≥ 1 cm and it does not snow | Schnee liegt | snow on the ground |
-| `tp.sceneFrost` | temperature ≤ 0° and no snow word | Frost | frost |
+| `tp.sceneSnowLies` | snow depth ≥ 1 cm and the weather word is not a snow word | Schnee liegt | snow on the ground |
+| `tp.sceneFrost` | temperature ≤ 0°, no snow word and not "Schnee liegt" | Frost | frost |
 | `tp.sceneHeat` | temperature ≥ 30° by day | Hitze | heat |
 
-## 2. Chips and the hint in the head (package 1)
+## 2. Chips and the hint (words and icons package 1a; the pill in the head package 1b)
 
 | Key | German | English | Note |
 | --- | --- | --- | --- |
@@ -54,16 +54,18 @@ Additions the picture needs a word for (appended to the detail line under the te
 | `tp.warnLabel` | Wetterhinweis | Weather notice | name of the `role="note"`; unchanged |
 | `tp.warn.ice({day})` | {day}: gefrierender Regen, es kann glatt sein | {day}: freezing rain, it may be slippery | new hint kind `ice` (a day whose code is 56, 57, 66 or 67) |
 
+| `tp.warnNotifyHelp` | Eine Benachrichtigung bei Gewitter, Sturm, Starkregen, Glätte, Hitze oder Frost am Hauptort. | One notification for thunderstorms, gales, heavy rain, ice, heat or frost at your main place. | replaces today's help text, which does not know `ice` (keep any further sentence of the existing text) |
+
 The existing lines `tp.warn.storm|wind|rain|heat|frost` keep their words (German and English as they are). `tp.warnSource` (the sentence under the old bar) is replaced by `tp.warnComputed`. The frost hint's icon becomes `thermometer` (nothing falls), `ice` takes `cloudDrizzle`.
 
 Drawn only, not built (no source for official warnings): „Amtliche Warnung · {Art}“ / "Official warning · {kind}", link „Quelle“ / "Source".
 
-## 3. Settings (package 1, moon switch package 2)
+## 3. Settings (package 1b, moon switch package 2) – both in the shared `weather` scope, shown in Einstellungen → Verbindungen → Wetter
 
 | Key | German | English |
 | --- | --- | --- |
 | `tp.sceneSetting` | Bild im Wetter-Kopf | Picture in the weather head |
-| `tp.sceneSettingHelp` | Zeigt Wetter, Tageszeit und Mond als Bild. Bewegung läuft kurz an und kommt dann zur Ruhe. | Shows weather, time of day and moon as a picture. Motion starts briefly and then comes to rest. |
+| `tp.sceneSettingHelp` | Zeigt Wetter, Tageszeit und Mond als Bild. Bewegung läuft beim Öffnen fünf Sekunden und kommt dann zur Ruhe. | Shows weather, time of day and moon as a picture. Motion runs for five seconds when you open the page and then comes to rest. |
 | `tp.sceneMotion` | Mit Bewegung | With motion |
 | `tp.sceneStill` | Standbild | Still picture |
 | `tp.scenePlain` | Schlicht (nur Himmel) | Plain (sky only) |
@@ -97,6 +99,7 @@ Drawn only, not built (no source for official warnings): „Amtliche Warnung · 
 | `tp.moonSuperLine` | Vollmond in Erdnähe: er wirkt etwas größer und heller. | Full moon close to Earth: it looks a little larger and brighter. |
 | `tp.moonBlue` | Zweiter Vollmond in diesem Monat | Second full moon this month |
 | `tp.moonDayAria({phase})` | Mond: {phase} | Moon: {phase} |
+| `tp.asideLabel` | Luft, Mond & Himmel | Air, moon & sky |
 
 „Erstes Viertel“ / „Letztes Viertel“ are not used in German: „Halbmond“ says what one sees. A day row shows glyph + name only (no percent); the hero chip and the moon card show the percent.
 

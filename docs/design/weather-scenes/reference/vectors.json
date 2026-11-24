@@ -1,5 +1,5 @@
 {
- "source": "astronomy-engine 2.1.19, deltaT = Espenak-Meeus; geometric (airless) topocentric altitudes unless stated; place erlangen = 49.6N 11.0E, h = 0 m; local days in Europe/Berlin",
+ "source": "astronomy-engine 2.1.19, deltaT = Espenak-Meeus; geometric (airless) topocentric altitudes unless stated; place lindenau = 49.6N 11.0E, h = 0 m; local days in Europe/Berlin",
  "conventions": {
   "illumPct": "geocentric illuminated fraction x 100",
   "tiltDeg": "bright-limb midpoint direction minus zenith direction (chi - q), -180..180, + = lit side towards the left (counter-clockwise from up), null if illumination outside 3..97 %",
@@ -12,7 +12,7 @@
   "waxing": true,
   "phaseName": "full",
   "distKm": 362230,
-  "erlangen": {
+  "lindenau": {
    "moonAltDeg": 41.99,
    "moonAzDeg": 255.97,
    "tiltDeg": null,
@@ -36,7 +36,7 @@
    "waxing": true,
    "phaseName": "waxingCrescent",
    "distKm": 367624,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": 45.44,
     "moonAzDeg": 256.75,
     "tiltDeg": -147.6,
@@ -55,7 +55,7 @@
    "waxing": true,
    "phaseName": "waxingGibbous",
    "distKm": 406212,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": 10.07,
     "moonAzDeg": 198.07,
     "tiltDeg": -109.9,
@@ -74,7 +74,7 @@
    "waxing": true,
    "phaseName": "waxingCrescent",
    "distKm": 399471,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": -48.39,
     "moonAzDeg": 29.67,
     "tiltDeg": -91.6,
@@ -93,7 +93,7 @@
    "waxing": false,
    "phaseName": "waningCrescent",
    "distKm": 370264,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": 20.31,
     "moonAzDeg": 76.77,
     "tiltDeg": 125,
@@ -112,7 +112,7 @@
    "waxing": true,
    "phaseName": "waxingCrescent",
    "distKm": 380290,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": -48.19,
     "moonAzDeg": 296.28,
     "tiltDeg": -104.1,
@@ -131,7 +131,7 @@
    "waxing": true,
    "phaseName": "waxingCrescent",
    "distKm": 406340,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": 2.48,
     "moonAzDeg": 110.96,
     "tiltDeg": null,
@@ -150,7 +150,7 @@
    "waxing": true,
    "phaseName": "waxingGibbous",
    "distKm": 380253,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": -9.51,
     "moonAzDeg": 244.5,
     "tiltDeg": -115.8,
@@ -169,7 +169,7 @@
    "waxing": true,
    "phaseName": "waxingCrescent",
    "distKm": 395987,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": -51.51,
     "moonAzDeg": 25.29,
     "tiltDeg": -93,
@@ -188,7 +188,7 @@
    "waxing": false,
    "phaseName": "waningCrescent",
    "distKm": 377353,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": -47.28,
     "moonAzDeg": 71.59,
     "tiltDeg": 139.5,
@@ -207,7 +207,7 @@
    "waxing": false,
    "phaseName": "waningCrescent",
    "distKm": 390596,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": 50.36,
     "moonAzDeg": 236.51,
     "tiltDeg": 60.1,
@@ -226,7 +226,7 @@
    "waxing": false,
    "phaseName": "lastQuarter",
    "distKm": 385725,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": 26.12,
     "moonAzDeg": 262.25,
     "tiltDeg": 62.4,
@@ -245,7 +245,7 @@
    "waxing": true,
    "phaseName": "waxingGibbous",
    "distKm": 394730,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": -7.13,
     "moonAzDeg": 312.84,
     "tiltDeg": -115.9,
@@ -264,7 +264,7 @@
    "waxing": false,
    "phaseName": "waningGibbous",
    "distKm": 403263,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": -22.65,
     "moonAzDeg": 348.62,
     "tiltDeg": 94.2,
@@ -283,7 +283,7 @@
    "waxing": false,
    "phaseName": "waningCrescent",
    "distKm": 358923,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": -14.75,
     "moonAzDeg": 255.29,
     "tiltDeg": null,
@@ -302,7 +302,7 @@
    "waxing": true,
    "phaseName": "waxingCrescent",
    "distKm": 405708,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": -18.78,
     "moonAzDeg": 26.39,
     "tiltDeg": -60.5,
@@ -321,7 +321,7 @@
    "waxing": true,
    "phaseName": "waxingCrescent",
    "distKm": 391501,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": 24.24,
     "moonAzDeg": 221.94,
     "tiltDeg": -87.3,
@@ -340,7 +340,7 @@
    "waxing": false,
    "phaseName": "waningCrescent",
    "distKm": 360854,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": 17.52,
     "moonAzDeg": 161.59,
     "tiltDeg": 109.3,
@@ -359,7 +359,7 @@
    "waxing": true,
    "phaseName": "waxingGibbous",
    "distKm": 367278,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": 14.49,
     "moonAzDeg": 146.56,
     "tiltDeg": -68,
@@ -378,7 +378,7 @@
    "waxing": true,
    "phaseName": "waxingCrescent",
    "distKm": 369735,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": -12.41,
     "moonAzDeg": 300.68,
     "tiltDeg": -145.4,
@@ -397,7 +397,7 @@
    "waxing": true,
    "phaseName": "waxingGibbous",
    "distKm": 404266,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": -41.61,
     "moonAzDeg": 16.06,
     "tiltDeg": -56.8,
@@ -416,7 +416,7 @@
    "waxing": false,
    "phaseName": "waningGibbous",
    "distKm": 367114,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": 24.77,
     "moonAzDeg": 93.36,
     "tiltDeg": 127.8,
@@ -435,7 +435,7 @@
    "waxing": true,
    "phaseName": "waxingCrescent",
    "distKm": 392243,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": -58.93,
     "moonAzDeg": 5.14,
     "tiltDeg": -96.3,
@@ -454,7 +454,7 @@
    "waxing": true,
    "phaseName": "waxingGibbous",
    "distKm": 404518,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": 6.64,
     "moonAzDeg": 246.31,
     "tiltDeg": -105.7,
@@ -473,7 +473,7 @@
    "waxing": true,
    "phaseName": "waxingGibbous",
    "distKm": 372999,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": -31.43,
     "moonAzDeg": 302.65,
     "tiltDeg": -145.7,
@@ -492,7 +492,7 @@
    "waxing": false,
    "phaseName": "waningGibbous",
    "distKm": 393286,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": 35.49,
     "moonAzDeg": 189.17,
     "tiltDeg": 105.8,
@@ -511,7 +511,7 @@
    "waxing": true,
    "phaseName": "full",
    "distKm": 386238,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": -44.88,
     "moonAzDeg": 347.84,
     "tiltDeg": null,
@@ -530,7 +530,7 @@
    "waxing": true,
    "phaseName": "waxingGibbous",
    "distKm": 399221,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": 6.79,
     "moonAzDeg": 124.51,
     "tiltDeg": -72.1,
@@ -549,7 +549,7 @@
    "waxing": true,
    "phaseName": "waxingGibbous",
    "distKm": 385430,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": -8.17,
     "moonAzDeg": 267.43,
     "tiltDeg": -106.6,
@@ -568,7 +568,7 @@
    "waxing": false,
    "phaseName": "waningCrescent",
    "distKm": 359973,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": 13.76,
     "moonAzDeg": 76.54,
     "tiltDeg": null,
@@ -587,7 +587,7 @@
    "waxing": true,
    "phaseName": "waxingCrescent",
    "distKm": 389557,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": -25.56,
     "moonAzDeg": 269.04,
     "tiltDeg": -137.3,
@@ -606,7 +606,7 @@
    "waxing": false,
    "phaseName": "waningCrescent",
    "distKm": 387894,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": 38.23,
     "moonAzDeg": 115.57,
     "tiltDeg": 110.1,
@@ -625,7 +625,7 @@
    "waxing": false,
    "phaseName": "waningGibbous",
    "distKm": 383964,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": 40.62,
     "moonAzDeg": 254.97,
     "tiltDeg": 54.8,
@@ -644,7 +644,7 @@
    "waxing": false,
    "phaseName": "waningCrescent",
    "distKm": 402246,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": 21.88,
     "moonAzDeg": 143.75,
     "tiltDeg": 86.8,
@@ -663,7 +663,7 @@
    "waxing": true,
    "phaseName": "waxingGibbous",
    "distKm": 375703,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": -9.35,
     "moonAzDeg": 245.3,
     "tiltDeg": -127.6,
@@ -682,7 +682,7 @@
    "waxing": false,
    "phaseName": "new",
    "distKm": 372566,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": 15.33,
     "moonAzDeg": 162.21,
     "tiltDeg": null,
@@ -701,7 +701,7 @@
    "waxing": true,
    "phaseName": "waxingCrescent",
    "distKm": 396783,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": 59.11,
     "moonAzDeg": 149.47,
     "tiltDeg": -55.9,
@@ -720,7 +720,7 @@
    "waxing": false,
    "phaseName": "waningGibbous",
    "distKm": 367004,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": -9.16,
     "moonAzDeg": 113.84,
     "tiltDeg": 124.2,
@@ -739,7 +739,7 @@
    "waxing": false,
    "phaseName": "waningGibbous",
    "distKm": 402325,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": 23.74,
     "moonAzDeg": 275.04,
     "tiltDeg": 56,
@@ -758,7 +758,7 @@
    "waxing": true,
    "phaseName": "waxingGibbous",
    "distKm": 394156,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": -22.6,
     "moonAzDeg": 27.11,
     "tiltDeg": -47.6,
@@ -777,7 +777,7 @@
    "waxing": true,
    "phaseName": "waxingGibbous",
    "distKm": 377364,
-   "erlangen": {
+   "lindenau": {
     "moonAltDeg": 13.57,
     "moonAzDeg": 250.95,
     "tiltDeg": -155.1,
@@ -906,7 +906,7 @@
    "utc": "2028-12-21T08:20:05Z"
   }
  ],
- "riseSetErlangen": [
+ "riseSetLindenau": [
   {
    "localDate": "2026-11-24",
    "rise": "2026-11-24T14:43Z",
@@ -974,7 +974,7 @@
   "umbralMagnitude": 1.252,
   "penumbralMagnitude": 2.28,
   "obscuration": 1,
-  "erlangen": {
+  "lindenau": {
    "altU1": -1,
    "altMax": 12.4,
    "altU4": 28.3,
@@ -982,7 +982,7 @@
    "verdictWithL2": "partly"
   }
  },
- "nextSolarEclipseErlangen": {
+ "nextSolarEclipseLindenau": {
   "kind": "partial",
   "obscuration": 0.453,
   "partialBegin": {
