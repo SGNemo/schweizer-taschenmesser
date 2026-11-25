@@ -1,5 +1,6 @@
 import { compareText } from '@/core/i18n/format';
 import type { PileEntry } from './pile';
+import type { PileArea } from './types';
 import { NEVER_LINKED, refKey, type EntityRef } from '@/core/entitylinks/types';
 import { loadModuleStates, useModuleStates } from './activation';
 import { availableManifests } from '@/core/modules/available';
@@ -22,7 +23,14 @@ import type {
 /** Loads the lazy sources of one contribution kind, so a live query over them starts with them cached. */
 const preload =
   (
-    kind: 'calendarItems' | 'notifications' | 'attention' | 'headline' | 'plannable' | 'linkTarget',
+    kind:
+      | 'calendarItems'
+      | 'notifications'
+      | 'attention'
+      | 'headline'
+      | 'plannable'
+      | 'linkTarget'
+      | 'pile',
     manifests: readonly ModuleManifest[],
   ) =>
   () =>
@@ -128,6 +136,29 @@ export async function collectPiles(
     }),
   );
   return lists.flat();
+}
+
+/**
+ * Live parts of the collective rows of the given areas from all active modules; `undefined` while loading. The
+ * sources are loaded first, so the live query follows every table they read (a lazy import inside it would not).
+ */
+export function usePiles(
+  ctx: { today: string; until: string },
+  areas: readonly PileArea[],
+): PileEntry[] | undefined {
+  const states = useModuleStates();
+  const list = activeManifests(states);
+  const ids = list.map((m) => m.id).join(',');
+  return useSharedLiveQuery(
+    `piles|${ctx.today}|${ctx.until}|${ids}|${areas.join(',')}|${states === undefined}`,
+    async () =>
+      states
+        ? areas.length === 0
+          ? []
+          : (await collectPiles(ctx, list)).filter((p) => areas.includes(p.area))
+        : undefined,
+    preload('pile', list),
+  );
 }
 
 /** A block of time a module keeps free (`PlannableSource.blocks`), with the module that asked for it. */

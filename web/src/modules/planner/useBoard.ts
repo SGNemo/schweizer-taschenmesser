@@ -4,6 +4,7 @@ import { getMeta } from '@/core/db/metaKv';
 import {
   useCalendarItems,
   usePlanBlocks,
+  usePiles,
   usePlannable,
   type PlannableEntry,
 } from '@/core/modules/contributions';
@@ -13,7 +14,7 @@ import { useSettings } from '@/core/settings/settings';
 import { today } from '@/core/time/now';
 import { PILE_AREAS, pileKey, type Folded } from '@/core/modules/pile';
 import { buildBoard, type Board } from './board';
-import { foldPlan, loadPileParts, pileAreas, pileUnasked } from './piles';
+import { foldPlan, pileAreas, pileUnasked } from './piles';
 import type { PileArea } from '@/core/modules/types';
 import { assignmentRepo, dayRepo, itemRepo } from './repo';
 import { LAST_RUN_KEY, requestedIds, type LastRun } from './run';
@@ -80,9 +81,9 @@ export function useBoard(
   // Collective rows (package 2), read live like the things themselves: the parts of the switched-on areas and of those never asked about (the offer counts what would fold).
   const areas = new Set([...pileAreas(settings), ...pileUnasked(settings)]);
   const areasKey = [...areas].join(',');
-  const parts = useLiveQuery(
-    () => loadPileParts({ today: day, until }, areas),
-    [day, until, areasKey],
+  const parts = usePiles(
+    { today: day, until },
+    areasKey ? (areasKey.split(',') as PileArea[]) : [],
   );
   return useMemo(() => {
     if (!own || !entries || !calendar || !blocks || !parts) return undefined;

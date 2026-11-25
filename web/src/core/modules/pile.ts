@@ -7,7 +7,8 @@
  *  - a member key stays only if its thing is in the plan's things, open, without a day of its own and without a lock;
  *  - it belongs to the part's own module, or – for mail – it is a ToDo whose `origin` link points to a mail thread;
  *  - never `accounts`; each key once; at most `PILE_MAX` per pile (the rest stay single rows and are not counted);
- *  - a pile is a row while it has something to do: folded members, or a count of a part that is not read-only.
+ *  - a pile is a row while it has something to do: folded members, or a count of a part that is not read-only (or a
+ *    member whose thing is not read yet – it is about to be).
  */
 import type { PlannableEntry } from './contributions';
 import type { Pile, PileArea } from './types';
@@ -87,6 +88,9 @@ export function foldPiles(
     if (own.length === 0) continue;
     let members = 0;
     let waiting = 0;
+    // A member key whose thing is not read yet (a ToDo mail made a moment ago): the pile stays a row meanwhile, so it
+    // does not flicker away between the two readings; it is not counted.
+    let pending = 0;
     let due: string | undefined;
     const out: PilePart[] = [];
     for (const pile of own) {
@@ -94,6 +98,7 @@ export function foldPiles(
       for (const key of pile.members ?? []) {
         if (members >= PILE_MAX) break;
         const e = byKey.get(key);
+        if (!e && !key.startsWith(`${NEVER}:`)) pending += 1;
         if (!e || e.done || opts.held.has(key) || folded.has(key) || !mayFold(pile, e)) continue;
         folded.set(key, area);
         kept.push(key);
@@ -105,7 +110,13 @@ export function foldPiles(
       out.push({ pile, members: kept });
     }
     const count = members + waiting;
-    groups.set(area, { area, parts: out, count, alive: count > 0, ...(due ? { due } : {}) });
+    groups.set(area, {
+      area,
+      parts: out,
+      count,
+      alive: count > 0 || pending > 0,
+      ...(due ? { due } : {}),
+    });
   }
   return { groups, folded };
 }

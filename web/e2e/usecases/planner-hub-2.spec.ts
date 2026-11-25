@@ -40,8 +40,8 @@ import { dismissNotices } from '../helpers';
  *    the jump into a module is expand + „Ganz öffnen“; the note keeps its one-handle chip); D4 phone `taps` 22 → 23
  *    (11: Thursday's invoice waits under the phone's folded „Danach“ – one unfold; buys rows 20 → 7, switches 2 → 0);
  *  - for a while (the bound is `PRICE`, valid while the named IST word or figure still reads as before the package
- *    that ends it): B `taps` 27 → 28 / phone 14 → 16 and `perThing` 17 → 21 / phone 9 → 13 from 4b (and 4c) until 2
- *    (each invoice and cancellation is expand + its step; budgets and mail are still trips); C1 `workTaps` 7 → 8 and
+ *    that ends it): (ended with 2: B `taps` 27 → 28 / phone 14 → 16 and `perThing` 17 → 21 / phone 9 → 13 from 4b);
+ *    C1 `workTaps` 7 → 8 and
  *    `taps` 19 → 20 from 4a until 5a (expand, „Ganz öffnen“, the routine's run as today).
  * Re-measured by the packages: 10b: D1 · 4a: D1, C1 · 4b/2: B · 4c: B `replySwitches` · 5a: C1 · 8: C1 `learned` · 1: D2 · 3: A1, C1 · 9: D3 · 11: D4.
  * `MEASURE=1` only measures. Facts (the click path, the module routes passed) land beside the table in
@@ -69,6 +69,9 @@ const HIGHER = ['rightKind', 'linkedToPlan', 'doneInPlanner', 'markVisible', 'ma
  * 5, `rowsAfter` 0; `taps` and `perThing` keep their IST (measured 28 / 21, phone 16 / 13: the named PRICE until 2).
  * B after 4c (2026-11-25): `replySwitches` 0 – the planned mail's row expands and „Antworten“ opens mail's compose
  * window over the planner (the demo threads carry one cached message each; the figure counts once that window is open).
+ * B after 2 (2026-11-25): the ten things stand in two piles („Finanzen checken“, „E-Mails durchgehen“; phone: one) –
+ * the pile switches are set before `rowsBefore` is read, expanding a pile is no `touch`, the budget is a read-only line;
+ * the mails enter through the mail pile's P15 and are ticked as member lines. The B prices end here.
  */
 // prettier-ignore
 const IST: Record<string, Figures> = {
@@ -76,8 +79,8 @@ const IST: Record<string, Figures> = {
   'A1 Alles ins Planer-Feld · pixel-7': { rows: 11, moduleSwitches: 0, taps: 12, perThing: 0, rightKind: 4, linkedToPlan: 4 },
   'A2 Jedes Ding als richtige Art · desktop-chrome': { rows: 8, moduleSwitches: 3, taps: 33, perThing: 13, forms: 2, fields: 5, rightKind: 12, linkedToPlan: 11 },
   'A2 Jedes Ding als richtige Art · pixel-7': { rows: 8, moduleSwitches: 5, taps: 34, perThing: 14, forms: 2, fields: 5, rightKind: 12, linkedToPlan: 11 },
-  'B Finanzen und Mails abarbeiten · desktop-chrome': { rowsBefore: 5, taps: 27, perThing: 17, moduleSwitches: 3, doneInPlanner: 5, rowsAfter: 0, mails: 4, replySwitches: 0 },
-  'B Finanzen und Mails abarbeiten · pixel-7': { rowsBefore: 5, taps: 14, perThing: 9, moduleSwitches: 3, doneInPlanner: 5, rowsAfter: 0, mails: 'nicht möglich', replySwitches: 'nicht möglich' },
+  'B Finanzen und Mails abarbeiten · desktop-chrome': { rowsBefore: 2, taps: 17, perThing: 12, moduleSwitches: 0, doneInPlanner: 9, rowsAfter: 0, mails: 4, replySwitches: 0 },
+  'B Finanzen und Mails abarbeiten · pixel-7': { rowsBefore: 1, taps: 10, perThing: 8, moduleSwitches: 0, doneInPlanner: 5, rowsAfter: 0, mails: 'nicht möglich', replySwitches: 'nicht möglich' },
   'C1 Bündel Haushalt · desktop-chrome': { rows: 1, createTaps: 12, workTaps: 7, taps: 19, perThing: 6, moduleSwitches: 4, nextStepOnly: 'nein', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
   'C1 Bündel Haushalt · pixel-7': { rows: 1, createTaps: 12, workTaps: 7, taps: 19, perThing: 6, moduleSwitches: 5, nextStepOnly: 'nein', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
   'C2 Besorgung · desktop-chrome': { rows: 2, createTaps: 0, workTaps: 9, perThing: 5, moduleSwitches: 2, oneRow: 'nein', mapShown: 'nicht möglich' },
@@ -123,21 +126,12 @@ const TARGET: Record<string, Figures> = {
 
 /**
  * Named prices for a while (header): `figure` may reach `max`, never more, as long as `IST[path][until[0]]` still
- * equals `until[1]` – the package that ends the price re-measures that IST (B: package 2 moves `rowsBefore`; C1: 5a
+ * equals `until[1]` – the package that ends the price re-measures that IST (B ended with package 2; C1: 5a
  * moves `nextStepOnly`), and from then on the usual bound holds again.
  */
 type Price = { figure: string; max: number; until: [string, number | string] };
-const untilPiles: [string, number] = ['rowsBefore', 5];
 const untilLos: [string, string] = ['nextStepOnly', 'nein'];
 const PRICE: Record<string, Price[]> = {
-  'B Finanzen und Mails abarbeiten · desktop-chrome': [
-    { figure: 'taps', max: 28, until: untilPiles },
-    { figure: 'perThing', max: 21, until: untilPiles },
-  ],
-  'B Finanzen und Mails abarbeiten · pixel-7': [
-    { figure: 'taps', max: 16, until: untilPiles },
-    { figure: 'perThing', max: 13, until: untilPiles },
-  ],
   'C1 Bündel Haushalt · desktop-chrome': [
     { figure: 'workTaps', max: 8, until: untilLos },
     { figure: 'taps', max: 20, until: untilLos },
@@ -892,33 +886,42 @@ const financeScene = {
   })),
 };
 
-/** The budget: never in the plan – a look on its page (its navigation names the thing). */
-async function lookAtBudget(hand: Hand, page: Page, isMobile: boolean) {
-  await go(hand, page, isMobile, 'budgets', 'Budget');
-  await expect(
-    page
-      .locator('main')
-      .getByText(/drüber/)
-      .first(),
-  ).toBeVisible();
-}
-
-/** A plan row (by its key, or a key's prefix ending in „:“) expanded by its title (package 4a); its compartment. */
-async function expandRow(hand: Hand, page: Page, key: string, thing: string) {
-  const row = page
-    .locator(key.endsWith(':') ? `[data-row-key^="${key}"]` : `[data-row-key="${key}"]`)
-    .filter({ has: page.locator('button[data-row][aria-expanded]') })
-    .first();
+/** A pile row („Finanzen checken“, „E-Mails durchgehen“, package 2) expanded by its title: no `touch`, no thing. */
+async function expandPile(hand: Hand, page: Page, area: 'money' | 'mail') {
+  const row = page.locator(`[data-row-key="planner:pile-${area}"]`).first();
   await expect(row).toBeVisible();
-  await hand.tap(row.locator('button[data-row]').first(), `Aufklappen: ${thing}`, thing);
+  await hand.tap(row.locator('button[data-row]').first(), `Aufklappen: ${area}`);
   const box = row.getByTestId('row-compartment');
   await expect(box).toBeVisible();
   return box;
 }
 
+/** A member line inside an open pile, by the words it shows. */
+const memberLine = (pile: Locator, text: string) =>
+  pile.locator('li').filter({ hasText: text }).first();
+
+/** ▸ of a member line: its own panel one level deeper, inside the pile (package 2). */
+async function expandMember(hand: Hand, pile: Locator, title: string) {
+  const toggle = pile
+    .getByRole('button', { name: new RegExp(`${escapeRe(title)}.*\\. Aufklappen$`) })
+    .first();
+  const id = await toggle.getAttribute('aria-controls');
+  await hand.tap(toggle, `▸ ${title}`, title);
+  const box = pile.locator(`[id="${id}"]`);
+  await expect(box).toBeVisible();
+  return box;
+}
+
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 test('B Finanzen und Mails abarbeiten', async ({ page, isMobile }, info) => {
   const name = 'B Finanzen und Mails abarbeiten';
-  await prepare(page, isMobile, financeScene);
+  // Package 2 (FIGURES §6): the pile switches are set before `rowsBefore` is read – „Finanzen checken“ and (desktop)
+  // „E-Mails durchgehen“ hold the ten things.
+  await prepare(page, isMobile, {
+    ...financeScene,
+    _settings: [{ id: 'module.planner', pileMoney: true, pileMail: true }],
+  });
   await planner(page);
   const before = await plannerRows(page);
   const hand = new Hand(page, isMobile);
@@ -929,9 +932,6 @@ test('B Finanzen und Mails abarbeiten', async ({ page, isMobile }, info) => {
     'Budget',
     ...MAILS.map((m) => m.subject),
   ];
-  // Since package 4b every invoice and cancellation is worked off in its row's compartment (expand, its step), so the
-  // money never leaves the planner. Desktop: mail → budgets → planner first (FIGURES B: the budget's navigation tap
-  // must not sit on /planner), then the money in the planner. Phone (no mail): the money first, then budgets and back.
   let mails: number | string = 'nicht möglich';
   let replySwitches: number | string = 'nicht möglich';
   let replyEditor = false;
@@ -940,62 +940,17 @@ test('B Finanzen und Mails abarbeiten', async ({ page, isMobile }, info) => {
     (await rows<Task>(page, 'todos_task')).filter(
       (x) => !x.done && x.links?.some((l) => l.kind === 'mail'),
     );
-  if (!isMobile) {
-    // 1 The mails: no source of the plan – „Alle in den Plan…“ in the mailbox makes four ToDos (desktop only).
-    await go(hand, page, isMobile, 'mail');
-    await hand.tap(page.getByRole('button', { name: 'Alle in den Plan…' }), 'Alle in den Plan…');
-    const all = page.getByRole('dialog', { name: 'In den Plan' });
-    await hand.tap(all.getByRole('button', { name: /^In den Plan \(\d+\)$/ }), 'In den Plan (4)');
-    hand.touch(MAILS.map((m) => m.subject));
-    await expect(all).toHaveCount(0);
-    // 2 The budget: never in the plan – a look on its page.
-    await lookAtBudget(hand, page, isMobile);
-    await go(hand, page, isMobile, 'planner');
-    await expect(page.getByTestId(`day-${TODAY}`)).toBeVisible();
-    await expect.poll(async () => (await fromMail()).length).toBe(MAILS.length);
-    // Answering one planned mail (package 4c): route changes from the planner until the reply editor of the first one
-    // is open – since 4c its row expands (mail's panel over the ToDo) and „Antworten“ opens mail's compose window over
-    // the planner; nothing is sent. Its own hand: the flow's figures stay as they were (its routes are taken back off
-    // the flow's list, the page returns unseen).
-    const mark = hand.places.length;
-    const reply = new Hand(page, isMobile);
-    reply.start();
-    await openNoDay(reply, page);
-    const first = (await fromMail())[0]!;
-    const mailRow = page
-      .locator('main li')
-      .filter({
-        has: page.getByRole('button', { name: `Aktionen für ${first.title}`, exact: true }),
-      })
-      .first();
-    await reply.tap(mailRow.locator('button[data-row]').first(), `Aufklappen: ${first.title}`);
-    const box = mailRow.getByTestId('row-compartment');
-    await expect(box).toBeVisible();
-    const answer = box.getByRole('button', { name: 'Antworten', exact: true });
-    if (await appears(answer, 2500)) {
-      await reply.tap(answer, 'Antworten');
-      replyEditor = await appears(page.getByRole('dialog', { name: 'Antworten' }).first());
-      await page.keyboard.press('Escape');
-    }
-    // The figure counts only once mail's compose window is open (FIGURES §6, 4c).
-    replySwitches = replyEditor ? reply.moduleSwitches : 'nicht möglich';
-    replyPath = reply.path;
-    await page.goto('/planner');
-    await expect(page.getByTestId(`day-${TODAY}`)).toBeVisible();
-    // „Noch ohne Tag“ as the flow found it: folded (the reply's unfolding is remembered).
-    const opened = page.getByRole('button', { name: 'Noch ohne Tag einklappen' });
-    if (await opened.count()) await opened.click();
-    await expect(page.getByRole('button', { name: 'Noch ohne Tag ausklappen' })).toBeVisible();
-    hand.places = hand.places.slice(0, mark);
-  }
-  // 3 The invoices (package 4b): each row expands, its pay step's „Bezahlt“ (today, the whole sum prefilled).
+  // 1–2 „Noch ohne Tag“, then the money pile: expanding a pile is no `touch` (it names no thing).
   await openNoDay(hand, page);
-  const late = page.getByTestId('planner-late-row');
-  if ((await late.count()) && (await late.getAttribute('aria-expanded')) === 'false')
-    await hand.tap(late, 'Frist vorbei aufklappen');
+  const money = await expandPile(hand, page, 'money');
+  // 3–5 one tap „Bezahlt“ on each invoice line (today, the whole sum – the line's own one-tap end).
   for (const inv of INVOICES) {
-    const box = await expandRow(hand, page, `invoices:${inv.id}`, inv.payee);
-    await hand.tap(box.getByRole('button', { name: 'Bezahlt', exact: true }), 'Bezahlt', inv.payee);
+    const line = memberLine(money, inv.payee);
+    await hand.tap(
+      line.getByRole('button', { name: 'Bezahlt', exact: true }),
+      'Bezahlt',
+      inv.payee,
+    );
     await expect
       .poll(
         async () =>
@@ -1005,10 +960,9 @@ test('B Finanzen und Mails abarbeiten', async ({ page, isMobile }, info) => {
       )
       .toBe('paid');
   }
-  // 4 The cancellations (package 4b): the one that goes – „Gekündigt am …“, „Vermerken“; the one that stays – „Läuft
-  //   weiter“, which decides that deadline (the source no longer lists it).
+  // 6–10 the cancellations: ▸ opens the member's own step inside the pile.
   const [cancel, keep] = SUBSCRIPTIONS;
-  const goes = await expandRow(hand, page, `subscriptions:${cancel!.id}:`, cancel!.name);
+  const goes = await expandMember(hand, money, cancel!.name);
   await hand.tap(
     goes.getByRole('button', { name: 'Gekündigt am …', exact: true }),
     'Gekündigt am …',
@@ -1027,7 +981,7 @@ test('B Finanzen und Mails abarbeiten', async ({ page, isMobile }, info) => {
         )?.cancelledOn,
     )
     .toBe(TODAY);
-  const stays = await expandRow(hand, page, `subscriptions:${keep!.id}:`, keep!.name);
+  const stays = await expandMember(hand, money, keep!.name);
   await hand.tap(
     stays.getByRole('button', { name: 'Läuft weiter', exact: true }),
     'Läuft weiter',
@@ -1041,46 +995,46 @@ test('B Finanzen und Mails abarbeiten', async ({ page, isMobile }, info) => {
         ).find((r) => r.id === keep!.id)?.keptDeadline,
     )
     .toBeTruthy();
+  // The budget: a read-only line in the pile, never a handle („Budget“ never counts).
   if (!isMobile) {
-    // 5 The mail ToDos wait under „Noch ohne Tag“, where a row has no tick: ⋯ · „Erledigt“ (or onto today, then ticked).
+    // 11–13 the mail pile: its queue line's P15 opens mail's PlanAllDialog over the planner; its own button.
+    const mailPile = await expandPile(hand, page, 'mail');
+    await hand.tap(
+      mailPile.getByRole('button', { name: /^In den Plan … \(\d+\)$/ }),
+      'In den Plan … (4)',
+    );
+    const all = page.getByRole('dialog', { name: 'In den Plan' });
+    await hand.tap(all.getByRole('button', { name: /^In den Plan \(\d+\)$/ }), 'In den Plan (4)');
+    hand.touch(MAILS.map((m) => m.subject));
+    await expect(all).toHaveCount(0);
+    await expect.poll(async () => (await fromMail()).length).toBe(MAILS.length);
+    // Answering one planned mail (4c, through the mail member's ▸ since package 2): its own hand, so the flow's figures
+    // stay as they were; nothing is sent.
+    const mark = hand.places.length;
+    const reply = new Hand(page, isMobile);
+    reply.start();
+    const first = (await fromMail())[0]!;
+    const open = await expandMember(reply, mailPile, first.title);
+    const answer = open.getByRole('button', { name: 'Antworten', exact: true });
+    if (await appears(answer, 2500)) {
+      await reply.tap(answer, 'Antworten');
+      replyEditor = await appears(page.getByRole('dialog', { name: 'Antworten' }).first());
+      await page.keyboard.press('Escape');
+      await expect(page.getByRole('dialog', { name: 'Antworten' })).toHaveCount(0);
+    }
+    replySwitches = replyEditor ? reply.moduleSwitches : 'nicht möglich';
+    replyPath = reply.path;
+    // The member closes again (the reply's ▸ is no handle of the flow).
+    await mailPile.getByRole('button', { name: `${first.title}. Zuklappen` }).click();
+    hand.places = hand.places.slice(0, mark);
+    // 14–17 the mail members: their tick.
     for (const todo of await fromMail()) {
       const subject = MAILS.find((m) => todo.title.includes(m.subject))!.subject;
-      const tick = page.getByRole('checkbox', { name: `Erledigt: ${todo.title}`, exact: true });
-      if (!(await tick.isVisible())) {
-        await hand.tap(
-          page.getByRole('button', { name: `Aktionen für ${todo.title}`, exact: true }).first(),
-          `⋯ ${todo.title}`,
-          subject,
-        );
-        const doneItem = page.getByRole('menuitem', { name: 'Erledigt', exact: true });
-        if (await doneItem.count()) {
-          await hand.tap(doneItem, 'Erledigt', subject);
-          await expect
-            .poll(async () => (await fromMail()).some((x) => x.id === todo.id))
-            .toBe(false);
-          continue;
-        }
-        await hand.tap(
-          page.getByRole('menuitem', { name: 'Verschieben …' }),
-          'Verschieben …',
-          subject,
-        );
-        const move = page.getByRole('dialog', { name: `Verschieben: ${todo.title}` });
-        await hand.tap(
-          move.getByRole('button', { name: 'Mo 30.', exact: true }),
-          'Mo 30.',
-          subject,
-        );
-        await expect(move).toHaveCount(0);
-      }
+      const tick = mailPile.getByRole('checkbox', { name: `Erledigt: ${todo.title}`, exact: true });
       await hand.tap(tick, `Erledigt: ${todo.title}`, subject);
-      await expect(tick).toHaveCount(0);
+      await expect.poll(async () => (await fromMail()).some((x) => x.id === todo.id)).toBe(false);
     }
     mails = (await fromMail()).length === 0 ? MAILS.length : 0;
-  } else {
-    // Phone: the budget after the money (its navigation leaves from the planner), and back.
-    await lookAtBudget(hand, page, isMobile);
-    await go(hand, page, isMobile, 'planner');
   }
   await planner(page);
   const after = await plannerRows(page);
