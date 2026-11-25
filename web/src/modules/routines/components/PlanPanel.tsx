@@ -34,12 +34,7 @@ export default function RoutinePlanPanel({ id, compact }: PlanPanelProps) {
     );
   const tick = (stepId: string, text: string, on: boolean) => {
     const word = on ? t.routines.run.stepTicked(text) : t.routines.run.stepReopened(text);
-    void undoableWithToast(
-      word,
-      word,
-      () => setTurnStep(id, stepId, on),
-      () => setTurnStep(id, stepId, !on),
-    );
+    void undoableWithToast(word, word, () => setTurnStep(id, stepId, on));
   };
   return (
     <>

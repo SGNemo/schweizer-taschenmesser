@@ -28,12 +28,7 @@ export async function tickChecklist(taskId: string, itemId: string, done: boolea
   const message = done
     ? t.todos.checklist.ticked(item.text)
     : t.todos.checklist.reopened(item.text);
-  await undoableWithToast(
-    message,
-    message,
-    () => setChecklistLine(taskId, itemId, done),
-    () => setChecklistLine(taskId, itemId, !done),
-  );
+  await undoableWithToast(message, message, () => setChecklistLine(taskId, itemId, done));
 }
 
 export default function TodoPlanPanel({ id, compact }: PlanPanelProps) {

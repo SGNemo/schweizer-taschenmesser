@@ -12,6 +12,7 @@
 import { type KeyboardEvent, type ReactNode, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import type { PlannableEntry } from '@/core/modules/contributions';
+import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { Button } from '@/ui';
 import { finishSteps, markStep } from '../actions';
@@ -72,8 +73,12 @@ export function StepStage({
       void navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
   }, [fresh, navigate, location.pathname, location.search]);
   const [busy, setBusy] = useState(false);
-  // The step a tick is running for: a held Enter never ticks the same step twice before the next one shows.
+  // The step a tick is running for: a held Enter never ticks the same step twice before the next one shows. New step
+  // data (the tick landed, an undo, another device) or a failed tick frees it.
   const ticked = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    ticked.current = undefined;
+  }, [entry.steps]);
   const setKept = (next: Kept) => {
     setKeptState(next);
     writeKept(unitId, next);
@@ -88,8 +93,10 @@ export function StepStage({
   // Everything done (also through the panel or another device): back to the plan.
   const allDone = steps.length > 0 && open.length === 0;
   useEffect(() => {
-    if (allDone) void navigate('/planner');
-  }, [allDone, navigate]);
+    if (!allDone) return;
+    writeKept(unitId, undefined);
+    void navigate('/planner');
+  }, [allDone, navigate, unitId]);
 
   // The step change, said politely (B24); the first step is the page's heading anyway.
   const [said, setSaid] = useState('');
@@ -113,12 +120,19 @@ export function StepStage({
     setBusy(true);
     try {
       if (last) {
-        await finishSteps(entry, current.id, titles);
-        writeKept(unitId, undefined);
-        void navigate('/planner');
+        if (!(await finishSteps(entry, current.id, titles))) ticked.current = undefined;
+        else {
+          writeKept(unitId, undefined);
+          void navigate('/planner');
+        }
         return;
       }
-      await markStep(entry, current.id, true, titles);
+      if (!(await markStep(entry, current.id, true, titles))) ticked.current = undefined;
+    } catch (err) {
+      // Nothing was kept (the act takes its writes back): said, and the step can be tried again.
+      ticked.current = undefined;
+      console.error('[planner] step tick failed', err);
+      useUiStore.getState().toast(t.planner.panel.failed);
     } finally {
       setBusy(false);
       focusFirst();
@@ -126,7 +140,11 @@ export function StepStage({
   }
   const skip = () =>
     current && !kept.paused && setKept({ ...kept, skipped: [...kept.skipped, current.id] });
-  const pause = () => setKept({ ...kept, paused: !kept.paused });
+  const pause = () => {
+    setKept({ ...kept, paused: !kept.paused });
+    // Said too: focus stays on the same button, only its state changes.
+    setSaid(kept.paused ? t.planner.steps.resumed : t.planner.steps.paused);
+  };
   // S and P only on the stage's buttons: never in a text field, never globally.
   const onKeys = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.altKey || e.ctrlKey || e.metaKey) return;
@@ -141,10 +159,11 @@ export function StepStage({
   };
 
   if (allDone) return null;
-  // One live region for both screens (B24), so it is mounted before it speaks.
+  // One live region for both screens (B24), at the same place in each, so it stays mounted; on B10 it says the
+  // question (focus lands on „Jetzt“, the heading is not read).
   const status = (
     <p className="sr-only" role="status" aria-live="polite">
-      {said}
+      {current ? said : t.planner.steps.skipped(open.length)}
     </p>
   );
   if (!current)
@@ -152,6 +171,7 @@ export function StepStage({
       // Only skipped steps are left (B10): walk them now, or keep them open for later.
       <section className={styles.page} aria-labelledby="step-eyebrow">
         {header}
+        {status}
         <p id="step-eyebrow" className={styles.eyebrow}>
           {title}
         </p>
@@ -171,13 +191,13 @@ export function StepStage({
             {t.planner.steps.later}
           </Button>
         </div>
-        {status}
       </section>
     );
 
   return (
     <section className={styles.page} aria-labelledby="step-eyebrow">
       {header}
+      {status}
       <p id="step-eyebrow" className={styles.eyebrow}>
         {t.planner.steps.eyebrow(title, k, steps.length)}
       </p>
@@ -203,7 +223,6 @@ export function StepStage({
       </div>
       {kept.paused ? <p className={styles.paused}>{t.planner.steps.paused}</p> : null}
       <p className={styles.keys}>{t.planner.steps.keys}</p>
-      {status}
     </section>
   );
 }

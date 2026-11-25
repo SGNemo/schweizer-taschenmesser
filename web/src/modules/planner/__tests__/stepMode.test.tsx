@@ -142,7 +142,7 @@ describe('„Los“ – step mode', () => {
     fireEvent.keyDown(screen.getByRole('button', { name: 'Fertig · weiter' }), { key: 'p' });
     expect(screen.getByRole('button', { name: 'Weiter' })).toBeInTheDocument();
     // Paused says so: the filled button does nothing until „Weiter“.
-    expect(screen.getByText('Pausiert – „Weiter“ macht weiter.')).toBeInTheDocument();
+    expect(screen.getAllByText('Pausiert.').length).toBeGreaterThan(0);
     first.unmount();
     page(id);
     // The reload: still on the step after the skipped one, still paused; nothing was written.
@@ -175,7 +175,10 @@ describe('„Los“ – step mode', () => {
     page(id);
     await screen.findByRole('heading', { level: 1, name: 'Wäsche anstellen' });
     fireEvent.click(screen.getByRole('button', { name: 'Überspringen' }));
-    expect(await screen.findByText('1 übersprungen. Jetzt oder später?')).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { level: 1, name: '1 übersprungen. Jetzt oder später?' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('1 übersprungen. Jetzt oder später?');
     fireEvent.click(screen.getByRole('button', { name: 'Jetzt' }));
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Wäsche anstellen' }),
@@ -221,5 +224,19 @@ describe('„Los“ – step mode', () => {
     });
     await undoLast();
     expect(await checklist(id)).toEqual([false, false, true]);
+  });
+
+  it('after „Rückgängig“ on the stage, the same step can be ticked again', async () => {
+    const id = await place('Haushalt', 0, { checklist: CHECK });
+    page(id);
+    await screen.findByRole('heading', { level: 1, name: 'Wäsche anstellen' });
+    fireEvent.click(screen.getByRole('button', { name: 'Fertig · weiter' }));
+    await screen.findByRole('heading', { level: 1, name: 'Bad wischen' });
+    await waitFor(() => expect(undoDepth()).toBe(1));
+    await undoLast();
+    await screen.findByRole('heading', { level: 1, name: 'Wäsche anstellen' });
+    fireEvent.click(screen.getByRole('button', { name: 'Fertig · weiter' }));
+    await screen.findByRole('heading', { level: 1, name: 'Bad wischen' });
+    expect(await checklist(id)).toEqual([true, false, false]);
   });
 });
