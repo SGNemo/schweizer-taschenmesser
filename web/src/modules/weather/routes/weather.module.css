@@ -304,6 +304,12 @@
     font-size: var(--text-meta);
   }
 }
+/* The eclipse safety pill above a weather hint (package 3): two pills, one under the other. */
+.pills {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
 /* The hint of the day: an opaque pill with the theme's own ink (never the stage's ink), in the stage under the detail
    line or, when the forecast came late, full width under the head (handoff 01b "The hint"). */
 .warn {

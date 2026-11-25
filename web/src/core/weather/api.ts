@@ -119,7 +119,7 @@ export interface Forecast {
 export const HOURS_KEPT = 48;
 
 const AIR_VARIABLES =
-  'european_aqi,pm10,pm2_5,ozone,nitrogen_dioxide,sulphur_dioxide,alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,olive_pollen,ragweed_pollen';
+  'european_aqi,pm10,pm2_5,ozone,nitrogen_dioxide,sulphur_dioxide,alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,olive_pollen,ragweed_pollen,dust';
 
 type Fetch = typeof fetch;
 /** Through the platform, so the connection log sees it and "Netzwerk sperren" applies. */

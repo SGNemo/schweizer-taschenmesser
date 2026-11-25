@@ -200,6 +200,24 @@ describe('fetchForecast', () => {
     expect(airUrl).toContain('longitude=7.45');
     expect(airUrl).toContain('birch_pollen');
     expect(airUrl).not.toMatch(/name=|query=/);
+    // Package 3 adds only `dust` (Saharan dust) to the same request: the variable list, nothing else.
+    const vars = new URL(airUrl).searchParams.get('current')!.split(',');
+    expect(vars).toEqual([
+      'european_aqi',
+      'pm10',
+      'pm2_5',
+      'ozone',
+      'nitrogen_dioxide',
+      'sulphur_dioxide',
+      'alder_pollen',
+      'birch_pollen',
+      'grass_pollen',
+      'mugwort_pollen',
+      'olive_pollen',
+      'ragweed_pollen',
+      'dust',
+    ]);
+    expect(new URL(airUrl).searchParams.get('hourly')).toBe(vars.join(','));
     expect(out.air?.now.aqi).toBe(33);
     expect(out.air?.pollen).toEqual({ birch: 80 });
 

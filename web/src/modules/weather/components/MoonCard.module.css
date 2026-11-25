@@ -37,3 +37,41 @@
   margin: 0;
   font-size: var(--text-sm);
 }
+/* "Als Nächstes" (mockups/10-karte.html): small caps heading, one event in a glyph | text grid. */
+.next {
+  margin-top: var(--space-2);
+}
+.caps {
+  margin: 0 0 var(--space-2);
+  color: var(--text-3);
+  font-size: var(--text-meta);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.ev {
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  gap: 2px var(--space-2);
+  align-items: start;
+  font-size: var(--text-sm);
+}
+.ev > svg {
+  margin-top: 2px;
+  color: var(--text-3);
+}
+.ev + .ev {
+  margin-top: var(--space-2);
+}
+.ev strong {
+  font-weight: var(--weight-semibold);
+}
+.muted {
+  grid-column: 2;
+  color: var(--text-muted);
+}
+.safe {
+  grid-column: 2;
+  margin-top: var(--space-1);
+  color: var(--text);
+}

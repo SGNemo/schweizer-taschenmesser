@@ -126,3 +126,16 @@
   color: var(--text-muted);
   font-size: var(--text-meta);
 }
+/* Saharan dust (package 3, mockups/10-karte.html): glyph and sentence, under the particle rows. */
+.dust {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  margin: 0;
+  font-size: var(--text-sm);
+}
+.dust svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--text-3);
+}

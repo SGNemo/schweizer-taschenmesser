@@ -13,11 +13,12 @@ import { PlaceChips } from '../components/PlaceChips';
 import { MoonCard } from '../components/MoonCard';
 import { WeatherAir } from '../components/WeatherAir';
 import { WeatherChart } from '../components/WeatherChart';
-import { WarningNotice } from '../components/WarningNotice';
+import { SafetyNotice, WarningNotice } from '../components/WarningNotice';
 import { WeatherHero, WeatherHeroPending, WeatherSceneDefault } from '../components/WeatherHero';
 import { weatherWarnings } from '../warnings';
 import { SignatureMark } from '@/ui/identity';
 import { useMoon } from '../useMoon';
+import { useSkyEvents } from '../useSkyEvents';
 import { useViewedForecast } from '../useViewedForecast';
 import styles from './weather.module.css';
 
@@ -46,6 +47,7 @@ export default function WeatherPage() {
   const lat = viewed?.lat ?? 0;
   const lon = viewed?.lon ?? 0;
   const moon = useMoon(lat, lon, weather?.forecast.tz, !!settings?.place);
+  const events = useSkyEvents(lat, lon, weather?.forecast, !!settings?.place);
 
   if (!settings) return null;
   const title = (weather?.place ?? settings.place ?? '').split(',')[0] || tx.title;
@@ -73,12 +75,22 @@ export default function WeatherPage() {
   const days = weather ? dayRows(weather.forecast, nowIso.slice(0, 10)) : [];
   const ready = !!weather?.forecast.hours && !!weather.forecast.days;
   const warnings = weather ? weatherWarnings(days) : [];
+  // On an eclipse day the stage holds the safety pill and at most one weather hint; a second one goes under the head.
+  const stageCount = events?.safety ? 1 : warnings.length;
+  const stageWarnings = late ? [] : warnings.slice(0, stageCount);
+  const belowWarnings = late ? warnings : warnings.slice(stageCount);
 
   return (
     <>
       <PageTitle title={title} />
       {weather ? (
-        <WeatherHero weather={weather} warnings={late ? [] : warnings} lat={lat} moon={moon} />
+        <WeatherHero
+          weather={weather}
+          warnings={stageWarnings}
+          lat={lat}
+          moon={moon}
+          events={events}
+        />
       ) : loading ? (
         <WeatherHeroPending />
       ) : null}
@@ -86,8 +98,9 @@ export default function WeatherPage() {
       {/* A hint that came after the frame stopped waiting sits where the loading line was, under the head: nothing
           painted is below it yet, so it pushes nothing, and it stays in sight on the phone. */}
       <div aria-live="polite" data-testid="weather-late-warning">
-        {late && warnings.length > 0 ? (
-          <WarningNotice warnings={warnings} today={nowIso.slice(0, 10)} />
+        {late && events?.safety ? <SafetyNotice /> : null}
+        {belowWarnings.length > 0 ? (
+          <WarningNotice warnings={belowWarnings} today={nowIso.slice(0, 10)} />
         ) : null}
       </div>
       {!weather ? (
@@ -132,8 +145,10 @@ export default function WeatherPage() {
             )}
           </div>
           <aside className={styles.aside} aria-label={moon ? tp.asideLabel : tx.airTitle}>
-            <WeatherAir air={weather.forecast.air} />
-            {moon ? <MoonCard moon={moon} tz={weather.forecast.tz} south={lat < 0} /> : null}
+            <WeatherAir air={weather.forecast.air} dust={!!events} />
+            {moon ? (
+              <MoonCard moon={moon} tz={weather.forecast.tz} lat={lat} next={events?.card} />
+            ) : null}
           </aside>
         </div>
       )}

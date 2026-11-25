@@ -25,6 +25,7 @@ describe('parseAir', () => {
         ozone: 61.2,
         nitrogen_dioxide: 12.7,
         sulphur_dioxide: 1.1,
+        dust: 61.4,
         birch_pollen: 118.6,
         grass_pollen: 4.2,
         olive_pollen: null,
@@ -36,7 +37,7 @@ describe('parseAir', () => {
         grass_pollen: hours.map(() => null),
       },
     })!;
-    expect(air.now).toEqual({ aqi: 42, pm25: 8.5, pm10: 14, o3: 61, no2: 13, so2: 1 });
+    expect(air.now).toEqual({ aqi: 42, pm25: 8.5, pm10: 14, o3: 61, no2: 13, so2: 1, dust: 61 });
     expect(air.pollen).toEqual({ birch: 119, grass: 4 });
     expect(air.days.map((d) => d.date)).toEqual(['2026-04-20', '2026-04-21']);
     expect(air.days[0]).toMatchObject({ aqi: 55, pollen: { birch: 140 } });
