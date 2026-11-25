@@ -19,8 +19,12 @@ export default function MeasureSettings() {
     await undoableWithToast(m.deleteAll, m.deleted, deleteMeasures);
   };
   return (
-    <SettingRow id="planner-measure-delete" label={m.deleteAll}>
-      <Button variant="ghost" disabled={!count} onClick={() => setOpen(true)}>
+    <SettingRow
+      id="planner-measure-delete"
+      label={m.deleteAll}
+      {...(count === 0 ? { description: m.none } : {})}
+    >
+      <Button variant="ghost" disabled={count === 0} onClick={() => setOpen(true)}>
         {t.actions.delete}
       </Button>
       <Dialog
@@ -38,7 +42,7 @@ export default function MeasureSettings() {
           </>
         }
       >
-        {null}
+        <p>{m.deleteHint}</p>
       </Dialog>
     </SettingRow>
   );

@@ -1,4 +1,4 @@
-import { createElement, Suspense } from 'react';
+import { createElement, Fragment, Suspense } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Link, useParams } from 'react-router';
 import { CopySchemaButton } from '@/core/dataapi/CopySchemaButton';
@@ -156,18 +156,23 @@ function ModuleSettingsBody({ manifest }: { manifest: ModuleManifest }) {
       run: () => void patch(before),
     });
   };
-  // A module's own quiet row below its fields (`ModuleSettings.extra`); `lazyComponent` keeps one per loader.
-  const Extra = manifest.settings.extra ? lazyComponent(manifest.settings.extra) : undefined;
+  // A module's own quiet row right after one of its fields (`ModuleSettings.extra`); `lazyComponent` keeps one per loader.
+  const extra = manifest.settings.extra;
+  const Extra = extra ? lazyComponent(extra.component) : undefined;
   const rows = (list: typeof fields) =>
     list.map((f) => (
-      <FieldRow
-        key={f.key}
-        sectionId={sectionId}
-        field={f}
-        value={v[f.key]}
-        defaultValue={defaults[f.key]}
-        onChange={(value) => void patch({ [f.key]: value })}
-      />
+      <Fragment key={f.key}>
+        <FieldRow
+          sectionId={sectionId}
+          field={f}
+          value={v[f.key]}
+          defaultValue={defaults[f.key]}
+          onChange={(value) => void patch({ [f.key]: value })}
+        />
+        {Extra && extra?.after === f.key ? (
+          <Suspense fallback={null}>{createElement(Extra)}</Suspense>
+        ) : null}
+      </Fragment>
     ));
   return (
     <section
@@ -215,7 +220,6 @@ function ModuleSettingsBody({ manifest }: { manifest: ModuleManifest }) {
           </SettingsGroup>
         );
       })}
-      {Extra ? <Suspense fallback={null}>{createElement(Extra)}</Suspense> : null}
       {wide ? null : <LibraryLink manifest={manifest} />}
     </section>
   );

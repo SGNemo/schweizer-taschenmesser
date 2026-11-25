@@ -23,6 +23,7 @@ import { startSession, pause } from '@/core/focus/session';
 import { addFromField, markDone, setEstimate } from '../actions';
 import manifest from '../manifest';
 import {
+  deleteMeasures,
   measureKey,
   proposalOf,
   proposedMinutes,
@@ -32,6 +33,7 @@ import {
   workedMinutes,
 } from '../measure';
 import { itemRepo, measureRepo } from '../repo';
+import { planLength } from '../schema';
 import { runsSettled, setManifestsForTests } from '../services';
 import { PLANNER_SCOPE } from '../settings';
 
@@ -229,9 +231,57 @@ describe('planner_measure stays his own', () => {
     expect((await buildDiagnostics()).counts.planner).toBe(without);
   });
 
-  it("the copy text and the planner's assistant paths never read it", () => {
+  it("the copy text and the planner's assistant paths import nothing of it", () => {
     const src = (f: string) => readFileSync(resolve(__dirname, '..', f), 'utf8');
     for (const f of ['copyPlan.ts', 'say.ts', 'automation.ts'])
-      expect(src(f)).not.toMatch(/measure/i);
+      expect(src(f)).not.toMatch(/from '\.\/measure'|measureRepo|planner_measure/);
+  });
+
+  it('never in the data API, even if the planner opened its own', () => {
+    expect(apiCollections({ ...manifest, dataApi: undefined })).not.toContain('measure');
+    expect(apiCollections({ ...manifest, dataApi: undefined })).toContain('item');
+  });
+});
+
+describe('council round 1', () => {
+  it('„Gemessene Zeiten löschen“: every record, one undo brings them back', async () => {
+    await record(WASH, 8);
+    await record(titleKey('Bad wischen')!, 20);
+    resetUndoJournal();
+    await undoable('del', deleteMeasures);
+    expect(await measureRepo.active().count()).toBe(0);
+    expect(undoDepth()).toBe(1);
+    await undoLast();
+    expect(await measureRepo.active().count()).toBe(2);
+  });
+
+  it('a very long title is compared by its beginning and never breaks „Erledigt“', async () => {
+    const long = `Wäsche ${'x'.repeat(300)}`;
+    await taskRepo.create({ listId: 'inbox', done: false, priority: 0, order: 0, title: long });
+    const [e] = await entries();
+    expect(await markDone(e!, {}, 12)).toBe(true);
+    await runsSettled();
+    expect((await recordsOf(titleKey(long)!)).map((r) => r.minutes)).toEqual([12]);
+  });
+
+  it('a record needs a whole minute that ran: 59 s is none', async () => {
+    await record(WASH, 59 / 60);
+    expect(await measureRepo.active().count()).toBe(0);
+    await record(WASH, 1.4);
+    expect((await recordsOf(WASH)).map((r) => r.minutes)).toEqual([1]);
+  });
+
+  it('an estimate set later in the source beats the measured length (Z1 ends)', async () => {
+    await record(WASH, 8);
+    await record(WASH, 12);
+    expect(await addFromField('Wäsche anstellen', {})).toBe(true);
+    await runsSettled();
+    const [task] = (await taskRepo.active().toArray()) as unknown as { id: string }[];
+    const item = await itemRepo.get(`todos:${task!.id}`);
+    expect(planLength(item, undefined)).toBe(10);
+    await taskRepo.update(task!.id, { estimateMin: 45 } as never);
+    expect(planLength(item, 45)).toBe(45);
+    // A length the plan set by hand (not measured) still wins over the source, as before.
+    expect(planLength({ durationMin: 20 }, 45)).toBe(20);
   });
 });

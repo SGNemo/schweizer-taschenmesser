@@ -119,4 +119,10 @@ for (const scheme of ['light', 'dark'] as const)
     await expect(page.getByText('Aus gemessener Zeit vorschlagen').first()).toBeVisible();
     await expect(page.getByText('Gemessene Zeiten löschen').first()).toBeVisible();
     expect(await axe()).toEqual([]);
+    // Z3's confirm: what goes and what stays, then nothing happens on „Abbrechen“.
+    await page.locator('#planner-measure-delete').getByRole('button', { name: 'Löschen' }).click();
+    const confirm = page.getByRole('dialog', { name: 'Gemessene Zeiten löschen' });
+    await expect(confirm.getByText(/Minuten, die schon im Plan stehen, bleiben/)).toBeVisible();
+    expect(await axe()).toEqual([]);
+    await confirm.getByRole('button', { name: 'Abbrechen' }).click();
   });

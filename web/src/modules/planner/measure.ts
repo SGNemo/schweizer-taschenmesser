@@ -7,6 +7,7 @@
  * „The same thing“: the source's stable id for a thing that comes back (`entityId`, e.g. a routine), else the title as
  * „Plan einfügen“ compares it (`sameTitle`). No fuzzy match: a near miss gets 30 as today.
  */
+import { notDeleted } from '@/core/db/repo';
 import type { Stored } from '@/core/db/types';
 import type { FocusSession } from '@/core/focus/session';
 import type { PlannableEntry } from '@/core/modules/contributions';
@@ -14,7 +15,7 @@ import { today } from '@/core/time/now';
 import { sameTitle } from './pastePlan';
 import { getPlannerSettings } from './prefs';
 import { measureRepo } from './repo';
-import { MEASURE_MAX_MIN, type MeasureRow } from './schema';
+import { MEASURE_KEY_MAX, MEASURE_MAX_MIN, type MeasureRow } from './schema';
 
 /** Records kept per key (pruned inside the recording action). */
 export const RECORDS_KEPT = 5;
@@ -24,20 +25,26 @@ export const RECORDS_TO_PROPOSE = 2;
 /** The key of a title (a new thing, a „Los“ step): its words as „Plan einfügen“ compares them. */
 export function titleKey(title: string): string | undefined {
   const words = sameTitle(title);
-  return words ? `t:${words}` : undefined;
+  return words ? capped(`t:${words}`) : undefined;
 }
+
+/** A key fits the record (`measureSchema.key`): a very long title is compared by its first 240 characters. */
+const capped = (key: string): string => key.slice(0, MEASURE_KEY_MAX);
 
 /** The key of a planned thing: its source's stable id when it has one that comes back, else its title. */
 export function measureKey(
-  e: Pick<PlannableEntry, 'moduleId' | 'title'> & { entityId?: string | undefined },
+  e: Pick<PlannableEntry, 'moduleId' | 'title' | 'entityId'>,
 ): string | undefined {
-  return e.entityId ? `id:${e.moduleId}:${e.entityId}` : titleKey(e.title);
+  return e.entityId ? capped(`id:${e.moduleId}:${e.entityId}`) : titleKey(e.title);
 }
 
-/** Minutes a focus round ran until `at`: its clock stops while paused, so pauses are already out; overtime counts. */
+/**
+ * Minutes (unrounded) a focus round ran until `at`: its clock stops while paused, so pauses are already out; overtime
+ * counts.
+ */
 export function workedMinutes(s: FocusSession, at: number): number {
   const ranMs = s.endAt === undefined ? s.durationMs - s.leftMs : s.durationMs - (s.endAt - at);
-  return Math.round(ranMs / 60_000);
+  return ranMs / 60_000;
 }
 
 /** A record worth keeping: at least a minute, at most eight hours (a timer left running teaches nothing). */
@@ -46,11 +53,11 @@ export const recordable = (minutes: number): boolean =>
 
 /** A key's records, newest first. */
 export async function recordsOf(key: string): Promise<Stored<MeasureRow>[]> {
-  const rows = await measureRepo
-    .active()
-    .filter((r) => r.key === key)
-    .toArray();
-  return rows.sort((a, b) => b.createdAt - a.createdAt || b.id.localeCompare(a.id));
+  const rows = await measureRepo.table.where('key').equals(key).filter(notDeleted).toArray();
+  // Newest first; a tie in the same millisecond (a fixed clock, a synced pair) by the later write.
+  return rows.sort(
+    (a, b) => b.createdAt - a.createdAt || b.updatedAt - a.updatedAt || b.id.localeCompare(a.id),
+  );
 }
 
 /**
@@ -58,8 +65,9 @@ export async function recordsOf(key: string): Promise<Stored<MeasureRow>[]> {
  * one undo takes both back. Nothing while the switch is off or the minutes are out of range.
  */
 export async function recordMeasure(key: string | undefined, minutes: number): Promise<void> {
+  // The range on what ran (59 s is under a minute), the record in whole minutes.
+  if (!key || !recordable(minutes)) return;
   const min = Math.round(minutes);
-  if (!key || !recordable(min)) return;
   if (!(await getPlannerSettings()).measurePropose) return;
   await measureRepo.create({ key, minutes: min, on: today() });
   const older = (await recordsOf(key)).slice(RECORDS_KEPT);

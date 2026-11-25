@@ -17,7 +17,7 @@ export const AUTO_WIDGET_ID = 'auto';
 export function countableCollections(m: ModuleManifest): string[] {
   if (m.dataApi === false) return [];
   return Object.entries(m.dataSchema.collections)
-    .filter(([, c]) => !c.local && c.dataApi !== false)
+    .filter(([, c]) => !c.local && c.dataApi !== false && !c.personal)
     .map(([name]) => tableName(m.id, name));
 }
 

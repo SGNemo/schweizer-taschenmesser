@@ -9505,11 +9505,11 @@ export const de = {
         allDayBlocksHelp: 'Aus: ein ganztägiger Termin kostet keine planbare Zeit.',
         // Planner hub 2, package 4a (COPY X15).
         expandRows: 'Zeilen aufklappen',
-        measurePropose: 'Aus gemessener Zeit vorschlagen',
-        measureProposeHelp:
-          'Ein neues Ding ohne Minuten bekommt die Zeit, die es die letzten Male mit „Fokus starten“ oder „Los“ gebraucht hat.',
         expandRowsHelp:
           'Ein Tipp auf den Titel zeigt das Ding im Planer. Aus: der Titel öffnet es in seinem Modul.',
+        measurePropose: 'Aus gemessener Zeit vorschlagen',
+        measureProposeHelp:
+          'Ein neues Ding ohne Minuten bekommt die Zeit, die es die letzten Male mit „Fokus starten“ oder „Los“ gebraucht hat. Aus: nichts wird mehr gemessen; Gemessenes bleibt bis „Gemessene Zeiten löschen“.',
         // Planner hub 2, package 2 (COPY P10): one switch per area.
         pileMoney: 'Stapel als eine Zeile: Finanzen',
         pileMail: 'Stapel als eine Zeile: E-Mail',
@@ -9533,7 +9533,6 @@ export const de = {
       tick: (step: string) => `„${step}“ abhaken`,
       more: (n: number) => `${n} weitere`,
     },
-    // A thing with steps and „Los“ (planner hub 2, package 5a; COPY B1, B3–B7, B10, B16, B19, B23–B26).
     /** Measured duration (package 8, COPY Z1–Z3). */
     measure: {
       /** Z1: after the minutes in the row („20 Min · wie zuletzt“). */
@@ -9544,7 +9543,13 @@ export const de = {
       /** Z3: the quiet button beside the switch. */
       deleteAll: 'Gemessene Zeiten löschen',
       deleted: 'Gemessene Zeiten gelöscht.',
+      /** Z3's confirm: what goes, what stays. */
+      deleteHint:
+        'Minuten, die schon im Plan stehen, bleiben. „Rückgängig“ holt die Zeiten zurück.',
+      /** Z3 with nothing measured yet. */
+      none: 'Noch nichts gemessen.',
     },
+    // A thing with steps and „Los“ (planner hub 2, package 5a; COPY B1, B3–B7, B10, B16, B19, B23–B26).
     steps: {
       count: (n: number) => (n === 1 ? '1 Schritt' : `${n} Schritte`),
       progress: (k: number, n: number) => `${k} von ${n}`,

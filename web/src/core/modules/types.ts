@@ -70,7 +70,7 @@ export interface CollectionDef {
   /**
    * `true`: what the collection holds is about him and stays his own (the planner's measured durations, package 8).
    * Synced between his own devices and kept in his own backup, but never in a share file for someone else and not
-   * counted in a diagnosis. Combine with `dataApi: false` (or a module without data API).
+   * counted in a diagnosis, and never offered to the data API (`apiCollections`) or counted on a home widget.
    */
   personal?: true;
   /**
@@ -442,10 +442,11 @@ export interface ModuleSettings {
   /** Extra search terms (German). */
   keywords?: string[];
   /**
-   * One quiet row a module adds below its fields on its settings page: a button with its own confirm and undo (the
-   * planner's „Gemessene Zeiten löschen“, package 8). Never a setting of its own – those are `fields`.
+   * One quiet row a module adds right after one of its fields (`after`, a field key) on its settings page: a button with
+   * its own confirm and undo (the planner's „Gemessene Zeiten löschen“ beside its switch, package 8). Never a setting of
+   * its own – those are `fields`.
    */
-  extra?: LazyComponent;
+  extra?: { after: string; component: LazyComponent };
 }
 
 /* ---- Contributions (registry-mediated, so modules never import each other) ---- */

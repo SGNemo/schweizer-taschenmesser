@@ -26,7 +26,7 @@ import styles from '../routes/focus.module.css';
 interface Kept {
   skipped: string[];
   paused: boolean;
-  /** When the current step began (epoch ms; a pause shifts it): its measured minutes run from here. */
+  /** When the current step began (epoch ms; a pause shifts it, a reload restarts it): its minutes run from here. */
   since?: number;
   /** When the pause began. */
   pausedAt?: number;
@@ -77,8 +77,10 @@ export function StepStage({
   const isFresh = (location.state as { stepsFresh?: boolean } | null)?.stepsFresh === true;
   const [kept, setKeptState] = useState<Kept>(() => {
     if (!isFresh) {
+      // A reload or a return keeps skips and pause, never the time away: the step's clock starts again here.
       const read = readKept(unitId);
-      return read.since === undefined ? { ...read, since: now() } : read;
+      const at = now();
+      return { ...read, since: at, ...(read.paused ? { pausedAt: at } : {}) };
     }
     writeKept(unitId, undefined);
     return fresh();

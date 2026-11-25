@@ -112,6 +112,18 @@ export const assignmentSchema = z.object({
   to: z.string().regex(TIME_RE).optional(),
 });
 
+/**
+ * The length the plan works with: its own row's over the source's – except a measured one (package 8), which only stood
+ * in for a missing estimate and gives way as soon as the source has one (set in ToDos, say).
+ */
+export function planLength(
+  row: Pick<PlanItemRow, 'durationMin' | 'measured'> | undefined,
+  source: number | undefined,
+): number | undefined {
+  if (row?.measured && source !== undefined) return source;
+  return row?.durationMin ?? source;
+}
+
 /** Longest record (8 h): a timer left running teaches nothing. */
 export const MEASURE_MAX_MIN = 480;
 
@@ -121,8 +133,11 @@ export const MEASURE_MAX_MIN = 480;
  * pruned inside the recording action. Synced between his own devices like the plan; never exported, copied, offered to
  * the data API, an assistant or a diagnosis.
  */
+/** Longest key: a longer title is compared by its beginning (`measure.ts capped`). */
+export const MEASURE_KEY_MAX = 240;
+
 export const measureSchema = z.object({
-  key: z.string().min(1).max(240),
+  key: z.string().min(1).max(MEASURE_KEY_MAX),
   minutes: z.number().int().min(1).max(MEASURE_MAX_MIN),
   on: z.string().regex(DATE_RE),
 });

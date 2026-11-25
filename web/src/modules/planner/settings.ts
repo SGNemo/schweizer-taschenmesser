@@ -164,7 +164,7 @@ export const settings: ModuleSettings = {
   schema: plannerSettingsSchema,
   defaults: DEFAULT_PLANNER_SETTINGS,
   // „Gemessene Zeiten löschen“ below the fields (package 8, COPY Z3).
-  extra: () => import('./components/MeasureSettings'),
+  extra: { after: 'measurePropose', component: () => import('./components/MeasureSettings') },
   fields: [
     {
       key: 'availableWeekday',

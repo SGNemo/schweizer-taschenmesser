@@ -41,7 +41,7 @@ import { t } from '@/strings';
 import type { SetupThing } from './daySetup';
 import { extractLock, readFieldWithPart } from './dueWords';
 import { assignmentRepo, dayRepo, itemKeyOf, itemRepo, putRow } from './repo';
-import type { AssignmentRow, PlanDayRow, PlanItemRow } from './schema';
+import { planLength, type AssignmentRow, type PlanDayRow, type PlanItemRow } from './schema';
 import { overloadLine } from './overload';
 import { GOAL_MAX, type Known, type PasteLine, type Place } from './pastePlan';
 import { requestedIds } from './run';
@@ -407,7 +407,7 @@ async function layOn(
       of: 1,
       date,
       // The length the board showed: the plan's own over the source's.
-      minutes: (await itemRepo.get(key))?.durationMin ?? e.durationMin ?? DEFAULT_MIN,
+      minutes: planLength(await itemRepo.get(key), e.durationMin) ?? DEFAULT_MIN,
       order: 0,
       reason: 'new',
     });
