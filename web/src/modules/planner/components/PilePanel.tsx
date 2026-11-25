@@ -99,7 +99,10 @@ export function PilePanel({
   const [openKey, setOpenKey] = useState<string | undefined>();
   const [shown, setShown] = useState<Record<string, number>>({});
   const box = useRef<HTMLDivElement>(null);
-  const keys = group.parts.flatMap((p) => p.members).join('|');
+  const memberKeys = group.parts.flatMap((p) => p.members);
+  const keys = memberKeys.join('|');
+  // Where the member that left stood: the focus goes to the ▸ now at that place.
+  const before = useRef<string[]>(memberKeys);
   // A member line that leaves (paid, ticked) takes the focus along: it goes to the next member's ▸, else the pile's
   // own title – never to the page's start.
   const [seenKeys, setSeenKeys] = useState(keys);
@@ -107,7 +110,11 @@ export function PilePanel({
   useEffect(() => {
     const el = box.current;
     if (!el || document.activeElement !== document.body) return;
-    const next = el.querySelector<HTMLElement>('[data-pile-expand]');
+    const now = new Set(seenKeys.split('|'));
+    const gone = before.current.findIndex((k) => !now.has(k));
+    before.current = seenKeys ? seenKeys.split('|') : [];
+    const all = [...el.querySelectorAll<HTMLElement>('[data-pile-expand]')];
+    const next = all[Math.min(Math.max(gone, 0), all.length - 1)];
     const title = el.closest('li')?.querySelector<HTMLElement>('button[data-row]');
     (next ?? title)?.focus({ preventScroll: true });
   }, [seenKeys]);

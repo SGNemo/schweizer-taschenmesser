@@ -23,7 +23,7 @@ import { acceptPileOffer } from '../pileSwitch';
 import type * as Piles from '../piles';
 import { foldPlan, pickOffer } from '../piles';
 import { plannerRepos } from '../repo';
-import { buildInputs, looseAll, looseOf, runPlanner, type RunDeps } from '../run';
+import { buildInputs, looseAll, looseOf, runPlanner, withFold, type RunDeps } from '../run';
 import type { AssignmentRow } from '../schema';
 import { DEFAULT_PLANNER_SETTINGS, PLANNER_SCOPE, plannerSettingsSchema } from '../settings';
 
@@ -251,14 +251,15 @@ describe('a run with a pile (write spy)', () => {
   });
 
   it('a pile with nothing to do is never proposed; a folded member neither', async () => {
+    const dp = deps([pileRow, i1]);
     parts.list = [
       part([]),
       part([], { moduleId: 'budgets', id: 'over', count: 2, readOnly: true }),
     ];
-    const idle = await buildInputs(deps([pileRow, i1]), plannerRepos(db));
+    const idle = await withFold(dp, await buildInputs(dp, plannerRepos(db)));
     expect(looseAll(idle)).toEqual(['invoices:i1']);
     parts.list = [part(['invoices:i1'])];
-    const alive = await buildInputs(deps([pileRow, i1]), plannerRepos(db));
+    const alive = await withFold(dp, await buildInputs(dp, plannerRepos(db)));
     expect(looseAll(alive)).toEqual(['planner:pile-money']);
   });
 });

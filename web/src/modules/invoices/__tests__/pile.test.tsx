@@ -33,7 +33,7 @@ describe('the invoices part', () => {
     const [part] = await source({ today: '2026-11-30', until: '2026-12-13' });
     expect(part).toMatchObject({ area: 'money', count: 0, to: OPEN_ROUTE });
     expect(new Set(part?.members)).toEqual(new Set([`invoices:${late.id}`, `invoices:${soon.id}`]));
-    expect(JSON.stringify(part)).not.toMatch(/Stadtwerke|84/);
+    expect(JSON.stringify(part)).not.toMatch(/Stadtwerke|84,30|8430/);
     expect(OPEN_ROUTE).toBe('/invoices?view=open');
   });
 

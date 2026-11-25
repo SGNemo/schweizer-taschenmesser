@@ -148,3 +148,29 @@ describe('foldPiles', () => {
     expect(groups.get('money')?.due).toBe('2026-12-04');
   });
 });
+
+describe('the pile contract', () => {
+  it('a module with `pile` declares its areas (`pileAreas`), and only such a module does', async () => {
+    const { availableManifests } = await import('./available');
+    for (const m of availableManifests()) {
+      const c = m.contributions ?? {};
+      expect(!!c.pile, m.id).toBe((c.pileAreas?.length ?? 0) > 0);
+    }
+  });
+
+  it('collectPiles keeps only declared areas and routes of the app itself', async () => {
+    const { collectPiles } = await import('./contributions');
+    const parts = [
+      { area: 'money', id: 'a', count: 1, label: String, to: '/invoices?view=open' },
+      { area: 'mail', id: 'b', count: 1, label: String, to: '/mail' },
+      { area: 'money', id: 'c', count: 1, label: String, to: '//evil.example' },
+      { area: 'money', id: 'd', count: 1, label: String, to: 'https://evil.example' },
+    ];
+    const m = {
+      id: 'x',
+      contributions: { pile: async () => ({ default: async () => parts }), pileAreas: ['money'] },
+    };
+    const got = await collectPiles({ today: '2026-11-30', until: '2026-12-13' }, [m as never]);
+    expect(got.map((p) => p.id)).toEqual(['a']);
+  });
+});

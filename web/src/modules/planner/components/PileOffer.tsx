@@ -28,7 +28,8 @@ export function PileOffer({ area, n }: { area: PileArea; n: number }) {
       <Button
         variant="ghost"
         onClick={() => {
-          // The focus goes to the new row's title, not to the page's start.
+          // Once: the line leaves at the tap. The focus goes to the new row's title, not to the page's start.
+          setGone(true);
           void acceptPileOffer(area).then(() =>
             focusWhenThere(() =>
               document.querySelector<HTMLElement>(

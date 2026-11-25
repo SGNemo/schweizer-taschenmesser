@@ -21,6 +21,33 @@ export function pileAreas(s: Pick<PlannerSettings, 'pileMoney' | 'pileMail'>): S
   return on;
 }
 
+/**
+ * The one fold of the board and the run: what stands on its own (a placement row, „Nicht planen“), what the plan asked
+ * for (request rows), then `folded` (member keys) and `idle` (pile keys with nothing to do – never proposed, and an
+ * unplaced one is no row).
+ */
+export function foldRows(
+  parts: readonly PileEntry[],
+  entries: readonly PlannableEntry[],
+  areas: ReadonlySet<PileArea>,
+  itemRows: Iterable<{ id: string; excluded?: boolean; skipped?: string }>,
+  assignmentKeys: Iterable<string>,
+): { fold: Folded; folded: Set<string>; idle: Set<string> } {
+  const rows = [...itemRows];
+  const fold = foldPlan(
+    parts,
+    entries,
+    areas,
+    [...assignmentKeys, ...rows.filter((r) => r.excluded).map((r) => r.id)],
+    rows.filter((r) => !r.excluded && !r.skipped).map((r) => r.id),
+  );
+  return {
+    fold,
+    folded: new Set(fold.folded.keys()),
+    idle: new Set(PILE_AREAS.filter((a) => !fold.groups.get(a)?.alive).map((a) => pileKey(a))),
+  };
+}
+
 /** The areas never asked about (`undefined`): the offer P5 may show for them. */
 export function pileUnasked(s: Pick<PlannerSettings, 'pileMoney' | 'pileMail'>): Set<PileArea> {
   const out = new Set<PileArea>();

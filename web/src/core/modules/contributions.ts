@@ -128,7 +128,11 @@ export async function collectPiles(
       const load = m.contributions?.pile;
       if (!load || m.id === 'accounts') return [];
       try {
-        return (await (await load()).default(ctx)).map((p) => ({ ...p, moduleId: m.id }));
+        // Only the areas the manifest declares, and a route of the app itself (`/…`, never `//` or a scheme).
+        const areas = new Set(m.contributions?.pileAreas ?? []);
+        return (await (await load()).default(ctx))
+          .filter((p) => areas.has(p.area) && /^\/(?!\/)/.test(p.to))
+          .map((p) => ({ ...p, moduleId: m.id }));
       } catch (e) {
         // The module id and the error's name only: a part's error may carry its data.
         console.error(`[pile] source "${m.id}" failed`, e instanceof Error ? e.name : typeof e);

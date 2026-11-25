@@ -330,7 +330,10 @@ export function ThingRow({
         >
           {idle ? (
             // P9: nothing waits – drawn like a done row (struck, the words say it too).
-            <s className={styles.pileIdle}>{`${row.title} · ${t.planner.pile.nothing}`}</s>
+            <span className={styles.pileIdle}>
+              <s>{row.title}</s>
+              {` · ${t.planner.pile.nothing}`}
+            </span>
           ) : (
             row.title
           )}
@@ -353,6 +356,7 @@ export function ThingRow({
             {facts.map((fact, i) => (
               <Fragment key={i}>
                 {i > 0 ? <span aria-hidden="true">·</span> : null}
+                {i > 0 && pile ? <span className="sr-only">, </span> : null}
                 {fact}
               </Fragment>
             ))}

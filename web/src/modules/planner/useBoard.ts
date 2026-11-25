@@ -12,10 +12,10 @@ import { addDays } from '@/core/plan/dates';
 import { useFocusSettings } from '@/core/settings/focus';
 import { useSettings } from '@/core/settings/settings';
 import { today } from '@/core/time/now';
-import { PILE_AREAS, pileKey, type Folded } from '@/core/modules/pile';
+import type { Folded } from '@/core/modules/pile';
 import { buildBoard, type Board } from './board';
 import { OFFER_FROM, pileOfferDismissed } from './pileSwitch';
-import { foldPlan, pickOffer, pileAreas, pileUnasked } from './piles';
+import { foldRows, pickOffer, pileAreas, pileUnasked } from './piles';
 import type { PileArea } from '@/core/modules/types';
 import { assignmentRepo, dayRepo, itemRepo } from './repo';
 import { LAST_RUN_KEY, requestedIds, type LastRun } from './run';
@@ -88,17 +88,18 @@ export function useBoard(
   );
   return useMemo(() => {
     if (!own || !entries || !calendar || !blocks || !parts) return undefined;
-    // What stands on its own is never folded: a placement row, „Nicht planen“.
-    const placed = [
-      ...own.assignments.map((a) => a.itemKey),
-      ...own.itemRows.filter((r) => r.excluded).map((r) => r.id),
-    ];
-    const requests = own.itemRows.filter((r) => !r.excluded && !r.skipped).map((r) => r.id);
-    const piles = foldPlan(parts, entries, pileAreas(settings), placed, requests);
-    const fold = {
-      folded: new Set(piles.folded.keys()),
-      idle: new Set(PILE_AREAS.filter((a) => !piles.groups.get(a)?.alive).map((a) => pileKey(a))),
-    };
+    const {
+      fold: piles,
+      folded,
+      idle,
+    } = foldRows(
+      parts,
+      entries,
+      pileAreas(settings),
+      own.itemRows,
+      own.assignments.map((a) => a.itemKey),
+    );
+    const fold = { folded, idle };
     const last = own.last ?? undefined;
     const titles: Record<string, string> = { ...last?.titles };
     for (const e of entries) titles[`${e.moduleId}:${e.id}`] = e.title;
@@ -137,7 +138,13 @@ export function useBoard(
     const unasked = pileUnasked(settings);
     const pileOffer = pickOffer(
       board.waiting.map((w) => w.itemKey),
-      foldPlan(parts, entries, unasked, placed).folded,
+      foldRows(
+        parts,
+        entries,
+        unasked,
+        own.itemRows,
+        own.assignments.map((a) => a.itemKey),
+      ).fold.folded,
       unasked,
       pileOfferDismissed,
       OFFER_FROM,

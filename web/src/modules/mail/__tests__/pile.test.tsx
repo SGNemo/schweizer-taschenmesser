@@ -89,7 +89,15 @@ describe('the mail part', () => {
   it('P15 opens PlanAllDialog over the planner and writes nothing before its own button; deleted and bulk stay unticked', async () => {
     await todo('t4', { deleted: true });
     await thread('t5', 'Newsletter', false);
-    const before = JSON.stringify(await db.table('todos_task').toArray());
+    const written = async () =>
+      JSON.stringify(
+        await Promise.all(
+          ['todos_task', 'mail_link', 'planner_item', 'planner_assignment'].map((t) =>
+            db.table(t).toArray(),
+          ),
+        ),
+      );
+    const before = await written();
     render(
       <MemoryRouter>
         <PlanQueue />
@@ -101,8 +109,10 @@ describe('the mail part', () => {
       within(dialog).getByRole('checkbox', { name: new RegExp(title) }) as HTMLInputElement;
     expect(box('Treffen').checked).toBe(true);
     expect(box('Schlüssel').checked).toBe(false);
-    expect(JSON.stringify(await db.table('todos_task').toArray())).toBe(before);
+    // Bulk mail is no member of the queue: not even in the dialog.
+    expect(within(dialog).queryByRole('checkbox', { name: /Newsletter/ })).toBeNull();
+    expect(await written()).toBe(before);
     fireEvent.click(within(dialog).getByRole('button', { name: 'Abbrechen' }));
-    expect(JSON.stringify(await db.table('todos_task').toArray())).toBe(before);
+    expect(await written()).toBe(before);
   });
 });
