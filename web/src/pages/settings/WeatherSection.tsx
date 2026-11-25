@@ -8,6 +8,8 @@ import {
   setWeatherEnabled,
   setWeatherScene,
   setWeatherSky,
+  setWeatherOfficial,
+  officialOn,
   skyOn,
   useWeatherSettings,
   type SceneMode,
@@ -95,6 +97,8 @@ export function WeatherSection() {
           <a href="https://open-meteo.com/" target="_blank" rel="noreferrer noopener">
             {tx.attributionLink}
           </a>
+          {' · '}
+          {tx.creditWarnings} · {tx.creditAurora}
         </p>
       </SettingRow>
       <SettingRow id="weather--scene" label={tp.sceneSetting} description={tp.sceneSettingHelp}>
@@ -115,6 +119,18 @@ export function WeatherSection() {
           labelHidden
           checked={skyOn(settings)}
           onChange={(on) => void setWeatherSky(on)}
+        />
+      </SettingRow>
+      <SettingRow
+        id="weather--official"
+        label={tp.officialSetting}
+        description={tp.officialSettingHelp}
+      >
+        <Switch
+          label={tp.officialSetting}
+          labelHidden
+          checked={officialOn(settings)}
+          onChange={(on) => void setWeatherOfficial(on)}
         />
       </SettingRow>
     </>

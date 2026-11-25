@@ -45,6 +45,16 @@ describe('describeRequest', () => {
     expect(describeRequest('https://sync.example.test/v1/pull?since=3').reason).toBe('sync');
     expect(describeRequest('https://elsewhere.example.test/x').reason).toBe('other');
     expect(describeRequest('https://api.pwnedpasswords.com/range/ABCDE').reason).toBe('breach');
+    // official warnings (DWD) and the aurora forecast (NOAA SWPC) are weather, never "other"
+    expect(describeRequest('https://maps.dwd.de/geoserver/dwd/ows?service=WFS')).toEqual({
+      host: 'maps.dwd.de',
+      reason: 'weather',
+    });
+    expect(
+      describeRequest(
+        'https://services.swpc.noaa.gov/products/noaa-planetary-k-index-forecast.json',
+      ),
+    ).toEqual({ host: 'services.swpc.noaa.gov', reason: 'weather' });
   });
 });
 

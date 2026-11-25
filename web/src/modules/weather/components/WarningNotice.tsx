@@ -1,4 +1,8 @@
 import { dateTimeFormat } from '@/core/i18n/format';
+import { getPlatform } from '@/core/platform';
+import { now } from '@/core/time/now';
+import { localDate as placeDate } from '@/core/sky/moonDay';
+import { DWD_WARNINGS_PAGE, type OfficialWarning } from '@/core/weather/warningsOfficial';
 import { tWeather } from '@/strings.weather';
 import { tWeatherPage } from '@/strings.weatherPage';
 import { Icon, type IconName } from '@/ui';
@@ -93,6 +97,63 @@ export function SafetyNotice({ inStage = false }: { inStage?: boolean }) {
           <Icon name="eye" size={16} />
           <span>{tp.ev.solarSafety}</span>
         </li>
+      </ul>
+    </div>
+  );
+}
+
+/**
+ * Official DWD warnings (handoff/03b "Official pill"): filled and framed, visibly more official than a computed hint;
+ * per warning "Amtliche (Unwetter)Warnung: {Ereignis}" · "bis …" · "Quelle: DWD" (opens the general DWD page, no
+ * place in the link). `more`: rows that went under the head, said at the end of the last row.
+ */
+export function OfficialNotice({
+  warnings,
+  tz,
+  inStage = false,
+  more = 0,
+}: {
+  warnings: OfficialWarning[];
+  tz: string | undefined;
+  inStage?: boolean;
+  more?: number;
+}) {
+  const tp = tWeatherPage.use();
+  const time = dateTimeFormat({ hour: '2-digit', minute: '2-digit', timeZone: tz });
+  const day = dateTimeFormat({ weekday: 'short', timeZone: tz });
+  const today = placeDate(now(), tz);
+  const until = (ms: number) =>
+    placeDate(ms, tz) === today
+      ? tp.officialUntilToday(time.format(ms))
+      : tp.officialUntil(day.format(ms), time.format(ms));
+  return (
+    <div
+      className={`${styles.warn} ${styles.official}`}
+      data-in-stage={inStage ? 'true' : undefined}
+      role="note"
+      aria-label={tp.officialLabel}
+      data-testid="weather-official"
+    >
+      <ul>
+        {warnings.map((w, i) => (
+          <li key={w.event}>
+            <Icon name="alert" size={16} />
+            <span className={styles.officialRow}>
+              <strong>{w.level >= 3 ? tp.officialSevere(w.event) : tp.official(w.event)}</strong>
+              <span className={styles.officialMeta}>
+                {until(w.expires)} ·{' '}
+                <button
+                  type="button"
+                  className={styles.officialSource}
+                  onClick={() => void getPlatform().app.openUrl(DWD_WARNINGS_PAGE)}
+                >
+                  {tp.officialSource}
+                </button>
+                {more > 0 && i === warnings.length - 1 ? ` · ${tp.officialMore(more)}` : null}
+              </span>
+            </span>
+          </li>
+        ))}
       </ul>
     </div>
   );

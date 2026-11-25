@@ -301,6 +301,10 @@
   --scene-rb-3: #f1dd7a;
   --scene-rb-4: #8fcf9a;
   --scene-rb-5: #7fb2e6;
+  /* Aurora (package 3b): base green, mid teal, violet top. */
+  --scene-aurora-1: #7fe0a8;
+  --scene-aurora-2: #58c7b0;
+  --scene-aurora-3: #a98be0;
   --scene-land-spring: #3f7a58;
   --scene-land-spring-1: #5f9a62;
   --scene-land-spring-2: #4f8c5a;

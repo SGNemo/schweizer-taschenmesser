@@ -33,12 +33,16 @@ export const weatherSettingsSchema = z.object({
   scene: z.enum(['motion', 'still', 'plain']).optional().catch(undefined),
   /** "Mond und Himmelsereignisse": calculated on this device; on by default. */
   sky: z.boolean().optional().catch(undefined),
+  /** "Amtliche Warnungen (Deutschland)" (package 3b), on by default; optional: stored settings stay valid. */
+  officialWarnings: z.boolean().optional().catch(undefined),
 });
 export type SceneMode = NonNullable<WeatherSettings['scene']>;
 /** The picture setting with its default. */
 export const sceneModeOf = (s: WeatherSettings | undefined): SceneMode => s?.scene ?? 'motion';
 /** The moon and sky events, with their default (on). */
 export const skyOn = (s: WeatherSettings | undefined): boolean => s?.sky ?? true;
+/** Official DWD warnings for the main place in Germany, with their default (on). */
+export const officialOn = (s: WeatherSettings | undefined): boolean => s?.officialWarnings ?? true;
 export type WeatherSettings = z.infer<typeof weatherSettingsSchema>;
 
 export const DEFAULT_WEATHER: WeatherSettings = {
@@ -72,6 +76,8 @@ export const setWeatherScene = (scene: SceneMode): Promise<void> =>
   setSettings(WEATHER_SCOPE, { scene });
 
 export const setWeatherSky = (sky: boolean): Promise<void> => setSettings(WEATHER_SCOPE, { sky });
+export const setWeatherOfficial = (officialWarnings: boolean): Promise<void> =>
+  setSettings(WEATHER_SCOPE, { officialWarnings });
 
 /** Removes the place and the device-local forecast of it. */
 export function clearWeatherPlace(): Promise<void> {

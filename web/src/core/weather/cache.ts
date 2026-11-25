@@ -5,6 +5,7 @@
 import { z } from 'zod';
 import { tWeather } from '@/strings.weather';
 import { POLLEN_TYPES } from './air';
+import { clearOfficial } from './warningsOfficial';
 import type { Forecast } from './api';
 import type { CodeGroup } from './logic';
 
@@ -141,6 +142,8 @@ export function clearCache(): void {
   } catch {
     // Nothing to clear.
   }
+  // The official warnings belong to the place; the Kp forecast is global and stays (handoff/03b "cache").
+  clearOfficial();
 }
 
 export interface Tried {

@@ -348,6 +348,12 @@ describe('sky events (package 3, handoff 03 "Scene")', () => {
       ['rainbow'],
     ],
     ['dust', base({ body: sun, event: 'dust', eventAmount: 1 }), ['dustSun']],
+    // package 3b: the aurora at its three strengths (CONCEPT-SOURCES §2)
+    ...([0.4, 0.7, 1] as const).map((a): [string, SceneState, string[]] => [
+      `aurora ${a}`,
+      base({ phase: 'night', cloud: 40, cond: 'partly', event: 'aurora', eventAmount: a }),
+      ['aurora', 'auroraGlow', 'auroraEdge'],
+    ]),
   ];
   const moving = (s: SceneState): SceneState => ({ ...s, motion: true, wind: 3 });
 
@@ -417,6 +423,16 @@ describe('sky events (package 3, handoff 03 "Scene")', () => {
       heavy({ body: sun, cond: 'snowShowers', cloud: 60, event: 'solarTotal', eventAmount: 1 }),
       heavy({ cond: 'showers', cloud: 60, body: { kind: 'none', t: 0.3 }, event: 'rainbow' }),
       heavy({ phase: 'night', cloud: 30, event: 'meteors', eventAmount: 1 }),
+      heavy({ phase: 'night', cloud: 60, event: 'aurora', eventAmount: 1 }),
+      heavy({
+        phase: 'night',
+        cond: 'clear',
+        cloud: 0,
+        body: { kind: 'moon', t: 0.6, alt: 40 },
+        moon: { illum: 1, tilt: -119, size: 1.2, t: 0.6, alt: 40 },
+        event: 'aurora',
+        eventAmount: 1,
+      }),
     ]) {
       const svg = sceneSvg(s);
       const n = (svg.inner.match(/<[a-zA-Z]/g) ?? []).length;
@@ -424,6 +440,53 @@ describe('sky events (package 3, handoff 03 "Scene")', () => {
       expect(size(s)).toBeLessThanOrEqual(48 * 1024);
       expect((svg.inner.match(/class="sc-/g) ?? []).length).toBeLessThanOrEqual(9);
     }
+  });
+
+  it('aurora: layer order and shape as in the mockup, curtains right of the text (x ≥ 900 or quietX)', () => {
+    const at = (a: number, o: Partial<SceneState> = {}): SceneState =>
+      base({ phase: 'night', cloud: 40, cond: 'partly', event: 'aurora', eventAmount: a, ...o });
+    const l = layers(at(1));
+    // behind the far clouds and every ridge, in front of the body (mockup svg())
+    expect(l.slice(0, 3)).toEqual(['sky', 'stars', 'aurora']); // no body here
+    expect(l.indexOf('aurora')).toBeLessThan(l.indexOf('cloudsFar'));
+    expect(l.indexOf('aurora')).toBeLessThan(l.indexOf('ridgeAlp'));
+    const withMoon = layers(at(1, { body: { kind: 'moon', t: 0.6, alt: 40 } }));
+    expect(withMoon.indexOf('aurora')).toBe(withMoon.indexOf('body') + 1);
+    const curtains = (s: SceneState, quietX?: number): Element[] => [
+      ...new DOMParser()
+        .parseFromString(
+          `<svg xmlns="http://www.w3.org/2000/svg">${sceneSvg(s, { quietX }).inner}</svg>`,
+          'image/svg+xml',
+        )
+        .querySelectorAll('[data-part="aurora"] path'),
+    ];
+    // two bands (two paths each) below 0.6, all four from 0.6 up
+    expect(curtains(at(0.4))).toHaveLength(4);
+    expect(curtains(at(0.7))).toHaveLength(8);
+    expect(curtains(at(1))).toHaveLength(8);
+    for (const [s, q] of [
+      [at(0.4), undefined],
+      [at(1), undefined],
+      [at(1), 1100],
+    ] as const) {
+      const left = q ?? 900;
+      for (const p of curtains(s, q)) {
+        const xs = [...p.getAttribute('d')!.matchAll(/[ML](-?[\d.]+),/g)].map((m) => Number(m[1]));
+        const tr = p.getAttribute('transform');
+        // the narrower copy: x' = tx + 0.62 · (x − cx)
+        const m = tr?.match(
+          /^translate\(([\d.]+) [\d.]+\) scale\(0\.62 0\.8\) translate\((-[\d.]+) /,
+        );
+        const real = m ? xs.map((x) => Number(m[1]) + 0.62 * (x + Number(m[2]))) : xs;
+        expect(Math.min(...real), `curtain left edge, quietX ${q}`).toBeGreaterThanOrEqual(left);
+      }
+    }
+    // the glow is the only part reaching left of the shelter; its centre stays right of it
+    const glow = parse(at(1)).querySelector('[data-part="auroraGlow"]')!;
+    expect(Number(glow.getAttribute('cx'))).toBeGreaterThanOrEqual(1100);
+    // no aurora by day or in "Schlicht"
+    expect(layers(at(1, { level: 'plain' }))).not.toContain('aurora');
+    expect(layers(base({ event: 'aurora', eventAmount: 1 }))).toContain('aurora'); // the drawing trusts the model
   });
 
   it('colours stay tokens with every event', () => {

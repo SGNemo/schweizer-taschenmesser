@@ -64,6 +64,11 @@ describe('"Was geht ins Netz" is derived from the code (D09)', () => {
     }
   });
 
+  it('names the weather sources: forecast, official warnings, aurora forecast', () => {
+    for (const host of ['api.open-meteo.com', 'maps.dwd.de', 'services.swpc.noaa.gov'])
+      expect([host, listed.get(host)]).toEqual([host, 'weather']);
+  });
+
   it("names the Claude provider's host (D13)", () => {
     expect(listed.get('api.anthropic.com')).toBe('ai');
   });

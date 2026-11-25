@@ -12,6 +12,7 @@ import {
 } from './lunarEclipses';
 import { showerNight, type ShowerNight } from './meteors';
 import { dayBounds, localDate } from './moonDay';
+import type { AuroraTonight } from './aurora';
 import { seasonInstant } from './phases';
 import {
   centralAt,
@@ -31,7 +32,8 @@ export type SceneEvent =
   | 'meteors'
   | 'starNight'
   | 'rainbow'
-  | 'dust';
+  | 'dust'
+  | 'aurora';
 
 export type SeasonKind = 'equinoxSpring' | 'solsticeSummer' | 'equinoxAutumn' | 'solsticeWinter';
 
@@ -39,11 +41,13 @@ export type SeasonKind = 'equinoxSpring' | 'solsticeSummer' | 'equinoxAutumn' | 
 export type When = 'running' | 'today' | 'ahead';
 
 export type EventChip =
+  | { kind: 'aurora' }
   | { kind: 'solar' | 'lunar'; from: number; to: number }
   | { kind: 'rainbow' }
   | { kind: 'meteors'; night: ShowerNight };
 
 export type CardEvent =
+  | { kind: 'aurora'; aurora: AuroraTonight; clouds: boolean; south: boolean }
   | { kind: 'solar'; when: When; eclipse: LocalSolarEclipse; clouds: boolean }
   | { kind: 'lunar'; when: When; eclipse: LocalLunarEclipse; clouds: boolean }
   | { kind: 'meteors'; night: ShowerNight; moonBright: boolean; clouds: boolean }
@@ -72,6 +76,8 @@ export interface EventsInput {
   hours?: readonly { time: string; cloud?: number }[];
   /** Mineral dust now, µg/m³. */
   dust?: number;
+  /** Aurora possible tonight from the SWPC Kp forecast (package 3b); absent without a usable file. */
+  aurora?: AuroraTonight;
 }
 
 const DAY = 86400000;
@@ -248,6 +254,10 @@ export function eventsFor(input: EventsInput): SkyEvents {
   const moonLit = s.moon.alt > 0 ? phaseLit(now) : 0;
 
   // Scene: running eclipse → rainbow → meteors (dark, not too cloudy) → dust (by day) → star night.
+  // Aurora (CONCEPT-SOURCES §2): in its dark span, cloud ≤ 60 %; after a running eclipse, before rainbow weather.
+  const aurora = input.aurora && now < input.aurora.to ? input.aurora : undefined;
+  if (!out.scene && aurora && dark && now >= aurora.from && (input.cloud ?? 0) <= METEOR_CLOUD_MAX)
+    out.scene = { event: 'aurora', amount: aurora.strength };
   if (!out.scene) {
     if (rainbow) out.scene = { event: 'rainbow', amount: 1 };
     else if (
@@ -267,9 +277,10 @@ export function eventsFor(input: EventsInput): SkyEvents {
       out.scene = { event: 'starNight', amount: 1 };
   }
 
-  // Chip: running eclipse → rainbow → an eclipse later today → meteors tonight.
+  // Chip: running eclipse → aurora tonight → rainbow → an eclipse later today → meteors tonight.
   const laterToday = all.find((x) => whenOf(x) === 'today');
   if (running) out.chip = { kind: running.kind, from: running.from, to: running.to };
+  else if (aurora) out.chip = { kind: 'aurora' };
   else if (rainbow) out.chip = { kind: 'rainbow' };
   else if (laterToday)
     out.chip = { kind: laterToday.kind, from: laterToday.from, to: laterToday.to };
@@ -283,6 +294,13 @@ export function eventsFor(input: EventsInput): SkyEvents {
       next.kind === 'solar'
         ? { kind: 'solar', when: whenOf(next), eclipse: next.e, clouds }
         : { kind: 'lunar', when: whenOf(next), eclipse: next.e, clouds };
+  } else if (aurora) {
+    out.card = {
+      kind: 'aurora',
+      aurora,
+      clouds: (cloudAt((aurora.from + aurora.to) / 2, input.hours, tz) ?? 0) > CLOUDS_HIDE,
+      south: lat < 0,
+    };
   } else if (meteorNight) {
     const mid = (meteorNight.from + meteorNight.to) / 2;
     const m = sky(mid, lat, lon, 15).moon;

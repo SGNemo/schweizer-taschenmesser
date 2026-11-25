@@ -3,8 +3,8 @@
  * geometry block `G` unchanged). Pure: the same state and options give the same string; all randomness comes from the
  * seeded generator. Colours are never literal: every colour is a `--scene-*` token (`ui/tokens.css`) or a
  * `color-mix()` of tokens, so the themes live in CSS. "Ruhig" is drawn by the component (greys over the same shapes).
- * The sky events (package 3) are drawn as in the mockup and never move; aurora (3b), the village landscape and the
- * porthole (4) are not here.
+ * The sky events (packages 3 and 3b, aurora included) are drawn as in the mockup and never move; the village
+ * landscape and the porthole (4) are not here.
  */
 import {
   FALLING,
@@ -238,6 +238,23 @@ export const G = {
     [1430, 116, 72],
     [1010, 66, 62],
   ] as const,
+  /**
+   * Aurora curtains: x0, x1, base y, height share, wave phase; top = base − h(amount); only the first `few` below an
+   * amount of 0.6. `op` = base + share × amount; `glow` = cx, cy, rx, ry of the faint glow behind them.
+   */
+  aurora: {
+    bands: [
+      [985, 1290, 198, 1, 0],
+      [1100, 1490, 190, 0.85, 1.7],
+      [1310, 1630, 200, 0.7, 3.1],
+      [1020, 1210, 206, 0.5, 4.4],
+    ] as const,
+    few: 2,
+    h: 128,
+    top: 70,
+    op: [0.2, 0.3] as const,
+    glow: [1260, 206, 520, 90] as const,
+  },
   motion: { rain: 2.4, rainHeavy: 1.6, snow: [10, 15], total: 12 },
   windStrokes: [
     [1150, 156, 190],
@@ -282,6 +299,8 @@ function prng(seed: number): () => number {
   };
 }
 const f = (n: number): number => Math.round(n * 10) / 10;
+/** Two decimals as a string, as the mockup writes faint opacities (a number attribute is rounded to one). */
+const p2 = (n: number): string => String(Math.round(n * 100) / 100);
 
 /** A colour: a palette key becomes its token; an expression (`var(…)`, `color-mix(…)`, a keyword) stays. */
 export function tok(h: string): string {
@@ -364,8 +383,13 @@ function spline(keys: readonly Pt[]): Ridge {
   return { y, crest: d, fill: `${d}V${G.H}H0Z` };
 }
 
+/** The skyline (alpine and far crest, whichever is higher) at x: what lies behind it is hidden by the ridges. */
+export function crestAt(x: number): number {
+  return Math.min(spline(G.ridges.alp).y(x), spline(G.ridges.far).y(x));
+}
+
 /* ============================== context ============================== */
-type Stop = readonly [number, string, number?];
+type Stop = readonly [number, string, (number | string)?];
 interface Ctx {
   s: SceneState;
   defs: string[];
@@ -996,7 +1020,14 @@ function rightMask(X: Ctx): string {
     );
   return X.rm;
 }
-const edges = (X: Ctx, crest: string, col: string, w: number, op: number): string =>
+const edges = (
+  X: Ctx,
+  crest: string,
+  col: string,
+  w: number,
+  op: number | string,
+  part?: string,
+): string =>
   el('path', {
     d: crest,
     fill: 'none',
@@ -1005,6 +1036,7 @@ const edges = (X: Ctx, crest: string, col: string, w: number, op: number): strin
     'stroke-linejoin': 'round',
     opacity: op,
     mask: rightMask(X),
+    'data-part': part,
   });
 /** Rime and ice glaze on one crest. */
 function ridgeTrims(X: Ctx, R: Ridge, LC: Land, which: 'far' | 'mid' | 'near'): string {
@@ -1145,6 +1177,7 @@ function lake(X: Ctx, LC: Land, bp: Pt | null): string {
     ? mix('rime', LC.bottom, LC.night ? 0.6 : 0.35)
     : mix(LC.bottom, LC.mid, 1 - K.sky);
   if (s.heat && !frozen) col = mix(X.skyMid, LC.mid, 0.3); // heat: still water, not sand
+  if (s.event === 'aurora') col = mix(col, 'aurora-1', 0.3 * s.eventAmount); // a faint green in the lake
   if (LC.wet) col = mix(col, 'black', 0.1);
   let out =
     el('path', { d, fill: mix(LC.mid, 'black', 0.12), transform: 'translate(0 2)' }) +
@@ -1620,6 +1653,72 @@ function eventLayer(X: Ctx): string {
   }
   return out;
 }
+/**
+ * The aurora (package 3b): a faint glow and soft curtains low over the mountains, never animated; nothing of it left
+ * of the shelter / quiet zone except the faint glow.
+ */
+function auroraLayer(X: Ctx): string {
+  const s = X.s;
+  const A = G.aurora;
+  const amt = Math.max(0, Math.min(1, s.eventAmount));
+  const left = Math.max(G.shelterX, X.quiet || 0);
+  const op = A.op[0] + A.op[1] * amt;
+  const gl = A.glow;
+  const glow = el('ellipse', {
+    cx: Math.max(gl[0], left + 200),
+    cy: gl[1],
+    rx: gl[2] * (0.6 + 0.4 * amt),
+    ry: gl[3] * (0.5 + 0.5 * amt),
+    fill: grad(
+      X,
+      [
+        [0, 'aurora-1', p2(0.3 * amt + 0.08)],
+        [1, 'aurora-1', 0],
+      ],
+      { radial: true },
+    ),
+    'data-part': 'auroraGlow',
+  });
+  const fill = grad(
+    X,
+    [
+      [0, 'aurora-3', 0],
+      [0.35, 'aurora-3', 0.45],
+      [0.7, 'aurora-2', 0.85],
+      [1, 'aurora-1', 1],
+    ],
+    { x1: 0, y1: 0, x2: 0, y2: 1 },
+  );
+  let curtains = '';
+  for (const b of A.bands.slice(0, amt < 0.6 ? A.few : A.bands.length)) {
+    const x0 = Math.max(b[0], left);
+    const x1 = b[1];
+    if (x1 - x0 < 90) continue;
+    const h = Math.min(A.h * Math.pow(amt, 1.15) * b[3] + 14, b[2] - A.top);
+    const n = 16;
+    let top = '';
+    let base = '';
+    for (let i = 0; i <= n; i++) {
+      const u = i / n;
+      const x = x0 + (x1 - x0) * u;
+      const env = Math.pow(Math.sin(Math.PI * u), 0.55);
+      const yb = b[2] + 7 * Math.sin(u * 7 + b[4]);
+      const yt = yb - h * env * (0.82 + 0.18 * Math.sin(u * 11 + b[4] * 2));
+      top += `${i ? 'L' : 'M'}${f(x)},${f(yt)}`;
+      base = `L${f(x)},${f(yb)}${base}`;
+    }
+    const d = `${top + base}Z`;
+    // two overlapping translucent copies (the second narrower and shifted) give the curtain its soft fold
+    curtains += el('path', { d, fill, opacity: p2(op) });
+    curtains += el('path', {
+      d,
+      fill,
+      opacity: p2(op * 0.6),
+      transform: `translate(${f(x0 + (x1 - x0) * 0.5)} ${b[2]}) scale(0.62 0.8) translate(${f(-(x0 + (x1 - x0) * 0.42))} ${-b[2]})`,
+    });
+  }
+  return el('g', { 'data-part': 'aurora' }, glow + curtains);
+}
 function windLayer(X: Ctx, LC: Land): string {
   const s = X.s;
   if (s.wind < 2) return '';
@@ -1896,11 +1995,17 @@ export function sceneSvg(s: SceneState, opts: SceneOptions = {}): SceneSvg {
     );
   }
   L.push(layer('body', body));
+  if (s.event === 'aurora' && !plain) L.push(layer('aurora', auroraLayer(X)));
   if (!plain) {
     const LC = landColours(X, stops);
     const cl = cloudLayers(X, bp, top);
     L.push(layer('cloudsFar', cl.far));
-    L.push(layer('ridgeAlp', mountain(X, alp, LC, G.alpPeaks, LC.alp, 'alp')));
+    // aurora: the alpine crest takes a faint green edge (fading out toward the text like every edge)
+    const auroraEdge =
+      s.event === 'aurora'
+        ? edges(X, alp.crest, 'aurora-1', 1.6, p2(0.45 * s.eventAmount), 'auroraEdge')
+        : '';
+    L.push(layer('ridgeAlp', mountain(X, alp, LC, G.alpPeaks, LC.alp, 'alp') + auroraEdge));
     L.push(layer('ridgeFar', mountain(X, far, LC, G.farPeaks, LC.far, 'far')));
     L.push(layer('fog', fogBands(X, 'far')));
     let midOut =

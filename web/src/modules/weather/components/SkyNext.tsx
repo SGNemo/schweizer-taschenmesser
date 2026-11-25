@@ -23,6 +23,8 @@ export function SkyNext({ event, tz }: { event: CardEvent; tz: string | undefine
   let head: ReactNode;
   const facts: string[] = [];
   let note: string | undefined;
+  /** A line in the text colour right under the head (the aurora's where-and-when, mockup 10-karte (g)). */
+  let lead: string | undefined;
   let safety = false;
   let clouds = false;
   switch (event.kind) {
@@ -82,6 +84,19 @@ export function SkyNext({ event, tz }: { event: CardEvent; tz: string | undefine
       clouds = event.clouds;
       break;
     }
+    case 'aurora': {
+      const hour = dateTimeFormat({ hour: 'numeric', timeZone: tz });
+      const h = (ms: number) => hour.format(ms).replace(/\D/g, '');
+      glyph = 'aurora';
+      head = ev.aurora;
+      lead = (event.south ? ev.auroraLineSouth : ev.auroraLine)(
+        h(event.aurora.from),
+        h(event.aurora.to),
+      );
+      facts.push(ev.auroraSource(String(Math.round(event.aurora.kp))));
+      clouds = event.clouds;
+      break;
+    }
     case 'rainbow':
       glyph = 'rainbow';
       head = ev.rainbow;
@@ -95,13 +110,14 @@ export function SkyNext({ event, tz }: { event: CardEvent; tz: string | undefine
       head = ev.starNight;
       break;
   }
-  const strong = event.kind === 'solar' || event.kind === 'lunar';
+  const strong = event.kind === 'solar' || event.kind === 'lunar' || event.kind === 'aurora';
   return (
     <div className={styles.next} data-testid="weather-sky-next" data-kind={event.kind}>
       <h4 className={styles.caps}>{ev.next}</h4>
       <div className={styles.ev}>
         <EventGlyph name={glyph} />
         <span>{strong ? <strong>{head}</strong> : head}</span>
+        {lead ? <span className={styles.safe}>{lead}</span> : null}
         {facts.length > 0 ? <span className={styles.muted}>{facts.join(' · ')}</span> : null}
         {note ? <span className={styles.muted}>{note}</span> : null}
       </div>
