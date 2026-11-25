@@ -7,8 +7,17 @@ import type { PlanItemRow } from '../schema';
 
 export const MeasureShown = createContext(true);
 
-/** The row's minutes came from measured time and still stand (`PlanItemRow.measured`). */
-export function useMeasured(item: PlanItemRow | undefined, minutes: number): boolean {
+/**
+ * The row's minutes came from measured time and still stand (`PlanItemRow.measured`): no estimate of the source's own has
+ * taken over (`planLength`), and the row is the whole thing (a split session shows plain minutes).
+ */
+export function useMeasured(
+  item: PlanItemRow | undefined,
+  sourceMin: number | undefined,
+  minutes: number,
+): boolean {
   const shown = useContext(MeasureShown);
-  return shown && item?.measured === true && item.durationMin === minutes;
+  return (
+    shown && item?.measured === true && sourceMin === undefined && item.durationMin === minutes
+  );
 }

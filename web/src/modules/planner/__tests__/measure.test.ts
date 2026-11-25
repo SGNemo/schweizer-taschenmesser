@@ -14,7 +14,7 @@ import { apiCollections } from '@/core/dataapi/scope';
 import { buildDiagnostics } from '@/core/diagnostics/export';
 import { enableModule } from '@/core/modules/activation';
 import { collectPlannable } from '@/core/modules/contributions';
-import { getManifest } from '@/core/modules/registry';
+import { getManifest, validateManifest } from '@/core/modules/registry';
 import { setSettings } from '@/core/settings/settings';
 import { shareableTables } from '@/core/share/share';
 import { setNow } from '@/core/time/now';
@@ -283,5 +283,28 @@ describe('council round 1', () => {
     expect(planLength(item, 45)).toBe(45);
     // A length the plan set by hand (not measured) still wins over the source, as before.
     expect(planLength({ durationMin: 20 }, 45)).toBe(20);
+  });
+
+  it('the manifest checks: extra.after names a field; a personal collection never gets an aiSchema', () => {
+    const extra = manifest.settings.extra!;
+    expect(validateManifest(manifest)).toEqual([]);
+    expect(
+      validateManifest({
+        ...manifest,
+        settings: { ...manifest.settings, extra: { ...extra, after: 'nope' } },
+      }),
+    ).toContain('settings.extra.after "nope" is not a settings field');
+    const ai = {
+      collections: { measure: { description: 'x', titleField: 'key', fields: { key: 'string' } } },
+    } as unknown as NonNullable<typeof manifest.aiSchema>;
+    expect(validateManifest({ ...manifest, aiSchema: ai }).join('\n')).toMatch(
+      /"measure" is personal/,
+    );
+  });
+
+  it('a key cut at 240 never splits an emoji', () => {
+    const key = titleKey(`${'a'.repeat(237)}😀😀`)!;
+    expect(key.length).toBeLessThanOrEqual(240);
+    expect(key.endsWith('\ud83d')).toBe(false);
   });
 });

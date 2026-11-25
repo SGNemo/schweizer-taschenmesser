@@ -153,7 +153,12 @@ export function validateManifest(m: ModuleManifest): string[] {
     if (!(name in m.dataSchema.collections))
       errors.push(`aiSchema collection "${name}" has no dataSchema`);
     if (!(c.titleField in c.fields)) errors.push(`aiSchema "${name}".titleField is not a field`);
+    if (m.dataSchema.collections[name]?.personal)
+      errors.push(`aiSchema collection "${name}" is personal: never offered to an assistant`);
   }
+  const extraAfter = m.settings.extra?.after;
+  if (extraAfter !== undefined && !m.settings.fields.some((f) => f.key === extraAfter))
+    errors.push(`settings.extra.after "${extraAfter}" is not a settings field`);
   errors.push(...validateAiActions(m.aiSchema));
   const onboarding = m.contributions?.onboarding;
   if (m.retired) return errors;

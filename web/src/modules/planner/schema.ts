@@ -127,15 +127,15 @@ export function planLength(
 /** Longest record (8 h): a timer left running teaches nothing. */
 export const MEASURE_MAX_MIN = 480;
 
+/** Longest key: a longer title is compared by its beginning (`measure.ts capped`). */
+export const MEASURE_KEY_MAX = 240;
+
 /**
  * One measured duration (package 8, CONCEPT-ROWS idea 8): the minutes a focus round or a „Los“ step ran, pauses
  * removed. `key` names „the same thing“ (`measure.ts measureKey`), `on` the day it was recorded. At most five per key –
  * pruned inside the recording action. Synced between his own devices like the plan; never exported, copied, offered to
  * the data API, an assistant or a diagnosis.
  */
-/** Longest key: a longer title is compared by its beginning (`measure.ts capped`). */
-export const MEASURE_KEY_MAX = 240;
-
 export const measureSchema = z.object({
   key: z.string().min(1).max(MEASURE_KEY_MAX),
   minutes: z.number().int().min(1).max(MEASURE_MAX_MIN),

@@ -286,7 +286,7 @@ export function ThingRow({
 
   // Z1 (package 8): a length taken from measured time says so until it is set by hand; the phone shows the minutes alone
   // and keeps the whole text for a screen reader.
-  const measured = useMeasured(row.item, row.minutes);
+  const measured = useMeasured(row.item, row.entry?.durationMin, row.minutes);
   const duration = measured ? (
     <>
       <span aria-hidden="true">

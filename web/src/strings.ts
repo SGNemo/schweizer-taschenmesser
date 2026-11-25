@@ -9509,7 +9509,7 @@ export const de = {
           'Ein Tipp auf den Titel zeigt das Ding im Planer. Aus: der Titel öffnet es in seinem Modul.',
         measurePropose: 'Aus gemessener Zeit vorschlagen',
         measureProposeHelp:
-          'Ein neues Ding ohne Minuten bekommt die Zeit, die es die letzten Male mit „Fokus starten“ oder „Los“ gebraucht hat. Aus: nichts wird mehr gemessen; Gemessenes bleibt bis „Gemessene Zeiten löschen“.',
+          'Ein neues Ding ohne Minuten bekommt die Zeit, die es die letzten Male mit „Fokus starten“ oder „Los“ gebraucht hat. Aus: nichts wird mehr gemessen, Gemessenes bleibt.',
         // Planner hub 2, package 2 (COPY P10): one switch per area.
         pileMoney: 'Stapel als eine Zeile: Finanzen',
         pileMail: 'Stapel als eine Zeile: E-Mail',

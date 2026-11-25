@@ -55,7 +55,7 @@ export const planner: Strings['planner'] = {
         'A tap on the title shows the thing in the planner. Off: the title opens it in its module.',
       measurePropose: 'Propose from measured time',
       measureProposeHelp:
-        'A new thing without minutes gets the time it took recently with “Start focus” or “Go”. Off: nothing is measured any more; what was measured stays until “Delete measured times”.',
+        'A new thing without minutes gets the time it took recently with “Start focus” or “Go”. Off: nothing more is measured; what was measured stays.',
       pileMoney: 'Piles as one row: finances',
       pileMail: 'Piles as one row: mail',
       pileHelp:

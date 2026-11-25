@@ -1,5 +1,6 @@
 /**
- * The planner's quiet row below its settings (package 8, COPY Z3; `ModuleSettings.extra`): „Gemessene Zeiten löschen“
+ * The planner's quiet row right after the switch „Aus gemessener Zeit vorschlagen“ (package 8, COPY Z3;
+ * `ModuleSettings.extra`): „Gemessene Zeiten löschen“
  * with one confirm and one undo. The switch „Aus gemessener Zeit vorschlagen“ is a plain field; off deletes nothing.
  */
 import { useLiveQuery } from 'dexie-react-hooks';

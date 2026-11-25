@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { areaOfPileId } from '@/core/modules/pile';
 import { unpile } from '../pileSwitch';
 import { hasOpenSteps, STEPS_FRESH, stepsPath } from './steps';
+import { planLength } from '../schema';
 import { dayName } from '@/core/plan/explain';
 import { t } from '@/strings';
 import type { RowMenuItem } from '@/ui';
@@ -93,7 +94,7 @@ export function useRowMenu(ctx: {
             setChoice({
               kind: 'estimate',
               entry: e,
-              current: row.item?.durationMin ?? e.durationMin ?? row.minutes,
+              current: planLength(row.item, e.durationMin) ?? row.minutes,
             }),
         },
         ...(date && 'pinned' in row && !row.pinned

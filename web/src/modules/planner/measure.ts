@@ -29,7 +29,16 @@ export function titleKey(title: string): string | undefined {
 }
 
 /** A key fits the record (`measureSchema.key`): a very long title is compared by its first 240 characters. */
-const capped = (key: string): string => key.slice(0, MEASURE_KEY_MAX);
+const capped = (key: string): string => {
+  if (key.length <= MEASURE_KEY_MAX) return key;
+  // By whole characters, so an emoji is never cut in half.
+  let out = '';
+  for (const ch of key) {
+    if (out.length + ch.length > MEASURE_KEY_MAX) break;
+    out += ch;
+  }
+  return out;
+};
 
 /** The key of a planned thing: its source's stable id when it has one that comes back, else its title. */
 export function measureKey(

@@ -159,6 +159,9 @@ function ModuleSettingsBody({ manifest }: { manifest: ModuleManifest }) {
   // A module's own quiet row right after one of its fields (`ModuleSettings.extra`); `lazyComponent` keeps one per loader.
   const extra = manifest.settings.extra;
   const Extra = extra ? lazyComponent(extra.component) : undefined;
+  // A key that names no field (renamed, mistyped) still shows the row: after the last field.
+  const extraAfter =
+    extra && fields.some((f) => f.key === extra.after) ? extra.after : fields.at(-1)?.key;
   const rows = (list: typeof fields) =>
     list.map((f) => (
       <Fragment key={f.key}>
@@ -169,7 +172,7 @@ function ModuleSettingsBody({ manifest }: { manifest: ModuleManifest }) {
           defaultValue={defaults[f.key]}
           onChange={(value) => void patch({ [f.key]: value })}
         />
-        {Extra && extra?.after === f.key ? (
+        {Extra && f.key === extraAfter ? (
           <Suspense fallback={null}>{createElement(Extra)}</Suspense>
         ) : null}
       </Fragment>
