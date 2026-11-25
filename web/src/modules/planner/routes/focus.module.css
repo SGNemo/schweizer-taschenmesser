@@ -84,8 +84,8 @@
   color: var(--text-3);
 }
 .stepTitle {
-  max-width: 20ch;
-  margin-inline: auto;
+  /* Even lines instead of a width cap (module CSS sets no max-width). */
+  text-wrap: balance;
 }
 /* The next step fades in (opacity only; `--dur` is 0 with reduced motion). */
 .fadeIn {
