@@ -3265,6 +3265,17 @@ export const de = {
     view: 'Status',
   },
   subscriptions: {
+    /** The first cancel step of the module (planner hub 2, package 4b; COPY X10, X11, X16). */
+    cancelStep: {
+      cancelledOn: 'Gekündigt am …',
+      dayLabel: 'Gekündigt am',
+      keep: 'Läuft weiter',
+      note: 'Vermerken',
+      noted: 'Als gekündigt vermerkt.',
+      kept: 'Läuft weiter, Frist erledigt.',
+      by: (day: string) => `Kündigen bis ${day}`,
+      title: (name: string) => `${name} kündigen?`,
+    },
     ext: {
       category: {
         label: 'Art des Dienstes',

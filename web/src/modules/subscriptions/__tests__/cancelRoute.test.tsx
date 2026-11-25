@@ -9,8 +9,9 @@ import { subscriptionRepo } from '../repo';
 
 /**
  * Planner hub S2, L7 (docs/design/planner-hub/CONCEPT-LINKS.md §2): the plan row's „Kündigen …“ is
- * `?open=<id>&do=cancel`, untrusted input. The module has no cancel step of its own, so `do` adds nothing: the
- * subscription opens as with `?open=`, nothing is written, and both parameters leave the URL.
+ * `?open=<id>&do=cancel`, untrusted input. Since planner hub 2, package 4b it opens the module's own cancel step (a
+ * dialog; only its own taps write); nothing is written by the route, and both parameters leave the URL. Any other `do`
+ * opens the subscription as with `?open=`.
  */
 const add = (over: Record<string, unknown> = {}) =>
   subscriptionRepo.create({
@@ -52,11 +53,12 @@ afterEach(() => {
 });
 
 describe('`?open=<id>&do=cancel`', () => {
-  it('opens the subscription and writes nothing; both parameters leave the URL', async () => {
+  it('opens the cancel step and writes nothing; both parameters leave the URL', async () => {
     const s = await add();
     const before = await snapshot();
     open(`/subscriptions?open=${s.id}&do=cancel`);
-    expect(await screen.findByRole('dialog', { name: 'Abo bearbeiten' })).toBeVisible();
+    // Since planner hub 2, package 4b: the module's own cancel step (only its own taps write).
+    expect(await screen.findByRole('dialog', { name: 'Zeitung kündigen?' })).toBeVisible();
     await stripped();
     expect(await snapshot()).toBe(before);
     expect(await subscriptionRepo.get(s.id)).toMatchObject({ active: true });

@@ -21,7 +21,7 @@ const manifest: ModuleManifest = {
     // The page has views „Abos | Übersicht“: the head keeps the tab row from the first paint.
     tabs: true,
   },
-  version: 6,
+  version: 7,
   get description() {
     return t.subscriptions.meta.description;
   },
@@ -64,6 +64,8 @@ const manifest: ModuleManifest = {
   contributions: {
     // Open things for the planner (read only; nothing is written back).
     plannable: () => import('./plannable'),
+    // Its panel under an expanded plan row (planner hub 2, package 4b): the first cancel step.
+    planPanel: () => import('./components/PlanPanel'),
     linkTarget: () => import('./linkTarget'),
     onboarding: onboarding,
     quickAdd: [

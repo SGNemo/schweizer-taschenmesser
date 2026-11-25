@@ -44,6 +44,10 @@ import {
   cancelTone,
 } from '../logic';
 import { subscriptionRepo } from '../repo';
+import type { Subscription } from '../schema';
+import type { Stored } from '@/core/db/types';
+import { nextDeadline, type Deadline } from '../cancelStep';
+import { CancelStep } from '../components/CancelStep';
 import { ServiceTile } from '../components/ServiceTile';
 import { OverviewView } from '../components/OverviewView';
 import { planDeadline } from '../planDeadline';
@@ -68,17 +72,28 @@ export default function SubscriptionsPage() {
   const [params, setParams] = useSearchParams();
   // A price from finance's hint (`?open=<id>&newprice=<cents>`) is offered for that subscription only.
   const [suggestion, setSuggestion] = useState<{ id: string; amountMinor: number } | undefined>();
+  // `?do=cancel` (the plan row's „Kündigen …“): the module's own cancel step for the next deadline, not the editor.
+  // Opening it writes nothing; only its „Vermerken“ / „Läuft weiter“ do (package 4b).
+  const [cancelling, setCancelling] = useState<
+    { sub: Stored<Subscription>; deadline: Deadline } | undefined
+  >();
+  const wantsCancel = params.get('do') === 'cancel';
   useOpenParam(
     (id) => subscriptionRepo.get(id),
     (record) => {
+      const deadline = wantsCancel ? nextDeadline(record, today()) : undefined;
+      if (deadline) {
+        setCancelling({ sub: record, deadline });
+        return;
+      }
       setTarget(record);
       const amountMinor = Number(params.get('newprice'));
       setSuggestion(amountMinor > 0 ? { id: record.id, amountMinor } : undefined);
     },
   );
-  // `?do=cancel` (the plan row's „Kündigen …“, CONCEPT-LINKS §2 L7) is untrusted input. The module has no cancel
-  // step of its own (cancelling is the „Gekündigt zum“ field of the entry), so it does nothing beyond `?open=`:
-  // the id is checked by `useOpenParam`, nothing is written, and once `open` is read `do` (any value) leaves the URL.
+  // `?do=cancel` (the plan row's „Kündigen …“, CONCEPT-LINKS §2 L7) is untrusted input: the id is checked by
+  // `useOpenParam`, `do=cancel` only OPENS the cancel step of a subscription with a deadline ahead (else the entry),
+  // nothing is written until its own tap, and once `open` is read `do` (any value) leaves the URL.
   const strayDo = params.has('do') && !params.get('open');
   useEffect(() => {
     if (!strayDo) return;
@@ -434,6 +449,15 @@ export default function SubscriptionsPage() {
             : undefined
         }
       />
+      {cancelling ? (
+        <CancelStep
+          key={cancelling.sub.id}
+          sub={cancelling.sub}
+          deadline={cancelling.deadline}
+          layout="dialog"
+          onClose={() => setCancelling(undefined)}
+        />
+      ) : null}
     </>
   );
 }
