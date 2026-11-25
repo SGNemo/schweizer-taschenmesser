@@ -77,14 +77,11 @@ export function useBoard(
   // As the run reads them: a thing without a date shows only while its item row asks for it.
   const requested = useMemo(() => (own ? requestedIds(own.itemRows) : undefined), [own]);
   const entries = usePlannable({ today: day, until }, requested);
-  // The parts of the switched-on piles (package 2): read live, like the things themselves.
-  // Parts of the switched-on areas and of those never asked about (the offer counts what would fold).
+  // Collective rows (package 2), read live like the things themselves: the parts of the switched-on areas and of those never asked about (the offer counts what would fold).
   const areas = new Set([...pileAreas(settings), ...pileUnasked(settings)]);
   const areasKey = [...areas].join(',');
   const parts = useLiveQuery(
     () => loadPileParts({ today: day, until }, areas),
-    // `areas` is read through its key.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [day, until, areasKey],
   );
   return useMemo(() => {

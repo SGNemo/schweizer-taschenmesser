@@ -6,6 +6,7 @@ import type { PileArea } from '@/core/modules/types';
 import { PlanPanelHost } from '@/core/modules/PlanPanelHost';
 import { getManifest } from '@/core/modules/registry';
 import { dayName, partWord } from '@/core/plan/explain';
+import { now } from '@/core/time/now';
 import { t } from '@/strings';
 import { Checkbox, Icon, type IconName, ItemRow, type RowMenuItem, SensitiveValue } from '@/ui';
 import { dueWas, type BoardRow, type WaitingRow } from '../board';
@@ -447,11 +448,23 @@ export function WaitRow({
 }) {
   const links = useRowLinks(row.entry);
   const linkMenu = useLinkMenu(links);
-  const opens = expandParts(expand, row.entry, row.unitId, row.title, links, row);
+  const pile = usePileOf(row.entry);
+  const opens = expandParts(expand, row.entry, row.unitId, row.title, links, row, pile);
+  // A pile (package 2): the area's glyph in front, its parts in the meta (a pile with nothing to do is no row here).
+  const pileMeta = pile?.group ? pileFacts(pile.group, pile.data, now()) : undefined;
   return (
     <ItemRow
       // `?item=<rowKey>` finds it here too: the page opens the folded group and focuses it (package 10b).
       rowKey={row.itemKey}
+      {...(pile
+        ? {
+            lead: (
+              <span className={styles.lead} aria-hidden="true">
+                <Icon name={PILE_GLYPH[pile.area]} size={20} />
+              </span>
+            ),
+          }
+        : {})}
       title={
         <span data-drag-unit={draggable ? row.unitId : undefined}>
           {row.title}
@@ -462,7 +475,20 @@ export function WaitRow({
       {...(opens ? { onOpen: opens.onOpen, disclosure: opens.disclosure } : {})}
       // The reason only behind „Warum hier?“, like on the board (U12). A row without a menu (no entry) keeps its
       // reason in sight.
-      meta={why || !row.entry ? reason : undefined}
+      meta={
+        why || !row.entry ? (
+          reason
+        ) : pileMeta?.length ? (
+          <span className={styles.meta}>
+            {pileMeta.map((fact, i) => (
+              <Fragment key={i}>
+                {i > 0 ? <span aria-hidden="true">·</span> : null}
+                {fact}
+              </Fragment>
+            ))}
+          </span>
+        ) : undefined
+      }
       below={
         chip || links.length > 0 ? (
           <>

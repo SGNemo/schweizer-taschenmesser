@@ -12,7 +12,11 @@ import { PanelGone, PanelLoading, PanelNote, PlanPanelFoot } from '@/core/module
 import type { PlanPanelProps } from '@/core/modules/types';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, PanelLine, PanelLines } from '@/ui';
+import { Button, PanelLine, PanelLines, SensitiveValue } from '@/ui';
+import { formatMoney } from '@/core/money';
+import { dayName } from '@/core/plan/explain';
+import { today } from '@/core/time/now';
+import { hardDue } from '../plannable';
 import { payWithUndo } from '../quickActions';
 import { invoiceRepo } from '../repo';
 import { PayForm } from './PayStep';
@@ -28,10 +32,21 @@ export default function InvoicePlanPanel({ id, compact }: PlanPanelProps) {
         <PlanPanelFoot />
       </>
     );
-  if (compact)
+  if (compact) {
+    // Hand-off 02: „Stadtwerke · 80,00 € · Frist Fr 4. Dez.“ – a passed deadline reads X18 „Frist war So“.
+    const due = hardDue(invoice);
+    const when = `${dayName(due)} ${formatDay(due, 'd. MMM')}`;
     return (
       <PanelLines>
         <PanelLine
+          meta={
+            <>
+              <SensitiveValue compact>
+                {formatMoney(invoice.amountMinor, invoice.currency)}
+              </SensitiveValue>
+              {` · ${due < today() ? t.planner.row.dueWas(dayName(due)) : t.planner.row.due(when)}`}
+            </>
+          }
           action={
             <Button variant="ghost" onClick={() => void payWithUndo(invoice.id)}>
               {t.invoices.paid}
@@ -42,6 +57,7 @@ export default function InvoicePlanPanel({ id, compact }: PlanPanelProps) {
         </PanelLine>
       </PanelLines>
     );
+  }
   const d = t.invoices.ext.dunning;
   return (
     <>
