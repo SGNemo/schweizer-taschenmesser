@@ -11,6 +11,7 @@ import { compact } from './capacity';
 import {
   ActionLead,
   LinkChips,
+  linksOfEntry,
   PanelLinks,
   type RowLinkViews,
   useActionMenu,
@@ -31,6 +32,16 @@ export interface RowExpand {
   onClose: () => void;
   /** X4 „Aus dem Plan nehmen“ for a thing that is gone (the planner's own undoable „Nicht planen“). */
   onTakeOut?: () => void;
+}
+
+/**
+ * The thing a ToDo row carries (package 4c): its first `origin` link when that is a mail thread – the host mounts mail's
+ * panel first, the ToDo's own lines under it. Any other row carries nothing.
+ */
+function carrierOf(entry: PlannableEntry): { moduleId: string; id: string } | undefined {
+  if (entry.moduleId !== 'todos') return undefined;
+  const origin = linksOfEntry(entry).find((l) => l.rel === 'origin');
+  return origin?.to.module === 'mail' ? { moduleId: 'mail', id: origin.to.id } : undefined;
 }
 
 /** The title's disclosure (COPY X1) and the compartment under the row while it is open. */
@@ -61,6 +72,7 @@ function expandParts(
           id={entry.id}
           to={entry.to}
           {...(expand.onTakeOut ? { onTakeOut: expand.onTakeOut } : {})}
+          {...(carrierOf(entry) ? { carrier: carrierOf(entry)! } : {})}
           detail={
             entry.detail ? (
               MONEY.test(entry.detail) ? (

@@ -115,6 +115,25 @@ export async function loadThreads(
   return out;
 }
 
+/** One cached thread header (the plan panel, package 4c): read through the device key; undefined when not here. */
+export async function loadThread(
+  accountKey: string,
+  thread: string,
+): Promise<CachedThreadView | undefined> {
+  const r = await threadRepo.get(threadId(accountKey, thread));
+  if (!r) return undefined;
+  let meta: ThreadMeta | undefined = r.demo;
+  if (!meta && r.sealed) {
+    try {
+      meta = threadMetaSchema.parse(await openJson(await getDeviceKey(), r.id, r.sealed));
+    } catch {
+      return undefined; // sealed with a key this device no longer has
+    }
+  }
+  if (!meta) return undefined;
+  return { id: r.threadId, date: r.sortKey, unread: r.unread, ...meta, demo: r.demo !== undefined };
+}
+
 /**
  * After a confirmed change at the service (mark read, archive, label, trash): the same change in the
  * saved header, so the list is right before the next refresh. A thread that left the inbox keeps its row
