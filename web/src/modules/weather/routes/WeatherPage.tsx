@@ -47,7 +47,7 @@ export default function WeatherPage() {
   const lat = viewed?.lat ?? 0;
   const lon = viewed?.lon ?? 0;
   const moon = useMoon(lat, lon, weather?.forecast.tz, !!settings?.place);
-  const events = useSkyEvents(lat, lon, weather?.forecast, !!settings?.place);
+  const events = useSkyEvents(lat, lon, weather?.forecast, !!settings?.place, !!weather?.stale);
   const phone = useMediaQuery(PHONE_QUERY);
 
   if (!settings) return null;
@@ -91,7 +91,8 @@ export default function WeatherPage() {
           warnings={stageWarnings}
           lat={lat}
           moon={moon}
-          events={events}
+          // A forecast that came late puts the safety pill under the head only (never twice, never into a painted stage).
+          events={late && events ? { ...events, safety: false } : events}
         />
       ) : loading ? (
         <WeatherHeroPending />

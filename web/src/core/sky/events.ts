@@ -238,7 +238,9 @@ export function eventsFor(input: EventsInput): SkyEvents {
     const last = showerNight(yesterday, lat, lon, tz);
     if (last && now <= last.to) return last;
     const tonight = showerNight(today, lat, lon, tz);
-    if (tonight && now >= (dayStart + dayEnd) / 2 && now <= tonight.to) return tonight;
+    // "That evening and night": from sunset of the day on.
+    if (tonight && now >= (dayStart + dayEnd) / 2 && sunAlt < 0 && now <= tonight.to)
+      return tonight;
     return null;
   })();
 

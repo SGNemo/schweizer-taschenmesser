@@ -14,6 +14,8 @@ export function useSkyEvents(
   lon: number,
   forecast: Forecast | undefined,
   enabled = true,
+  /** Old values (offline): rain, cloud and dust of hours ago say nothing about now; time and place still hold. */
+  stale = false,
 ): SkyEvents | undefined {
   const [settings] = useWeatherSettings();
   const on = enabled && !!forecast && !!settings && skyOn(settings);
@@ -26,12 +28,14 @@ export function useSkyEvents(
             lat,
             lon,
             tz: forecast.tz,
-            code: forecast.code,
-            cloud: forecast.now?.cloud,
-            hours: forecast.hours,
-            dust: forecast.air?.now.dust,
+            ...(!stale && {
+              code: forecast.code,
+              cloud: forecast.now?.cloud,
+              hours: forecast.hours,
+              dust: forecast.air?.now.dust,
+            }),
           })
         : undefined,
-    [on, minute, lat, lon, forecast],
+    [on, minute, lat, lon, forecast, stale],
   );
 }

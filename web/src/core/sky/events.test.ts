@@ -230,6 +230,8 @@ describe('one event at a time (CONCEPT-EVENTS §2)', () => {
   });
 
   it('meteors: chip and card on that evening and night; the bright moon and the clouds are told', () => {
+    // Not at midday: "that evening and night" starts at sunset.
+    expect(ev('2027-12-14T11:00Z', { cloud: 10 }).chip).toBeUndefined();
     const gem27 = ev('2027-12-14T19:00Z', { cloud: 10 });
     expect(gem27.chip).toMatchObject({ kind: 'meteors', night: { shower: { id: 'GEM' } } });
     expect(gem27.card).toMatchObject({ kind: 'meteors', moonBright: true });

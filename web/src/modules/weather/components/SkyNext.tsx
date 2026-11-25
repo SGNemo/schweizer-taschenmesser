@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { dateTimeFormat, numberFormat } from '@/core/i18n/format';
-import type { CardEvent } from '@/core/sky/events';
+import { solarSpan, type CardEvent } from '@/core/sky/events';
 import { tWeatherPage } from '@/strings.weatherPage';
 import { Icon } from '@/ui';
 import { EventGlyph, type EventGlyphName } from '@/ui/weather-scene';
@@ -39,8 +39,8 @@ export function SkyNext({ event, tz }: { event: CardEvent; tz: string | undefine
         event.when === 'running'
           ? ev.running(name, t(e.sunSet ?? e.end))
           : event.when === 'today'
-            ? ev.today(name, t(e.begin), t(e.end))
-            : ev.ahead(name, date.format(e.begin), t(e.begin), t(e.end));
+            ? ev.today(name, t(solarSpan(e).from), t(e.end))
+            : ev.ahead(name, date.format(e.begin), t(solarSpan(e).from), t(e.end));
       // The maximum is named only when the sun is up then; the coverage is the largest seen while it is up.
       if (e.altPeak > 0) facts.push(ev.peak(t(e.peak)));
       facts.push(ev.solarCover(pct(e.visibleObscuration)));
@@ -104,16 +104,20 @@ export function SkyNext({ event, tz }: { event: CardEvent; tz: string | undefine
         <span>{strong ? <strong>{head}</strong> : head}</span>
         {facts.length > 0 ? <span className={styles.muted}>{facts.join(' · ')}</span> : null}
         {note ? <span className={styles.muted}>{note}</span> : null}
-        {safety ? (
-          <span className={styles.safe} data-testid="weather-sky-safety">
-            {ev.solarSafety}
-          </span>
-        ) : null}
       </div>
       {clouds ? (
         <div className={styles.ev}>
           <Icon name="cloud" size={16} />
           <span className={styles.muted}>{ev.clouds}</span>
+        </div>
+      ) : null}
+      {/* A solar eclipse always ends with the safety sentence (handoff/03-events). */}
+      {safety ? (
+        <div className={styles.ev}>
+          <span aria-hidden="true" />
+          <span className={styles.safe} data-testid="weather-sky-safety">
+            {ev.solarSafety}
+          </span>
         </div>
       ) : null}
     </div>

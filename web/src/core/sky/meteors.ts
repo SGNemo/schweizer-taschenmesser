@@ -44,7 +44,7 @@ function lambdaJ2000(ms: number): number {
 
 /** The peak instant of a shower in a calendar year (UTC). */
 export function showerPeak(s: Shower, year: number): number {
-  // Start from the day the sun passes the longitude in a mean year (≈ 80° on 21 March).
+  // Start from the day the sun passes the longitude in a mean year (0° near 21 March).
   let t = Date.UTC(year, 2, 21) + (((s.lambda - 0 + 360) % 360) / 0.9856474) * DAY;
   if (new Date(t).getUTCFullYear() !== year) t -= 365.2422 * DAY;
   for (let i = 0; i < 8; i++) t += (norm180(s.lambda - lambdaJ2000(t)) / 0.9856474) * DAY;
