@@ -16,7 +16,7 @@ export interface ComposeFields {
 }
 
 const PREFIX = /^\s*((re|aw|fwd|fw|wg):\s*)+/i;
-const withPrefix = (prefix: 'Re' | 'Fwd', subject: string): string =>
+export const withPrefix = (prefix: 'Re' | 'Fwd', subject: string): string =>
   `${prefix}: ${subject.replace(PREFIX, '').trim()}`;
 
 const quoted = (text: string): string =>

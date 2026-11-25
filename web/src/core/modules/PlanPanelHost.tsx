@@ -46,8 +46,22 @@ interface PanelContext {
   links?: ReactNode;
   /** X4 „Aus dem Plan nehmen“ for a thing that is gone; the planner's own undoable action. */
   onTakeOut?: () => void;
+  /** The plan row itself (module and source id): what a carried target's panel acts on („Erledigt“ of the ToDo). */
+  row: { moduleId: string; id: string };
+  /**
+   * The row's own panel under a carried target's (a mail ToDo, package 4c): only its own lines (a checklist, else its
+   * detail and links – the way to the mail among them) – no second foot and no note.
+   */
+  secondary?: boolean;
+  /** A carried target's panel: the row's own lines, drawn just above that panel's foot (so the foot stays last). */
+  beforeFoot?: ReactNode;
 }
 const Ctx = createContext<PanelContext | undefined>(undefined);
+
+/** The plan row a panel is mounted for (its module and source id); a carried target's panel acts on it. */
+export function usePlanRow(): { moduleId: string; id: string } | undefined {
+  return useContext(Ctx)?.row;
+}
 
 /**
  * A panel's foot: the module's actions on the left (at most two; the main one `secondary`, others ghost), X2 „Ganz
@@ -56,21 +70,49 @@ const Ctx = createContext<PanelContext | undefined>(undefined);
 export function PlanPanelFoot({ children }: { children?: ReactNode }) {
   const ctx = useContext(Ctx);
   const navigate = useNavigate();
+  if (ctx?.secondary) return null;
   return (
-    <div className={styles.foot} data-panel-foot="">
-      {children ? <span className={styles.footStart}>{children}</span> : null}
-      {ctx ? (
-        <Button variant="ghost" data-panel-open="" onClick={() => void navigate(ctx.to)}>
-          {t.planner.panel.open}
-        </Button>
-      ) : null}
-    </div>
+    <>
+      {ctx?.beforeFoot}
+      <div className={styles.foot} data-panel-foot="">
+        {children ? <span className={styles.footStart}>{children}</span> : null}
+        {ctx ? (
+          <Button variant="ghost" data-panel-open="" onClick={() => void navigate(ctx.to)}>
+            {t.planner.panel.open}
+          </Button>
+        ) : null}
+      </div>
+    </>
   );
 }
 
 /** A note inside a panel: its first three lines, small, at most the reading measure (a ToDo's note). */
 export function PanelNote({ children }: { children: ReactNode }) {
+  if (useContext(Ctx)?.secondary) return null;
   return <p className={`${styles.line} ${styles.note}`}>{children}</p>;
+}
+
+/**
+ * A module's text inside a panel, at most the reading measure: `meta` small and muted (sender · day), `title` in 600
+ * (a subject), `body` plain text with its line breaks, clamped to six lines (four in a narrow window) – never a
+ * scroll box inside a row.
+ */
+export function PanelText({
+  kind,
+  as: Tag = 'p',
+  children,
+  ...rest
+}: {
+  kind: 'meta' | 'title' | 'body';
+  /** `span` inside a panel's foot (a question beside its button). */
+  as?: 'p' | 'span';
+  children: ReactNode;
+} & { 'data-testid'?: string }) {
+  return (
+    <Tag className={`${styles.line} ${styles[kind]}`} {...rest}>
+      {children}
+    </Tag>
+  );
 }
 
 /** A small head inside a panel (a list's section): caps, 600, muted. */
@@ -97,20 +139,29 @@ export function PanelGone() {
 
 /** X7 where he acted, `role="alert"`; what he typed stays (the panel keeps its own state). */
 export function PanelError() {
+  // A carried panel that broke keeps the row's own lines (a ToDo's checklist) above X7.
+  const before = useContext(Ctx)?.beforeFoot;
   return (
-    <p className={styles.line} role="alert">
-      {t.planner.panel.failed}
-    </p>
+    <>
+      {before}
+      <p className={styles.line} role="alert">
+        {t.planner.panel.failed}
+      </p>
+    </>
   );
 }
 
 /** Two quiet lines while a panel reads (no spinner). */
 export function PanelLoading() {
+  const before = useContext(Ctx)?.beforeFoot;
   return (
-    <div className={styles.loading} role="status" aria-label={t.ui.loading}>
-      <Skeleton height="1rem" width="60%" />
-      <Skeleton height="1rem" width="40%" />
-    </div>
+    <>
+      {before}
+      <div className={styles.loading} role="status" aria-label={t.ui.loading}>
+        <Skeleton height="1rem" width="60%" />
+        <Skeleton height="1rem" width="40%" />
+      </div>
+    </>
   );
 }
 
@@ -188,6 +239,63 @@ export interface PlanPanelHostProps {
   /** The default panel's body: the source's `detail` line and the links as `PanelLine`s. */
   detail?: ReactNode;
   links?: ReactNode;
+  /**
+   * The thing a carrier row stands for (a ToDo whose first `origin` link is a mail thread, package 4c): its module's
+   * panel comes first, the row's own lines under it. Only the pairs in `CARRIED` are mounted this way.
+   */
+  carrier?: { moduleId: string; id: string };
+}
+
+/**
+ * Which row carries which target's panel (CONCEPT-ROWS idea 4: „the one case where the host mounts two“): a ToDo
+ * planned from a mail. Any other origin (an invoice read from a mail) keeps its own panel.
+ */
+const CARRIED: Record<string, string> = { mail: 'todos' };
+
+/** One module's panel for one id, or what stands in for it (off, not on this device, none of its own). */
+function ModulePanel({
+  moduleId,
+  id,
+  compact,
+  onDone,
+  carried,
+}: {
+  moduleId: string;
+  id: string;
+  compact: boolean;
+  onDone?: () => void;
+  /** A carried target: mail that is not on this device (the phone) says where it is answered (X6). */
+  carried?: boolean;
+}) {
+  const states = useModuleStates();
+  const manifest = availableManifests().find((m) => m.id === moduleId);
+  const loader = manifest?.contributions?.planPanel;
+  if (moduleId === NEVER) return null;
+  if (!manifest)
+    return (
+      <>
+        <p className={styles.line}>{t.planner.panel.unavailable}</p>
+        {carried && moduleId === 'mail' ? (
+          <p className={styles.line}>{t.planner.panel.mailOnComputer}</p>
+        ) : null}
+      </>
+    );
+  if (!states) return <PanelLoading />;
+  if (!states[moduleId]) return <p className={styles.line}>{t.planner.panel.unavailable}</p>;
+  // Resolved only for a module that may show here (never cached for `accounts` or a module that is off).
+  const Panel = loader ? panelFor(`panel:${moduleId}`, loader) : undefined;
+  return (
+    <PanelBoundary moduleId={moduleId}>
+      {Panel ? (
+        <Suspense fallback={<PanelLoading />}>
+          {/* The module's component, made once per module (`panelFor`), rendered by reference. */}
+          {createElement<PlanPanelProps>(Panel, { id, compact, ...(onDone ? { onDone } : {}) })}
+        </Suspense>
+      ) : (
+        <DefaultPanel />
+      )}
+    </PanelBoundary>
+  );
 }
 
 export function PlanPanelHost({
@@ -199,32 +307,43 @@ export function PlanPanelHost({
   onTakeOut,
   detail,
   links,
+  carrier,
 }: PlanPanelHostProps) {
   const states = useModuleStates();
-  const manifest = availableManifests().find((m) => m.id === moduleId);
-  const loader = manifest?.contributions?.planPanel;
+  const row = useMemo(() => ({ moduleId, id }), [moduleId, id]);
   const ctx = useMemo(
-    () => ({ to, detail, links, ...(onTakeOut ? { onTakeOut } : {}) }),
-    [to, detail, links, onTakeOut],
+    () => ({ to, detail, links, row, ...(onTakeOut ? { onTakeOut } : {}) }),
+    [to, detail, links, row, onTakeOut],
   );
+  const carried =
+    carrier && CARRIED[carrier.moduleId] === moduleId && !compact ? carrier : undefined;
   if (moduleId === NEVER) return null;
-  if (!manifest) return <p className={styles.line}>{t.planner.panel.unavailable}</p>;
-  if (!states) return <PanelLoading />;
-  if (!states[moduleId]) return <p className={styles.line}>{t.planner.panel.unavailable}</p>;
-  // Resolved only for a module that may show here (never cached for `accounts` or a module that is off).
-  const Panel = loader ? panelFor(`panel:${moduleId}`, loader) : undefined;
+  if (carried) {
+    // No flicker between the two forms while the module states load.
+    if (states === undefined) return <PanelLoading />;
+    const own = (
+      <Ctx.Provider value={{ ...ctx, secondary: true }}>
+        <ModulePanel moduleId={moduleId} id={id} compact={false} />
+      </Ctx.Provider>
+    );
+    // The target can show here: its panel, the row's own lines just above its foot. Else (off, not on this device):
+    // what stands in for it (X5, on the phone X6) and the row's own lines – no button: the mail is answered at the PC.
+    const shows =
+      !!states?.[carried.moduleId] && availableManifests().some((m) => m.id === carried.moduleId);
+    return shows ? (
+      <Ctx.Provider value={{ ...ctx, beforeFoot: own }}>
+        <ModulePanel moduleId={carried.moduleId} id={carried.id} compact={false} carried />
+      </Ctx.Provider>
+    ) : (
+      <Ctx.Provider value={ctx}>
+        <ModulePanel moduleId={carried.moduleId} id={carried.id} compact={false} carried />
+        {own}
+      </Ctx.Provider>
+    );
+  }
   return (
     <Ctx.Provider value={ctx}>
-      <PanelBoundary moduleId={moduleId}>
-        {Panel ? (
-          <Suspense fallback={<PanelLoading />}>
-            {/* The module's component, made once per module (`panelFor`), rendered by reference. */}
-            {createElement<PlanPanelProps>(Panel, { id, compact, ...(onDone ? { onDone } : {}) })}
-          </Suspense>
-        ) : (
-          <DefaultPanel />
-        )}
-      </PanelBoundary>
+      <ModulePanel moduleId={moduleId} id={id} compact={compact} {...(onDone ? { onDone } : {})} />
     </Ctx.Provider>
   );
 }

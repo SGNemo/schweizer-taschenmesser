@@ -11,6 +11,7 @@ import { compact } from './capacity';
 import {
   ActionLead,
   LinkChips,
+  linksOfEntry,
   PanelLinks,
   type RowLinkViews,
   useActionMenu,
@@ -33,6 +34,15 @@ export interface RowExpand {
   onTakeOut?: () => void;
 }
 
+/**
+ * What a row may carry (package 4c): its first `origin` link. The host decides which targets it mounts above the row's
+ * own panel (today a mail thread: mail's panel first, the ToDo's own lines under it); any other origin is ignored.
+ */
+function carrierOf(entry: PlannableEntry): { moduleId: string; id: string } | undefined {
+  const origin = linksOfEntry(entry).find((l) => l.rel === 'origin');
+  return origin ? { moduleId: origin.to.module, id: origin.to.id } : undefined;
+}
+
 /** The title's disclosure (COPY X1) and the compartment under the row while it is open. */
 function expandParts(
   expand: RowExpand | undefined,
@@ -47,6 +57,7 @@ function expandParts(
   // The compartment's name: a thing in parts says which part, as its title does (the button's name is what it shows).
   const named =
     part && part.of > 1 ? `${title}, ${t.planner.row.partAria(part.k + 1, part.of)}` : title;
+  const carrier = expand.open ? carrierOf(entry) : undefined;
   return {
     disclosure: {
       open: expand.open,
@@ -61,6 +72,7 @@ function expandParts(
           id={entry.id}
           to={entry.to}
           {...(expand.onTakeOut ? { onTakeOut: expand.onTakeOut } : {})}
+          {...(carrier ? { carrier } : {})}
           detail={
             entry.detail ? (
               MONEY.test(entry.detail) ? (

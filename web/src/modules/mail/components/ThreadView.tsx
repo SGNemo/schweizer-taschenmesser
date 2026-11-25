@@ -273,7 +273,7 @@ function Unsubscribe({ url }: { url: string }) {
 }
 
 /** Reply, reply all or forward to one message: the compose window's prefill and title. */
-function composeOf(
+export function composeOf(
   kind: 'reply' | 'replyAll' | 'forward',
   message: MailMessage,
   account: MailAccountRef,

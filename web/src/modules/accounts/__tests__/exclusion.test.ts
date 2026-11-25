@@ -257,3 +257,9 @@ it('is no target of the quick capture: no capture type writes to it, whatever is
   expect(await db.table('accounts_entry').count()).toBe(before);
   expect(await db.table('accounts_vault').count()).toBe(1);
 });
+
+it('the vault offers no panel under a plan row and no strip at the planner’s foot (planner hub 2, 4a / 4c)', () => {
+  const c = manifest.contributions ?? {};
+  expect(c).not.toHaveProperty('planPanel');
+  expect(c).not.toHaveProperty('planPageFoot');
+});

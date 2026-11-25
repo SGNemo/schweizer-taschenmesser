@@ -9519,6 +9519,8 @@ export const de = {
       gone: 'Gibt es nicht mehr.',
       takeOut: 'Aus dem Plan nehmen',
       unavailable: 'Auf diesem Gerät nicht verfügbar.',
+      // X6 (mail on the phone, package 4c)
+      mailOnComputer: 'Mails beantwortest du am PC.',
       failed: 'Das hat nicht geklappt. Es ist nichts verändert.',
       tick: (step: string) => `„${step}“ abhaken`,
       more: (n: number) => `${n} weitere`,

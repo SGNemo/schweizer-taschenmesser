@@ -83,6 +83,10 @@ const manifest: ModuleManifest = {
   area: 'knowledge',
   automation: () => import('./automation'),
   contributions: {
+    // The planned mail's panel under its ToDo's plan row, and the send window at the planner's foot (planner hub 2,
+    // package 4c); mounted by `core/modules/PlanPanelHost` only.
+    planPanel: () => import('./components/PlanPanel'),
+    planPageFoot: () => import('./components/PlanFoot'),
     onboarding: noOnboarding,
     // What a link to one of these says about its target (alive, gone); read through `resolveLink` only.
     linkTarget: () => import('./linkTarget'),

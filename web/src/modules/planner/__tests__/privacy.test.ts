@@ -226,3 +226,29 @@ describe('pin (2): the local stage and the field never fetch', () => {
     expect(stage).toContain('localStageReady()');
   });
 });
+
+it('a planned mail’s content never reaches the planner: no mail import, no mail cache in its code (package 4c)', () => {
+  // Mail's panel is mail's code, mounted by core; the planner only hands over the ToDo's first `origin` link. So the
+  // mail text is never in the planner's strings, search, copy path, diagnostics or prompt: nothing here reads it.
+  const files = [
+    '../routes/PlannerPage.tsx',
+    '../components/ThingRow.tsx',
+    '../components/RowLinks.tsx',
+    '../components/RowCompartment.tsx',
+    '../copyPlan.ts',
+    '../pastePlan.ts',
+    '../localStage.ts',
+    '../../../core/modules/PlanPanelHost.tsx',
+  ].map((f) => readFileSync(new URL(f, import.meta.url), 'utf8'));
+  for (const text of files)
+    for (const forbidden of [
+      'modules/mail',
+      // Joined, so the module-isolation scan does not read it as an import.
+      ['from ', "'../../mail"].join(''),
+      'mail_body',
+      'mail_thread',
+      'loadThreadBodies',
+      'mailText',
+    ])
+      expect(text).not.toContain(forbidden);
+});
