@@ -1,4 +1,5 @@
 import { compareText } from '@/core/i18n/format';
+import type { PileEntry } from './pile';
 import { NEVER_LINKED, refKey, type EntityRef } from '@/core/entitylinks/types';
 import { loadModuleStates, useModuleStates } from './activation';
 import { availableManifests } from '@/core/modules/available';
@@ -104,6 +105,29 @@ export function usePlannable(
     async () => (states ? collectPlannable(ctx, activeManifests(states), requested) : undefined),
     preload('plannable', activeManifests(states)),
   );
+}
+
+/**
+ * The parts of the planner's collective rows (planner hub 2, package 2) of all given (active) modules, in manifest
+ * order. A failing part is missing; the others stay. Never `accounts`.
+ */
+export async function collectPiles(
+  ctx: { today: string; until: string },
+  manifests: readonly ModuleManifest[],
+): Promise<PileEntry[]> {
+  const lists = await Promise.all(
+    manifests.map(async (m) => {
+      const load = m.contributions?.pile;
+      if (!load || m.id === 'accounts') return [];
+      try {
+        return (await (await load()).default(ctx)).map((p) => ({ ...p, moduleId: m.id }));
+      } catch (e) {
+        console.error(`[pile] source "${m.id}" failed`, e);
+        return [];
+      }
+    }),
+  );
+  return lists.flat();
 }
 
 /** A block of time a module keeps free (`PlannableSource.blocks`), with the module that asked for it. */
