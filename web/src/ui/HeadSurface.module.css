@@ -51,10 +51,18 @@
 .surface > :not(.pattern, .backdrop) {
   position: relative;
 }
-/* A night sky is dark whatever the theme: the head's text switches to the light ink (tokens.css --sky-night-ink). */
-.surface:has([data-sky='night']) {
-  --text: var(--sky-night-ink);
-  --text-on-tint: var(--sky-night-ink);
+/* A scene behind the stage (the weather) decides the ink of the text on it, per scene and theme (A11Y §1): light on
+   dark skies, dark on light ones. Opaque parts on it (chips, the hint, the module row) go back to --ink-theme. */
+.surface:has([data-ink='light']) {
+  --text: var(--ink-light);
+  --text-muted: var(--ink-light);
+  --text-on-tint: var(--ink-light);
+  color: var(--text);
+}
+.surface:has([data-ink='dark']) {
+  --text: var(--ink-dark);
+  --text-muted: var(--ink-dark);
+  --text-on-tint: var(--ink-dark);
   color: var(--text);
 }
 

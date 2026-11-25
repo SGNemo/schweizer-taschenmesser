@@ -26,7 +26,12 @@ export const weatherSettingsSchema = z.object({
   lon: z.number().min(-180).max(180),
   /** More places for the weather page; only the first one feeds the overview widget. */
   extra: z.array(placeSchema).max(MAX_EXTRA_PLACES),
+  /** "Bild im Wetter-Kopf": with motion (default), a still picture, or sky only. Optional: stored settings stay valid. */
+  scene: z.enum(['motion', 'still', 'plain']).optional(),
 });
+export type SceneMode = NonNullable<WeatherSettings['scene']>;
+/** The picture setting with its default. */
+export const sceneModeOf = (s: WeatherSettings | undefined): SceneMode => s?.scene ?? 'motion';
 export type WeatherSettings = z.infer<typeof weatherSettingsSchema>;
 
 export const DEFAULT_WEATHER: WeatherSettings = {
@@ -55,6 +60,9 @@ export async function chooseWeatherPlace(place: string, lat: number, lon: number
 
 export const setWeatherEnabled = (enabled: boolean): Promise<void> =>
   setSettings(WEATHER_SCOPE, { enabled });
+
+export const setWeatherScene = (scene: SceneMode): Promise<void> =>
+  setSettings(WEATHER_SCOPE, { scene });
 
 /** Removes the place and the device-local forecast of it. */
 export function clearWeatherPlace(): Promise<void> {

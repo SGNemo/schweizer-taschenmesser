@@ -225,8 +225,8 @@
 .heroBlock {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  margin-top: var(--space-3);
+  align-items: flex-start;
+  gap: var(--space-2);
 }
 .keys {
   display: flex;
@@ -243,17 +243,21 @@
   min-height: 2.25rem;
   padding: 0 var(--space-3);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--surface) 72%, transparent);
-  color: var(--text);
+  /* opaque, with the theme's own ink: readable on any scene (A11Y §1, find A6) */
+  --text: var(--ink-theme);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  color: var(--ink-theme);
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
+  white-space: nowrap;
 }
 .key[data-kind='rain'] svg {
   color: var(--info-ink);
 }
 .rest {
   margin: 0;
-  max-width: 48rem;
+  /* never wider than 36 rem: the one row that would fall under 4.5 : 1 over snowy ridges (A11Y §1 rule 1) */
+  max-width: 36rem;
   color: var(--text);
   font-size: var(--text-meta);
 }
@@ -261,8 +265,9 @@
 .heroFacts {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-2);
   min-width: 0;
+  max-width: 36rem;
 }
 /* Phone (design check K3, stage ≤ 320 px): the long line of further values lies in the page, right under the head. */
 .restBelow {
@@ -272,6 +277,15 @@
   .heroFacts .rest {
     display: none;
   }
+  /* the scene's body sits right of the figure: a long detail line wraps instead of running into it */
+  .heroBlock {
+    max-width: none;
+    width: 100%;
+    gap: var(--space-1);
+  }
+  .heroBlock > :first-child {
+    max-width: calc(100% - 96px);
+  }
   .restBelow {
     display: block;
     margin: 0 0 var(--space-3);
@@ -279,11 +293,23 @@
     font-size: var(--text-meta);
   }
 }
+/* The hint of the day: an opaque pill with the theme's own ink (never the stage's ink), in the stage under the detail
+   line or, when the forecast came late, full width under the head (handoff 01b "The hint"). */
 .warn {
-  padding: var(--space-3) var(--space-4);
+  --text: var(--ink-theme);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 2px var(--space-2);
+  padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--warning) 14%, var(--surface));
-  color: var(--text);
+  color: var(--ink-theme);
+  font-size: var(--text-sm);
+}
+.warn[data-in-stage='true'] {
+  width: fit-content;
+  max-width: 100%;
 }
 .warn ul {
   margin: 0;
@@ -291,22 +317,49 @@
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: 2px;
 }
 .warn li {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  min-height: 1.375rem;
   font-weight: var(--weight-semibold);
 }
 .warn li svg {
   color: var(--warning-ink);
   flex: none;
 }
-.warn p {
-  margin: var(--space-1) 0 0;
-  color: var(--text-muted);
+.computed {
+  color: var(--ink-theme-muted);
   font-size: var(--text-meta);
+  line-height: 1.375rem;
+}
+.computed::before {
+  content: '· ';
+}
+@media (max-width: 899px) {
+  .warn {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    padding: 3px var(--space-3);
+    font-size: var(--text-meta);
+    line-height: 1.125rem;
+  }
+  .warn[data-in-stage='true'] {
+    width: 100%;
+  }
+  .warn li {
+    min-height: 1.125rem;
+  }
+  .computed {
+    padding-left: 24px;
+    line-height: 1.125rem;
+  }
+  .computed::before {
+    content: none;
+  }
 }
 .places {
   display: flex;

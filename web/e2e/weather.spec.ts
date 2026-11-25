@@ -326,3 +326,163 @@ test.describe('Weather module', () => {
     ).toBeVisible();
   });
 });
+
+/* ---- Weather scenes, package 1b: the scene in the head, the hint inside the stage, sizes, motion, axe ---- */
+
+const sceneDays = days7;
+/** The analysis fixture (invented place "Lindenau"): a night or a day, with 0, 1 or 2 hints for today and tomorrow. */
+async function mockScene(page: Page, o: { night: boolean; hints: 0 | 1 | 2 }) {
+  const hours = [...times, ...nextDay];
+  await page.route('**://geocoding-api.open-meteo.com/**', (route) =>
+    route.fulfill({
+      json: {
+        results: [{ name: 'Lindenau', country: 'Deutschland', latitude: 50.1, longitude: 10.2 }],
+      },
+    }),
+  );
+  await page.route('**://air-quality-api.open-meteo.com/**', (route) =>
+    route.fulfill({ status: 500, body: '' }),
+  );
+  await page.route('**://api.open-meteo.com/**', (route) =>
+    route.fulfill({
+      json: {
+        timezone: 'Europe/Berlin',
+        current: {
+          time: o.night ? '2026-09-29T02:50' : '2026-09-29T12:00',
+          temperature_2m: o.night ? -4.2 : 9,
+          weather_code: 1,
+          apparent_temperature: o.night ? -9 : 7,
+          relative_humidity_2m: 86,
+          wind_speed_10m: 9,
+          wind_gusts_10m: 18,
+          is_day: o.night ? 0 : 1,
+          cloud_cover: 0,
+          pressure_msl: 1027,
+          wind_direction_10m: 45,
+          snow_depth: 0,
+        },
+        hourly: {
+          time: hours,
+          temperature_2m: hours.map(() => -4),
+          weather_code: hours.map(() => 1),
+          precipitation_probability: hours.map(() => 0),
+          is_day: hours.map((t) => (t.slice(11, 13) >= '08' && t.slice(11, 13) < '16' ? 1 : 0)),
+          uv_index: hours.map(() => 0),
+        },
+        daily: {
+          time: sceneDays,
+          weather_code: sceneDays.map((_, i) => (i === 1 && o.hints === 2 ? 66 : 1)),
+          temperature_2m_max: sceneDays.map(() => 2),
+          temperature_2m_min: sceneDays.map((_, i) => (i === 0 && o.hints > 0 ? -6 : 1)),
+          precipitation_probability_max: sceneDays.map(() => 0),
+          uv_index_max: sceneDays.map(() => 1.5),
+          sunrise: sceneDays.map((d) => `${d}T07:38`),
+          sunset: sceneDays.map((d) => `${d}T16:24`),
+        },
+      },
+    }),
+  );
+}
+
+async function chooseLindenau(page: Page) {
+  await ready(page, '/settings/verbindungen');
+  await page.getByLabel('Ort suchen').fill('Lindenau');
+  await page
+    .locator('#weather--place')
+    .getByRole('button', { name: 'Suchen', exact: true })
+    .click();
+  await page.getByRole('button', { name: /Lindenau.*wählen/ }).click();
+  await expect(page.getByTestId('weather-place')).toContainText('Lindenau');
+}
+
+test.describe('Weather scene in the head (package 1b)', () => {
+  test('the hint lives in the stage as a pill, nothing above the head', async ({ page }) => {
+    await mockScene(page, { night: true, hints: 2 });
+    await chooseLindenau(page);
+    await ready(page, '/weather');
+    const frame = page.getByTestId('module-frame');
+    const scene = frame.getByTestId('weather-scene');
+    await expect(scene).toHaveAttribute('data-phase', 'night');
+    await expect(scene).toHaveAttribute('data-cond', 'mostlyClear');
+    await expect(scene).toHaveAttribute('data-ink', 'light');
+    await expect(frame.getByTestId('sky')).toBeAttached();
+    const pill = frame.getByTestId('weather-warning');
+    await expect(pill).toHaveCount(1);
+    await expect(pill).toHaveAttribute('role', 'note');
+    await expect(pill).toHaveAccessibleName('Wetterhinweis');
+    await expect(pill).toContainText('Heute: Frost bis -6°');
+    await expect(pill).toContainText('gefrierender Regen, es kann glatt sein');
+    await expect(pill.getByText('berechnet, keine amtliche Warnung')).toHaveCount(1);
+    // No hint outside the stage.
+    await expect(page.getByTestId('weather-warning')).toHaveCount(1);
+    // At night: no UV, the sunrise instead; the dry chip is an umbrella.
+    await expect(frame.getByTestId('weather-now')).toContainText('überwiegend klar · Frost');
+  });
+
+  for (const [w, h, phone] of [
+    [1920, 1080, false],
+    [1280, 800, false],
+    [412, 915, true],
+  ] as const)
+    for (const hints of [0, 1, 2] as const)
+      test(`stage height at ${w} px with ${hints} hint(s)`, async ({ page }) => {
+        await page.setViewportSize({ width: w, height: h });
+        await mockScene(page, { night: true, hints });
+        await chooseLindenau(page);
+        await ready(page, '/weather');
+        await expect(page.getByTestId('weather-keys')).toBeVisible();
+        await expect(page.getByTestId('weather-warning')).toHaveCount(hints > 0 ? 1 : 0);
+        const box = (await page.getByTestId('module-frame').boundingBox())!;
+        const base = phone ? 272 : 280;
+        const most = hints === 2 ? (phone ? 300 : 290) : base;
+        expect(box.height, `stage at ${w} px, ${hints} hint(s)`).toBeGreaterThanOrEqual(base - 1);
+        expect(box.height, `stage at ${w} px, ${hints} hint(s)`).toBeLessThanOrEqual(most + 1);
+      });
+
+  test('motion: five seconds after opening; none with reduced motion', async ({ page }) => {
+    await mockScene(page, { night: false, hints: 0 });
+    await chooseLindenau(page);
+    await ready(page, '/weather');
+    await expect(page.getByTestId('weather-scene')).toHaveAttribute('data-motion', /run|rest/);
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await ready(page, '/');
+    await ready(page, '/weather');
+    await expect(page.getByTestId('weather-keys')).toBeVisible();
+    await expect(page.getByTestId('weather-scene')).not.toHaveAttribute('data-motion', /.+/);
+  });
+
+  test('"Schlicht": the sky and the sun only, no motion', async ({ page }) => {
+    await mockScene(page, { night: false, hints: 0 });
+    await chooseLindenau(page);
+    await page.getByLabel('Bild im Wetter-Kopf').selectOption('plain');
+    await ready(page, '/weather');
+    const scene = page.getByTestId('weather-scene');
+    await expect(scene).toHaveAttribute('data-level', 'plain');
+    await expect(scene.locator('[data-layer]')).toHaveCount(2);
+    await expect(scene).not.toHaveAttribute('data-motion', /.+/);
+  });
+
+  for (const scheme of ['light', 'dark'] as const)
+    for (const night of [false, true])
+      for (const w of [1920, 1280])
+        test(`axe on the weather page with a place: ${scheme}, ${night ? 'night' : 'day'}, ${w} px`, async ({
+          page,
+        }) => {
+          await page.setViewportSize({ width: w, height: 900 });
+          await page.emulateMedia({ colorScheme: scheme });
+          await mockScene(page, { night, hints: 2 });
+          await chooseLindenau(page);
+          await ready(page, '/weather');
+          await expect(page.getByTestId('weather-keys')).toBeVisible();
+          const { default: AxeBuilder } = await import('@axe-core/playwright');
+          const results = await new AxeBuilder({ page })
+            .include('[data-testid="module-frame"]')
+            .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+            .analyze();
+          expect(
+            results.violations.map(
+              (v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`,
+            ),
+          ).toEqual([]);
+        });
+});

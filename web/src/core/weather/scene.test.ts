@@ -1,7 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { tWeather } from '@/strings.weather';
 import { codeGroup, type CodeGroup } from './logic';
-import { conditionId, sceneAddition, WMO_CODES } from './scene';
+import type { Forecast } from './api';
+import {
+  conditionId,
+  condOf,
+  frostLevel,
+  phaseOf,
+  sceneAddition,
+  sceneOf,
+  seasonOf,
+  skyKey,
+  windLevel,
+  WMO_CODES,
+  type SceneState,
+} from './scene';
 
 /** Every code Open-Meteo documents for `weather_code` (WMO 4677 subset). */
 const OPEN_METEO_CODES = [
@@ -111,5 +124,183 @@ describe('sceneAddition (one extra word, by priority)', () => {
   it('heat from 30° by day only', () => {
     expect(sceneAddition({ ...base, temp: 30 })).toBe('heat');
     expect(sceneAddition({ ...base, temp: 31, night: true })).toBeUndefined();
+  });
+});
+
+/* ============================== package 1b: the picture's model ============================== */
+
+/** CONCEPT §3: code → cond, intensity, day sky, night sky (cloud cover from the condition's default). */
+const TABLE: [number, string, number, string, string][] = [
+  [0, 'clear', 2, 'day', 'night'],
+  [1, 'mostlyClear', 2, 'day', 'night'],
+  [2, 'partly', 2, 'day', 'night'],
+  [3, 'overcast', 2, 'overcast', 'night-overcast'],
+  [45, 'fog', 2, 'fog', 'night-fog'],
+  [48, 'fog', 2, 'fog', 'night-fog'],
+  [51, 'drizzle', 1, 'drizzle', 'night-overcast'],
+  [53, 'drizzle', 2, 'drizzle', 'night-overcast'],
+  [55, 'drizzle', 3, 'drizzle', 'night-overcast'],
+  [56, 'freezingDrizzle', 1, 'drizzle', 'night-overcast'],
+  [57, 'freezingDrizzle', 3, 'drizzle', 'night-overcast'],
+  [61, 'rain', 1, 'rain', 'night-rain'],
+  [63, 'rain', 2, 'rain', 'night-rain'],
+  [65, 'rain', 3, 'rain', 'night-rain'],
+  [66, 'freezingRain', 1, 'rain', 'night-rain'],
+  [67, 'freezingRain', 3, 'rain', 'night-rain'],
+  [71, 'snow', 1, 'snow', 'night-snow'],
+  [73, 'snow', 2, 'snow', 'night-snow'],
+  [75, 'snow', 3, 'snow', 'night-snow'],
+  [77, 'snow', 1, 'snow', 'night-snow'],
+  [80, 'showers', 1, 'drizzle', 'night-rain'],
+  [81, 'showers', 2, 'drizzle', 'night-rain'],
+  [82, 'showers', 3, 'drizzle', 'night-rain'],
+  [85, 'snowShowers', 1, 'snow', 'night-snow'],
+  [86, 'snowShowers', 3, 'snow', 'night-snow'],
+  [95, 'thunder', 2, 'storm', 'night-rain'],
+  [96, 'thunderHail', 2, 'storm', 'night-rain'],
+  [99, 'thunderHail', 3, 'storm', 'night-rain'],
+];
+
+const forecastAt = (
+  time: string,
+  over: Partial<Forecast> = {},
+  now: Forecast['now'] = {},
+): Forecast => ({
+  temp: 10,
+  group: 'clear',
+  time,
+  now: { night: false, ...now },
+  days: [
+    {
+      date: time.slice(0, 10),
+      min: 2,
+      max: 12,
+      group: 'clear',
+      rain: 0,
+      sunrise: '07:38',
+      sunset: '16:24',
+    },
+  ],
+  ...over,
+});
+const sceneAt = (
+  time: string,
+  over: Partial<Forecast> = {},
+  now: Forecast['now'] = {},
+  lat = 50,
+): SceneState =>
+  sceneOf({ forecast: forecastAt(time, over, now), at: 0, nowMs: 0, lat, theme: 'light' });
+
+describe('scene model (CONCEPT §3)', () => {
+  it('covers every Open-Meteo code', () => {
+    expect(TABLE.map((r) => r[0])).toEqual([...WMO_CODES].sort((a, b) => a - b));
+  });
+
+  it.each(TABLE)(
+    'code %i → %s %i, sky by day %s, by night %s',
+    (code, cond, intensity, day, night) => {
+      expect(condOf(code, codeGroup(code))).toEqual({ cond, intensity });
+      const byDay = sceneAt('2026-11-24T12:00', { code, group: codeGroup(code) });
+      expect(byDay.phase).toBe('day');
+      expect(skyKey(byDay)).toBe(day);
+      expect(byDay.body.kind).toBe('sun');
+      const byNight = sceneAt(
+        '2026-11-24T02:50',
+        { code, group: codeGroup(code) },
+        { night: true },
+      );
+      expect(byNight.phase).toBe('night');
+      expect(skyKey(byNight)).toBe(night);
+      // No moon before package 2: the night has no body.
+      expect(byNight.body.kind).toBe('none');
+      // Snow on the ground while it snows; rime fog is frost 1 even when mild.
+      expect(byDay.snowGround).toBe(cond === 'snow' || cond === 'snowShowers');
+      expect(byDay.frost).toBe(code === 48 ? 1 : 0);
+    },
+  );
+
+  it('without a code: the group at intensity 2', () => {
+    expect(condOf(undefined, 'cloudy')).toEqual({ cond: 'overcast', intensity: 2 });
+    expect(condOf(undefined, 'snow')).toEqual({ cond: 'snow', intensity: 2 });
+    expect(condOf(undefined, 'thunder')).toEqual({ cond: 'thunder', intensity: 2 });
+    expect(sceneAt('2026-11-24T12:00', { group: 'rain' }).cond).toBe('rain');
+  });
+
+  it('a cover above 85 % turns an open sky into the overcast family', () => {
+    expect(skyKey(sceneAt('2026-11-24T12:00', { code: 2 }, { cloud: 85 }))).toBe('day');
+    expect(skyKey(sceneAt('2026-11-24T12:00', { code: 2 }, { cloud: 86 }))).toBe('overcast');
+    expect(skyKey(sceneAt('2026-11-24T02:50', { code: 2 }, { night: true, cloud: 86 }))).toBe(
+      'night-overcast',
+    );
+  });
+
+  it('wind levels at and below their edges', () => {
+    expect([windLevel(19, 34), windLevel(20, 0), windLevel(0, 35)]).toEqual([0, 1, 1]);
+    expect([windLevel(34, 49), windLevel(35, 0), windLevel(0, 50)]).toEqual([1, 2, 2]);
+    expect([windLevel(49, 69), windLevel(50, 0), windLevel(0, 70)]).toEqual([2, 3, 3]);
+    expect(windLevel(undefined, undefined)).toBe(0);
+  });
+
+  it('frost at 0° (nothing falling) and −5°, heat at 30° by day, snow lying from 1 cm', () => {
+    expect([frostLevel(0.1, 'clear'), frostLevel(0, 'clear'), frostLevel(0, 'snow')]).toEqual([
+      0, 1, 0,
+    ]);
+    expect([frostLevel(-4.9, 'rain'), frostLevel(-5, 'rain'), frostLevel(-5, 'clear')]).toEqual([
+      0, 2, 2,
+    ]);
+    expect(sceneAt('2026-11-24T12:00', { temp: 29 }).heat).toBe(false);
+    expect(sceneAt('2026-11-24T12:00', { temp: 30 }).heat).toBe(true);
+    expect(sceneAt('2026-11-24T02:50', { temp: 30 }, { night: true }).heat).toBe(false);
+    expect(sceneAt('2026-11-24T12:00', {}, { snowDepth: 0.009 }).snowGround).toBe(false);
+    expect(sceneAt('2026-11-24T12:00', {}, { snowDepth: 0.01 }).snowGround).toBe(true);
+  });
+
+  it.each([
+    // sunrise 07:38, sunset 16:24: dawn from 06:58, golden to 08:23 and from 15:24, dusk to 17:04
+    ['06:57', 'night'],
+    ['06:58', 'dawn'],
+    ['07:37', 'dawn'],
+    ['07:38', 'golden'],
+    ['08:22', 'golden'],
+    ['08:23', 'day'],
+    ['15:23', 'day'],
+    ['15:24', 'golden'],
+    ['16:23', 'golden'],
+    ['16:24', 'dusk'],
+    ['17:03', 'dusk'],
+    ['17:04', 'night'],
+  ])('at %s the phase is %s', (hhmm, phase) => {
+    expect(phaseOf(`2026-11-24T${hhmm}`, '07:38', '16:24', true)).toBe(phase);
+  });
+
+  it('without sunrise and sunset (polar day or night) is_day decides', () => {
+    expect(phaseOf('2026-06-21T02:00', undefined, undefined, true)).toBe('day');
+    expect(phaseOf('2026-12-21T12:00', undefined, undefined, false)).toBe('night');
+  });
+
+  it('the sun on its arc: t from sunrise to sunset; none in twilight', () => {
+    expect(sceneAt('2026-11-24T12:01').body).toEqual({ kind: 'sun', t: 0.5 });
+    expect(sceneAt('2026-11-24T07:38').body.t).toBe(0);
+    expect(sceneAt('2026-11-24T07:10').body.kind).toBe('none');
+    expect(sceneAt('2026-11-24T16:40').body.kind).toBe('none');
+  });
+
+  it.each([
+    [1, 50, 'winter'],
+    [3, 50, 'spring'],
+    [5, 50, 'spring'],
+    [6, 50, 'summer'],
+    [8, 50, 'summer'],
+    [9, 50, 'autumn'],
+    [11, 50, 'autumn'],
+    [12, 50, 'winter'],
+    [1, -34, 'summer'],
+    [4, -34, 'autumn'],
+    [7, -34, 'winter'],
+    [10, -34, 'spring'],
+    [7, 10, 'summer'],
+    [1, -23, 'summer'],
+  ] as const)('month %i at latitude %i is %s', (month, lat, season) => {
+    expect(seasonOf(month, lat)).toBe(season);
   });
 });
