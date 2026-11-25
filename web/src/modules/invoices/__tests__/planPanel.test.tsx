@@ -110,6 +110,10 @@ describe('the invoice panel', () => {
     await waitFor(async () => expect((await invoiceRepo.get('inv1'))?.payments?.length).toBe(1));
     expect((await invoiceRepo.get('inv1'))?.status).toBe('open');
     expect(useUiStore.getState().toasts.at(-1)?.action?.label).toBe('Rückgängig');
+    // Still open: the same panel takes the next payment, prefilled with what is open now.
+    await waitFor(() => expect((sum as HTMLInputElement).value).toBe('54,30'));
+    fireEvent.click(screen.getByRole('button', { name: 'Bezahlt' }));
+    await waitFor(async () => expect((await invoiceRepo.get('inv1'))?.status).toBe('paid'));
   });
 
   it('„Werte ausblenden“: no sum in the panel or the toast; an empty sum pays what is open', async () => {

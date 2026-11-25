@@ -35,16 +35,31 @@ export function parseRowId(id: string): { subId: string; deadline: Deadline } | 
   return undefined;
 }
 
-/** The deadline the page's step speaks of: the next one (a trial end first when it is earlier). */
+/**
+ * The deadline the page's step speaks of: the next one not decided yet (a trial end first when it is earlier) – after
+ * „Läuft weiter“ the next period's, as the planner lists it.
+ */
 export function nextDeadline(s: Subscription, today: string): Deadline | undefined {
-  const next = nextCancelDeadline(s, today)?.deadline;
-  const trial = s.trialEndsOn && s.trialEndsOn >= today ? s.trialEndsOn : undefined;
+  let next = nextCancelDeadline(s, today)?.deadline;
+  if (next && next === s.keptDeadline) next = nextCancelDeadline(s, addDaysStr(next, 1))?.deadline;
+  const trial =
+    s.trialEndsOn && s.trialEndsOn >= today && s.trialEndsOn !== s.keptDeadline
+      ? s.trialEndsOn
+      : undefined;
   if (trial && (!next || trial <= next)) return { date: trial, trial: true };
   return next ? { date: next, trial: false } : undefined;
 }
 
-/** The last day the subscription runs when cancelled by `deadline`: the day before that charge (a trial: its end). */
-export function lastDay(s: Subscription, deadline: Deadline): string {
+/**
+ * The last day the subscription runs when cancelled on `on` for `deadline`: the day before that deadline's charge (a
+ * trial: its end). Cancelled after the deadline (a „Frist vorbei“ row): that charge comes anyway, so it ends before
+ * the charge of the first deadline on or after `on`.
+ */
+export function lastDay(s: Subscription, deadline: Deadline, on: string): string {
+  if (on > deadline.date) {
+    const charge = nextCancelDeadline(s, on)?.charge;
+    if (charge) return addDaysStr(charge, -1);
+  }
   if (deadline.trial) return deadline.date;
   const charge = cancelDeadlinesInRange(s, deadline.date, deadline.date).find(
     (d) => d.deadline === deadline.date,
@@ -59,9 +74,11 @@ export function markCancelled(
   on: string,
 ): Promise<void> {
   return changeWithUndo(async () => {
+    // Read again: a sync or another tab may have changed the rule since the step opened.
+    const fresh = (await subscriptionRepo.get(s.id)) ?? s;
     await subscriptionRepo.update(s.id, {
       cancelledOn: on,
-      recurrence: { ...s.recurrence, until: lastDay(s, deadline), count: undefined },
+      recurrence: { ...fresh.recurrence, until: lastDay(fresh, deadline, on), count: undefined },
     });
   }, t.subscriptions.cancelStep.noted);
 }

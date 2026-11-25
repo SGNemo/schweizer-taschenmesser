@@ -89,7 +89,8 @@ export function PayForm({
   // Untouched (`undefined`): the open sum – in the panel only once values may show, never for a moment before.
   const [typed, setAmount] = useState<string | undefined>(undefined);
   const [prefill] = useState(() => formatMoneyInput(remainingMinor(initial)));
-  const amount = typed ?? (panel && hide ? '' : prefill);
+  // The panel stays open after a part payment: its prefill follows what is still open.
+  const amount = typed ?? (panel ? (hide ? '' : formatMoneyInput(rest)) : prefill);
   const [error, setError] = useState('');
   // Set once this step writes (or decides not to): its own change must not read as „paid elsewhere“.
   const settled = useRef(false);
@@ -135,6 +136,12 @@ export function PayForm({
     }
     onClose();
     if (through) onPaid?.();
+    // The panel's form stays while the invoice is still open (after a part payment): ready for the next one. A paid
+    // one keeps `settled`, so its own payment never reads as „paid elsewhere“.
+    if (panel && (await invoiceRepo.get(id))?.status === 'open') {
+      settled.current = false;
+      setAmount(undefined);
+    }
   }
   const payOnce = useSubmitOnce(pay);
 

@@ -74,7 +74,7 @@ describe('cancel step', () => {
   it('„Vermerken“: the day and the end before that charge; the deadline leaves the plan; one undo', async () => {
     const s = await add();
     expect(await listed()).toEqual(['s1:2026-11-13']);
-    expect(lastDay(s, { date: '2026-11-13', trial: false })).toBe('2026-11-19');
+    expect(lastDay(s, { date: '2026-11-13', trial: false }, TODAY)).toBe('2026-11-19');
     await markCancelled(s, { date: '2026-11-13', trial: false }, '2026-11-08');
     const after = await subscriptionRepo.get('s1');
     expect(after?.cancelledOn).toBe('2026-11-08');
@@ -90,6 +90,33 @@ describe('cancel step', () => {
     await keepRunning(s, { date: '2026-11-13', trial: false });
     expect(await listed()).toEqual(['s1:2026-12-13']);
     expect((await subscriptionRepo.get('s1'))?.recurrence.until).toBeUndefined();
+  });
+});
+
+describe('round 1 of the review', () => {
+  it('cancelled after a missed deadline: it ends before the next charge it can still avoid', async () => {
+    const s = await add();
+    // The 13 Nov deadline passed („Frist vorbei“); cancelling on 15 Nov cannot avoid the 20 Nov charge.
+    expect(lastDay(s, { date: '2026-11-13', trial: false }, '2026-11-15')).toBe('2026-12-19');
+  });
+
+  it('after „Läuft weiter“ the page’s step speaks of the next period’s deadline', async () => {
+    const { nextDeadline } = await import('../cancelStep');
+    const s = await add();
+    expect(nextDeadline(s, TODAY)?.date).toBe('2026-11-13');
+    await keepRunning(s, { date: '2026-11-13', trial: false });
+    expect(nextDeadline((await subscriptionRepo.get('s1'))!, TODAY)?.date).toBe('2026-12-13');
+  });
+
+  it('no reminder for a decided deadline', async () => {
+    const { default: notify } = await import('../notifications');
+    const s = await add();
+    const window = { from: new Date(2026, 10, 9).getTime(), to: new Date(2026, 11, 31).getTime() };
+    const keys = async () => (await notify(window)).map((n) => n.key);
+    expect(await keys()).toContain('subscription-cancel:s1:2026-11-13');
+    await keepRunning(s, { date: '2026-11-13', trial: false });
+    expect(await keys()).not.toContain('subscription-cancel:s1:2026-11-13');
+    expect(await keys()).toContain('subscription-cancel:s1:2026-12-13');
   });
 });
 

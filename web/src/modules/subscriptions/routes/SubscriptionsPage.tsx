@@ -81,7 +81,11 @@ export default function SubscriptionsPage() {
   useOpenParam(
     (id) => subscriptionRepo.get(id),
     (record) => {
-      const deadline = wantsCancel ? nextDeadline(record, today()) : undefined;
+      // Only a running subscription has a deadline to decide; a paused or ended one opens its entry.
+      const deadline =
+        wantsCancel && record.active && !record.recurrence.until
+          ? nextDeadline(record, today())
+          : undefined;
       if (deadline) {
         setCancelling({ sub: record, deadline });
         return;
