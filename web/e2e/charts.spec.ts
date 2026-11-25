@@ -48,8 +48,14 @@ test('the trend thins its month labels to the width; the newest month always sho
 test('"Bewegung reduzieren" draws the charts without animation', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await sheet(page);
-  const running = await page
-    .getByTestId('chart-sheet')
-    .evaluate((el) => el.getAnimations({ subtree: true }).length);
-  expect(running).toBe(0);
+  // What moves visibly: animations and transitions that take time. The reduce rule (ui/global.css) shortens every
+  // other one to 0.01 ms; on a slow runner such a stub (a `scrollbar-color` transition when the theme settles) can
+  // still be listed for a moment and says nothing about the charts.
+  const running = await page.getByTestId('chart-sheet').evaluate((el) =>
+    el
+      .getAnimations({ subtree: true })
+      .filter((a) => Number(a.effect?.getComputedTiming().duration ?? 0) > 1)
+      .map((a) => (a as CSSAnimation).animationName ?? (a as CSSTransition).transitionProperty),
+  );
+  expect(running).toEqual([]);
 });
