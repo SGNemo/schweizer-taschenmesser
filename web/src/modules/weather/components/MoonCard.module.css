@@ -1,0 +1,77 @@
+/* "Mond & Himmel": the same card look as "Atemwege & Allergie" (WeatherAir.module.css). */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  font-variant-numeric: var(--font-num);
+}
+.title {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+}
+.now {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+.now svg {
+  flex: none;
+}
+.name {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  font-size: var(--text-sm);
+}
+.phase {
+  color: var(--text);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+}
+.line {
+  margin: 0;
+  font-size: var(--text-sm);
+}
+/* "Als Nächstes" (mockups/10-karte.html): small caps heading, one event in a glyph | text grid. */
+.next {
+  margin-top: var(--space-2);
+}
+.caps {
+  margin: 0 0 var(--space-2);
+  color: var(--text-3);
+  font-size: var(--text-meta);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.ev {
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  gap: 2px var(--space-2);
+  align-items: start;
+  font-size: var(--text-sm);
+}
+.ev > svg {
+  margin-top: 2px;
+  color: var(--text-3);
+}
+.ev + .ev {
+  margin-top: var(--space-2);
+}
+.ev strong {
+  font-weight: var(--weight-semibold);
+}
+.muted {
+  grid-column: 2;
+  color: var(--text-muted);
+}
+.safe {
+  grid-column: 2;
+  margin-top: var(--space-1);
+  color: var(--text);
+}

@@ -2,7 +2,7 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { defaultScene, type SceneState } from '@/core/weather/scene';
-import { sceneSvg } from './draw';
+import { litPath, sceneSvg, tiltRotation } from './draw';
 import { WeatherScene } from './WeatherScene';
 
 afterEach(() => {
@@ -54,10 +54,14 @@ const ALL: SceneState[] = CONDS.flatMap((cond) =>
           snowGround: cond.includes('snow') || wind === 3,
           season: wind === 3 ? 'winter' : 'autumn',
           cloud: cond === 'partly' ? 50 : cond === 'mostlyClear' ? 25 : cond === 'clear' ? 5 : 95,
+          // by night a full moon (package 2): the heaviest body with halo ring, maria and ridge highlights
           body: {
-            kind: phase === 'day' || phase === 'golden' ? 'sun' : 'none',
+            kind: phase === 'day' || phase === 'golden' ? 'sun' : 'moon',
             t: phase === 'golden' ? 0.92 : 0.5,
+            alt: 40,
           },
+          moon: { illum: 0.995, tilt: -119, size: 1.2, t: 0.7, alt: 30 },
+          dayMoon: phase === 'day',
           motion: true,
         }),
       ),
@@ -69,6 +73,8 @@ const ALL: SceneState[] = CONDS.flatMap((cond) =>
 function xOf(el: Element): number | undefined {
   const dx = el.getAttribute('data-x');
   if (dx) return Number(dx);
+  const tr = el.getAttribute('transform')?.match(/^translate\((-?[\d.]+)/);
+  if (tr) return Number(tr[1]);
   const cx = el.getAttribute('cx');
   if (cx) return Number(cx);
   const d = el.getAttribute('d');
@@ -125,7 +131,10 @@ describe('weather scene drawing (handoff 01b tests 2)', () => {
         if (!g) continue;
         const marks =
           name === 'body'
-            ? [...g.querySelectorAll('circle')]
+            ? [
+                ...[...g.querySelectorAll('circle')].filter((c) => !c.closest('[data-part]')),
+                ...g.querySelectorAll('[data-part="moon"]'),
+              ]
             : [...g.querySelectorAll('[data-x], path')];
         for (const el of marks) {
           if (
@@ -217,5 +226,210 @@ describe('<WeatherScene>', () => {
   it('"Ruhig" takes the theme ink (dark ink on the light theme, even at night)', () => {
     render(<WeatherScene state={base({ calm: true, phase: 'night' })} />);
     expect(screen.getByTestId('weather-scene')).toHaveAttribute('data-ink', 'dark');
+  });
+});
+
+describe('the moon (package 2)', () => {
+  const night = (illum: number, tilt: number, size = 1): SceneState =>
+    base({
+      phase: 'night',
+      cond: 'clear',
+      cloud: 5,
+      body: { kind: 'moon', t: 0.6, alt: 40 },
+      moon: { illum, tilt, size },
+    });
+
+  it('eight phases: the lit shape by its parameters (not pixels)', () => {
+    const shapes = [0.01, 0.15, 0.5, 0.8, 1, 0.8, 0.5, 0.15].map((k) => litPath(10, k));
+    expect(shapes).toMatchInlineSnapshot(`
+      [
+        null,
+        "M0,-10A10,10 0 0 1 0,10A7,10 0 0 0 0,-10Z",
+        "M0,-10A10,10 0 0 1 0,10A0,10 0 0 1 0,-10Z",
+        "M0,-10A10,10 0 0 1 0,10A6,10 0 0 1 0,-10Z",
+        "M-10,0a10,10 0 1,1 20,0a10,10 0 1,1 -20,0",
+        "M0,-10A10,10 0 0 1 0,10A6,10 0 0 1 0,-10Z",
+        "M0,-10A10,10 0 0 1 0,10A0,10 0 0 1 0,-10Z",
+        "M0,-10A10,10 0 0 1 0,10A7,10 0 0 0 0,-10Z",
+      ]
+    `);
+  });
+
+  it('turns the lit side to its tilt: + left of up, − right; north and south differ in sign', () => {
+    expect(tiltRotation(-90)).toBe(0); // lit side to the right: the shape as drawn
+    expect(tiltRotation(0)).toBe(-90); // lit side up
+    expect(tiltRotation(90)).toBe(-180); // lit side to the left
+    const g = parse(night(0.3, -147.6)).querySelector('[data-part="moon"]')!;
+    expect(g.getAttribute('transform')).toContain(
+      `rotate(${Math.round(tiltRotation(-147.6) * 10) / 10})`,
+    );
+    expect(g.querySelector('[data-part="lit"]')).not.toBeNull();
+  });
+
+  it('a new moon is a thin ring; a crescent shows earthshine; a full moon its ring and its own sky', () => {
+    const newMoon = parse(night(0.01, 0)).querySelector('[data-part="moon"]')!;
+    expect(newMoon.querySelector('[data-part="lit"]')).toBeNull();
+    expect(newMoon.querySelectorAll('circle').length).toBeGreaterThan(0);
+    const full = parse(night(0.995, -119, 1.2));
+    expect(full.querySelector('[data-part="moon"] [stroke]')).not.toBeNull(); // the halo ring
+    expect(JSON.stringify(sceneSvg(night(0.995, -119, 1.2)).vars)).toContain(
+      '--scene-sky-night-full-0',
+    );
+  });
+
+  it('the moon thins the stars; below the horizon there is none', () => {
+    const count = (s: SceneState) =>
+      (sceneSvg(s).inner.match(/a[\d.]+,[\d.]+ 0 1,1/g) ?? []).length;
+    expect(count(night(1, 0))).toBeLessThan(
+      count(base({ phase: 'night', cond: 'clear', cloud: 5 })),
+    );
+    expect(layers(base({ phase: 'night', body: { kind: 'none', t: 0.5 } }))).not.toContain('body');
+  });
+
+  it('day moon: small and pale beside the sun, not in a phone crop', () => {
+    const day = base({
+      body: { kind: 'sun', t: 0.3 },
+      moon: { illum: 0.6, tilt: -40, size: 1, t: 0.8, alt: 30 },
+      dayMoon: true,
+    });
+    expect(parse(day).querySelector('[data-part="dayMoon"]')).not.toBeNull();
+    const phone = new DOMParser().parseFromString(
+      `<svg xmlns="http://www.w3.org/2000/svg">${sceneSvg(day, { bodyAt: [1480, 90] }).inner}</svg>`,
+      'image/svg+xml',
+    );
+    expect(phone.querySelector('[data-part="dayMoon"]')).toBeNull();
+  });
+});
+
+describe('sky events (package 3, handoff 03 "Scene")', () => {
+  const sun = { kind: 'sun', t: 0.5 } as const;
+  const moonBody = { kind: 'moon', t: 0.6, alt: 40 } as const;
+  const fullMoon = { illum: 1, tilt: -119, size: 1.2, t: 0.6, alt: 40 };
+  /** Each event in a state the model lets through, with the parts it must draw. */
+  const CASES: [string, SceneState, string[]][] = [
+    ['solarPartial', base({ body: sun, event: 'solarPartial', eventAmount: 0.7 }), ['bite']],
+    ['solarAnnular', base({ body: sun, event: 'solarAnnular', eventAmount: 0.9 }), ['annular']],
+    [
+      'solarTotal',
+      base({ body: sun, event: 'solarTotal', eventAmount: 1 }),
+      ['corona', 'disc', 'eclipseGlow'],
+    ],
+    [
+      'lunarPartial',
+      base({
+        phase: 'night',
+        body: moonBody,
+        moon: fullMoon,
+        event: 'lunarPartial',
+        eventAmount: 0.4,
+      }),
+      ['moon', 'umbra'],
+    ],
+    [
+      'lunarTotal',
+      base({ phase: 'night', body: moonBody, moon: fullMoon, event: 'lunarTotal', eventAmount: 1 }),
+      ['moon', 'copper'],
+    ],
+    [
+      'meteors',
+      base({ phase: 'night', cloud: 30, cond: 'partly', event: 'meteors', eventAmount: 1 }),
+      ['meteors'],
+    ],
+    ['starNight', base({ phase: 'night', event: 'starNight', eventAmount: 1 }), ['milky']],
+    [
+      'rainbow',
+      base({
+        cond: 'showers',
+        cloud: 60,
+        body: { kind: 'none', t: 0.3 },
+        event: 'rainbow',
+        eventAmount: 1,
+      }),
+      ['rainbow'],
+    ],
+    ['dust', base({ body: sun, event: 'dust', eventAmount: 1 }), ['dustSun']],
+  ];
+  const moving = (s: SceneState): SceneState => ({ ...s, motion: true, wind: 3 });
+
+  it.each(CASES)('%s draws its parts, and none of them moves', (_, s, parts) => {
+    for (const st of [s, moving(s)]) {
+      const doc = parse(st);
+      for (const part of parts) {
+        const el = doc.querySelector(`[data-part="${part}"]`);
+        expect(el, part).not.toBeNull();
+        for (let n: Element | null = el; n; n = n.parentElement) {
+          expect(n.getAttribute('class') ?? '', `${part} in a motion group`).not.toMatch(/sc-/);
+          expect(n.getAttribute('style') ?? '', part).not.toMatch(/animation|--dur/);
+        }
+      }
+    }
+  });
+
+  it('a total eclipse: dark sky, no clouds, stars by day; a deep partial one dims the sky', () => {
+    const total = base({ body: sun, event: 'solarTotal', eventAmount: 1, cloud: 30 });
+    const l = layers(total);
+    expect(l).toContain('stars');
+    expect(l).not.toContain('clouds');
+    expect(JSON.stringify(sceneSvg(total).vars)).toContain('--scene-sky-eclipse-sky-0');
+    expect(sceneSvg(total).ink).toBe('light');
+    const deep = base({ body: sun, event: 'solarPartial', eventAmount: 0.8 });
+    expect(JSON.stringify(sceneSvg(deep).vars)).toContain('--scene-dim-target');
+    const slight = base({ body: sun, event: 'solarPartial', eventAmount: 0.5 });
+    expect(JSON.stringify(sceneSvg(slight).vars)).not.toContain('--scene-dim-target');
+  });
+
+  it('dust: its own sky and a pale sun without halo; rainbow: no sun even with a sun body', () => {
+    const dust = base({ body: sun, event: 'dust', eventAmount: 1, cloud: 30 });
+    expect(JSON.stringify(sceneSvg(dust).vars)).toContain('--scene-sky-dust-0');
+    expect(parse(dust).querySelectorAll('[data-layer="body"] circle')).toHaveLength(1);
+    expect(layers(dust)).not.toContain('clouds');
+    const rainbow = base({ body: sun, cond: 'rain', cloud: 70, event: 'rainbow', eventAmount: 1 });
+    expect(layers(rainbow)).not.toContain('body');
+    expect(sceneSvg(rainbow).body).toBeNull();
+  });
+
+  it('the star night draws 150 stars where a plain night draws 60', () => {
+    const count = (s: SceneState) =>
+      (sceneSvg(s).inner.match(/a[\d.]+,[\d.]+ 0 1,1/g) ?? []).length;
+    const plainNight = base({ phase: 'night', cloud: 0 });
+    // every star and every grain of the band is two arcs
+    expect(count(base({ ...plainNight, event: 'starNight', eventAmount: 1 }))).toBeGreaterThan(
+      count(plainNight) * 2,
+    );
+  });
+
+  it('stays under the ceiling of A11Y §4 with the heaviest event scenes', () => {
+    const heavy = (o: Partial<SceneState>): SceneState =>
+      base({
+        cond: 'partly',
+        cloud: 50,
+        wind: 3,
+        frost: 2,
+        snowGround: true,
+        season: 'winter',
+        motion: true,
+        ...o,
+      });
+    for (const s of [
+      heavy({ phase: 'night', cloud: 0, event: 'starNight', eventAmount: 1 }),
+      heavy({ phase: 'night', cond: 'clear', cloud: 0, event: 'starNight', eventAmount: 1 }),
+      heavy({ body: sun, event: 'solarTotal', eventAmount: 1 }),
+      heavy({ body: sun, cond: 'snowShowers', cloud: 60, event: 'solarTotal', eventAmount: 1 }),
+      heavy({ cond: 'showers', cloud: 60, body: { kind: 'none', t: 0.3 }, event: 'rainbow' }),
+      heavy({ phase: 'night', cloud: 30, event: 'meteors', eventAmount: 1 }),
+    ]) {
+      const svg = sceneSvg(s);
+      const n = (svg.inner.match(/<[a-zA-Z]/g) ?? []).length;
+      expect(n, `${s.event} ${s.cond}`).toBeLessThanOrEqual(220);
+      expect(size(s)).toBeLessThanOrEqual(48 * 1024);
+      expect((svg.inner.match(/class="sc-/g) ?? []).length).toBeLessThanOrEqual(9);
+    }
+  });
+
+  it('colours stay tokens with every event', () => {
+    for (const [, s] of CASES) {
+      expect(sceneSvg(s).inner).not.toMatch(/#[0-9a-fA-F]{3,6}\b(?!\))/);
+      expect(Object.values(sceneSvg(s).vars).join(' ')).not.toMatch(/#[0-9a-fA-F]{3,6}\b/);
+    }
   });
 });

@@ -19,6 +19,8 @@ export interface AirNow {
   o3?: number;
   no2?: number;
   so2?: number;
+  /** Mineral dust near the ground (Saharan dust), µg/m³. */
+  dust?: number;
 }
 
 export interface AirDay {
@@ -53,6 +55,7 @@ const airSchema = z.object({
       mugwort_pollen: num,
       olive_pollen: num,
       ragweed_pollen: num,
+      dust: num,
     })
     .optional(),
   hourly: z
@@ -97,6 +100,7 @@ export function parseAir(body: unknown): Air | undefined {
     o3: rnd(c?.ozone),
     no2: rnd(c?.nitrogen_dioxide),
     so2: rnd(c?.sulphur_dioxide),
+    dust: rnd(c?.dust),
   };
   const pollen = pollenOf((t) => c?.[`${t}_pollen`]);
   const byDay = new Map<string, AirDay>();

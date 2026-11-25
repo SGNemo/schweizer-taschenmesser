@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
 import { setNow } from '@/core/time/now';
-import { chooseWeatherPlace } from '@/core/weather/settings';
+import { chooseWeatherPlace, setWeatherSky } from '@/core/weather/settings';
 import { AreaFrame } from '@/layout/AreaFrame';
 import WeatherPage from '../routes/WeatherPage';
 import WeatherWidget from '../widgets/WeatherWidget';
@@ -102,12 +102,15 @@ describe('weather words by WMO code (package 1a)', () => {
     expect(await screen.findByTestId('weather-widget')).toHaveTextContent('überwiegend klar');
   });
 
-  it('at night: no UV, the next sunrise instead, the dry chip with an umbrella', async () => {
+  it('at night: no UV but the moon (package 2), the dry chip with an umbrella', async () => {
     vi.stubGlobal('fetch', ok(night()));
     await chooseWeatherPlace('Lindenau', 50.1, 10.2);
     renderPage();
     const keys = await screen.findByTestId('weather-keys');
-    await waitFor(() => expect(keys).toHaveTextContent('Sonnenaufgang 07:38'));
+    // 2026-11-24 02:50 at 50.1° N 10.2° E: the full moon's day, 99 % lit (CONCEPT-MOON §7).
+    await waitFor(() => expect(keys).toHaveTextContent('Vollmond · 99 %'));
+    expect(keys.querySelector('[data-testid="moon-glyph"]')).not.toBeNull();
+    expect(keys).not.toHaveTextContent('Sonnenaufgang');
     expect(keys).not.toHaveTextContent('UV');
     expect(keys).toHaveTextContent('Kein Regen in Sicht');
     const dry = within(keys).getByText('Kein Regen in Sicht').closest('li')!;
@@ -115,6 +118,19 @@ describe('weather words by WMO code (package 1a)', () => {
     expect(keys.querySelector('svg.lucide-sun')).toBeNull();
     // Frost stands after the word (−4°, no snow word, no snow lying).
     expect(screen.getByTestId('weather-now')).toHaveTextContent('überwiegend klar · Frost');
+  });
+
+  it('with "Mond und Himmelsereignisse" off the night chip is the next sunrise (package 1a)', async () => {
+    vi.stubGlobal('fetch', ok(night()));
+    await chooseWeatherPlace('Lindenau', 50.1, 10.2);
+    await setWeatherSky(false);
+    renderPage();
+    const keys = await screen.findByTestId('weather-keys');
+    await waitFor(() => expect(keys).toHaveTextContent('Sonnenaufgang 07:38'));
+    expect(keys).not.toHaveTextContent('Vollmond');
+    expect(screen.queryByTestId('weather-moon')).toBeNull();
+    expect(screen.queryAllByTestId('weather-day-moon')).toHaveLength(0);
+    expect(screen.getByTestId('weather-scene').querySelector('[data-part="moon"]')).toBeNull();
   });
 
   it('by day the UV chip is back; after sunset the sunrise is tomorrow’s', async () => {

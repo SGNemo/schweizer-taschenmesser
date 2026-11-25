@@ -4,9 +4,12 @@
  * intensity, wind, frost, heat, snow on the ground, season, the sun on its arc, the sky family and the ink. Field
  * names follow the mockup's `state` (`mockups/scene.js`), so the drawing in `ui/weather-scene` is a straight port.
  */
+import type { SceneEvent } from '@/core/sky/events';
 import type { tWeather } from '@/strings.weather';
 import type { Forecast } from './api';
 import { placeNowIso, type CodeGroup } from './logic';
+
+export type { SceneEvent };
 
 export type ConditionId = keyof typeof tWeather.de.conditions;
 
@@ -144,7 +147,9 @@ export type SkyKey =
   | 'storm'
   | 'snow'
   | 'fog'
-  | 'heat';
+  | 'heat'
+  | 'dust'
+  | 'eclipse-sky';
 
 export interface SceneState {
   phase: Phase;
@@ -159,8 +164,19 @@ export interface SceneState {
   heat: boolean;
   snowGround: boolean;
   season: Season;
-  /** The sun on its arc (`t` 0 = sunrise, 1 = sunset); `none` at night, dawn and dusk until the moon is calculated. */
-  body: { kind: 'sun' | 'none'; t: number };
+  /**
+   * The sun on its arc (`t` 0 = sunrise, 1 = sunset), or the moon while it is up at night, dawn and dusk (`t` from its
+   * azimuth, `alt` its altitude in degrees); `none` otherwise (CONCEPT-MOON §4).
+   */
+  body: { kind: 'sun' | 'moon' | 'none'; t: number; alt?: number };
+  /** The moon's lit fraction, the direction of its lit side (deg, + = left of up) and its size (1, full 1.2, super 1.35). */
+  moon?: { illum: number; tilt: number; size: number; t?: number; alt?: number };
+  /** A small pale moon by day (CONCEPT-MOON §4). */
+  dayMoon?: boolean;
+  /** The sky event drawn now (package 3, CONCEPT-EVENTS §1); only one at a time. */
+  event?: SceneEvent;
+  /** 0…1: the share of the sun covered (solar) or of the moon in the umbra (lunar); 1 for the others, 0 without. */
+  eventAmount: number;
   calm: boolean;
   level: SceneLevel;
   motion: boolean;
@@ -322,9 +338,36 @@ export interface SceneInput {
   calm?: boolean;
   level?: SceneLevel;
   motion?: boolean;
+  /** The moon now at the place (`core/sky` `moonNow`); absent when "Mond und Himmelsereignisse" is off. */
+  moon?: MoonInput;
+  /** The sky event now (`core/sky` `skyEvents().scene`); absent when "Mond und Himmelsereignisse" is off. */
+  event?: { event: SceneEvent; amount: number };
 }
 
-/** The picture's state for a forecast (handoff 01b "Model"). */
+/** What the scene needs of the moon now (a subset of `core/sky` `MoonNow`). */
+export interface MoonInput {
+  lit: number;
+  tilt: number;
+  alt: number;
+  az: number;
+  /** The local day is named full moon / its full moon is a supermoon. */
+  full: boolean;
+  superMoon: boolean;
+}
+
+/** The moon on the picture's arc: east at the left end, south at the top, west at the right (mirrored south). */
+export function moonArcT(az: number, lat: number): number {
+  // South of the equator one faces north: east on the right, north at the top, west on the left; the break of the
+  // scale lies behind the observer (south), as it lies in the north for the northern branch.
+  const s180 = ((((az + 180) % 360) + 360) % 360) - 180;
+  const t = lat >= 0 ? (az - 90) / 180 : (s180 + 90) / 180;
+  return Math.min(1, Math.max(0, t));
+}
+
+/** Day moon: by day, moon up, 20–97 % lit, cloud cover ≤ 60 %. */
+const DAY_MOON = { min: 0.2, max: 0.97, cloud: 60 } as const;
+
+/** The picture's state for a forecast (handoff 01b "Model", CONCEPT-MOON §4). */
 export function sceneOf(i: SceneInput): SceneState {
   const f = i.forecast;
   const nowIso = placeNowIso(f, i.at, i.nowMs);
@@ -339,24 +382,74 @@ export function sceneOf(i: SceneInput): SceneState {
     const span = minutes(today.sunset) - sr;
     if (span > 0) t = Math.min(1, Math.max(0, (minutes(nowIso.slice(11, 16)) - sr) / span));
   }
+  const cloud = f.now?.cloud ?? CLOUD_DEFAULT[cond];
+  const m = i.moon;
+  const moonUp = !!m && m.alt > 0;
+  let body: SceneState['body'] = { kind: byDay ? 'sun' : 'none', t };
+  if (!byDay && m && moonUp) body = { kind: 'moon', t: moonArcT(m.az, i.lat), alt: m.alt };
+  const moon = m
+    ? {
+        illum: m.lit,
+        tilt: m.tilt,
+        size: body.kind === 'moon' && m.full ? (m.superMoon ? 1.35 : 1.2) : 1,
+        t: moonArcT(m.az, i.lat),
+        alt: m.alt,
+      }
+    : undefined;
+  const dayMoon =
+    byDay && moonUp && m.lit >= DAY_MOON.min && m.lit <= DAY_MOON.max && cloud <= DAY_MOON.cloud;
+  const event = eventOf(i.event?.event, body.kind, phase, cloud);
+  // Rainbow: the sun stands behind the viewer, so no disc (handoff 03 "Scene").
+  if (event === 'rainbow') body = { kind: 'none', t };
   return {
     phase,
     theme: i.theme,
     cond,
     intensity,
-    cloud: f.now?.cloud ?? CLOUD_DEFAULT[cond],
+    cloud,
     wind: windLevel(f.now?.wind, f.now?.gust),
     frost: frostLevel(f.temp, cond, f.code),
     heat: f.temp >= HEAT_C && byDay,
     snowGround: SNOWING.has(cond) || (f.now?.snowDepth ?? 0) >= SNOW_LIES_M,
     season: seasonOf(Number(nowIso.slice(5, 7)), i.lat),
-    body: { kind: byDay ? 'sun' : 'none', t },
+    body,
+    moon,
+    dayMoon,
+    event,
+    eventAmount: event ? Math.min(1, Math.max(0, i.event?.amount ?? 0)) : 0,
     calm: !!i.calm,
     level: i.level ?? 'full',
     motion: !!i.motion,
     landscape: 'mountains',
     seed: 7,
   };
+}
+
+/** Meteor streaks only with cloud cover up to this (CONCEPT-EVENTS §1). */
+const METEOR_CLOUD = 60;
+
+/**
+ * Whether the event can be drawn now (handoff 03 "Scene"): solar events and the rainbow need the sun as the body,
+ * lunar events the moon; dust is by day only; meteors and the star night only at night (meteors with cloud ≤ 60 %).
+ */
+function eventOf(
+  ev: SceneEvent | undefined,
+  body: SceneState['body']['kind'],
+  phase: Phase,
+  cloud: number,
+): SceneEvent | undefined {
+  if (!ev) return undefined;
+  const ok =
+    ev === 'solarPartial' || ev === 'solarTotal' || ev === 'solarAnnular' || ev === 'rainbow'
+      ? body === 'sun'
+      : ev === 'lunarPartial' || ev === 'lunarTotal'
+        ? body === 'moon'
+        : ev === 'dust'
+          ? phase === 'day' || phase === 'golden'
+          : ev === 'meteors'
+            ? phase === 'night' && cloud <= METEOR_CLOUD
+            : phase === 'night';
+  return ok ? ev : undefined;
 }
 
 /** The calm default (loading, no place): a clear day of the device's season, no body. */
@@ -373,6 +466,7 @@ export function defaultScene(theme: SceneTheme, month: number, calm = false): Sc
     snowGround: false,
     season: seasonOf(month, 47),
     body: { kind: 'none', t: 0.5 },
+    eventAmount: 0,
     calm,
     level: 'full',
     motion: false,
@@ -388,6 +482,8 @@ export const isDrizzle = (c: Cond): boolean => c === 'drizzle' || c === 'freezin
 
 /** Which sky (mockup `skyOf`): the family by condition, the twilight glow at full or 40 % strength. */
 export function skyOf(s: SceneState): { key: SkyKey; glow?: { phase: Phase; strength: number } } {
+  if (s.event === 'solarTotal') return { key: 'eclipse-sky' };
+  if (s.event === 'dust') return { key: 'dust' };
   const c = s.cond;
   const deck = s.cloud > 85 && c !== 'fog';
   const nightKey = (): SkyKey => {
@@ -396,7 +492,7 @@ export function skyOf(s: SceneState): { key: SkyKey; glow?: { phase: Phase; stre
     if (c === 'rain' || c === 'freezingRain' || c === 'showers' || isThunder(c))
       return 'night-rain';
     if (c === 'overcast' || isDrizzle(c) || deck) return 'night-overcast';
-    return 'night';
+    return s.body.kind === 'moon' && (s.moon?.size ?? 1) >= 1.2 ? 'night-full' : 'night';
   };
   const dayKey = (): SkyKey => {
     if (c === 'fog') return 'fog';
@@ -425,6 +521,7 @@ const DARK_INK: Partial<Record<SkyKey, readonly [boolean, boolean]>> = {
   snow: [true, false],
   fog: [true, false],
   heat: [true, false],
+  dust: [true, false],
 };
 
 /** The ink of text on a sky in a theme (A11Y §1). */
@@ -456,4 +553,6 @@ export const SKY_KEYS: readonly SkyKey[] = [
   'snow',
   'fog',
   'heat',
+  'dust',
+  'eclipse-sky',
 ];

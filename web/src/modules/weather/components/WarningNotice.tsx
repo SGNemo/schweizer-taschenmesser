@@ -74,3 +74,26 @@ export function WarningNotice({
     </div>
   );
 }
+
+/**
+ * The eclipse safety sentence in the hint's place (handoff/03-events "Safety pill"): the hint pill's look, icon `eye`,
+ * no "berechnet" suffix; on the day of a visible solar eclipse until its end, above a weather hint if there is one.
+ */
+export function SafetyNotice({ inStage = false }: { inStage?: boolean }) {
+  const tp = tWeatherPage.use();
+  return (
+    <div
+      className={styles.warn}
+      data-in-stage={inStage ? 'true' : undefined}
+      role="note"
+      data-testid="weather-safety"
+    >
+      <ul>
+        <li>
+          <Icon name="eye" size={16} />
+          <span>{tp.ev.solarSafety}</span>
+        </li>
+      </ul>
+    </div>
+  );
+}

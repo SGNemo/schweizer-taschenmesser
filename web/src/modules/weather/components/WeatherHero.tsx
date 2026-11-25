@@ -1,5 +1,7 @@
-import { useMemo } from 'react';
-import { dateTimeFormat } from '@/core/i18n/format';
+import { useMemo, type ReactNode } from 'react';
+import type { SkyEvents } from '@/core/sky/events';
+import type { MoonNow } from '@/core/sky/moonDay';
+import { dateTimeFormat, numberFormat } from '@/core/i18n/format';
 import type { DayRow } from '@/core/weather/api';
 import { compassIndex } from '@/core/weather/air';
 import { bestWindow, hourRows, placeNowIso, dayRows, rainsNow } from '@/core/weather/logic';
@@ -19,11 +21,11 @@ import { tWeather } from '@/strings.weather';
 import { tWeatherPage } from '@/strings.weatherPage';
 import { Icon, PHONE_QUERY, useMediaQuery, type IconName } from '@/ui';
 import { HeroFigure, HeroSlot, skyKind } from '@/ui/identity';
-import { useSceneEnv, WeatherScene } from '@/ui/weather-scene';
+import { EventGlyph, MoonGlyph, useSceneEnv, WeatherScene } from '@/ui/weather-scene';
 import styles from '../routes/weather.module.css';
 import { dec } from './parts';
 import { lineBuilders } from './lines';
-import { WarningNotice } from './WarningNotice';
+import { SafetyNotice, WarningNotice } from './WarningNotice';
 import type { WeatherWarning } from '../warnings';
 
 /** The scene's mode from the setting "Bild im Wetter-Kopf" (`motion`, `still`, `plain`). */
@@ -65,12 +67,18 @@ export function WeatherHero({
   weather,
   warnings,
   lat,
+  moon,
+  events,
 }: {
   weather: WeatherView;
   /** The hints for the stage (`weatherWarnings`); empty when they came late and sit in the page instead. */
   warnings: WeatherWarning[];
   /** Latitude of the place (season and hemisphere of the scene). */
   lat: number;
+  /** The moon now at the place; absent while "Mond und Himmelsereignisse" is off (then no moon anywhere). */
+  moon?: MoonNow;
+  /** The sky events now (package 3); absent while "Mond und Himmelsereignisse" is off. */
+  events?: SkyEvents;
 }) {
   const tx = tWeather.use();
   const tp = tWeatherPage.use();
@@ -84,6 +92,7 @@ export function WeatherHero({
   const best = bestWindow(hours);
   const night = !!detail?.night;
   const hourFmt = dateTimeFormat({ hour: '2-digit', minute: '2-digit' });
+  const placeTime = dateTimeFormat({ hour: '2-digit', minute: '2-digit', timeZone: forecast.tz });
   const env = useSceneEnv();
   const { level, motion } = useSceneMode();
   const phone = useMediaQuery(PHONE_QUERY);
@@ -100,12 +109,24 @@ export function WeatherHero({
         calm: env.calm,
         level,
         motion,
+        moon: moon
+          ? {
+              lit: moon.lit,
+              tilt: moon.tilt,
+              alt: moon.alt,
+              az: moon.az,
+              full: moon.name === 'full',
+              superMoon: moon.day.superMoon,
+            }
+          : undefined,
+        event: events?.scene,
       }),
-    [forecast, at, minute, lat, env.theme, env.calm, level, motion],
+    [forecast, at, minute, lat, env.theme, env.calm, level, motion, moon, events?.scene],
   );
 
-  // UV only while the sun is up at the place (the day's maximum read at 02:50 said "UV 1,5" with a sun);
-  // otherwise the third chip is the next sunrise. Without sunrise and sunset `is_day` decides.
+  // UV only while the sun is up at the place (the day's maximum read at 02:50 said "UV 1,5" with a sun); otherwise the
+  // third chip is the moon (its name and how much is lit), or the next sunrise while the moon is switched off.
+  // Without sunrise and sunset `is_day` decides.
   const clockNow = nowIso.slice(11, 16);
   const sunUp =
     first?.sunrise && first.sunset ? clockNow >= first.sunrise && clockNow < first.sunset : !night;
@@ -133,7 +154,7 @@ export function WeatherHero({
 
   const wind = detail?.wind ?? hours[0]?.wind;
   const compass = detail?.dir != null ? tx.compass[compassIndex(detail.dir)] : undefined;
-  type Key = { icon: IconName; text: string; kind?: 'rain' };
+  type Key = { icon: IconName; text: string; kind?: 'rain'; glyph?: ReactNode };
   // While it rains the first chip says so (never "no rain in sight" next to the word "rain"); with old values it stays out.
   const rainKey: Key[] = rainsNow(forecast.code, forecast.group)
     ? stale
@@ -156,13 +177,54 @@ export function WeatherHero({
       ? first?.uv != null && first.uv >= 1
         ? [{ icon: 'sun' as const, text: tp.keyUv(dec(first.uv)) }]
         : []
-      : nextSunrise
-        ? [{ icon: 'sunrise' as const, text: tp.keySunrise(nextSunrise) }]
-        : []),
+      : moon
+        ? [
+            {
+              icon: 'moon' as const,
+              text: tp.keyMoon(
+                tx.moon[moon.name],
+                numberFormat({ maximumFractionDigits: 0 }).format(Math.round(moon.lit * 100)),
+              ),
+              glyph: (
+                <MoonGlyph illum={moon.lit} size={16} mono waxing={moon.waxing} south={lat < 0} />
+              ),
+            },
+          ]
+        : nextSunrise
+          ? [{ icon: 'sunrise' as const, text: tp.keySunrise(nextSunrise) }]
+          : []),
   ];
-  // Phone: two chips in the stage (rain / dry and wind); the third chip's fact opens the line under the stage.
-  const stageKeys = phone ? keys.slice(0, 2) : keys;
-  const moved = phone ? keys.slice(2).map((k) => k.text) : [];
+  // A sky event takes the third chip's place (CONCEPT-EVENTS §2); on the phone it takes the wind chip's place and the
+  // wind goes to the line under the stage.
+  const chip = events?.chip;
+  const eventKey = ((): Key | undefined => {
+    if (!chip) return undefined;
+    switch (chip.kind) {
+      case 'solar':
+      case 'lunar':
+        return {
+          icon: 'sun',
+          text: `${chip.kind === 'solar' ? tp.ev.solarShort : tp.ev.lunarShort} ${placeTime.format(chip.from)}–${placeTime.format(chip.to)}`,
+          glyph: <EventGlyph name={chip.kind === 'solar' ? 'eclipse' : 'lunar'} />,
+        };
+      case 'rainbow':
+        return { icon: 'sun', text: tp.ev.rainbowChip, glyph: <EventGlyph name="rainbow" /> };
+      case 'meteors':
+        return {
+          icon: 'sun',
+          text: tp.ev.meteorsChip(tp.ev.shower[chip.night.shower.id]),
+          glyph: <EventGlyph name="meteor" />,
+        };
+    }
+  })();
+  const withEvent: Key[] = eventKey
+    ? phone
+      ? [...rainKey, eventKey, ...keys.slice(rainKey.length)]
+      : [...keys.slice(0, rainKey.length + (wind != null ? 1 : 0)), eventKey]
+    : keys;
+  // Phone: two chips in the stage (rain / dry and wind or the event); the rest opens the line under the stage.
+  const stageKeys = phone ? withEvent.slice(0, 2) : withEvent;
+  const moved = phone ? withEvent.slice(2, eventKey ? 3 : undefined).map((k) => k.text) : [];
   const rest = [
     ...moved,
     first ? tx.range(first.min, first.max) : undefined,
@@ -196,9 +258,12 @@ export function WeatherHero({
               .join(' · ')}
             testId="weather-temp"
           />
-          {warnings.length > 0 ? (
-            <div data-scene-avoid="">
-              <WarningNotice warnings={warnings} today={nowIso.slice(0, 10)} inStage />
+          {events?.safety || warnings.length > 0 ? (
+            <div className={styles.pills} data-scene-avoid="">
+              {events?.safety ? <SafetyNotice inStage /> : null}
+              {warnings.length > 0 ? (
+                <WarningNotice warnings={warnings} today={nowIso.slice(0, 10)} inStage />
+              ) : null}
             </div>
           ) : null}
         </div>
@@ -210,7 +275,7 @@ export function WeatherHero({
           <ul className={styles.keys} data-testid="weather-keys" data-scene-avoid="">
             {stageKeys.map((k) => (
               <li key={k.text} className={styles.key} data-kind={k.kind}>
-                <Icon name={k.icon} size={16} />
+                {k.glyph ?? <Icon name={k.icon} size={16} />}
                 {k.text}
               </li>
             ))}

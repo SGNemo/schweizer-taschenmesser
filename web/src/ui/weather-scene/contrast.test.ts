@@ -80,7 +80,8 @@ describe('weather scene contrast (A11Y §1)', () => {
   });
 
   it('the ink follows the table of A11Y §1', () => {
-    const darkInkLight = ['golden', 'day', 'overcast', 'drizzle', 'snow', 'fog', 'heat'];
+    // A11Y §1 row 2: `dust` (package 3) is a light sky with dark ink in the light theme
+    const darkInkLight = ['golden', 'day', 'overcast', 'drizzle', 'snow', 'fog', 'heat', 'dust'];
     for (const key of SKY_KEYS) {
       expect(inkForSky(key, 'light'), `${key} light`).toBe(
         darkInkLight.includes(key) ? 'dark' : 'light',
@@ -114,6 +115,20 @@ describe('weather scene contrast (A11Y §1)', () => {
             `calm ${key} ${theme}`,
           ).toBeGreaterThanOrEqual(4.5);
     }
+  });
+
+  it('the event skies (package 3) are walked by every loop above, with their palette.js values', () => {
+    expect(SKY_KEYS).toEqual(expect.arrayContaining(['dust', 'eclipse-sky']));
+    expect(stopsOf('dust', 'light')).toEqual(['#c9b98f', '#ead9ae']);
+    expect(stopsOf('dust', 'dark')).toEqual(['#4a442f', '#6a6046']);
+    expect(stopsOf('eclipse-sky', 'light')).toEqual(['#141a36', '#3a3f6a']);
+    expect(stopsOf('eclipse-sky', 'dark')).toEqual(['#141a36', '#3a3f6a']);
+    for (const key of ['dust', 'eclipse-sky'] as const)
+      for (const theme of ['light', 'dark'] as const) {
+        const ink = light[inkForSky(key, theme) === 'light' ? '--ink-light' : '--ink-dark']!;
+        for (const s of stopsOf(key, theme))
+          expect(ratio(ink, s), `${key} ${theme} ${s}`).toBeGreaterThanOrEqual(4.5);
+      }
   });
 
   it('the inks are the app inks, and the opaque parts take the theme ink', () => {

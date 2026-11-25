@@ -80,7 +80,7 @@ const nowSchema = z.object({
 // open preview from a tampered value (a foreign value reads as absent, like everything else here).
 const pollenSchema = z.partialRecord(z.enum(POLLEN_TYPES), z.number().finite());
 const airSchema = z.object({
-  now: z.object({ aqi: num, pm25: num, pm10: num, o3: num, no2: num, so2: num }),
+  now: z.object({ aqi: num, pm25: num, pm10: num, o3: num, no2: num, so2: num, dust: num }),
   pollen: pollenSchema,
   days: z.array(z.object({ date: z.string(), pollen: pollenSchema, aqi: num })),
 });

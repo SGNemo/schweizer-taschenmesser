@@ -249,6 +249,10 @@
   --scene-sky-fog-1: #dfe4e8;
   --scene-sky-heat-0: #4f9fe6;
   --scene-sky-heat-1: #f4e9c8;
+  --scene-sky-dust-0: #c9b98f;
+  --scene-sky-dust-1: #ead9ae;
+  --scene-sky-eclipse-sky-0: #141a36;
+  --scene-sky-eclipse-sky-1: #3a3f6a;
   --scene-sun: #ffd36a;
   --scene-sun-core: #fff5c8;
   --scene-sun-low: #ffb25e;
@@ -281,6 +285,22 @@
   --scene-crest-night: #8090c0;
   --scene-grass-heat: #c9b46a;
   --scene-land-night: #0c1430;
+  --scene-moon: #f1ecd8;
+  --scene-moon-mare: #d8d1b8;
+  --scene-moon-dark: #2a3660;
+  /* Sky events (package 3): eclipses, rainbow, dust, the dimmer sky of a deep partial eclipse. */
+  --scene-glow-eclipse-sky: #e59a6a;
+  --scene-dust-sun: #f6e7c0;
+  --scene-eclipse-disc: #0b0f22;
+  --scene-eclipse-red: #c8694a;
+  --scene-eclipse-red-dark: #8f3d2e;
+  --scene-eclipse-umbra: #5a2a25;
+  --scene-dim-target: #1b2340;
+  --scene-rb-1: #e8807a;
+  --scene-rb-2: #f2b56b;
+  --scene-rb-3: #f1dd7a;
+  --scene-rb-4: #8fcf9a;
+  --scene-rb-5: #7fb2e6;
   --scene-land-spring: #3f7a58;
   --scene-land-spring-1: #5f9a62;
   --scene-land-spring-2: #4f8c5a;
@@ -393,6 +413,8 @@
   --scene-sky-fog-1: #48515a;
   --scene-sky-heat-0: #1f4468;
   --scene-sky-heat-1: #5a5a52;
+  --scene-sky-dust-0: #4a442f;
+  --scene-sky-dust-1: #6a6046;
   --overlay: rgb(0 0 0 / 0.55);
   --shadow-1:
     0 1px 0 rgb(255 255 255 / 0.04) inset, 0 8px 24px rgb(0 0 0 / 0.35), 0 1px 2px rgb(0 0 0 / 0.3);
@@ -471,6 +493,8 @@
     --scene-sky-fog-1: #48515a;
     --scene-sky-heat-0: #1f4468;
     --scene-sky-heat-1: #5a5a52;
+    --scene-sky-dust-0: #4a442f;
+    --scene-sky-dust-1: #6a6046;
     --overlay: rgb(0 0 0 / 0.55);
     --shadow-1:
       0 1px 0 rgb(255 255 255 / 0.04) inset, 0 8px 24px rgb(0 0 0 / 0.35),

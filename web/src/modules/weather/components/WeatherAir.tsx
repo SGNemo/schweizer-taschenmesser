@@ -8,7 +8,10 @@ import {
   type Air,
   type PollenLevel,
 } from '@/core/weather/air';
+import { DUST_MIN } from '@/core/sky/events';
 import { tWeather } from '@/strings.weather';
+import { tWeatherPage } from '@/strings.weatherPage';
+import { EventGlyph } from '@/ui/weather-scene';
 import { RatingChip } from './RatingChip';
 import styles from './WeatherAir.module.css';
 
@@ -29,10 +32,12 @@ function Meter({ level }: { level: PollenLevel }) {
 /**
  * "Atemwege & Allergie": the air quality index with its word, the pollutants, and every pollen type with
  * data, strongest first. Without values (the request failed) a calm sentence; pollen outside Europe: one
- * sentence instead of an empty list. Orientation only: the hint says so.
+ * sentence instead of an empty list. Orientation only: the hint says so. Saharan dust (package 3): one row under the
+ * pollutants while it is in the air (`dust` only while "Mond und Himmelsereignisse" is on).
  */
-export function WeatherAir({ air }: { air: Air | undefined }) {
+export function WeatherAir({ air, dust = false }: { air: Air | undefined; dust?: boolean }) {
   const tx = tWeather.use();
+  const tp = tWeatherPage.use();
   const rating = rateAir(air);
   const rows = air ? pollenRows(air.pollen) : [];
   const now = air?.now;
@@ -72,6 +77,12 @@ export function WeatherAir({ air }: { air: Air | undefined }) {
                 </li>
               ))}
             </ul>
+          ) : null}
+          {dust && now?.dust != null && now.dust >= DUST_MIN ? (
+            <p className={styles.dust} data-testid="weather-dust">
+              <EventGlyph name="dust" />
+              <span>{tp.ev.dust(formatNumber(now.dust, { maximumFractionDigits: 0 }))}</span>
+            </p>
           ) : null}
           <h4 className={styles.sub}>{tx.pollenTitle}</h4>
           {rows.length > 0 ? (
