@@ -170,7 +170,7 @@ for (const scheme of ['light', 'dark'] as const)
   }) => {
     test.setTimeout(120_000);
     await page.setViewportSize(DESKTOP);
-    await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' });
+    await page.emulateMedia({ colorScheme: scheme });
     await prepare(page);
     const box = await open(page, 'invoices:i1');
     await expect(box.getByLabel(/Gezahlte Summe/)).toBeVisible();
