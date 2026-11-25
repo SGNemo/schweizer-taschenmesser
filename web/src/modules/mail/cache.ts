@@ -3,6 +3,7 @@
  * with the device key, local to this device, bounded and deletable. Nothing here is synced or backed up.
  */
 import { openJson, sealJson } from '@/core/crypto/aead';
+import type { Stored } from '@/core/db/types';
 import { getDeviceKey } from '@/core/secrets/deviceKey';
 import { now } from '@/core/time/now';
 import type { MailMessage, MailThreadSummary } from '@/core/mail/types';
@@ -116,7 +117,7 @@ export async function loadThreads(
 }
 
 /** A cached header row as the list shows it, read through the device key; undefined when unreadable here. */
-async function viewOf(r: CachedThread): Promise<CachedThreadView | undefined> {
+async function viewOf(r: Stored<CachedThread>): Promise<CachedThreadView | undefined> {
   let meta: ThreadMeta | undefined = r.demo;
   if (!meta && r.sealed) {
     try {
@@ -221,7 +222,7 @@ export async function loadBody(
 }
 
 /** A cached body row as a message: demo rows as they are, sealed ones through the device key. */
-async function bodyOf(row: CachedBody): Promise<MailMessage | undefined> {
+async function bodyOf(row: Stored<CachedBody>): Promise<MailMessage | undefined> {
   if (row.demo)
     return {
       id: row.messageId,
