@@ -18,7 +18,7 @@ import { resolveLink, useResolvedLinks } from '@/core/modules/contributions';
 import { getManifest } from '@/core/modules/registry';
 import { useSharedLiveQuery } from '@/core/modules/sharedQuery';
 import type { ResolvedState } from '@/core/modules/types';
-import { planMarkOf } from './planMark';
+import { planMarkOf } from './planMarkRead';
 import {
   carrierStamp,
   linkId,
@@ -246,7 +246,7 @@ export function useLinks(ref: EntityRef): ResolvedLink[] | undefined {
 
 /**
  * „Im Plan · Di“: the earliest day from today on that the planner gave the thing – its own rows (`<module>:<id>` or an
- * occurrence `<module>:<id>:…`) first, then a ToDo linking to it with `origin` / `about` (`planMark.ts`). `undefined`
+ * occurrence `<module>:<id>:…`) first, then a ToDo linking to it with `origin` / `about` (`planMarkRead.ts`). `undefined`
  * while the planner module is off (or not in this build). Dexie reads only; nothing is written.
  */
 export async function plannedDay(

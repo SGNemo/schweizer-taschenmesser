@@ -9,7 +9,7 @@ import { usePageChrome } from '@/core/shell/pageChrome';
 import { useWriteAvailable, useWriteLabel } from '@/core/shell/writeAvailable';
 import { useModuleStates } from '@/core/modules/activation';
 import { PlanMarkWords, usePlanMarks } from '@/core/entitylinks/PlanMark';
-import { planMarkPath, type PlanMarkState } from '@/core/entitylinks/planMark';
+import { planMarkPath, type PlanMarkState } from '@/core/entitylinks/planMarkRead';
 import { planFacts, requestManyIntoPlan } from '@/core/entitylinks/planRow';
 import { useFocusSettings } from '@/core/settings/focus';
 import { useSettings } from '@/core/settings/settings';

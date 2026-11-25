@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { PlanMarkLink } from '@/core/entitylinks/PlanMark';
-import { planMarkOf } from '@/core/entitylinks/planMark';
+import { planMarkOf } from '@/core/entitylinks/planMarkRead';
 import { usePlanRowEntries } from '@/core/entitylinks/planRow';
 import { useSharedLiveQuery } from '@/core/modules/sharedQuery';
 import { bus } from '@/core/events';

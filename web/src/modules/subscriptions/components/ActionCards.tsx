@@ -4,7 +4,7 @@ import { relativeDays } from '@/core/i18n/format';
 import { currencyOf, formatMoney, formatTotals } from '@/core/money';
 import { addDaysStr, formatDay } from '@/core/time/dates';
 import { PlanMarkLink } from '@/core/entitylinks/PlanMark';
-import type { PlanMarkState } from '@/core/entitylinks/planMark';
+import type { PlanMarkState } from '@/core/entitylinks/planMarkRead';
 import { t } from '@/strings';
 import { Button, Card, Icon } from '@/ui';
 import { cancelTone, changePercent } from '../logic';

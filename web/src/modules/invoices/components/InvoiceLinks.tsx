@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import { removeLink, useLinks, type ResolvedLink } from '@/core/entitylinks';
 import { PlanMarkLink } from '@/core/entitylinks/PlanMark';
-import { planMarkOf, type PlanMarkState } from '@/core/entitylinks/planMark';
+import { planMarkOf, type PlanMarkState } from '@/core/entitylinks/planMarkRead';
 import { useSharedLiveQuery } from '@/core/modules/sharedQuery';
 import { getPlatform } from '@/core/platform';
 import { formatDay } from '@/core/time/dates';
