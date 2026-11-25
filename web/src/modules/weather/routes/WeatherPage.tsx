@@ -10,12 +10,14 @@ import { Button, Card, EmptyState, PageTitle } from '@/ui';
 import { DaySpans } from '../components/DaySpans';
 import { HourCards } from '../components/HourCards';
 import { PlaceChips } from '../components/PlaceChips';
+import { MoonCard } from '../components/MoonCard';
 import { WeatherAir } from '../components/WeatherAir';
 import { WeatherChart } from '../components/WeatherChart';
 import { WarningNotice } from '../components/WarningNotice';
 import { WeatherHero, WeatherHeroPending, WeatherSceneDefault } from '../components/WeatherHero';
 import { weatherWarnings } from '../warnings';
 import { SignatureMark } from '@/ui/identity';
+import { useMoon } from '../useMoon';
 import { useViewedForecast } from '../useViewedForecast';
 import styles from './weather.module.css';
 
@@ -39,6 +41,11 @@ export default function WeatherPage() {
   // `late`: the frame stopped waiting first (a slow network); a hint that comes later goes under the head instead.
   const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
   const late = useHeadReady(!!settings && (!!weather || !loading));
+  // The viewed place (main or an extra one): its position feeds the scene's season and the moon.
+  const viewed = index > 0 ? settings?.extra[index - 1] : settings;
+  const lat = viewed?.lat ?? 0;
+  const lon = viewed?.lon ?? 0;
+  const moon = useMoon(lat, lon, weather?.forecast.tz, !!settings?.place);
 
   if (!settings) return null;
   const title = (weather?.place ?? settings.place ?? '').split(',')[0] || tx.title;
@@ -66,13 +73,12 @@ export default function WeatherPage() {
   const days = weather ? dayRows(weather.forecast, nowIso.slice(0, 10)) : [];
   const ready = !!weather?.forecast.hours && !!weather.forecast.days;
   const warnings = weather ? weatherWarnings(days) : [];
-  const lat = index > 0 ? (settings.extra[index - 1]?.lat ?? settings.lat) : settings.lat;
 
   return (
     <>
       <PageTitle title={title} />
       {weather ? (
-        <WeatherHero weather={weather} warnings={late ? [] : warnings} lat={lat} />
+        <WeatherHero weather={weather} warnings={late ? [] : warnings} lat={lat} moon={moon} />
       ) : loading ? (
         <WeatherHeroPending />
       ) : null}
@@ -113,15 +119,21 @@ export default function WeatherPage() {
                 </Card>
                 <Card>
                   <h2 className={styles.sectionTitle}>{tp.daysTitle}</h2>
-                  <DaySpans days={days} today={nowIso.slice(0, 10)} forecast={weather.forecast} />
+                  <DaySpans
+                    days={days}
+                    today={nowIso.slice(0, 10)}
+                    forecast={weather.forecast}
+                    moon={moon ? { lat, lon, tz: weather.forecast.tz } : undefined}
+                  />
                 </Card>
               </>
             ) : (
               <p className={styles.loading}>{tx.previewLoading}</p>
             )}
           </div>
-          <aside className={styles.aside} aria-label={tx.airTitle}>
+          <aside className={styles.aside} aria-label={moon ? tp.asideLabel : tx.airTitle}>
             <WeatherAir air={weather.forecast.air} />
+            {moon ? <MoonCard moon={moon} tz={weather.forecast.tz} south={lat < 0} /> : null}
           </aside>
         </div>
       )}

@@ -25,6 +25,8 @@ export const G = {
   titleY: 60,
   arc: { x0: 1180, dx: 320, y0: 236, dy: 132 },
   sun: { r: 46, rHeat: 52, core: 0.62, halo: 2.6, haloOp: 0.35, low: 0.12 },
+  moon: { r: 42, halo: 2.4, haloOp: 0.25, ring: 1.9, ringOp: 0.18, earthshine: 0.35, darkOp: 0.5 },
+  dayMoon: { x: 1240, y: 120, r: 22, op: 0.55 },
   peek: 0.35,
   ridges: {
     alp: [
@@ -462,6 +464,7 @@ function starsLayer(X: Ctx): string {
   if (!nightish(s)) return '';
   const total = S.n;
   let k = (1 - s.cloud / 100) * (p === 'dawn' || p === 'dusk' ? S.few : 1);
+  if (s.body.kind === 'moon') k *= 1 - 0.6 * (s.moon?.illum ?? 0);
   if (s.cond === 'fog') k *= 0.3;
   const n = Math.round(total * k);
   const r = prng(s.seed * 13 + 1);
@@ -473,6 +476,12 @@ function starsLayer(X: Ctx): string {
     const rr = S.rMin + r() * (S.rMax - S.rMin);
     let b = r();
     if (i >= n) continue;
+    if (
+      s.body.kind === 'moon' &&
+      X.bodyP &&
+      Math.hypot(x - X.bodyP[0], y - X.bodyP[1]) < X.br * 1.15
+    )
+      continue;
     const qx = X.quiet || 760;
     if (x < qx && y > (X.quiet ? -X.ext : 64) && (b < 0.85 || x < qx - 200)) continue; // hardly any stars behind the text
     if (x < qx) b = 0;
@@ -534,6 +543,8 @@ interface Tone {
   b: string;
   sh: string;
   op: number;
+  /** A lit upper edge under a bright moon. */
+  rim?: string;
 }
 function cloudTone(X: Ctx): Tone {
   const s = X.s;
@@ -588,7 +599,11 @@ function cloudTone(X: Ctx): Tone {
     b = mix(b, sk, 0.08);
     sh = mix(sh, sk, 0.08);
   }
-  return { b, sh, op: 1 };
+  const rim =
+    night && s.body.kind === 'moon' && (s.moon?.illum ?? 0) > 0.3
+      ? mix(b, 'moon', 0.32)
+      : undefined;
+  return { b, sh, op: 1, rim };
 }
 function cloud(
   X: Ctx,
@@ -646,7 +661,8 @@ function cloud(
       opacity: tone.op,
       'data-x': f(x),
     },
-    el('path', { d, fill }),
+    (tone.rim ? el('path', { d, fill: tone.rim, transform: `translate(0 ${f(-2 / sc)})` }) : '') +
+      el('path', { d, fill }),
   );
   if (s.wind >= 2) {
     const by = y + T.h * sc;
@@ -842,6 +858,8 @@ function ridgeTrims(X: Ctx, R: Ridge, LC: Land, which: 'far' | 'mid' | 'near'): 
     out += edges(X, R.crest, 'rime', w * 0.75, LC.night ? 0.45 : 0.7);
   if ((s.cond === 'freezingDrizzle' || s.cond === 'freezingRain') && which !== 'far')
     out += edges(X, R.crest, 'ice', 1.6, 0.75);
+  if (which !== 'near' && fullMoonUp(s) && LC.night)
+    out += edges(X, R.crest, mix(LC[which], 'moon', 0.35), 1.5, 0.9);
   return out;
 }
 /** Clean scalloped caps: the cap line meets the crest exactly on both sides. */
@@ -977,7 +995,8 @@ function lake(X: Ctx, LC: Land, bp: Pt | null): string {
   if (frozen)
     out += el('path', { d, fill: 'none', stroke: tok('rime'), 'stroke-width': 1.5, opacity: 0.8 });
   const lowSun = s.body.kind === 'sun' && (s.body.t < 0.15 || s.body.t > 0.85);
-  if (bp && !frozen && lowSun && bp[0] < 1330 && !(s.cloud > 85)) {
+  const moonUp = s.body.kind === 'moon';
+  if (bp && !frozen && (lowSun || moonUp) && bp[0] < 1330 && !(s.cloud > 85)) {
     // soft vertical light path
     const x = Math.min(bp[0], K.x1 - 30);
     let lp = '';
@@ -990,7 +1009,7 @@ function lake(X: Ctx, LC: Land, bp: Pt | null): string {
       lp += rrect(x - q[1]! / 2, K.y0 + 1.5 + q[0]!, q[1]!, 2.4, 1.2);
     out += el('path', {
       d: lp,
-      fill: tok('sun-low'),
+      fill: tok(moonUp ? 'moon' : 'sun-low'),
       opacity: 0.55,
       'clip-path': clip(X, el('path', { d })),
     });
@@ -1196,6 +1215,8 @@ function nearRidge(X: Ctx, R: Ridge, LC: Land): string {
     }
     out += el('path', { d: sp, fill: tok('rime'), opacity: 0.95 });
   }
+  // full-moon highlight: one continuous line over the crest, drawn after trees and bushes
+  if (fullMoonUp(s) && LC.night) out += edges(X, R.crest, mix(LC.near, 'moon', 0.35), 1.5, 0.9);
   return out;
 }
 function fogBands(X: Ctx, which: 'far' | 'near'): string {
@@ -1427,12 +1448,110 @@ export interface SceneSvg {
   body: { x: number; y: number; r: number } | null;
 }
 
-/** Where the body sits on its arc ("partly behind the far ridge", never fully hidden). */
+/* --- moon (CONCEPT-MOON §4; mockup scene.js `litPath`, `moonBody`) --- */
+const fullMoonUp = (s: SceneState): boolean => s.body.kind === 'moon' && (s.moon?.size ?? 1) >= 1.2;
+
+/** The lit shape with its lit side to the right (+x), centre 0,0; null for a new moon. */
+export function litPath(r: number, illum: number): string | null {
+  if (illum < 0.02) return null;
+  if (illum > 0.98) return circ(0, 0, r);
+  const rx = r * Math.abs(1 - 2 * illum);
+  return `M0,${f(-r)}A${f(r)},${f(r)} 0 0 1 0,${f(r)}A${f(rx)},${f(r)} 0 0 ${illum < 0.5 ? 0 : 1} 0,${f(-r)}Z`;
+}
+/** The four flat maria: [cx, cy, rx, ry, rotation] as shares of the radius. */
+export const MARIA: readonly (readonly [number, number, number, number, number])[] = [
+  [-0.3, -0.3, 0.33, 0.25, -22],
+  [0.22, -0.1, 0.21, 0.17, 12],
+  [-0.1, 0.22, 0.2, 0.14, 0],
+  [0.36, 0.38, 0.15, 0.11, 30],
+];
+/** SVG rotation that turns the lit-right shape so its lit side points `tilt` degrees left of up. */
+export const tiltRotation = (tilt: number): number => -(tilt + 90) || 0;
+
+function moonBody(
+  X: Ctx,
+  cx: number,
+  cy: number,
+  r: number,
+  o: { glow: boolean; darkFill: string; maria?: boolean },
+): string {
+  const m = X.s.moon ?? { illum: 0.5, tilt: -90, size: 1 };
+  const illum = m.illum;
+  const lit = litPath(r, illum);
+  let out = '';
+  // dark side: earthshine when thin, else the sky's own colour (it hides the stars behind the moon)
+  if (lit && illum < G.moon.earthshine)
+    out += el('circle', { r, fill: mix('moon-dark', o.darkFill, 0.15), opacity: 0.85 });
+  if (!lit)
+    out += el('circle', {
+      r: r - 0.75,
+      fill: 'none',
+      stroke: tok('moon-dark'),
+      'stroke-width': 1.5,
+      opacity: 0.9,
+    });
+  if (o.glow && lit) {
+    const gop = G.moon.haloOp * illum * (m.size >= 1.2 ? 1.25 : 1);
+    // the glow sits a little toward the lit side, so the unlit part shows no ring of its own
+    const gg = grad(
+      X,
+      [
+        [0, 'moon', 0.8],
+        [0.4, 'moon', 0.9],
+        [1, 'moon', 0],
+      ],
+      { radial: true },
+    );
+    out += el('circle', {
+      cx: r * (1 - illum) * 0.9,
+      r: r * G.moon.halo * X.haloK,
+      fill: gg,
+      opacity: f(gop * 100) / 100,
+    });
+    if (m.size >= 1.2)
+      out += el('circle', {
+        r: r * G.moon.ring,
+        fill: 'none',
+        stroke: tok('moon'),
+        'stroke-width': 1.2,
+        opacity: G.moon.ringOp,
+      });
+  }
+  if (lit) {
+    out += el('path', { d: lit, fill: tok('moon'), 'data-part': 'lit' });
+    if (o.maria !== false && r >= 8) {
+      const cp = clip(X, el('path', { d: lit }));
+      const md = MARIA.map((q) =>
+        el('ellipse', {
+          cx: q[0] * r,
+          cy: q[1] * r,
+          rx: q[2] * r,
+          ry: q[3] * r,
+          transform: `rotate(${q[4]} ${f(q[0] * r)} ${f(q[1] * r)})`,
+        }),
+      ).join('');
+      out += el(
+        'g',
+        { 'clip-path': cp, fill: tok('moon-mare'), opacity: m.size >= 1.2 ? 0.95 : 0.75 },
+        md,
+      );
+    }
+  }
+  return `<g data-part="moon" data-tilt="${f(m.tilt)}" transform="translate(${f(cx)} ${f(cy)}) rotate(${f(tiltRotation(m.tilt))})">${out}</g>`;
+}
+
+/** Where the body sits: the sun on its arc ("partly behind the far ridge", never fully hidden); the moon by its
+ * altitude (0° at the ridge line, ≥ 60° at the top of the arc). */
 function bodyPos(s: SceneState, crest: (x: number) => number, r: number): Pt {
   const A = G.arc;
   const t = s.body.t;
   const x = A.x0 + A.dx * t;
-  const y = Math.min(A.y0 - A.dy * Math.sin(Math.PI * t), crest(x) - G.peek * r);
+  const top = A.y0 - A.dy;
+  const arcY =
+    s.body.kind === 'moon'
+      ? crest(x) - (Math.min(Math.max(s.body.alt ?? 0, 0), 60) / 60) * (crest(x) - top)
+      : A.y0 - A.dy * Math.sin(Math.PI * t);
+  const y = Math.min(arcY, crest(x) - G.peek * r);
   return [x, y];
 }
 
@@ -1463,7 +1582,8 @@ export function sceneSvg(s: SceneState, opts: SceneOptions = {}): SceneSvg {
   const crest = (x: number): number => Math.min(alp.y(x), far.y(x));
   const plain = s.level === 'plain';
   const deckOn = s.cloud > 85 && s.cond !== 'fog';
-  const br = s.heat ? G.sun.rHeat : G.sun.r;
+  const moonUp = s.body.kind === 'moon';
+  const br = moonUp ? G.moon.r * (s.moon?.size ?? 1) : s.heat ? G.sun.rHeat : G.sun.r;
   const bp: Pt | null = s.body.kind === 'none' ? null : (opts.bodyAt ?? bodyPos(s, crest, br));
   X.bodyX = bp ? bp[0] : null;
   X.bodyP = bp;
@@ -1487,7 +1607,23 @@ export function sceneSvg(s: SceneState, opts: SceneOptions = {}): SceneSvg {
           { radial: true },
         ),
       });
+    else if (moonUp)
+      body = moonBody(X, bp[0], bp[1], br, { glow: true, darkFill: skyAt(stops, bp[1]) });
     else body = sunBody(X, bp[0], bp[1], br, bottom);
+  }
+  // No day moon in a narrow crop (phone): the body has its own box there and the text needs the rest.
+  if (s.dayMoon && !plain && !opts.bodyAt) {
+    // At its own place in the sky (the mockup's fixed spot could sit on the sun).
+    const D = G.dayMoon;
+    const at: Pt =
+      s.moon?.t == null
+        ? [D.x, D.y]
+        : bodyPos({ ...s, body: { kind: 'moon', t: s.moon.t, alt: s.moon.alt } }, crest, D.r);
+    body += el(
+      'g',
+      { opacity: D.op, 'data-part': 'dayMoon' },
+      moonBody(X, at[0], at[1], D.r, { glow: false, darkFill: skyAt(stops, at[1]) }),
+    );
   }
   L.push(layer('body', body));
   if (!plain) {

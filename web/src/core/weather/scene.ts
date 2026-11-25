@@ -159,8 +159,15 @@ export interface SceneState {
   heat: boolean;
   snowGround: boolean;
   season: Season;
-  /** The sun on its arc (`t` 0 = sunrise, 1 = sunset); `none` at night, dawn and dusk until the moon is calculated. */
-  body: { kind: 'sun' | 'none'; t: number };
+  /**
+   * The sun on its arc (`t` 0 = sunrise, 1 = sunset), or the moon while it is up at night, dawn and dusk (`t` from its
+   * azimuth, `alt` its altitude in degrees); `none` otherwise (CONCEPT-MOON §4).
+   */
+  body: { kind: 'sun' | 'moon' | 'none'; t: number; alt?: number };
+  /** The moon's lit fraction, the direction of its lit side (deg, + = left of up) and its size (1, full 1.2, super 1.35). */
+  moon?: { illum: number; tilt: number; size: number; t?: number; alt?: number };
+  /** A small pale moon by day (CONCEPT-MOON §4). */
+  dayMoon?: boolean;
   calm: boolean;
   level: SceneLevel;
   motion: boolean;
@@ -322,9 +329,34 @@ export interface SceneInput {
   calm?: boolean;
   level?: SceneLevel;
   motion?: boolean;
+  /** The moon now at the place (`core/sky` `moonNow`); absent when "Mond und Himmelsereignisse" is off. */
+  moon?: MoonInput;
 }
 
-/** The picture's state for a forecast (handoff 01b "Model"). */
+/** What the scene needs of the moon now (a subset of `core/sky` `MoonNow`). */
+export interface MoonInput {
+  lit: number;
+  tilt: number;
+  alt: number;
+  az: number;
+  /** The local day is named full moon / its full moon is a supermoon. */
+  full: boolean;
+  superMoon: boolean;
+}
+
+/** The moon on the picture's arc: east at the left end, south at the top, west at the right (mirrored south). */
+export function moonArcT(az: number, lat: number): number {
+  // South of the equator one faces north: east on the right, north at the top, west on the left; the break of the
+  // scale lies behind the observer (south), as it lies in the north for the northern branch.
+  const s180 = ((((az + 180) % 360) + 360) % 360) - 180;
+  const t = lat >= 0 ? (az - 90) / 180 : (s180 + 90) / 180;
+  return Math.min(1, Math.max(0, t));
+}
+
+/** Day moon: by day, moon up, 20–97 % lit, cloud cover ≤ 60 %. */
+const DAY_MOON = { min: 0.2, max: 0.97, cloud: 60 } as const;
+
+/** The picture's state for a forecast (handoff 01b "Model", CONCEPT-MOON §4). */
 export function sceneOf(i: SceneInput): SceneState {
   const f = i.forecast;
   const nowIso = placeNowIso(f, i.at, i.nowMs);
@@ -339,18 +371,36 @@ export function sceneOf(i: SceneInput): SceneState {
     const span = minutes(today.sunset) - sr;
     if (span > 0) t = Math.min(1, Math.max(0, (minutes(nowIso.slice(11, 16)) - sr) / span));
   }
+  const cloud = f.now?.cloud ?? CLOUD_DEFAULT[cond];
+  const m = i.moon;
+  const moonUp = !!m && m.alt > 0;
+  let body: SceneState['body'] = { kind: byDay ? 'sun' : 'none', t };
+  if (!byDay && m && moonUp) body = { kind: 'moon', t: moonArcT(m.az, i.lat), alt: m.alt };
+  const moon = m
+    ? {
+        illum: m.lit,
+        tilt: m.tilt,
+        size: body.kind === 'moon' && m.full ? (m.superMoon ? 1.35 : 1.2) : 1,
+        t: moonArcT(m.az, i.lat),
+        alt: m.alt,
+      }
+    : undefined;
+  const dayMoon =
+    byDay && moonUp && m.lit >= DAY_MOON.min && m.lit <= DAY_MOON.max && cloud <= DAY_MOON.cloud;
   return {
     phase,
     theme: i.theme,
     cond,
     intensity,
-    cloud: f.now?.cloud ?? CLOUD_DEFAULT[cond],
+    cloud,
     wind: windLevel(f.now?.wind, f.now?.gust),
     frost: frostLevel(f.temp, cond, f.code),
     heat: f.temp >= HEAT_C && byDay,
     snowGround: SNOWING.has(cond) || (f.now?.snowDepth ?? 0) >= SNOW_LIES_M,
     season: seasonOf(Number(nowIso.slice(5, 7)), i.lat),
-    body: { kind: byDay ? 'sun' : 'none', t },
+    body,
+    moon,
+    dayMoon,
     calm: !!i.calm,
     level: i.level ?? 'full',
     motion: !!i.motion,
@@ -396,7 +446,7 @@ export function skyOf(s: SceneState): { key: SkyKey; glow?: { phase: Phase; stre
     if (c === 'rain' || c === 'freezingRain' || c === 'showers' || isThunder(c))
       return 'night-rain';
     if (c === 'overcast' || isDrizzle(c) || deck) return 'night-overcast';
-    return 'night';
+    return s.body.kind === 'moon' && (s.moon?.size ?? 1) >= 1.2 ? 'night-full' : 'night';
   };
   const dayKey = (): SkyKey => {
     if (c === 'fog') return 'fog';

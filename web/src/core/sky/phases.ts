@@ -1,0 +1,191 @@
+/**
+ * Instants of the principal moon phases (Meeus ch. 49) and of equinoxes and solstices (Meeus ch. 27), ported from
+ * docs/design/weather-scenes/reference/astro/phases.js. Results are ms (UTC); Meeus yields JDE (TT), converted with ΔT.
+ */
+import { cosd, deltaT, msFromJdUT, sind } from './core';
+
+const ttToMs = (jde: number): number => msFromJdUT(jde - deltaT(jde) / 86400);
+
+// Periodic terms [coef, eExp, nM, nM', nF, nOmega] for new moon, full moon, quarters.
+const NEW: readonly (readonly number[])[] = [
+  [-0.4072, 0, 0, 1, 0, 0],
+  [0.17241, 1, 1, 0, 0, 0],
+  [0.01608, 0, 0, 2, 0, 0],
+  [0.01039, 0, 0, 0, 2, 0],
+  [0.00739, 1, -1, 1, 0, 0],
+  [-0.00514, 1, 1, 1, 0, 0],
+  [0.00208, 2, 2, 0, 0, 0],
+  [-0.00111, 0, 0, 1, -2, 0],
+  [-0.00057, 0, 0, 1, 2, 0],
+  [0.00056, 1, 1, 2, 0, 0],
+  [-0.00042, 0, 0, 3, 0, 0],
+  [0.00042, 1, 1, 0, 2, 0],
+  [0.00038, 1, 1, 0, -2, 0],
+  [-0.00024, 1, -1, 2, 0, 0],
+  [-0.00017, 0, 0, 0, 0, 1],
+  [-0.00007, 0, 2, 1, 0, 0],
+  [0.00004, 0, 0, 2, -2, 0],
+  [0.00004, 0, 3, 0, 0, 0],
+  [0.00003, 0, 1, 1, -2, 0],
+  [0.00003, 0, 0, 2, 2, 0],
+  [-0.00003, 0, 1, 1, 2, 0],
+  [0.00003, 0, -1, 1, 2, 0],
+  [-0.00002, 0, -1, 1, -2, 0],
+  [-0.00002, 0, 1, 3, 0, 0],
+  [0.00002, 0, 0, 4, 0, 0],
+];
+// Full moon: same arguments as new moon, only the first seven coefficients differ.
+const FULL_C = [-0.40614, 0.17302, 0.01614, 0.01043, 0.00734, -0.00515, 0.00209];
+const FULL: readonly (readonly number[])[] = NEW.map((r, i) =>
+  i < FULL_C.length ? [FULL_C[i]!, ...r.slice(1)] : r,
+);
+const QUARTER: readonly (readonly number[])[] = [
+  [-0.62801, 0, 0, 1, 0, 0],
+  [0.17172, 1, 1, 0, 0, 0],
+  [-0.01183, 1, 1, 1, 0, 0],
+  [0.00862, 0, 0, 2, 0, 0],
+  [0.00804, 0, 0, 0, 2, 0],
+  [0.00454, 1, -1, 1, 0, 0],
+  [0.00204, 2, 2, 0, 0, 0],
+  [-0.0018, 0, 0, 1, -2, 0],
+  [-0.0007, 0, 0, 1, 2, 0],
+  [-0.0004, 0, 0, 3, 0, 0],
+  [-0.00034, 1, -1, 2, 0, 0],
+  [0.00032, 1, 1, 0, 2, 0],
+  [0.00032, 1, 1, 0, -2, 0],
+  [-0.00028, 2, 2, 1, 0, 0],
+  [0.00027, 1, 1, 2, 0, 0],
+  [-0.00017, 0, 0, 0, 0, 1],
+  [-0.00005, 0, -1, 1, -2, 0],
+  [0.00004, 0, 0, 2, 2, 0],
+  [-0.00004, 0, 1, 1, 2, 0],
+  [0.00004, 0, -2, 1, 0, 0],
+  [0.00003, 0, 1, 1, -2, 0],
+  [0.00003, 0, 3, 0, 0, 0],
+  [0.00002, 0, 0, 2, -2, 0],
+  [0.00002, 0, -1, 1, 2, 0],
+  [-0.00002, 0, 1, 3, 0, 0],
+];
+// Planetary arguments A1..A14: [a, b] -> a + b*k (A1 also -0.009173 T^2), coefficients 1e-6 d.
+const PLAN: readonly (readonly number[])[] = [
+  [299.77, 0.107408, 325],
+  [251.88, 0.016321, 165],
+  [251.83, 26.651886, 164],
+  [349.42, 36.412478, 126],
+  [84.66, 18.206239, 110],
+  [141.74, 53.303771, 62],
+  [207.14, 2.453732, 60],
+  [154.84, 7.30686, 56],
+  [34.52, 27.261239, 47],
+  [207.19, 0.121824, 42],
+  [291.34, 1.844379, 40],
+  [161.72, 24.198154, 37],
+  [239.56, 25.513099, 35],
+  [331.55, 3.592518, 23],
+];
+
+const SEASON0: readonly (readonly number[])[] = [
+  // Meeus table 27.B (years 2000..3000), Y = (year-2000)/1000
+  [2451623.80984, 365242.37404, 0.05169, -0.00411, -0.00057],
+  [2451716.56767, 365241.62603, 0.00325, 0.00888, -0.0003],
+  [2451810.21715, 365242.01767, -0.11575, 0.00337, 0.00078],
+  [2451900.05952, 365242.74049, -0.06223, -0.00823, 0.00032],
+];
+const S27: readonly (readonly number[])[] = [
+  [485, 324.96, 1934.136],
+  [203, 337.23, 32964.467],
+  [199, 342.08, 20.186],
+  [182, 27.85, 445267.112],
+  [156, 73.14, 45036.886],
+  [136, 171.52, 22518.443],
+  [77, 222.54, 65928.934],
+  [74, 296.72, 3034.906],
+  [70, 243.58, 9037.513],
+  [58, 119.81, 33718.147],
+  [52, 297.17, 150.678],
+  [50, 21.02, 2281.226],
+  [45, 247.54, 29929.562],
+  [44, 325.15, 31555.956],
+  [29, 60.93, 4443.417],
+  [18, 155.12, 67555.328],
+  [17, 288.79, 4562.452],
+  [16, 198.04, 62894.029],
+  [14, 199.76, 31436.921],
+  [12, 95.39, 14577.848],
+  [12, 287.11, 31931.756],
+  [12, 320.81, 34777.259],
+  [9, 227.73, 1222.114],
+  [8, 15.45, 16859.074],
+];
+
+/** Instant of phase k (integer + 0 new, .25 first quarter, .5 full, .75 last quarter; k = 0 ≈ 2000-01-06). */
+export function phaseInstant(k: number): number {
+  const T = k / 1236.85;
+  const T2 = T * T;
+  const T3 = T2 * T;
+  const T4 = T3 * T;
+  let jde =
+    2451550.09766 + 29.530588861 * k + 0.00015437 * T2 - 0.00000015 * T3 + 0.00000000073 * T4;
+  const E = 1 - 0.002516 * T - 0.0000074 * T2;
+  const M = 2.5534 + 29.1053567 * k - 0.0000014 * T2 - 0.00000011 * T3;
+  const Mp = 201.5643 + 385.81693528 * k + 0.0107582 * T2 + 0.00001238 * T3 - 0.000000058 * T4;
+  const F = 160.7108 + 390.67050284 * k - 0.0016118 * T2 - 0.00000227 * T3 + 0.000000011 * T4;
+  const Om = 124.7746 - 1.56375588 * k + 0.0020672 * T2 + 0.00000215 * T3;
+  const frac = ((k % 1) + 1) % 1;
+  const tab = frac < 0.1 ? NEW : Math.abs(frac - 0.5) < 0.1 ? FULL : QUARTER;
+  for (const row of tab) {
+    const [c, e, a, b, f, o] = row as [number, number, number, number, number, number];
+    jde += c * E ** e * sind(a * M + b * Mp + f * F + o * Om);
+  }
+  if (tab === QUARTER) {
+    const W =
+      0.00306 -
+      0.00038 * E * cosd(M) +
+      0.00026 * cosd(Mp) -
+      0.00002 * cosd(Mp - M) +
+      0.00002 * cosd(Mp + M) +
+      0.00002 * cosd(2 * F);
+    jde += Math.abs(frac - 0.25) < 0.1 ? W : -W;
+  }
+  PLAN.forEach((row, i) => {
+    const [a, b, c] = row as [number, number, number];
+    jde += c * 1e-6 * sind(a + b * k - (i === 0 ? 0.009173 * T2 : 0));
+  });
+  return ttToMs(jde);
+}
+
+/** 0 new, 1 first quarter, 2 full, 3 last quarter. */
+export type PrincipalPhase = 0 | 1 | 2 | 3;
+export interface PhaseInstant {
+  ms: number;
+  phase: PrincipalPhase;
+}
+
+/** All principal phases with instants in [fromMs, toMs). */
+export function phasesBetween(fromMs: number, toMs: number): PhaseInstant[] {
+  const yr = 2000 + (fromMs / 86400000 + 2440587.5 - 2451545) / 365.25;
+  let k = Math.floor((yr - 2000) * 12.3685) - 1;
+  const out: PhaseInstant[] = [];
+  for (; ; k += 0.25) {
+    const ms = phaseInstant(k);
+    if (ms >= toMs) break;
+    if (ms >= fromMs)
+      out.push({ ms, phase: (Math.round((((k % 1) + 1) % 1) * 4) % 4) as PrincipalPhase });
+  }
+  return out;
+}
+
+/** Equinox / solstice instant; which: 0 March equinox, 1 June solstice, 2 September equinox, 3 December solstice. */
+export function seasonInstant(year: number, which: 0 | 1 | 2 | 3): number {
+  const Y = (year - 2000) / 1000;
+  const [a, b, c, d, e] = SEASON0[which] as [number, number, number, number, number];
+  const jde0 = a + b * Y + c * Y * Y + d * Y ** 3 + e * Y ** 4;
+  const T = (jde0 - 2451545) / 36525;
+  const W = 35999.373 * T - 2.47;
+  const dl = 1 + 0.0334 * cosd(W) + 0.0007 * cosd(2 * W);
+  const S = S27.reduce((s, row) => {
+    const [A, B, C] = row as [number, number, number];
+    return s + A * cosd(B + C * T);
+  }, 0);
+  return ttToMs(jde0 + (0.00001 * S) / dl);
+}
