@@ -64,6 +64,8 @@ const manifest: ModuleManifest = {
   area: 'money',
   contributions: {
     attention: () => import('./attention'),
+    pile: () => import('./pile'),
+    planPanel: () => import('./components/PlanPanel'),
     onboarding: noOnboarding,
     quickAdd: [
       {

@@ -64,6 +64,7 @@ const manifest: ModuleManifest = {
   contributions: {
     // Open things for the planner (read only; nothing is written back).
     plannable: () => import('./plannable'),
+    pile: () => import('./pile'),
     // Its panel under an expanded plan row (planner hub 2, package 4b): the first cancel step.
     planPanel: () => import('./components/PlanPanel'),
     linkTarget: () => import('./linkTarget'),

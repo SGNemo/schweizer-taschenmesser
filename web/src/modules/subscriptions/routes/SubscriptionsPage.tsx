@@ -135,6 +135,13 @@ export default function SubscriptionsPage() {
   const compact = narrow && !advanced;
   // View and order live in the URL: a reload or the way back keeps them (focus checklist 5).
   const view = params.get('view') === 'overview' ? 'overview' : 'list';
+  // `?view=notice` (the jump from the planner's pile): the list, sorted by the next deadline as it is by default; the
+  // word leaves the URL once read. Any other value but `overview` is ignored the same way.
+  const strayView = params.has('view') && view !== 'overview';
+  useEffect(() => {
+    if (strayView) setParam('view', undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [strayView]);
   const rawSort = params.get('sort');
   const sort: SortKey = isSortKey(rawSort) ? rawSort : 'next';
   const rows = sortList(subs ?? [], day, sort);

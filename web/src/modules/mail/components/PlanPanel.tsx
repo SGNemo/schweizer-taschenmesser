@@ -30,7 +30,9 @@ import { closeAnswered } from '../answered';
 import { DEMO_ACCOUNT, DEMO_EMAIL, loadPlanThread, type CachedThreadView } from '../cache';
 import { emptyCompose, type ComposeState } from '../composeState';
 import { personName, shortWhen, subjectOf } from '../format';
+import { QUEUE_PANEL } from '../pile';
 import { openPlanCompose } from '../planCompose';
+import { PlanQueue } from './PlanQueue';
 import { settings } from '../settings';
 import { composeOf } from './ThreadView';
 
@@ -77,7 +79,12 @@ function replyOf(
   ];
 }
 
-export default function MailPlanPanel({ id }: PlanPanelProps) {
+export default function MailPlanPanel(props: PlanPanelProps) {
+  // The pile's queue line (package 2) is this module's panel under a fixed id no thread id can take.
+  return props.id === QUEUE_PANEL ? <PlanQueue /> : <ThreadPanel {...props} />;
+}
+
+function ThreadPanel({ id }: PlanPanelProps) {
   const row = usePlanRow();
   const read = useLiveQuery(() => readThread(id), [id]);
   const [prefs] = useSettings('module.mail', settings.schema, settings.defaults);

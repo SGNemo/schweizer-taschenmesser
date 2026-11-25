@@ -67,7 +67,7 @@ describe('foldPiles', () => {
 
   it('drops a member key of another module, keeps a mail ToDo with an origin link to a thread', () => {
     const origin = (module: string) => ({
-      links: [{ to: { module, id: 't1' }, rel: 'origin' as const }],
+      links: [{ to: { module, id: 't1' }, rel: 'origin' as const, label: 'Mail' }],
     });
     const { folded } = foldPiles(
       [
