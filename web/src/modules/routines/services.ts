@@ -32,7 +32,10 @@ export async function addRequested(req: {
   return created.id;
 }
 
-/** Runs while the routines module is enabled: reacts to `routine.requested`. */
+/**
+ * Runs while the routines module is enabled: reacts to `routine.requested`. The handler hands back the write's promise,
+ * so whoever awaits the emit waits for the routine (the planner's „Als Routine speichern“, package 5a).
+ */
 export default function start(): () => void {
-  return bus.on('routine.requested', (req) => void addRequested(req));
+  return bus.on('routine.requested', (req) => addRequested(req).then(() => undefined));
 }

@@ -16,18 +16,12 @@ import { addDays } from '@/core/plan/dates';
 import type { PlannableItem, PlannableSource } from '@/core/modules/types';
 import { getSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
-import { itemRepo, listRepo } from './repo';
+import { itemRepo, itemsOf, listRepo } from './repo';
 import { SHOPPING_LIST_ID } from './schema';
 import { settings } from './settings';
 
 export const SHOP_MINUTES = 45;
 export const PACK_MINUTES = 20;
-
-/** How many entries of a list are still open (live rows only). */
-async function openCount(listId: string): Promise<number> {
-  const rows = await itemRepo.table.where('listId').equals(listId).toArray();
-  return rows.filter((i) => i.deletedAt === null && !i.done).length;
-}
 
 const source: PlannableSource = {
   async list(ctx) {
@@ -46,7 +40,8 @@ const source: PlannableSource = {
           : undefined;
       const dated = packBy !== undefined && packBy <= ctx.until;
       if (!dated && !asked.has(l.id)) continue;
-      const open = await openCount(l.id);
+      const all = await itemsOf(l.id);
+      const open = all.filter((i) => !i.done).length;
       if (open === 0) continue;
       const to = `/lists?open=${encodeURIComponent(l.id)}`;
       items.push({
@@ -59,10 +54,21 @@ const source: PlannableSource = {
         action: { label: t.lists.plan.toList, to },
         durationMin: l.kind === 'packing' ? PACK_MINUTES : SHOP_MINUTES,
         ...(packBy ? { due: { date: packBy < ctx.today ? ctx.today : packBy, hard: true } } : {}),
+        // Its entries as steps (package 5a): ticked ones stay in place, so the order never jumps.
+        // (by the entries' own order – the list view puts bought ones last, a step list must not jump).
+        steps: [...all]
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+          .map((i) => ({ id: i.id, title: i.name, done: !!i.done })),
         createdAt: l.createdAt,
       });
     }
     return items;
+  },
+  /** A list entry ticked from the plan (package 5a): only an entry of that list, read fresh. */
+  async onStepDone(listId, itemId, done) {
+    const item = await itemRepo.get(itemId);
+    if (!item || item.listId !== listId || !!item.done === done) return;
+    await itemRepo.update(itemId, { done });
   },
 };
 

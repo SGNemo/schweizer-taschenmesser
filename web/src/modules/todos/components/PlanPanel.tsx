@@ -15,18 +15,7 @@ import type { PlanPanelProps } from '@/core/modules/types';
 import { undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import { Checkbox, PanelLine, PanelLines } from '@/ui';
-import { setDone, taskRepo } from '../repo';
-import type { ChecklistItem } from '../schema';
-
-/** Sets one checklist line, read fresh: a sync may have changed the other lines meanwhile. */
-async function setLine(taskId: string, itemId: string, done: boolean): Promise<void> {
-  const fresh = await taskRepo.get(taskId);
-  if (!fresh?.checklist?.some((c) => c.id === itemId && c.done !== done)) return;
-  const checklist: ChecklistItem[] = fresh.checklist.map((c) =>
-    c.id === itemId ? { ...c, done } : c,
-  );
-  await taskRepo.update(taskId, { checklist });
-}
+import { setChecklistLine, setDone, taskRepo } from '../repo';
 
 /**
  * Ticks one checklist line: ToDos' own write with its own undo toast. The undo flips only this line back (the field
@@ -39,12 +28,7 @@ export async function tickChecklist(taskId: string, itemId: string, done: boolea
   const message = done
     ? t.todos.checklist.ticked(item.text)
     : t.todos.checklist.reopened(item.text);
-  await undoableWithToast(
-    message,
-    message,
-    () => setLine(taskId, itemId, done),
-    () => setLine(taskId, itemId, !done),
-  );
+  await undoableWithToast(message, message, () => setChecklistLine(taskId, itemId, done));
 }
 
 export default function TodoPlanPanel({ id, compact }: PlanPanelProps) {

@@ -258,7 +258,8 @@ async function inputSnapshot(): Promise<string> {
   ]);
   return JSON.stringify([
     day,
-    things,
+    // Steps are display only (package 5a): a step tick never wakes the background run.
+    things.map(({ steps: _steps, ...thing }) => thing),
     calendar.filter((c) => c.source !== 'planner'),
     blocks,
     days,

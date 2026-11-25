@@ -50,7 +50,7 @@ import { PlannerOffError, runUser, type RunScope, type UserRun } from './service
 import { dayEndLabel, DEFAULT_PLANNER_SETTINGS, PLANNER_SCOPE } from './settings';
 import { runToast } from './toast';
 
-const toast = (message: string, run?: UserRun) =>
+const toast = (message: string, run?: UserRun, lead?: { label: string; run: () => void }) =>
   useUiStore.getState().toast(
     message,
     run?.entry
@@ -63,6 +63,8 @@ const toast = (message: string, run?: UserRun) =>
           },
         }
       : undefined,
+    undefined,
+    lead,
   );
 
 /**
@@ -81,6 +83,8 @@ export async function act(
     leadAfter?: (run: UserRun) => Promise<string | undefined>;
     /** The action hands things to the proposer itself (its scope): a thing without room is named. */
     proposes?: boolean;
+    /** A second action before „Rückgängig“ („Ansehen“ of B16, package 5a). */
+    view?: { label: string; run: () => void };
   } & RunScope = {},
 ): Promise<boolean> {
   let run: UserRun;
@@ -104,7 +108,7 @@ export async function act(
   // A proposal that found no room for a thing says so after „Übernehmen“ too (the thing kept its day).
   const held = proposes ? (run.outcome.result?.heldBack?.length ?? 0) : 0;
   const line = held > 0 ? `${first}\n${t.planner.toast.heldBack(held)}` : first;
-  toast(withOverload(line, await overloadNotice(run)), run);
+  toast(withOverload(line, await overloadNotice(run)), run, opts.view);
   return true;
 }
 
@@ -561,6 +565,46 @@ export async function markDone(
   const s = await source(e.moduleId);
   if (!s?.onDone) return false;
   return act(t.planner.toast.done, t.planner.toast.done, titles, () => s.onDone!(e.id));
+}
+
+/**
+ * One step of a thing ticked or unticked from the plan („Los“, package 5a): the source's `onStepDone` in its own `act`
+ * – one undo entry, the quiet toast B26 „Schritt erledigt. · Rückgängig“. False for a source without steps.
+ */
+export async function markStep(
+  e: PlannableEntry,
+  stepId: string,
+  done: boolean,
+  titles: Record<string, string>,
+): Promise<boolean> {
+  const s = await source(e.moduleId);
+  if (!s?.onStepDone) return false;
+  return act(
+    t.planner.steps.stepDone,
+    t.planner.steps.stepDone,
+    titles,
+    () => s.onStepDone!(e.id, stepId, done),
+    { leadOnly: true },
+  );
+}
+
+/**
+ * B23 „Fertig“ on the last open step („Los“, package 5a): the step and the thing that carries it in **one** `act` – one
+ * undo entry brings back both – with the thing's own toast („Erledigt.“). A thing its source does not tick (a list) only
+ * finishes the step.
+ */
+export async function finishSteps(
+  e: PlannableEntry,
+  stepId: string,
+  titles: Record<string, string>,
+): Promise<boolean> {
+  const s = await source(e.moduleId);
+  if (!s?.onStepDone) return false;
+  const label = s.onDone ? t.planner.toast.done : t.planner.steps.stepDone;
+  return act(label, label, titles, async () => {
+    await s.onStepDone!(e.id, stepId, true);
+    if (s.onDone) await s.onDone(e.id);
+  });
 }
 
 /**

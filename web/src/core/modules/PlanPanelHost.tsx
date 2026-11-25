@@ -20,6 +20,7 @@ import {
   Suspense,
   useContext,
   useMemo,
+  useState,
   type ComponentType,
   type ReactNode,
 } from 'react';
@@ -27,7 +28,7 @@ import { useNavigate } from 'react-router';
 import { recordEntry } from '@/core/diagnostics/errorLog';
 import { now } from '@/core/time/now';
 import { t } from '@/strings';
-import { Button, Skeleton } from '@/ui';
+import { Button, RowMenu, Skeleton, type RowMenuItem } from '@/ui';
 import { useModuleStates } from './activation';
 import { availableManifests } from './available';
 import { lazyComponent } from './lazy';
@@ -55,6 +56,11 @@ interface PanelContext {
   secondary?: boolean;
   /** A carried target's panel: the row's own lines, drawn just above that panel's foot (so the foot stays last). */
   beforeFoot?: ReactNode;
+  /**
+   * A thing with steps (package 5a): the planner's B3 „Los“ and its ⋯ („Als Routine speichern“) in the foot, after the
+   * module's own actions and before „Ganz öffnen“. The planner's, never the module's: the host only places them.
+   */
+  steps?: { go: () => void; title: string; menu: RowMenuItem[] };
 }
 const Ctx = createContext<PanelContext | undefined>(undefined);
 
@@ -70,12 +76,33 @@ export function usePlanRow(): { moduleId: string; id: string } | undefined {
 export function PlanPanelFoot({ children }: { children?: ReactNode }) {
   const ctx = useContext(Ctx);
   const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
   if (ctx?.secondary) return null;
+  const steps = ctx?.steps;
   return (
     <>
       {ctx?.beforeFoot}
       <div className={styles.foot} data-panel-foot="">
-        {children ? <span className={styles.footStart}>{children}</span> : null}
+        {children || steps ? (
+          <span className={styles.footStart}>
+            {children}
+            {steps ? (
+              <>
+                <Button variant="secondary" onClick={steps.go}>
+                  {t.planner.steps.go}
+                </Button>
+                {steps.menu.length > 0 ? (
+                  <RowMenu
+                    label={t.planner.row.menu(steps.title)}
+                    items={steps.menu}
+                    open={menuOpen}
+                    onOpenChange={setMenuOpen}
+                  />
+                ) : null}
+              </>
+            ) : null}
+          </span>
+        ) : null}
         {ctx ? (
           <Button variant="ghost" data-panel-open="" onClick={() => void navigate(ctx.to)}>
             {t.planner.panel.open}
@@ -244,6 +271,8 @@ export interface PlanPanelHostProps {
    * panel comes first, the row's own lines under it. Only the pairs in `CARRIED` are mounted this way.
    */
   carrier?: { moduleId: string; id: string };
+  /** A thing with steps (package 5a): „Los“ and the ⋯ the foot carries (`PanelContext.steps`). */
+  steps?: { go: () => void; title: string; menu: RowMenuItem[] };
 }
 
 /**
@@ -308,12 +337,20 @@ export function PlanPanelHost({
   detail,
   links,
   carrier,
+  steps,
 }: PlanPanelHostProps) {
   const states = useModuleStates();
   const row = useMemo(() => ({ moduleId, id }), [moduleId, id]);
   const ctx = useMemo(
-    () => ({ to, detail, links, row, ...(onTakeOut ? { onTakeOut } : {}) }),
-    [to, detail, links, row, onTakeOut],
+    () => ({
+      to,
+      detail,
+      links,
+      row,
+      ...(onTakeOut ? { onTakeOut } : {}),
+      ...(steps ? { steps } : {}),
+    }),
+    [to, detail, links, row, onTakeOut, steps],
   );
   const carried =
     carrier && CARRIED[carrier.moduleId] === moduleId && !compact ? carrier : undefined;

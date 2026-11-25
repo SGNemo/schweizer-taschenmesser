@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { areaOfPileId } from '@/core/modules/pile';
 import { unpile } from '../pileSwitch';
+import { hasOpenSteps, STEPS_FRESH, stepsPath } from './steps';
 import { dayName } from '@/core/plan/explain';
 import { t } from '@/strings';
 import type { RowMenuItem } from '@/ui';
@@ -153,6 +154,16 @@ export function useRowMenu(ctx: {
     const excluded = row.item?.excluded === true;
     const open = why === row.unitId;
     const top: RowMenuItem[] = [
+      // B3 „Los“ first (package 5a): a thing with a step left opens the focus page in step mode.
+      ...(hasOpenSteps(e)
+        ? [
+            {
+              id: 'go',
+              label: t.planner.steps.go,
+              onSelect: () => void navigate(stepsPath(row.unitId), STEPS_FRESH),
+            },
+          ]
+        : []),
       // „Verschieben …“ first (package 5; also `M` on the row and dragging): the day chips; the thing lies on the chosen
       // day from then on, nothing else moves.
       ...(excluded

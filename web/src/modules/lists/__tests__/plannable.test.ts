@@ -60,6 +60,8 @@ describe('lists as a plan source', () => {
         action: { label: 'Zur Liste', to: '/lists?open=trip' },
         durationMin: PACK_MINUTES,
         due: { date: '2026-11-19', hard: true },
+        // Its entries as steps (package 5a; their content: the test „steps“ below).
+        steps: expect.any(Array),
         createdAt: expect.any(Number),
       },
     ]);
@@ -246,5 +248,27 @@ describe('pantry → shopping list keeps the way back', () => {
         label: 'x',
       }),
     ).rejects.toThrow();
+  });
+});
+
+describe('steps (planner hub 2, package 5a)', () => {
+  it('a list hands over its entries in order as steps, ticked ones in place; a tick from the plan writes that entry only', async () => {
+    await list('trip', 'packing', { name: 'Ostsee', tripDate: '2026-11-20' });
+    await entries('trip', 2, 1);
+    const [row] = await source.list(ctx());
+    expect(row?.steps?.map((s) => [s.title, s.done])).toEqual([
+      ['trip-0', false],
+      ['trip-1', false],
+      ['trip-2', true],
+    ]);
+    await source.onStepDone!('trip', row!.steps![0]!.id, true);
+    const [after] = await source.list(ctx());
+    expect(after?.steps?.map((s) => s.done)).toEqual([true, false, true]);
+    // An entry of another list is never touched through this one.
+    await list('other', 'packing', { name: 'Berge', tripDate: '2026-11-20' });
+    await entries('other', 1);
+    const foreign = (await source.list(ctx())).find((r) => r.id === 'other');
+    await source.onStepDone!('trip', foreign!.steps![0]!.id, true);
+    expect((await itemRepo.get(foreign!.steps![0]!.id))?.done).toBe(false);
   });
 });

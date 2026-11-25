@@ -646,7 +646,17 @@ export interface PlannableItem {
   detail?: string;
   /** When the thing was created (epoch ms): the engine's tie-break "older first". */
   createdAt?: number;
+  /**
+   * The thing's own steps in order (planner hub 2, package 5a, CONCEPT-ROWS idea 5): a ToDo's checklist, a list's open
+   * entries, a routine's steps of today's run – all of them: core drops the whole list when it holds more than
+   * `STEPS_MAX` (a cut list would end the thing with steps still open), the thing is then a plain row. Display and
+   * „Los“ only – never part of the planner's input hash; a tick goes back through `PlannableSource.onStepDone`.
+   */
+  steps?: { id: string; title: string; done: boolean }[];
 }
+
+/** At most this many steps of one thing (CONCEPT-ROWS idea 5); a longer list is dropped by `collectPlannable`. */
+export const STEPS_MAX = 40;
 
 /**
  * Is a source's date the planner's own? Only while the mark carries the same day; every other combination
@@ -695,6 +705,11 @@ export interface PlannableSource {
   onRelease?(id: string): Promise<void>;
   /** Ticked off from the plan. */
   onDone?(id: string): Promise<void>;
+  /**
+   * One of the thing's `steps` ticked or unticked from the plan (its panel, „Los“; package 5a). The source writes the
+   * step only – read fresh, so a sync's change to another step stays; the planner wraps each call in its own undo.
+   */
+  onStepDone?(id: string, stepId: string, done: boolean): Promise<void>;
   /** The estimate was edited in the plan. */
   onEstimate?(id: string, minutes: number): Promise<void>;
   /**

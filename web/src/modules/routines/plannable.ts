@@ -5,17 +5,39 @@
  * switched off for the planner („Im Planer zeigen“) is not offered.
  */
 import { notDeleted } from '@/core/db/repo';
-import type { PlannableItem, PlannableSource } from '@/core/modules/types';
+import { recordAs } from '@/core/db/recorder';
+import { type PlannableItem, type PlannableSource } from '@/core/modules/types';
 import { today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { DEFAULT_MINUTES, donePatch, whoseTurn } from './logic';
+import {
+  DEFAULT_MINUTES,
+  donePatch,
+  doneSteps,
+  stepsOf,
+  toggleStepPatch,
+  whoseTurn,
+} from './logic';
 import { routineRepo } from './repo';
 
 /** `<id>:<due day>` → its parts, split at the last colon. */
-const split = (key: string): { id: string; due: string } => {
+export const split = (key: string): { id: string; due: string } => {
   const at = key.lastIndexOf(':');
   return at < 0 ? { id: key, due: '' } : { id: key.slice(0, at), due: key.slice(at + 1) };
 };
+
+/**
+ * One step of the turn `<id>:<due day>`, read fresh (package 5a): a turn ticked elsewhere meanwhile is over, a step
+ * already in that state writes nothing. Its undo flips only this step back (`progress` is one field: see `recordAs`).
+ */
+export async function setTurnStep(key: string, stepId: string, done: boolean): Promise<void> {
+  const { id, due } = split(key);
+  const r = await routineRepo.get(id);
+  if (!r || r.dueDate !== due || doneSteps(r).has(stepId) === done) return;
+  await recordAs(
+    () => setTurnStep(key, stepId, !done),
+    () => routineRepo.update(id, toggleStepPatch(r, stepId, done)),
+  );
+}
 
 const source: PlannableSource = {
   async list(ctx) {
@@ -37,6 +59,16 @@ const source: PlannableSource = {
       // The turn's day (planner rethink): shown there without a row; a turn that is due already shows on today.
       day: r.dueDate > ctx.today ? r.dueDate : ctx.today,
       due: { date: r.dueDate > ctx.today ? r.dueDate : ctx.today, hard: false },
+      // The steps of the run due now (package 5a): a later turn has none yet.
+      ...(stepsOf(r).length && r.dueDate <= ctx.today
+        ? {
+            steps: stepsOf(r).map((st) => ({
+              id: st.id,
+              title: st.text,
+              done: doneSteps(r).has(st.id),
+            })),
+          }
+        : {}),
       createdAt: r.createdAt,
     }));
   },
@@ -46,6 +78,7 @@ const source: PlannableSource = {
     // A turn that was ticked elsewhere meanwhile is over: nothing to do for it.
     if (r && r.dueDate === due) await routineRepo.update(id, donePatch(r, today()));
   },
+  onStepDone: setTurnStep,
   async onEstimate(key, minutes) {
     await routineRepo.update(split(key).id, {
       minutes: Math.max(1, Math.min(1440, Math.round(minutes))),
