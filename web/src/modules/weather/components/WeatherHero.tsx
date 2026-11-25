@@ -1,7 +1,7 @@
 import { dateTimeFormat } from '@/core/i18n/format';
 import type { DayRow } from '@/core/weather/api';
 import { compassIndex } from '@/core/weather/air';
-import { bestWindow, hourRows, placeNowIso, dayRows } from '@/core/weather/logic';
+import { bestWindow, hourRows, placeNowIso, dayRows, rainsNow } from '@/core/weather/logic';
 import { conditionId, sceneAddition, type SceneAddition } from '@/core/weather/scene';
 import type { WeatherView } from '@/core/weather/useWeather';
 import { now } from '@/core/time/now';
@@ -71,10 +71,17 @@ export function WeatherHero({
 
   const wind = detail?.wind ?? hours[0]?.wind;
   const compass = detail?.dir != null ? tx.compass[compassIndex(detail.dir)] : undefined;
-  const keys: { icon: IconName; text: string; kind?: 'rain' }[] = [
-    forecast.rainFrom && !stale
-      ? { icon: 'cloudRain', text: tp.keyRain(forecast.rainFrom), kind: 'rain' }
-      : { icon: 'umbrella', text: tp.keyDry },
+  type Key = { icon: IconName; text: string; kind?: 'rain' };
+  // While it rains the first chip says so (never "no rain in sight" next to the word "rain"); with old values it stays out.
+  const rainKey: Key[] = rainsNow(forecast.code, forecast.group)
+    ? stale
+      ? []
+      : [{ icon: 'cloudRain', text: tp.keyRainNow, kind: 'rain' }]
+    : forecast.rainFrom && !stale
+      ? [{ icon: 'cloudRain', text: tp.keyRain(forecast.rainFrom), kind: 'rain' }]
+      : [{ icon: 'umbrella', text: tp.keyDry }];
+  const keys: Key[] = [
+    ...rainKey,
     ...(wind != null
       ? [
           {

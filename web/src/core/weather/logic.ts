@@ -18,6 +18,13 @@ export function codeGroup(code: number): CodeGroup {
   return 'cloudy';
 }
 
+const RAIN_GROUPS: readonly CodeGroup[] = ['drizzle', 'rain', 'showers', 'thunder'];
+
+/** True when it rains now: by the WMO code when there is one (values cached before the code have only the group). */
+export function rainsNow(code: number | undefined, group: CodeGroup): boolean {
+  return RAIN_GROUPS.includes(code != null ? codeGroup(code) : group);
+}
+
 /** Chance of rain (percent) from which a coming hour counts as "rain". */
 export const RAIN_PERCENT = 60;
 /** How far ahead the hint looks. */
@@ -37,7 +44,7 @@ export function rainFrom(
   nowIso: string,
   currentGroup: CodeGroup,
 ): string | undefined {
-  if (['drizzle', 'rain', 'showers', 'thunder'].includes(currentGroup)) return undefined;
+  if (RAIN_GROUPS.includes(currentGroup)) return undefined;
   const day = dayOf(nowIso);
   const hour = hourOf(nowIso);
   for (let i = 0; i < times.length; i++) {

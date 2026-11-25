@@ -8,6 +8,7 @@ import {
   hourRows,
   placeNowIso,
   rainFrom,
+  rainsNow,
   rate,
   rateDay,
   rateHour,
@@ -32,6 +33,19 @@ describe('codeGroup', () => {
 
   it('falls back to "bedeckt" for a code it does not know', () => {
     expect(codeGroup(42)).toBe('cloudy');
+  });
+});
+
+describe('rainsNow', () => {
+  it('reads the WMO code when there is one, else the group', () => {
+    expect(rainsNow(63, 'rain')).toBe(true);
+    expect(rainsNow(51, 'drizzle')).toBe(true);
+    expect(rainsNow(81, 'showers')).toBe(true);
+    expect(rainsNow(95, 'thunder')).toBe(true);
+    expect(rainsNow(2, 'partly')).toBe(false);
+    expect(rainsNow(73, 'snow')).toBe(false);
+    expect(rainsNow(undefined, 'rain')).toBe(true);
+    expect(rainsNow(undefined, 'cloudy')).toBe(false);
   });
 });
 
