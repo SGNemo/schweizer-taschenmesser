@@ -51,6 +51,9 @@ export const planner: Strings['planner'] = {
       allDayBlocks: 'All-day appointments block time',
       allDayBlocksHelp: 'Off: an all-day appointment costs no plannable time.',
       expandRows: 'Expand rows',
+      measurePropose: 'Propose from measured time',
+      measureProposeHelp:
+        'A new thing without minutes gets the time it took the last times with “Start focus” or “Go”.',
       expandRowsHelp:
         'A tap on the title shows the thing in the planner. Off: the title opens it in its module.',
       pileMoney: 'Piles as one row: finances',
@@ -71,6 +74,13 @@ export const planner: Strings['planner'] = {
     failed: 'That did not work. Nothing was changed.',
     tick: (step: string) => `Tick “${step}”`,
     more: (n: number) => `${n} more`,
+  },
+  measure: {
+    asLast: 'as last time',
+    asLastFull: (min: string) => `${min} · as last time`,
+    last: (minutes: number[]) => `last ${minutes.join(', ')} min`,
+    deleteAll: 'Delete measured times',
+    deleted: 'Measured times deleted.',
   },
   steps: {
     count: (n: number) => (n === 1 ? '1 step' : `${n} steps`),

@@ -26,6 +26,7 @@ import { Button, EmptyState, Skeleton } from '@/ui';
 import { markDone } from '../actions';
 import { StepStage } from '../components/StepStage';
 import { beginPlanFocus, planFocusMinutes } from '../focus';
+import { workedMinutes } from '../measure';
 import { useBoard } from '../useBoard';
 import styles from './focus.module.css';
 
@@ -116,9 +117,11 @@ export default function PlannerFocusPage() {
   }
   async function end(done: boolean) {
     if (mine) void onFocusEnd(mine.startedAt);
+    // The minutes the round ran, pauses out (package 8): recorded with „Erledigt“ only, never with „Runde beenden“.
+    const ran = mine ? workedMinutes(mine, now()) : undefined;
     await clearFocusSession();
     // A thing its source does not tick off from the plan (an invoice) just ends the round.
-    if (!(done && row?.entry && (await markDone(row.entry, data!.titles))))
+    if (!(done && row?.entry && (await markDone(row.entry, data!.titles, ran))))
       toast(t.focus.mode.ended);
     void navigate('/planner');
   }

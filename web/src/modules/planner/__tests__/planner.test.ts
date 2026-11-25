@@ -24,7 +24,12 @@ describe('planner module', () => {
       widget: 'fortschritt',
       signature: 'weekBars',
     });
-    expect(Object.keys(manifest.dataSchema.collections)).toEqual(['day', 'item', 'assignment']);
+    expect(Object.keys(manifest.dataSchema.collections)).toEqual([
+      'day',
+      'item',
+      'assignment',
+      'measure',
+    ]);
     expect(manifest.dataSchema.collections.assignment!.indexes).toEqual(['date', 'itemKey']);
   });
 

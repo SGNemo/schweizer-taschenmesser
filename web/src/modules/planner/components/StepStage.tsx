@@ -8,6 +8,9 @@
  * storage, so a reload keeps the round where it was; an explicit „Los“ (`STEPS_FRESH`) starts it fresh. The steps' own
  * state is the source's. Focus lands on the filled button on arrival and after each step. Keys: Enter is the focused
  * button's own activation; S and P only while focus is on one of the stage's buttons (WCAG 2.1.4); Esc is the page's.
+ *
+ * Measured duration (package 8): each step's minutes run from when it was shown (or the step before was ticked or
+ * skipped), a pause shifts that start; „Fertig · weiter“ / „Fertig“ records them under the step's title in its own act.
  */
 import { type KeyboardEvent, type ReactNode, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
@@ -15,13 +18,21 @@ import type { PlannableEntry } from '@/core/modules/contributions';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { Button } from '@/ui';
+import { now } from '@/core/time/now';
 import { finishSteps, markStep } from '../actions';
+import { titleKey } from '../measure';
 import styles from '../routes/focus.module.css';
 
 interface Kept {
   skipped: string[];
   paused: boolean;
+  /** When the current step began (epoch ms; a pause shifts it): its measured minutes run from here. */
+  since?: number;
+  /** When the pause began. */
+  pausedAt?: number;
 }
+const stamp = (v: unknown): number | undefined =>
+  typeof v === 'number' && Number.isFinite(v) ? v : undefined;
 const keyOf = (unitId: string) => `tm-plan-steps:${unitId}`;
 function readKept(unitId: string): Kept {
   try {
@@ -30,6 +41,8 @@ function readKept(unitId: string): Kept {
     return {
       skipped: Array.isArray(v.skipped) ? v.skipped.filter((s) => typeof s === 'string') : [],
       paused: v.paused === true,
+      ...(stamp(v.since) !== undefined ? { since: stamp(v.since)! } : {}),
+      ...(stamp(v.pausedAt) !== undefined ? { pausedAt: stamp(v.pausedAt)! } : {}),
     };
   } catch {
     return { skipped: [], paused: false };
@@ -43,7 +56,7 @@ function writeKept(unitId: string, kept: Kept | undefined) {
     // Storage blocked: the round still works, it only forgets its skips on a reload.
   }
 }
-const FRESH: Kept = { skipped: [], paused: false };
+const fresh = (): Kept => ({ skipped: [], paused: false, since: now() });
 
 export function StepStage({
   entry,
@@ -61,17 +74,20 @@ export function StepStage({
 }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const fresh = (location.state as { stepsFresh?: boolean } | null)?.stepsFresh === true;
+  const isFresh = (location.state as { stepsFresh?: boolean } | null)?.stepsFresh === true;
   const [kept, setKeptState] = useState<Kept>(() => {
-    if (!fresh) return readKept(unitId);
+    if (!isFresh) {
+      const read = readKept(unitId);
+      return read.since === undefined ? { ...read, since: now() } : read;
+    }
     writeKept(unitId, undefined);
-    return FRESH;
+    return fresh();
   });
   // The fresh mark is read once: dropped from the history entry, so a reload keeps the round.
   useEffect(() => {
-    if (fresh)
+    if (isFresh)
       void navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
-  }, [fresh, navigate, location.pathname, location.search]);
+  }, [isFresh, navigate, location.pathname, location.search]);
   const [busy, setBusy] = useState(false);
   // The step a tick is running for: a held Enter never ticks the same step twice before the next one shows. `busy`
   // covers the tick in flight; this covers the moment after it, until new step data arrives (any re-read frees it –
@@ -121,16 +137,22 @@ export function StepStage({
     if (!current || busy || kept.paused || ticked.current === current.id) return;
     ticked.current = current.id;
     setBusy(true);
+    const at = now();
+    const ran = {
+      key: titleKey(current.title),
+      minutes: kept.since === undefined ? 0 : (at - kept.since) / 60_000,
+    };
     try {
       if (last) {
-        if (!(await finishSteps(entry, current.id, titles))) ticked.current = undefined;
+        if (!(await finishSteps(entry, current.id, titles, ran))) ticked.current = undefined;
         else {
           writeKept(unitId, undefined);
           void navigate('/planner');
         }
         return;
       }
-      if (!(await markStep(entry, current.id, true, titles))) ticked.current = undefined;
+      if (await markStep(entry, current.id, true, titles, ran)) setKept({ ...kept, since: at });
+      else ticked.current = undefined;
     } catch (err) {
       // Said without claiming nothing changed (a step written before a later failure stays); trying again is safe –
       // a step already in that state writes nothing.
@@ -143,10 +165,18 @@ export function StepStage({
     }
   }
   const skip = () =>
-    current && !kept.paused && setKept({ ...kept, skipped: [...kept.skipped, current.id] });
+    current &&
+    !kept.paused &&
+    setKept({ ...kept, skipped: [...kept.skipped, current.id], since: now() });
   const pause = () => {
     if (!current) return; // B10 has no pause
-    setKept({ ...kept, paused: !kept.paused });
+    const at = now();
+    if (kept.paused) {
+      // The pause is not the step's time: its start moves on by the paused stretch.
+      const { pausedAt, ...rest } = kept;
+      const since = kept.since === undefined ? at : kept.since + (at - (pausedAt ?? at));
+      setKept({ ...rest, paused: false, since });
+    } else setKept({ ...kept, paused: true, pausedAt: at });
     // Said too: focus stays on the same button, only its state changes.
     setSaid(kept.paused ? t.planner.steps.resumed : t.planner.steps.paused);
   };
@@ -182,7 +212,7 @@ export function StepStage({
         </p>
         <h1 className={styles.title}>{t.planner.steps.skipped(open.length)}</h1>
         <div ref={actions} className={`${styles.actions} ${styles.stepActions}`}>
-          <Button variant="primary" onClick={() => setKept({ ...kept, skipped: [] })}>
+          <Button variant="primary" onClick={() => setKept({ ...kept, skipped: [], since: now() })}>
             {t.planner.steps.now}
           </Button>
           <Button

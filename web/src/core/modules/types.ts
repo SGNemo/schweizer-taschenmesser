@@ -68,6 +68,12 @@ export interface CollectionDef {
    */
   dataApi?: false;
   /**
+   * `true`: what the collection holds is about him and stays his own (the planner's measured durations, package 8).
+   * Synced between his own devices and kept in his own backup, but never in a share file for someone else and not
+   * counted in a diagnosis. Combine with `dataApi: false` (or a module without data API).
+   */
+  personal?: true;
+  /**
    * Optional hand-written example in the import format (see `core/dataapi`): plain field names,
    * money as a number in euro, references by title. Made-up data only. Without it the example is
    * generated from the schema.
@@ -435,6 +441,11 @@ export interface ModuleSettings {
   order?: number;
   /** Extra search terms (German). */
   keywords?: string[];
+  /**
+   * One quiet row a module adds below its fields on its settings page: a button with its own confirm and undo (the
+   * planner's „Gemessene Zeiten löschen“, package 8). Never a setting of its own – those are `fields`.
+   */
+  extra?: LazyComponent;
 }
 
 /* ---- Contributions (registry-mediated, so modules never import each other) ---- */

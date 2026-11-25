@@ -2,7 +2,7 @@ import { noOnboarding } from '@/core/importer/types';
 import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { t } from '@/strings';
 import { migrations } from './migrations';
-import { assignmentSchema, daySchema, itemSchema } from './schema';
+import { assignmentSchema, daySchema, itemSchema, measureSchema } from './schema';
 import { settings } from './settings';
 
 /**
@@ -25,7 +25,7 @@ const manifest: ModuleManifest = {
     signature: 'weekBars',
     type: 'sans',
   },
-  version: 6,
+  version: 7,
   get description() {
     return t.planner.meta.description;
   },
@@ -53,6 +53,8 @@ const manifest: ModuleManifest = {
       day: { schema: daySchema, indexes: ['date'] },
       item: { schema: itemSchema, indexes: [] },
       assignment: { schema: assignmentSchema, indexes: ['date', 'itemKey'] },
+      // Personal (CollectionDef.personal): never in a share file or a diagnosis; the module has no data API.
+      measure: { schema: measureSchema, indexes: ['key'], personal: true },
     },
   },
   dataApi: false,

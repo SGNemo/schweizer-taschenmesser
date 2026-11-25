@@ -55,6 +55,17 @@ export function buildStores(manifests: readonly ModuleManifest[]): Record<string
   return Object.fromEntries(Object.entries(stores).sort(([a], [b]) => a.localeCompare(b)));
 }
 
+/** Tables of `personal` collections (`CollectionDef.personal`): never shared with someone else, never counted. */
+export function personalTableNames(manifests: readonly ModuleManifest[]): Set<string> {
+  return new Set(
+    manifests.flatMap((m) =>
+      Object.entries(m.dataSchema.collections)
+        .filter(([, def]) => def.personal)
+        .map(([collection]) => tableName(m.id, collection)),
+    ),
+  );
+}
+
 /** Tables whose records travel through sync (module collections plus the synced system tables). */
 export function syncedTableNames(manifests: readonly ModuleManifest[]): string[] {
   const local = new Set(

@@ -1,3 +1,4 @@
+import { createElement, Suspense } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Link, useParams } from 'react-router';
 import { CopySchemaButton } from '@/core/dataapi/CopySchemaButton';
@@ -5,6 +6,7 @@ import { JSON_IMPORTER_ID } from '@/core/dataapi/importer';
 import { hasStartData, importersOf } from '@/core/dataapi/onboarding';
 import { StartDataButton } from '@/core/importer/StartDataButton';
 import { useModuleStates } from '@/core/modules/activation';
+import { lazyComponent } from '@/core/modules/lazy';
 import { availableManifests } from '@/core/modules/available';
 import type { ModuleManifest } from '@/core/modules/types';
 import { changedKeys, fieldBlocks } from '@/core/settings/moduleBlocks';
@@ -154,6 +156,8 @@ function ModuleSettingsBody({ manifest }: { manifest: ModuleManifest }) {
       run: () => void patch(before),
     });
   };
+  // A module's own quiet row below its fields (`ModuleSettings.extra`); `lazyComponent` keeps one per loader.
+  const Extra = manifest.settings.extra ? lazyComponent(manifest.settings.extra) : undefined;
   const rows = (list: typeof fields) =>
     list.map((f) => (
       <FieldRow
@@ -211,6 +215,7 @@ function ModuleSettingsBody({ manifest }: { manifest: ModuleManifest }) {
           </SettingsGroup>
         );
       })}
+      {Extra ? <Suspense fallback={null}>{createElement(Extra)}</Suspense> : null}
       {wide ? null : <LibraryLink manifest={manifest} />}
     </section>
   );

@@ -16,6 +16,7 @@ import { setNow } from '@/core/time/now';
 import { useUiStore } from '@/stores/ui';
 import { assignmentRepo } from '../repo';
 import FocusPage from '../routes/FocusPage';
+import { recordsOf, titleKey } from '../measure';
 import { setManifestsForTests } from '../services';
 
 const NOW = new Date(2026, 10, 9, 10, 0).getTime(); // Monday 2026-11-09
@@ -238,5 +239,34 @@ describe('„Los“ – step mode', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Fertig · weiter' }));
     await screen.findByRole('heading', { level: 1, name: 'Bad wischen' });
     expect(await checklist(id)).toEqual([true, false, false]);
+  });
+
+  it('package 8: „Fertig · weiter“ records each step’s minutes under its title, a pause not counted', async () => {
+    await db.table('planner_measure').clear();
+    const id = await place('Haushalt', 0, { checklist: CHECK });
+    page(id);
+    await screen.findByRole('heading', { level: 1, name: 'Wäsche anstellen' });
+    setNow(() => NOW + 4 * 60_000);
+    fireEvent.click(screen.getByRole('button', { name: 'Pause' }));
+    setNow(() => NOW + 10 * 60_000);
+    fireEvent.click(screen.getByRole('button', { name: 'Weiter' }));
+    setNow(() => NOW + 13 * 60_000);
+    fireEvent.click(screen.getByRole('button', { name: 'Fertig · weiter' }));
+    await screen.findByRole('heading', { level: 1, name: 'Bad wischen' });
+    await waitFor(async () =>
+      expect((await recordsOf(titleKey('Wäsche anstellen')!)).map((r) => r.minutes)).toEqual([7]),
+    );
+    await waitFor(() => expect(undoDepth()).toBe(1));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Fertig · weiter' })).not.toHaveAttribute(
+        'aria-busy',
+        'true',
+      ),
+    );
+    // Ticked at once: under a minute, nothing recorded.
+    fireEvent.click(screen.getByRole('button', { name: 'Fertig · weiter' }));
+    await screen.findByRole('heading', { level: 1, name: 'Müll rausbringen' });
+    await waitFor(() => expect(undoDepth()).toBe(2));
+    expect(await recordsOf(titleKey('Bad wischen')!)).toEqual([]);
   });
 });

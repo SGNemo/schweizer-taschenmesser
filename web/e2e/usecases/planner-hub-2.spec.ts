@@ -85,8 +85,8 @@ const IST: Record<string, Figures> = {
   'A2 Jedes Ding als richtige Art · pixel-7': { rows: 8, moduleSwitches: 5, taps: 34, perThing: 14, forms: 2, fields: 5, rightKind: 12, linkedToPlan: 11 },
   'B Finanzen und Mails abarbeiten · desktop-chrome': { rowsBefore: 2, taps: 17, perThing: 12, moduleSwitches: 0, doneInPlanner: 9, rowsAfter: 0, mails: 4, replySwitches: 0 },
   'B Finanzen und Mails abarbeiten · pixel-7': { rowsBefore: 1, taps: 10, perThing: 8, moduleSwitches: 0, doneInPlanner: 5, rowsAfter: 0, mails: 'nicht möglich', replySwitches: 'nicht möglich' },
-  'C1 Bündel Haushalt · desktop-chrome': { rows: 1, createTaps: 10, workTaps: 7, taps: 17, perThing: 6, moduleSwitches: 2, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
-  'C1 Bündel Haushalt · pixel-7': { rows: 1, createTaps: 10, workTaps: 7, taps: 17, perThing: 6, moduleSwitches: 2, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
+  'C1 Bündel Haushalt · desktop-chrome': { rows: 1, createTaps: 10, workTaps: 7, taps: 17, perThing: 6, moduleSwitches: 2, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'ja' },
+  'C1 Bündel Haushalt · pixel-7': { rows: 1, createTaps: 10, workTaps: 7, taps: 17, perThing: 6, moduleSwitches: 2, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'ja' },
   'C2 Besorgung · desktop-chrome': { rows: 2, createTaps: 0, workTaps: 9, perThing: 5, moduleSwitches: 2, oneRow: 'nein', mapShown: 'nicht möglich' },
   'C2 Besorgung · pixel-7': { rows: 2, createTaps: 0, workTaps: 8, perThing: 5, moduleSwitches: 2, oneRow: 'nein', mapShown: 'nicht möglich' },
   'D1 Steht es im Plan, und wann · desktop-chrome': { taps: 11, perThing: 5, moduleSwitches: 10, markVisible: 5, markAgrees: 5, tripsToPlanner: 0 },
@@ -1163,6 +1163,8 @@ test('C1 Bündel Haushalt', async ({ page, isMobile }, info) => {
   for (const [i, step] of HOUSEHOLD.entries()) {
     const last = i === HOUSEHOLD.length - 1;
     await expect(page.getByRole('heading', { level: 1, name: step })).toBeVisible();
+    // Package 8 measures: the first step („Wäsche anstellen“) takes 8 minutes, the others no time (not recorded).
+    if (i === 0) await page.clock.setFixedTime(new Date(`${TODAY}T09:08:00`));
     await hand.tap(
       page.getByRole('button', { name: last ? 'Fertig' : 'Fertig · weiter', exact: true }),
       last ? 'Fertig' : 'Fertig · weiter',
@@ -1171,9 +1173,11 @@ test('C1 Bündel Haushalt', async ({ page, isMobile }, info) => {
   }
   await expect(page).toHaveURL(/\/planner$/);
   await expect.poll(() => onDay(page, TODAY)).toBe(0);
+  await page.clock.setFixedTime(new Date(`${TODAY}T09:00:00`));
   const workTaps = hand.taps - createTaps;
   // The duration the planner proposes for a new thing, and whether one round with „Fokus starten“ (12 minutes,
-  // „Fertig“) changes the next proposal for the same thing. Not counted in the figures above.
+  // „Fertig“) changes the next proposal for the same thing. Not counted in the figures above. With package 8 the
+  // „Los“ step above (8 minutes) and this round are the two records: the second proposal is their median, 10.
   await field.fill('Wäsche anstellen');
   await field.press('Enter');
   await expect(
