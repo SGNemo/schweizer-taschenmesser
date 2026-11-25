@@ -12,7 +12,7 @@ import {
 } from '@/core/weather/settings';
 import { tWeather } from '@/strings.weather';
 import { tWeatherPage } from '@/strings.weatherPage';
-import { Button, Segmented, Switch, TextField, SettingRow } from '@/ui';
+import { Button, SelectField, Switch, TextField, SettingRow } from '@/ui';
 import styles from './settings.module.css';
 
 /** Weather line: the switch, the chosen place and a place search (one request per search, on a click). */
@@ -96,16 +96,16 @@ export function WeatherSection() {
         </p>
       </SettingRow>
       <SettingRow id="weather--scene" label={tp.sceneSetting} description={tp.sceneSettingHelp}>
-        <Segmented<SceneMode>
+        <SelectField
           label={tp.sceneSetting}
+          labelHidden
           value={sceneModeOf(settings)}
-          options={[
-            { value: 'motion', label: tp.sceneMotion },
-            { value: 'still', label: tp.sceneStill },
-            { value: 'plain', label: tp.scenePlain },
-          ]}
-          onChange={(scene) => void setWeatherScene(scene)}
-        />
+          onChange={(e) => void setWeatherScene(e.target.value as SceneMode)}
+        >
+          <option value="motion">{tp.sceneMotion}</option>
+          <option value="still">{tp.sceneStill}</option>
+          <option value="plain">{tp.scenePlain}</option>
+        </SelectField>
       </SettingRow>
     </>
   );

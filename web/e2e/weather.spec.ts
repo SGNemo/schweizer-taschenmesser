@@ -454,10 +454,7 @@ test.describe('Weather scene in the head (package 1b)', () => {
   test('"Schlicht": the sky and the sun only, no motion', async ({ page }) => {
     await mockScene(page, { night: false, hints: 0 });
     await chooseLindenau(page);
-    await page
-      .getByRole('group', { name: 'Bild im Wetter-Kopf' })
-      .getByRole('button', { name: 'Schlicht (nur Himmel)' })
-      .click();
+    await page.getByLabel('Bild im Wetter-Kopf').selectOption('plain');
     await ready(page, '/weather');
     const scene = page.getByTestId('weather-scene');
     await expect(scene).toHaveAttribute('data-level', 'plain');
