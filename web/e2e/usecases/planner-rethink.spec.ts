@@ -291,10 +291,28 @@ class Hand {
       await this.page.mouse.move(a.x + 30, 10);
       await this.page.waitForTimeout(50);
     }
-    const b = (await tile.boundingBox())!;
+    // Out of the edge zone before aiming: near an edge the page scrolls on every frame while the pointer rests, so
+    // on a slow machine the tile measured above has moved by the time the pointer gets there.
+    await this.page.mouse.move(a.x + 30, height / 2, { steps: 2 });
+    let b = (await tile.boundingBox())!;
+    for (let i = 0; i < 20; i++) {
+      await this.page.waitForTimeout(100);
+      const now = (await tile.boundingBox())!;
+      if (now.y === b.y) break;
+      b = now;
+    }
     await this.page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 6 });
     await this.page.mouse.up();
-    return true;
+    // Done only when the stored plan has it on that day.
+    return expect
+      .poll(async () => (await layout(this.page))[title]?.split('+').includes(to) ?? false, {
+        timeout: 10_000,
+      })
+      .toBe(true)
+      .then(
+        () => true,
+        () => false,
+      );
   }
   /**
    * „Verschieben …“ of one thing onto a day: find it (open its day), row menu, „Verschieben …“, the day chip.

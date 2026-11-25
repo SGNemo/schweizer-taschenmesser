@@ -286,7 +286,11 @@ test.describe('ten paths', () => {
     await s.tap(page.getByRole('button', { name: 'Suchen' }).first());
     await s.type(page.getByRole('combobox'), 'Zahnbürste');
     await s.tap(page.getByRole('option', { name: /Zahnbürste kaufen/ }).first());
-    await expect(page.getByRole('dialog')).toHaveCount(0);
+    // A hit opens the thing itself (`?open=<id>`, core/ai/query/rows.ts): the search is gone, the ToDo's form is
+    // the one dialog. Checking for no dialog at all only passed when it ran before the form mounted.
+    const form = page.getByRole('dialog', { name: 'Aufgabe bearbeiten' });
+    await expect(form.getByRole('textbox', { name: 'Titel' })).toHaveValue('Zahnbürste kaufen');
+    await expect(page.getByRole('dialog')).toHaveCount(1);
     await record(info, '10 Suche', s.n);
   });
 });
