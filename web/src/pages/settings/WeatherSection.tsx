@@ -7,6 +7,8 @@ import {
   sceneModeOf,
   setWeatherEnabled,
   setWeatherScene,
+  setWeatherSky,
+  skyOn,
   useWeatherSettings,
   type SceneMode,
 } from '@/core/weather/settings';
@@ -106,6 +108,14 @@ export function WeatherSection() {
           <option value="still">{tp.sceneStill}</option>
           <option value="plain">{tp.scenePlain}</option>
         </SelectField>
+      </SettingRow>
+      <SettingRow id="weather--sky" label={tp.skySetting} description={tp.skySettingHelp}>
+        <Switch
+          label={tp.skySetting}
+          labelHidden
+          checked={skyOn(settings)}
+          onChange={(on) => void setWeatherSky(on)}
+        />
       </SettingRow>
     </>
   );

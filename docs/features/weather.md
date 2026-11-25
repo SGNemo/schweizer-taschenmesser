@@ -38,6 +38,12 @@ Open-Meteo documents `Access-Control-Allow-Origin: *` for browser use, so the PW
 - Motion: five seconds after opening (clouds drift, rain and snow fall, fog and trees sway), then still; paused while hidden or out of view; none with reduced motion, "Standbild", "Schlicht", "Ruhig", "Modulfarben: Aus". Setting "Bild im Wetter-Kopf": Mit Bewegung · Standbild · Schlicht (nur Himmel), in the synced `weather` scope (`scene`).
 - Widget and overview line still use `Sky` until package 4.
 
+## The moon (weather scenes 2)
+- Calculated on the device (`core/sky/`, no request): phase name for the place's local day (one "Vollmond" per lunation), lit share, moonrise and moonset, next full and new moon, supermoon (≤ 361 885 km) and second full moon in a month.
+- In the scene at night, dawn and dusk while it is up: true phase, tilt of the lit side, height and place from its altitude and azimuth; full moon larger with its own sky and lit ridges, supermoon larger still; a small day moon by day. Stars thin out with its light.
+- On the page: the third chip at night ("Vollmond · 99 %"; on the phone the line under the stage starts with it), the card "Mond & Himmel" in the aside (named "Luft, Mond & Himmel" then), a glyph and the name at every forecast day (named "Mond: {Phase}").
+- Switch "Mond und Himmelsereignisse" (Einstellungen → Verbindungen → Wetter, synced, on): off removes the moon everywhere; the night chip is the sunrise again.
+
 ## Words, chips and hints (weather scenes 1a)
 - **The word follows the WMO code** (`conditionId(code, group)` in `core/weather/scene.ts`, 22 words in `tx.conditions`): head, hour cards, day rows, widget, overview line and trip weather say the same word (code 1 = "überwiegend klar", no longer "leicht bewölkt"). `codeGroup` (nine groups) still drives the rating, icons and the cache; a value cached without a code gets its group's nearest word.
 - **Data kept beside the group** (all optional, also in the cache): raw `code` (now, hour, day), `tz` (the place's IANA zone from the response), `now.snowDepth` (m; `snow_depth`, the only added variable of the forecast request).

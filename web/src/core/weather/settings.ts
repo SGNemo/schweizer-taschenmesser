@@ -31,10 +31,14 @@ export const weatherSettingsSchema = z.object({
   // whole scope falling back to its defaults and hiding the place.
   // Such a mode is not written back from here; settings writes only the keys they change.
   scene: z.enum(['motion', 'still', 'plain']).optional().catch(undefined),
+  /** "Mond und Himmelsereignisse": calculated on this device; on by default. */
+  sky: z.boolean().optional().catch(undefined),
 });
 export type SceneMode = NonNullable<WeatherSettings['scene']>;
 /** The picture setting with its default. */
 export const sceneModeOf = (s: WeatherSettings | undefined): SceneMode => s?.scene ?? 'motion';
+/** The moon and sky events, with their default (on). */
+export const skyOn = (s: WeatherSettings | undefined): boolean => s?.sky ?? true;
 export type WeatherSettings = z.infer<typeof weatherSettingsSchema>;
 
 export const DEFAULT_WEATHER: WeatherSettings = {
@@ -66,6 +70,8 @@ export const setWeatherEnabled = (enabled: boolean): Promise<void> =>
 
 export const setWeatherScene = (scene: SceneMode): Promise<void> =>
   setSettings(WEATHER_SCOPE, { scene });
+
+export const setWeatherSky = (sky: boolean): Promise<void> => setSettings(WEATHER_SCOPE, { sky });
 
 /** Removes the place and the device-local forecast of it. */
 export function clearWeatherPlace(): Promise<void> {

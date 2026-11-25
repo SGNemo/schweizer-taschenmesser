@@ -130,6 +130,18 @@
   min-width: 0;
 }
 .rowMain,
+.dayMoon {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+}
+@media (max-width: 899px) {
+  .dayMoon {
+    flex-basis: 100%;
+  }
+}
 .rowMeta {
   margin: 0;
 }

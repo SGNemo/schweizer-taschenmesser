@@ -2,7 +2,10 @@ import { dateTimeFormat } from '@/core/i18n/format';
 import type { DayRow, Forecast } from '@/core/weather/api';
 import { rateDay } from '@/core/weather/logic';
 import { conditionId } from '@/core/weather/scene';
+import { moonOfDay } from '@/core/sky/moonDay';
 import { tWeather } from '@/strings.weather';
+import { tWeatherPage } from '@/strings.weatherPage';
+import { MoonGlyph } from '@/ui/weather-scene';
 import { Icon } from '@/ui';
 import styles from '../routes/weather.module.css';
 import { lineBuilders } from './lines';
@@ -14,13 +17,45 @@ import { weatherIcon } from './weatherIcon';
  * The next days as range bars: each day's bar sits where its minimum and maximum lie within the week, the gradient (cool → warm)
  * spans the whole week. Word, rating chip and the detail line carry every number.
  */
+/** The moon of a forecast day: glyph and name; one accessible name "Mond: {Phase}" for the pair. */
+function DayMoon({
+  date,
+  lat,
+  lon,
+  tz,
+}: {
+  date: string;
+  lat: number;
+  lon: number;
+  tz: string | undefined;
+}) {
+  const tx = tWeather.use();
+  const tp = tWeatherPage.use();
+  const m = moonOfDay(date, lat, lon, tz);
+  const name = tx.moon[m.name];
+  return (
+    <span
+      className={styles.dayMoon}
+      role="img"
+      aria-label={tp.moonDayAria(name)}
+      data-testid="weather-day-moon"
+    >
+      <MoonGlyph illum={m.lit} size={18} mono waxing={m.waxing} south={lat < 0} />
+      <span aria-hidden="true">{name}</span>
+    </span>
+  );
+}
+
 export function DaySpans({
   days,
   today,
   forecast,
+  moon,
 }: {
   days: readonly DayRow[];
   today: string;
+  /** The place of the moon glyphs (absent while "Mond und Himmelsereignisse" is off). */
+  moon?: { lat: number; lon: number; tz: string | undefined };
   forecast: Forecast;
 }) {
   const tx = tWeather.use();
@@ -51,6 +86,7 @@ export function DaySpans({
               </span>
               <span>{tx.conditions[conditionId(d.code, d.group)]}</span>
               <RatingChip rating={rateDay(d)} />
+              {moon ? <DayMoon date={d.date} {...moon} /> : null}
             </p>
             <div className={styles.range}>
               <span className={styles.rangeLabel} data-tone={tone(d.min)}>

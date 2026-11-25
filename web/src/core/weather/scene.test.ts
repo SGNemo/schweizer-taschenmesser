@@ -6,6 +6,7 @@ import {
   conditionId,
   condOf,
   frostLevel,
+  moonArcT,
   phaseOf,
   sceneAddition,
   sceneOf,
@@ -13,6 +14,7 @@ import {
   skyKey,
   windLevel,
   WMO_CODES,
+  type MoonInput,
   type SceneState,
 } from './scene';
 
@@ -302,5 +304,57 @@ describe('scene model (CONCEPT §3)', () => {
     [1, -23, 'summer'],
   ] as const)('month %i at latitude %i is %s', (month, lat, season) => {
     expect(seasonOf(month, lat)).toBe(season);
+  });
+});
+
+/* ============================== package 2: the moon in the scene ============================== */
+describe('the moon in the scene (CONCEPT-MOON §4, §5)', () => {
+  const moon = (o: Partial<MoonInput> = {}): MoonInput => ({
+    lit: 0.6,
+    tilt: -60,
+    alt: 30,
+    az: 200,
+    full: false,
+    superMoon: false,
+    ...o,
+  });
+  const at = (time: string, m?: MoonInput, now: Forecast['now'] = { night: true }, lat = 50) =>
+    sceneOf({ forecast: forecastAt(time, {}, now), at: 0, nowMs: 0, lat, theme: 'light', moon: m });
+
+  it('drawn at night, dawn and dusk while up; none below the horizon or when switched off', () => {
+    expect(at('2026-11-24T02:50', moon()).body).toMatchObject({ kind: 'moon', alt: 30 });
+    expect(at('2026-11-24T07:10', moon()).body.kind).toBe('moon'); // dawn
+    expect(at('2026-11-24T16:40', moon()).body.kind).toBe('moon'); // dusk
+    expect(at('2026-11-24T02:50', moon({ alt: -0.5 })).body.kind).toBe('none');
+    expect(at('2026-11-24T02:50', undefined).body.kind).toBe('none');
+    expect(at('2026-11-24T12:00', moon(), { night: false }).body.kind).toBe('sun');
+  });
+
+  it('on the arc: east left, south top, west right; mirrored south of the equator', () => {
+    expect([moonArcT(90, 50), moonArcT(180, 50), moonArcT(270, 50)]).toEqual([0, 0.5, 1]);
+    expect([moonArcT(90, -34), moonArcT(0, -34), moonArcT(270, -34)]).toEqual([1, 0.5, 0]);
+    expect(moonArcT(30, 50)).toBe(0);
+  });
+
+  it('full moon 1.2 × with its own sky, supermoon 1.35 ×; stars thin out', () => {
+    const full = at('2026-11-24T02:50', moon({ lit: 0.99, full: true }));
+    expect(full.moon?.size).toBe(1.2);
+    expect(skyKey(full)).toBe('night-full');
+    expect(at('2026-11-24T02:50', moon({ lit: 1, full: true, superMoon: true })).moon?.size).toBe(
+      1.35,
+    );
+    expect(skyKey(at('2026-11-24T02:50', moon({ lit: 0.99, full: true, alt: -3 })))).toBe('night');
+    expect(at('2026-11-24T02:50', moon()).moon?.size).toBe(1);
+  });
+
+  it('day moon: by day, up, 20–97 % lit, cloud ≤ 60 %', () => {
+    const day = (m: MoonInput, cloud = 20) =>
+      at('2026-11-24T12:00', m, { night: false, cloud }).dayMoon;
+    expect(day(moon({ lit: 0.2 }))).toBe(true);
+    expect(day(moon({ lit: 0.19 }))).toBe(false);
+    expect(day(moon({ lit: 0.98 }))).toBe(false);
+    expect(day(moon({ alt: -1 }))).toBe(false);
+    expect(day(moon(), 61)).toBe(false);
+    expect(day(moon(), 60)).toBe(true);
   });
 });
