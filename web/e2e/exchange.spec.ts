@@ -89,7 +89,7 @@ test('PC: switched on once for the one paired phone, a link goes out and a note 
   const got = page.getByRole('listitem').filter({ hasText: 'Milch' });
   await expect(got).toContainText('vom Handy · Notiz');
   await expect(got.getByRole('button', { name: 'Kopieren' })).toBeVisible();
-  await expect(page.getByText('Karten bleiben 30 Tage.')).toBeVisible();
+  await expect(page.getByText('Karten bleiben 30 Tage, je Gerät die neuesten 1000.')).toBeVisible();
   await audit(page, 'conversation');
 
   // the off switch per device: pausing never asks, resuming does (the fake says yes)

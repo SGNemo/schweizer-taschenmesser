@@ -94,19 +94,23 @@ const MAX: Record<string, Record<Metric | 'seconds', number>> = {
   // prettier-ignore
   'B Ding auf einen anderen Tag · pixel-7': { taps: 3, keys: 0, screens: 1, dialogs: 1, detours: 0, seconds: 8 },
   // before R1: 3 taps, 10 s
+  // RAISED in 4a (+1 tap, +1 s): the title expands the row, „Ganz öffnen“ jumps (decisions/plan-hub-2.md).
   // prettier-ignore
-  'C1 Quelle öffnen: ToDo · desktop-chrome': { taps: 1, keys: 0, screens: 2, dialogs: 1, detours: 0, seconds: 8 },
+  'C1 Quelle öffnen: ToDo · desktop-chrome': { taps: 2, keys: 0, screens: 2, dialogs: 1, detours: 0, seconds: 9 },
   // R2: the thing is one of „Zuerst“ since the invoices left the day – no fold to open (R1: 2 taps, 9 s; before
   // R1: 3 taps, 10 s)
+  // RAISED in 4a (+1 tap, +1 s): the title expands the row, „Ganz öffnen“ jumps (decisions/plan-hub-2.md).
   // prettier-ignore
-  'C1 Quelle öffnen: ToDo · pixel-7': { taps: 1, keys: 0, screens: 2, dialogs: 1, detours: 0, seconds: 8 },
+  'C1 Quelle öffnen: ToDo · pixel-7': { taps: 2, keys: 0, screens: 2, dialogs: 1, detours: 0, seconds: 9 },
   // before R1: 3 taps, 10 s
+  // RAISED in 4a (+1 tap, +1 s): the title expands the row, „Ganz öffnen“ jumps (decisions/plan-hub-2.md).
   // prettier-ignore
-  'C2 Quelle öffnen: Rechnung · desktop-chrome': { taps: 1, keys: 0, screens: 2, dialogs: 1, detours: 0, seconds: 8 },
+  'C2 Quelle öffnen: Rechnung · desktop-chrome': { taps: 2, keys: 0, screens: 2, dialogs: 1, detours: 0, seconds: 9 },
   // before R1: 3 taps, 10 s. RAISED in R2 (1 tap, 8 s → 2 taps, 9 s; maintainer to confirm): a late invoice stands
   // in „Frist vorbei“, which is one folded row above the day on the phone (mockup a-412) – one tap to unfold it.
+  // RAISED in 4a (+1 tap, +1 s): the title expands the row, „Ganz öffnen“ jumps (decisions/plan-hub-2.md).
   // prettier-ignore
-  'C2 Quelle öffnen: Rechnung · pixel-7': { taps: 2, keys: 0, screens: 2, dialogs: 1, detours: 0, seconds: 9 },
+  'C2 Quelle öffnen: Rechnung · pixel-7': { taps: 3, keys: 0, screens: 2, dialogs: 1, detours: 0, seconds: 10 },
   // K1b: the chip „Aus Mail“ under the title – one tap (R1: ⋯ → „Zur Mail“, 2 taps, 6 s; before R1: 3 taps, 7 s)
   // prettier-ignore
   'C3 Quelle öffnen: Mail · desktop-chrome': { taps: 1, keys: 0, screens: 2, dialogs: 0, detours: 0, seconds: 5 },
@@ -1130,8 +1134,19 @@ async function openSource(
   }
   await page.keyboard.press('Escape');
   await expect(page.getByRole('menuitem')).toHaveCount(0);
-  await m.nav(row.locator('button[data-row]'), h1);
+  await openWhole(m, row, h1);
   return menu;
+}
+
+/**
+ * A row's way into its module (planner hub 2, package 4a, `decisions/plan-hub-2.md`): the title opens the
+ * compartment (one tap), „Ganz öffnen“ in it is the old jump (one more). Before 4a the title itself was the jump.
+ */
+async function openWhole(m: Meter, row: Locator, h1: RegExp) {
+  const head = row.locator('button[data-row]').first();
+  if ((await head.getAttribute('aria-expanded')) === null) return m.nav(head, h1);
+  await m.tap(head);
+  await m.nav(row.getByTestId('row-compartment').getByRole('button', { name: 'Ganz öffnen' }), h1);
 }
 
 test('C1 Quelle öffnen: ToDo', async ({ page, isMobile }, info) => {
@@ -1179,7 +1194,7 @@ test('C2 Quelle öffnen: Rechnung', async ({ page, isMobile }, info) => {
   expect(menu).toEqual(['Bezahlt …', 'Öffnen', 'Nicht planen']);
   await page.keyboard.press('Escape');
   await expect(page.getByRole('menuitem')).toHaveCount(0);
-  await m.nav(row.locator('button[data-row]'), /Rechnungen/);
+  await openWhole(m, row, /Rechnungen/);
   const dialog = page.getByRole('dialog', { name: 'Rechnung bearbeiten' });
   await expect(dialog).toBeVisible();
   m.dialog();
