@@ -9,9 +9,10 @@ import type { WarningKind, WeatherWarning } from '../warnings';
 const ICON: Record<WarningKind, IconName> = {
   storm: 'cloudLightning',
   wind: 'wind',
+  ice: 'cloudDrizzle',
   rain: 'cloudRain',
   heat: 'thermometer',
-  frost: 'cloudSnow',
+  frost: 'thermometer',
 };
 
 /** One line per hint above the head: icon + words ("Freitag: Sturmböen bis 70 km/h"), and what the hint is based on. */
@@ -28,6 +29,8 @@ export function WarningNotice({ warnings, today }: { warnings: WeatherWarning[];
         return tp.warn.storm(day);
       case 'wind':
         return tp.warn.wind(day, n);
+      case 'ice':
+        return tp.warn.ice(day);
       case 'rain':
         return tp.warn.rain(day, n);
       case 'heat':

@@ -36,6 +36,32 @@ describe('forecast cache (fixed clock)', () => {
     expect(readCache()).toBeUndefined();
   });
 
+  it('keeps the package-1a fields (zone, raw code, snow depth) and still reads an entry without them', () => {
+    const full = {
+      temp: -4,
+      group: 'partly' as const,
+      code: 1,
+      tz: 'Europe/Berlin',
+      time: '2026-11-24T02:50',
+      now: { feels: -9, snowDepth: 0.03, night: true },
+      hours: [{ time: '2026-11-24T02:00', temp: -4, group: 'partly' as const, code: 1, rain: 0 }],
+      days: [{ date: '2026-11-24', min: -6, max: 2, group: 'rain' as const, code: 66, rain: 40 }],
+    };
+    writeCache({ key, at: now(), forecast: full });
+    expect(readCache()?.forecast).toEqual(full);
+    // A value cached before package 1a (no code, no zone, no snow depth) stays valid as it is.
+    const old = {
+      temp: -4,
+      group: 'partly' as const,
+      time: '2026-11-24T02:50',
+      now: { feels: -9, night: true },
+      hours: [{ time: '2026-11-24T02:00', temp: -4, group: 'partly' as const, rain: 0 }],
+      days: [{ date: '2026-11-24', min: -6, max: 2, group: 'partly' as const, rain: 0 }],
+    };
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ key, at: T0, forecast: old }));
+    expect(readCache()).toEqual({ key, at: T0, forecast: old });
+  });
+
   it('ignores damaged content', () => {
     localStorage.setItem(CACHE_KEY, '{not json');
     expect(readCache()).toBeUndefined();

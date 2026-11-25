@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import { useWeather } from '@/core/weather/useWeather';
+import { conditionId } from '@/core/weather/scene';
 import { tOverview } from '@/strings.overview';
 import { tWeather } from '@/strings.weather';
 import { Sky, skyKind } from '@/ui/identity/Sky';
@@ -17,7 +18,7 @@ export default function WeatherGlance() {
   const f = weather.forecast;
   const text = [
     tx.temp(f.temp),
-    tx.codes[f.group],
+    tx.conditions[conditionId(f.code, f.group)],
     f.rainFrom && !weather.stale ? tx.rainFrom(f.rainFrom) : undefined,
   ]
     .filter(Boolean)

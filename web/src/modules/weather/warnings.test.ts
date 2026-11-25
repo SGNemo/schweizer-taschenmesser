@@ -51,4 +51,38 @@ describe('weatherWarnings', () => {
     expect(weatherWarnings([day('2026-10-01', { gust: undefined, mm: undefined })])).toEqual([]);
     expect(weatherWarnings([])).toEqual([]);
   });
+
+  it('finds ice (freezing drizzle or rain) from each of the codes 56, 57, 66 and 67', () => {
+    for (const code of [56, 57, 66, 67]) {
+      expect(weatherWarnings([day('2026-11-24', { group: 'rain', code })])).toEqual([
+        { kind: 'ice', date: '2026-11-24' },
+      ]);
+    }
+    // Plain rain, drizzle and a value cached without a code are no ice.
+    for (const code of [51, 61, 65, undefined]) {
+      expect(weatherWarnings([day('2026-11-24', { group: 'rain', code })])).toEqual([]);
+    }
+  });
+
+  it('orders one day as storm, wind, ice, rain, heat, frost', () => {
+    const all = day('2026-11-24', {
+      group: 'thunder',
+      code: 66,
+      gust: 75,
+      mm: 25,
+      max: 33,
+      min: -7,
+    });
+    expect(weatherWarnings([all], 10).map((w) => w.kind)).toEqual([
+      'storm',
+      'wind',
+      'ice',
+      'rain',
+      'heat',
+      'frost',
+    ]);
+    expect(
+      weatherWarnings([day('2026-11-24', { code: 67, mm: 25, min: -7 })]).map((w) => w.kind),
+    ).toEqual(['ice', 'rain']);
+  });
 });

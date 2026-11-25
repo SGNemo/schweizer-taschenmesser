@@ -35,6 +35,8 @@ export interface HourRow {
   time: string;
   temp: number;
   group: CodeGroup;
+  /** Raw WMO code beside the group (the word follows it); absent in older cached values. */
+  code?: number;
   rain: number;
   /** Felt temperature, °C. */
   feels?: number;
@@ -60,6 +62,8 @@ export interface DayRow {
   min: number;
   max: number;
   group: CodeGroup;
+  /** Raw WMO code; absent in older cached values. */
+  code?: number;
   rain: number;
   feelsMin?: number;
   feelsMax?: number;
@@ -87,11 +91,17 @@ export interface NowDetail {
   hpa?: number;
   dir?: number;
   night?: boolean;
+  /** Snow on the ground, metres, rounded down to whole centimetres. */
+  snowDepth?: number;
 }
 
 export interface Forecast {
   temp: number;
   group: CodeGroup;
+  /** Raw WMO code of now; absent in older cached values. */
+  code?: number;
+  /** The place's IANA time zone (the response's `timezone`); absent in older cached values. */
+  tz?: string;
   /** "HH" of the first coming hour with rain, when there is one. */
   rainFrom?: string;
   /** The place's local time of the values (`YYYY-MM-DDTHH:mm`); absent in older cached values. */
@@ -133,6 +143,7 @@ const series = z.array(z.number().nullable()).optional();
 const stringSeries = z.array(z.string().nullable()).optional();
 
 const forecastSchema = z.object({
+  timezone: z.string().optional(),
   current: z.object({
     time: z.string(),
     temperature_2m: z.number(),
@@ -145,6 +156,7 @@ const forecastSchema = z.object({
     cloud_cover: z.number().nullable().optional(),
     pressure_msl: z.number().nullable().optional(),
     wind_direction_10m: z.number().nullable().optional(),
+    snow_depth: z.number().nullable().optional(),
   }),
   hourly: z
     .object({
@@ -211,6 +223,7 @@ function hourRowsOf(h: Hourly | undefined, nowIso: string): HourRow[] | undefine
       time,
       temp: Math.round(temp),
       group: codeGroup(code),
+      code,
       rain: Math.round(h.precipitation_probability[i] ?? 0),
       feels: round(h.apparent_temperature?.[i]),
       mm: round1(h.precipitation?.[i]),
@@ -241,6 +254,7 @@ function dayRowsOf(d: Daily | undefined): DayRow[] | undefined {
       min: Math.round(min),
       max: Math.round(max),
       group: codeGroup(code),
+      code,
       rain: Math.round(d.precipitation_probability_max[i] ?? 0),
       feelsMin: round(d.apparent_temperature_min?.[i]),
       feelsMax: round(d.apparent_temperature_max?.[i]),
@@ -268,6 +282,7 @@ function nowOf(c: Current): NowDetail | undefined {
     hpa: round(c.pressure_msl),
     dir: round(c.wind_direction_10m),
     night: c.is_day == null ? undefined : c.is_day === 0,
+    snowDepth: c.snow_depth == null ? undefined : Math.floor(c.snow_depth * 100 + 1e-9) / 100,
   };
   return Object.values(out).some((v) => v !== undefined) ? out : undefined;
 }
@@ -314,7 +329,7 @@ export async function fetchForecast(
     latitude: String(lat),
     longitude: String(lon),
     current:
-      'temperature_2m,weather_code,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_gusts_10m,is_day,cloud_cover,pressure_msl,wind_direction_10m',
+      'temperature_2m,weather_code,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_gusts_10m,is_day,cloud_cover,pressure_msl,wind_direction_10m,snow_depth',
     hourly:
       'temperature_2m,weather_code,precipitation_probability,apparent_temperature,precipitation,wind_speed_10m,wind_gusts_10m,relative_humidity_2m,uv_index,is_day,cloud_cover,pressure_msl,wind_direction_10m',
     daily:
@@ -334,11 +349,13 @@ export async function fetchForecast(
   })}`;
   const forecastBody = getJson(url, f);
   const airBody = getJson(airUrl, f).catch(() => undefined);
-  const { current: c, hourly, daily } = parse(forecastSchema, await forecastBody);
+  const { timezone, current: c, hourly, daily } = parse(forecastSchema, await forecastBody);
   const group = codeGroup(c.weather_code);
   return {
     temp: Math.round(c.temperature_2m),
     group,
+    code: c.weather_code,
+    tz: timezone,
     rainFrom: rainFrom(hourly?.time ?? [], hourly?.precipitation_probability ?? [], c.time, group),
     time: c.time,
     hours: hourRowsOf(hourly, c.time),

@@ -1,6 +1,7 @@
 import { dateTimeFormat } from '@/core/i18n/format';
 import type { DayRow, Forecast } from '@/core/weather/api';
 import { rateDay } from '@/core/weather/logic';
+import { conditionId } from '@/core/weather/scene';
 import { tWeather } from '@/strings.weather';
 import { Icon } from '@/ui';
 import styles from '../routes/weather.module.css';
@@ -48,7 +49,7 @@ export function DaySpans({
               <span className={styles.dayName}>
                 {d.date === today ? tx.today : dayFmt.format(localDate(d.date))}
               </span>
-              <span>{tx.codes[d.group]}</span>
+              <span>{tx.conditions[conditionId(d.code, d.group)]}</span>
               <RatingChip rating={rateDay(d)} />
             </p>
             <div className={styles.range}>

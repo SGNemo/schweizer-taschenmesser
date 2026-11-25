@@ -2,6 +2,7 @@ import { dateTimeFormat } from '@/core/i18n/format';
 import type { DayRow } from '@/core/weather/api';
 import { compassIndex } from '@/core/weather/air';
 import { bestWindow, hourRows, placeNowIso, dayRows } from '@/core/weather/logic';
+import { conditionId, sceneAddition, type SceneAddition } from '@/core/weather/scene';
 import type { WeatherView } from '@/core/weather/useWeather';
 import { now } from '@/core/time/now';
 import { useKeepHeadRoom } from '@/core/shell/heroContext';
@@ -41,12 +42,39 @@ export function WeatherHero({
   const night = !!detail?.night;
   const hourFmt = dateTimeFormat({ hour: '2-digit', minute: '2-digit' });
 
+  // UV only while the sun is up at the place (the day's maximum read at 02:50 said "UV 1,5" with a sun);
+  // otherwise the third chip is the next sunrise. Without sunrise and sunset `is_day` decides.
+  const clockNow = nowIso.slice(11, 16);
+  const sunUp =
+    first?.sunrise && first.sunset ? clockNow >= first.sunrise && clockNow < first.sunset : !night;
+  const nextSunrise = sunUp
+    ? undefined
+    : first?.sunrise && clockNow < first.sunrise
+      ? first.sunrise
+      : days[1]?.sunrise;
+  const word = conditionId(forecast.code, forecast.group);
+  const addition = sceneAddition({
+    id: word,
+    temp: forecast.temp,
+    wind: detail?.wind,
+    gust: detail?.gust,
+    snowDepth: detail?.snowDepth,
+    night,
+  });
+  const additionWord: Record<SceneAddition, string> = {
+    storm: tp.sceneStorm,
+    windy: tp.sceneWindy,
+    snowLies: tp.sceneSnowLies,
+    frost: tp.sceneFrost,
+    heat: tp.sceneHeat,
+  };
+
   const wind = detail?.wind ?? hours[0]?.wind;
   const compass = detail?.dir != null ? tx.compass[compassIndex(detail.dir)] : undefined;
   const keys: { icon: IconName; text: string; kind?: 'rain' }[] = [
     forecast.rainFrom && !stale
       ? { icon: 'cloudRain', text: tp.keyRain(forecast.rainFrom), kind: 'rain' }
-      : { icon: 'sun', text: tp.keyDry },
+      : { icon: 'umbrella', text: tp.keyDry },
     ...(wind != null
       ? [
           {
@@ -55,9 +83,13 @@ export function WeatherHero({
           },
         ]
       : []),
-    ...(first?.uv != null && first.uv >= 1
-      ? [{ icon: 'sun' as const, text: tp.keyUv(dec(first.uv)) }]
-      : []),
+    ...(sunUp
+      ? first?.uv != null && first.uv >= 1
+        ? [{ icon: 'sun' as const, text: tp.keyUv(dec(first.uv)) }]
+        : []
+      : nextSunrise
+        ? [{ icon: 'sunrise' as const, text: tp.keySunrise(nextSunrise) }]
+        : []),
   ];
   const rest = [
     first ? tx.range(first.min, first.max) : undefined,
@@ -88,7 +120,8 @@ export function WeatherHero({
             value={tx.temp(forecast.temp)}
             detail={[
               detail?.feels != null ? tp.feelsLike(detail.feels) : undefined,
-              tx.codes[forecast.group],
+              tx.conditions[word],
+              addition ? additionWord[addition] : undefined,
               stale ? tx.asOf(hourFmt.format(at)) : undefined,
             ]
               .filter(Boolean)

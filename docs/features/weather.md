@@ -29,7 +29,14 @@ Open-Meteo data is CC BY 4.0: Settings → Wetter shows "Wetterdaten von Open-Me
 Open-Meteo documents `Access-Control-Allow-Origin: *` for browser use, so the PWA and the Tauri webview call it directly. Not verified from the build sandbox (no outbound access to the host); the E2E specs mock both hosts (`web/e2e/weather.spec.ts`). Check once with a real browser before a release.
 
 ## Code and tests
-`core/weather/{api,logic,cache,hint,settings,useWeather}.ts`, `home/WeatherLine.tsx`, `home/WeatherPreview.tsx`, `home/WeatherChart.tsx`, `home/weatherIcon.ts`, `pages/settings/WeatherSection.tsx`, texts `strings.weather.ts` (5 languages). Parsers (Zod) are tested against fixtures in `core/weather/fixtures/` (shaped after the documented responses, no network in tests).
+`core/weather/{api,air,cache,logic,scene,settings,useWeather}.ts`; page and widget in `modules/weather/` (`components/WeatherHero.tsx`, `HourCards.tsx`, `DaySpans.tsx`, `WeatherChart.tsx`, `WarningNotice.tsx`, `weatherIcon.ts`; `widgets/WeatherWidget.tsx`; hints `warnings.ts`, `attention.ts`, `notifications.ts`); overview line `home/WeatherGlance.tsx`; trip weather in lists `modules/lists/components/TripWeather.tsx`; settings `pages/settings/WeatherSection.tsx`; texts `strings.weather.ts` (`tx`) and `strings.weatherPage.ts` (`tp`), German and English. Parsers (Zod) are tested against fixtures in `core/weather/fixtures/` (shaped after the documented responses, no network in tests).
+
+## Words, chips and hints (weather scenes 1a)
+- **The word follows the WMO code** (`conditionId(code, group)` in `core/weather/scene.ts`, 22 words in `tx.conditions`): head, hour cards, day rows, widget, overview line and trip weather say the same word (code 1 = "überwiegend klar", no longer "leicht bewölkt"). `codeGroup` (nine groups) still drives the rating, icons and the cache; a value cached without a code gets its group's nearest word.
+- **Data kept beside the group** (all optional, also in the cache): raw `code` (now, hour, day), `tz` (the place's IANA zone from the response), `now.snowDepth` (m; `snow_depth`, the only added variable of the forecast request).
+- **Head detail line:** after the word at most one extra word: Sturmböen, windig, Schnee liegt, Frost, Hitze (`sceneAddition`, limits of the picture only).
+- **Chips:** "Kein Regen in Sicht" with an umbrella; UV only between sunrise and sunset, otherwise "Sonnenaufgang hh:mm" (today's or tomorrow's).
+- **Hints:** kinds storm, wind, ice (codes 56, 57, 66, 67: "gefrierender Regen, es kann glatt sein"), rain, heat, frost in that order; frost has the thermometer icon.
 
 ## Parked
 Setup-assistant step "Stadt für das Wetter" (skippable): not built; the settings entry and the one-time hint cover it, and an extra step would add load to the first run.

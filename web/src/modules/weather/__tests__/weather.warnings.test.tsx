@@ -10,8 +10,10 @@ import { cacheKey, clearCache, writeCache } from '@/core/weather/cache';
 import { addExtraPlace, chooseWeatherPlace, getWeatherSettings } from '@/core/weather/settings';
 import attention from '../attention';
 import { PlacesDialog } from '../components/PlacesDialog';
+import { WarningNotice } from '../components/WarningNotice';
 import notifications from '../notifications';
 import { settings as moduleSettings } from '../settings';
+import { tWeatherPage } from '@/strings.weatherPage';
 
 const TODAY = '2026-10-19';
 const day = (date: string, extra: Partial<DayRow> = {}): DayRow => ({
@@ -72,6 +74,51 @@ describe('severe-weather hints', () => {
     expect(await attention({ today: TODAY })).toEqual([]);
     await chooseWeatherPlace('Zürich, Schweiz', 47.3769, 8.5417); // the cache belongs to Bern
     expect(await attention({ today: TODAY })).toEqual([]);
+  });
+});
+
+describe('ice hint (freezing rain, package 1a)', () => {
+  it('"Jetzt wichtig" has the line and the drizzle icon; frost has the thermometer', async () => {
+    await primeForecast([day(TODAY, { group: 'rain', code: 66, min: -7 })]);
+    const items = await attention({ today: TODAY });
+    expect(items.map((i) => [i.id, i.icon, i.title])).toEqual([
+      [`weather:ice:${TODAY}`, 'cloudDrizzle', 'Heute: gefrierender Regen, es kann glatt sein'],
+      [`weather:frost:${TODAY}`, 'thermometer', 'Heute: Frost bis -7°'],
+    ]);
+  });
+
+  it('the hint above the head shows it with the drizzle icon; frost has the thermometer', () => {
+    render(
+      <WarningNotice
+        warnings={[
+          { kind: 'ice', date: TODAY },
+          { kind: 'frost', date: TODAY, value: -7 },
+        ]}
+        today={TODAY}
+      />,
+    );
+    const items = screen.getByTestId('weather-warning').querySelectorAll('li');
+    expect(items[0]).toHaveTextContent('Heute: gefrierender Regen, es kann glatt sein');
+    expect(items[0]!.querySelector('svg.lucide-cloud-drizzle')).not.toBeNull();
+    expect(items[1]!.querySelector('svg.lucide-thermometer')).not.toBeNull();
+    expect(screen.getByTestId('weather-warning').querySelector('svg.lucide-cloud-snow')).toBeNull();
+  });
+
+  it('the notification names it, and the help text says so', async () => {
+    await setSettings('module.weather', { warnNotify: true });
+    await primeForecast([day('2026-10-20', { group: 'drizzle', code: 57 })]);
+    const evening = await notifications({
+      from: toEpoch(TODAY, '17:00'),
+      to: toEpoch(TODAY, '19:00'),
+    });
+    expect(evening).toHaveLength(1);
+    expect(evening[0]!.body).toMatch(/: gefrierender Regen, es kann glatt sein$/);
+    expect(tWeatherPage.de.warnNotifyHelp).toContain(
+      'Gewitter, Sturm, Starkregen, Glätte, Hitze oder Frost',
+    );
+    expect(tWeatherPage.en.warnNotifyHelp).toContain(
+      'thunderstorms, storm, heavy rain, ice, heat or frost',
+    );
   });
 });
 

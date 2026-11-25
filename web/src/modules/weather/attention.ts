@@ -10,9 +10,10 @@ import { warningsNow } from './warningsToday';
 const ICON: Record<WarningKind, IconName> = {
   storm: 'cloudLightning',
   wind: 'wind',
+  ice: 'cloudDrizzle',
   rain: 'cloudRain',
   heat: 'thermometer',
-  frost: 'cloudSnow',
+  frost: 'thermometer',
 };
 
 /** The words of one warning ("Freitag: Sturmböen bis 70 km/h"), shared by "Jetzt wichtig" and the notification. */
@@ -28,6 +29,8 @@ export function warningLine(w: WeatherWarning, today: string): string {
       return tp.warn.storm(day);
     case 'wind':
       return tp.warn.wind(day, n);
+    case 'ice':
+      return tp.warn.ice(day);
     case 'rain':
       return tp.warn.rain(day, n);
     case 'heat':
