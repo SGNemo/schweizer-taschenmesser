@@ -5,10 +5,17 @@
  * switched off for the planner („Im Planer zeigen“) is not offered.
  */
 import { notDeleted } from '@/core/db/repo';
-import type { PlannableItem, PlannableSource } from '@/core/modules/types';
+import { STEPS_MAX, type PlannableItem, type PlannableSource } from '@/core/modules/types';
 import { today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { DEFAULT_MINUTES, donePatch, whoseTurn } from './logic';
+import {
+  DEFAULT_MINUTES,
+  donePatch,
+  doneSteps,
+  stepsOf,
+  toggleStepPatch,
+  whoseTurn,
+} from './logic';
 import { routineRepo } from './repo';
 
 /** `<id>:<due day>` → its parts, split at the last colon. */
@@ -37,6 +44,14 @@ const source: PlannableSource = {
       // The turn's day (planner rethink): shown there without a row; a turn that is due already shows on today.
       day: r.dueDate > ctx.today ? r.dueDate : ctx.today,
       due: { date: r.dueDate > ctx.today ? r.dueDate : ctx.today, hard: false },
+      // The steps of this turn (package 5a): ticked ones count only for the turn due now.
+      ...(stepsOf(r).length
+        ? {
+            steps: stepsOf(r)
+              .slice(0, STEPS_MAX)
+              .map((st) => ({ id: st.id, title: st.text, done: doneSteps(r).has(st.id) })),
+          }
+        : {}),
       createdAt: r.createdAt,
     }));
   },
@@ -45,6 +60,12 @@ const source: PlannableSource = {
     const r = await routineRepo.get(id);
     // A turn that was ticked elsewhere meanwhile is over: nothing to do for it.
     if (r && r.dueDate === due) await routineRepo.update(id, donePatch(r, today()));
+  },
+  async onStepDone(key, stepId, done) {
+    const { id, due } = split(key);
+    const r = await routineRepo.get(id);
+    // Only the turn the row stands for: a turn ticked elsewhere meanwhile is over.
+    if (r && r.dueDate === due) await routineRepo.update(id, toggleStepPatch(r, stepId, done));
   },
   async onEstimate(key, minutes) {
     await routineRepo.update(split(key).id, {

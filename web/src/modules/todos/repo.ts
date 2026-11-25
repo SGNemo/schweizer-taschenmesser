@@ -111,3 +111,18 @@ export async function createNextInstance(task: Stored<Task>): Promise<void> {
   }
   await taskRepo.createMany(items);
 }
+
+/**
+ * Sets one checklist line, read fresh: a sync may have changed the other lines meanwhile (the plan panel's tick and
+ * the planner's `onStepDone`, packages 4a / 5a). A line that is gone or already so writes nothing.
+ */
+export async function setChecklistLine(
+  taskId: string,
+  itemId: string,
+  done: boolean,
+): Promise<void> {
+  const fresh = await taskRepo.get(taskId);
+  if (!fresh?.checklist?.some((c) => c.id === itemId && c.done !== done)) return;
+  const checklist = fresh.checklist.map((c) => (c.id === itemId ? { ...c, done } : c));
+  await taskRepo.update(taskId, { checklist });
+}

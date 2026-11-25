@@ -5,11 +5,11 @@
  * planner's only while `planMark.date === plannedFor`; `prior` carries the user's own date it overwrote.
  */
 import { fromLegacy } from '@/core/entitylinks/types';
-import type { PlannableItem, PlannableSource } from '@/core/modules/types';
+import { STEPS_MAX, type PlannableItem, type PlannableSource } from '@/core/modules/types';
 import { today } from '@/core/time/now';
 import { nextInstanceId } from './logic';
 import { restorePatch } from './planMark';
-import { createNextInstance, deleteTask, setDone, taskRepo } from './repo';
+import { createNextInstance, deleteTask, setChecklistLine, setDone, taskRepo } from './repo';
 import type { PlanMark, Task } from './schema';
 import { isPlannerOwned, movePatch } from './views';
 
@@ -74,6 +74,14 @@ const itemOf = (t: Task & { id: string; createdAt: number }): PlannableItem => (
   ...(t.personId ? { personId: t.personId } : {}),
   // Every link travels (`links`); `link` stays the first one for readers of before the link contract.
   ...(t.links?.[0] ? { link: t.links[0], links: t.links.map(fromLegacy) } : {}),
+  // Its checklist as steps (package 5a): display and „Los“ only, never planned.
+  ...(t.checklist?.length
+    ? {
+        steps: t.checklist
+          .slice(0, STEPS_MAX)
+          .map((c) => ({ id: c.id, title: c.text, done: !!c.done })),
+      }
+    : {}),
   createdAt: t.createdAt,
 });
 
@@ -138,6 +146,9 @@ const source: PlannableSource = {
     if (!task) return;
     const patch = restorePatch(task);
     if (Object.keys(patch).length > 0) await taskRepo.update(id, patch);
+  },
+  async onStepDone(id, stepId, done) {
+    await setChecklistLine(id, stepId, done);
   },
   async onDone(id) {
     const task = await taskRepo.get(id);
