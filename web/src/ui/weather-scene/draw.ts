@@ -893,6 +893,7 @@ function mountain(
       xv < G.W
     )
       xv += side * 2;
+    xv = Math.min(G.W, Math.max(0, xv)); // a step of 2 from an odd summit ends one unit past the edge
     const D = (R.y(xv) - p[1]) * G.flank.depth + 12;
     let back = '';
     for (let i = 1; i <= 14; i++) {
@@ -1022,6 +1023,9 @@ function conifers(X: Ctx, R: Ridge, LC: Land): string {
     if (x < G.shelterX) h = Math.min(h, yb - C.topMin);
     if (h < 5) continue;
     const w = h * C.w;
+    // Nothing beyond the picture's right edge (the mockup's half tree there was cut off anyway; its box stuck out of
+    // the window at 1280 px, e2e/seed/layout-overflow).
+    if (x + w / 2 + k * h > G.W) continue;
     const P = (dx: number, dy: number): string => `${f(x + dx + k * dy)},${f(yb - dy)}`;
     const tier = (b: number, top: number, ww: number): string =>
       `M${P(-ww / 2, b)}L${P(-1.3, top - 1.6)}Q${P(0, top + 0.6)} ${P(1.3, top - 1.6)}L${P(ww / 2, b)}Q${P(0, b - 1.2)} ${P(-ww / 2, b)}Z`;
