@@ -160,6 +160,6 @@ test('a device without mail (the phone): X5 and X6 in the row, no button; the ch
   await prepare(page, 'web');
   const box = await open(page);
   await expect(box).toContainText('Mails beantwortest du am PC.');
-  await expect(box.getByRole('button', { name: 'Antworten' })).toHaveCount(0);
+  await expect(box.getByRole('button')).toHaveCount(0);
   await expect(box.getByRole('checkbox', { name: '„Kalender prüfen“ abhaken' })).toBeVisible();
 });

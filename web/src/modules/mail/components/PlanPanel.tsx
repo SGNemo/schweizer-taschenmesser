@@ -10,20 +10,34 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { listMailAccounts } from '@/core/mail/accounts';
+import { formatAddress } from '@/core/mail/address';
 import { mailText } from '@/core/mail/prefill';
 import { safeThreadId } from '@/core/mail/service';
-import type { MailAccountRef } from '@/core/mail/types';
-import { PanelLoading, PanelNote, PlanPanelFoot, usePlanRow } from '@/core/modules/PlanPanelHost';
+import type { MailAccountRef, MailMessage } from '@/core/mail/types';
+import {
+  PanelLoading,
+  PanelNote,
+  PanelText,
+  PlanPanelFoot,
+  usePlanRow,
+} from '@/core/modules/PlanPanelHost';
 import type { PlanPanelProps } from '@/core/modules/types';
+import { useSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
 import { Button } from '@/ui';
 import { closeAnswered } from '../answered';
-import { DEMO_ACCOUNT, DEMO_EMAIL, loadThread, loadThreadBodies } from '../cache';
-import type { ComposeState } from '../composeState';
+import {
+  DEMO_ACCOUNT,
+  DEMO_EMAIL,
+  loadThread,
+  loadThreadBodies,
+  type CachedThreadView,
+} from '../cache';
+import { emptyCompose, type ComposeState } from '../composeState';
 import { personName, shortWhen, subjectOf } from '../format';
-import { ComposeDialog } from './ComposeDialog';
+import { openPlanCompose } from '../planCompose';
+import { settings } from '../settings';
 import { composeOf } from './ThreadView';
-import styles from './mail.module.css';
 
 const DEMO_REF: MailAccountRef = { key: DEMO_ACCOUNT, connectorId: 'demo', email: DEMO_EMAIL };
 
@@ -40,10 +54,31 @@ async function readThread(raw: string) {
   return null;
 }
 
+/**
+ * The reply's start: from the newest cached message (quote, In-Reply-To), or – when its body is not on this device or
+ * older than the header – from the header alone (to the sender, „Re: …“, same thread; no quote).
+ */
+function replyOf(
+  th: CachedThreadView,
+  newest: MailMessage | undefined,
+  account: MailAccountRef,
+): [ComposeState, string] {
+  if (newest && newest.date >= th.date) return composeOf('reply', newest, account);
+  return [
+    emptyCompose({
+      to: formatAddress(th.from),
+      subject: `Re: ${th.subject.replace(/^\s*((re|aw|fwd|fw|wg):\s*)+/i, '').trim()}`,
+      threadId: th.id,
+    }),
+    t.mail.write.compose.titleReply,
+  ];
+}
+
 export default function MailPlanPanel({ id }: PlanPanelProps) {
   const row = usePlanRow();
   const read = useLiveQuery(() => readThread(id), [id]);
-  const [compose, setCompose] = useState<{ state: ComposeState; title: string } | undefined>();
+  const [prefs] = useSettings('module.mail', settings.schema, settings.defaults);
+  const [busy, setBusy] = useState(false);
   if (read === undefined) return <PanelLoading />;
   // Not on this device (another device's cache, a foreign id): said, nothing fetched.
   if (read === null)
@@ -54,48 +89,49 @@ export default function MailPlanPanel({ id }: PlanPanelProps) {
       </>
     );
   const { account, th, newest } = read;
-  // Plain text only, a few lines: the box clamps it to six (four in a narrow window).
-  const body = newest ? mailText(newest, 1200) : th.snippet;
-  const answered = !!th.lastFromMe && row?.moduleId === 'todos';
+  // Plain text only, its line breaks kept; the box clamps it to six lines (four in a narrow window). No `lang`: the
+  // mail does not say its language.
+  const fresh = newest && newest.date >= th.date ? newest : undefined;
+  const body = fresh ? (fresh.text ?? mailText(fresh, 1200)).slice(0, 1200) : th.snippet;
+  // „Beantwortet?“ as on the mail row: only while mail shows it (its setting) and the row is the ToDo.
+  const showAnswered = (prefs as { showAnswered?: boolean } | undefined)?.showAnswered !== false;
+  const answered = showAnswered && !!th.lastFromMe && row?.moduleId === 'todos';
+  const done = () => {
+    if (busy || !row) return;
+    setBusy(true);
+    void closeAnswered(row.id).finally(() => setBusy(false));
+  };
   return (
     <>
-      <p className={styles.planMeta}>
+      <PanelText kind="meta">
         {personName(th.from)} · {shortWhen(th.date)}
-      </p>
-      <p className={styles.planSubject}>{subjectOf(th.subject)}</p>
+      </PanelText>
+      <PanelText kind="title">{subjectOf(th.subject)}</PanelText>
       {body ? (
-        <p className={styles.planBody} data-testid="mail-plan-body">
+        <PanelText kind="body" data-testid="mail-plan-body">
           {body}
-        </p>
+        </PanelText>
       ) : null}
       <PlanPanelFoot>
         {answered ? (
           <>
-            <span className={styles.planMeta}>{t.mail.answered.question}</span>
-            <Button variant="secondary" onClick={() => void closeAnswered(row!.id)}>
+            <PanelText kind="meta">{t.mail.answered.question}</PanelText>
+            <Button variant="secondary" aria-busy={busy} disabled={busy} onClick={done}>
               {t.mail.answered.done}
             </Button>
           </>
-        ) : newest ? (
+        ) : (
           <Button
             variant="secondary"
             onClick={() => {
-              const [state, title] = composeOf('reply', newest, account);
-              setCompose({ state, title });
+              const [state, title] = replyOf(th, newest, account);
+              openPlanCompose({ state, title, account });
             }}
           >
             {t.mail.write.reply}
           </Button>
-        ) : null}
+        )}
       </PlanPanelFoot>
-      {compose ? (
-        <ComposeDialog
-          account={account}
-          initial={compose.state}
-          title={compose.title}
-          onClose={() => setCompose(undefined)}
-        />
-      ) : null}
     </>
   );
 }

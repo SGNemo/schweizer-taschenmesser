@@ -58,6 +58,7 @@ function expandParts(
   // The compartment's name: a thing in parts says which part, as its title does (the button's name is what it shows).
   const named =
     part && part.of > 1 ? `${title}, ${t.planner.row.partAria(part.k + 1, part.of)}` : title;
+  const carrier = expand.open ? carrierOf(entry) : undefined;
   return {
     disclosure: {
       open: expand.open,
@@ -72,7 +73,7 @@ function expandParts(
           id={entry.id}
           to={entry.to}
           {...(expand.onTakeOut ? { onTakeOut: expand.onTakeOut } : {})}
-          {...(carrierOf(entry) ? { carrier: carrierOf(entry)! } : {})}
+          {...(carrier ? { carrier } : {})}
           detail={
             entry.detail ? (
               MONEY.test(entry.detail) ? (

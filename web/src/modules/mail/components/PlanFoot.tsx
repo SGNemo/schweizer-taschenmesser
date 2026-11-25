@@ -1,29 +1,32 @@
 /**
- * Mail's strip at the foot of the planner page (`contributions.planPageFoot`, planner hub 2, package 4c): the send
- * window of a reply written from a plan row („Wird gesendet … · Zurückziehen“, `PendingSendBar`), mounted once by the
- * page so closing the row never hides it. „Zurückziehen“ reopens mail's own compose window over the planner with the
- * withdrawn text, so nothing typed is lost.
+ * Mail's strip at the foot of the planner page (`contributions.planPageFoot`, planner hub 2, package 4c), mounted once by
+ * the page so closing a row never hides it:
+ *  - the compose window a plan row opened („Antworten“, `planCompose.ts`) – outside the row, so Esc or a row that
+ *    leaves never takes a typed reply along;
+ *  - the send window of a confirmed reply („Wird gesendet … · Zurückziehen“, `PendingSendBar`): „Zurückziehen“
+ *    reopens the compose window with the withdrawn text, so nothing typed is lost.
  */
-import { useState } from 'react';
-import type { MailAccountRef } from '@/core/mail/types';
 import { t } from '@/strings';
-import type { ComposeState } from '../composeState';
+import { closePlanCompose, openPlanCompose, usePlanCompose } from '../planCompose';
 import { ComposeDialog } from './ComposeDialog';
 import { PendingSendBar } from './PendingSendBar';
 
 export default function MailPlanFoot() {
-  const [compose, setCompose] = useState<
-    { state: ComposeState; account: MailAccountRef } | undefined
-  >();
+  const open = usePlanCompose((s) => s.open);
   return (
     <>
-      <PendingSendBar onReopen={(state, account) => setCompose({ state, account })} />
-      {compose ? (
+      <PendingSendBar
+        // The bar also holds a mail sent from the mail page a moment ago: the neutral title, as the mail page uses.
+        onReopen={(state, account) =>
+          openPlanCompose({ state, account, title: t.mail.write.compose.titleNew })
+        }
+      />
+      {open ? (
         <ComposeDialog
-          account={compose.account}
-          initial={compose.state}
-          title={t.mail.write.compose.titleReply}
-          onClose={() => setCompose(undefined)}
+          account={open.account}
+          initial={open.state}
+          title={open.title}
+          onClose={closePlanCompose}
         />
       ) : null}
     </>

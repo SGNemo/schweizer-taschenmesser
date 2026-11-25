@@ -779,6 +779,10 @@ export type HeadlineSource = (ctx: { today: string }) => Promise<HeadlineFigure 
  * `onDone` tells the host the thing is finished at its source (the row leaves with the board's next reading).
  */
 export interface PlanPanelProps {
+  /**
+   * The thing's id in this module. For a carried panel (a ToDo whose origin is a mail thread) it is the target's id –
+   * the thread – and the row it sits in comes from `usePlanRow()` (`core/modules/PlanPanelHost`).
+   */
   id: string;
   compact: boolean;
   onDone?: () => void;

@@ -67,3 +67,28 @@
   line-clamp: 3;
   overflow: hidden;
 }
+
+/* A module's text (`PanelText`): mail's sender · day, subject and first lines (package 4c). */
+.meta {
+  font-size: var(--text-meta);
+  color: var(--text-3);
+}
+.title {
+  font-weight: var(--weight-semibold);
+}
+.body {
+  margin-top: var(--space-2);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  line-clamp: 6;
+  overflow: hidden;
+}
+@media (max-width: 1100px) {
+  .body {
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+  }
+}

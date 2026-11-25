@@ -92,6 +92,23 @@ export function PanelNote({ children }: { children: ReactNode }) {
   return <p className={`${styles.line} ${styles.note}`}>{children}</p>;
 }
 
+/**
+ * A module's text inside a panel, at most the reading measure: `meta` small and muted (sender · day), `title` in 600
+ * (a subject), `body` plain text with its line breaks, clamped to six lines (four in a narrow window) – never a
+ * scroll box inside a row.
+ */
+export function PanelText({
+  kind,
+  children,
+  ...rest
+}: { kind: 'meta' | 'title' | 'body'; children: ReactNode } & { 'data-testid'?: string }) {
+  return (
+    <p className={`${styles.line} ${styles[kind]}`} {...rest}>
+      {children}
+    </p>
+  );
+}
+
 /** A small head inside a panel (a list's section): caps, 600, muted. */
 export function PanelHead({ children }: { children: ReactNode }) {
   return <p className={styles.head}>{children}</p>;
@@ -116,20 +133,29 @@ export function PanelGone() {
 
 /** X7 where he acted, `role="alert"`; what he typed stays (the panel keeps its own state). */
 export function PanelError() {
+  // A carried panel that broke keeps the row's own lines (a ToDo's checklist) above X7.
+  const before = useContext(Ctx)?.beforeFoot;
   return (
-    <p className={styles.line} role="alert">
-      {t.planner.panel.failed}
-    </p>
+    <>
+      {before}
+      <p className={styles.line} role="alert">
+        {t.planner.panel.failed}
+      </p>
+    </>
   );
 }
 
 /** Two quiet lines while a panel reads (no spinner). */
 export function PanelLoading() {
+  const before = useContext(Ctx)?.beforeFoot;
   return (
-    <div className={styles.loading} role="status" aria-label={t.ui.loading}>
-      <Skeleton height="1rem" width="60%" />
-      <Skeleton height="1rem" width="40%" />
-    </div>
+    <>
+      {before}
+      <div className={styles.loading} role="status" aria-label={t.ui.loading}>
+        <Skeleton height="1rem" width="60%" />
+        <Skeleton height="1rem" width="40%" />
+      </div>
+    </>
   );
 }
 
@@ -284,13 +310,15 @@ export function PlanPanelHost({
   const carried = carrier && CARRIED.has(carrier.moduleId) && !compact ? carrier : undefined;
   if (moduleId === NEVER) return null;
   if (carried) {
+    // No flicker between the two forms while the module states load.
+    if (states === undefined) return <PanelLoading />;
     const own = (
       <Ctx.Provider value={{ ...ctx, secondary: true }}>
         <ModulePanel moduleId={moduleId} id={id} compact={false} />
       </Ctx.Provider>
     );
     // The target can show here: its panel, the row's own lines just above its foot. Else (off, not on this device):
-    // what stands in for it, the row's own lines, and the row's foot („Ganz öffnen“, the ToDo).
+    // what stands in for it (X5, on the phone X6) and the row's own lines – no button: the mail is answered at the PC.
     const shows =
       !!states?.[carried.moduleId] && availableManifests().some((m) => m.id === carried.moduleId);
     return shows ? (
@@ -301,7 +329,6 @@ export function PlanPanelHost({
       <Ctx.Provider value={ctx}>
         <ModulePanel moduleId={carried.moduleId} id={carried.id} compact={false} carried />
         {own}
-        <PlanPanelFoot />
       </Ctx.Provider>
     );
   }

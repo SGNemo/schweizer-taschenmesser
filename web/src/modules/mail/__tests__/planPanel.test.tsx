@@ -17,16 +17,33 @@ import { PlanPageFoot, PlanPanelHost } from '@/core/modules/PlanPanelHost';
 import { getManifest } from '@/core/modules/registry';
 import { setPlatform } from '@/core/platform';
 import { createWebPlatform } from '@/core/platform/web';
+import type * as Accounts from '@/core/mail/accounts';
+import { setSettings } from '@/core/settings/settings';
 import { emptyCompose } from '../composeState';
 import { queueSend, usePendingSends } from '../pendingSend';
+import { usePlanCompose } from '../planCompose';
+
+// A switch for the "a carried panel breaks" case: reading the accounts throws while it is set.
+const broken = vi.hoisted(() => ({ on: false }));
+vi.mock('@/core/mail/accounts', async (actual) => {
+  const real = await actual<typeof Accounts>();
+  return {
+    ...real,
+    listMailAccounts: () => {
+      if (broken.on) throw new TypeError('boom');
+      return real.listMailAccounts();
+    },
+  };
+});
 
 const taskRepo = createCollectionRepo(getManifest('todos')!, 'task');
 const base = { createdAt: 1, updatedAt: 1, deviceId: 't', deletedAt: null, _f: {} };
 const mod = (id: string) => ({ id, enabled: true, dataPolicy: null, ...base });
 const BODY = 'Hallo,\nkannst du mir bis Freitag die Unterlagen schicken?\nDanke, Anna';
 
-async function scene(opts: { lastFromMe?: boolean } = {}) {
-  for (const t of ['mail_thread', 'mail_body', 'todos_task', '_modules']) await db.table(t).clear();
+async function scene(opts: { lastFromMe?: boolean; noBody?: boolean } = {}) {
+  for (const t of ['mail_thread', 'mail_body', 'todos_task', '_modules', '_settings'])
+    await db.table(t).clear();
   await db.table('_modules').bulkPut([mod('mail'), mod('todos'), mod('planner')]);
   await db.table('mail_thread').put({
     ...base,
@@ -47,21 +64,22 @@ async function scene(opts: { lastFromMe?: boolean } = {}) {
       ...(opts.lastFromMe ? { lastFromMe: true } : {}),
     },
   });
-  await db.table('mail_body').put({
-    ...base,
-    id: 'demo|m1',
-    accountKey: 'demo',
-    messageId: 'm1',
-    threadId: 't1',
-    sortKey: 1,
-    demo: {
-      from: { name: 'Anna Beispiel', email: 'anna@example.org' },
-      to: [{ email: 'test@example.org' }],
-      subject: 'Treffen am Samstag?',
-      date: new Date(2026, 10, 27, 9, 0).getTime(),
-      text: BODY,
-    },
-  });
+  if (!opts.noBody)
+    await db.table('mail_body').put({
+      ...base,
+      id: 'demo|m1',
+      accountKey: 'demo',
+      messageId: 'm1',
+      threadId: 't1',
+      sortKey: 1,
+      demo: {
+        from: { name: 'Anna Beispiel', email: 'anna@example.org' },
+        to: [{ email: 'test@example.org' }],
+        subject: 'Treffen am Samstag?',
+        date: new Date(2026, 10, 27, 9, 0).getTime(),
+        text: BODY,
+      },
+    });
   await taskRepo.create(
     {
       listId: 'inbox',
@@ -77,6 +95,7 @@ async function scene(opts: { lastFromMe?: boolean } = {}) {
   );
 }
 
+// The row's panel and the page's foot, as the planner mounts them: the compose window lives in the foot.
 const panel = () =>
   render(
     <MemoryRouter>
@@ -86,6 +105,7 @@ const panel = () =>
         to="/todos?open=todo1"
         carrier={{ moduleId: 'mail', id: 't1' }}
       />
+      <PlanPageFoot />
     </MemoryRouter>,
   );
 
@@ -94,6 +114,8 @@ const desktop = () => setPlatform({ ...createWebPlatform(), kind: 'desktop', isN
 beforeEach(() => {
   desktop();
   usePendingSends.setState({ items: [] });
+  usePlanCompose.setState({ open: undefined, returnTo: undefined });
+  broken.on = false;
 });
 afterEach(() => {
   setPlatform(createWebPlatform());
@@ -152,8 +174,8 @@ describe('the mail panel of a planned mail', () => {
     expect(
       await screen.findByRole('checkbox', { name: '„Termin prüfen“ abhaken' }),
     ).toBeInTheDocument();
-    // The ToDo's own way out stays: „Ganz öffnen“ once.
-    expect(screen.getAllByRole('button', { name: 'Ganz öffnen' })).toHaveLength(1);
+    // No button: the mail is answered at the PC (the ToDo is ticked on its row).
+    expect(screen.queryByRole('button', { name: 'Ganz öffnen' })).toBeNull();
   });
 
   it('a thread that is not on this device: X5, nothing fetched', async () => {
@@ -197,5 +219,53 @@ describe('the send window at the planner’s foot', () => {
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByDisplayValue('Samstag passt mir.')).toBeInTheDocument();
     expect(usePendingSends.getState().items).toHaveLength(0);
+  });
+});
+
+describe('the mail panel after review', () => {
+  it('Esc in the reply closes only the window: the row keeps its text, the focus goes back to „Antworten“', async () => {
+    await scene();
+    panel();
+    const reply = await screen.findByRole('button', { name: 'Antworten' });
+    reply.focus();
+    fireEvent.click(reply);
+    const dialog = await screen.findByRole('dialog');
+    // Outside the row: the compartment's own Esc never sees it.
+    expect(dialog.closest('[data-testid="row-compartment"]')).toBeNull();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Verwerfen' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(screen.getByTestId('mail-plan-body')).toBeInTheDocument();
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Antworten' })),
+    );
+  });
+
+  it('mail’s „Beantwortet?“ switched off: „Antworten“, as on the mail row', async () => {
+    await scene({ lastFromMe: true });
+    await setSettings('module.mail', { showAnswered: false });
+    panel();
+    expect(await screen.findByRole('button', { name: 'Antworten' })).toBeInTheDocument();
+    expect(screen.queryByText('Beantwortet?')).toBeNull();
+  });
+
+  it('a header without its body on this device: „Antworten“ starts from the header (to the sender, „Re: …“)', async () => {
+    await scene({ noBody: true });
+    panel();
+    expect(await screen.findByTestId('mail-plan-body')).toHaveTextContent('Kannst du mir …');
+    fireEvent.click(await screen.findByRole('button', { name: 'Antworten' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByDisplayValue('Re: Treffen am Samstag?')).toBeInTheDocument();
+    expect(within(dialog).getByDisplayValue(/anna@example\.org/)).toBeInTheDocument();
+  });
+
+  it('a carried panel that breaks: X7, and the ToDo’s checklist stays', async () => {
+    await scene();
+    broken.on = true;
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    panel();
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    expect(
+      await screen.findByRole('checkbox', { name: '„Termin prüfen“ abhaken' }),
+    ).toBeInTheDocument();
   });
 });

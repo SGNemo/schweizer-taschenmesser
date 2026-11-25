@@ -74,7 +74,7 @@ export function RowCompartment({
       if (e.key !== 'Escape' || e.defaultPrevented) return;
       // A menu or a dialog inside the row closes itself first.
       const target = e.target as HTMLElement | null;
-      if (target?.closest('[role="menu"], [role="dialog"], [role="listbox"]')) return;
+      if (target?.closest('dialog, [role="menu"], [role="dialog"], [role="listbox"]')) return;
       e.preventDefault();
       e.stopPropagation();
       row.querySelector<HTMLElement>('[data-row]')?.focus();
