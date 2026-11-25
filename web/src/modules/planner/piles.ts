@@ -21,6 +21,14 @@ export function pileAreas(s: Pick<PlannerSettings, 'pileMoney' | 'pileMail'>): S
   return on;
 }
 
+/** The areas never asked about (`undefined`): the offer P5 may show for them. */
+export function pileUnasked(s: Pick<PlannerSettings, 'pileMoney' | 'pileMail'>): Set<PileArea> {
+  const out = new Set<PileArea>();
+  if (s.pileMoney === undefined) out.add('money');
+  if (s.pileMail === undefined) out.add('mail');
+  return out;
+}
+
 /** The parts of the switched-on areas from the active modules (a failing part is missing, the rest stays). */
 export async function loadPileParts(
   ctx: { today: string; until: string },

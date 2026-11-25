@@ -1,6 +1,8 @@
 import { Fragment, type ReactNode, useState } from 'react';
 import { useNavigate } from 'react-router';
 import type { PlannableEntry } from '@/core/modules/contributions';
+import type { PileGroup } from '@/core/modules/pile';
+import type { PileArea } from '@/core/modules/types';
 import { PlanPanelHost } from '@/core/modules/PlanPanelHost';
 import { getManifest } from '@/core/modules/registry';
 import { dayName, partWord } from '@/core/plan/explain';
@@ -11,7 +13,6 @@ import { compact } from './capacity';
 import {
   ActionLead,
   LinkChips,
-  linksOfEntry,
   PanelLinks,
   type RowLinkViews,
   useActionMenu,
@@ -20,6 +21,9 @@ import {
   withLinks,
 } from './RowLinks';
 import { compartmentId, RowCompartment } from './RowCompartment';
+import { carrierOf } from './carrier';
+import { PilePanel } from './PilePanel';
+import { usePileOf, type PileData } from './pileContext';
 import styles from '../routes/planner.module.css';
 
 /**
@@ -34,15 +38,6 @@ export interface RowExpand {
   onTakeOut?: () => void;
 }
 
-/**
- * What a row may carry (package 4c): its first `origin` link. The host decides which targets it mounts above the row's
- * own panel (today a mail thread: mail's panel first, the ToDo's own lines under it); any other origin is ignored.
- */
-function carrierOf(entry: PlannableEntry): { moduleId: string; id: string } | undefined {
-  const origin = linksOfEntry(entry).find((l) => l.rel === 'origin');
-  return origin ? { moduleId: origin.to.module, id: origin.to.id } : undefined;
-}
-
 /** The title's disclosure (COPY X1) and the compartment under the row while it is open. */
 function expandParts(
   expand: RowExpand | undefined,
@@ -51,6 +46,7 @@ function expandParts(
   title: string,
   links: RowLinkViews,
   part?: { k: number; of: number },
+  pile?: ReturnType<typeof usePileOf>,
 ) {
   if (!expand || !entry) return undefined;
   const id = compartmentId(unitId);
@@ -67,26 +63,66 @@ function expandParts(
     onOpen: expand.onToggle,
     compartment: expand.open ? (
       <RowCompartment id={id} label={named} onClose={expand.onClose}>
-        <PlanPanelHost
-          moduleId={entry.moduleId}
-          id={entry.id}
-          to={entry.to}
-          {...(expand.onTakeOut ? { onTakeOut: expand.onTakeOut } : {})}
-          {...(carrier ? { carrier } : {})}
-          detail={
-            entry.detail ? (
-              MONEY.test(entry.detail) ? (
-                <SensitiveValue compact>{entry.detail}</SensitiveValue>
-              ) : (
-                entry.detail
-              )
-            ) : undefined
-          }
-          links={links.length > 0 ? <PanelLinks views={links} /> : undefined}
-        />
+        {pile ? (
+          pile.group && pile.data ? (
+            <PilePanel group={pile.group} entries={pile.data.entries} />
+          ) : null
+        ) : (
+          <PlanPanelHost
+            moduleId={entry.moduleId}
+            id={entry.id}
+            to={entry.to}
+            {...(expand.onTakeOut ? { onTakeOut: expand.onTakeOut } : {})}
+            {...(carrier ? { carrier } : {})}
+            detail={
+              entry.detail ? (
+                MONEY.test(entry.detail) ? (
+                  <SensitiveValue compact>{entry.detail}</SensitiveValue>
+                ) : (
+                  entry.detail
+                )
+              ) : undefined
+            }
+            links={links.length > 0 ? <PanelLinks views={links} /> : undefined}
+          />
+        )}
       </RowCompartment>
     ) : undefined,
   };
+}
+
+/** A pile's lead: the area's glyph (money: the invoices glyph, mail: the mail glyph), never a tick or a button. */
+const PILE_GLYPH: Record<PileArea, IconName> = { money: 'receipt', mail: 'mail' };
+
+/** The facts of a pile row: P3 parts (desktop), P12 „{n} Dinge“ (phone), P4 late money, the earliest deadline. */
+function pileFacts(group: PileGroup, data: PileData | undefined, dueClock: number): ReactNode[] {
+  const parts = group.parts.flatMap(({ pile, members }) => {
+    const n = members.length + Math.max(0, pile.count);
+    return n > 0 ? [pile.label(n)] : [];
+  });
+  const late = data
+    ? group.parts
+        .flatMap((p) => p.members)
+        .filter((k) => {
+          const e = data.entries.get(k);
+          return !!e?.due?.hard && e.due.date < data.today;
+        }).length
+    : 0;
+  const out: ReactNode[] = [];
+  if (parts.length > 0)
+    out.push(
+      <>
+        <span className={styles.pileWide}>{parts.join(' · ')}</span>
+        <span className={styles.pileNarrow}>{t.planner.pile.things(group.count)}</span>
+      </>,
+    );
+  if (late > 0) out.push(<span>{t.planner.pile.late(late)}</span>);
+  else if (group.due) {
+    const was = dueWas({ hardDue: group.due }, dueClock);
+    const when = dayName(group.due);
+    out.push(<span>{was ? t.planner.row.dueWas(when) : t.planner.row.due(when)}</span>);
+  }
+  return out;
 }
 
 /** „Teil 1/2“ for the eye, „Teil 1 von 2“ for the screen reader. */
@@ -181,7 +217,16 @@ export function ThingRow({
   const source = entry ? sourceOf(entry) : undefined;
   const action = onDone ? undefined : entry?.action;
   const links = useRowLinks(entry);
-  const opens = expandParts(select ? undefined : expand, entry, row.unitId, row.title, links, row);
+  const pile = usePileOf(entry);
+  const opens = expandParts(
+    select ? undefined : expand,
+    entry,
+    row.unitId,
+    row.title,
+    links,
+    row,
+    pile,
+  );
   const linkedMenu = withLinks(menu, useActionMenu(action), useLinkMenu(links));
   // „Noch offen“: the row's steps are on the row itself – no ⋯.
   const fullMenu = onMove ? [] : linkedMenu;
@@ -207,6 +252,10 @@ export function ThingRow({
   else if (row.pinned && !lock)
     facts.push(<span className={styles.chipFest}>{t.planner.row.fixed}</span>);
   if (was) facts.push(<span>{t.planner.open.was(dayName(was))}</span>);
+  // A pile (package 2): its parts (P3), late money (P4), the earliest deadline; on the phone P12 „{n} Dinge“ instead
+  // of the parts. Muted text like every fact – never a badge, never a colour.
+  const idle = !!pile && !pile.group?.alive;
+  if (pile?.group && !idle) facts.push(...pileFacts(pile.group, pile.data, dueClock));
   if (entry?.detail)
     facts.push(
       MONEY.test(entry.detail) ? (
@@ -217,7 +266,7 @@ export function ThingRow({
     );
   // The part as plain text, only when set (package 4b; no colour carries it).
   if (row.item?.part) facts.push(<span>{partWord(row.item.part)}</span>);
-  if (row.hardDue) {
+  if (row.hardDue && !pile) {
     const when = row.hardDueTime
       ? `${dayName(row.hardDue)} ${row.hardDueTime}`
       : dayName(row.hardDue);
@@ -251,7 +300,7 @@ export function ThingRow({
           <ActionLead action={action} title={row.title} />
         ) : (
           <span className={styles.lead} aria-hidden="true">
-            <Icon name={source?.icon ?? 'checklist'} size={20} />
+            <Icon name={pile ? PILE_GLYPH[pile.area] : (source?.icon ?? 'checklist')} size={20} />
           </span>
         )
       }
@@ -261,7 +310,12 @@ export function ThingRow({
           title={row.title}
           data-drag-unit={draggable && !select ? row.unitId : undefined}
         >
-          {row.title}
+          {idle ? (
+            // P9: nothing waits – drawn like a done row (struck, the words say it too).
+            <s className={styles.pileIdle}>{`${row.title} · ${t.planner.pile.nothing}`}</s>
+          ) : (
+            row.title
+          )}
           {row.of > 1 ? <Part k={row.k} of={row.of} /> : null}
         </span>
       }

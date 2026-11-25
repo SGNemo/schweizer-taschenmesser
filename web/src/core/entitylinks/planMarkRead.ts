@@ -21,6 +21,11 @@ import { dateTimeFormat } from '@/core/i18n/format';
 import { loadModuleStates } from '@/core/modules/activation';
 import { availableManifests } from '@/core/modules/available';
 import { getManifest } from '@/core/modules/registry';
+import { collectPiles } from '@/core/modules/contributions';
+import { pileKey } from '@/core/modules/pile';
+import type { PileArea } from '@/core/modules/types';
+import { getSettings } from '@/core/settings/settings';
+import { z } from 'zod';
 import { dayName } from '@/core/plan/explain';
 import { addDaysStr } from '@/core/time/dates';
 import { today } from '@/core/time/now';
@@ -187,6 +192,51 @@ export async function placementsOf(
   return out;
 }
 
+/** The planner's pile switches, read without the planner's code (a module page draws the mark). */
+const pileSwitches = z.object({
+  pileMoney: z.boolean().optional(),
+  pileMail: z.boolean().optional(),
+});
+
+/**
+ * The collective rows a thing of `module` may fold into (planner hub 2, package 2): for each switched-on area its
+ * member keys – this module's own and, for a mail pile, the ToDos mail made – and the pile's placement. Read from the
+ * modules' `pile` contributions (keys only) and the planner's rows; the 40-cap and the plan's live things are the
+ * board's to check, so a member past the cap may still read „in „Finanzen checken““ here.
+ */
+async function pilesFor(
+  module: string,
+  database: TaschenmesserDB,
+): Promise<{ members: Map<string, PileArea>; placed: Map<PileArea, Placed[]> }> {
+  const members = new Map<string, PileArea>();
+  const placed = new Map<PileArea, Placed[]>();
+  const s = await getSettings(`module.${PLANNER}`, pileSwitches, {});
+  const on = new Set<PileArea>([
+    ...(s.pileMoney ? (['money'] as const) : []),
+    ...(s.pileMail ? (['mail'] as const) : []),
+  ]);
+  if (on.size === 0) return { members, placed };
+  const states = await loadModuleStates(undefined, database);
+  const sources = [module, 'mail'].flatMap((id) => {
+    const m = getManifest(id);
+    return m && states[id] ? [m] : [];
+  });
+  const from = today();
+  const parts = await collectPiles({ today: from, until: addDaysStr(from, 27) }, sources);
+  for (const p of parts) {
+    if (!on.has(p.area)) continue;
+    for (const k of p.members ?? []) if (!members.has(k)) members.set(k, p.area);
+  }
+  for (const area of on) {
+    const key = pileKey(area);
+    placed.set(
+      area,
+      (await placements([key], [], database)).filter((r) => r.key === key),
+    );
+  }
+  return { members, placed };
+}
+
 /**
  * The marks of several things of one module (a list's rows), in a handful of indexed reads. `undefined` while the
  * planner is off or not in this build (nothing is drawn); things without a mark are missing from the map.
@@ -209,6 +259,7 @@ export async function planMarks(
   const from = today();
 
   const { own, carriersOf, carrierRows, doneCarriers } = await gather(module, ids, database);
+  const piles = await pilesFor(module, database);
 
   // The planner's own item row `<module>:<id>`: asked in (M3) or „Nicht planen“. Only the exact key, as
   // `isRequested` reads it: occurrence rows also hold pins, estimates or a skipped day and stay after their turn; an
@@ -237,6 +288,33 @@ export async function planMarks(
     if (day) {
       out.set(id, { kind: 'day', date: day.date, locked: day.locked, rowKey: day.key });
       continue;
+    }
+    // Folded into a pile (package 2): nothing of its own lies anywhere and its row key – or its open carrier's –
+    // is a member. On a placed pile M5 with the pile's title; on an unplaced one M3; both lead to the pile's row.
+    if (mine.length === 0 && carried.length === 0) {
+      const rowKey = thing.fallbackKey ?? key;
+      const area =
+        piles.members.get(rowKey) ??
+        (carriersOf.get(id) ?? [])
+          .filter((k) => !doneCarriers.has(k))
+          .map((k) => piles.members.get(k))
+          .find(Boolean);
+      if (area) {
+        const at = earliestFrom(piles.placed.get(area) ?? [], from);
+        out.set(
+          id,
+          at
+            ? {
+                kind: 'day',
+                date: at.date,
+                locked: at.locked,
+                rowKey: pileKey(area),
+                pile: t.planner.pile.title[area],
+              }
+            : { kind: 'noDay', rowKey: pileKey(area) },
+        );
+        continue;
+      }
     }
     // A passed day: of the exact key, of the occurrence the module itself still names (`fallbackKey`: its request
     // is the current one), or of an open carrier. Other occurrences keep their rows when done (`run.ts writeRows`:

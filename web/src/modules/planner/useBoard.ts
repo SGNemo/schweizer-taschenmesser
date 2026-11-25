@@ -1,14 +1,20 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo } from 'react';
 import { getMeta } from '@/core/db/metaKv';
-import { useCalendarItems, usePlanBlocks, usePlannable } from '@/core/modules/contributions';
+import {
+  useCalendarItems,
+  usePlanBlocks,
+  usePlannable,
+  type PlannableEntry,
+} from '@/core/modules/contributions';
 import { addDays } from '@/core/plan/dates';
 import { useFocusSettings } from '@/core/settings/focus';
 import { useSettings } from '@/core/settings/settings';
 import { today } from '@/core/time/now';
 import { PILE_AREAS, pileKey, type Folded } from '@/core/modules/pile';
 import { buildBoard, type Board } from './board';
-import { foldPlan, loadPileParts, pileAreas } from './piles';
+import { foldPlan, loadPileParts, pileAreas, pileUnasked } from './piles';
+import type { PileArea } from '@/core/modules/types';
 import { assignmentRepo, dayRepo, itemRepo } from './repo';
 import { LAST_RUN_KEY, requestedIds, type LastRun } from './run';
 import {
@@ -22,6 +28,13 @@ export interface BoardData {
   board: Board;
   /** The collective rows of the switched-on areas (package 2): parts, folded members, counts. */
   piles: Folded;
+  /** The plan's things by item key (`<module>:<id>`): a pile's member lines are read from them. */
+  entries: ReadonlyMap<string, PlannableEntry>;
+  /**
+   * The offer P5 (package 2): an area never asked about whose things wait in „Noch ohne Tag“ – how many of them would
+   * fold. Money before mail; the page shows it from 3 on, unless dismissed on this device.
+   */
+  pileOffer?: { area: PileArea; n: number };
   /** The days in view when they differ from the board's (package 4: a later week, the 4-week grid). */
   view?: Board['days'];
   settings: PlannerSettings;
@@ -65,7 +78,8 @@ export function useBoard(
   const requested = useMemo(() => (own ? requestedIds(own.itemRows) : undefined), [own]);
   const entries = usePlannable({ today: day, until }, requested);
   // The parts of the switched-on piles (package 2): read live, like the things themselves.
-  const areas = pileAreas(settings);
+  // Parts of the switched-on areas and of those never asked about (the offer counts what would fold).
+  const areas = new Set([...pileAreas(settings), ...pileUnasked(settings)]);
   const areasKey = [...areas].join(',');
   const parts = useLiveQuery(
     () => loadPileParts({ today: day, until }, areas),
@@ -120,9 +134,22 @@ export function useBoard(
         titles,
         piles: fold,
       }).days;
+    const unasked = pileUnasked(settings);
+    const would = foldPlan(parts, entries, unasked, placed).folded;
+    const offerArea = PILE_AREAS.find(
+      (a) => unasked.has(a) && board.waiting.some((w) => would.get(w.itemKey) === a),
+    );
+    const pileOffer = offerArea
+      ? {
+          area: offerArea,
+          n: board.waiting.filter((w) => would.get(w.itemKey) === offerArea).length,
+        }
+      : undefined;
     return {
       board,
       piles,
+      ...(pileOffer ? { pileOffer } : {}),
+      entries: new Map(entries.map((e) => [`${e.moduleId}:${e.id}`, e])),
       ...(shown ? { view: shown } : {}),
       settings,
       planLimit: focus.planLimit,

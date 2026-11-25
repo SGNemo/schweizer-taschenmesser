@@ -1,7 +1,7 @@
 import { getISOWeek } from 'date-fns';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router';
-import { type FormEvent, useEffect, useRef, useState } from 'react';
+import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { getMeta, setMeta } from '@/core/db/metaKv';
 import { getLang } from '@/core/i18n/lang';
@@ -69,6 +69,8 @@ import { useAbilities, useRowMenu } from '../components/rowMenu';
 import { type RowExpand, ThingRow, TodoHintRow, WaitRow } from '../components/ThingRow';
 import { compartmentId, useOpenRow } from '../components/RowCompartment';
 import { PlanPageFoot } from '@/core/modules/PlanPanelHost';
+import { PileContext } from '../components/pileContext';
+import { PileOffer } from '../components/PileOffer';
 import { appointmentsOf, Context, nextDeadlinesOf } from '../components/Context';
 import { DayPage, DayPageLoading } from '../components/DayPage';
 import { LateGroup, LateRow } from '../components/LateGroup';
@@ -169,6 +171,11 @@ export default function PlannerPage() {
   const data = useBoard(
     Math.max(READ_DAYS, daysBetween(now, viewEnd) + 1),
     viewFrom === now && !grid ? undefined : { from: viewFrom, span: viewSpan },
+  );
+  // Collective rows (package 2): what a pile row draws, from the same reading as the board.
+  const pileData = useMemo(
+    () => (data ? { piles: data.piles, entries: data.entries, today: data.today } : undefined),
+    [data],
   );
   // Planner hub R1 (layout `split`): field, week band and the picked day's sheet in the main column; on a wide page
   // the context column (appointments, what waits) lies beside them, below that width it follows the sheet.
@@ -1658,7 +1665,19 @@ export default function PlannerPage() {
                           ),
                         }
                       : {}),
-                    children: waitRows(noDay),
+                    children: (
+                      <>
+                        {/* P5 (package 2): one quiet offer under the group's head, money before mail. */}
+                        {data?.pileOffer ? (
+                          <PileOffer
+                            key={data.pileOffer.area}
+                            area={data.pileOffer.area}
+                            n={data.pileOffer.n}
+                          />
+                        ) : null}
+                        {waitRows(noDay)}
+                      </>
+                    ),
                   },
                 ]
               : []),
@@ -1824,7 +1843,7 @@ export default function PlannerPage() {
   const hasContext = hasBeside || (wide && late.length > 0);
 
   return (
-    <>
+    <PileContext.Provider value={pileData}>
       <PageHeader title={t.planner.title}>{phone ? null : pageMenuButton}</PageHeader>
       {/* U01: the figure has no caps label, the frame's placeholder for a `kennzahl` head has one. Until the board is
           read – and while no day holds a thing – the page holds the row itself, in the figure's own shape, unseen, so
@@ -2059,6 +2078,6 @@ export default function PlannerPage() {
       ) : null}
       {/* A module's quiet strip at the page's foot (`contributions.planPageFoot`, first user: mail in package 4c). */}
       <PlanPageFoot />
-    </>
+    </PileContext.Provider>
   );
 }

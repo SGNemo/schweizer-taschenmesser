@@ -577,6 +577,14 @@
         "label": "Zeilen aufklappen",
         "default": true
       },
+      "pileMoney": {
+        "type": "boolean",
+        "label": "Stapel als eine Zeile: Finanzen"
+      },
+      "pileMail": {
+        "type": "boolean",
+        "label": "Stapel als eine Zeile: E-Mails"
+      },
       "calendarBlocks": {
         "type": "boolean",
         "label": "Termine blocken Zeit",
