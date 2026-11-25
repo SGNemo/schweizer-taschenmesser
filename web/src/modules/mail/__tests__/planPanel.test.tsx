@@ -113,6 +113,10 @@ describe('the mail panel of a planned mail', () => {
     ).toBeInTheDocument();
     expect(container.textContent).not.toMatch(/mail\.example\.org/);
     expect(screen.getAllByRole('button', { name: 'Ganz öffnen' })).toHaveLength(1);
+    // The foot stays last: the ToDo's lines come before it.
+    const tick = screen.getByRole('checkbox', { name: '„Termin prüfen“ abhaken' });
+    const open = screen.getByRole('button', { name: 'Ganz öffnen' });
+    expect(tick.compareDocumentPosition(open) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('„Antworten“ opens mail’s compose window over the planner; nothing is sent by it', async () => {
@@ -148,6 +152,8 @@ describe('the mail panel of a planned mail', () => {
     expect(
       await screen.findByRole('checkbox', { name: '„Termin prüfen“ abhaken' }),
     ).toBeInTheDocument();
+    // The ToDo's own way out stays: „Ganz öffnen“ once.
+    expect(screen.getAllByRole('button', { name: 'Ganz öffnen' })).toHaveLength(1);
   });
 
   it('a thread that is not on this device: X5, nothing fetched', async () => {

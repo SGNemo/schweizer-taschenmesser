@@ -53,6 +53,8 @@ interface PanelContext {
    * second foot, no note, no repeated detail or links; the target's panel above holds those.
    */
   secondary?: boolean;
+  /** A carried target's panel: the row's own lines, drawn just above that panel's foot (so the foot stays last). */
+  beforeFoot?: ReactNode;
 }
 const Ctx = createContext<PanelContext | undefined>(undefined);
 
@@ -70,14 +72,17 @@ export function PlanPanelFoot({ children }: { children?: ReactNode }) {
   const navigate = useNavigate();
   if (ctx?.secondary) return null;
   return (
-    <div className={styles.foot} data-panel-foot="">
-      {children ? <span className={styles.footStart}>{children}</span> : null}
-      {ctx ? (
-        <Button variant="ghost" data-panel-open="" onClick={() => void navigate(ctx.to)}>
-          {t.planner.panel.open}
-        </Button>
-      ) : null}
-    </div>
+    <>
+      {ctx?.beforeFoot}
+      <div className={styles.foot} data-panel-foot="">
+        {children ? <span className={styles.footStart}>{children}</span> : null}
+        {ctx ? (
+          <Button variant="ghost" data-panel-open="" onClick={() => void navigate(ctx.to)}>
+            {t.planner.panel.open}
+          </Button>
+        ) : null}
+      </div>
+    </>
   );
 }
 
@@ -270,6 +275,7 @@ export function PlanPanelHost({
   links,
   carrier,
 }: PlanPanelHostProps) {
+  const states = useModuleStates();
   const row = useMemo(() => ({ moduleId, id }), [moduleId, id]);
   const ctx = useMemo(
     () => ({ to, detail, links, row, ...(onTakeOut ? { onTakeOut } : {}) }),
@@ -277,17 +283,28 @@ export function PlanPanelHost({
   );
   const carried = carrier && CARRIED.has(carrier.moduleId) && !compact ? carrier : undefined;
   if (moduleId === NEVER) return null;
-  if (carried)
-    return (
-      <>
-        <Ctx.Provider value={ctx}>
-          <ModulePanel moduleId={carried.moduleId} id={carried.id} compact={false} carried />
-        </Ctx.Provider>
-        <Ctx.Provider value={{ ...ctx, secondary: true }}>
-          <ModulePanel moduleId={moduleId} id={id} compact={false} />
-        </Ctx.Provider>
-      </>
+  if (carried) {
+    const own = (
+      <Ctx.Provider value={{ ...ctx, secondary: true }}>
+        <ModulePanel moduleId={moduleId} id={id} compact={false} />
+      </Ctx.Provider>
     );
+    // The target can show here: its panel, the row's own lines just above its foot. Else (off, not on this device):
+    // what stands in for it, the row's own lines, and the row's foot („Ganz öffnen“, the ToDo).
+    const shows =
+      !!states?.[carried.moduleId] && availableManifests().some((m) => m.id === carried.moduleId);
+    return shows ? (
+      <Ctx.Provider value={{ ...ctx, beforeFoot: own }}>
+        <ModulePanel moduleId={carried.moduleId} id={carried.id} compact={false} carried />
+      </Ctx.Provider>
+    ) : (
+      <Ctx.Provider value={ctx}>
+        <ModulePanel moduleId={carried.moduleId} id={carried.id} compact={false} carried />
+        {own}
+        <PlanPanelFoot />
+      </Ctx.Provider>
+    );
+  }
   return (
     <Ctx.Provider value={ctx}>
       <ModulePanel moduleId={moduleId} id={id} compact={compact} {...(onDone ? { onDone } : {})} />
