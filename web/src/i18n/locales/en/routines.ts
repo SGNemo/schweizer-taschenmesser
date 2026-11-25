@@ -82,6 +82,8 @@ export const routines: Strings['routines'] = {
     start: 'Start',
     resume: 'Continue',
     startFor: (name: string) => `Start: ${name}`,
+    stepTicked: (step: string) => `“${step}” ticked.`,
+    stepReopened: (step: string) => `“${step}” open again.`,
     progress: (done: number, total: number) => `${done} of ${total} steps`,
     later: 'Later',
     allDone: 'Done',

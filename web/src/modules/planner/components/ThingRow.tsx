@@ -25,6 +25,7 @@ import { compartmentId, RowCompartment } from './RowCompartment';
 import { carrierOf } from './carrier';
 import { PilePanel } from './PilePanel';
 import { usePileOf, type PileData } from './pileContext';
+import { stepsFact, useRoutineMenu, useStepsFoot } from './steps';
 import styles from '../routes/planner.module.css';
 
 /**
@@ -48,6 +49,7 @@ function expandParts(
   links: RowLinkViews,
   part?: { k: number; of: number },
   pile?: ReturnType<typeof usePileOf>,
+  stepsFoot?: { go: () => void; menu: RowMenuItem[] },
 ) {
   if (!expand || !entry) return undefined;
   const id = compartmentId(unitId);
@@ -75,6 +77,7 @@ function expandParts(
             to={entry.to}
             {...(expand.onTakeOut ? { onTakeOut: expand.onTakeOut } : {})}
             {...(carrier ? { carrier } : {})}
+            {...(stepsFoot ? { steps: stepsFoot } : {})}
             detail={
               entry.detail ? (
                 MONEY.test(entry.detail) ? (
@@ -249,6 +252,7 @@ export function ThingRow({
   const action = onDone ? undefined : entry?.action;
   const links = useRowLinks(entry);
   const pile = usePileOf(entry);
+  const stepsFoot = useStepsFoot(entry, row.unitId, useRoutineMenu(entry));
   const opens = expandParts(
     select ? undefined : expand,
     entry,
@@ -257,6 +261,7 @@ export function ThingRow({
     links,
     row,
     pile,
+    stepsFoot,
   );
   const linkedMenu = withLinks(menu, useActionMenu(action), useLinkMenu(links));
   // „Noch offen“: the row's steps are on the row itself – no ⋯.
@@ -295,6 +300,9 @@ export function ThingRow({
         <span>{entry.detail}</span>
       ),
     );
+  // B1 (package 5a): „5 Schritte“, „1 von 5“ – plain text, no bar.
+  const stepsWord = stepsFact(entry);
+  if (stepsWord) facts.push(<span>{stepsWord}</span>);
   // The part as plain text, only when set (package 4b; no colour carries it).
   if (row.item?.part) facts.push(<span>{partWord(row.item.part)}</span>);
   if (row.hardDue && !pile) {
@@ -483,7 +491,9 @@ export function WaitRow({
   const links = useRowLinks(row.entry);
   const linkMenu = useLinkMenu(links);
   const pile = usePileOf(row.entry);
-  const opens = expandParts(expand, row.entry, row.unitId, row.title, links, row, pile);
+  const stepsFoot = useStepsFoot(row.entry, row.unitId, useRoutineMenu(row.entry));
+  const opens = expandParts(expand, row.entry, row.unitId, row.title, links, row, pile, stepsFoot);
+  const stepsWord = stepsFact(row.entry);
   // A pile (package 2): the area's glyph in front, its parts in the meta (a pile with nothing to do is no row here).
   const pileMeta = pile?.group ? pileFacts(pile.group, pile.data, now()) : undefined;
   return (
@@ -512,6 +522,8 @@ export function WaitRow({
       meta={
         why || !row.entry ? (
           reason
+        ) : stepsWord && !pile ? (
+          <span className={styles.meta}>{stepsWord}</span>
         ) : pileMeta?.length ? (
           <span className={styles.meta}>
             {pileMeta.map((fact, i) => (
