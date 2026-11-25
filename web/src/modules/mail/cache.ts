@@ -140,10 +140,10 @@ export async function loadPlanThread(
   thread: string,
 ): Promise<{ accountKey: string; view: CachedThreadView; messages: MailMessage[] } | undefined> {
   const heads = await Promise.all(accountKeys.map((k) => threadRepo.get(threadId(k, thread))));
-  const bodies = await bodyRepo
-    .active()
-    .filter((r) => r.threadId === thread)
-    .toArray();
+  // Through the thread index: a write to another thread's body does not wake this query.
+  const bodies = (await bodyRepo.table.where('threadId').equals(thread).toArray()).filter(
+    (r) => r.deletedAt === null,
+  );
   for (const [i, head] of heads.entries()) {
     if (!head || head.deletedAt !== null) continue;
     const view = await viewOf(head);

@@ -317,26 +317,21 @@ export function PlanPanelHost({
   );
   const carried =
     carrier && CARRIED[carrier.moduleId] === moduleId && !compact ? carrier : undefined;
-  // Stable values, so the row's own panel is not re-rendered on every render of the host.
-  const own = useMemo(
-    () => (
-      <Ctx.Provider value={{ ...ctx, secondary: true }}>
-        <ModulePanel moduleId={moduleId} id={id} compact={false} />
-      </Ctx.Provider>
-    ),
-    [ctx, moduleId, id],
-  );
-  const carriedCtx = useMemo(() => ({ ...ctx, beforeFoot: own }), [ctx, own]);
   if (moduleId === NEVER) return null;
   if (carried) {
     // No flicker between the two forms while the module states load.
     if (states === undefined) return <PanelLoading />;
+    const own = (
+      <Ctx.Provider value={{ ...ctx, secondary: true }}>
+        <ModulePanel moduleId={moduleId} id={id} compact={false} />
+      </Ctx.Provider>
+    );
     // The target can show here: its panel, the row's own lines just above its foot. Else (off, not on this device):
     // what stands in for it (X5, on the phone X6) and the row's own lines – no button: the mail is answered at the PC.
     const shows =
       !!states?.[carried.moduleId] && availableManifests().some((m) => m.id === carried.moduleId);
     return shows ? (
-      <Ctx.Provider value={carriedCtx}>
+      <Ctx.Provider value={{ ...ctx, beforeFoot: own }}>
         <ModulePanel moduleId={carried.moduleId} id={carried.id} compact={false} carried />
       </Ctx.Provider>
     ) : (
