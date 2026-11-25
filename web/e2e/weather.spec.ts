@@ -568,3 +568,103 @@ test.describe('Sky events (package 3)', () => {
       ).toEqual([]);
     });
 });
+
+test.describe('Official warnings and aurora (package 3b)', () => {
+  // The DWD answer in the shape the GeoServer gave on 2026-11-25 (fields limited by `propertyName`).
+  const dwd = (page: Page, n: 1 | 3) =>
+    page.route('**://maps.dwd.de/**', (route) =>
+      route.fulfill({
+        headers: { 'access-control-allow-origin': '*' },
+        json: {
+          type: 'FeatureCollection',
+          features: [
+            ['ORKANARTIGE BÖEN', 'Severe', 'WIND'],
+            ['GLÄTTE', 'Moderate', 'GLAZE'],
+            ['DAUERREGEN', 'Moderate', 'RAIN'],
+          ]
+            .slice(0, n)
+            .map(([EVENT, SEVERITY, EC_GROUP]) => ({
+              type: 'Feature',
+              properties: {
+                EVENT,
+                SEVERITY,
+                EC_GROUP,
+                URGENCY: 'Immediate',
+                STATUS: 'Actual',
+                MSGTYPE: 'Alert',
+                ONSET: '2026-09-29T06:00:00Z',
+                EXPIRES: '2026-09-29T21:00:00Z',
+              },
+            })),
+        },
+      }),
+    );
+
+  for (const [w, h, phone] of [
+    [1920, 1080, false],
+    [412, 915, true],
+  ] as const)
+    test(`the official pill at ${w} px: two rows in the stage at most, the rest under the head, stage height`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: w, height: h });
+      await mockScene(page, { night: false, hints: 2 });
+      const asked: string[] = [];
+      page.on('request', (r) => {
+        if (r.url().includes('maps.dwd.de')) asked.push(r.url());
+      });
+      await dwd(page, 3);
+      await chooseLindenau(page);
+      await ready(page, '/weather');
+      const frame = page.getByTestId('module-frame');
+      const pill = frame.getByTestId('weather-official');
+      await expect(pill).toContainText('Amtliche Unwetterwarnung: Orkanartige Böen');
+      await expect(pill.getByRole('listitem')).toHaveCount(2);
+      await expect(pill).toContainText('+ 1 weitere');
+      await expect(frame.getByTestId('weather-warning')).toHaveCount(0);
+      await expect(
+        page.getByTestId('weather-late-warning').getByTestId('weather-official'),
+      ).toHaveCount(1);
+      const box = (await frame.boundingBox())!;
+      expect(box.height).toBeLessThanOrEqual((phone ? 300 : 290) + 1);
+      // Only the rounded position of the main place leaves the device.
+      expect(asked.length).toBeGreaterThan(0);
+      expect(new URL(asked[0]!).searchParams.get('CQL_FILTER')).toBe(
+        'INTERSECTS(THE_GEOM,POINT(50.1 10.2))',
+      );
+    });
+
+  for (const scheme of ['light', 'dark'] as const)
+    test(`axe with the official pill: ${scheme}`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await mockScene(page, { night: false, hints: 1 });
+      await dwd(page, 1);
+      await chooseLindenau(page);
+      await ready(page, '/weather');
+      await expect(page.getByTestId('weather-official')).toBeVisible();
+      const { default: AxeBuilder } = await import('@axe-core/playwright');
+      const results = await new AxeBuilder({ page })
+        .include('[data-testid="module-frame"]')
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+        .analyze();
+      expect(
+        results.violations.map(
+          (v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`,
+        ),
+      ).toEqual([]);
+    });
+
+  test('switched off: the DWD is not asked', async ({ page }) => {
+    await mockScene(page, { night: false, hints: 0 });
+    const asked: string[] = [];
+    page.on('request', (r) => {
+      if (/maps\.dwd\.de|swpc\.noaa\.gov/.test(r.url())) asked.push(r.url());
+    });
+    await chooseLindenau(page);
+    await page.getByLabel('Amtliche Warnungen (Deutschland)').click();
+    await ready(page, '/weather');
+    await expect(page.getByTestId('weather-keys')).toBeVisible();
+    // The SWPC file is never asked at this place in daylight unless the night needs it; the DWD not at all.
+    expect(asked.filter((u) => u.includes('maps.dwd.de'))).toEqual([]);
+  });
+});
