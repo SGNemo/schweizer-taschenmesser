@@ -206,7 +206,7 @@ for (const scheme of ['light', 'dark'] as const)
   test(`plan row expand (4a): an open compartment passes axe (${scheme})`, async ({ page }) => {
     test.setTimeout(120_000);
     await page.setViewportSize(DESKTOP);
-    await page.emulateMedia({ colorScheme: scheme });
+    await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' });
     await prepare(page);
     await rowOf(page, 'todos:hh')
       .getByRole('button', { name: /^Haushalt.*\. Aufklappen$/ })

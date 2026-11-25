@@ -140,7 +140,7 @@ for (const scheme of ['light', 'dark'] as const)
   test(`plan steps (5a): the „Los“ stage passes axe (${scheme})`, async ({ page }) => {
     test.setTimeout(120_000);
     await page.setViewportSize(DESKTOP);
-    await page.emulateMedia({ colorScheme: scheme });
+    await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' });
     await prepare(page);
     await rowOf(page).locator('button[data-row]').first().click();
     const results0 = await new AxeBuilder({ page })

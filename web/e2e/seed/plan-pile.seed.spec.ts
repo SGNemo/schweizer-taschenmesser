@@ -137,7 +137,7 @@ for (const scheme of ['light', 'dark'] as const)
   test(`plan piles (2): an open pile passes axe (${scheme})`, async ({ page }) => {
     test.setTimeout(120_000);
     await page.setViewportSize(DESKTOP);
-    await page.emulateMedia({ colorScheme: scheme });
+    await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' });
     await prepare(page);
     await unfoldWaiting(page);
     await expect(page.getByTestId('pile-offer')).toBeVisible();

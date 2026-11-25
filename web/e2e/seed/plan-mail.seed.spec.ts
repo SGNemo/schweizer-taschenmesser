@@ -142,7 +142,7 @@ for (const scheme of ['light', 'dark'] as const)
   test(`a planned mail’s compartment passes axe (${scheme})`, async ({ page }) => {
     test.setTimeout(120_000);
     await page.setViewportSize(DESKTOP);
-    await page.emulateMedia({ colorScheme: scheme });
+    await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' });
     await prepare(page);
     const box = await open(page);
     await expect(box.getByTestId('mail-plan-body')).toBeVisible();
