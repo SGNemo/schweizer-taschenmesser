@@ -29,6 +29,7 @@ export const weatherSettingsSchema = z.object({
   /** "Bild im Wetter-Kopf": with motion (default), a still picture, or sky only. Optional: stored settings stay valid. */
   // `.catch`: a mode a later version adds (synced from another device) reads as the default here, instead of the
   // whole scope falling back to its defaults and hiding the place.
+  // Such a mode is not written back from here; settings writes only the keys they change.
   scene: z.enum(['motion', 'still', 'plain']).optional().catch(undefined),
 });
 export type SceneMode = NonNullable<WeatherSettings['scene']>;

@@ -222,8 +222,8 @@ export function WeatherHero({
 /**
  * The head while the first forecast is still on its way after the frame stopped waiting (a slow network, 0b-8): the
  * same blocks as `WeatherHero` – the figure with its line, the row of chips and the line of further values – with
- * dashes, in the stage's room of the last visit, so the head keeps its height when the forecast arrives. The sky stays
- * the frame's default.
+ * dashes, in the stage's room of the last visit, so the head keeps its height when the forecast arrives. Behind it
+ * the calm default scene (a clear day), as without a place.
  */
 export function WeatherHeroPending() {
   // The stage keeps the room of the last visit (U01) until the forecast fills it: on the phone the chips wrap.
