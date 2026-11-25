@@ -8,6 +8,7 @@
  * (P86). Only the NEXT of these per subscription, only for active subscriptions that are not cancelled already.
  * No write-back: cancelling stays in this module – the row gets `action` „Kündigen …“ instead, a route that opens
  * the subscription (CONCEPT-LINKS §2 L7; the page treats `?do=cancel` as untrusted and writes nothing).
+ * A deadline the user let pass with „Läuft weiter“ (`keptDeadline`, package 4b) is not listed; the next one is.
  * Switch: `showInPlan`. A deadline asked into the plan from the page („In den Plan“, `plannedDeadline`, still the next one)
  * is listed regardless of that switch and of the horizon: the person asked for it (`planDeadline.ts`).
  */
@@ -52,8 +53,11 @@ const source: PlannableSource = {
             recentMissed.deadline >= addDaysStr(ctx.today, -MISSED_RECENT_DAYS)))
           ? s.plannedDeadline
           : undefined;
+      // „Läuft weiter“ decided this deadline: it is no thing to do any more (the next period's comes as usual).
+      const open = (d: Deadline) => d.date !== s.keptDeadline;
       if (!prefs.showInPlan) {
-        if (asked) items.push(item(s, { date: asked, trial: false }));
+        if (asked && open({ date: asked, trial: false }))
+          items.push(item(s, { date: asked, trial: false }));
         continue;
       }
       if (asked) candidates.push({ date: asked, trial: false });
@@ -63,15 +67,17 @@ const source: PlannableSource = {
       const missed = missedDeadline(s, ctx.today);
       if (missed && missed.deadline >= recent)
         candidates.push({ date: missed.deadline, trial: false });
+      // The first deadline in range that is not decided already: after „Läuft weiter“ the next period's.
       const next = cancelDeadlinesInRange(s, ctx.today, ctx.until)
         .map((d) => d.deadline)
+        .filter((d) => d !== s.keptDeadline)
         .sort()[0];
       if (next) candidates.push({ date: next, trial: false });
       const trial = s.trialEndsOn;
       if (trial && trial <= ctx.until && trial >= recent)
         candidates.push({ date: trial, trial: true });
       // One row per subscription: the earliest (a passed deadline first – it is the one at stake).
-      const first = candidates.sort((a, b) => a.date.localeCompare(b.date))[0];
+      const first = candidates.filter(open).sort((a, b) => a.date.localeCompare(b.date))[0];
       if (!first) continue;
       items.push(item(s, first));
     }

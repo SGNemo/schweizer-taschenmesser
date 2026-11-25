@@ -22,4 +22,6 @@ export const migrations: ModuleManifest['migrations'] = {
     }),
   // 6: optional `unusedSince` and `plannedDeadline`; absent means "as before", nothing is rewritten.
   6: () => Promise.resolve(),
+  // 7: optional `cancelledOn` and `keptDeadline` (planner hub 2, package 4b); absent means "as before".
+  7: () => Promise.resolve(),
 };

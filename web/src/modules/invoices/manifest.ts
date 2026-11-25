@@ -64,6 +64,8 @@ const manifest: ModuleManifest = {
   contributions: {
     // Open things for the planner (read only; nothing is written back).
     plannable: () => import('./plannable'),
+    // Its panel under an expanded plan row (planner hub 2, package 4b): the pay step as one line.
+    planPanel: () => import('./components/PlanPanel'),
     // What a link to one of these says about its target (alive, gone); read through `resolveLink` only.
     linkTarget: () => import('./linkTarget'),
     attention: () => import('./attention'),

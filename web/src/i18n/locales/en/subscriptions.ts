@@ -1,6 +1,16 @@
 import type { Strings } from '@/strings';
 
 export const subscriptions: Strings['subscriptions'] = {
+  cancelStep: {
+    cancelledOn: 'Cancelled on …',
+    dayLabel: 'Cancelled on',
+    keep: 'Keep it',
+    note: 'Save',
+    noted: 'Noted as cancelled.',
+    kept: 'Kept, deadline settled.',
+    by: (day: string) => `Cancel by ${day}`,
+    title: (name: string) => `Cancel ${name}?`,
+  },
   ext: {
     category: {
       label: 'Type of service',

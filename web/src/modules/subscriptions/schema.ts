@@ -59,6 +59,16 @@ export const subscriptionSchema = z.object({
    * lists that deadline even beyond the horizon and with „Im Plan zeigen“ off. Once it is past, it means nothing.
    */
   plannedDeadline: z.string().regex(DATE_RE).optional().meta({ internal: true }),
+  /**
+   * The day the user cancelled („Gekündigt am …“, since version 7; planner hub 2, package 4b). Written together with
+   * `recurrence.until` (the last day before the charge the deadline was for), which is what every reader goes by.
+   */
+  cancelledOn: z.string().regex(DATE_RE).optional(),
+  /**
+   * A cancellation deadline the user decided to let pass („Läuft weiter“, since version 7): the planner source no
+   * longer lists it; the next period's deadline comes as usual. Only that one date; an older one means nothing.
+   */
+  keptDeadline: z.string().regex(DATE_RE).optional().meta({ internal: true }),
 });
 
 export type Subscription = z.output<typeof subscriptionSchema>;

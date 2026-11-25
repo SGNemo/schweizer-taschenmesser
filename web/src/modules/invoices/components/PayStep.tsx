@@ -1,7 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import type { Stored } from '@/core/db/types';
+import { useHideValuesSetting } from '@/core/focus/hideValues';
 import { useSubmitOnce } from '@/core/forms/submitOnce';
+import { PlanPanelFoot } from '@/core/modules/PlanPanelHost';
 import { formatMoney, formatMoneyInput, parseMoney } from '@/core/money';
 import { today } from '@/core/time/dates';
 import { useUiStore } from '@/stores/ui';
@@ -44,7 +46,7 @@ export function PayStep({
       title={invoice ? t.invoices.payStep.title(invoice.payee) : ''}
     >
       {invoice ? (
-        <Form key={invoice.id} invoice={invoice} onClose={onClose} onPaid={onPaid} />
+        <PayForm key={invoice.id} invoice={invoice} onClose={onClose} onPaid={onPaid} />
       ) : null}
     </Dialog>
   );
@@ -55,15 +57,28 @@ function notOpenMessage(invoice: Stored<Invoice> | undefined): string {
   return invoice?.status === 'paid' ? t.invoices.payStep.alreadyPaid : t.invoices.links.gone;
 }
 
-function Form({
+/**
+ * The pay step's form. `layout="dialog"` is the page's step (above). `layout="panel"` is the same form as one line in
+ * the invoice's plan panel (planner hub 2, package 4b; hand-off 04): the visible small labels „Bezahlt am“ and
+ * „Betrag“, the day and the sum, and „Bezahlt“ (secondary) in the panel's foot beside „Ganz öffnen“ – no „Offen: …“
+ * line (the row says the sum) and no cancel button (closing the row is the way out). While „Werte ausblenden“ is on,
+ * the panel's sum starts empty: an empty sum pays what is open, a typed one is a part payment as on the page.
+ */
+export function PayForm({
   invoice: initial,
   onClose,
   onPaid,
+  layout = 'dialog',
 }: {
   invoice: Stored<Invoice>;
   onClose: () => void;
   onPaid?: () => void;
+  layout?: 'dialog' | 'panel';
 }) {
+  const panel = layout === 'panel';
+  // `undefined` while the switch is read: the panel shows no sum until it knows values may show.
+  const hideSetting = useHideValuesSetting();
+  const hide = hideSetting !== false;
   const id = initial.id;
   // `null` while the first read is under way; `undefined` once the invoice is gone (deleted or missing).
   const live = useLiveQuery(() => invoiceRepo.get(id), [id], null);
@@ -71,7 +86,11 @@ function Form({
   const rest = remainingMinor(invoice);
   const money = (minor: number) => formatMoney(minor, invoice.currency);
   const [date, setDate] = useState(today());
-  const [amount, setAmount] = useState(formatMoneyInput(remainingMinor(initial)));
+  // Untouched (`undefined`): the open sum – in the panel only once values may show, never for a moment before.
+  const [typed, setAmount] = useState<string | undefined>(undefined);
+  const [prefill] = useState(() => formatMoneyInput(remainingMinor(initial)));
+  // The panel stays open after a part payment: its prefill follows what is still open.
+  const amount = typed ?? (panel ? (hide ? '' : formatMoneyInput(rest)) : prefill);
   const [error, setError] = useState('');
   // Set once this step writes (or decides not to): its own change must not read as „paid elsewhere“.
   const settled = useRef(false);
@@ -88,7 +107,8 @@ function Form({
   async function pay(e: FormEvent) {
     e.preventDefault();
     if (settled.current) return;
-    const minor = parseMoney(amount);
+    // The panel's empty sum (values hidden) is the whole open rest.
+    const minor = panel && amount.trim() === '' ? rest : parseMoney(amount);
     if (!minor || minor < 1) return setError(t.money.invalidAmount(formatMoneyInput(1250)));
     if (minor > rest) return setError(t.invoices.ext.payment.tooMuch(money(rest)));
     settled.current = true;
@@ -116,9 +136,40 @@ function Form({
     }
     onClose();
     if (through) onPaid?.();
+    // The panel's form stays while the invoice is still open (after a part payment): ready for the next one. A paid
+    // one keeps `settled`, so its own payment never reads as „paid elsewhere“.
+    if (panel && (await invoiceRepo.get(id))?.status === 'open') {
+      settled.current = false;
+      setAmount(undefined);
+    }
   }
   const payOnce = useSubmitOnce(pay);
 
+  if (panel)
+    return (
+      <form onSubmit={payOnce} data-testid="pay-panel">
+        <div className={styles.payLine}>
+          <DayField label={t.invoices.paidAt} value={date} onChange={setDate} required />
+          <TextField
+            label={t.invoices.ext.payment.amount}
+            inputMode="decimal"
+            value={amount}
+            onChange={(e) => {
+              setAmount(e.target.value);
+              setError('');
+            }}
+            error={error}
+            required={!hide}
+            className={styles.payAmount}
+          />
+        </div>
+        <PlanPanelFoot>
+          <Button type="submit" variant="secondary" data-testid="pay-panel-confirm">
+            {t.invoices.paid}
+          </Button>
+        </PlanPanelFoot>
+      </form>
+    );
   return (
     <form onSubmit={payOnce} className={styles.form}>
       <p className={styles.muted} data-testid="pay-step-open">

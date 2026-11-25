@@ -27,17 +27,20 @@ const source: NotificationSource = async ({ from, to }) => {
   const running = subs.filter((s) => !s.recurrence.until);
   return running
     .flatMap((s) =>
-      cancelDeadlinesInRange(s, fromDate, toDate).map((d) => ({
-        key: `subscription-cancel:${s.id}:${d.deadline}`,
-        at: toEpoch(addDaysStr(d.deadline, -before), prefs.remindTime),
-        title: t.subscriptions.cancelTitle(s.name),
-        body: t.subscriptions.cancelBody(
-          formatDay(d.deadline, 'd. MMM yyyy'),
-          formatMoney(s.amountMinor, currencyOf(s)),
-          formatDay(d.charge, 'd. MMM yyyy'),
-        ),
-        url: '/subscriptions',
-      })),
+      // A deadline decided with „Läuft weiter“ (`keptDeadline`, planner hub 2 package 4b) is not reminded of again.
+      cancelDeadlinesInRange(s, fromDate, toDate)
+        .filter((d) => d.deadline !== s.keptDeadline)
+        .map((d) => ({
+          key: `subscription-cancel:${s.id}:${d.deadline}`,
+          at: toEpoch(addDaysStr(d.deadline, -before), prefs.remindTime),
+          title: t.subscriptions.cancelTitle(s.name),
+          body: t.subscriptions.cancelBody(
+            formatDay(d.deadline, 'd. MMM yyyy'),
+            formatMoney(s.amountMinor, currencyOf(s)),
+            formatDay(d.charge, 'd. MMM yyyy'),
+          ),
+          url: '/subscriptions',
+        })),
     )
     .concat(trialReminders(subs, prefs, from, to))
     .filter((n) => n.at > from && n.at <= to);
@@ -51,7 +54,7 @@ function trialReminders(
   to: number,
 ) {
   return subs
-    .filter((s) => s.trialEndsOn)
+    .filter((s) => s.trialEndsOn && s.trialEndsOn !== s.keptDeadline)
     .map((s) => ({
       key: `subscription-trial:${s.id}:${s.trialEndsOn}`,
       at: toEpoch(addDaysStr(s.trialEndsOn!, -prefs.trialRemindDaysBefore), prefs.remindTime),
