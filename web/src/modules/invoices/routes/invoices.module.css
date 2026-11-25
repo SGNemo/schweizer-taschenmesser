@@ -241,7 +241,8 @@
 .payLine {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  /* Top-aligned: the day field carries its hint („Heute“) below, the sum does not. */
+  align-items: flex-start;
   gap: var(--space-3);
 }
 .payLine label {
