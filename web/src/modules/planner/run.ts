@@ -31,6 +31,7 @@ import { isPlannerOwned, type CalendarItem, type ModuleManifest } from '@/core/m
 import { fixedOf, planDays, turnDayOf } from './days';
 import { lateMoneyDue } from './late';
 import { migratePins } from './migrateModel';
+import { foldRows, loadPileParts, pileAreas } from './piles';
 import { itemKeyOf, plannerRepos, putRow, type PlannerDb, type PlannerRepos } from './repo';
 import type { AssignmentRow, PlanItemRow } from './schema';
 import { planSettings, type PlannerSettings } from './settings';
@@ -94,6 +95,12 @@ export interface RunInputs {
   turns: PrevAssignment[];
   /** Items whose rows a run takes away: „Nicht planen“ and late money. Nothing else is ever removed by a run. */
   removeKeys: Set<string>;
+  /**
+   * Members folded into a collective row (package 2, `piles.ts`): no proposal takes them one by one – the pile is the
+   * thing „Woche vorschlagen“ and „Rest verteilen“ see; and a pile with nothing to do, which no proposal places. Not
+   * part of the hash: a count that changes never reruns.
+   */
+  foldedKeys?: Set<string>;
   settings: PlanSettings;
   hash: string;
   titles: Record<string, string>;
@@ -488,6 +495,7 @@ export async function runPlanner(
     return { ran: false, inputs, rowWrites: 0, writeBacks: 0 };
   const bail = () => deps.aborted?.() === true;
   if (bail()) return { ran: false, inputs, rowWrites: 0, writeBacks: 0 };
+  await withFold(deps, inputs);
   // What lies stays (docs/design/planner-rethink): the engine only gets the things the action handed over.
   // A thing the action laid itself (`touched`) is never handed over in the same breath – it stays where it was
   // laid, also in a reshuffle.
@@ -627,7 +635,7 @@ export async function previewPlanner(
   /** A spread of one day („Rest verteilen“ on an overbooked day): these things, not before `notBefore`. */
   spread?: { loose: readonly string[]; notBefore: string },
 ): Promise<PreviewOutcome> {
-  const inputs = await buildInputs(deps, plannerRepos(deps.database));
+  const inputs = await withFold(deps, await buildInputs(deps, plannerRepos(deps.database)));
   const next = withOps({ ...inputs, items: [...inputs.items, ...extra] }, ops);
   // A sentence that names a turn („schieb Training auf Mi“) moves it as `applyOps` does (it lays a row): it is handed
   // over with its pin and no longer stands on its source's day; every other turn stays where it is.
@@ -681,10 +689,16 @@ export async function proposeDays(
   later: readonly string[] = [],
 ): Promise<Record<string, string>> {
   if (keys.length === 0 && later.length === 0) return {};
-  const inputs = await buildInputs(deps, plannerRepos(deps.database));
+  const inputs = await withFold(deps, await buildInputs(deps, plannerRepos(deps.database)));
   const laid = new Set([...inputs.prevRows.values()].map((r) => r.itemKey));
   const free = (list: readonly string[]) =>
-    list.filter((k) => !inputs.lockedKeys.has(k) && !laid.has(k) && !turnKeys(inputs).has(k));
+    list.filter(
+      (k) =>
+        !inputs.lockedKeys.has(k) &&
+        !inputs.foldedKeys?.has(k) &&
+        !laid.has(k) &&
+        !turnKeys(inputs).has(k),
+    );
   // A dated turn shown on its day without a row takes that day's time, as on the board.
   const lying = [...inputs.prev, ...inputs.turns];
   const out: Record<string, string> = {};
@@ -718,9 +732,34 @@ export interface PreviewOutcome {
   prev: PrevAssignment[];
 }
 
+/**
+ * Collective rows (package 2): folded members and piles with nothing to do are never proposed. Read only where a
+ * proposal is built – after the run's „nothing changed“ check – from the same things and rows as the board
+ * (`foldRows`); never part of the hash.
+ */
+export async function withFold(deps: RunDeps, inputs: RunInputs): Promise<RunInputs> {
+  const areas = pileAreas(deps.settings);
+  if (areas.size === 0) return inputs;
+  const { folded, idle } = foldRows(
+    await loadPileParts(
+      { today: deps.today, until: inputs.horizon.at(-1) ?? deps.today },
+      areas,
+      deps.manifests,
+    ),
+    inputs.entries,
+    areas,
+    [...inputs.itemRows].map(([id, r]) => ({ id, ...r })),
+    [...inputs.prevRows.values()].map((r) => r.itemKey),
+  );
+  inputs.foldedKeys = new Set([...folded, ...idle]);
+  return inputs;
+}
+
 /** Every thing a proposal may take: all that is not „fest“. */
-export function looseAll(inputs: Pick<RunInputs, 'items' | 'lockedKeys'>): string[] {
-  return inputs.items.filter((i) => !inputs.lockedKeys.has(i.key)).map((i) => i.key);
+export function looseAll(inputs: Pick<RunInputs, 'items' | 'lockedKeys' | 'foldedKeys'>): string[] {
+  return inputs.items
+    .filter((i) => !inputs.lockedKeys.has(i.key) && !inputs.foldedKeys?.has(i.key))
+    .map((i) => i.key);
 }
 
 /**
@@ -730,7 +769,7 @@ export function looseAll(inputs: Pick<RunInputs, 'items' | 'lockedKeys'>): strin
  * names herself („schieb X auf Mi“) may.
  */
 export function looseOf(
-  inputs: Pick<RunInputs, 'items' | 'lockedKeys' | 'prevRows'>,
+  inputs: Pick<RunInputs, 'items' | 'lockedKeys' | 'prevRows' | 'foldedKeys'>,
   ops: readonly PlanOp[],
   extra: readonly PlanItem[] = [],
 ): string[] {
@@ -742,7 +781,10 @@ export function looseOf(
       for (const i of inputs.items) if (op.reshuffle || !laid.has(i.key)) out.add(i.key);
   }
   const named = new Set(ops.flatMap((op) => (op.op === 'pin' ? [op.key] : [])));
-  return [...out].filter((k) => named.has(k) || !inputs.lockedKeys.has(k));
+  // A pile's folded members go with the pile, never one by one – unless an op names one.
+  return [...out].filter(
+    (k) => named.has(k) || (!inputs.lockedKeys.has(k) && !inputs.foldedKeys?.has(k)),
+  );
 }
 
 /**

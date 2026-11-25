@@ -115,6 +115,11 @@ export interface Board {
    * in `waiting`. Oldest deadline first. A thing set to „Nicht planen“ is not listed here (it waits, as before).
    */
   late: BoardRow[];
+  /**
+   * Late money folded into a pile (package 2): not drawn as its own group, but the head's sentence still names it
+   * („Frist vorbei: n“ – late money must not get quieter).
+   */
+  lateFolded: BoardRow[];
   /** „Noch offen“: rows on a day before today whose thing is not done, „fest“ first, then by day. */
   open: OpenRow[];
   /** Open things in the plan today (first sessions). */
@@ -137,6 +142,12 @@ export interface BoardInput {
   blocks?: readonly PlanBlockEntry[];
   unplaced: readonly Unplaced[];
   titles?: Record<string, string>;
+  /**
+   * Collective rows (package 2, `piles.ts`): `folded` = member keys drawn inside their pile (not in „Noch ohne Tag“,
+   * not in „Frist vorbei“); `idle` = pile keys with nothing to do – an unplaced one is no row, a placed one stays (drawn
+   * as „nichts wartet“) and never goes to „Noch offen“.
+   */
+  piles?: { folded: ReadonlySet<string>; idle: ReadonlySet<string> };
 }
 
 export const unitTitle = (titles: Record<string, string>, unitId: string): string =>
@@ -180,7 +191,9 @@ export function buildBoard(input: BoardInput): Board {
     const due = lateMoneyDue(e, items.get(key), input.today);
     if (due) lateDue.set(key, due);
   }
-  const late: BoardRow[] = [...lateDue]
+  const folded = input.piles?.folded ?? new Set<string>();
+  const idle = input.piles?.idle ?? new Set<string>();
+  const lateAll: BoardRow[] = [...lateDue]
     .filter(([key]) => !items.get(key)?.excluded)
     .map(([key, due]) => {
       const entry = entries.get(key)!;
@@ -207,6 +220,9 @@ export function buildBoard(input: BoardInput): Board {
         (a.entry?.createdAt ?? 0) - (b.entry?.createdAt ?? 0) ||
         a.itemKey.localeCompare(b.itemKey),
     );
+  const late = lateAll.filter((r) => !folded.has(r.itemKey));
+  const lateFolded = lateAll.filter((r) => folded.has(r.itemKey));
+
   // A row is shown while its thing is open (planner rethink: one selector hides, nothing is tidied): a thing that
   // is done is hidden at once; one that no source lists and the last pass did not know either (its module is off)
   // is hidden until it is back. The stored row stays either way.
@@ -357,6 +373,8 @@ export function buildBoard(input: BoardInput): Board {
   const waiting: WaitingRow[] = input.unplaced
     .filter((u) => u.reason !== 'after-hard-due' || !placed.has(u.itemKey) || u.date === undefined)
     .filter((u) => entries.has(u.itemKey) && !lateDue.has(u.itemKey) && !onADay.has(u.itemKey))
+    // Inside a pile, or a pile with nothing to do that lies nowhere: no row of its own.
+    .filter((u) => !folded.has(u.itemKey) && !idle.has(u.itemKey))
     // A thing with a row is never „Noch ohne Tag“, whatever the last pass said.
     .filter((u) => u.reason !== 'no-day' || !rowDates.has(u.itemKey))
     .map((u) => ({
@@ -395,7 +413,9 @@ export function buildBoard(input: BoardInput): Board {
   // „Noch offen“ (planner rethink): what lies on a day that has passed and is not done. Nothing moved it – the
   // row is still on its day; things that are „fest“ come first (they need a new day), then by day.
   const open: OpenRow[] = input.assignments
-    .filter((a) => a.date < input.today && !lateDue.has(a.itemKey) && shown(a))
+    .filter(
+      (a) => a.date < input.today && !lateDue.has(a.itemKey) && shown(a) && !idle.has(a.itemKey),
+    )
     .filter(
       (a) =>
         !items.get(a.itemKey)?.excluded &&
@@ -460,5 +480,5 @@ export function buildBoard(input: BoardInput): Board {
   waiting.splice(0, waiting.length, ...waiting.filter((w) => w.reason !== 'later'), ...laterRows);
   const todayDay = days[0];
   const todayCount = todayDay ? new Set(todayDay.rows.map((r) => r.itemKey)).size : 0;
-  return { days, waiting, late, open, todayCount };
+  return { days, waiting, late, lateFolded, open, todayCount };
 }

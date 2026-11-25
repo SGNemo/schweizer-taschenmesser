@@ -1,12 +1,22 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo } from 'react';
 import { getMeta } from '@/core/db/metaKv';
-import { useCalendarItems, usePlanBlocks, usePlannable } from '@/core/modules/contributions';
+import {
+  useCalendarItems,
+  usePlanBlocks,
+  usePiles,
+  usePlannable,
+  type PlannableEntry,
+} from '@/core/modules/contributions';
 import { addDays } from '@/core/plan/dates';
 import { useFocusSettings } from '@/core/settings/focus';
 import { useSettings } from '@/core/settings/settings';
 import { today } from '@/core/time/now';
+import type { Folded } from '@/core/modules/pile';
 import { buildBoard, type Board } from './board';
+import { OFFER_FROM, pileOfferDismissed } from './pileSwitch';
+import { foldRows, pickOffer, pileAreas, pileUnasked } from './piles';
+import type { PileArea } from '@/core/modules/types';
 import { assignmentRepo, dayRepo, itemRepo } from './repo';
 import { LAST_RUN_KEY, requestedIds, type LastRun } from './run';
 import {
@@ -18,6 +28,15 @@ import {
 
 export interface BoardData {
   board: Board;
+  /** The collective rows of the switched-on areas (package 2): parts, folded members, counts. */
+  piles: Folded;
+  /** The plan's things by item key (`<module>:<id>`): a pile's member lines are read from them. */
+  entries: ReadonlyMap<string, PlannableEntry>;
+  /**
+   * The offer P5 (package 2): an area never asked about whose things wait in „Noch ohne Tag“ – how many of them would
+   * fold. Money before mail; the page shows it from 3 on, unless dismissed on this device.
+   */
+  pileOffer?: { area: PileArea; n: number };
   /** The days in view when they differ from the board's (package 4: a later week, the 4-week grid). */
   view?: Board['days'];
   settings: PlannerSettings;
@@ -35,6 +54,8 @@ export interface BoardData {
 export function useBoard(
   span: number,
   view?: { from: string; span: number },
+  /** The planner page only: also read what the offer P5 would fold (areas never asked, not dismissed here). */
+  opts: { offer?: boolean } = {},
 ): BoardData | undefined {
   const day = today();
   const boardEnd = addDays(day, span - 1);
@@ -60,8 +81,31 @@ export function useBoard(
   // As the run reads them: a thing without a date shows only while its item row asks for it.
   const requested = useMemo(() => (own ? requestedIds(own.itemRows) : undefined), [own]);
   const entries = usePlannable({ today: day, until }, requested);
+  // Collective rows (package 2), read live like the things themselves: the parts of the switched-on areas and of those never asked about (the offer counts what would fold).
+  const offerAreas = opts.offer
+    ? new Set([...pileUnasked(settings)].filter((a) => !pileOfferDismissed(a)))
+    : new Set<PileArea>();
+  const offerKey = [...offerAreas].join(',');
+  const areas = new Set([...pileAreas(settings), ...offerAreas]);
+  const areasKey = [...areas].join(',');
+  const parts = usePiles(
+    { today: day, until },
+    areasKey ? (areasKey.split(',') as PileArea[]) : [],
+  );
   return useMemo(() => {
-    if (!own || !entries || !calendar || !blocks) return undefined;
+    if (!own || !entries || !calendar || !blocks || !parts) return undefined;
+    const {
+      fold: piles,
+      folded,
+      idle,
+    } = foldRows(
+      parts,
+      entries,
+      pileAreas(settings),
+      own.itemRows,
+      own.assignments.map((a) => a.itemKey),
+    );
+    const fold = { folded, idle };
     const last = own.last ?? undefined;
     const titles: Record<string, string> = { ...last?.titles };
     for (const e of entries) titles[`${e.moduleId}:${e.id}`] = e.title;
@@ -77,6 +121,7 @@ export function useBoard(
       blocks,
       unplaced: last?.unplaced ?? [],
       titles,
+      piles: fold,
     });
     const shown =
       viewFrom !== undefined &&
@@ -94,9 +139,27 @@ export function useBoard(
         blocks,
         unplaced: [],
         titles,
+        piles: fold,
       }).days;
+    const unasked = new Set(offerKey ? (offerKey.split(',') as PileArea[]) : []);
+    const pileOffer = pickOffer(
+      board.waiting.map((w) => w.itemKey),
+      foldRows(
+        parts,
+        entries,
+        unasked,
+        own.itemRows,
+        own.assignments.map((a) => a.itemKey),
+      ).fold.folded,
+      unasked,
+      pileOfferDismissed,
+      OFFER_FROM,
+    );
     return {
       board,
+      piles,
+      ...(pileOffer ? { pileOffer } : {}),
+      entries: new Map(entries.map((e) => [`${e.moduleId}:${e.id}`, e])),
       ...(shown ? { view: shown } : {}),
       settings,
       planLimit: focus.planLimit,
@@ -104,5 +167,18 @@ export function useBoard(
       titles,
       today: day,
     };
-  }, [own, entries, calendar, blocks, settings, focus.planLimit, day, span, viewFrom, viewSpan]);
+  }, [
+    own,
+    entries,
+    calendar,
+    blocks,
+    parts,
+    offerKey,
+    settings,
+    focus.planLimit,
+    day,
+    span,
+    viewFrom,
+    viewSpan,
+  ]);
 }

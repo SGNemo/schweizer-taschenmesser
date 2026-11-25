@@ -263,3 +263,8 @@ it('the vault offers no panel under a plan row and no strip at the planner’s f
   expect(c).not.toHaveProperty('planPanel');
   expect(c).not.toHaveProperty('planPageFoot');
 });
+
+it('the vault is never a pile part (planner hub 2, package 2)', () => {
+  expect(manifest.contributions ?? {}).not.toHaveProperty('pile');
+  expect(manifest.contributions ?? {}).not.toHaveProperty('pileAreas');
+});

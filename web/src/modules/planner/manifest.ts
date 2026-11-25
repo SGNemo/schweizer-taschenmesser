@@ -80,6 +80,7 @@ const manifest: ModuleManifest = {
   requires: ['todos'],
   contributions: {
     notifications: () => import('./notifications'),
+    plannable: () => import('./plannable'),
     onboarding: noOnboarding,
     quickAdd: [
       {

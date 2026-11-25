@@ -81,6 +81,13 @@ export const plannerSettingsSchema = z.object({
    * thing's panel; off, the title opens the thing in its module as before. Read by the planner page only.
    */
   expandRows: z.boolean(),
+  /**
+   * „Stapel als eine Zeile“ per area (planner hub 2, package 2; COPY P10): things of the area without a day fold into
+   * one row („Finanzen checken“, „E-Mails durchgehen“). Flat and optional – settings merge per top-level key, so a
+   * change on one device never takes the other area along; `undefined` = never asked (the offer P5 may show once).
+   */
+  pileMoney: z.boolean().optional(),
+  pileMail: z.boolean().optional(),
 });
 export type PlannerSettings = z.output<typeof plannerSettingsSchema>;
 
@@ -284,6 +291,26 @@ export const settings: ModuleSettings = {
       },
       get help() {
         return s().expandRowsHelp;
+      },
+    },
+    {
+      key: 'pileMoney',
+      type: 'boolean',
+      get label() {
+        return s().pileMoney;
+      },
+      get help() {
+        return s().pileHelp;
+      },
+    },
+    {
+      key: 'pileMail',
+      type: 'boolean',
+      get label() {
+        return s().pileMail;
+      },
+      get help() {
+        return s().pileHelp;
       },
     },
     {

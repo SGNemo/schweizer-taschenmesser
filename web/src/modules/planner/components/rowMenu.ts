@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { areaOfPileId } from '@/core/modules/pile';
+import { unpile } from '../pileSwitch';
 import { dayName } from '@/core/plan/explain';
 import { t } from '@/strings';
 import type { RowMenuItem } from '@/ui';
@@ -72,6 +74,42 @@ export function useRowMenu(ctx: {
   ): RowMenuItem[] => {
     const e = row.entry;
     if (!e || !ctx.today) return [];
+    // A pile (package 2): Verschieben …, Dauer …, Fest, „Wieder einzeln zeigen“ (P11) – no „Nicht planen“, no tick;
+    // the way out is P11 or the switch.
+    const pileArea = e.moduleId === 'planner' && e.kind === 'pile' ? areaOfPileId(e.id) : undefined;
+    if (pileArea)
+      return [
+        {
+          id: 'move',
+          label: t.planner.row.move,
+          shortcut: 'M',
+          onSelect: () => setChoice({ kind: 'move', entry: e, ...(date ? { on: date } : {}) }),
+        },
+        {
+          id: 'estimate',
+          label: t.planner.row.estimate,
+          onSelect: () =>
+            setChoice({
+              kind: 'estimate',
+              entry: e,
+              current: row.item?.durationMin ?? e.durationMin ?? row.minutes,
+            }),
+        },
+        ...(date && 'pinned' in row && !row.pinned
+          ? [
+              {
+                id: 'pin',
+                label: t.planner.row.pin,
+                onSelect: () => void setLocked(e, true, titles),
+              },
+            ]
+          : []),
+        {
+          id: 'unpile',
+          label: t.planner.pile.unpile,
+          onSelect: () => void unpile(pileArea),
+        },
+      ];
     // „Frist vorbei“: the thing sits on no day, so nothing here moves, nails or orders it. What is left:
     // open it, or take it out of the plan.
     if (opts.late)

@@ -1,4 +1,6 @@
 import { compareText } from '@/core/i18n/format';
+import type { PileEntry } from './pile';
+import type { PileArea } from './types';
 import { NEVER_LINKED, refKey, type EntityRef } from '@/core/entitylinks/types';
 import { loadModuleStates, useModuleStates } from './activation';
 import { availableManifests } from '@/core/modules/available';
@@ -21,7 +23,14 @@ import type {
 /** Loads the lazy sources of one contribution kind, so a live query over them starts with them cached. */
 const preload =
   (
-    kind: 'calendarItems' | 'notifications' | 'attention' | 'headline' | 'plannable' | 'linkTarget',
+    kind:
+      | 'calendarItems'
+      | 'notifications'
+      | 'attention'
+      | 'headline'
+      | 'plannable'
+      | 'linkTarget'
+      | 'pile',
     manifests: readonly ModuleManifest[],
   ) =>
   () =>
@@ -103,6 +112,57 @@ export function usePlannable(
     `plannable|${ctx.today}|${ctx.until}|${ids}|${states === undefined}|${asked}`,
     async () => (states ? collectPlannable(ctx, activeManifests(states), requested) : undefined),
     preload('plannable', activeManifests(states)),
+  );
+}
+
+/**
+ * The parts of the planner's collective rows (planner hub 2, package 2) of all given (active) modules, in manifest
+ * order. A failing part is missing; the others stay. Never `accounts`.
+ */
+export async function collectPiles(
+  ctx: { today: string; until: string },
+  manifests: readonly ModuleManifest[],
+): Promise<PileEntry[]> {
+  const lists = await Promise.all(
+    manifests.map(async (m) => {
+      const load = m.contributions?.pile;
+      if (!load || m.id === 'accounts') return [];
+      try {
+        // Only the areas the manifest declares, and a route of the app itself (`/…`, never `//` or a scheme).
+        const areas = new Set(m.contributions?.pileAreas ?? []);
+        return (await (await load()).default(ctx))
+          .filter((p) => areas.has(p.area) && /^\/(?![/\\])/.test(p.to))
+          .map((p) => ({ ...p, moduleId: m.id }));
+      } catch (e) {
+        // The module id and the error's name only: a part's error may carry its data.
+        console.error(`[pile] source "${m.id}" failed`, e instanceof Error ? e.name : typeof e);
+        return [];
+      }
+    }),
+  );
+  return lists.flat();
+}
+
+/**
+ * Live parts of the collective rows of the given areas from all active modules; `undefined` while loading. The
+ * sources are loaded first, so the live query follows every table they read (a lazy import inside it would not).
+ */
+export function usePiles(
+  ctx: { today: string; until: string },
+  areas: readonly PileArea[],
+): PileEntry[] | undefined {
+  const states = useModuleStates();
+  const list = activeManifests(states);
+  const ids = list.map((m) => m.id).join(',');
+  return useSharedLiveQuery(
+    `piles|${ctx.today}|${ctx.until}|${ids}|${areas.join(',')}|${states === undefined}`,
+    async () =>
+      states
+        ? areas.length === 0
+          ? []
+          : (await collectPiles(ctx, list)).filter((p) => areas.includes(p.area))
+        : undefined,
+    preload('pile', list),
   );
 }
 

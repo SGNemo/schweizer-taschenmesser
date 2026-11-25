@@ -771,6 +771,45 @@ export interface HeadlineFigure {
 }
 export type HeadlineSource = (ctx: { today: string }) => Promise<HeadlineFigure | undefined>;
 
+/** The two areas a collective row stands for (planner hub 2, package 2, CONCEPT-ROWS idea 2). */
+export type PileArea = 'money' | 'mail';
+
+/**
+ * One part of a collective row („Finanzen checken“, „E-Mails durchgehen“; planner hub 2, package 2, CONCEPT-ROWS idea 2):
+ * what of one module waits in an area. Content never travels: words, a count, a fixed route and item keys.
+ */
+export interface Pile {
+  area: PileArea;
+  /** Unique within the module (`invoices`, `over`, `queue` …). */
+  id: string;
+  /**
+   * What waits besides the members (budgets over their frame, queue threads without a ToDo). Members are counted by
+   * core, once each, after its checks; a part with members passes 0 here.
+   */
+  count: number;
+  /** The part in the row's meta (COPY P3): „1 Rechnung“ / „{n} Rechnungen“. */
+  label: (n: number) => string;
+  /** The part's head in the panel (COPY P7): „Rechnungen offen“; none for a pile's only part (the mail queue). */
+  head?: string;
+  /** The jump into the filtered view (COPY P8), a fixed route of the module (`/invoices?view=open`). */
+  to: string;
+  /** The earliest hard deadline among the part's things ('YYYY-MM-DD'): the row's „Frist …“ meta. */
+  due?: string;
+  /**
+   * Item keys (`<module>:<id>`) of plannable rows the module owns or made (mail names the ToDos it created); they fold
+   * into the pile while they have no day and no lock. Core keeps a key only if it belongs to this module or – for
+   * mail – is a `todos:` key whose `origin` link points to a mail thread; never `accounts`; at most 40 per pile.
+   */
+  members?: string[];
+  /** Read-only lines (budgets over their frame): shown while the pile exists, never what keeps it, never „done“. */
+  readOnly?: boolean;
+  /** The module's own `compact` panel for the part (budgets' lines, mail's queue line): its `planPanel` with this id. */
+  panel?: string;
+}
+
+/** A module's parts of the collective rows: its own data only, never network. */
+export type PileSource = (ctx: { today: string; until: string }) => Promise<Pile[]>;
+
 /**
  * What the planner hands a module's plan panel (`contributions.planPanel`, planner hub 2, CONCEPT-ROWS idea 4).
  * `id` is the plan row's source id (`PlannableItem.id`): untrusted – an unknown or foreign id shows the panel's own
@@ -820,6 +859,10 @@ export interface ModuleContributions {
    * „Wird gesendet … · Zurückziehen“, package 4c), so closing a row never hides it. Same rules as `planPanel`.
    */
   planPageFoot?: LazyComponent;
+  /** Parts of the planner's collective rows (planner hub 2, package 2): counts, routes, member keys – never content. */
+  pile?: () => Promise<{ default: PileSource }>;
+  /** The areas of its `pile` parts, known without loading them: the planner lists a pile row from these alone. */
+  pileAreas?: readonly PileArea[];
   /** Tracked minutes per thing (time tracking only). Types only for now: first reader package TT2. */
   actuals?: () => Promise<{ default: ActualsSource }>;
   /** One large figure for the cockpit's "Großanzeige" (balance, …); the module formats it. */

@@ -322,6 +322,9 @@ export interface SourceAbility {
   split: boolean;
 }
 
+/** The planner's own module id: its source lists the collective rows (package 2). */
+const PLANNER = 'planner';
+
 /** Which sources take a tick or „Später“ back (an invoice or a cancellation does not: that stays in its module). */
 export async function sourceAbilities(): Promise<Record<string, SourceAbility>> {
   const out: Record<string, SourceAbility> = {};
@@ -333,7 +336,8 @@ export async function sourceAbilities(): Promise<Record<string, SourceAbility>> 
           done: !!s.onDone,
           assign: !!s.onAssign,
           remove: !!s.onRemove,
-          estimate: !!s.onEstimate,
+          // A pile row's length is the planner's own (`setEstimate`).
+          estimate: !!s.onEstimate || m.id === PLANNER,
           later: !!s.onLater,
           split: !!s.onSplitOff,
         };
@@ -625,6 +629,14 @@ export async function setEstimate(
   min: number,
   titles: Record<string, string>,
 ): Promise<boolean> {
+  // A pile row (package 2) is the planner's own thing: its length lives on its own item row.
+  if (e.moduleId === PLANNER)
+    return act(
+      t.planner.row.estimate,
+      t.planner.toast.estimate(short(e.title), formatMinutes(min, { compact: true })),
+      titles,
+      () => itemPatch(e, { durationMin: min }),
+    );
   const s = await source(e.moduleId);
   if (!s?.onEstimate) return false;
   return act(

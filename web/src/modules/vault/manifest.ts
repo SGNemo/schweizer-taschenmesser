@@ -91,6 +91,8 @@ const manifest: ModuleManifest = {
     notifications: () => import('./notifications'),
     // Deadlines and expiry dates in the planner; titles are category wording only (`plannable.ts`).
     plannable: () => import('./plannable'),
+    pile: () => import('./pile'),
+    pileAreas: ['money'],
     services: () => import('./services'),
   },
 };

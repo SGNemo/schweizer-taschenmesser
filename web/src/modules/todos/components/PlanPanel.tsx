@@ -15,7 +15,7 @@ import type { PlanPanelProps } from '@/core/modules/types';
 import { undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import { Checkbox, PanelLine, PanelLines } from '@/ui';
-import { taskRepo } from '../repo';
+import { setDone, taskRepo } from '../repo';
 import type { ChecklistItem } from '../schema';
 
 /** Sets one checklist line, read fresh: a sync may have changed the other lines meanwhile. */
@@ -53,10 +53,28 @@ export default function TodoPlanPanel({ id, compact }: PlanPanelProps) {
   if (task === undefined) return <PanelLoading />;
   if (task === null) return <PanelGone />;
   const checklist = task.checklist ?? [];
+  // A member line in a pile (package 2): the title and its tick – the ToDo's own „Erledigt“ with its undo toast.
   if (compact)
     return (
       <PanelLines>
-        <PanelLine>{task.title}</PanelLine>
+        <PanelLine
+          done={task.done}
+          tick={
+            <Checkbox
+              tone="neutral"
+              label={t.planner.row.doneName(task.title)}
+              labelHidden
+              checked={!!task.done}
+              onChange={(e) => {
+                const done = e.target.checked;
+                const word = done ? t.todos.markedDone : t.todos.markedOpen;
+                void undoableWithToast(word, word, () => setDone(task, done));
+              }}
+            />
+          }
+        >
+          {task.title}
+        </PanelLine>
       </PanelLines>
     );
   return (

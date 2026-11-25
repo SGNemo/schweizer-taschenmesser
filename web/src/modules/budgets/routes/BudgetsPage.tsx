@@ -22,6 +22,7 @@ import {
   Tabs,
   useAdvancedMenuItem,
   useOpenParam,
+  useViewParam,
 } from '@/ui';
 import { mainCurrencyOf, useBudgetData, useBudgetInsights } from '../data';
 import { BudgetCharts, ExampleBars } from '../components/BudgetCharts';
@@ -47,6 +48,8 @@ type Tab = 'budgets' | 'goals';
 export default function BudgetsPage() {
   const [params, setParams] = useSearchParams();
   const [tab, setTab] = useState<Tab>(params.get('tab') === 'goals' ? 'goals' : 'budgets');
+  // `?view=over` (the jump from the planner's pile): the budgets tab, where an exceeded budget says so; read once.
+  useViewParam(['over'] as const, () => setTab('budgets'));
   const [month, setMonth] = useState(monthOf(today()));
   const { data, financeOn, loading } = useBudgetData(month);
   const goals = useLiveQuery(

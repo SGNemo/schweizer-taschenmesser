@@ -9507,6 +9507,11 @@ export const de = {
         expandRows: 'Zeilen aufklappen',
         expandRowsHelp:
           'Ein Tipp auf den Titel zeigt das Ding im Planer. Aus: der Titel öffnet es in seinem Modul.',
+        // Planner hub 2, package 2 (COPY P10): one switch per area.
+        pileMoney: 'Stapel als eine Zeile: Finanzen',
+        pileMail: 'Stapel als eine Zeile: E-Mail',
+        pileHelp:
+          'Fasst Dinge aus einem Bereich zusammen, die noch keinen Tag haben. Einzeln legen kannst du sie weiter.',
       },
     },
     title: 'Planer',
@@ -9524,6 +9529,33 @@ export const de = {
       failed: 'Das hat nicht geklappt. Es ist nichts verändert.',
       tick: (step: string) => `„${step}“ abhaken`,
       more: (n: number) => `${n} weitere`,
+    },
+    // Collective rows (planner hub 2, package 2; COPY P1–P15).
+    pile: {
+      title: { money: 'Finanzen checken', mail: 'E-Mails durchgehen' },
+      area: { money: 'Finanzen', mail: 'E-Mail' },
+      invoices: (n: number) => (n === 1 ? '1 Rechnung' : `${n} Rechnungen`),
+      deadlines: (n: number) => (n === 1 ? '1 Frist' : `${n} Fristen`),
+      budgets: (n: number) => (n === 1 ? '1 Budget' : `${n} Budgets`),
+      waiting: (n: number) => (n === 1 ? '1 wartet' : `${n} warten`),
+      late: (n: number) => `Frist vorbei: ${n}`,
+      offer: (n: number, area: string) => `${n} Dinge aus ${area}`,
+      offerAction: 'Als eine Zeile zeigen',
+      offerClose: 'Nicht mehr anbieten',
+      toast: (area: string) => `${area} ist jetzt eine Zeile.`,
+      unpiled: (area: string) => `${area} steht wieder einzeln.`,
+      head: {
+        invoices: 'Rechnungen offen',
+        subscriptions: 'Kündigungsfristen',
+        budgets: 'Budgets über dem Rahmen',
+        vault: 'Unterlagen mit Frist',
+      },
+      jump: (module: string) => `In ${module} ansehen`,
+      nothing: 'nichts wartet',
+      unpile: 'Wieder einzeln zeigen',
+      things: (n: number) => (n === 1 ? '1 Ding' : `${n} Dinge`),
+      overFrame: 'über dem Rahmen',
+      planAll: (n: number) => `In den Plan … (${n})`,
     },
     head: {
       free: (min: string) => `${min} frei`,

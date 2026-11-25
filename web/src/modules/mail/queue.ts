@@ -7,6 +7,7 @@
  * agreed in the notes repo 2026-11-23). It wraps it in its own pile contribution; this module adds no event.
  */
 import { listMailAccounts } from '@/core/mail/accounts';
+import type { MailAccountRef } from '@/core/mail/types';
 import { getSettings } from '@/core/settings/settings';
 import { now } from '@/core/time/now';
 import { DEMO_ACCOUNT, DEMO_EMAIL, loadThreads, type CachedThreadView } from './cache';
@@ -151,6 +152,27 @@ export interface MailQueueSummary {
  * the count is their sum; the route opens the first account's queue (the mail page's own default).
  */
 export async function mailQueueSummary(): Promise<MailQueueSummary> {
+  const waiting = await waitingByAccount();
+  return { count: waiting.reduce((n, a) => n + a.threadIds.length, 0), target: QUEUE_ROUTE };
+}
+
+/**
+ * The queue's thread ids per account (the summary's and the planner pile's reading). Ids only – no content leaves.
+ */
+export async function waitingByAccount(): Promise<{ accountKey: string; threadIds: string[] }[]> {
+  return (await waitingQueue()).map(({ account, threads }) => ({
+    accountKey: account.key,
+    threadIds: threads.map((th) => th.id),
+  }));
+}
+
+/**
+ * The queue per account: every connected account, the demo mailbox only when none is, from the device cache, without
+ * network. For this module's own views (the pile's queue line and its `PlanAllDialog`).
+ */
+export async function waitingQueue(): Promise<
+  { account: MailAccountRef; threads: CachedThreadView[] }[]
+> {
   const prefs = (await getSettings(
     'module.mail',
     settings.schema,
@@ -158,18 +180,19 @@ export async function mailQueueSummary(): Promise<MailQueueSummary> {
   )) as MailSettings;
   // The connected accounts (a disconnected account's old cache does not count), with their own address: a
   // header refreshed in the background has lost `lastFromMe`, the sender address still tells.
-  const connected = (await listMailAccounts()).map((a) => ({ key: a.key, me: a.email }));
-  const demo =
+  const connected = await listMailAccounts();
+  const demo: MailAccountRef[] =
     (await threadRepo.table.where('accountKey').equals(DEMO_ACCOUNT).count()) > 0
-      ? [{ key: DEMO_ACCOUNT, me: DEMO_EMAIL }]
+      ? [{ key: DEMO_ACCOUNT, connectorId: 'demo', email: DEMO_EMAIL }]
       : [];
   const accounts = connected.length > 0 ? connected : demo;
   const marks = readMarks();
   const at = now();
-  let count = 0;
-  for (const { key: accountKey, me } of accounts) {
-    const threads = await loadThreads(accountKey, { limit: 200 });
-    count += waitingThreads(threads, { rule: prefs.waitingRule, marks, accountKey, me, at }).length;
+  const out: { account: MailAccountRef; threads: CachedThreadView[] }[] = [];
+  for (const account of accounts) {
+    const threads = await loadThreads(account.key, { limit: 200 });
+    const rule = { rule: prefs.waitingRule, marks, accountKey: account.key, me: account.email, at };
+    out.push({ account, threads: waitingThreads(threads, rule) });
   }
-  return { count, target: QUEUE_ROUTE };
+  return out;
 }

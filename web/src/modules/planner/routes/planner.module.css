@@ -942,3 +942,100 @@ section.sheet .headEnd button[aria-expanded='true'] {
   margin: 0 0 var(--space-2);
   color: var(--text-muted);
 }
+
+/* Collective rows (planner hub 2, package 2; hand-off 02). */
+.pileIdle {
+  color: var(--text-3);
+}
+.pile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.pilePart {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.pileHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.pileJump {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+.pileMembers {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+.pileMemberLine {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.pileMemberBody {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+/* The open member's title is 600. */
+.pileMember[data-open] .pileMemberBody {
+  font-weight: var(--weight-semibold);
+}
+.pileExpand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--touch);
+  min-height: var(--touch);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.pileExpand:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+/* The open member's panel follows its line, indented, without a surface of its own; its foot left-aligned. */
+.pileMemberPanel {
+  padding-left: var(--space-5);
+  margin-bottom: var(--space-3);
+}
+.pileMemberPanel [data-panel-foot] {
+  justify-content: flex-start;
+}
+.pileNarrow,
+.pileJumpNarrow {
+  display: none;
+}
+@media (max-width: 899px) {
+  .pileWide,
+  .pileJumpWide {
+    display: none;
+  }
+  .pileNarrow {
+    display: inline;
+  }
+  .pileJumpNarrow {
+    display: block;
+  }
+}
+.pileOffer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+.pileOffer > span {
+  margin-right: auto;
+}

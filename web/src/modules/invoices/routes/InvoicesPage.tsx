@@ -26,6 +26,7 @@ import {
   TextField,
   useAdvancedMenuItem,
   useOpenParam,
+  useViewParam,
   useSelection,
   useSplitView,
 } from '@/ui';
@@ -166,6 +167,8 @@ export default function InvoicesPage() {
     stopSelecting();
     setViewState(next);
   };
+  // `?view=open` (the jump from the planner's pile): the open invoices, read once, then off the URL.
+  useViewParam(['open'] as const, (v) => setView(v));
   const payPicked = async () => {
     const ids = ticked;
     stopSelecting();
