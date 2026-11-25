@@ -1,0 +1,114 @@
+/* The weather scene (docs/design/weather-scenes): fills the stage's backdrop; the ink of the stage's text follows
+   the scene's `data-ink` (ui/HeadSurface.module.css). Motion: mockups/scene-motion.css, 5 s, transform only. */
+.scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+/* The body's box, for the head-height check that looks for the sun (no paint). */
+.bodyBox {
+  position: absolute;
+  pointer-events: none;
+}
+/* "Ruhig" / "Modulfarben: Aus": the same shapes in greys, mixed toward the surface; ink by the theme. */
+.calm .svg {
+  filter: grayscale(1);
+}
+.calm::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--surface);
+  opacity: 0.6;
+}
+:global(:root[data-theme='dark']) .calm::after {
+  opacity: 0.45;
+}
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme='light'])) .calm::after {
+    opacity: 0.45;
+  }
+}
+
+/* Motion: only while the page asked for it (`data-motion`), finite, comes to rest on the still picture. */
+.svg[data-motion] :global(.sc-drift) {
+  animation: sc-drift 5s cubic-bezier(0.2, 0.7, 0.3, 1) 1 both;
+}
+.svg[data-motion] :global(.sc-fall) {
+  animation: sc-fall var(--dur) linear var(--n) both;
+}
+.svg[data-motion] :global(.sc-fog) {
+  animation: sc-fog 5s ease-in-out 1 both;
+}
+.svg[data-motion] :global(.sc-sway) {
+  animation: sc-sway 1.66s ease-in-out 3 both;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.svg[data-motion='run'] :global([class^='sc-']) {
+  will-change: transform;
+}
+/* At rest the end frame holds: a redraw after the five seconds (resize, theme, a new forecast) shows the still picture
+   at once instead of playing the motion again. */
+.svg[data-motion='rest'] :global([class^='sc-']) {
+  animation-duration: 0s;
+  animation-delay: 0s;
+}
+.svg[data-paused='true'] :global([class^='sc-']) {
+  animation-play-state: paused;
+}
+@keyframes sc-drift {
+  from {
+    transform: translateX(-16px);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes sc-fall {
+  from {
+    transform: none;
+  }
+  to {
+    transform: translate(var(--fx), var(--fy));
+  }
+}
+@keyframes sc-fog {
+  0%,
+  100% {
+    transform: none;
+  }
+  30% {
+    transform: translateX(20px);
+  }
+  70% {
+    transform: translateX(-20px);
+  }
+}
+@keyframes sc-sway {
+  0%,
+  100% {
+    transform: none;
+  }
+  25% {
+    transform: rotate(2deg);
+  }
+  75% {
+    transform: rotate(-2deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .svg :global([class^='sc-']) {
+    animation: none;
+  }
+}
+:global(:root[data-motion='reduce']) .svg :global([class^='sc-']) {
+  animation: none;
+}

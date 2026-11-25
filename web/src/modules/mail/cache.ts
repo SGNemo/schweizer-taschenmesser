@@ -3,11 +3,12 @@
  * with the device key, local to this device, bounded and deletable. Nothing here is synced or backed up.
  */
 import { openJson, sealJson } from '@/core/crypto/aead';
+import type { Stored } from '@/core/db/types';
 import { getDeviceKey } from '@/core/secrets/deviceKey';
 import { now } from '@/core/time/now';
 import type { MailMessage, MailThreadSummary } from '@/core/mail/types';
 import { bodyRepo, threadRepo } from './repo';
-import { threadMetaSchema, type ThreadMeta } from './schema';
+import { threadMetaSchema, type CachedBody, type CachedThread, type ThreadMeta } from './schema';
 import { dropSearchIndex, touchSearchIndex } from './searchMemory';
 
 export const DEMO_ACCOUNT = 'demo';
@@ -115,6 +116,50 @@ export async function loadThreads(
   return out;
 }
 
+/** A cached header row as the list shows it, read through the device key; undefined when unreadable here. */
+async function viewOf(r: Stored<CachedThread>): Promise<CachedThreadView | undefined> {
+  let meta: ThreadMeta | undefined = r.demo;
+  if (!meta && r.sealed) {
+    try {
+      meta = threadMetaSchema.parse(await openJson(await getDeviceKey(), r.id, r.sealed));
+    } catch {
+      return undefined; // sealed with a key this device no longer has
+    }
+  }
+  if (!meta) return undefined;
+  return { id: r.threadId, date: r.sortKey, unread: r.unread, ...meta, demo: r.demo !== undefined };
+}
+
+/**
+ * A thread for its plan row (package 4c): the first of the accounts whose cache holds it, its header and its cached
+ * messages, oldest first. Every Dexie read comes before the first decrypt, so a live query around this sees later
+ * changes to these rows (an await outside Dexie ends its tracking). Thread ids are the provider's, unique per account;
+ * the first account that holds one wins.
+ */
+export async function loadPlanThread(
+  accountKeys: string[],
+  thread: string,
+): Promise<{ accountKey: string; view: CachedThreadView; messages: MailMessage[] } | undefined> {
+  const heads = await Promise.all(accountKeys.map((k) => threadRepo.get(threadId(k, thread))));
+  // Through the thread index: a write to another thread's body does not wake this query.
+  const bodies = (await bodyRepo.table.where('threadId').equals(thread).toArray()).filter(
+    (r) => r.deletedAt === null,
+  );
+  for (const [i, head] of heads.entries()) {
+    if (!head || head.deletedAt !== null) continue;
+    const view = await viewOf(head);
+    if (!view) continue;
+    const accountKey = accountKeys[i]!;
+    const messages: MailMessage[] = [];
+    for (const r of bodies.filter((b) => b.accountKey === accountKey)) {
+      const m = await bodyOf(r);
+      if (m) messages.push(m);
+    }
+    return { accountKey, view, messages: messages.sort((a, b) => a.date - b.date) };
+  }
+  return undefined;
+}
+
 /**
  * After a confirmed change at the service (mark read, archive, label, trash): the same change in the
  * saved header, so the list is right before the next refresh. A thread that left the inbox keeps its row
@@ -172,9 +217,12 @@ export async function loadBody(
   accountKey: string,
   messageId: string,
 ): Promise<MailMessage | undefined> {
-  const id = threadId(accountKey, messageId);
-  const row = await bodyRepo.get(id);
-  if (!row) return undefined;
+  const row = await bodyRepo.get(threadId(accountKey, messageId));
+  return row ? bodyOf(row) : undefined;
+}
+
+/** A cached body row as a message: demo rows as they are, sealed ones through the device key. */
+async function bodyOf(row: Stored<CachedBody>): Promise<MailMessage | undefined> {
   if (row.demo)
     return {
       id: row.messageId,
@@ -193,7 +241,7 @@ export async function loadBody(
     };
   if (!row.sealed) return undefined;
   try {
-    return (await openJson(await getDeviceKey(), id, row.sealed)) as MailMessage;
+    return (await openJson(await getDeviceKey(), row.id, row.sealed)) as MailMessage;
   } catch {
     return undefined;
   }

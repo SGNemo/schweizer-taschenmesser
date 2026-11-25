@@ -6,7 +6,7 @@ import type { EventMap } from '@/core/events/events';
 import { getManifest } from '@/core/modules/registry';
 import { setNow } from '@/core/time/now';
 import { addLink, plannedDay } from './index';
-import { planMarkName, planMarkOf, planMarkPath, planMarks, planMarkText } from './planMark';
+import { planMarkName, planMarkOf, planMarkPath, planMarks, planMarkText } from './planMarkRead';
 import { planFacts, planRowAction, planRowEntries, planRowState, requestIntoPlan } from './planRow';
 
 const planner = getManifest('planner')!;

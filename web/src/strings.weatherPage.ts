@@ -54,7 +54,13 @@ export const tWeatherPage = defineBundle(
     legendNight: 'Nacht',
     daysTitle: '7 Tage',
     warnLabel: 'Wetterhinweis',
-    warnSource: 'Aus den Vorhersagedaten berechnet, keine amtliche Warnung.',
+    warnComputed: 'berechnet, keine amtliche Warnung',
+    sceneSetting: 'Bild im Wetter-Kopf',
+    sceneSettingHelp:
+      'Zeigt Wetter, Tageszeit und Mond als Bild. Bewegung läuft beim Öffnen fünf Sekunden und kommt dann zur Ruhe.',
+    sceneMotion: 'Mit Bewegung',
+    sceneStill: 'Standbild',
+    scenePlain: 'Schlicht (nur Himmel)',
     warn: {
       storm: (day: string) => `${day}: Gewitter`,
       wind: (day: string, n: number) => `${day}: Sturmböen bis ${n} km/h`,
@@ -117,7 +123,13 @@ export const tWeatherPage = defineBundle(
       legendNight: 'Night',
       daysTitle: '7 days',
       warnLabel: 'Weather notice',
-      warnSource: 'Worked out from the forecast data, not an official warning.',
+      warnComputed: 'calculated, not an official warning',
+      sceneSetting: 'Picture in the weather head',
+      sceneSettingHelp:
+        'Shows weather, time of day and moon as a picture. Motion runs for five seconds when you open the page and then comes to rest.',
+      sceneMotion: 'With motion',
+      sceneStill: 'Still picture',
+      scenePlain: 'Plain (sky only)',
       warn: {
         storm: (day: string) => `${day}: thunderstorm`,
         wind: (day: string, n: number) => `${day}: gusts up to ${n} km/h`,

@@ -1,6 +1,6 @@
 /**
  * The mark „Im Plan · Mi“ (planner hub 2, hand-off 10, COPY M1–M6): one muted text link with the planner glyph that
- * leads to the plan row it matched (`planMark.ts`). Nothing is drawn while loading, while the planner is off and when
+ * leads to the plan row it matched (`planMarkRead.ts`). Nothing is drawn while loading, while the planner is off and when
  * the thing is not in the plan – no colour, no tone, no count.
  *
  *  - `variant="meta"`: a row's line – inside an `ItemRow` it goes into `below`, the line directly under the meta (the
@@ -21,7 +21,7 @@ import {
   planMarkText,
   type PlanMarkInput,
   type PlanMarkState,
-} from './planMark';
+} from './planMarkRead';
 import styles from './PlanMark.module.css';
 
 export type PlanMarkVariant = 'meta' | 'detail';

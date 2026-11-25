@@ -67,6 +67,8 @@ const HIGHER = ['rightKind', 'linkedToPlan', 'doneInPlanner', 'markVisible', 'ma
  * no „Antworten“ to press today – its IST counts the way to the open thread (row chip „Aus Mail“ → /mail: 1).
  * B after 4b (2026-11-25): invoices and cancellations are worked off in their rows – `moduleSwitches` 3, `doneInPlanner`
  * 5, `rowsAfter` 0; `taps` and `perThing` keep their IST (measured 28 / 21, phone 16 / 13: the named PRICE until 2).
+ * B after 4c (2026-11-25): `replySwitches` 0 – the planned mail's row expands and „Antworten“ opens mail's compose
+ * window over the planner (the demo threads carry one cached message each; the figure counts once that window is open).
  */
 // prettier-ignore
 const IST: Record<string, Figures> = {
@@ -74,7 +76,7 @@ const IST: Record<string, Figures> = {
   'A1 Alles ins Planer-Feld · pixel-7': { rows: 11, moduleSwitches: 0, taps: 12, perThing: 0, rightKind: 4, linkedToPlan: 4 },
   'A2 Jedes Ding als richtige Art · desktop-chrome': { rows: 8, moduleSwitches: 3, taps: 33, perThing: 13, forms: 2, fields: 5, rightKind: 12, linkedToPlan: 11 },
   'A2 Jedes Ding als richtige Art · pixel-7': { rows: 8, moduleSwitches: 5, taps: 34, perThing: 14, forms: 2, fields: 5, rightKind: 12, linkedToPlan: 11 },
-  'B Finanzen und Mails abarbeiten · desktop-chrome': { rowsBefore: 5, taps: 27, perThing: 17, moduleSwitches: 3, doneInPlanner: 5, rowsAfter: 0, mails: 4, replySwitches: 1 },
+  'B Finanzen und Mails abarbeiten · desktop-chrome': { rowsBefore: 5, taps: 27, perThing: 17, moduleSwitches: 3, doneInPlanner: 5, rowsAfter: 0, mails: 4, replySwitches: 0 },
   'B Finanzen und Mails abarbeiten · pixel-7': { rowsBefore: 5, taps: 14, perThing: 9, moduleSwitches: 3, doneInPlanner: 5, rowsAfter: 0, mails: 'nicht möglich', replySwitches: 'nicht möglich' },
   'C1 Bündel Haushalt · desktop-chrome': { rows: 1, createTaps: 12, workTaps: 7, taps: 19, perThing: 6, moduleSwitches: 4, nextStepOnly: 'nein', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
   'C1 Bündel Haushalt · pixel-7': { rows: 1, createTaps: 12, workTaps: 7, taps: 19, perThing: 6, moduleSwitches: 5, nextStepOnly: 'nein', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
@@ -873,6 +875,21 @@ const financeScene = {
       personal: true,
     },
   })),
+  // One cached message per thread (package 4c: the panel shows its text and answers it; the demo mailbox loads none).
+  mail_body: MAILS.map((m, i) => ({
+    id: `demo|m${i}`,
+    accountKey: 'demo',
+    messageId: `m${i}`,
+    threadId: `t${i}`,
+    sortKey: 1_796_000_000_000 + i,
+    demo: {
+      from: { name: m.from, email: `person${i}@example.org` },
+      to: [{ email: 'test@example.org' }],
+      subject: m.subject,
+      date: 1_796_000_000_000 + i,
+      text: 'Kannst du mir bitte kurz antworten?',
+    },
+  })),
 };
 
 /** The budget: never in the plan – a look on its page (its navigation names the thing). */
@@ -937,8 +954,9 @@ test('B Finanzen und Mails abarbeiten', async ({ page, isMobile }, info) => {
     await expect(page.getByTestId(`day-${TODAY}`)).toBeVisible();
     await expect.poll(async () => (await fromMail()).length).toBe(MAILS.length);
     // Answering one planned mail (package 4c): route changes from the planner until the reply editor of the first one
-    // is open – its row's link chip („Aus Mail“, else ⋯ · „Öffnen“), then „Antworten“; nothing is sent. Its own hand:
-    // the flow's figures stay as they were (its routes are taken back off the flow's list, the page returns unseen).
+    // is open – since 4c its row expands (mail's panel over the ToDo) and „Antworten“ opens mail's compose window over
+    // the planner; nothing is sent. Its own hand: the flow's figures stay as they were (its routes are taken back off
+    // the flow's list, the page returns unseen).
     const mark = hand.places.length;
     const reply = new Hand(page, isMobile);
     reply.start();
@@ -950,25 +968,17 @@ test('B Finanzen und Mails abarbeiten', async ({ page, isMobile }, info) => {
         has: page.getByRole('button', { name: `Aktionen für ${first.title}`, exact: true }),
       })
       .first();
-    const chip = mailRow.locator('[data-link-chip]').first();
-    if (await chip.count()) await reply.tap(chip, 'Chip Aus Mail');
-    else {
-      await reply.tap(
-        mailRow.getByRole('button', { name: `Aktionen für ${first.title}`, exact: true }),
-        `⋯ ${first.title}`,
-      );
-      await reply.tap(page.getByRole('menuitem', { name: 'Öffnen', exact: true }), 'Öffnen');
-    }
-    // The thread on screen (mail's reading pane). The demo mailbox has no message body offline („Die Mail konnte nicht
-    // geladen werden.“), so there may be no „Antworten“ to press: then the figure counts the way to the open thread.
-    await expect(page).toHaveURL(/\/mail/);
-    await expect(page.getByRole('button', { name: 'Zur Liste' }).first()).toBeVisible();
-    const answer = page.getByRole('button', { name: 'Antworten', exact: true }).first();
-    if (await appears(answer, 1500)) {
+    await reply.tap(mailRow.locator('button[data-row]').first(), `Aufklappen: ${first.title}`);
+    const box = mailRow.getByTestId('row-compartment');
+    await expect(box).toBeVisible();
+    const answer = box.getByRole('button', { name: 'Antworten', exact: true });
+    if (await appears(answer, 2500)) {
       await reply.tap(answer, 'Antworten');
-      replyEditor = await appears(page.getByRole('dialog').first());
+      replyEditor = await appears(page.getByRole('dialog', { name: 'Antworten' }).first());
+      await page.keyboard.press('Escape');
     }
-    replySwitches = reply.moduleSwitches;
+    // The figure counts only once mail's compose window is open (FIGURES §6, 4c).
+    replySwitches = replyEditor ? reply.moduleSwitches : 'nicht möglich';
     replyPath = reply.path;
     await page.goto('/planner');
     await expect(page.getByTestId(`day-${TODAY}`)).toBeVisible();

@@ -136,7 +136,9 @@ describe('weather words by WMO code (package 1a)', () => {
     renderPage();
     const head = await screen.findByTestId('weather-now');
     await waitFor(() => expect(head).toHaveTextContent('bedeckt · Sturmböen'));
-    expect(head).not.toHaveTextContent('Schnee liegt');
-    expect(head).not.toHaveTextContent('Frost');
+    // The detail line (the figure), not the hint pill under it (which may name a frost day).
+    const detail = head.firstElementChild!;
+    expect(detail).not.toHaveTextContent('Schnee liegt');
+    expect(detail).not.toHaveTextContent('Frost');
   });
 });

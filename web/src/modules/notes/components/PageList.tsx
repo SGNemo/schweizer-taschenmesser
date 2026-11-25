@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { compareText } from '@/core/i18n/format';
 import { PlanMarkLink, usePlanMarks } from '@/core/entitylinks/PlanMark';
-import type { PlanMarkState } from '@/core/entitylinks/planMark';
+import type { PlanMarkState } from '@/core/entitylinks/planMarkRead';
 import { t } from '@/strings';
 import {
   Button,

@@ -36,6 +36,7 @@
 }
 .footStart {
   display: inline-flex;
+  align-items: center;
   flex-wrap: wrap;
   gap: var(--space-2);
   margin-right: auto;
@@ -51,10 +52,20 @@
   }
 }
 
+/* Stays in sight at the bottom while it holds something (a send window's „Zurückziehen“ after „Senden“ far up). */
 .pageFoot {
+  position: sticky;
+  bottom: 0;
+  z-index: var(--z-sticky);
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+}
+@media (max-width: 899px) {
+  /* Above the bottom bar (a later strip may live on the phone; mail's does not). */
+  .pageFoot {
+    bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom));
+  }
 }
 
 /* A ToDo's note: the first three lines (hand-off 04). */
@@ -66,4 +77,29 @@
   -webkit-line-clamp: 3;
   line-clamp: 3;
   overflow: hidden;
+}
+
+/* A module's text (`PanelText`): mail's sender · day, subject and first lines (package 4c). */
+.meta {
+  font-size: var(--text-meta);
+  color: var(--text-3);
+}
+.title {
+  font-weight: var(--weight-semibold);
+}
+.body {
+  margin-top: var(--space-2);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  line-clamp: 6;
+  overflow: hidden;
+}
+@media (max-width: 1100px) {
+  .body {
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+  }
 }

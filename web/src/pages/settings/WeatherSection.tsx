@@ -4,16 +4,21 @@ import { searchPlaces, type Place } from '@/core/weather/api';
 import {
   chooseWeatherPlace,
   clearWeatherPlace,
+  sceneModeOf,
   setWeatherEnabled,
+  setWeatherScene,
   useWeatherSettings,
+  type SceneMode,
 } from '@/core/weather/settings';
 import { tWeather } from '@/strings.weather';
-import { Button, Switch, TextField, SettingRow } from '@/ui';
+import { tWeatherPage } from '@/strings.weatherPage';
+import { Button, SelectField, Switch, TextField, SettingRow } from '@/ui';
 import styles from './settings.module.css';
 
 /** Weather line: the switch, the chosen place and a place search (one request per search, on a click). */
 export function WeatherSection() {
   const tx = tWeather.use();
+  const tp = tWeatherPage.use();
   const [settings] = useWeatherSettings();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Place[] | undefined>();
@@ -89,6 +94,18 @@ export function WeatherSection() {
             {tx.attributionLink}
           </a>
         </p>
+      </SettingRow>
+      <SettingRow id="weather--scene" label={tp.sceneSetting} description={tp.sceneSettingHelp}>
+        <SelectField
+          label={tp.sceneSetting}
+          labelHidden
+          value={sceneModeOf(settings)}
+          onChange={(e) => void setWeatherScene(e.target.value as SceneMode)}
+        >
+          <option value="motion">{tp.sceneMotion}</option>
+          <option value="still">{tp.sceneStill}</option>
+          <option value="plain">{tp.scenePlain}</option>
+        </SelectField>
       </SettingRow>
     </>
   );

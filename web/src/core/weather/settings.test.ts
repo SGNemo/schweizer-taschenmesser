@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { beforeEach } from 'vitest';
 import { db } from '@/core/db/db';
+import { setSettings } from '@/core/settings/settings';
 import {
   addExtraPlace,
+  chooseWeatherPlace,
+  sceneModeOf,
   DEFAULT_WEATHER,
   getWeatherSettings,
   isWeatherActive,
@@ -34,6 +37,16 @@ describe('weather settings', () => {
 describe('extra places', () => {
   beforeEach(async () => {
     await db.table('_settings').clear();
+  });
+
+  it('a picture mode this version does not know reads as the default and keeps the place', async () => {
+    await chooseWeatherPlace('Lindenau', 50.1, 10.2);
+    await setSettings('weather', { scene: 'xyz' } as never);
+    const s = await getWeatherSettings();
+    expect(s.place).toBe('Lindenau');
+    expect(sceneModeOf(s)).toBe('motion');
+    await setSettings('weather', { scene: 'plain' } as never);
+    expect(sceneModeOf(await getWeatherSettings())).toBe('plain');
   });
 
   it('starts without extra places (older stored settings have no `extra` at all)', async () => {

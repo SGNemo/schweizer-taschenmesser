@@ -13,9 +13,9 @@ import { PlaceChips } from '../components/PlaceChips';
 import { WeatherAir } from '../components/WeatherAir';
 import { WeatherChart } from '../components/WeatherChart';
 import { WarningNotice } from '../components/WarningNotice';
-import { WeatherHero, WeatherHeroPending } from '../components/WeatherHero';
+import { WeatherHero, WeatherHeroPending, WeatherSceneDefault } from '../components/WeatherHero';
 import { weatherWarnings } from '../warnings';
-import { HeroSlot, SignatureMark, Sky } from '@/ui/identity';
+import { SignatureMark } from '@/ui/identity';
 import { useViewedForecast } from '../useViewedForecast';
 import styles from './weather.module.css';
 
@@ -47,10 +47,8 @@ export default function WeatherPage() {
     return (
       <>
         <PageTitle title={tx.title} />
-        {/* C26: the sky stays in the head without a place (a calm day sky); the next step sits in the body. */}
-        <HeroSlot area="backdrop">
-          <Sky kind="clear" />
-        </HeroSlot>
+        {/* C26: the scene stays in the head without a place (a calm day); the next step sits in the body. */}
+        <WeatherSceneDefault />
         <div className={styles.empty} data-testid="weather-empty">
           <EmptyState title={tp.emptyTitle} motif={<SignatureMark id="sky" size={64} />}>
             <p>{tp.emptyText}</p>
@@ -68,12 +66,13 @@ export default function WeatherPage() {
   const days = weather ? dayRows(weather.forecast, nowIso.slice(0, 10)) : [];
   const ready = !!weather?.forecast.hours && !!weather.forecast.days;
   const warnings = weather ? weatherWarnings(days) : [];
+  const lat = index > 0 ? (settings.extra[index - 1]?.lat ?? settings.lat) : settings.lat;
 
   return (
     <>
       <PageTitle title={title} />
       {weather ? (
-        <WeatherHero weather={weather} warnings={late ? [] : warnings} />
+        <WeatherHero weather={weather} warnings={late ? [] : warnings} lat={lat} />
       ) : loading ? (
         <WeatherHeroPending />
       ) : null}

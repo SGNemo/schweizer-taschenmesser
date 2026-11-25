@@ -1,6 +1,6 @@
 import type { Stored } from '@/core/db/types';
 import { PlanMarkLink } from '@/core/entitylinks/PlanMark';
-import type { PlanMarkState } from '@/core/entitylinks/planMark';
+import type { PlanMarkState } from '@/core/entitylinks/planMarkRead';
 import { copyData } from '@/core/db/copy';
 import { bus } from '@/core/events';
 import { loadModuleStates, useModuleStates } from '@/core/modules/activation';

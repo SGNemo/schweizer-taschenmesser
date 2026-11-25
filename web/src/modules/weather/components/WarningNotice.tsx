@@ -15,8 +15,20 @@ const ICON: Record<WarningKind, IconName> = {
   frost: 'thermometer',
 };
 
-/** One line per hint above the head: icon + words ("Freitag: Sturmböen bis 70 km/h"), and what the hint is based on. */
-export function WarningNotice({ warnings, today }: { warnings: WeatherWarning[]; today: string }) {
+/**
+ * The hint of the day as a pill: one line per hint, icon + words ("Freitag: Sturmböen bis 70 km/h"), then once
+ * "berechnet, keine amtliche Warnung". In the stage under the detail line (`inStage`), or full width under the head
+ * when the forecast came late. Opaque, with the theme's own ink whatever the scene behind it.
+ */
+export function WarningNotice({
+  warnings,
+  today,
+  inStage = false,
+}: {
+  warnings: WeatherWarning[];
+  today: string;
+  inStage?: boolean;
+}) {
   const tp = tWeatherPage.use();
   const tx = tWeather.use();
   const dayFmt = dateTimeFormat({ weekday: 'long' });
@@ -42,6 +54,7 @@ export function WarningNotice({ warnings, today }: { warnings: WeatherWarning[];
   return (
     <div
       className={styles.warn}
+      data-in-stage={inStage ? 'true' : undefined}
       role="note"
       aria-label={tp.warnLabel}
       data-testid="weather-warning"
@@ -49,12 +62,15 @@ export function WarningNotice({ warnings, today }: { warnings: WeatherWarning[];
       <ul>
         {warnings.map((w) => (
           <li key={w.kind}>
-            <Icon name={ICON[w.kind]} size={18} />
+            <Icon name={ICON[w.kind]} size={16} />
             <span>{line(w)}</span>
           </li>
         ))}
       </ul>
-      <p>{tp.warnSource}</p>
+      <span className={styles.sep} aria-hidden="true">
+        ·
+      </span>
+      <span className={styles.computed}>{tp.warnComputed}</span>
     </div>
   );
 }

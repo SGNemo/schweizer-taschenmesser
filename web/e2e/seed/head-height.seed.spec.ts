@@ -240,6 +240,29 @@ test.describe('weather stage with weather data (K3)', () => {
         }
         // The phone has a module row: both must be found, or the check says nothing. Desktop has none.
         expect(overlap, 'the module row lies across the sun').toBe(phone ? false : 'no module row');
+        // Weather scenes 1b: the scene's own body (the sun's disc, not its soft halo) is clear of the module row too.
+        const bodyOverlap = await page.evaluate(() => {
+          const row = document.querySelector('nav[data-module-row]')?.getBoundingClientRect();
+          const discs = [
+            ...document.querySelectorAll<SVGCircleElement>(
+              '[data-testid="module-frame"] [data-layer="body"] circle',
+            ),
+          ].filter((c) => !(c.getAttribute('fill') ?? '').startsWith('url('));
+          if (discs.length === 0) return 'no body';
+          if (!row || row.height === 0) return 'no module row';
+          return discs.some((c) => {
+            const b = c.getBoundingClientRect();
+            return !(
+              b.bottom <= row.top ||
+              b.top >= row.bottom ||
+              b.right <= row.left ||
+              b.left >= row.right
+            );
+          });
+        });
+        expect(bodyOverlap, 'the module row lies across the scene body').toBe(
+          phone ? false : 'no module row',
+        );
         console.log(`weather stage with data ${phone ? 'phone' : 'desktop'}: ${head?.height}`);
       });
     });

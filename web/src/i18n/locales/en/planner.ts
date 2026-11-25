@@ -63,6 +63,7 @@ export const planner: Strings['planner'] = {
     gone: 'No longer exists.',
     takeOut: 'Take out of the plan',
     unavailable: 'Not available on this device.',
+    mailOnComputer: 'Answer mail on your computer.',
     failed: 'That did not work. Nothing was changed.',
     tick: (step: string) => `Tick “${step}”`,
     more: (n: number) => `${n} more`,
