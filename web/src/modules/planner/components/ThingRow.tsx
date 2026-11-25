@@ -252,7 +252,12 @@ export function ThingRow({
   const action = onDone ? undefined : entry?.action;
   const links = useRowLinks(entry);
   const pile = usePileOf(entry);
-  const stepsFoot = useStepsFoot(entry, row.unitId, useRoutineMenu(entry));
+  // The foot only exists in an open compartment: its lookups run only there.
+  const stepsFoot = useStepsFoot(
+    entry,
+    row.unitId,
+    useRoutineMenu(expand?.open ? entry : undefined),
+  );
   const opens = expandParts(
     select ? undefined : expand,
     entry,
@@ -491,7 +496,11 @@ export function WaitRow({
   const links = useRowLinks(row.entry);
   const linkMenu = useLinkMenu(links);
   const pile = usePileOf(row.entry);
-  const stepsFoot = useStepsFoot(row.entry, row.unitId, useRoutineMenu(row.entry));
+  const stepsFoot = useStepsFoot(
+    row.entry,
+    row.unitId,
+    useRoutineMenu(expand?.open ? row.entry : undefined),
+  );
   const opens = expandParts(expand, row.entry, row.unitId, row.title, links, row, pile, stepsFoot);
   const stepsWord = stepsFact(row.entry);
   // A pile (package 2): the area's glyph in front, its parts in the meta (a pile with nothing to do is no row here).

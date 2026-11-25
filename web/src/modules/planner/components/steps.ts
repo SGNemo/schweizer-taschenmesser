@@ -55,10 +55,7 @@ export function useRoutineMenu(entry: PlannableEntry | undefined): RowMenuItem[]
   const key = entry
     ? `${entry.moduleId}:${entry.id}:${entry.link ? 1 : 0}:${entry.steps?.length ?? 0}`
     : '';
-  const can = useLiveQuery(
-    async () => (entry ? canSaveAsRoutine(entry) : false),
-    [key],
-  );
+  const can = useLiveQuery(async () => (entry ? canSaveAsRoutine(entry) : false), [key]);
   if (!can || !entry) return [];
   return [
     {

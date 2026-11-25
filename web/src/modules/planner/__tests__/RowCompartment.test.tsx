@@ -117,7 +117,7 @@ describe('expanding a plan row', () => {
     page();
     const first = await screen.findByRole(
       'button',
-      { name: 'Haushalt. Aufklappen' },
+      { name: /^Haushalt.*\. Aufklappen$/ },
       { timeout: 5000 },
     );
     // Let the page settle (its own reads and first-visit writes) before the spy listens.
@@ -149,7 +149,7 @@ describe('expanding a plan row', () => {
     expect(spy.writes).toEqual([]);
 
     // A tick in the panel: ToDos' own write, nothing of the planner's.
-    fireEvent.click(screen.getByRole('button', { name: 'Haushalt. Aufklappen' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Haushalt.*\. Aufklappen$/ }));
     const tick = await screen.findByRole('checkbox', { name: '„Bad wischen“ abhaken' });
     fireEvent.click(tick);
     await waitFor(async () =>
@@ -172,7 +172,7 @@ describe('expanding a plan row', () => {
     await place('Haushalt', 0);
     page();
     fireEvent.click(
-      await screen.findByRole('button', { name: 'Haushalt. Aufklappen' }, { timeout: 5000 }),
+      await screen.findByRole('button', { name: /^Haushalt.*\. Aufklappen$/ }, { timeout: 5000 }),
     );
     fireEvent.click(await screen.findByRole('button', { name: 'Ganz öffnen' }));
     expect(await screen.findByText('ToDos-Seite')).toBeInTheDocument();
@@ -197,7 +197,7 @@ describe('a row that leaves while open', () => {
     await place('Steuer', 1);
     page();
     fireEvent.click(
-      await screen.findByRole('button', { name: 'Haushalt. Aufklappen' }, { timeout: 5000 }),
+      await screen.findByRole('button', { name: /^Haushalt.*\. Aufklappen$/ }, { timeout: 5000 }),
     );
     const open = await screen.findByRole('button', { name: 'Ganz öffnen' });
     open.focus();
