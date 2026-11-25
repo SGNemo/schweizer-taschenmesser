@@ -65,6 +65,8 @@ const HIGHER = ['rightKind', 'linkedToPlan', 'doneInPlanner', 'markVisible', 'ma
  * where its navigation does (area in the bottom bar, the module used last there) and where a module is desktop-only
  * (mail). B `replySwitches` (added 2026-11-23, round 3): the demo mailbox loads no message body offline, so there is
  * no „Antworten“ to press today – its IST counts the way to the open thread (row chip „Aus Mail“ → /mail: 1).
+ * B after 4b (2026-11-25): invoices and cancellations are worked off in their rows – `moduleSwitches` 3, `doneInPlanner`
+ * 5, `rowsAfter` 0; `taps` and `perThing` keep their IST (measured 28 / 21, phone 16 / 13: the named PRICE until 2).
  */
 // prettier-ignore
 const IST: Record<string, Figures> = {
@@ -72,8 +74,8 @@ const IST: Record<string, Figures> = {
   'A1 Alles ins Planer-Feld · pixel-7': { rows: 11, moduleSwitches: 0, taps: 12, perThing: 0, rightKind: 4, linkedToPlan: 4 },
   'A2 Jedes Ding als richtige Art · desktop-chrome': { rows: 8, moduleSwitches: 3, taps: 33, perThing: 13, forms: 2, fields: 5, rightKind: 12, linkedToPlan: 11 },
   'A2 Jedes Ding als richtige Art · pixel-7': { rows: 8, moduleSwitches: 5, taps: 34, perThing: 14, forms: 2, fields: 5, rightKind: 12, linkedToPlan: 11 },
-  'B Finanzen und Mails abarbeiten · desktop-chrome': { rowsBefore: 5, taps: 27, perThing: 17, moduleSwitches: 5, doneInPlanner: 1, rowsAfter: 1, mails: 4, replySwitches: 1 },
-  'B Finanzen und Mails abarbeiten · pixel-7': { rowsBefore: 5, taps: 14, perThing: 9, moduleSwitches: 5, doneInPlanner: 1, rowsAfter: 1, mails: 'nicht möglich', replySwitches: 'nicht möglich' },
+  'B Finanzen und Mails abarbeiten · desktop-chrome': { rowsBefore: 5, taps: 27, perThing: 17, moduleSwitches: 3, doneInPlanner: 5, rowsAfter: 0, mails: 4, replySwitches: 1 },
+  'B Finanzen und Mails abarbeiten · pixel-7': { rowsBefore: 5, taps: 14, perThing: 9, moduleSwitches: 3, doneInPlanner: 5, rowsAfter: 0, mails: 'nicht möglich', replySwitches: 'nicht möglich' },
   'C1 Bündel Haushalt · desktop-chrome': { rows: 1, createTaps: 12, workTaps: 7, taps: 19, perThing: 6, moduleSwitches: 4, nextStepOnly: 'nein', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
   'C1 Bündel Haushalt · pixel-7': { rows: 1, createTaps: 12, workTaps: 7, taps: 19, perThing: 6, moduleSwitches: 5, nextStepOnly: 'nein', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
   'C2 Besorgung · desktop-chrome': { rows: 2, createTaps: 0, workTaps: 9, perThing: 5, moduleSwitches: 2, oneRow: 'nein', mapShown: 'nicht möglich' },
@@ -873,6 +875,30 @@ const financeScene = {
   })),
 };
 
+/** The budget: never in the plan – a look on its page (its navigation names the thing). */
+async function lookAtBudget(hand: Hand, page: Page, isMobile: boolean) {
+  await go(hand, page, isMobile, 'budgets', 'Budget');
+  await expect(
+    page
+      .locator('main')
+      .getByText(/drüber/)
+      .first(),
+  ).toBeVisible();
+}
+
+/** A plan row (by its key, or a key's prefix ending in „:“) expanded by its title (package 4a); its compartment. */
+async function expandRow(hand: Hand, page: Page, key: string, thing: string) {
+  const row = page
+    .locator(key.endsWith(':') ? `[data-row-key^="${key}"]` : `[data-row-key="${key}"]`)
+    .filter({ has: page.locator('button[data-row][aria-expanded]') })
+    .first();
+  await expect(row).toBeVisible();
+  await hand.tap(row.locator('button[data-row]').first(), `Aufklappen: ${thing}`, thing);
+  const box = row.getByTestId('row-compartment');
+  await expect(box).toBeVisible();
+  return box;
+}
+
 test('B Finanzen und Mails abarbeiten', async ({ page, isMobile }, info) => {
   const name = 'B Finanzen und Mails abarbeiten';
   await prepare(page, isMobile, financeScene);
@@ -886,86 +912,29 @@ test('B Finanzen und Mails abarbeiten', async ({ page, isMobile }, info) => {
     'Budget',
     ...MAILS.map((m) => m.subject),
   ];
-  // 1 The invoices: no tick in the plan (the late one's „Bezahlt …“ is a route to the invoice) – one trip to
-  //   Rechnungen pays all three: „Als bezahlt markieren“ (and „Bezahlt“ where it asks).
-  await go(hand, page, isMobile, 'invoices');
-  for (const inv of INVOICES) {
-    const row = page
-      .locator('main li')
-      .filter({ hasText: inv.payee })
-      .filter({ has: page.getByRole('button', { name: 'Als bezahlt markieren' }) })
-      .first();
-    await hand.tap(
-      row.getByRole('button', { name: 'Als bezahlt markieren' }),
-      `Bezahlt: ${inv.payee}`,
-      inv.payee,
-    );
-    const ask = page.getByRole('dialog', { name: `${inv.payee} bezahlt?` });
-    if (await appears(ask, 1500)) {
-      await hand.tap(
-        ask.getByRole('button', { name: 'Bezahlt', exact: true }),
-        'Bezahlt',
-        inv.payee,
-      );
-      await expect(ask).toHaveCount(0);
-    }
-    await expect
-      .poll(
-        async () =>
-          (await rows<{ id: string; status: string }>(page, 'invoices_invoice')).find(
-            (r) => r.id === inv.id,
-          )?.status,
-      )
-      .toBe('paid');
-  }
-  // 2 The cancellations: the module has no step of its own – cancelling is „Gekündigt zum“ in the entry. The one
-  //   that goes: open it, the date, „Speichern“.
-  const [cancel, keep] = SUBSCRIPTIONS;
-  await go(hand, page, isMobile, 'subscriptions');
-  await hand.tap(
-    page.locator('main').getByText(cancel!.name, { exact: true }).first(),
-    `Abo öffnen: ${cancel!.name}`,
-    cancel!.name,
-  );
-  const editor = page.getByRole('dialog', { name: 'Abo bearbeiten' });
-  await expect(editor).toBeVisible();
-  await hand.fill(editor.getByLabel('Gekündigt zum (optional)'), '2026-12-10', 'Gekündigt zum', {
-    thing: cancel!.name,
-  });
-  await hand.tap(
-    editor.getByRole('button', { name: 'Speichern', exact: true }),
-    'Speichern',
-    cancel!.name,
-  );
-  await expect(editor).toHaveCount(0);
-  // 3 The budget: never in the plan – a look on its page.
-  await go(hand, page, isMobile, 'budgets', 'Budget');
-  await expect(
-    page
-      .locator('main')
-      .getByText(/drüber/)
-      .first(),
-  ).toBeVisible();
-  // 4 The mails: no source of the plan – „Alle in den Plan…“ in the mailbox makes four ToDos (desktop only).
+  // Since package 4b every invoice and cancellation is worked off in its row's compartment (expand, its step), so the
+  // money never leaves the planner. Desktop: mail → budgets → planner first (FIGURES B: the budget's navigation tap
+  // must not sit on /planner), then the money in the planner. Phone (no mail): the money first, then budgets and back.
   let mails: number | string = 'nicht möglich';
   let replySwitches: number | string = 'nicht möglich';
   let replyEditor = false;
   let replyPath: string[] = [];
+  const fromMail = async () =>
+    (await rows<Task>(page, 'todos_task')).filter(
+      (x) => !x.done && x.links?.some((l) => l.kind === 'mail'),
+    );
   if (!isMobile) {
+    // 1 The mails: no source of the plan – „Alle in den Plan…“ in the mailbox makes four ToDos (desktop only).
     await go(hand, page, isMobile, 'mail');
     await hand.tap(page.getByRole('button', { name: 'Alle in den Plan…' }), 'Alle in den Plan…');
     const all = page.getByRole('dialog', { name: 'In den Plan' });
     await hand.tap(all.getByRole('button', { name: /^In den Plan \(\d+\)$/ }), 'In den Plan (4)');
     hand.touch(MAILS.map((m) => m.subject));
     await expect(all).toHaveCount(0);
-  }
-  await go(hand, page, isMobile, 'planner');
-  await expect(page.getByTestId(`day-${TODAY}`)).toBeVisible();
-  if (!isMobile) {
-    const fromMail = async () =>
-      (await rows<Task>(page, 'todos_task')).filter(
-        (x) => !x.done && x.links?.some((l) => l.kind === 'mail'),
-      );
+    // 2 The budget: never in the plan – a look on its page.
+    await lookAtBudget(hand, page, isMobile);
+    await go(hand, page, isMobile, 'planner');
+    await expect(page.getByTestId(`day-${TODAY}`)).toBeVisible();
     await expect.poll(async () => (await fromMail()).length).toBe(MAILS.length);
     // Answering one planned mail (package 4c): route changes from the planner until the reply editor of the first one
     // is open – its row's link chip („Aus Mail“, else ⋯ · „Öffnen“), then „Antworten“; nothing is sent. Its own hand:
@@ -1008,9 +977,62 @@ test('B Finanzen und Mails abarbeiten', async ({ page, isMobile }, info) => {
     if (await opened.count()) await opened.click();
     await expect(page.getByRole('button', { name: 'Noch ohne Tag ausklappen' })).toBeVisible();
     hand.places = hand.places.slice(0, mark);
-    // They wait under „Noch ohne Tag“, where a row has no tick: each one onto today first, then ticked.
-    const head = page.getByRole('button', { name: 'Noch ohne Tag ausklappen' });
-    if (await head.count()) await hand.tap(head, 'Noch ohne Tag aufklappen');
+  }
+  // 3 The invoices (package 4b): each row expands, its pay step's „Bezahlt“ (today, the whole sum prefilled).
+  await openNoDay(hand, page);
+  const late = page.getByTestId('planner-late-row');
+  if ((await late.count()) && (await late.getAttribute('aria-expanded')) === 'false')
+    await hand.tap(late, 'Frist vorbei aufklappen');
+  for (const inv of INVOICES) {
+    const box = await expandRow(hand, page, `invoices:${inv.id}`, inv.payee);
+    await hand.tap(box.getByRole('button', { name: 'Bezahlt', exact: true }), 'Bezahlt', inv.payee);
+    await expect
+      .poll(
+        async () =>
+          (await rows<{ id: string; status: string }>(page, 'invoices_invoice')).find(
+            (r) => r.id === inv.id,
+          )?.status,
+      )
+      .toBe('paid');
+  }
+  // 4 The cancellations (package 4b): the one that goes – „Gekündigt am …“, „Vermerken“; the one that stays – „Läuft
+  //   weiter“, which decides that deadline (the source no longer lists it).
+  const [cancel, keep] = SUBSCRIPTIONS;
+  const goes = await expandRow(hand, page, `subscriptions:${cancel!.id}:`, cancel!.name);
+  await hand.tap(
+    goes.getByRole('button', { name: 'Gekündigt am …', exact: true }),
+    'Gekündigt am …',
+    cancel!.name,
+  );
+  await hand.tap(
+    goes.getByRole('button', { name: 'Vermerken', exact: true }),
+    'Vermerken',
+    cancel!.name,
+  );
+  await expect
+    .poll(
+      async () =>
+        (await rows<{ id: string; cancelledOn?: string }>(page, 'subscriptions_subscription')).find(
+          (r) => r.id === cancel!.id,
+        )?.cancelledOn,
+    )
+    .toBe(TODAY);
+  const stays = await expandRow(hand, page, `subscriptions:${keep!.id}:`, keep!.name);
+  await hand.tap(
+    stays.getByRole('button', { name: 'Läuft weiter', exact: true }),
+    'Läuft weiter',
+    keep!.name,
+  );
+  await expect
+    .poll(
+      async () =>
+        (
+          await rows<{ id: string; keptDeadline?: string }>(page, 'subscriptions_subscription')
+        ).find((r) => r.id === keep!.id)?.keptDeadline,
+    )
+    .toBeTruthy();
+  if (!isMobile) {
+    // 5 The mail ToDos wait under „Noch ohne Tag“, where a row has no tick: ⋯ · „Erledigt“ (or onto today, then ticked).
     for (const todo of await fromMail()) {
       const subject = MAILS.find((m) => todo.title.includes(m.subject))!.subject;
       const tick = page.getByRole('checkbox', { name: `Erledigt: ${todo.title}`, exact: true });
@@ -1041,29 +1063,15 @@ test('B Finanzen und Mails abarbeiten', async ({ page, isMobile }, info) => {
         );
         await expect(move).toHaveCount(0);
       }
-      const then = page.getByTestId(`day-${TODAY}`).getByRole('button', { name: /^Danach/ });
-      if (!(await tick.isVisible()) && (await then.count()))
-        if ((await then.getAttribute('aria-expanded')) === 'false')
-          await hand.tap(then, 'Danach aufklappen');
-      const more = page.getByTestId('planner-more');
-      if (!(await tick.isVisible()) && (await more.count()))
-        await hand.tap(more.first(), 'weitere zeigen');
       await hand.tap(tick, `Erledigt: ${todo.title}`, subject);
       await expect(tick).toHaveCount(0);
     }
     mails = (await fromMail()).length === 0 ? MAILS.length : 0;
+  } else {
+    // Phone: the budget after the money (its navigation leaves from the planner), and back.
+    await lookAtBudget(hand, page, isMobile);
+    await go(hand, page, isMobile, 'planner');
   }
-  // 5 The subscription that stays: „Nicht planen“ on its row in „Noch ohne Tag“ – decided, out of the plan.
-  const head = page.getByRole('button', { name: 'Noch ohne Tag ausklappen' });
-  if (await head.count()) await hand.tap(head, 'Noch ohne Tag aufklappen');
-  const keepTitle = `${keep!.name} kündigen`;
-  await hand.tap(
-    page.getByRole('button', { name: `Aktionen für ${keepTitle}`, exact: true }).first(),
-    `⋯ ${keepTitle}`,
-    keep!.name,
-  );
-  await hand.tap(page.getByRole('menuitem', { name: 'Nicht planen' }), 'Nicht planen', keep!.name);
-  await expect(page.getByRole('menuitem')).toHaveCount(0);
   await planner(page);
   const after = await plannerRows(page);
   const afterText = await plannerText(page);
