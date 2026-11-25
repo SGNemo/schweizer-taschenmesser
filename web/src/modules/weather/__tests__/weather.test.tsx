@@ -221,6 +221,11 @@ describe('weather page', () => {
       expect(within(frame).getByTestId('sky')).toHaveAttribute('data-sky', 'cloudy'),
     );
     expect(frame).toHaveAttribute('data-signature', 'sky');
+    // The scene behind the stage (weather scenes 1b): phase and condition of the forecast.
+    const scene = within(frame).getByTestId('weather-scene');
+    expect(scene).toHaveAttribute('data-phase', 'day');
+    expect(scene).toHaveAttribute('data-cond', 'partly');
+    expect(scene).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('24 hour cards and 7 days; rain only from 30 %, the rating always with its word', async () => {

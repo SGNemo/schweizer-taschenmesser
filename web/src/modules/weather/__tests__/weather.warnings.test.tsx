@@ -122,6 +122,33 @@ describe('ice hint (freezing rain, package 1a)', () => {
   });
 });
 
+describe('hint pill (package 1b)', () => {
+  it('names itself "Wetterhinweis" and says "berechnet, keine amtliche Warnung" once, for one or two hints', () => {
+    for (const list of [
+      [{ kind: 'frost' as const, date: TODAY, value: -6 }],
+      [
+        { kind: 'frost' as const, date: TODAY, value: -6 },
+        { kind: 'ice' as const, date: '2026-10-20' },
+      ],
+    ]) {
+      render(<WarningNotice warnings={list} today={TODAY} inStage />);
+      const note = screen.getByRole('note', { name: 'Wetterhinweis' });
+      expect(note.querySelectorAll('li')).toHaveLength(list.length);
+      expect(note.textContent!.match(/berechnet, keine amtliche Warnung/g)).toHaveLength(1);
+      expect(note).toHaveAttribute('data-in-stage', 'true');
+      cleanup();
+    }
+  });
+
+  it('the late path under the head has the same pill, full width', () => {
+    render(<WarningNotice warnings={[{ kind: 'storm', date: TODAY }]} today={TODAY} />);
+    const note = screen.getByRole('note', { name: 'Wetterhinweis' });
+    expect(note).not.toHaveAttribute('data-in-stage');
+    expect(note).toHaveTextContent('Heute: Gewitter');
+    expect(note).toHaveTextContent('berechnet, keine amtliche Warnung');
+  });
+});
+
 describe('severe-weather notification', () => {
   const range = (from: string, to: string) => ({
     from: toEpoch(TODAY, from),
