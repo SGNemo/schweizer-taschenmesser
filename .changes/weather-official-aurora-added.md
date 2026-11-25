@@ -3,8 +3,8 @@ type: added
 area: weather
 breaking: false
 highlight: true
-de: Amtliche DWD-Warnungen für deinen Hauptort in Deutschland, statt des eigenen Hinweises zum selben Wetter; dafür geht seine ungefähre Position an den DWD (abschaltbar).
-en: Official DWD warnings for your main place in Germany, instead of the app's own hint for the same weather; its approximate position goes to the DWD for this (can be switched off).
+de: Amtliche DWD-Warnungen für deinen Hauptort in Deutschland, statt des eigenen Hinweises zum selben Wetter; dafür geht die ungefähre Position des Hauptorts an den DWD (abschaltbar).
+en: Official DWD warnings for your main place in Germany, instead of the app's own hint for the same weather; for this the main place's approximate position goes to the DWD (can be switched off).
 ---
 ---
 type: added

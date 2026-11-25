@@ -19,6 +19,7 @@ import {
   type OfficialWarning,
 } from '@/core/weather/warningsOfficial';
 import { AreaFrame } from '@/layout/AreaFrame';
+import { tWeatherPage } from '@/strings.weatherPage';
 import { setSettings } from '@/core/settings/settings';
 import { toEpoch } from '@/core/time/dates';
 import attention from '../attention';
@@ -226,7 +227,10 @@ describe('aurora (package 3b)', () => {
     vi.stubGlobal('fetch', f);
     await setWeatherEnabled(false);
     renderPage();
-    await screen.findByText(/ausgeschaltet|aus/i, undefined, SLOW).catch(() => undefined);
+    // The page's own off state is there (its effects ran); then no SWPC request.
+    expect(await screen.findByRole('status', undefined, SLOW)).toHaveTextContent(
+      tWeatherPage.de.switchedOff,
+    );
     expect(f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes('swpc'))).toEqual([]);
   });
 
