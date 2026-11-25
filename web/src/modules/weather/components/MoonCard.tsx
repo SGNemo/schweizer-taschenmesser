@@ -1,24 +1,30 @@
 import { dateTimeFormat, numberFormat } from '@/core/i18n/format';
+import type { CardEvent } from '@/core/sky/events';
 import type { MoonNow } from '@/core/sky/moonDay';
 import { tWeather } from '@/strings.weather';
 import { tWeatherPage } from '@/strings.weatherPage';
 import { MoonGlyph } from '@/ui/weather-scene';
 import styles from './MoonCard.module.css';
+import { SkyNext } from './SkyNext';
 
 /**
  * "Mond & Himmel" in the aside (CONCEPT-MOON §6): the phase as a picture with its real tilt, its name and how much
  * is lit; moonrise and moonset of the place's day in clock order (or that there is none); the next full and new moon;
- * supermoon and second full moon when they are.
+ * supermoon and second full moon when they are; last, the one sky event of "Als Nächstes" (package 3).
  */
 export function MoonCard({
   moon,
   tz,
-  south,
+  lat,
+  next,
 }: {
   moon: MoonNow;
   tz: string | undefined;
-  south: boolean;
+  lat: number;
+  /** The one sky event of "Als Nächstes" (package 3); absent when there is none. */
+  next?: CardEvent;
 }) {
+  const south = lat < 0;
   const tx = tWeather.use();
   const tp = tWeatherPage.use();
   const time = dateTimeFormat({ hour: '2-digit', minute: '2-digit', timeZone: tz });
@@ -73,6 +79,7 @@ export function MoonCard({
         </p>
       ) : null}
       {day.secondFull ? <p className={styles.line}>{tp.moonBlue}</p> : null}
+      {next ? <SkyNext event={next} tz={tz} /> : null}
     </section>
   );
 }

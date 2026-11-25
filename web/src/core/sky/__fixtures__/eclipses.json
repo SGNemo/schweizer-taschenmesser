@@ -1,0 +1,1723 @@
+{
+  "generatedBy": "astronomy-engine 2.1.19 (truth) + light/solarEclipse.js (option B)",
+  "range": "2026-11-24 .. 2040-12-31",
+  "lunar": [
+    {
+      "kind": "penumbral",
+      "P1": "2027-02-20T21:11:52Z",
+      "U1": null,
+      "U2": null,
+      "max": "2027-02-20T23:12:44Z",
+      "U3": null,
+      "U4": null,
+      "P4": "2027-02-21T01:13:36Z",
+      "umbralMagnitude": -0.052,
+      "penumbralMagnitude": 0.931,
+      "obscuration": 0,
+      "lindenau": {
+        "altU1": null,
+        "altMax": 49.4,
+        "altU4": null,
+        "verdict": "penumbral only: yes",
+        "verdictWithL2": "penumbral only: yes"
+      }
+    },
+    {
+      "kind": "penumbral",
+      "P1": "2027-07-18T15:50:13Z",
+      "U1": null,
+      "U2": null,
+      "max": "2027-07-18T16:02:54Z",
+      "U3": null,
+      "U4": null,
+      "P4": "2027-07-18T16:15:36Z",
+      "umbralMagnitude": -1.062,
+      "penumbralMagnitude": 0.007,
+      "obscuration": 0,
+      "lindenau": {
+        "altU1": null,
+        "altMax": -30.2,
+        "altU4": null,
+        "verdict": "penumbral only: no",
+        "verdictWithL2": "penumbral only: no"
+      }
+    },
+    {
+      "kind": "penumbral",
+      "P1": "2027-08-17T05:23:58Z",
+      "U1": null,
+      "U2": null,
+      "max": "2027-08-17T07:13:44Z",
+      "U3": null,
+      "U4": null,
+      "P4": "2027-08-17T09:03:30Z",
+      "umbralMagnitude": -0.521,
+      "penumbralMagnitude": 0.55,
+      "obscuration": 0,
+      "lindenau": {
+        "altU1": null,
+        "altMax": -28.3,
+        "altU4": null,
+        "verdict": "penumbral only: no",
+        "verdictWithL2": "penumbral only: no"
+      }
+    },
+    {
+      "kind": "partial",
+      "P1": "2028-01-12T02:07:16Z",
+      "U1": "2028-01-12T03:43:52Z",
+      "U2": null,
+      "max": "2028-01-12T04:13:00Z",
+      "U3": null,
+      "U4": "2028-01-12T04:42:08Z",
+      "P4": "2028-01-12T06:18:44Z",
+      "umbralMagnitude": 0.072,
+      "penumbralMagnitude": 1.052,
+      "obscuration": 0.027,
+      "lindenau": {
+        "altU1": 32.3,
+        "altMax": 27.7,
+        "altU4": 23.1,
+        "verdict": "yes",
+        "verdictWithL2": "yes"
+      }
+    },
+    {
+      "kind": "partial",
+      "P1": "2028-07-06T15:43:55Z",
+      "U1": "2028-07-06T17:08:19Z",
+      "U2": null,
+      "max": "2028-07-06T18:19:38Z",
+      "U3": null,
+      "U4": "2028-07-06T19:30:57Z",
+      "P4": "2028-07-06T20:55:21Z",
+      "umbralMagnitude": 0.395,
+      "penumbralMagnitude": 1.432,
+      "obscuration": 0.332,
+      "lindenau": {
+        "altU1": -19.7,
+        "altMax": -9.1,
+        "altU4": 0.4,
+        "verdict": "partly",
+        "verdictWithL2": "partly"
+      }
+    },
+    {
+      "kind": "total",
+      "P1": "2028-12-31T14:03:27Z",
+      "U1": "2028-12-31T15:07:09Z",
+      "U2": "2028-12-31T16:15:46Z",
+      "max": "2028-12-31T16:51:54Z",
+      "U3": "2028-12-31T17:28:02Z",
+      "U4": "2028-12-31T18:36:39Z",
+      "P4": "2028-12-31T19:40:21Z",
+      "umbralMagnitude": 1.252,
+      "penumbralMagnitude": 2.28,
+      "obscuration": 1,
+      "lindenau": {
+        "altU1": -1,
+        "altMax": 12.4,
+        "altU4": 28.3,
+        "verdict": "partly",
+        "verdictWithL2": "partly"
+      }
+    },
+    {
+      "kind": "total",
+      "P1": "2029-06-26T00:34:13Z",
+      "U1": "2029-06-26T01:32:01Z",
+      "U2": "2029-06-26T02:30:51Z",
+      "max": "2029-06-26T03:22:06Z",
+      "U3": "2029-06-26T04:13:21Z",
+      "U4": "2029-06-26T05:12:11Z",
+      "P4": "2029-06-26T06:10:00Z",
+      "umbralMagnitude": 1.849,
+      "penumbralMagnitude": 2.832,
+      "obscuration": 1,
+      "lindenau": {
+        "altU1": 9.9,
+        "altMax": -1,
+        "altU4": -16.1,
+        "verdict": "partly",
+        "verdictWithL2": "partly"
+      }
+    },
+    {
+      "kind": "total",
+      "P1": "2029-12-20T19:42:34Z",
+      "U1": "2029-12-20T20:54:54Z",
+      "U2": "2029-12-20T22:14:26Z",
+      "max": "2029-12-20T22:41:54Z",
+      "U3": "2029-12-20T23:09:23Z",
+      "U4": "2029-12-21T00:28:54Z",
+      "P4": "2029-12-21T01:41:14Z",
+      "umbralMagnitude": 1.123,
+      "penumbralMagnitude": 2.206,
+      "obscuration": 1,
+      "lindenau": {
+        "altU1": 52.1,
+        "altMax": 62.3,
+        "altU4": 59.5,
+        "verdict": "yes",
+        "verdictWithL2": "yes"
+      }
+    },
+    {
+      "kind": "partial",
+      "P1": "2030-06-15T16:13:48Z",
+      "U1": "2030-06-15T17:20:39Z",
+      "U2": null,
+      "max": "2030-06-15T18:33:14Z",
+      "U3": null,
+      "U4": "2030-06-15T19:45:49Z",
+      "P4": "2030-06-15T20:52:41Z",
+      "umbralMagnitude": 0.507,
+      "penumbralMagnitude": 1.453,
+      "obscuration": 0.471,
+      "lindenau": {
+        "altU1": -16.3,
+        "altMax": -5.9,
+        "altU4": 3,
+        "verdict": "partly",
+        "verdictWithL2": "partly"
+      }
+    },
+    {
+      "kind": "penumbral",
+      "P1": "2030-12-09T20:07:30Z",
+      "U1": null,
+      "U2": null,
+      "max": "2030-12-09T22:27:32Z",
+      "U3": null,
+      "U4": null,
+      "P4": "2030-12-10T00:47:35Z",
+      "umbralMagnitude": -0.158,
+      "penumbralMagnitude": 0.946,
+      "obscuration": 0,
+      "lindenau": {
+        "altU1": null,
+        "altMax": 60.7,
+        "altU4": null,
+        "verdict": "penumbral only: yes",
+        "verdictWithL2": "penumbral only: yes"
+      }
+    },
+    {
+      "kind": "penumbral",
+      "P1": "2031-05-07T01:51:42Z",
+      "U1": null,
+      "U2": null,
+      "max": "2031-05-07T03:50:47Z",
+      "U3": null,
+      "U4": null,
+      "P4": "2031-05-07T05:49:53Z",
+      "umbralMagnitude": -0.085,
+      "penumbralMagnitude": 0.886,
+      "obscuration": 0,
+      "lindenau": {
+        "altU1": null,
+        "altMax": -1.5,
+        "altU4": null,
+        "verdict": "penumbral only: partly",
+        "verdictWithL2": "penumbral only: partly"
+      }
+    },
+    {
+      "kind": "penumbral",
+      "P1": "2031-06-05T10:55:28Z",
+      "U1": null,
+      "U2": null,
+      "max": "2031-06-05T11:44:03Z",
+      "U3": null,
+      "U4": null,
+      "P4": "2031-06-05T12:32:38Z",
+      "umbralMagnitude": -0.815,
+      "penumbralMagnitude": 0.133,
+      "obscuration": 0,
+      "lindenau": {
+        "altU1": null,
+        "altMax": -61.1,
+        "altU4": null,
+        "verdict": "penumbral only: no",
+        "verdictWithL2": "penumbral only: no"
+      }
+    },
+    {
+      "kind": "penumbral",
+      "P1": "2031-10-30T05:48:58Z",
+      "U1": null,
+      "U2": null,
+      "max": "2031-10-30T07:45:19Z",
+      "U3": null,
+      "U4": null,
+      "P4": "2031-10-30T09:41:40Z",
+      "umbralMagnitude": -0.315,
+      "penumbralMagnitude": 0.721,
+      "obscuration": 0,
+      "lindenau": {
+        "altU1": null,
+        "altMax": -13.2,
+        "altU4": null,
+        "verdict": "penumbral only: partly",
+        "verdictWithL2": "penumbral only: partly"
+      }
+    },
+    {
+      "kind": "total",
+      "P1": "2032-04-25T12:21:56Z",
+      "U1": "2032-04-25T13:27:33Z",
+      "U2": "2032-04-25T14:40:11Z",
+      "max": "2032-04-25T15:13:29Z",
+      "U3": "2032-04-25T15:46:48Z",
+      "U4": "2032-04-25T16:59:26Z",
+      "P4": "2032-04-25T18:05:03Z",
+      "umbralMagnitude": 1.197,
+      "penumbralMagnitude": 2.225,
+      "obscuration": 1,
+      "lindenau": {
+        "altU1": -44.7,
+        "altMax": -30.2,
+        "altU4": -13.9,
+        "verdict": "no",
+        "verdictWithL2": "no"
+      }
+    },
+    {
+      "kind": "total",
+      "P1": "2032-10-18T16:24:20Z",
+      "U1": "2032-10-18T17:24:05Z",
+      "U2": "2032-10-18T18:38:11Z",
+      "max": "2032-10-18T19:02:22Z",
+      "U3": "2032-10-18T19:26:34Z",
+      "U4": "2032-10-18T20:40:40Z",
+      "P4": "2032-10-18T21:40:24Z",
+      "umbralMagnitude": 1.108,
+      "penumbralMagnitude": 2.088,
+      "obscuration": 1,
+      "lindenau": {
+        "altU1": 11.2,
+        "altMax": 26.6,
+        "altU4": 40.4,
+        "verdict": "yes",
+        "verdictWithL2": "yes"
+      }
+    },
+    {
+      "kind": "total",
+      "P1": "2033-04-14T16:11:34Z",
+      "U1": "2033-04-14T17:24:40Z",
+      "U2": "2033-04-14T18:47:14Z",
+      "max": "2033-04-14T19:12:31Z",
+      "U3": "2033-04-14T19:37:48Z",
+      "U4": "2033-04-14T21:00:22Z",
+      "P4": "2033-04-14T22:13:27Z",
+      "umbralMagnitude": 1.099,
+      "penumbralMagnitude": 2.176,
+      "obscuration": 1,
+      "lindenau": {
+        "altU1": -5.4,
+        "altMax": 9.9,
+        "altU4": 22.6,
+        "verdict": "partly",
+        "verdictWithL2": "partly"
+      }
+    },
+    {
+      "kind": "total",
+      "P1": "2033-10-08T08:18:25Z",
+      "U1": "2033-10-08T09:13:32Z",
+      "U2": "2033-10-08T10:15:16Z",
+      "max": "2033-10-08T10:55:02Z",
+      "U3": "2033-10-08T11:34:49Z",
+      "U4": "2033-10-08T12:36:33Z",
+      "P4": "2033-10-08T13:31:40Z",
+      "umbralMagnitude": 1.355,
+      "penumbralMagnitude": 2.311,
+      "obscuration": 1,
+      "lindenau": {
+        "altU1": -30.7,
+        "altMax": -35,
+        "altU4": -31.5,
+        "verdict": "no",
+        "verdictWithL2": "no"
+      }
+    },
+    {
+      "kind": "penumbral",
+      "P1": "2034-04-03T16:52:26Z",
+      "U1": null,
+      "U2": null,
+      "max": "2034-04-03T19:05:34Z",
+      "U3": null,
+      "U4": null,
+      "P4": "2034-04-03T21:18:42Z",
+      "umbralMagnitude": -0.223,
+      "penumbralMagnitude": 0.859,
+      "obscuration": 0,
+      "lindenau": {
+        "altU1": null,
+        "altMax": 12.2,
+        "altU4": null,
+        "verdict": "penumbral only: partly",
+        "verdictWithL2": "penumbral only: partly"
+      }
+    },
+    {
+      "kind": "partial",
+      "P1": "2034-09-28T00:41:36Z",
+      "U1": "2034-09-28T02:30:49Z",
+      "U2": null,
+      "max": "2034-09-28T02:46:19Z",
+      "U3": null,
+      "U4": "2034-09-28T03:01:48Z",
+      "P4": "2034-09-28T04:51:02Z",
+      "umbralMagnitude": 0.019,
+      "penumbralMagnitude": 0.996,
+      "obscuration": 0.004,
+      "lindenau": {
+        "altU1": 24.1,
+        "altMax": 22,
+        "altU4": 19.9,
+        "verdict": "yes",
+        "verdictWithL2": "yes"
+      }
+    },
+    {
+      "kind": "penumbral",
+      "P1": "2035-02-22T06:56:28Z",
+      "U1": null,
+      "U2": null,
+      "max": "2035-02-22T09:04:43Z",
+      "U3": null,
+      "U4": null,
+      "P4": "2035-02-22T11:12:58Z",
+      "umbralMagnitude": -0.048,
+      "penumbralMagnitude": 0.97,
+      "obscuration": 0,
+      "lindenau": {
+        "altU1": null,
+        "altMax": -23.7,
+        "altU4": null,
+        "verdict": "penumbral only: no",
+        "verdictWithL2": "penumbral only: no"
+      }
+    },
+    {
+      "kind": "partial",
+      "P1": "2035-08-18T22:45:36Z",
+      "U1": "2035-08-19T00:31:41Z",
+      "U2": null,
+      "max": "2035-08-19T01:10:55Z",
+      "U3": null,
+      "U4": "2035-08-19T01:50:09Z",
+      "P4": "2035-08-19T03:36:15Z",
+      "umbralMagnitude": 0.109,
+      "penumbralMagnitude": 1.156,
+      "obscuration": 0.051,
+      "lindenau": {
+        "altU1": 25.4,
+        "altMax": 22.8,
+        "altU4": 19.4,
+        "verdict": "yes",
+        "verdictWithL2": "yes"
+      }
+    },
+    {
+      "kind": "total",
+      "P1": "2036-02-11T19:33:22Z",
+      "U1": "2036-02-11T20:30:27Z",
+      "U2": "2036-02-11T21:34:04Z",
+      "max": "2036-02-11T22:11:44Z",
+      "U3": "2036-02-11T22:49:23Z",
+      "U4": "2036-02-11T23:53:01Z",
+      "P4": "2036-02-12T00:50:05Z",
+      "umbralMagnitude": 1.305,
+      "penumbralMagnitude": 2.281,
+      "obscuration": 1,
+      "lindenau": {
+        "altU1": 38.7,
+        "altMax": 50,
+        "altU4": 53,
+        "verdict": "yes",
+        "verdictWithL2": "yes"
+      }
+    },
+    {
+      "kind": "total",
+      "P1": "2036-08-06T23:44:43Z",
+      "U1": "2036-08-07T00:55:06Z",
+      "U2": "2036-08-07T02:03:05Z",
+      "max": "2036-08-07T02:51:07Z",
+      "U3": "2036-08-07T03:39:10Z",
+      "U4": "2036-08-07T04:47:08Z",
+      "P4": "2036-08-07T05:57:32Z",
+      "umbralMagnitude": 1.46,
+      "penumbralMagnitude": 2.532,
+      "obscuration": 1,
+      "lindenau": {
+        "altU1": 19.9,
+        "altMax": 8.9,
+        "altU4": -6.3,
+        "verdict": "partly",
+        "verdictWithL2": "partly"
+      }
+    },
+    {
+      "kind": "total",
+      "P1": "2037-01-31T11:23:53Z",
+      "U1": "2037-01-31T12:21:12Z",
+      "U2": "2037-01-31T13:27:58Z",
+      "max": "2037-01-31T14:00:15Z",
+      "U3": "2037-01-31T14:32:32Z",
+      "U4": "2037-01-31T15:39:18Z",
+      "P4": "2037-01-31T16:36:37Z",
+      "umbralMagnitude": 1.212,
+      "penumbralMagnitude": 2.185,
+      "obscuration": 1,
+      "lindenau": {
+        "altU1": -22,
+        "altMax": -15.5,
+        "altU4": -4.4,
+        "verdict": "no",
+        "verdictWithL2": "no"
+      }
+    },
+    {
+      "kind": "partial",
+      "P1": "2037-07-27T01:17:41Z",
+      "U1": "2037-07-27T02:31:51Z",
+      "U2": null,
+      "max": "2037-07-27T04:08:27Z",
+      "U3": null,
+      "U4": "2037-07-27T05:45:04Z",
+      "P4": "2037-07-27T06:59:14Z",
+      "umbralMagnitude": 0.815,
+      "penumbralMagnitude": 1.864,
+      "obscuration": 0.85,
+      "lindenau": {
+        "altU1": 7.8,
+        "altMax": -3.8,
+        "altU4": -18.1,
+        "verdict": "partly",
+        "verdictWithL2": "partly"
+      }
+    },
+    {
+      "kind": "penumbral",
+      "P1": "2038-01-21T01:45:21Z",
+      "U1": null,
+      "U2": null,
+      "max": "2038-01-21T03:48:37Z",
+      "U3": null,
+      "U4": null,
+      "P4": "2038-01-21T05:51:54Z",
+      "umbralMagnitude": -0.109,
+      "penumbralMagnitude": 0.904,
+      "obscuration": 0,
+      "lindenau": {
+        "altU1": null,
+        "altMax": 30.9,
+        "altU4": null,
+        "verdict": "penumbral only: yes",
+        "verdictWithL2": "penumbral only: yes"
+      }
+    },
+    {
+      "kind": "penumbral",
+      "P1": "2038-06-17T01:14:49Z",
+      "U1": null,
+      "U2": null,
+      "max": "2038-06-17T02:43:30Z",
+      "U3": null,
+      "U4": null,
+      "P4": "2038-06-17T04:12:11Z",
+      "umbralMagnitude": -0.522,
+      "penumbralMagnitude": 0.447,
+      "obscuration": 0,
+      "lindenau": {
+        "altU1": null,
+        "altMax": 4.2,
+        "altU4": null,
+        "verdict": "penumbral only: partly",
+        "verdictWithL2": "penumbral only: partly"
+      }
+    },
+    {
+      "kind": "penumbral",
+      "P1": "2038-07-16T09:57:39Z",
+      "U1": null,
+      "U2": null,
+      "max": "2038-07-16T11:34:22Z",
+      "U3": null,
+      "U4": null,
+      "P4": "2038-07-16T13:11:05Z",
+      "umbralMagnitude": -0.49,
+      "penumbralMagnitude": 0.504,
+      "obscuration": 0,
+      "lindenau": {
+        "altU1": null,
+        "altMax": -63.1,
+        "altU4": null,
+        "verdict": "penumbral only: no",
+        "verdictWithL2": "penumbral only: no"
+      }
+    },
+    {
+      "kind": "penumbral",
+      "P1": "2038-12-11T15:33:57Z",
+      "U1": null,
+      "U2": null,
+      "max": "2038-12-11T17:43:41Z",
+      "U3": null,
+      "U4": null,
+      "P4": "2038-12-11T19:53:25Z",
+      "umbralMagnitude": -0.284,
+      "penumbralMagnitude": 0.81,
+      "obscuration": 0,
+      "lindenau": {
+        "altU1": null,
+        "altMax": 21.1,
+        "altU4": null,
+        "verdict": "penumbral only: yes",
+        "verdictWithL2": "penumbral only: yes"
+      }
+    },
+    {
+      "kind": "partial",
+      "P1": "2039-06-06T16:24:19Z",
+      "U1": "2039-06-06T17:23:01Z",
+      "U2": null,
+      "max": "2039-06-06T18:53:00Z",
+      "U3": null,
+      "U4": "2039-06-06T20:23:00Z",
+      "P4": "2039-06-06T21:21:42Z",
+      "umbralMagnitude": 0.89,
+      "penumbralMagnitude": 1.832,
+      "obscuration": 0.928,
+      "lindenau": {
+        "altU1": -15.2,
+        "altMax": -2.6,
+        "altU4": 7.3,
+        "verdict": "partly",
+        "verdictWithL2": "partly"
+      }
+    },
+    {
+      "kind": "partial",
+      "P1": "2039-11-30T13:54:38Z",
+      "U1": "2039-11-30T15:11:39Z",
+      "U2": null,
+      "max": "2039-11-30T16:55:03Z",
+      "U3": null,
+      "U4": "2039-11-30T18:38:27Z",
+      "P4": "2039-11-30T19:55:27Z",
+      "umbralMagnitude": 0.948,
+      "penumbralMagnitude": 2.047,
+      "obscuration": 0.976,
+      "lindenau": {
+        "altU1": -0.6,
+        "altMax": 13.7,
+        "altU4": 29.9,
+        "verdict": "partly",
+        "verdictWithL2": "partly"
+      }
+    },
+    {
+      "kind": "total",
+      "P1": "2040-05-26T09:03:57Z",
+      "U1": "2040-05-26T09:59:17Z",
+      "U2": "2040-05-26T10:58:30Z",
+      "max": "2040-05-26T11:44:57Z",
+      "U3": "2040-05-26T12:31:24Z",
+      "U4": "2040-05-26T13:30:37Z",
+      "P4": "2040-05-26T14:25:57Z",
+      "umbralMagnitude": 1.54,
+      "penumbralMagnitude": 2.499,
+      "obscuration": 1,
+      "lindenau": {
+        "altU1": -58.7,
+        "altMax": -61.4,
+        "altU4": -52,
+        "verdict": "no",
+        "verdictWithL2": "no"
+      }
+    },
+    {
+      "kind": "total",
+      "P1": "2040-11-18T16:06:06Z",
+      "U1": "2040-11-18T17:12:40Z",
+      "U2": "2040-11-18T18:18:55Z",
+      "max": "2040-11-18T19:03:13Z",
+      "U3": "2040-11-18T19:47:31Z",
+      "U4": "2040-11-18T20:53:46Z",
+      "P4": "2040-11-18T22:00:20Z",
+      "umbralMagnitude": 1.402,
+      "penumbralMagnitude": 2.457,
+      "obscuration": 1,
+      "lindenau": {
+        "altU1": 16.2,
+        "altMax": 33.8,
+        "altU4": 50,
+        "verdict": "yes",
+        "verdictWithL2": "yes"
+      }
+    }
+  ],
+  "solarGlobal": [
+    {
+      "kind": "annular",
+      "peak": "2027-02-06T15:59:32Z",
+      "obscuration": 0.861,
+      "lat": -31.29,
+      "lon": -48.47
+    },
+    {
+      "kind": "total",
+      "peak": "2027-08-02T10:06:34Z",
+      "obscuration": 1,
+      "lat": 25.49,
+      "lon": 33.19
+    },
+    {
+      "kind": "annular",
+      "peak": "2028-01-26T15:07:42Z",
+      "obscuration": 0.848,
+      "lat": 2.97,
+      "lon": -51.55
+    },
+    {
+      "kind": "total",
+      "peak": "2028-07-22T02:55:24Z",
+      "obscuration": 1,
+      "lat": -15.6,
+      "lon": 126.71
+    },
+    {
+      "kind": "partial",
+      "peak": "2029-01-14T17:12:28Z",
+      "obscuration": null,
+      "lat": null,
+      "lon": null
+    },
+    {
+      "kind": "partial",
+      "peak": "2029-06-12T04:04:55Z",
+      "obscuration": null,
+      "lat": null,
+      "lon": null
+    },
+    {
+      "kind": "partial",
+      "peak": "2029-07-11T15:36:03Z",
+      "obscuration": null,
+      "lat": null,
+      "lon": null
+    },
+    {
+      "kind": "partial",
+      "peak": "2029-12-05T15:02:39Z",
+      "obscuration": null,
+      "lat": null,
+      "lon": null
+    },
+    {
+      "kind": "annular",
+      "peak": "2030-06-01T06:27:58Z",
+      "obscuration": 0.892,
+      "lat": 56.51,
+      "lon": 80.07
+    },
+    {
+      "kind": "total",
+      "peak": "2030-11-25T06:50:19Z",
+      "obscuration": 1,
+      "lat": -43.61,
+      "lon": 71.24
+    },
+    {
+      "kind": "annular",
+      "peak": "2031-05-21T07:14:49Z",
+      "obscuration": 0.92,
+      "lat": 8.92,
+      "lon": 71.73
+    },
+    {
+      "kind": "total",
+      "peak": "2031-11-14T21:06:12Z",
+      "obscuration": 1,
+      "lat": -0.63,
+      "lon": -137.63
+    },
+    {
+      "kind": "annular",
+      "peak": "2032-05-09T13:25:23Z",
+      "obscuration": 0.992,
+      "lat": -51.3,
+      "lon": -7.04
+    },
+    {
+      "kind": "partial",
+      "peak": "2032-11-03T05:32:53Z",
+      "obscuration": null,
+      "lat": null,
+      "lon": null
+    },
+    {
+      "kind": "total",
+      "peak": "2033-03-30T18:01:16Z",
+      "obscuration": 1,
+      "lat": 71.29,
+      "lon": -155.57
+    },
+    {
+      "kind": "partial",
+      "peak": "2033-09-23T13:53:11Z",
+      "obscuration": null,
+      "lat": null,
+      "lon": null
+    },
+    {
+      "kind": "total",
+      "peak": "2034-03-20T10:17:27Z",
+      "obscuration": 1,
+      "lat": 16.04,
+      "lon": 22.23
+    },
+    {
+      "kind": "annular",
+      "peak": "2034-09-12T16:18:03Z",
+      "obscuration": 0.948,
+      "lat": -18.23,
+      "lon": -72.59
+    },
+    {
+      "kind": "annular",
+      "peak": "2035-03-09T23:04:31Z",
+      "obscuration": 0.984,
+      "lat": -29.05,
+      "lon": -154.94
+    },
+    {
+      "kind": "total",
+      "peak": "2035-09-02T01:55:23Z",
+      "obscuration": 1,
+      "lat": 29.1,
+      "lon": 158.05
+    },
+    {
+      "kind": "partial",
+      "peak": "2036-02-27T04:45:29Z",
+      "obscuration": null,
+      "lat": null,
+      "lon": null
+    },
+    {
+      "kind": "partial",
+      "peak": "2036-07-23T10:30:42Z",
+      "obscuration": null,
+      "lat": null,
+      "lon": null
+    },
+    {
+      "kind": "partial",
+      "peak": "2036-08-21T17:24:21Z",
+      "obscuration": null,
+      "lat": null,
+      "lon": null
+    },
+    {
+      "kind": "partial",
+      "peak": "2037-01-16T09:47:30Z",
+      "obscuration": null,
+      "lat": null,
+      "lon": null
+    },
+    {
+      "kind": "total",
+      "peak": "2037-07-13T02:39:15Z",
+      "obscuration": 1,
+      "lat": -24.76,
+      "lon": 139.07
+    },
+    {
+      "kind": "annular",
+      "peak": "2038-01-05T13:45:48Z",
+      "obscuration": 0.946,
+      "lat": 2.08,
+      "lon": -25.45
+    },
+    {
+      "kind": "annular",
+      "peak": "2038-07-02T13:31:32Z",
+      "obscuration": 0.982,
+      "lat": 25.43,
+      "lon": -21.89
+    },
+    {
+      "kind": "total",
+      "peak": "2038-12-26T00:58:48Z",
+      "obscuration": 1,
+      "lat": -40.29,
+      "lon": 163.94
+    },
+    {
+      "kind": "annular",
+      "peak": "2039-06-21T17:11:28Z",
+      "obscuration": 0.894,
+      "lat": 78.89,
+      "lon": -102.16
+    },
+    {
+      "kind": "total",
+      "peak": "2039-12-15T16:22:21Z",
+      "obscuration": 1,
+      "lat": -80.84,
+      "lon": 172.59
+    },
+    {
+      "kind": "partial",
+      "peak": "2040-05-11T03:41:37Z",
+      "obscuration": null,
+      "lat": null,
+      "lon": null
+    },
+    {
+      "kind": "partial",
+      "peak": "2040-11-04T19:07:35Z",
+      "obscuration": null,
+      "lat": null,
+      "lon": null
+    }
+  ],
+  "solarLocal": {
+    "lindenau": [
+      {
+        "kind": "partial",
+        "obscuration": 0.453,
+        "partialBegin": {
+          "t": "2027-08-02T08:10Z",
+          "alt": 40.1
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2027-08-02T09:11Z",
+          "alt": 48.7
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2027-08-02T10:14Z",
+          "alt": 55.3
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.711,
+        "partialBegin": {
+          "t": "2028-01-26T15:40Z",
+          "alt": 2.2
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2028-01-26T16:51Z",
+          "alt": -7.8
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2028-01-26T17:56Z",
+          "alt": -18
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.068,
+        "partialBegin": {
+          "t": "2029-06-12T02:28Z",
+          "alt": -5.1
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2029-06-12T02:56Z",
+          "alt": -1.8
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2029-06-12T03:25Z",
+          "alt": 1.6
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.593,
+        "partialBegin": {
+          "t": "2030-06-01T04:16Z",
+          "alt": 7.9
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2030-06-01T05:17Z",
+          "alt": 17.2
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2030-06-01T06:24Z",
+          "alt": 27.8
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.041,
+        "partialBegin": {
+          "t": "2034-03-20T10:00Z",
+          "alt": 37.2
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2034-03-20T10:34Z",
+          "alt": 39.2
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2034-03-20T11:08Z",
+          "alt": 40.3
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.62,
+        "partialBegin": {
+          "t": "2036-08-21T17:19Z",
+          "alt": 9.1
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2036-08-21T18:08Z",
+          "alt": 1.5
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2036-08-21T18:55Z",
+          "alt": -5.3
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.487,
+        "partialBegin": {
+          "t": "2037-01-16T07:56Z",
+          "alt": 5.8
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2037-01-16T09:19Z",
+          "alt": 14.2
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2037-01-16T10:48Z",
+          "alt": 19.1
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.12,
+        "partialBegin": {
+          "t": "2038-01-05T14:00Z",
+          "alt": 9.8
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2038-01-05T14:50Z",
+          "alt": 4.5
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2038-01-05T15:37Z",
+          "alt": -1
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.062,
+        "partialBegin": {
+          "t": "2038-07-02T13:37Z",
+          "alt": 52.3
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2038-07-02T14:18Z",
+          "alt": 46.3
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2038-07-02T14:58Z",
+          "alt": 40.1
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.694,
+        "partialBegin": {
+          "t": "2039-06-21T17:33Z",
+          "alt": 15.3
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2039-06-21T18:34Z",
+          "alt": 6.4
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2039-06-21T19:31Z",
+          "alt": -0.7
+        }
+      }
+    ],
+    "tromso": [
+      {
+        "kind": "partial",
+        "obscuration": 0.165,
+        "partialBegin": {
+          "t": "2029-06-12T02:40Z",
+          "alt": 11.9
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2029-06-12T03:21Z",
+          "alt": 14.9
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2029-06-12T04:03Z",
+          "alt": 18.2
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.378,
+        "partialBegin": {
+          "t": "2030-06-01T04:55Z",
+          "alt": 21.8
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2030-06-01T05:55Z",
+          "alt": 27
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2030-06-01T06:58Z",
+          "alt": 32.2
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.811,
+        "partialBegin": {
+          "t": "2036-08-21T16:41Z",
+          "alt": 11.6
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2036-08-21T17:34Z",
+          "alt": 7.1
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2036-08-21T18:25Z",
+          "alt": 3.1
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.609,
+        "partialBegin": {
+          "t": "2037-01-16T08:29Z",
+          "alt": -3.5
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2037-01-16T09:47Z",
+          "alt": -0.6
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2037-01-16T11:05Z",
+          "alt": 0.1
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.862,
+        "partialBegin": {
+          "t": "2039-06-21T16:56Z",
+          "alt": 21.1
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2039-06-21T18:00Z",
+          "alt": 15.8
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2039-06-21T19:02Z",
+          "alt": 11.3
+        }
+      }
+    ],
+    "singapore": [
+      {
+        "kind": "partial",
+        "obscuration": 0.4,
+        "partialBegin": {
+          "t": "2027-08-02T10:52Z",
+          "alt": 5
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2027-08-02T11:37Z",
+          "alt": -5.1
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2027-08-02T12:19Z",
+          "alt": -15.1
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.598,
+        "partialBegin": {
+          "t": "2028-07-22T00:35Z",
+          "alt": 20
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2028-07-22T01:44Z",
+          "alt": 36
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2028-07-22T03:03Z",
+          "alt": 53.5
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.819,
+        "partialBegin": {
+          "t": "2031-05-21T07:09Z",
+          "alt": 53.5
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2031-05-21T08:52Z",
+          "alt": 30.8
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2031-05-21T10:13Z",
+          "alt": 12
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.014,
+        "partialBegin": {
+          "t": "2037-07-13T00:57Z",
+          "alt": 25.1
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2037-07-13T01:20Z",
+          "alt": 30.4
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2037-07-13T01:44Z",
+          "alt": 35.9
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.432,
+        "partialBegin": {
+          "t": "2038-12-25T22:22Z",
+          "alt": -9.9
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2038-12-25T23:09Z",
+          "alt": 0.8
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2038-12-26T00:01Z",
+          "alt": 12.2
+        }
+      }
+    ],
+    "sydney": [
+      {
+        "kind": "total",
+        "obscuration": 1,
+        "partialBegin": {
+          "t": "2028-07-22T02:41Z",
+          "alt": 35.2
+        },
+        "totalBegin": {
+          "t": "2028-07-22T03:59Z",
+          "alt": 29.1
+        },
+        "peak": {
+          "t": "2028-07-22T04:01Z",
+          "alt": 28.9
+        },
+        "totalEnd": {
+          "t": "2028-07-22T04:03Z",
+          "alt": 28.7
+        },
+        "partialEnd": {
+          "t": "2028-07-22T05:15Z",
+          "alt": 19.1
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.79,
+        "partialBegin": {
+          "t": "2030-11-25T07:25Z",
+          "alt": 14.9
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2030-11-25T08:19Z",
+          "alt": 4.4
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2030-11-25T09:09Z",
+          "alt": -4.5
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.616,
+        "partialBegin": {
+          "t": "2035-03-09T20:21Z",
+          "alt": 5.8
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2035-03-09T21:25Z",
+          "alt": 18.9
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2035-03-09T22:37Z",
+          "alt": 33.4
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.01,
+        "partialBegin": {
+          "t": "2036-02-27T05:33Z",
+          "alt": 36.5
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2036-02-27T05:57Z",
+          "alt": 31.8
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2036-02-27T06:20Z",
+          "alt": 27.1
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.868,
+        "partialBegin": {
+          "t": "2037-07-13T01:40Z",
+          "alt": 34.1
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2037-07-13T03:12Z",
+          "alt": 31.9
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2037-07-13T04:36Z",
+          "alt": 23.3
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.87,
+        "partialBegin": {
+          "t": "2038-12-25T23:05Z",
+          "alt": 51.5
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2038-12-26T00:26Z",
+          "alt": 67.9
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2038-12-26T01:55Z",
+          "alt": 79.5
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.166,
+        "partialBegin": {
+          "t": "2040-05-11T02:57Z",
+          "alt": 35.8
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2040-05-11T04:04Z",
+          "alt": 29.2
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2040-05-11T05:08Z",
+          "alt": 20.2
+        }
+      }
+    ],
+    "reykjavik": [
+      {
+        "kind": "partial",
+        "obscuration": 0.056,
+        "partialBegin": {
+          "t": "2027-08-02T08:31Z",
+          "alt": 22.2
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2027-08-02T08:59Z",
+          "alt": 25.2
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2027-08-02T09:28Z",
+          "alt": 28.2
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.159,
+        "partialBegin": {
+          "t": "2028-01-26T15:28Z",
+          "alt": 4.7
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2028-01-26T16:25Z",
+          "alt": 1.6
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2028-01-26T17:19Z",
+          "alt": -2.2
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.278,
+        "partialBegin": {
+          "t": "2029-06-12T02:51Z",
+          "alt": -0.5
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2029-06-12T03:33Z",
+          "alt": 1.1
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2029-06-12T04:17Z",
+          "alt": 3.5
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.243,
+        "partialBegin": {
+          "t": "2030-06-01T05:01Z",
+          "alt": 5.9
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2030-06-01T05:48Z",
+          "alt": 9.9
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2030-06-01T06:37Z",
+          "alt": 14.7
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.426,
+        "partialBegin": {
+          "t": "2033-03-30T18:22Z",
+          "alt": 11.4
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2033-03-30T19:12Z",
+          "alt": 6
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2033-03-30T20:00Z",
+          "alt": 1
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.626,
+        "partialBegin": {
+          "t": "2036-08-21T16:45Z",
+          "alt": 27.8
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2036-08-21T17:42Z",
+          "alt": 22.2
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2036-08-21T18:37Z",
+          "alt": 16.5
+        }
+      },
+      {
+        "kind": "partial",
+        "obscuration": 0.705,
+        "partialBegin": {
+          "t": "2039-06-21T16:56Z",
+          "alt": 37.3
+        },
+        "totalBegin": null,
+        "peak": {
+          "t": "2039-06-21T18:10Z",
+          "alt": 29.7
+        },
+        "totalEnd": null,
+        "partialEnd": {
+          "t": "2039-06-21T19:18Z",
+          "alt": 22.3
+        }
+      }
+    ]
+  },
+  "optionB": {
+    "places": 25,
+    "matched": 213,
+    "onlyTruth": 0,
+    "onlyLight": 1,
+    "kindMismatch": 1,
+    "obscurationPP": {
+      "n": 213,
+      "max": 0.25043683091519053,
+      "p95": 0.10727927576763552,
+      "mean": 0.04273744846853235
+    },
+    "beginMin": {
+      "n": 213,
+      "max": 1.261729081217448,
+      "p95": 0.9775409220377604,
+      "mean": 0.3510503134857321
+    },
+    "peakMin": {
+      "n": 213,
+      "max": 1.0344998982747395,
+      "p95": 0.8753613525390626,
+      "mean": 0.35134336078864664
+    },
+    "endMin": {
+      "n": 213,
+      "max": 1.3821970336914062,
+      "p95": 0.9592960530598958,
+      "mean": 0.3476016015090107
+    },
+    "sunAltAtPeakDeg": {
+      "n": 213,
+      "max": 0.21633138060850143,
+      "p95": 0.09668191999984543,
+      "mean": 0.035849116742298036
+    },
+    "outliers": [
+      {
+        "place": "eu4",
+        "peak": "2029-06-12T03:11:52Z",
+        "note": "extra in light",
+        "obsc": 0.16
+      },
+      {
+        "place": "eu5",
+        "peak": "2028-01-26T16:57:23Z",
+        "note": "kind light=partial truth=annular",
+        "obsc": 0.8249
+      },
+      {
+        "place": "eu1",
+        "peak": "2034-03-20T10:38:01Z",
+        "dObscPP": -0.01,
+        "dBeginMin": 1.26
+      },
+      {
+        "place": "eu13",
+        "peak": "2034-03-20T10:59:02Z",
+        "dObscPP": -0.02,
+        "dBeginMin": 1.08
+      },
+      {
+        "place": "eu8",
+        "peak": "2034-03-20T10:16:28Z",
+        "dObscPP": -0.01,
+        "dBeginMin": 1.04
+      },
+      {
+        "place": "sydney",
+        "peak": "2028-07-22T04:01:22Z",
+        "dObscPP": 0,
+        "dBeginMin": 1.03
+      },
+      {
+        "place": "eu9",
+        "peak": "2034-03-20T10:51:49Z",
+        "dObscPP": 0.02,
+        "dBeginMin": 1
+      }
+    ],
+    "europeanPlaces": [
+      {
+        "id": "eu1",
+        "lat": 55.8,
+        "lon": 10.79
+      },
+      {
+        "id": "eu2",
+        "lat": 67.11,
+        "lon": 17.95
+      },
+      {
+        "id": "eu3",
+        "lat": 61.6,
+        "lon": 17.58
+      },
+      {
+        "id": "eu4",
+        "lat": 53.72,
+        "lon": -3.93
+      },
+      {
+        "id": "eu5",
+        "lat": 37.67,
+        "lon": -0.95
+      },
+      {
+        "id": "eu6",
+        "lat": 45.77,
+        "lon": 29.88
+      },
+      {
+        "id": "eu7",
+        "lat": 60.15,
+        "lon": 16.86
+      },
+      {
+        "id": "eu8",
+        "lat": 48.3,
+        "lon": 0.25
+      },
+      {
+        "id": "eu9",
+        "lat": 39.56,
+        "lon": 25.98
+      },
+      {
+        "id": "eu10",
+        "lat": 64.89,
+        "lon": 23.59
+      },
+      {
+        "id": "eu11",
+        "lat": 51.34,
+        "lon": 1.25
+      },
+      {
+        "id": "eu12",
+        "lat": 64.61,
+        "lon": -8.18
+      },
+      {
+        "id": "eu13",
+        "lat": 62.05,
+        "lon": 28.53
+      },
+      {
+        "id": "eu14",
+        "lat": 63.37,
+        "lon": -5.4
+      },
+      {
+        "id": "eu15",
+        "lat": 47.46,
+        "lon": 15.98
+      },
+      {
+        "id": "eu16",
+        "lat": 37.9,
+        "lon": 0.76
+      },
+      {
+        "id": "eu17",
+        "lat": 53.17,
+        "lon": 20.74
+      },
+      {
+        "id": "eu18",
+        "lat": 45.23,
+        "lon": 10.66
+      },
+      {
+        "id": "eu19",
+        "lat": 36.09,
+        "lon": 13.09
+      },
+      {
+        "id": "eu20",
+        "lat": 54.87,
+        "lon": 16.06
+      }
+    ]
+  },
+  "lunarVerdictMismatchL2vsTruth": 0,
+  "tableSizes": {
+    "lunar2026_2050": {
+      "count": 55,
+      "jsonBytes": 1427,
+      "format": "[peakUnixSec, sdPenumMin, sdPartialMin, sdTotalMin]"
+    },
+    "solar2026_2050": {
+      "count": 54,
+      "jsonBytes": 919,
+      "format": "[peakUnixSec, kindLetter] (option B needs only this, or nothing)"
+    },
+    "besselian2026_2050": {
+      "count": 54,
+      "estimateBytes": 12420,
+      "note": "not measured: estimate for ~26 numbers/eclipse (t0, dT, x,y,d,mu,l1,l2 cubic/quadratic coefficients, tan f1, tan f2)"
+    }
+  }
+}

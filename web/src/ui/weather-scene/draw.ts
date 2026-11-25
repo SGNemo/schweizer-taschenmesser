@@ -3,7 +3,8 @@
  * geometry block `G` unchanged). Pure: the same state and options give the same string; all randomness comes from the
  * seeded generator. Colours are never literal: every colour is a `--scene-*` token (`ui/tokens.css`) or a
  * `color-mix()` of tokens, so the themes live in CSS. "Ruhig" is drawn by the component (greys over the same shapes).
- * Not in this package: moon, sky events, the village landscape, the porthole and the moon glyph (packages 2–4).
+ * The sky events (package 3) are drawn as in the mockup and never move; aurora (3b), the village landscape and the
+ * porthole (4) are not here.
  */
 import {
   FALLING,
@@ -144,7 +145,18 @@ export const G = {
     [1530, 24],
   ] as Pt[],
   grass: { n: 9, from: 1110, to: 1590 },
-  stars: { n: 60, yMin: 8, yMax: 200, rMin: 0.8, rMax: 1.8, sparkles: 6, sparkR: 4, few: 0.35 },
+  stars: {
+    n: 60,
+    many: 150,
+    yMin: 8,
+    yMax: 200,
+    rMin: 0.8,
+    rMax: 1.8,
+    sparkles: 6,
+    sparkR: 4,
+    few: 0.35,
+  },
+  milky: { cx: 1180, cy: 112, rx: 560, ry: 46, rot: -14, op: 0.12, n: 60 },
   tpl: {
     s: {
       w: 120,
@@ -194,6 +206,7 @@ export const G = {
     hail: 40,
     slant: [10, 10, 28, 42],
     showers: [1150, 1500],
+    curtain: [1400, 1600, 34],
     len: 18,
     width: 2,
     op: 0.75,
@@ -207,6 +220,7 @@ export const G = {
     [940, 660, 252, 26, 'near'],
     [1260, 380, 234, 16, 'near'],
   ] as const,
+  rainbow: { cx: 1180, cy: 330, r: 196, w: 5, op: 0.7, fade: [214, 274] },
   bolt: [
     [1296, 190],
     [1316, 190],
@@ -218,6 +232,12 @@ export const G = {
   ] as Pt[],
   skew: [0, 6, 12, 20],
   shelter: { x1: 1300, op: 0.75, y0: 196, y1: 252 },
+  /** Head x, y, tail length (up and to the right). */
+  meteors: [
+    [1214, 76, 108],
+    [1430, 116, 72],
+    [1010, 66, 62],
+  ] as const,
   motion: { rain: 2.4, rainHeavy: 1.6, snow: [10, 15], total: 12 },
   windStrokes: [
     [1150, 156, 190],
@@ -245,6 +265,8 @@ const SKY_OFFSETS: Record<SkyKey, readonly number[]> = {
   snow: [0, 1],
   fog: [0, 1],
   heat: [0, 1],
+  dust: [0, 1],
+  'eclipse-sky': [0, 1],
 };
 export const skyOffsets = (key: SkyKey, theme: 'light' | 'dark'): readonly number[] =>
   key === 'golden' && theme === 'dark' ? [0, 0.6, 1] : SKY_OFFSETS[key];
@@ -401,9 +423,18 @@ function mask(X: Ctx, inner: string): string {
 const PRECIP = FALLING;
 const nightish = (s: SceneState): boolean =>
   s.phase === 'night' || s.phase === 'dawn' || s.phase === 'dusk';
+/** Night, twilight or the darkness of a total solar eclipse: clouds take their night tone. */
+const darkSky = (s: SceneState): boolean => nightish(s) || s.event === 'solarTotal';
+/** … and the star night: the land takes its night colours. */
+const nightLand = (s: SceneState): boolean => darkSky(s) || s.event === 'starNight';
 
-function skyStops(key: SkyKey, theme: 'light' | 'dark'): Stop[] {
-  return skyOffsets(key, theme).map((o, i) => [o, `var(--scene-sky-${key}-${i})`] as const);
+function skyStops(s: SceneState, key: SkyKey): Stop[] {
+  // a partial solar eclipse beyond 60 %: the sky one step dimmer
+  const dim = s.event === 'solarPartial' && s.eventAmount > 0.6 ? 0.3 : 0;
+  return skyOffsets(key, s.theme).map((o, i) => {
+    const c = `var(--scene-sky-${key}-${i})`;
+    return [o, dim ? mix(c, 'dim-target', dim) : c] as const;
+  });
 }
 /** The sky gradient's colour at a height (for atmospheric perspective). */
 function skyAt(stops: readonly Stop[], y: number): string {
@@ -454,6 +485,22 @@ function skyLayer(
     );
     out += el('rect', { width: G.W, height: G.H, fill: gl });
   }
+  if (X.s.event === 'solarTotal')
+    out += el('rect', {
+      y: 170,
+      width: G.W,
+      height: 100,
+      fill: grad(
+        X,
+        [
+          [0, 'glow-eclipse-sky', 0],
+          [0.6, 'glow-eclipse-sky', 0.35],
+          [1, 'glow-eclipse-sky', 0],
+        ],
+        { x1: 0, y1: 0, x2: 0, y2: 1 },
+      ),
+      'data-part': 'eclipseGlow',
+    });
   return out;
 }
 
@@ -461,10 +508,12 @@ function starsLayer(X: Ctx): string {
   const s = X.s;
   const S = G.stars;
   const p = s.phase;
-  if (!nightish(s)) return '';
-  const total = S.n;
+  const ev = s.event;
+  if (!nightish(s) && ev !== 'solarTotal' && ev !== 'starNight') return '';
+  const many = ev === 'starNight' || ev === 'lunarTotal';
+  const total = many ? S.many : S.n;
   let k = (1 - s.cloud / 100) * (p === 'dawn' || p === 'dusk' ? S.few : 1);
-  if (s.body.kind === 'moon') k *= 1 - 0.6 * (s.moon?.illum ?? 0);
+  if (s.body.kind === 'moon' && !many && ev !== 'lunarPartial') k *= 1 - 0.6 * (s.moon?.illum ?? 0);
   if (s.cond === 'fog') k *= 0.3;
   const n = Math.round(total * k);
   const r = prng(s.seed * 13 + 1);
@@ -499,14 +548,92 @@ function starsLayer(X: Ctx): string {
     if (dots[i]) out += el('path', { d: dots[i], fill: star, opacity: o });
   });
   if (sp) out += el('path', { d: sp, fill: star, opacity: 0.9 });
+  if (ev === 'starNight') {
+    // the faint band of the Milky Way: a soft ellipse and a dust of tiny stars along it
+    const M = G.milky;
+    const mw = grad(
+      X,
+      [
+        [0, 'white', 1],
+        [1, 'white', 0],
+      ],
+      { radial: true },
+    );
+    let band = el('ellipse', {
+      cx: M.cx,
+      cy: M.cy,
+      rx: M.rx,
+      ry: M.ry,
+      fill: mw,
+      opacity: M.op,
+      transform: `rotate(${M.rot} ${M.cx} ${M.cy})`,
+    });
+    let md = '';
+    const rot = (M.rot * Math.PI) / 180;
+    for (let j = 0; j < M.n; j++) {
+      const u = (r() * 2 - 1) * M.rx * 0.9;
+      const v = (r() + r() - 1) * M.ry * 0.7;
+      md += circ(
+        M.cx + u * Math.cos(rot) - v * Math.sin(rot),
+        M.cy + u * Math.sin(rot) + v * Math.cos(rot),
+        0.4 + r() * 0.5,
+      );
+    }
+    band += el('path', { d: md, fill: star, opacity: 0.8 });
+    out += el('g', { 'data-part': 'milky' }, band);
+  }
   return out;
 }
 
 function sunBody(X: Ctx, x: number, y: number, r: number, bottom: string): string {
   const s = X.s;
+  const ev = s.event;
   const low = s.body.t < G.sun.low || s.body.t > 1 - G.sun.low;
+  if (ev === 'dust')
+    return el('circle', {
+      cx: x,
+      cy: y,
+      r,
+      fill: tok('dust-sun'),
+      opacity: 0.78,
+      'data-part': 'dustSun',
+    });
   if (s.cond === 'fog')
     return el('circle', { cx: x, cy: y, r, fill: mix('sun-core', bottom, 0.35), opacity: 0.78 });
+  if (ev === 'solarTotal') {
+    // dark disc, a soft corona and six rounded petals
+    const cg = grad(
+      X,
+      [
+        [0, 'white', 0.85],
+        [0.36, 'white', 0.45],
+        [1, 'white', 0],
+      ],
+      { radial: true },
+    );
+    let petals = '';
+    for (let i = 0; i < 6; i++) {
+      const a = i * 60 + 18 + (i % 2) * 9;
+      const L = r * (i % 2 ? 1.55 : 1.85);
+      const w = r * 0.55;
+      petals += el('path', {
+        d:
+          `M0,${f(-w)}C${f(L * 0.6)},${f(-w)} ${f(L)},${f(-w * 0.25)} ${f(L)},0` +
+          `C${f(L)},${f(w * 0.25)} ${f(L * 0.6)},${f(w)} 0,${f(w)}Z`,
+        transform: `rotate(${a})`,
+        fill: 'white',
+        opacity: 0.42,
+      });
+    }
+    return el(
+      'g',
+      { transform: `translate(${f(x)} ${f(y)})`, 'data-part': 'corona' },
+      el('circle', { r: r * 2.8 * X.haloK, fill: cg }) +
+        petals +
+        el('circle', { r, fill: tok('eclipse-disc'), 'data-part': 'disc' }),
+    );
+  }
+  const amt = ev === 'solarPartial' ? s.eventAmount : ev === 'solarAnnular' ? 0.85 : 0;
   const ring = tok(low ? 'sun-low' : 'sun');
   const core = low ? mix('sun-core', 'sun-low', 0.3) : tok('sun-core');
   const key = low ? 'sun-low' : 'sun';
@@ -524,10 +651,30 @@ function sunBody(X: Ctx, x: number, y: number, r: number, bottom: string): strin
     cy: y,
     r: r * G.sun.halo * X.haloK,
     fill: hg,
-    opacity: f(G.sun.haloOp * 100) / 100,
+    opacity: f(G.sun.haloOp * (1 - amt * 0.7) * 100) / 100,
   });
   out += el('circle', { cx: x, cy: y, r, fill: ring });
-  out += el('circle', { cx: x, cy: y, r: r * G.sun.core, fill: core });
+  if (ev !== 'solarAnnular') out += el('circle', { cx: x, cy: y, r: r * G.sun.core, fill: core });
+  if (ev === 'solarPartial') {
+    // the moon's bite from the upper right: a disc of the sky itself
+    const d = 2 * r * (1 - s.eventAmount);
+    const k = Math.SQRT1_2;
+    out += el('circle', {
+      cx: x + d * k,
+      cy: y - d * k,
+      r: r + 0.5,
+      fill: X.skyFill,
+      'data-part': 'bite',
+    });
+  }
+  if (ev === 'solarAnnular')
+    out += el('circle', {
+      cx: x,
+      cy: y,
+      r: r * 0.93,
+      fill: tok('eclipse-disc'),
+      'data-part': 'annular',
+    });
   return out;
 }
 
@@ -552,7 +699,7 @@ function cloudTone(X: Ctx): Tone {
   const dark = s.theme === 'dark';
   const p = s.phase;
   const i = s.intensity;
-  const night = nightish(s);
+  const night = darkSky(s);
   let b: string;
   let sh: string;
   if (night) {
@@ -715,7 +862,7 @@ function cloudLayers(X: Ctx, bp: Pt | null, top: string): { far: string; main: s
   const tone = cloudTone(X);
   let far = '';
   let main = '';
-  if (c === 'fog') return { far: '', main: '' };
+  if (c === 'fog' || s.event === 'solarTotal' || s.event === 'dust') return { far: '', main: '' };
   const bx = bp ? bp[0] : 1340;
   const by = bp ? bp[1] : 124;
   const lowSun = s.body.t < G.sun.low || s.body.t > 1 - G.sun.low;
@@ -778,7 +925,7 @@ interface Land {
 }
 function landColours(X: Ctx, stops: readonly Stop[]): Land {
   const s = X.s;
-  const night = nightish(s);
+  const night = nightLand(s);
   const season = s.season;
   let base = night ? tok('land-night') : tok(`land-${season}`);
   if (!night && s.theme === 'dark') base = mix(base, 'land-night', 0.45);
@@ -789,6 +936,7 @@ function landColours(X: Ctx, stops: readonly Stop[]): Land {
   if (s.heat && !night) near = mix('dry-meadow', base, s.theme === 'dark' ? 0.45 : 0.1);
   if (wet) near = mix(near, 'black', 0.12);
   if (s.frost === 2) near = mix(near, 'rime', night ? 0.12 : 0.25);
+  if (s.event === 'rainbow') near = mix(near, 'glow-golden', 0.12);
   const snow = s.snowGround;
   const snowTone = night
     ? mix('snow', bottom, 0.6)
@@ -803,8 +951,12 @@ function landColours(X: Ctx, stops: readonly Stop[]): Land {
     wet,
     near: snow ? snowTone : near,
     mid: mix(snow ? snowTone : base, bottom, 0.3),
-    far: night ? mix(mix(base, bottom, 0.62), 'haze-night', 0.2) : mix(base, bottom, 0.62),
-    alp: night ? mix(mix(base, bottom, 0.78), 'haze-night', 0.22) : mix(base, bottom, 0.78),
+    far: night
+      ? mix(mix(base, bottom, 0.62), 'haze-night', 0.2)
+      : mix(base, bottom, s.event === 'dust' ? 0.82 : 0.62),
+    alp: night
+      ? mix(mix(base, bottom, 0.78), 'haze-night', 0.22)
+      : mix(base, bottom, s.event === 'dust' ? 0.9 : 0.78),
     crowns: night
       ? [mix(base, 'black', 0.15), mix(base, 'black', 0.2), mix(base, 'black', 0.1)]
       : crowns.map((c) => (s.theme === 'dark' ? mix(c, 'land-night', 0.4) : c)),
@@ -816,6 +968,11 @@ function landColours(X: Ctx, stops: readonly Stop[]): Land {
         : tok('snow-shade'),
     trees: '',
   };
+  if (s.event === 'rainbow') {
+    // warm light on the ridges
+    o.mid = mix(o.mid, 'glow-golden', 0.12);
+    o.far = mix(o.far, 'glow-golden', 0.15);
+  }
   o.trees = mix(snow ? mix(base, bottom, 0.3) : o.mid, 'black', night ? 0.25 : 0.22);
   return o;
 }
@@ -858,7 +1015,7 @@ function ridgeTrims(X: Ctx, R: Ridge, LC: Land, which: 'far' | 'mid' | 'near'): 
     out += edges(X, R.crest, 'rime', w * 0.75, LC.night ? 0.45 : 0.7);
   if ((s.cond === 'freezingDrizzle' || s.cond === 'freezingRain') && which !== 'far')
     out += edges(X, R.crest, 'ice', 1.6, 0.75);
-  if (which !== 'near' && fullMoonUp(s) && LC.night)
+  if (which !== 'near' && fullMoonUp(s) && LC.night && !s.event)
     out += edges(X, R.crest, mix(LC[which], 'moon', 0.35), 1.5, 0.9);
   return out;
 }
@@ -1216,7 +1373,8 @@ function nearRidge(X: Ctx, R: Ridge, LC: Land): string {
     out += el('path', { d: sp, fill: tok('rime'), opacity: 0.95 });
   }
   // full-moon highlight: one continuous line over the crest, drawn after trees and bushes
-  if (fullMoonUp(s) && LC.night) out += edges(X, R.crest, mix(LC.near, 'moon', 0.35), 1.5, 0.9);
+  if (fullMoonUp(s) && LC.night && !s.event)
+    out += edges(X, R.crest, mix(LC.near, 'moon', 0.35), 1.5, 0.9);
   return out;
 }
 function fogBands(X: Ctx, which: 'far' | 'near'): string {
@@ -1257,7 +1415,9 @@ function precip(X: Ctx, bottom: string): string {
     isDrizzle(c) || c === 'rain' || c === 'freezingRain' || c === 'showers' || isThunder(c);
   const snowy = isSnow(c);
   const hail = c === 'thunderHail';
-  if (!rainy && !snowy) return '';
+  // rainbow weather: the rain falls as a light curtain on the right only
+  const curtain = s.event === 'rainbow';
+  if (!rainy && !snowy && !curtain) return '';
   const slant = P.slant[s.wind]!;
   const k = Math.tan((slant * Math.PI) / 180);
   const top = P.top;
@@ -1302,11 +1462,22 @@ function precip(X: Ctx, bottom: string): string {
     );
   };
   const showers = c === 'showers' || c === 'snowShowers';
-  const x0 = showers ? P.showers[0]! : 0;
-  const x1 = showers ? P.showers[1]! : G.W;
+  const x0 = curtain ? P.curtain[0]! : showers ? P.showers[0]! : 0;
+  const x1 = curtain ? P.curtain[1]! : showers ? P.showers[1]! : G.W;
   const rdur = i === 3 ? G.motion.rainHeavy : G.motion.rain;
   let out = '';
-  if (rainy) {
+  if (curtain && !rainy) {
+    out += fall(
+      el('path', {
+        d: region(P.curtain[2]!, 14, x0, x1),
+        stroke: rainCol,
+        'stroke-width': 1.4,
+        'stroke-linecap': 'round',
+        opacity: 0.4,
+      }),
+      rdur,
+    );
+  } else if (rainy) {
     const drizzle = isDrizzle(c);
     let n = drizzle ? P.drizzle : P.rain[i - 1]!;
     if (showers) n = Math.round(n * 0.8);
@@ -1374,21 +1545,80 @@ function precip(X: Ctx, bottom: string): string {
       ),
     }),
   );
-  const cy = showers ? 178 : top;
-  const clipD = showers
-    ? `M${x0},${cy}H${x1}L${f(x1 + k * (G.H - cy))},${G.H}H${f(x0 + k * (G.H - cy))}Z`
-    : `M0,${top}H${G.W}V${G.H}H0Z`;
+  const cy = showers ? 178 : curtain ? 96 : top;
+  const clipD =
+    showers || curtain
+      ? `M${x0},${cy}H${x1}L${f(x1 + k * (G.H - cy))},${G.H}H${f(x0 + k * (G.H - cy))}Z`
+      : `M0,${top}H${G.W}V${G.H}H0Z`;
   return el('g', { mask: mk }, el('g', { 'clip-path': clip(X, el('path', { d: clipD })) }, out));
 }
 
-/* --- bolt and wind --- */
+/* --- bolt, sky events and wind --- */
+/** The bolt, the rainbow and the meteors: all still (no motion class, never animated). */
 function eventLayer(X: Ctx): string {
-  if (!isThunder(X.s.cond)) return '';
-  return el('path', {
-    d: `M${G.bolt.map((p) => p.join(',')).join('L')}Z`,
-    fill: tok('bolt'),
-    'stroke-linejoin': 'round',
-  });
+  const s = X.s;
+  let out = '';
+  if (isThunder(s.cond))
+    out += el('path', {
+      d: `M${G.bolt.map((p) => p.join(',')).join('L')}Z`,
+      fill: tok('bolt'),
+      'stroke-linejoin': 'round',
+    });
+  if (s.event === 'rainbow') {
+    const R = G.rainbow;
+    let arcs = '';
+    for (let i = 0; i < 5; i++) {
+      const rr = R.r - R.w / 2 - i * R.w;
+      arcs += el('path', {
+        d: `M${f(R.cx - rr)},${R.cy}A${f(rr)},${f(rr)} 0 0 1 ${f(R.cx + rr)},${R.cy}`,
+        fill: 'none',
+        stroke: tok(`rb-${i + 1}`),
+        'stroke-width': R.w + 0.4,
+      });
+    }
+    // the feet fade into the land
+    const mk = mask(
+      X,
+      el('rect', {
+        width: G.W,
+        height: G.H,
+        fill: grad(
+          X,
+          [
+            [0, 'white', 1],
+            [1, 'white', 0],
+          ],
+          { x1: 0, x2: 0, y1: R.fade[0], y2: R.fade[1], gradientUnits: 'userSpaceOnUse' },
+        ),
+      }),
+    );
+    out += el('g', { mask: mk, opacity: R.op, 'data-part': 'rainbow' }, arcs);
+  }
+  if (s.event === 'meteors') {
+    let streaks = '';
+    const a = (32 * Math.PI) / 180;
+    for (const [hx, hy, len] of G.meteors) {
+      const tx = hx + Math.cos(a) * len;
+      const ty = hy - Math.sin(a) * len;
+      const g = grad(
+        X,
+        [
+          [0, 'white', 0.95],
+          [1, 'white', 0],
+        ],
+        { x1: hx, y1: hy, x2: f(tx), y2: f(ty), gradientUnits: 'userSpaceOnUse' },
+      );
+      streaks +=
+        el('path', {
+          d: `M${hx},${hy}L${f(tx)},${f(ty)}`,
+          stroke: g,
+          'stroke-width': 1.6,
+          'stroke-linecap': 'round',
+        }) + el('circle', { cx: hx, cy: hy, r: 1.6, fill: tok('star') });
+    }
+    out += el('g', { 'data-part': 'meteors' }, streaks);
+  }
+  return out;
 }
 function windLayer(X: Ctx, LC: Land): string {
   const s = X.s;
@@ -1473,14 +1703,30 @@ function moonBody(
   cx: number,
   cy: number,
   r: number,
-  o: { glow: boolean; darkFill: string; maria?: boolean },
+  o: { glow: boolean; darkFill: string; maria?: boolean; eclipse?: 'lunarPartial' | 'lunarTotal' },
 ): string {
   const m = X.s.moon ?? { illum: 0.5, tilt: -90, size: 1 };
-  const illum = m.illum;
+  const ev = o.eclipse;
+  // an eclipsed moon is full (a lunar eclipse happens only at full moon)
+  const illum = ev ? 1 : m.illum;
   const lit = litPath(r, illum);
   let out = '';
+  if (ev === 'lunarTotal') {
+    // the copper moon: no glow, no maria
+    const cu = grad(
+      X,
+      [
+        [0, 'eclipse-red'],
+        [0.7, 'eclipse-red'],
+        [1, 'eclipse-red-dark'],
+      ],
+      { radial: true },
+    );
+    out = el('circle', { r, fill: cu, 'data-part': 'copper' });
+    return `<g data-part="moon" data-tilt="${f(m.tilt)}" transform="translate(${f(cx)} ${f(cy)})">${out}</g>`;
+  }
   // dark side: earthshine when thin, else the sky's own colour (it hides the stars behind the moon)
-  if (lit && illum < G.moon.earthshine)
+  if (!ev && lit && illum < G.moon.earthshine)
     out += el('circle', { r, fill: mix('moon-dark', o.darkFill, 0.15), opacity: 0.85 });
   if (!lit)
     out += el('circle', {
@@ -1537,7 +1783,26 @@ function moonBody(
       );
     }
   }
-  return `<g data-part="moon" data-tilt="${f(m.tilt)}" transform="translate(${f(cx)} ${f(cy)}) rotate(${f(tiltRotation(m.tilt))})">${out}</g>`;
+  const rot = f(tiltRotation(m.tilt));
+  if (ev === 'lunarPartial') {
+    // the umbra's bite from the lower left (on the screen, not turned with the tilt)
+    const ru = r * 2.6;
+    const d = ru + r - X.s.eventAmount * 2 * r;
+    const k = Math.SQRT1_2;
+    out += el(
+      'g',
+      { transform: `rotate(${-rot || 0})`, 'data-part': 'umbra' },
+      el('circle', {
+        cx: f(-d * k),
+        cy: f(d * k),
+        r: ru,
+        fill: tok('eclipse-umbra'),
+        opacity: 0.85,
+        'clip-path': clip(X, el('circle', { r })),
+      }),
+    );
+  }
+  return `<g data-part="moon" data-tilt="${f(m.tilt)}" transform="translate(${f(cx)} ${f(cy)}) rotate(${rot})">${out}</g>`;
 }
 
 /** Where the body sits: the sun on its arc ("partly behind the far ridge", never fully hidden); the moon by its
@@ -1557,7 +1822,7 @@ function bodyPos(s: SceneState, crest: (x: number) => number, r: number): Pt {
 
 export function sceneSvg(s: SceneState, opts: SceneOptions = {}): SceneSvg {
   const sky = skyOf(s);
-  const stops = skyStops(sky.key, s.theme);
+  const stops = skyStops(s, sky.key);
   const X: Ctx = {
     s,
     defs: [],
@@ -1584,7 +1849,8 @@ export function sceneSvg(s: SceneState, opts: SceneOptions = {}): SceneSvg {
   const deckOn = s.cloud > 85 && s.cond !== 'fog';
   const moonUp = s.body.kind === 'moon';
   const br = moonUp ? G.moon.r * (s.moon?.size ?? 1) : s.heat ? G.sun.rHeat : G.sun.r;
-  const bp: Pt | null = s.body.kind === 'none' ? null : (opts.bodyAt ?? bodyPos(s, crest, br));
+  const bp: Pt | null =
+    s.body.kind === 'none' || s.event === 'rainbow' ? null : (opts.bodyAt ?? bodyPos(s, crest, br));
   X.bodyX = bp ? bp[0] : null;
   X.bodyP = bp;
   X.br = br;
@@ -1608,7 +1874,11 @@ export function sceneSvg(s: SceneState, opts: SceneOptions = {}): SceneSvg {
         ),
       });
     else if (moonUp)
-      body = moonBody(X, bp[0], bp[1], br, { glow: true, darkFill: skyAt(stops, bp[1]) });
+      body = moonBody(X, bp[0], bp[1], br, {
+        glow: true,
+        darkFill: skyAt(stops, bp[1]),
+        eclipse: s.event === 'lunarPartial' || s.event === 'lunarTotal' ? s.event : undefined,
+      });
     else body = sunBody(X, bp[0], bp[1], br, bottom);
   }
   // No day moon in a narrow crop (phone): the body has its own box there and the text needs the rest.

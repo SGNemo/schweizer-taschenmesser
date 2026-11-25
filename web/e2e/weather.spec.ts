@@ -331,8 +331,21 @@ test.describe('Weather module', () => {
 
 const sceneDays = days7;
 /** The analysis fixture (invented place "Lindenau"): a night or a day, with 0, 1 or 2 hints for today and tomorrow. */
-async function mockScene(page: Page, o: { night: boolean; hints: 0 | 1 | 2 }) {
+async function mockScene(
+  page: Page,
+  o: { night: boolean; hints: 0 | 1 | 2; date?: string; dust?: number },
+) {
   const hours = [...times, ...nextDay];
+  // Another day (package 3): every date of the answer moves by the same number of days.
+  const shift = o.date ? Math.round((Date.parse(o.date) - Date.parse('2026-09-29')) / 86400000) : 0;
+  const moved = <T>(json: T): T =>
+    shift === 0
+      ? json
+      : (JSON.parse(
+          JSON.stringify(json).replace(/2026-(09|10)-(\d\d)/g, (d) =>
+            new Date(Date.parse(d) + shift * 86400000).toISOString().slice(0, 10),
+          ),
+        ) as T);
   await page.route('**://geocoding-api.open-meteo.com/**', (route) =>
     route.fulfill({
       json: {
@@ -341,11 +354,13 @@ async function mockScene(page: Page, o: { night: boolean; hints: 0 | 1 | 2 }) {
     }),
   );
   await page.route('**://air-quality-api.open-meteo.com/**', (route) =>
-    route.fulfill({ status: 500, body: '' }),
+    o.dust != null
+      ? route.fulfill({ json: { current: { european_aqi: 25, dust: o.dust } } })
+      : route.fulfill({ status: 500, body: '' }),
   );
   await page.route('**://api.open-meteo.com/**', (route) =>
     route.fulfill({
-      json: {
+      json: moved({
         timezone: 'Europe/Berlin',
         current: {
           time: o.night ? '2026-09-29T02:50' : '2026-09-29T12:00',
@@ -379,7 +394,7 @@ async function mockScene(page: Page, o: { night: boolean; hints: 0 | 1 | 2 }) {
           sunrise: sceneDays.map((d) => `${d}T07:38`),
           sunset: sceneDays.map((d) => `${d}T16:24`),
         },
-      },
+      }),
     }),
   );
 }
@@ -485,4 +500,71 @@ test.describe('Weather scene in the head (package 1b)', () => {
             ),
           ).toEqual([]);
         });
+});
+
+test.describe('Sky events (package 3)', () => {
+  // The partial solar eclipse of 2027-08-02 at the invented place (CONCEPT-EVENTS §4): 08:10–10:14 UTC (the browser
+  // runs in UTC; the place's clock is Berlin).
+  const eclipseDay = async (page: Page, hints: 0 | 1 | 2, time = '2027-08-02T05:00:00Z') => {
+    await page.clock.setFixedTime(new Date(time));
+    await mockScene(page, { night: false, hints, date: '2027-08-02' });
+    await chooseLindenau(page);
+    await ready(page, '/weather');
+    await expect(page.getByTestId('weather-keys')).toBeVisible();
+  };
+
+  for (const [w, h, phone] of [
+    [1920, 1080, false],
+    [412, 915, true],
+  ] as const)
+    test(`the eclipse day at ${w} px: safety pill and the hints, the chip, the stage height`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: w, height: h });
+      await eclipseDay(page, 2);
+      const frame = page.getByTestId('module-frame');
+      await expect(frame.getByTestId('weather-safety')).toContainText('Sonnenfinsternis-Brille');
+      // Desktop: one hint beside the safety pill, the second under the head; phone: both hints under the head.
+      await expect(frame.getByTestId('weather-warning')).toHaveCount(phone ? 0 : 1);
+      await expect(
+        page.getByTestId('weather-late-warning').getByTestId('weather-warning'),
+      ).toHaveCount(1);
+      const keys = frame.getByTestId('weather-keys');
+      await expect(keys).toContainText(/Sonnenfinsternis \d\d:\d\d–\d\d:\d\d/);
+      // Phone: the event takes the wind chip's place; the wind goes to the line under the stage.
+      if (phone) {
+        await expect(keys.getByRole('listitem')).toHaveCount(2);
+        await expect(keys).not.toContainText('Wind');
+      }
+      const box = (await frame.boundingBox())!;
+      expect(box.height).toBeLessThanOrEqual((phone ? 300 : 290) + 1);
+      await expect(page.getByTestId('weather-sky-next')).toContainText('Als Nächstes');
+    });
+
+  test('the event pictures never move, also with motion on', async ({ page }) => {
+    await eclipseDay(page, 0, '2027-08-02T09:10:00Z');
+    const scene = page.getByTestId('weather-scene');
+    await expect(scene.locator('[data-part="bite"]')).toHaveCount(1);
+    const moving = await scene
+      .locator('[data-part="bite"]')
+      .evaluate((el) => !!el.closest('[class*="sc-"]'));
+    expect(moving).toBe(false);
+  });
+
+  for (const scheme of ['light', 'dark'] as const)
+    test(`axe on the eclipse day: ${scheme}`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await eclipseDay(page, 1, '2027-08-02T09:10:00Z');
+      const { default: AxeBuilder } = await import('@axe-core/playwright');
+      const results = await new AxeBuilder({ page })
+        .include('[data-testid="module-frame"]')
+        .include('[data-testid="weather-moon"]')
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+        .analyze();
+      expect(
+        results.violations.map(
+          (v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`,
+        ),
+      ).toEqual([]);
+    });
 });
