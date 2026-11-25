@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { PlanMarkLink } from '@/core/entitylinks/PlanMark';
-import type { PlanMarkState } from '@/core/entitylinks/planMark';
+import type { PlanMarkState } from '@/core/entitylinks/planMarkRead';
 import { useModuleStates } from '@/core/modules/activation';
 import { t } from '@/strings';
 import { RowMenu } from '@/ui';

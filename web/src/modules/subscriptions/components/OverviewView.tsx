@@ -6,7 +6,7 @@ import { relativeDays } from '@/core/i18n/format';
 import { t } from '@/strings';
 import { Card, Segmented } from '@/ui';
 import { Bars, Donut } from '@/ui/charts';
-import type { PlanMarkState } from '@/core/entitylinks/planMark';
+import type { PlanMarkState } from '@/core/entitylinks/planMarkRead';
 import type { Subscription } from '../schema';
 import {
   byDay,

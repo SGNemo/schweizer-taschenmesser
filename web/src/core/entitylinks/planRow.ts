@@ -24,7 +24,7 @@ import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
 import { createCollectionRepo } from '@/core/db/repo';
 import { getManifest } from '@/core/modules/registry';
 import { plannedDay } from './index';
-import { placementsOf } from './planMark';
+import { placementsOf } from './planMarkRead';
 import { NEVER_LINKED, refKey, type EntityRef } from './types';
 
 const PLANNER = 'planner';
