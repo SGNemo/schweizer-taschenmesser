@@ -650,7 +650,7 @@
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
-      "colouredAboveFold": 13,
+      "colouredAboveFold": 17,
       "signatureBlocks": 0
     },
     "p412--accounts": {
@@ -1125,7 +1125,7 @@
       "height": 7727,
       "buttons": 21,
       "links": 8,
-      "icons": 16,
+      "icons": 18,
       "firstScreenActions": 11,
       "borders": 1,
       "shadows": 0,
