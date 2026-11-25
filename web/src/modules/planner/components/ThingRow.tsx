@@ -1,6 +1,7 @@
 import { Fragment, type ReactNode, useState } from 'react';
 import { useNavigate } from 'react-router';
 import type { PlannableEntry } from '@/core/modules/contributions';
+import { PlanPanelHost } from '@/core/modules/PlanPanelHost';
 import { getManifest } from '@/core/modules/registry';
 import { dayName, partWord } from '@/core/plan/explain';
 import { t } from '@/strings';
@@ -10,12 +11,71 @@ import { compact } from './capacity';
 import {
   ActionLead,
   LinkChips,
+  PanelLinks,
+  type RowLinkViews,
   useActionMenu,
   useLinkMenu,
   useRowLinks,
   withLinks,
 } from './RowLinks';
+import { compartmentId, RowCompartment } from './RowCompartment';
 import styles from '../routes/planner.module.css';
+
+/**
+ * The row opens instead of jumping (planner hub 2, package 4a): the title toggles the compartment, „Ganz öffnen“ in it
+ * is the old jump. Left out while „Zeilen aufklappen“ is off (the title opens the thing as before) and in a selection.
+ */
+export interface RowExpand {
+  open: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+  /** X4 „Aus dem Plan nehmen“ for a thing that is gone (the planner's own undoable „Nicht planen“). */
+  onTakeOut?: () => void;
+}
+
+/** The title's disclosure (COPY X1) and the compartment under the row while it is open. */
+function expandParts(
+  expand: RowExpand | undefined,
+  entry: PlannableEntry | undefined,
+  unitId: string,
+  title: string,
+  links: RowLinkViews,
+  part?: { k: number; of: number },
+) {
+  if (!expand || !entry) return undefined;
+  const id = compartmentId(unitId);
+  // The compartment's name: a thing in parts says which part, as its title does (the button's name is what it shows).
+  const named =
+    part && part.of > 1 ? `${title}, ${t.planner.row.partAria(part.k + 1, part.of)}` : title;
+  return {
+    disclosure: {
+      open: expand.open,
+      controls: id,
+      hint: expand.open ? t.planner.panel.collapseHint : t.planner.panel.expandHint,
+    },
+    onOpen: expand.onToggle,
+    compartment: expand.open ? (
+      <RowCompartment id={id} label={named} onClose={expand.onClose}>
+        <PlanPanelHost
+          moduleId={entry.moduleId}
+          id={entry.id}
+          to={entry.to}
+          {...(expand.onTakeOut ? { onTakeOut: expand.onTakeOut } : {})}
+          detail={
+            entry.detail ? (
+              MONEY.test(entry.detail) ? (
+                <SensitiveValue compact>{entry.detail}</SensitiveValue>
+              ) : (
+                entry.detail
+              )
+            ) : undefined
+          }
+          links={links.length > 0 ? <PanelLinks views={links} /> : undefined}
+        />
+      </RowCompartment>
+    ) : undefined,
+  };
+}
 
 /** „Teil 1/2“ for the eye, „Teil 1 von 2“ for the screen reader. */
 export function Part({ k, of }: { k: number; of: number }) {
@@ -68,6 +128,7 @@ export function ThingRow({
   onTakeOff,
   select,
   draggable,
+  expand,
 }: {
   row: BoardRow;
   /** The first row of „Zuerst“: its title is strong. */
@@ -98,6 +159,8 @@ export function ThingRow({
   select?: { selected: boolean; onChange: (selected: boolean) => void };
   /** The row can be dragged onto a day and moved with `M` (package 5; the page's `useDragMove` acts). */
   draggable?: boolean;
+  /** „Zeilen aufklappen“ (package 4a): the title opens the compartment; not in a selection. */
+  expand?: RowExpand;
 }) {
   const navigate = useNavigate();
   // Ticked: the row fades while the source stores it, then leaves with the board's next reading.
@@ -106,6 +169,7 @@ export function ThingRow({
   const source = entry ? sourceOf(entry) : undefined;
   const action = onDone ? undefined : entry?.action;
   const links = useRowLinks(entry);
+  const opens = expandParts(select ? undefined : expand, entry, row.unitId, row.title, links, row);
   const linkedMenu = withLinks(menu, useActionMenu(action), useLinkMenu(links));
   // „Noch offen“: the row's steps are on the row itself – no ⋯.
   const fullMenu = onMove ? [] : linkedMenu;
@@ -189,7 +253,8 @@ export function ThingRow({
           {row.of > 1 ? <Part k={row.k} of={row.of} /> : null}
         </span>
       }
-      onOpen={entry ? () => void navigate(entry.to) : undefined}
+      onOpen={opens ? opens.onOpen : entry ? () => void navigate(entry.to) : undefined}
+      {...(opens ? { disclosure: opens.disclosure } : {})}
       meta={
         facts.length === 0 && !whyOpen ? (
           // Only the phone shows the minutes in the meta (its end slot is hidden).
@@ -283,7 +348,9 @@ export function ThingRow({
       swipeRightLabel={t.planner.row.done}
       onSwipeLeft={row.fixed ? undefined : onLater}
       swipeLeftLabel={t.planner.row.later}
-    />
+    >
+      {opens?.compartment}
+    </ItemRow>
   );
 }
 
@@ -298,6 +365,7 @@ export function WaitRow({
   menu,
   chip,
   draggable,
+  expand,
 }: {
   row: WaitingRow;
   reason: string;
@@ -308,9 +376,12 @@ export function WaitRow({
   chip?: ReactNode;
   /** The row can be dragged onto a day and moved with `M` (package 5). */
   draggable?: boolean;
+  /** „Zeilen aufklappen“ (package 4a): the title opens the compartment. */
+  expand?: RowExpand;
 }) {
   const links = useRowLinks(row.entry);
   const linkMenu = useLinkMenu(links);
+  const opens = expandParts(expand, row.entry, row.unitId, row.title, links, row);
   return (
     <ItemRow
       // `?item=<rowKey>` finds it here too: the page opens the folded group and focuses it (package 10b).
@@ -322,6 +393,7 @@ export function WaitRow({
         </span>
       }
       titleFull
+      {...(opens ? { onOpen: opens.onOpen, disclosure: opens.disclosure } : {})}
       // The reason only behind „Warum hier?“, like on the board (U12). A row without a menu (no entry) keeps its
       // reason in sight.
       meta={why || !row.entry ? reason : undefined}
@@ -336,7 +408,9 @@ export function WaitRow({
       end={<span className={styles.minutes}>{compact(row.minutes)}</span>}
       menu={withLinks(menu, [], linkMenu)}
       menuLabel={t.planner.row.menu(row.title)}
-    />
+    >
+      {opens?.compartment}
+    </ItemRow>
   );
 }
 

@@ -1,5 +1,6 @@
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
+import type { UndoStep } from '@/core/db/recorder';
 import { undoable, undoEntry } from './index';
 
 /**
@@ -10,8 +11,10 @@ export async function undoableWithToast<R>(
   label: string,
   message: string,
   fn: () => Promise<R>,
+  /** The action's own, narrower inverse (`undoable`). */
+  inverse?: UndoStep,
 ): Promise<R> {
-  const { result, entry } = await undoable(label, fn);
+  const { result, entry } = await undoable(label, fn, undefined, inverse);
   const { toast } = useUiStore.getState();
   toast(
     message,

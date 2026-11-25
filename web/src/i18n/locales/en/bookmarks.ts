@@ -1,6 +1,9 @@
 import type { Strings } from '@/strings';
 
 export const bookmarks: Strings['bookmarks'] = {
+  panel: {
+    openInBrowser: 'Open in the browser',
+  },
   meta: {
     name: 'Saved',
     description:

@@ -7,6 +7,7 @@ import { useHeroControls, useHeroTargets } from '@/core/shell/heroContext';
 import { usePageAction } from '@/core/shell/pageAction';
 import { Button } from './Button';
 import { Checkbox } from './Fields';
+import { Icon } from './icons';
 import { ListSurface } from './ListSurface';
 import { ReadableText } from './ReadableText';
 import { RowMenu, type RowMenuItem } from './RowMenu';
@@ -272,6 +273,15 @@ export function ItemList({
   );
 }
 
+/** Keyboard focus (`:focus-visible`); an engine without the selector counts every focus. */
+function focusVisible(el: HTMLElement): boolean {
+  try {
+    return el.matches(':focus-visible');
+  } catch {
+    return true;
+  }
+}
+
 /** Meta that reads like a sentence (a note excerpt, a description) gets the reading aid; short facts ("Fällig am …") do not. */
 function isTeaser(meta: string): boolean {
   return meta.split(/\s+/).length >= 5;
@@ -312,9 +322,17 @@ export function ItemRow({
   recessed,
   below,
   rowKey,
+  disclosure,
   children,
 }: {
   title: ReactNode;
+  /**
+   * The title is a disclosure button instead of a link (planner hub 2, package 4a): `aria-expanded`, `aria-controls`;
+   * its name is what it shows (title and meta, WCAG 2.5.3) followed by `hint` for the screen reader only (COPY X1:
+   * „. Aufklappen“ / „. Zuklappen“). The open row shows a 16 px chevron after the title; a closed one shows it on the
+   * desktop under the mouse and keyboard focus only – otherwise it is not in the DOM. The click is still `onOpen`.
+   */
+  disclosure?: { open: boolean; controls: string; hint: string };
   /** A stable key of the thing on the row (`data-row-key`), for a page that brings a row into view by its key. */
   rowKey?: string;
   /** Wrap a long title in full instead of ending it in "…" after two lines (lists the user reads and ticks). */
@@ -372,6 +390,9 @@ export function ItemRow({
   below?: ReactNode;
   children?: ReactNode;
 }) {
+  // A closed disclosure peeks its chevron while the mouse is on it or the keyboard focus (desktop only).
+  const [peek, setPeek] = useState(false);
+  const chevron = disclosure && (disclosure.open || peek);
   const body = (
     <>
       <span
@@ -379,6 +400,11 @@ export function ItemRow({
         title={typeof title === 'string' ? title : undefined}
       >
         {typeof title === 'string' ? <ReadableText text={title} kind="list" /> : title}
+        {chevron ? (
+          <span className={styles.chevron} aria-hidden="true" data-row-chevron="">
+            <Icon name="chevronDown" size={16} />
+          </span>
+        ) : null}
       </span>
       {meta ? (
         <span className={styles.muted} title={typeof meta === 'string' ? meta : undefined}>
@@ -389,6 +415,7 @@ export function ItemRow({
           )}
         </span>
       ) : null}
+      {disclosure ? <span className="sr-only">{disclosure.hint}</span> : null}
     </>
   );
   const swipe = useSwipeRow({ onSwipeRight, onSwipeLeft });
@@ -403,6 +430,20 @@ export function ItemRow({
       className={styles.main}
       data-row
       aria-current={current ? 'true' : undefined}
+      {...(disclosure
+        ? {
+            'aria-expanded': disclosure.open,
+            'aria-controls': disclosure.controls,
+            onPointerEnter: (e: { pointerType: string }) => {
+              if (e.pointerType === 'mouse') setPeek(true);
+            },
+            onPointerLeave: () => setPeek(false),
+            onFocus: (e: { currentTarget: HTMLElement }) => {
+              if (focusVisible(e.currentTarget)) setPeek(true);
+            },
+            onBlur: () => setPeek(false),
+          }
+        : {})}
       onClick={onOpen}
     >
       {body}
@@ -424,6 +465,7 @@ export function ItemRow({
       }
       data-tone={tone}
       data-row-key={rowKey}
+      data-expanded={disclosure?.open ? '' : undefined}
       data-signature-block={signatureBlock}
       className={[
         styles.item,

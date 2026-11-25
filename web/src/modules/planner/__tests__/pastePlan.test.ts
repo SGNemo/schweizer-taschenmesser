@@ -644,3 +644,49 @@ describe('applyPaste', () => {
     expect(undoDepth()).toBe(n);
   });
 });
+
+describe('„Plan als Text kopieren“ never holds panel content (planner hub 2, package 4a)', () => {
+  it('a row with a detail, links and a panel full of things copies its title and minutes only', () => {
+    // What a panel shows comes from the module at render time and never reaches the board; what the board does hold
+    // beyond the title (the detail line, the links, the action) stays out of the copy as well.
+    const entry = {
+      moduleId: 'todos',
+      id: 'hh',
+      kind: 'task',
+      title: 'Haushalt',
+      to: '/todos?open=hh',
+      detail: 'Mahnung · 92,40 € bis 20.11.',
+      action: { label: 'Bezahlt …', to: '/invoices?open=x&do=pay' },
+      links: [{ to: { module: 'notes', id: 'n1' }, rel: 'origin', label: 'Notiz Geheimfach' }],
+    };
+    const input = copyInput(
+      [
+        {
+          date: SA,
+          rows: [{ itemKey: 'todos:hh', title: 'Haushalt', minutes: 30, approx: false, entry }],
+        },
+      ] as never,
+      [],
+      [],
+      { from: SA, to: SA },
+    );
+    const text = planAsText(input, {
+      goal: (g: string) => `Ziel: ${g}`,
+      day: () => 'Sa 28.11.',
+      week: 'Diese Woche, ohne Tag',
+      later: 'Nächste Wochen',
+      minutes: (m: number) => `${m} Min`,
+      fixed: (title: string, from: string, to: string) => `(${from}–${to} ${title})`,
+    });
+    expect(input.days[0]!.things).toEqual([{ title: 'Haushalt', minutes: 30 }]);
+    for (const secret of [
+      'Mahnung',
+      '92,40',
+      'Geheimfach',
+      'Bezahlt',
+      'Bad wischen',
+      'Vor dem Besuch',
+    ])
+      expect(text).not.toContain(secret);
+  });
+});

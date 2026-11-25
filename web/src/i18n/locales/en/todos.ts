@@ -75,6 +75,8 @@ export const todos: Strings['todos'] = {
     add: 'Add item',
     remove: (text: string) => `Remove ${text}`,
     progress: (done: number, total: number) => `${done} of ${total}`,
+    ticked: (text: string) => `“${text}” ticked.`,
+    reopened: (text: string) => `“${text}” open again.`,
   },
   links: {
     title: 'Linked',

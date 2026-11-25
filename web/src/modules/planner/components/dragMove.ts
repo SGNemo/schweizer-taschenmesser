@@ -157,6 +157,8 @@ export function useDragMove(rowOf: (unitId: string) => DragRow | undefined) {
     const onDown = (e: PointerEvent) => {
       if (g || !e.isPrimary || (e.pointerType === 'mouse' && e.button !== 0)) return;
       const target = e.target instanceof Element ? e.target : null;
+      // An open row's compartment (package 4a) is the panel's own: its text is selected, never a row lifted.
+      if (target?.closest('[data-row-compartment]')) return;
       const li = target?.closest<HTMLElement>('li');
       const unit = li?.querySelector<HTMLElement>('[data-drag-unit]')?.dataset.dragUnit;
       if (!li || !unit || !host.contains(li)) return;
@@ -283,6 +285,7 @@ export function useDragMove(rowOf: (unitId: string) => DragRow | undefined) {
     const onKey = (e: KeyboardEvent) => {
       if (e.key.toLowerCase() !== 'm' || e.ctrlKey || e.metaKey || e.altKey || typing(e.target))
         return;
+      if (e.target instanceof Element && e.target.closest('[data-row-compartment]')) return;
       const li = e.target instanceof Element ? e.target.closest('li') : null;
       const unit = li?.querySelector<HTMLElement>('[data-drag-unit]')?.dataset.dragUnit;
       const move = unit ? lookup.current(unit)?.onMoveKey : undefined;

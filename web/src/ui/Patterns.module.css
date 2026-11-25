@@ -815,3 +815,25 @@ button.chip[aria-pressed='true'] {
   flex: 1 1 0;
   min-width: 0;
 }
+
+/* The disclosure chevron after a row's title (planner hub 2, package 4a): 16 px, muted, pointing down; drawn only on
+   the open row and – desktop – under the mouse or keyboard focus of a closed one. */
+.chevron {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-left: var(--space-1);
+  color: var(--text-3);
+}
+/* An expanded row (`disclosure`): its compartment lies inside the item, so the hover and focus tone sits on the row
+   line only – on the whole item it would swallow the compartment's own surface. */
+.rows > .item[data-expanded]:hover,
+.rows > .item[data-expanded]:focus-within {
+  background: none;
+}
+.rows > .item[data-expanded] > .row {
+  border-radius: var(--radius-sm);
+}
+.rows > .item[data-expanded] > .row:hover,
+.rows > .item[data-expanded] > .row:focus-within {
+  background: var(--surface-2);
+}

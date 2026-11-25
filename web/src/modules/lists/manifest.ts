@@ -85,6 +85,8 @@ const manifest: ModuleManifest = {
     ],
     services: () => import('./services'),
     plannable: () => import('./plannable'),
+    // Its panel under an expanded plan row (planner hub 2, package 4a); mounted by `core/modules/PlanPanelHost` only.
+    planPanel: () => import('./components/PlanPanel'),
     linkTarget: () => import('./linkTarget'),
     aiCreateDefaults: () => import('./aiDefaults'),
   },

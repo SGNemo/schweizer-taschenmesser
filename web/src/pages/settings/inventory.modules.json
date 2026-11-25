@@ -572,6 +572,11 @@
         "label": "Kürzeste Sitzung (Minuten)",
         "default": 25
       },
+      "expandRows": {
+        "type": "boolean",
+        "label": "Zeilen aufklappen",
+        "default": true
+      },
       "calendarBlocks": {
         "type": "boolean",
         "label": "Termine blocken Zeit",

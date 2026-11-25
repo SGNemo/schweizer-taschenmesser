@@ -771,6 +771,19 @@ export interface HeadlineFigure {
 }
 export type HeadlineSource = (ctx: { today: string }) => Promise<HeadlineFigure | undefined>;
 
+/**
+ * What the planner hands a module's plan panel (`contributions.planPanel`, planner hub 2, CONCEPT-ROWS idea 4).
+ * `id` is the plan row's source id (`PlannableItem.id`): untrusted – an unknown or foreign id shows the panel's own
+ * „Gibt es nicht mehr“ (`PanelGone` in `core/modules/PlanPanelHost`), never a request. `compact` = the one-line form for
+ * a member inside a pile or a bundle (title, the source's `detail`, at most one end action that needs no further choice).
+ * `onDone` tells the host the thing is finished at its source (the row leaves with the board's next reading).
+ */
+export interface PlanPanelProps {
+  id: string;
+  compact: boolean;
+  onDone?: () => void;
+}
+
 export interface ModuleContributions {
   /**
    * Start-data importers of the module ("Startdaten einrichten"). **Required** so new modules think
@@ -790,6 +803,19 @@ export interface ModuleContributions {
    * vault (`accounts`) never has one. First reader: planner hub K1a (`resolveLink`, the ToDo editor's link list).
    */
   linkTarget?: () => Promise<{ default: LinkTarget }>;
+  /**
+   * The thing's panel under its plan row (planner hub 2, package 4a: „aufklappen statt hinspringen“). Mounted only by
+   * `core/modules/PlanPanelHost` (lazy, error boundary, never for `accounts`). Rules: reads and writes only the module's
+   * own data, each write the module's own action with its own undo toast; no network unless the person taps something
+   * that says so; every action sits in the panel's foot (`PlanPanelFoot`, at most three, „Ganz öffnen“ last). A module
+   * without one gets the core default panel (the source's `detail`, its links, „Ganz öffnen“).
+   */
+  planPanel?: () => Promise<{ default: ComponentType<PlanPanelProps> }>;
+  /**
+   * One quiet strip a module keeps at the foot of the planner page, mounted once by the page through core (mail's
+   * „Wird gesendet … · Zurückziehen“, package 4c), so closing a row never hides it. Same rules as `planPanel`.
+   */
+  planPageFoot?: LazyComponent;
   /** Tracked minutes per thing (time tracking only). Types only for now: first reader package TT2. */
   actuals?: () => Promise<{ default: ActualsSource }>;
   /** One large figure for the cockpit's "Großanzeige" (balance, …); the module formats it. */
