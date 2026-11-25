@@ -284,4 +284,22 @@ describe('one event at a time (CONCEPT-EVENTS §2)', () => {
       if (e.safety) expect(localDate(t, L.tz)).toBe('2027-08-02');
     }
   });
+
+  it('aurora tonight: chip and card from the evening only, after a running eclipse, before rainbow weather', () => {
+    const aurora = {
+      from: ms('2027-03-10T19:00Z'),
+      to: ms('2027-03-11T01:00Z'),
+      kp: 7,
+      strength: 0.4 as const,
+    };
+    expect(ev('2027-03-10T09:00Z', { aurora }).chip).toBeUndefined(); // morning
+    const evening = ev('2027-03-10T18:30Z', { aurora, cloud: 10 });
+    expect(evening.chip).toEqual({ kind: 'aurora' });
+    expect(evening.card).toMatchObject({ kind: 'aurora', south: false });
+    expect(ev('2027-03-10T21:00Z', { aurora, cloud: 10 }).scene).toEqual({
+      event: 'aurora',
+      amount: 0.4,
+    });
+    expect(ev('2027-03-10T21:00Z', { aurora, cloud: 90 }).scene?.event).not.toBe('aurora');
+  });
 });

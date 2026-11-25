@@ -64,6 +64,8 @@ export const NET_CATALOGUE: readonly NetUse[] = [
       'geocoding-api.open-meteo.com',
       'air-quality-api.open-meteo.com',
       'open-meteo.com',
+      'maps.dwd.de',
+      'services.swpc.noaa.gov',
     ],
   },
   {

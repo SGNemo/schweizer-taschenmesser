@@ -21,7 +21,7 @@ export const tWeather = defineBundle(
     pick: (label: string) => `${label} wählen`,
     remove: 'Ort entfernen',
     privacy:
-      'Nur der Ortsname (beim Suchen) und die ungefähre Position des gewählten Orts gehen an open-meteo.com, nie deine Einträge. Abfrage etwa alle 30 Minuten, solange die Übersicht offen ist.',
+      'Nur der Ortsname (beim Suchen) und die ungefähre Position des gewählten Orts gehen an open-meteo.com und, für amtliche Warnungen in Deutschland, an den Deutschen Wetterdienst – nie deine Einträge. Die Polarlicht-Vorhersage ist eine allgemeine Datei von NOAA SWPC, dabei wird kein Ort gesendet. Abfrage etwa alle 30 Minuten, solange die Übersicht offen ist.',
     temp: (n: number) => `${n}°`,
     codes: {
       clear: 'klar',
@@ -73,6 +73,8 @@ export const tWeather = defineBundle(
     noticeTitle: 'Dein Wetter-Ort wird abgefragt',
     attribution: 'Wetterdaten von',
     attributionLink: 'Open-Meteo.com (CC BY 4.0)',
+    creditWarnings: 'Warnungen: Deutscher Wetterdienst',
+    creditAurora: 'Polarlicht-Vorhersage: NOAA SWPC',
     asOf: (time: string) => `Stand ${time}`,
     chooseHint: 'Wetter: Stadt wählen',
     chooseHintDismiss: 'Hinweis ausblenden',
@@ -166,7 +168,7 @@ export const tWeather = defineBundle(
       pick: (label: string) => `Choose ${label}`,
       remove: 'Remove place',
       privacy:
-        'Only the place name (when you search) and the approximate position of the chosen place go to open-meteo.com, never your entries. Requested about every 30 minutes while the Overview is open.',
+        'Only the place name (when you search) and the approximate position of the chosen place go to open-meteo.com and, for official warnings in Germany, to the Deutscher Wetterdienst – never your entries. The aurora forecast is a general file from NOAA SWPC; no place is sent for it. Requested about every 30 minutes while the overview is open.',
       temp: (n: number) => `${n}°`,
       codes: {
         clear: 'clear',
@@ -218,6 +220,8 @@ export const tWeather = defineBundle(
       noticeTitle: 'Your weather place will be requested',
       attribution: 'Weather data by',
       attributionLink: 'Open-Meteo.com (CC BY 4.0)',
+      creditWarnings: 'Warnings: Deutscher Wetterdienst',
+      creditAurora: 'Aurora forecast: NOAA SWPC',
       asOf: (time: string) => `As of ${time}`,
       chooseHint: 'Weather: choose a city',
       chooseHintDismiss: 'Hide this hint',

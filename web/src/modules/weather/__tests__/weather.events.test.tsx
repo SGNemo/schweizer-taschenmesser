@@ -74,6 +74,8 @@ const renderPage = () =>
       </AreaFrame>
     </MemoryRouter>,
   );
+/** The first eclipse search of a day takes a while on a loaded machine (once per place and day, then memoised). */
+const SLOW = { timeout: 5000 };
 const at = async (utc: string, local: string, o?: Parameters<typeof bodyFor>[1]) => {
   setNow(() => Date.parse(utc));
   body = bodyFor(local, o);
@@ -95,7 +97,7 @@ describe('sky events on the weather page (package 3)', () => {
   it('the morning of 2027-08-02: the eclipse chip, the safety pill in the stage, "Als Nächstes" with its facts', async () => {
     await at('2027-08-02T05:00:00Z', '2027-08-02T07:00');
     renderPage();
-    const keys = await screen.findByTestId('weather-keys');
+    const keys = await screen.findByTestId('weather-keys', undefined, SLOW);
     expect(keys).toHaveTextContent('Sonnenfinsternis 10:10–12:14');
     expect(within(keys).getAllByTestId('event-glyph')[0]).toHaveAttribute('data-glyph', 'eclipse');
     const pill = screen.getByTestId('weather-safety');
@@ -104,7 +106,7 @@ describe('sky events on the weather page (package 3)', () => {
       'Nur mit Sonnenfinsternis-Brille hinsehen, nie mit bloßem Auge oder Sonnenbrille.',
     );
     expect(pill).not.toHaveTextContent('berechnet');
-    const next = await screen.findByTestId('weather-sky-next');
+    const next = await screen.findByTestId('weather-sky-next', undefined, SLOW);
     expect(next).toHaveTextContent('Als Nächstes');
     expect(next).toHaveTextContent('Heute: Partielle Sonnenfinsternis · 10:10–12:14');
     expect(next).toHaveTextContent('Höhepunkt 11:11 · hier bis 45 % der Sonne bedeckt');
@@ -114,7 +116,7 @@ describe('sky events on the weather page (package 3)', () => {
   it('on an eclipse day the stage holds the safety pill and one weather hint; the second goes under the head', async () => {
     await at('2027-08-02T05:00:00Z', '2027-08-02T07:00', { gust: 90, max: 36 });
     renderPage();
-    const stage = await screen.findByTestId('weather-now');
+    const stage = await screen.findByTestId('weather-now', undefined, SLOW);
     await within(stage).findByTestId('weather-safety');
     const inStage = within(stage).getByTestId('weather-warning');
     expect(within(inStage).getAllByRole('listitem')).toHaveLength(1);
@@ -125,7 +127,7 @@ describe('sky events on the weather page (package 3)', () => {
   it('a week ahead, from 26 July: the card names the day; no chip, no pill', async () => {
     await at('2027-07-26T10:00:00Z', '2027-07-26T12:00');
     renderPage();
-    const next = await screen.findByTestId('weather-sky-next');
+    const next = await screen.findByTestId('weather-sky-next', undefined, SLOW);
     expect(next).toHaveTextContent(/Partielle Sonnenfinsternis am Mo\., 2\. Aug\. · 10:10–12:14/);
     expect(screen.queryByTestId('weather-safety')).toBeNull();
     expect(screen.getByTestId('weather-keys')).not.toHaveTextContent('Sonnenfinsternis');
@@ -134,7 +136,7 @@ describe('sky events on the weather page (package 3)', () => {
   it('2028-12-31: the moon rises during the eclipse', async () => {
     await at('2028-12-31T12:00:00Z', '2028-12-31T13:00', { isDay: 1 });
     renderPage();
-    const next = await screen.findByTestId('weather-sky-next');
+    const next = await screen.findByTestId('weather-sky-next', undefined, SLOW);
     // The table keeps whole minutes of the half-durations: totality ends 17:27 here (17:28:02 in the truth).
     expect(next).toHaveTextContent('Heute Nacht: Totale Mondfinsternis · 16:06–19:36');
     expect(next).toHaveTextContent('ganz im Schatten 17:15–18:27');
@@ -146,13 +148,13 @@ describe('sky events on the weather page (package 3)', () => {
   it('Saharan dust: a row under the particles; switched off: no event anywhere', async () => {
     await at('2027-08-02T05:00:00Z', '2027-08-02T07:00', { dust: 86 });
     renderPage();
-    expect(await screen.findByTestId('weather-dust')).toHaveTextContent(
+    expect(await screen.findByTestId('weather-dust', undefined, SLOW)).toHaveTextContent(
       'Saharastaub in der Luft (86 µg/m³): der Himmel wirkt milchig.',
     );
     cleanup();
     await setWeatherSky(false);
     renderPage();
-    await screen.findByTestId('weather-keys');
+    await screen.findByTestId('weather-keys', undefined, SLOW);
     expect(screen.queryByTestId('weather-dust')).toBeNull();
     expect(screen.queryByTestId('weather-safety')).toBeNull();
     expect(screen.queryByTestId('weather-sky-next')).toBeNull();

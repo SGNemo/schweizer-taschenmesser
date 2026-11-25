@@ -2,10 +2,10 @@ import type { ReactNode } from 'react';
 
 /**
  * The 16 px line glyphs of the sky events (mockups/10-karte.html): eclipse, lunar eclipse, rainbow, meteors, solstice,
- * dust and the star night. Decorative: the words beside them say the event (`aria-hidden`), stroke `currentColor`.
+ * dust, the star night and the aurora. Decorative: the words beside them say the event (`aria-hidden`), stroke `currentColor`.
  */
 export type EventGlyphName =
-  'eclipse' | 'lunar' | 'rainbow' | 'meteor' | 'solstice' | 'dust' | 'stars';
+  'eclipse' | 'lunar' | 'rainbow' | 'meteor' | 'solstice' | 'dust' | 'stars' | 'aurora';
 
 const PATHS: Record<EventGlyphName, ReactNode> = {
   eclipse: (
@@ -45,6 +45,12 @@ const PATHS: Record<EventGlyphName, ReactNode> = {
       <path d="M2 5h8M4 8h10M2 11h7" />
       <circle cx="12.5" cy="5" r=".6" fill="currentColor" />
       <circle cx="11" cy="11" r=".6" fill="currentColor" />
+    </>
+  ),
+  aurora: (
+    <>
+      <path d="M1.5 6.5c2-3 4 3 6.5 0s4.5 3 6.5 0" />
+      <path d="M1.5 11c2-3 4 3 6.5 0s4.5 3 6.5 0" />
     </>
   ),
   stars: (

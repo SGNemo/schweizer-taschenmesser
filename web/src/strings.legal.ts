@@ -108,8 +108,20 @@ export const tLegal = defineBundle(
       weather: {
         title: 'Wetter-Zeile (optional)',
         what: 'Beim Suchen eines Ortes der eingegebene Ortsname; danach die auf etwa einen Kilometer gerundete Position des gewählten Ortes (für die Vorhersage der nächsten 7 Tage sowie Luftqualität und Pollen). Keine Einträge, keine Konto- oder Gerätedaten; open-meteo.com sieht deine IP-Adresse und die üblichen Verbindungsdaten.',
-        to: 'open-meteo.com (Geocoding und Vorhersage; kostenlos, ohne Schlüssel).',
+        to: 'open-meteo.com (Geocoding und Vorhersage; kostenlos, ohne Schlüssel). Amtliche Warnungen für einen Hauptort in Deutschland kommen vom Deutschen Wetterdienst (siehe „Amtliche Warnungen“), die Polarlicht-Vorhersage von NOAA SWPC ohne Ort (siehe „Polarlicht-Vorhersage“).',
         when: 'Nur wenn du einen Ort wählst: beim Suchen und danach etwa alle 30 Minuten, solange die Übersicht offen ist. Ohne Ort passiert nichts; abschaltbar unter Verbindungen → Wetter.',
+      },
+      'weather-warnings': {
+        title: 'Wetter: amtliche Warnungen (Deutschland)',
+        what: 'Die auf etwa einen Kilometer gerundete Position deines Hauptorts, um die dort geltenden Warnungen abzufragen (Ereignis, Stufe, Beginn, Ende). Keine Einträge, keine Konto- oder Gerätedaten; der Deutsche Wetterdienst sieht deine IP-Adresse und die üblichen Verbindungsdaten. Ob der Ort in Deutschland liegt, entscheidet Nemo auf dem Gerät; für Orte außerhalb und für weitere Orte wird nichts gefragt.',
+        to: 'Deutscher Wetterdienst (maps.dwd.de).',
+        when: 'Nur mit Hauptort in Deutschland und eingeschaltetem Schalter „Amtliche Warnungen (Deutschland)“ (standardmäßig an): zusammen mit der Vorhersage, etwa alle 30 Minuten, solange die Wetter-Seite oder die Übersicht offen ist. Abschaltbar unter Verbindungen → Wetter.',
+      },
+      'weather-aurora': {
+        title: 'Wetter: Polarlicht-Vorhersage',
+        what: 'Ein einfacher Abruf einer allgemeinen Datei (Kp-Index-Vorhersage für drei Tage), für alle gleich. Kein Ort, keine Einträge; NOAA sieht deine IP-Adresse. Ob Polarlicht möglich ist, rechnet Nemo auf dem Gerät aus.',
+        to: 'NOAA Space Weather Prediction Center (services.swpc.noaa.gov).',
+        when: 'Höchstens alle 3 Stunden, nur solange „Mond und Himmelsereignisse“ an ist und von deinem Hauptort aus überhaupt Polarlicht zu sehen sein kann.',
       },
       maps: {
         title: 'Karten & Orte (optional)',
@@ -203,7 +215,7 @@ export const tLegal = defineBundle(
       weather: {
         title: 'Dein Wetter-Ort wird abgefragt',
         body: [
-          'Beim Suchen geht der Ortsname, danach etwa alle 30 Minuten die auf etwa einen Kilometer gerundete Position deines Ortes an open-meteo.com. Nie deine Einträge.',
+          'Beim Suchen geht der Ortsname, danach etwa alle 30 Minuten die auf etwa einen Kilometer gerundete Position deines Ortes an open-meteo.com und, für amtliche Warnungen in Deutschland, an den Deutschen Wetterdienst. Nie deine Einträge.',
           'Ohne gewählten Ort wird nichts abgefragt. Du kannst die Anzeige jederzeit ausschalten oder den Ort entfernen.',
         ],
       },
@@ -376,8 +388,20 @@ export const tLegal = defineBundle(
         weather: {
           title: 'Weather line (optional)',
           what: 'When you search for a place, the place name you typed; after that, the position of the chosen place rounded to about a kilometre (for the forecast of the next 7 days, plus air quality and pollen). No entries, no account or device data; open-meteo.com sees your IP address and the usual connection data.',
-          to: 'open-meteo.com (geocoding and forecast; free, no key).',
+          to: 'open-meteo.com (geocoding and forecast; free, no key). Official warnings for a main place in Germany come from the Deutscher Wetterdienst (see “Official warnings”), the aurora forecast from NOAA SWPC without a place (see “Aurora forecast”).',
           when: 'Only when you choose a place: when you search and then about every 30 minutes while the Overview is open. Without a place nothing happens; can be switched off under Connections → Weather.',
+        },
+        'weather-warnings': {
+          title: 'Weather: official warnings (Germany)',
+          what: 'The position of your main place rounded to about a kilometre, to request the warnings in force there (event, level, onset, expiry). No entries, no account or device data; the Deutscher Wetterdienst sees your IP address and the usual connection data. Whether the place lies in Germany is decided on the device; for places outside and for further places nothing is requested.',
+          to: 'Deutscher Wetterdienst, the German weather service (maps.dwd.de).',
+          when: 'Only with a main place in Germany and the switch “Official warnings (Germany)” on (on by default): together with the forecast, about every 30 minutes while the weather page or the Overview is open. Can be switched off under Connections → Weather.',
+        },
+        'weather-aurora': {
+          title: 'Weather: aurora forecast',
+          what: 'A plain request for a general file (Kp index forecast for three days), the same for everyone. No place, no entries; NOAA sees your IP address. Whether an aurora is possible is calculated on the device.',
+          to: 'NOAA Space Weather Prediction Center (services.swpc.noaa.gov).',
+          when: 'At most every 3 hours, only while “Moon and sky events” is on and an aurora can be seen from your main place at all.',
         },
         maps: {
           title: 'Maps & places (optional)',
@@ -471,7 +495,7 @@ export const tLegal = defineBundle(
         weather: {
           title: 'Your weather place will be requested',
           body: [
-            'When you search, the place name goes to open-meteo.com; after that, about every 30 minutes, the position of your place rounded to about a kilometre. Never your entries.',
+            'When you search, the place name goes to open-meteo.com; after that, about every 30 minutes, the position of your place rounded to about a kilometre, and for official warnings in Germany also to the Deutscher Wetterdienst. Never your entries.',
             'Without a chosen place nothing is requested. You can switch the line off or remove the place at any time.',
           ],
         },

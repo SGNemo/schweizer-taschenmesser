@@ -304,6 +304,43 @@
     font-size: var(--text-meta);
   }
 }
+/* Official DWD warnings (package 3b): stronger tint and a hairline, no stripe, no red; the level is a word. */
+.official {
+  background: color-mix(in srgb, var(--warning) 22%, var(--surface));
+  border: 1px solid var(--warning);
+}
+.officialRow {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--space-2);
+}
+.officialMeta {
+  color: var(--ink-theme-muted);
+  font-weight: normal;
+}
+.officialSource {
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+/* 44 px target on touch without growing the pill. */
+@media (pointer: coarse) {
+  .officialSource::after {
+    content: '';
+    position: absolute;
+    inset: -14px -8px;
+  }
+}
+@media (max-width: 899px) {
+  .officialRow {
+    flex-direction: column;
+  }
+}
 /* The eclipse safety pill above a weather hint (package 3): two pills, one under the other. */
 .pills {
   display: flex;

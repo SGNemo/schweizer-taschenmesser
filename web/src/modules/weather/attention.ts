@@ -5,7 +5,8 @@ import { tWeatherPage } from '@/strings.weatherPage';
 import type { IconName } from '@/ui/icons';
 import { localDate } from './components/parts';
 import type { WarningKind, WeatherWarning } from './warnings';
-import { warningsNow } from './warningsToday';
+import { officialUntil } from './components/WarningNotice';
+import { officialNow, warningsNow } from './warningsToday';
 
 const ICON: Record<WarningKind, IconName> = {
   storm: 'cloudLightning',
@@ -44,15 +45,30 @@ export function warningLine(w: WeatherWarning, today: string): string {
  * Severe-weather hints for today and tomorrow (from the cached forecast); a hint, never red (`warning`).
  * Only a warning for today carries `due: 'today'`, so it stays a card in "Jetzt wichtig"; tomorrow's folds.
  */
-const source: AttentionSource = async ({ today }) =>
-  (await warningsNow(today)).map((w, i): AttentionItem => ({
-    id: `weather:${w.kind}:${w.date}`,
-    tone: 'warning',
-    icon: ICON[w.kind],
-    title: warningLine(w, today),
-    to: '/weather',
-    rank: 10 + i,
-    ...(w.date === today ? { due: 'today' as const } : {}),
-  }));
+const source: AttentionSource = async ({ today }) => {
+  // Official DWD warnings first, with their label (package 3b); then the computed hints they did not replace.
+  const tp = tWeatherPage.get();
+  const { warnings: official, tz } = await officialNow();
+  return [
+    ...official.map((w, i): AttentionItem => ({
+      id: `weather:official:${w.event}`,
+      tone: 'warning',
+      icon: 'alert',
+      title: `${w.level >= 3 ? tp.officialSevere(w.event) : tp.official(w.event)} · ${officialUntil(w.expires, tz)}`,
+      to: '/weather',
+      rank: 5 + i,
+      due: 'today',
+    })),
+    ...(await warningsNow(today)).map((w, i): AttentionItem => ({
+      id: `weather:${w.kind}:${w.date}`,
+      tone: 'warning',
+      icon: ICON[w.kind],
+      title: warningLine(w, today),
+      to: '/weather',
+      rank: 10 + i,
+      ...(w.date === today ? { due: 'today' as const } : {}),
+    })),
+  ];
+};
 
 export default source;

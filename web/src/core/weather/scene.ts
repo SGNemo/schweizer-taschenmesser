@@ -427,10 +427,13 @@ export function sceneOf(i: SceneInput): SceneState {
 
 /** Meteor streaks only with cloud cover up to this (CONCEPT-EVENTS §1). */
 const METEOR_CLOUD = 60;
+/** Aurora curtains only with cloud cover up to this (CONCEPT-SOURCES §2). */
+const AURORA_CLOUD = 60;
 
 /**
  * Whether the event can be drawn now (handoff 03 "Scene"): solar events and the rainbow need the sun as the body,
- * lunar events the moon; dust is by day only; meteors and the star night only at night (meteors with cloud ≤ 60 %).
+ * lunar events the moon; dust is by day only; meteors, the aurora and the star night only at night (meteors and the
+ * aurora with cloud ≤ 60 %; the mockup draws the aurora only in the night phase, not at dusk or dawn).
  */
 function eventOf(
   ev: SceneEvent | undefined,
@@ -448,7 +451,9 @@ function eventOf(
           ? phase === 'day' || phase === 'golden'
           : ev === 'meteors'
             ? phase === 'night' && cloud <= METEOR_CLOUD
-            : phase === 'night';
+            : ev === 'aurora'
+              ? phase === 'night' && cloud <= AURORA_CLOUD
+              : phase === 'night';
   return ok ? ev : undefined;
 }
 

@@ -143,6 +143,8 @@ export function recordNet(entry: Omit<NetEntry, 'at'>): void {
 const HOST_REASONS: [RegExp, NetReason][] = [
   [/^(api\.)?github\.com$|(^|\.)githubusercontent\.com$/, 'update'],
   [/(^|\.)open-meteo\.com$/, 'weather'],
+  [/^maps\.dwd\.de$/, 'weather'],
+  [/^services\.swpc\.noaa\.gov$/, 'weather'],
   [/^(tile|nominatim)\.openstreetmap\.org$/, 'maps'],
   [/^routing\.openstreetmap\.de$/, 'maps'],
   [/^api\.transitous\.org$/, 'maps'],

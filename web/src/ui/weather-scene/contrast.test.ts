@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { inkForSky, SKY_KEYS, type SkyKey } from '@/core/weather/scene';
-import { skyOffsets } from './draw';
+import { defaultScene, inkForSky, skyOf, SKY_KEYS, type SkyKey } from '@/core/weather/scene';
+import { crestAt, G, skyOffsets } from './draw';
 
 /**
  * Contrast of the text on the weather scene (docs/design/weather-scenes/A11Y.md §1, find A9): for every sky × theme the
@@ -128,6 +128,50 @@ describe('weather scene contrast (A11Y §1)', () => {
         const ink = light[inkForSky(key, theme) === 'light' ? '--ink-light' : '--ink-dark']!;
         for (const s of stopsOf(key, theme))
           expect(ratio(ink, s), `${key} ${theme} ${s}`).toBeGreaterThanOrEqual(4.5);
+      }
+  });
+
+  it('aurora (package 3b, handoff 03b test 8): night sky and light ink stay; the glow left of the text edge keeps ≥ 4.5', () => {
+    expect([
+      light['--scene-aurora-1'],
+      light['--scene-aurora-2'],
+      light['--scene-aurora-3'],
+    ]).toEqual(['#7fe0a8', '#58c7b0', '#a98be0']);
+    // The aurora changes no sky key: the text rows keep the night skies walked above.
+    const night = { ...defaultScene('light', 11), phase: 'night', event: 'aurora' } as const;
+    expect(skyOf({ ...night, eventAmount: 1 }).key).toBe('night');
+    const fullMoon = {
+      ...night,
+      eventAmount: 1,
+      body: { kind: 'moon', t: 0.6, alt: 40 },
+      moon: { illum: 1, tilt: -119, size: 1.2, t: 0.6, alt: 40 },
+    } as const;
+    expect(skyOf(fullMoon).key).toBe('night-full');
+    // The curtains start right of the quiet edge (WeatherScene.test); only the faint glow reaches left of it. The glow
+    // is a radial fade from 0.3 · amount + 0.08 at its centre to 0 at its rim, drawn behind the ridges: its strongest
+    // visible pixel left of the edge is at the edge, on its centre row or, where the ridges cover that row, just above
+    // the skyline. Desktop: edge x 900; a narrow crop: the edge is quietX, the centre at least 200 right of it. Every
+    // stop of the sky stands in for the sky behind (the brightest is the bottom one).
+    const A = G.aurora;
+    const ink = light['--ink-light']!;
+    for (const amt of [0.4, 0.7, 1])
+      for (const quiet of [0, 1000, 1060, 1100, 1200, 1300, 1400]) {
+        const edge = Math.max(G.shelterX, quiet);
+        const cx = Math.max(A.glow[0], edge + 200);
+        const rx = A.glow[2] * (0.6 + 0.4 * amt);
+        const ry = A.glow[3] * (0.5 + 0.5 * amt);
+        const dy = Math.max(0, A.glow[1] - crestAt(edge));
+        const t = Math.hypot((cx - edge) / rx, dy / ry);
+        const alpha = (0.3 * amt + 0.08) * Math.max(0, 1 - t);
+        for (const key of ['night', 'night-full'] as const)
+          for (const theme of ['light', 'dark'] as const) {
+            expect(inkForSky(key, theme)).toBe('light');
+            for (const stop of stopsOf(key, theme))
+              expect(
+                ratio(ink, mix(stop, light['--scene-aurora-1']!, alpha)),
+                `aurora ${amt} quiet ${quiet} ${key} ${theme} ${stop}`,
+              ).toBeGreaterThanOrEqual(4.5);
+          }
       }
   });
 
