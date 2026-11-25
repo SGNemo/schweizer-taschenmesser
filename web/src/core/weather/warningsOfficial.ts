@@ -45,10 +45,12 @@ const answerSchema = z.object({ features: z.array(z.unknown()) });
 
 /** "ORKANARTIGE BÖEN" → "Orkanartige Böen" (nothing else is reworded). */
 export function displayEvent(raw: string): string {
+  // Words in capitals become ordinary case; DWD's joining words, already lower case ("GEWITTER mit HAGEL"), stay.
   return raw
-    .toLowerCase()
     .split(/(\s+|-)/)
-    .map((w) => (w.trim() && w !== '-' ? w.charAt(0).toUpperCase() + w.slice(1) : w))
+    .map((w) =>
+      /\p{Lu}/u.test(w) && w === w.toUpperCase() ? w.charAt(0) + w.slice(1).toLowerCase() : w,
+    )
     .join('');
 }
 
@@ -85,13 +87,7 @@ export function parseOfficial(body: unknown): OfficialWarning[] | undefined {
     const kind = kindOf(x.EVENT, x.EC_GROUP ?? '');
     out.push({ event: displayEvent(x.EVENT), level, ...(kind && { kind }), onset, expires });
   }
-  // Several warnings of one event: the one that ends last.
-  const byEvent = new Map<string, OfficialWarning>();
-  for (const w of out) {
-    const had = byEvent.get(w.event);
-    if (!had || w.expires > had.expires) byEvent.set(w.event, w);
-  }
-  return [...byEvent.values()];
+  return out;
 }
 
 /** In force now or beginning later today (the place's local day), highest level first, then the earliest end. */
@@ -101,9 +97,15 @@ export function activeOfficial(
   tz?: string,
 ): OfficialWarning[] {
   const today = localDateOf(nowMs, tz);
-  return warnings
-    .filter((w) => w.expires > nowMs && (w.onset <= nowMs || localDateOf(w.onset, tz) === today))
-    .sort((a, b) => b.level - a.level || a.expires - b.expires);
+  // Several warnings of one event in force: the one that ends last (after the time filter, so tomorrow's does not
+  // hide today's).
+  const byEvent = new Map<string, OfficialWarning>();
+  for (const w of warnings) {
+    if (w.expires <= nowMs || (w.onset > nowMs && localDateOf(w.onset, tz) !== today)) continue;
+    const had = byEvent.get(w.event);
+    if (!had || w.expires > had.expires) byEvent.set(w.event, w);
+  }
+  return [...byEvent.values()].sort((a, b) => b.level - a.level || a.expires - b.expires);
 }
 
 /** Today's computed hints of a kind an official warning has are dropped; other kinds and later days stay. */
@@ -201,7 +203,8 @@ export function officialUrl(lat: number, lon: number): string {
     typeName: 'dwd:Warnungen_Gemeinden',
     outputFormat: 'application/json',
     propertyName: 'EVENT,SEVERITY,URGENCY,ONSET,EXPIRES,EC_GROUP,STATUS,MSGTYPE',
-    CQL_FILTER: `INTERSECTS(THE_GEOM,POINT(${lat} ${lon}))`,
+    // Rounded here as well (~1 km), whatever the caller passes.
+    CQL_FILTER: `INTERSECTS(THE_GEOM,POINT(${lat.toFixed(2)} ${lon.toFixed(2)}))`,
   });
   return `${DWD_URL}?${q}`;
 }

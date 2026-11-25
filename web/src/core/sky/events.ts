@@ -255,7 +255,11 @@ export function eventsFor(input: EventsInput): SkyEvents {
 
   // Scene: running eclipse → rainbow → meteors (dark, not too cloudy) → dust (by day) → star night.
   // Aurora (CONCEPT-SOURCES §2): in its dark span, cloud ≤ 60 %; after a running eclipse, before rainbow weather.
-  const aurora = input.aurora && now < input.aurora.to ? input.aurora : undefined;
+  // "On the evening and night of such a step": once the sun is down and the span begins within 6 h.
+  const aurora =
+    input.aurora && now < input.aurora.to && sunAlt < 0 && input.aurora.from - now < 6 * 3600000
+      ? input.aurora
+      : undefined;
   if (!out.scene && aurora && dark && now >= aurora.from && (input.cloud ?? 0) <= METEOR_CLOUD_MAX)
     out.scene = { event: 'aurora', amount: aurora.strength };
   if (!out.scene) {

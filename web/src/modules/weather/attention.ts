@@ -5,6 +5,7 @@ import { tWeatherPage } from '@/strings.weatherPage';
 import type { IconName } from '@/ui/icons';
 import { localDate } from './components/parts';
 import type { WarningKind, WeatherWarning } from './warnings';
+import { officialUntil } from './components/WarningNotice';
 import { officialNow, warningsNow } from './warningsToday';
 
 const ICON: Record<WarningKind, IconName> = {
@@ -48,13 +49,12 @@ const source: AttentionSource = async ({ today }) => {
   // Official DWD warnings first, with their label (package 3b); then the computed hints they did not replace.
   const tp = tWeatherPage.get();
   const { warnings: official, tz } = await officialNow();
-  const time = dateTimeFormat({ hour: '2-digit', minute: '2-digit', ...(tz && { timeZone: tz }) });
   return [
     ...official.map((w, i): AttentionItem => ({
       id: `weather:official:${w.event}`,
       tone: 'warning',
       icon: 'alert',
-      title: `${w.level >= 3 ? tp.officialSevere(w.event) : tp.official(w.event)} · ${tp.officialUntilToday(time.format(w.expires))}`,
+      title: `${w.level >= 3 ? tp.officialSevere(w.event) : tp.official(w.event)} · ${officialUntil(w.expires, tz)}`,
       to: '/weather',
       rank: 5 + i,
       due: 'today',

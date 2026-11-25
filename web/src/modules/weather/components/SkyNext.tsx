@@ -85,7 +85,8 @@ export function SkyNext({ event, tz }: { event: CardEvent; tz: string | undefine
       break;
     }
     case 'aurora': {
-      const hour = dateTimeFormat({ hour: 'numeric', timeZone: tz });
+      // 24-hour clock in both languages ("zwischen 22 und 2 Uhr" / "between 22 and 2"): no AM/PM to lose.
+      const hour = dateTimeFormat({ hour: 'numeric', hourCycle: 'h23', timeZone: tz });
       const h = (ms: number) => hour.format(ms).replace(/\D/g, '');
       glyph = 'aurora';
       head = ev.aurora;

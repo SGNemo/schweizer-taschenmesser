@@ -39,6 +39,8 @@ export async function officialNow(): Promise<{ warnings: OfficialWarning[]; tz?:
   const s = await getWeatherSettings();
   if (!isWeatherActive(s) || !officialOn(s)) return { warnings: [] };
   const all = readOfficial(s.lat, s.lon);
-  const tz = readCache()?.forecast.tz;
+  // The place's zone only from a forecast of this place (after a place change the cache may still be the old one).
+  const cached = readCache();
+  const tz = cached?.key === cacheKey(s.lat, s.lon) ? cached.forecast.tz : undefined;
   return { warnings: all ? activeOfficial(all, now(), tz) : [], ...(tz && { tz }) };
 }

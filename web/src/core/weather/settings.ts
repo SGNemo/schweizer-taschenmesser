@@ -4,6 +4,7 @@
  * open-meteo.com, see `docs/legal/DATA-FLOWS.md` (`weather`).
  */
 import { z } from 'zod';
+import { clearOfficial } from './warningsOfficial';
 import { getSettings, setSettings, useSettings } from '@/core/settings/settings';
 import { clearCache } from './cache';
 
@@ -76,8 +77,11 @@ export const setWeatherScene = (scene: SceneMode): Promise<void> =>
   setSettings(WEATHER_SCOPE, { scene });
 
 export const setWeatherSky = (sky: boolean): Promise<void> => setSettings(WEATHER_SCOPE, { sky });
-export const setWeatherOfficial = (officialWarnings: boolean): Promise<void> =>
-  setSettings(WEATHER_SCOPE, { officialWarnings });
+export const setWeatherOfficial = (officialWarnings: boolean): Promise<void> => {
+  // Off: the last DWD answer leaves the device's storage too.
+  if (!officialWarnings) clearOfficial();
+  return setSettings(WEATHER_SCOPE, { officialWarnings });
+};
 
 /** Removes the place and the device-local forecast of it. */
 export function clearWeatherPlace(): Promise<void> {

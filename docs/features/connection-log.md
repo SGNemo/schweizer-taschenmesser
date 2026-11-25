@@ -16,7 +16,7 @@ Almost everything goes through `getPlatform().fetch` (`core/platform/web.ts:153`
 | ICS subscription (`connectors/ics/sync.ts`) | user's ICS URL (web: via `<server>/v1/proxy`) | add click, then connector loop | subscription added | secret ICS URL |
 | Weather (`core/weather/api.ts`) | open-meteo.com | search typing; forecast on home mount | `enabled && place` | place name, lat/lon |
 | Official warnings (`core/weather/warningsOfficial.ts`) | maps.dwd.de | with the forecast (~30 min) | main place in Germany + `Amtliche Warnungen` on (default on) | lat/lon of the main place (2 decimals) |
-| Aurora forecast (`core/weather/*`) | services.swpc.noaa.gov | ≤ every 3 h | sky events on + aurora visible from main place | nothing (global file) |
+| Aurora forecast (`core/sky/aurora.ts`) | services.swpc.noaa.gov | ≤ every 3 h | sky events on + aurora visible from main place | nothing (global file) |
 | Currency (`tools/currency/View.tsx`) | api.frankfurter.dev | opening the tool | none (named exception in legal text) | nothing |
 | Public IP (`modules/disk/.../PublicIp.tsx`) | api.ipify.org | click | click | nothing |
 | Vault leak check (`modules/accounts/breach.ts`) | api.pwnedpasswords.com | opening the vault check | setting `breachCheck`, off by default | first 5 hex chars of SHA-1 only, `Add-Padding` |

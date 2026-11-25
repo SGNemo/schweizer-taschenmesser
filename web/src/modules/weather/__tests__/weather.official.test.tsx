@@ -7,7 +7,12 @@ import { getPlatform } from '@/core/platform';
 import { KP_KEY } from '@/core/sky/aurora';
 import { setNow } from '@/core/time/now';
 import { clearCache } from '@/core/weather/cache';
-import { addExtraPlace, chooseWeatherPlace, setWeatherOfficial } from '@/core/weather/settings';
+import {
+  addExtraPlace,
+  chooseWeatherPlace,
+  setWeatherEnabled,
+  setWeatherOfficial,
+} from '@/core/weather/settings';
 import {
   DWD_WARNINGS_PAGE,
   OFFICIAL_KEY,
@@ -203,7 +208,28 @@ describe('official warnings (package 3b)', () => {
   });
 });
 
+describe('official warnings ending on a later day', () => {
+  it('"Jetzt wichtig" names the day as the pill does ("bis Do. 07:00")', async () => {
+    official({ event: 'Glätte', kind: 'ice', expires: Date.parse('2026-11-26T06:00:00Z') });
+    renderPage();
+    await screen.findByTestId('weather-keys', undefined, SLOW);
+    const items = await attention({ today: '2026-11-25' });
+    expect(items[0]!.title).toMatch(/^Amtliche Warnung: Glätte · bis Do\.? 07:00$/);
+    expect(screen.getByTestId('weather-official')).toHaveTextContent(/bis Do\.? 07:00/);
+  });
+});
+
 describe('aurora (package 3b)', () => {
+  it('weather switched off: the SWPC file is not asked, even on the page', async () => {
+    setNow(() => Date.parse('2026-11-25T19:00:00Z'));
+    const f = vi.fn(async () => new Response('[]', { status: 200 }));
+    vi.stubGlobal('fetch', f);
+    await setWeatherEnabled(false);
+    renderPage();
+    await screen.findByText(/ausgeschaltet|aus/i, undefined, SLOW).catch(() => undefined);
+    expect(f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes('swpc'))).toEqual([]);
+  });
+
   it('a strong night at the sample place: chip "Polarlicht möglich" and the card line with the hours and the source', async () => {
     setNow(() => Date.parse('2026-11-25T19:00:00Z'));
     answer = body({ isDay: 0, time: '2026-11-25T20:00' });

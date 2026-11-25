@@ -51,7 +51,7 @@ export default function WeatherPage() {
   const lon = viewed?.lon ?? 0;
   const moon = useMoon(lat, lon, weather?.forecast.tz, !!settings?.place);
   // Aurora and official warnings belong to the main place only (CONCEPT-SOURCES §1); an extra place shows neither.
-  const main = index === 0 && !!settings?.place;
+  const main = index === 0 && !!settings?.place && isWeatherActive(settings);
   const aurora = useAurora(lat, lon, main && skyOn(settings));
   const official = useOfficial(lat, lon, weather?.forecast.tz, main && officialOn(settings));
   const events = useSkyEvents(

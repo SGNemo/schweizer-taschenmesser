@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { now } from '@/core/time/now';
 import {
   activeOfficial,
@@ -24,7 +24,15 @@ export function useOfficial(
   enabled: boolean,
 ): OfficialWarning[] | undefined {
   useSyncExternalStore(onOfficialChange, version, version);
-  if (!enabled) return undefined;
-  const all = readOfficial(lat, lon);
-  return all ? activeOfficial(all, now(), tz) : undefined;
+  const all = enabled ? readOfficial(lat, lon) : undefined;
+  const shown = all ? activeOfficial(all, now(), tz) : undefined;
+  // While a warning is shown, look again every minute: it goes at its end and when the answer passes 60 minutes.
+  const [, tick] = useState(0);
+  const showing = !!shown?.length;
+  useEffect(() => {
+    if (!showing) return;
+    const id = setInterval(() => tick((n) => n + 1), 60_000);
+    return () => clearInterval(id);
+  }, [showing]);
+  return shown;
 }

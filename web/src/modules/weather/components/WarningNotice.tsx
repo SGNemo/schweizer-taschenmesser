@@ -102,6 +102,15 @@ export function SafetyNotice({ inStage = false }: { inStage?: boolean }) {
   );
 }
 
+/** "bis 23:00" today, "bis Do. 06:00" on a later day – the same words in the pill and in "Jetzt wichtig". */
+export function officialUntil(ms: number, tz: string | undefined): string {
+  const tp = tWeatherPage.get();
+  const time = dateTimeFormat({ hour: '2-digit', minute: '2-digit', timeZone: tz }).format(ms);
+  return placeDate(ms, tz) === placeDate(now(), tz)
+    ? tp.officialUntilToday(time)
+    : tp.officialUntil(dateTimeFormat({ weekday: 'short', timeZone: tz }).format(ms), time);
+}
+
 /**
  * Official DWD warnings (handoff/03b "Official pill"): filled and framed, visibly more official than a computed hint;
  * per warning "Amtliche (Unwetter)Warnung: {Ereignis}" · "bis …" · "Quelle: DWD" (opens the general DWD page, no
@@ -119,13 +128,7 @@ export function OfficialNotice({
   more?: number;
 }) {
   const tp = tWeatherPage.use();
-  const time = dateTimeFormat({ hour: '2-digit', minute: '2-digit', timeZone: tz });
-  const day = dateTimeFormat({ weekday: 'short', timeZone: tz });
-  const today = placeDate(now(), tz);
-  const until = (ms: number) =>
-    placeDate(ms, tz) === today
-      ? tp.officialUntilToday(time.format(ms))
-      : tp.officialUntil(day.format(ms), time.format(ms));
+  const until = (ms: number) => officialUntil(ms, tz);
   return (
     <div
       className={`${styles.warn} ${styles.official}`}

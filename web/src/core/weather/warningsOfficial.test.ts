@@ -66,20 +66,30 @@ describe('parse', () => {
     expect(parseOfficial(answer())).toEqual([]);
   });
 
-  it('several warnings of one event: the one that ends last', () => {
+  it("several warnings of one event: the one in force that ends last; tomorrow's does not hide today's", () => {
     const out = parseOfficial(
       answer(
         f({ ...base, EVENT: 'STURMBÖEN', SEVERITY: 'Moderate', EXPIRES: '2026-11-25T18:00:00Z' }),
         f({ ...base, EVENT: 'STURMBÖEN', SEVERITY: 'Moderate', EXPIRES: '2026-11-25T23:00:00Z' }),
+        f({
+          ...base,
+          EVENT: 'STURMBÖEN',
+          SEVERITY: 'Moderate',
+          ONSET: '2026-11-26T10:00:00Z',
+          EXPIRES: '2026-11-26T23:00:00Z',
+        }),
       ),
     )!;
-    expect(out).toHaveLength(1);
-    expect(new Date(out[0]!.expires).toISOString()).toBe('2026-11-25T23:00:00.000Z');
+    expect(out).toHaveLength(3);
+    const now = Date.parse('2026-11-25T16:00:00Z');
+    const shown = activeOfficial(out, now, 'Europe/Berlin');
+    expect(shown).toHaveLength(1);
+    expect(new Date(shown[0]!.expires).toISOString()).toBe('2026-11-25T23:00:00.000Z');
   });
 
   it('the event in ordinary case and its hint kind', () => {
     expect(displayEvent('ORKANARTIGE BÖEN')).toBe('Orkanartige Böen');
-    expect(displayEvent('STARKES GEWITTER mit HAGEL')).toBe('Starkes Gewitter Mit Hagel');
+    expect(displayEvent('STARKES GEWITTER mit HAGEL')).toBe('Starkes Gewitter mit Hagel');
     expect(displayEvent('FROST')).toBe('Frost');
     expect(kindOf('GEWITTER', 'THUNDERSTORM')).toBe('storm');
     expect(kindOf('STURMBÖEN', 'WIND')).toBe('wind');
