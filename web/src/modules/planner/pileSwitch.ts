@@ -15,6 +15,9 @@ import {
   type PlannerSettings,
 } from './settings';
 
+/** From this many waiting rows of one area the offer P5 shows. */
+export const OFFER_FROM = 3;
+
 const KEY: Record<PileArea, 'pileMoney' | 'pileMail'> = { money: 'pileMoney', mail: 'pileMail' };
 const DISMISS_KEY = (area: PileArea) => `tm-pile-offer-${area}`;
 

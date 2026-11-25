@@ -26,8 +26,6 @@ const source: PileSource = async () => {
       id: 'queue',
       count,
       label: t.planner.pile.waiting,
-      // One part only: the queue line needs no head of its own.
-      head: '',
       to: QUEUE_ROUTE,
       members,
       panel: QUEUE_PANEL,

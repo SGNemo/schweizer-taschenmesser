@@ -10,6 +10,7 @@ import { Link } from 'react-router';
 import { useModuleStates } from '@/core/modules/activation';
 import { PanelLoading } from '@/core/modules/PlanPanelHost';
 import { t } from '@/strings';
+import { useUiStore } from '@/stores/ui';
 import { Button, PanelLine, PanelLines } from '@/ui';
 import type { CachedThreadView } from '../cache';
 import { deletedThreads, planMany, plannedThreads, planTitle } from '../planMail';
@@ -40,6 +41,13 @@ export function PlanQueue() {
   const [open, setOpen] = useState<number | undefined>();
   if (queue === undefined) return <PanelLoading />;
   const name = t.mail.meta.name;
+  // The next account (after `after`) with a mail not in the plan yet: one dialog per account, one after another.
+  const nextWaiting = (after: number) => {
+    const i = queue.accounts.findIndex(
+      (a, idx) => idx > after && a.threads.some((th) => !a.planned.has(th.id)),
+    );
+    return i < 0 ? undefined : i;
+  };
   const dialog = open === undefined ? undefined : queue.accounts[open];
   return (
     <>
@@ -47,10 +55,7 @@ export function PlanQueue() {
         <PanelLine
           action={
             queue.count > 0 ? (
-              <Button
-                variant="ghost"
-                onClick={() => setOpen(queue.accounts.findIndex((a) => a.threads.length > 0))}
-              >
+              <Button variant="ghost" onClick={() => setOpen(nextWaiting(-1))}>
                 {t.planner.pile.planAll(queue.count)}
               </Button>
             ) : undefined
@@ -69,8 +74,12 @@ export function PlanQueue() {
           plannerOn={!!states?.planner}
           onClose={() => setOpen(undefined)}
           onPlan={(picked) => {
-            setOpen(undefined);
-            void planMany(dialog.account, picked, () => undefined, dialog.deleted);
+            const at = open!;
+            setOpen(nextWaiting(at));
+            // A failed save says so in mail's own words (no content); nothing half-written stays (planMany's undo).
+            planMany(dialog.account, picked, () => undefined, dialog.deleted).catch(() =>
+              useUiStore.getState().toast(t.mail.plan.failed),
+            );
           }}
         />
       ) : null}

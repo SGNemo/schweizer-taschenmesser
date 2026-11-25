@@ -11,6 +11,8 @@ export interface PileData {
   piles: Folded;
   entries: ReadonlyMap<string, PlannableEntry>;
   today: string;
+  /** Members that are „Frist vorbei“ by the board's own rule (`lateMoneyDue`): P4 counts these. */
+  lateKeys: ReadonlySet<string>;
 }
 
 export const PileContext = createContext<PileData | undefined>(undefined);

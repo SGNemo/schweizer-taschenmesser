@@ -5,16 +5,17 @@
  * indented, no surface of its own); a part without members as the module's own line (budgets, the mail queue). The
  * planner draws the frame and writes nothing: every action is the member's module's own, with its own undo toast.
  */
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { availableManifests } from '@/core/modules/available';
 import type { PlannableEntry } from '@/core/modules/contributions';
 import { PanelHead, PlanPanelHost } from '@/core/modules/PlanPanelHost';
 import type { PileGroup } from '@/core/modules/pile';
 import { t } from '@/strings';
-import { Icon, PanelLine, PanelLines, Button } from '@/ui';
+import { Button, Icon, PanelLine, PanelLines, SensitiveValue } from '@/ui';
 import styles from '../routes/planner.module.css';
 import { carrierOf } from './carrier';
+import { MONEY } from './ThingRow';
 
 /** Members shown before X19 „{n} weitere“; each tap shows this many more. */
 const STEP = 5;
@@ -23,6 +24,16 @@ const hasPanel = (moduleId: string) =>
   !!availableManifests().find((m) => m.id === moduleId)?.contributions?.planPanel;
 const moduleName = (moduleId: string) =>
   availableManifests().find((m) => m.id === moduleId)?.name ?? moduleId;
+
+/** A source's detail line: a sum in it is a sensitive value („Werte ausblenden“ holds in the pile too). */
+const detailOf = (detail: string | undefined) =>
+  detail ? (
+    MONEY.test(detail) ? (
+      <SensitiveValue compact>{detail}</SensitiveValue>
+    ) : (
+      detail
+    )
+  ) : undefined;
 
 function Member({
   entry,
@@ -44,12 +55,15 @@ function Member({
           ) : (
             // A module without a panel of its own (Unterlagen): what the row knows, as one line.
             <PanelLines>
-              <PanelLine {...(entry.detail ? { meta: entry.detail } : {})}>{entry.title}</PanelLine>
+              <PanelLine {...(entry.detail ? { meta: detailOf(entry.detail) } : {})}>
+                {entry.title}
+              </PanelLine>
             </PanelLines>
           )}
         </div>
         <button
           type="button"
+          data-pile-expand=""
           className={styles.pileExpand}
           aria-expanded={open}
           aria-controls={id}
@@ -60,13 +74,13 @@ function Member({
         </button>
       </div>
       {open ? (
-        <div id={id} className={styles.pileMemberPanel}>
+        <div id={id} className={styles.pileMemberPanel} role="group" aria-label={entry.title}>
           <PlanPanelHost
             moduleId={entry.moduleId}
             id={entry.id}
             to={entry.to}
             {...(carrier ? { carrier } : {})}
-            {...(entry.detail ? { detail: entry.detail } : {})}
+            {...(entry.detail ? { detail: detailOf(entry.detail) } : {})}
           />
         </div>
       ) : null}
@@ -84,8 +98,46 @@ export function PilePanel({
 }) {
   const [openKey, setOpenKey] = useState<string | undefined>();
   const [shown, setShown] = useState<Record<string, number>>({});
+  const box = useRef<HTMLDivElement>(null);
+  const keys = group.parts.flatMap((p) => p.members).join('|');
+  // A member line that leaves (paid, ticked) takes the focus along: it goes to the next member's ▸, else the pile's
+  // own title – never to the page's start.
+  const [seenKeys, setSeenKeys] = useState(keys);
+  if (seenKeys !== keys) setSeenKeys(keys);
+  useEffect(() => {
+    const el = box.current;
+    if (!el || document.activeElement !== document.body) return;
+    const next = el.querySelector<HTMLElement>('[data-pile-expand]');
+    const title = el.closest('li')?.querySelector<HTMLElement>('button[data-row]');
+    (next ?? title)?.focus({ preventScroll: true });
+  }, [seenKeys]);
+  // Esc closes the open member first, then the pile (A11Y). Native, on the panel: the compartment's own Esc listener
+  // sits on the row above and skips a key this one has taken.
+  const openNow = useRef(openKey);
+  useEffect(() => {
+    openNow.current = openKey;
+  });
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || e.defaultPrevented || !openNow.current) return;
+      if (
+        (e.target as HTMLElement | null)?.closest(
+          '[role="menu"], [role="dialog"], [role="listbox"]',
+        )
+      )
+        return;
+      e.preventDefault();
+      const back = el.querySelector<HTMLElement>('[data-pile-expand][aria-expanded="true"]');
+      setOpenKey(undefined);
+      back?.focus({ preventScroll: true });
+    };
+    el.addEventListener('keydown', onKey);
+    return () => el.removeEventListener('keydown', onKey);
+  }, []);
   return (
-    <div className={styles.pile}>
+    <div ref={box} className={styles.pile}>
       {group.parts.map(({ pile, members }) => {
         const lines = members.flatMap((k) => (entries.get(k) ? [entries.get(k)!] : []));
         const line = pile.panel && pile.count > 0;

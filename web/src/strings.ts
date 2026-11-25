@@ -9533,7 +9533,7 @@ export const de = {
     // Collective rows (planner hub 2, package 2; COPY P1–P15).
     pile: {
       title: { money: 'Finanzen checken', mail: 'E-Mails durchgehen' },
-      area: { money: 'Finanzen', mail: 'E-Mails' },
+      area: { money: 'Finanzen', mail: 'E-Mail' },
       invoices: (n: number) => (n === 1 ? '1 Rechnung' : `${n} Rechnungen`),
       deadlines: (n: number) => (n === 1 ? '1 Frist' : `${n} Fristen`),
       budgets: (n: number) => (n === 1 ? '1 Budget' : `${n} Budgets`),

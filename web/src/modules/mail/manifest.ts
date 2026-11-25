@@ -87,6 +87,7 @@ const manifest: ModuleManifest = {
     // package 4c); mounted by `core/modules/PlanPanelHost` only.
     planPanel: () => import('./components/PlanPanel'),
     pile: () => import('./pile'),
+    pileAreas: ['mail'],
     planPageFoot: () => import('./components/PlanFoot'),
     onboarding: noOnboarding,
     // What a link to one of these says about its target (alive, gone); read through `resolveLink` only.

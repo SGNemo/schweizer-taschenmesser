@@ -65,11 +65,11 @@ export default function TodoPlanPanel({ id, compact }: PlanPanelProps) {
               label={t.planner.row.doneName(task.title)}
               labelHidden
               checked={!!task.done}
-              onChange={(e) =>
-                void undoableWithToast(t.todos.markedDone, t.todos.markedDone, () =>
-                  setDone(task, e.target.checked),
-                )
-              }
+              onChange={(e) => {
+                const done = e.target.checked;
+                const word = done ? t.todos.markedDone : t.todos.markedOpen;
+                void undoableWithToast(word, word, () => setDone(task, done));
+              }}
             />
           }
         >

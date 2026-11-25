@@ -8,16 +8,25 @@
 import type { PlannableItem, PlannableSource } from '@/core/modules/types';
 import { pileId, pileKey } from '@/core/modules/pile';
 import { t } from '@/strings';
-import { loadPileParts, pileAreas, PILE_MINUTES } from './piles';
+import { loadModuleStates } from '@/core/modules/activation';
+import { activeManifests } from '@/core/modules/contributions';
+import { pileAreas, PILE_MINUTES } from './piles';
 import { getPlannerSettings } from './prefs';
 
 const source: PlannableSource = {
-  async list(ctx) {
+  async list() {
     const areas = pileAreas(await getPlannerSettings());
-    const parts = await loadPileParts(ctx, areas);
+    if (areas.size === 0) return [];
+    // Which areas an active module has parts for, from the manifests alone: no part is read here, so a slow or failing
+    // source never changes what the run sees.
+    const offered = new Set(
+      activeManifests(await loadModuleStates()).flatMap((m) =>
+        m.contributions?.pile ? (m.contributions.pileAreas ?? []) : [],
+      ),
+    );
     const items: PlannableItem[] = [];
     for (const area of areas) {
-      if (!parts.some((p) => p.area === area)) continue;
+      if (!offered.has(area)) continue;
       items.push({
         id: pileId(area),
         kind: 'pile',

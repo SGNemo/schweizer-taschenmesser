@@ -174,7 +174,15 @@ export default function PlannerPage() {
   );
   // Collective rows (package 2): what a pile row draws, from the same reading as the board.
   const pileData = useMemo(
-    () => (data ? { piles: data.piles, entries: data.entries, today: data.today } : undefined),
+    () =>
+      data
+        ? {
+            piles: data.piles,
+            entries: data.entries,
+            today: data.today,
+            lateKeys: new Set(data.board.lateFolded.map((r) => r.itemKey)),
+          }
+        : undefined,
     [data],
   );
   // Planner hub R1 (layout `split`): field, week band and the picked day's sheet in the main column; on a wide page
@@ -612,7 +620,10 @@ export default function PlannerPage() {
   // The head reports the next day that asks for something (CONCEPT-DESIGN §5): `head.ts`. With no thing on any
   // day there is no figure; the unseen placeholder keeps the head's height (U01).
   const head = board
-    ? plannerHead(board.days.slice(0, SPAN), { short: phone, late: board.late })
+    ? plannerHead(board.days.slice(0, SPAN), {
+        short: phone,
+        late: [...board.late, ...board.lateFolded],
+      })
     : undefined;
 
   // „Woche prüfen · 2 Schritte“: Mondays only, only with the switch on, until it is clicked away for this week.

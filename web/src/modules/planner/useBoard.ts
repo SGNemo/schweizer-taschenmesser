@@ -14,7 +14,8 @@ import { useSettings } from '@/core/settings/settings';
 import { today } from '@/core/time/now';
 import { PILE_AREAS, pileKey, type Folded } from '@/core/modules/pile';
 import { buildBoard, type Board } from './board';
-import { foldPlan, pileAreas, pileUnasked } from './piles';
+import { OFFER_FROM, pileOfferDismissed } from './pileSwitch';
+import { foldPlan, pickOffer, pileAreas, pileUnasked } from './piles';
 import type { PileArea } from '@/core/modules/types';
 import { assignmentRepo, dayRepo, itemRepo } from './repo';
 import { LAST_RUN_KEY, requestedIds, type LastRun } from './run';
@@ -92,7 +93,8 @@ export function useBoard(
       ...own.assignments.map((a) => a.itemKey),
       ...own.itemRows.filter((r) => r.excluded).map((r) => r.id),
     ];
-    const piles = foldPlan(parts, entries, pileAreas(settings), placed);
+    const requests = own.itemRows.filter((r) => !r.excluded && !r.skipped).map((r) => r.id);
+    const piles = foldPlan(parts, entries, pileAreas(settings), placed, requests);
     const fold = {
       folded: new Set(piles.folded.keys()),
       idle: new Set(PILE_AREAS.filter((a) => !piles.groups.get(a)?.alive).map((a) => pileKey(a))),
@@ -133,16 +135,13 @@ export function useBoard(
         piles: fold,
       }).days;
     const unasked = pileUnasked(settings);
-    const would = foldPlan(parts, entries, unasked, placed).folded;
-    const offerArea = PILE_AREAS.find(
-      (a) => unasked.has(a) && board.waiting.some((w) => would.get(w.itemKey) === a),
+    const pileOffer = pickOffer(
+      board.waiting.map((w) => w.itemKey),
+      foldPlan(parts, entries, unasked, placed).folded,
+      unasked,
+      pileOfferDismissed,
+      OFFER_FROM,
     );
-    const pileOffer = offerArea
-      ? {
-          area: offerArea,
-          n: board.waiting.filter((w) => would.get(w.itemKey) === offerArea).length,
-        }
-      : undefined;
     return {
       board,
       piles,

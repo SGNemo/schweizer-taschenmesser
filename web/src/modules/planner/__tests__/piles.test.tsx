@@ -21,8 +21,9 @@ import { useRowMenu } from '../components/rowMenu';
 import { copyInput } from '../copyPlan';
 import { acceptPileOffer } from '../pileSwitch';
 import type * as Piles from '../piles';
-import { foldPlan } from '../piles';
-import { looseAll, looseOf } from '../run';
+import { foldPlan, pickOffer } from '../piles';
+import { plannerRepos } from '../repo';
+import { buildInputs, looseAll, looseOf, runPlanner, type RunDeps } from '../run';
 import type { AssignmentRow } from '../schema';
 import { DEFAULT_PLANNER_SETTINGS, PLANNER_SCOPE, plannerSettingsSchema } from '../settings';
 
@@ -175,26 +176,130 @@ describe('proposals never take a folded member one by one', () => {
 });
 
 describe("the planner's own source", () => {
+  const stamp = { createdAt: 1, updatedAt: 1, deviceId: 't', deletedAt: null, _f: {} };
   beforeEach(async () => {
     await db.table('_settings').clear();
+    await db.table('_modules').clear();
   });
-  it('lists a pile only while its switch is on and a part exists; a count that changes hands over the same thing', async () => {
+  it('lists a pile only while its switch is on and an active module offers that area; nothing that moves with a count', async () => {
     const { default: source } = await import('../plannable');
-    parts.list = [part(['invoices:i1'])];
-    expect(await source.list({ today: TODAY, until: '2026-12-13' })).toEqual([]);
-    await setSettings(PLANNER_SCOPE, { pileMoney: true }, DEFAULT_PLANNER_SETTINGS);
-    const before = await source.list({ today: TODAY, until: '2026-12-13' });
-    expect(before.map((i) => i.id)).toEqual(['pile-money']);
-    // No due date, no detail: nothing the run's hash reads changes with the count.
-    expect(before[0]).not.toHaveProperty('due');
-    expect(before[0]).not.toHaveProperty('detail');
+    const ctx = { today: TODAY, until: '2026-12-13' };
+    await setSettings(PLANNER_SCOPE, { pileMoney: true, pileMail: true }, DEFAULT_PLANNER_SETTINGS);
+    const modules = (on: string[]) =>
+      db.table('_modules').bulkPut(
+        ['planner', 'invoices', 'subscriptions', 'vault', 'budgets', 'mail'].map((id) => ({
+          id,
+          enabled: id === 'planner' || on.includes(id),
+          dataPolicy: null,
+          ...stamp,
+        })),
+      );
+    await modules([]);
+    expect(await source.list(ctx)).toEqual([]);
+    await modules(['invoices']);
+    const listed = await source.list(ctx);
+    // Mail is not on: only the money pile.
+    expect(listed.map((i) => i.id)).toEqual(['pile-money']);
+    // No due date, no detail: nothing the run's hash reads changes with a count – the parts are not even read.
+    expect(listed[0]).not.toHaveProperty('due');
+    expect(listed[0]).not.toHaveProperty('detail');
+    parts.list = [part([], { moduleId: 'budgets', id: 'over', count: 3, readOnly: true })];
+    expect(await source.list(ctx)).toEqual(listed);
+    await setSettings(PLANNER_SCOPE, { pileMoney: false }, DEFAULT_PLANNER_SETTINGS);
+    expect(await source.list(ctx)).toEqual([]);
+  });
+});
+
+describe('a run with a pile (write spy)', () => {
+  const tables = ['planner_item', 'planner_assignment', 'planner_day', '_meta'];
+  beforeEach(async () => {
+    for (const t of tables) await db.table(t).clear();
+  });
+  const deps = (entries: PlannableEntry[]): RunDeps => ({
+    today: TODAY,
+    manifests: [],
+    settings: { ...DEFAULT_PLANNER_SETTINGS, horizonDays: '7', pileMoney: true },
+    planLimit: 3,
+    settled: true,
+    entries,
+    calendar: [],
+    writer: { onAssign: vi.fn(async () => undefined), onRelease: vi.fn(async () => undefined) },
+  });
+  const snapshot = async () =>
+    JSON.stringify(await Promise.all(tables.map((t) => db.table(t).toArray())));
+
+  it('a count that changes – also to 0 – reruns nothing and writes nothing', async () => {
+    parts.list = [
+      part(['invoices:i1']),
+      part([], { moduleId: 'budgets', id: 'over', count: 2, readOnly: true }),
+    ];
+    await runPlanner(deps([pileRow, i1]), { force: true });
+    const before = await snapshot();
+    for (const next of [
+      [
+        part(['invoices:i1']),
+        part([], { moduleId: 'budgets', id: 'over', count: 0, readOnly: true }),
+      ],
+      [part([])],
+      [],
+    ]) {
+      parts.list = next;
+      const r = await runPlanner(deps([pileRow, i1]));
+      expect(r.ran).toBe(false);
+      expect(await snapshot()).toBe(before);
+    }
+  });
+
+  it('a pile with nothing to do is never proposed; a folded member neither', async () => {
     parts.list = [
       part([]),
-      part([], { moduleId: 'budgets', id: 'over', count: 3, readOnly: true }),
+      part([], { moduleId: 'budgets', id: 'over', count: 2, readOnly: true }),
     ];
-    expect(await source.list({ today: TODAY, until: '2026-12-13' })).toEqual(before);
-    parts.list = [];
-    expect(await source.list({ today: TODAY, until: '2026-12-13' })).toEqual([]);
+    const idle = await buildInputs(deps([pileRow, i1]), plannerRepos(db));
+    expect(looseAll(idle)).toEqual(['invoices:i1']);
+    parts.list = [part(['invoices:i1'])];
+    const alive = await buildInputs(deps([pileRow, i1]), plannerRepos(db));
+    expect(looseAll(alive)).toEqual(['planner:pile-money']);
+  });
+});
+
+describe('the offer P5', () => {
+  const would = new Map([
+    ['invoices:a', 'money'],
+    ['invoices:b', 'money'],
+    ['todos:m1', 'mail'],
+    ['todos:m2', 'mail'],
+    ['todos:m3', 'mail'],
+  ] as const);
+  const keys = [...would.keys()];
+  const both = new Set(['money', 'mail'] as const);
+  it('one at a time, money before mail – the first area with three waiting rows, not dismissed here', () => {
+    expect(pickOffer(keys, would, both, () => false, 3)).toEqual({ area: 'mail', n: 3 });
+    expect(
+      pickOffer(
+        [...keys, 'invoices:c'],
+        new Map([...would, ['invoices:c', 'money']]),
+        both,
+        () => false,
+        3,
+      ),
+    ).toEqual({ area: 'money', n: 3 });
+    expect(pickOffer(keys, would, both, (a) => a === 'mail', 3)).toBeUndefined();
+    expect(pickOffer(keys, would, new Set(['money'] as const), () => false, 3)).toBeUndefined();
+  });
+});
+
+describe('the head with late money folded', () => {
+  it('„Frist vorbei“ is not drawn, but the head still names it', () => {
+    const fold = foldPlan([part(['invoices:i2'])], [pileRow, i2], new Set(['money']), []);
+    const board = buildBoard(
+      input({
+        entries: [pileRow, i2],
+        piles: { folded: new Set(fold.folded.keys()), idle: new Set() },
+      }),
+    );
+    expect(board.late).toEqual([]);
+    expect(keysOf(board.lateFolded)).toEqual(['invoices:i2']);
   });
 });
 

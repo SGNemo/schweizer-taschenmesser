@@ -65,6 +65,7 @@ const manifest: ModuleManifest = {
     // Open things for the planner (read only; nothing is written back).
     plannable: () => import('./plannable'),
     pile: () => import('./pile'),
+    pileAreas: ['money'],
     // Its panel under an expanded plan row (planner hub 2, package 4b): the pay step as one line.
     planPanel: () => import('./components/PlanPanel'),
     // What a link to one of these says about its target (alive, gone); read through `resolveLink` only.

@@ -59,8 +59,33 @@ export function foldPlan(
   entries: readonly PlannableEntry[],
   areas: ReadonlySet<PileArea>,
   placed: Iterable<string>,
+  /** The planner's request rows: a member among them whose thing is not read yet keeps its pile a row meanwhile. */
+  requested?: Iterable<string>,
 ): Folded {
   const held = heldKeys(entries, placed);
   for (const a of PILE_AREAS) held.add(pileKey(a));
-  return foldPiles(parts, entries, { areas, held });
+  return foldPiles(parts, entries, {
+    areas,
+    held,
+    ...(requested ? { expected: new Set(requested) } : {}),
+  });
+}
+
+/**
+ * The offer P5: one at a time, money before mail – the first area never asked about with at least `from` waiting rows
+ * that would fold, unless it was dismissed on this device.
+ */
+export function pickOffer(
+  waitingKeys: readonly string[],
+  would: ReadonlyMap<string, PileArea>,
+  unasked: ReadonlySet<PileArea>,
+  dismissed: (area: PileArea) => boolean,
+  from: number,
+): { area: PileArea; n: number } | undefined {
+  for (const area of PILE_AREAS) {
+    if (!unasked.has(area) || dismissed(area)) continue;
+    const n = waitingKeys.filter((k) => would.get(k) === area).length;
+    if (n >= from) return { area, n };
+  }
+  return undefined;
 }

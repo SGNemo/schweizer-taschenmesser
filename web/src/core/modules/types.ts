@@ -789,8 +789,8 @@ export interface Pile {
   count: number;
   /** The part in the row's meta (COPY P3): „1 Rechnung“ / „{n} Rechnungen“. */
   label: (n: number) => string;
-  /** The part's head in the panel (COPY P7): „Rechnungen offen“. */
-  head: string;
+  /** The part's head in the panel (COPY P7): „Rechnungen offen“; none for a pile's only part (the mail queue). */
+  head?: string;
   /** The jump into the filtered view (COPY P8), a fixed route of the module (`/invoices?view=open`). */
   to: string;
   /** The earliest hard deadline among the part's things ('YYYY-MM-DD'): the row's „Frist …“ meta. */
@@ -861,6 +861,8 @@ export interface ModuleContributions {
   planPageFoot?: LazyComponent;
   /** Parts of the planner's collective rows (planner hub 2, package 2): counts, routes, member keys – never content. */
   pile?: () => Promise<{ default: PileSource }>;
+  /** The areas of its `pile` parts, known without loading them: the planner lists a pile row from these alone. */
+  pileAreas?: readonly PileArea[];
   /** Tracked minutes per thing (time tracking only). Types only for now: first reader package TT2. */
   actuals?: () => Promise<{ default: ActualsSource }>;
   /** One large figure for the cockpit's "Großanzeige" (balance, …); the module formats it. */

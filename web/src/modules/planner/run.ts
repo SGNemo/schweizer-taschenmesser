@@ -31,6 +31,7 @@ import { isPlannerOwned, type CalendarItem, type ModuleManifest } from '@/core/m
 import { fixedOf, planDays, turnDayOf } from './days';
 import { lateMoneyDue } from './late';
 import { migratePins } from './migrateModel';
+import { PILE_AREAS, pileKey } from '@/core/modules/pile';
 import { foldPlan, loadPileParts, pileAreas } from './piles';
 import { itemKeyOf, plannerRepos, putRow, type PlannerDb, type PlannerRepos } from './repo';
 import type { AssignmentRow, PlanItemRow } from './schema';
@@ -97,7 +98,8 @@ export interface RunInputs {
   removeKeys: Set<string>;
   /**
    * Members folded into a collective row (package 2, `piles.ts`): no proposal takes them one by one – the pile is the
-   * thing „Woche vorschlagen“ and „Rest verteilen“ see. Not part of the hash: a count that changes never reruns.
+   * thing „Woche vorschlagen“ and „Rest verteilen“ see; and a pile with nothing to do, which no proposal places. Not
+   * part of the hash: a count that changes never reruns.
    */
   foldedKeys?: Set<string>;
   settings: PlanSettings;
@@ -185,14 +187,18 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
     ...(await repos.assignment.active().toArray()).map((r) => r.itemKey),
     ...[...itemRows.entries()].filter(([, r]) => r.excluded).map(([k]) => k),
   ];
-  const foldedKeys = new Set(
-    foldPlan(
-      await loadPileParts({ today: deps.today, until }, areas, deps.manifests),
-      entries,
-      areas,
-      placedOrOut,
-    ).folded.keys(),
+  const fold = foldPlan(
+    await loadPileParts({ today: deps.today, until }, areas, deps.manifests),
+    entries,
+    areas,
+    placedOrOut,
+    [...itemRows.entries()].filter(([, r]) => !r.excluded && !r.skipped).map(([k]) => k),
   );
+  // Folded members, and a pile with nothing to do (CONCEPT-ROWS idea 2 (6): it is simply not there): no proposal.
+  const foldedKeys = new Set([
+    ...fold.folded.keys(),
+    ...PILE_AREAS.filter((a) => !fold.groups.get(a)?.alive).map((a) => pileKey(a)),
+  ]);
   const days: PlanDay[] = planDays({
     today: deps.today,
     span: settings.horizonDays,

@@ -8,7 +8,7 @@
  *  - it belongs to the part's own module, or – for mail – it is a ToDo whose `origin` link points to a mail thread;
  *  - never `accounts`; each key once; at most `PILE_MAX` per pile (the rest stay single rows and are not counted);
  *  - a pile is a row while it has something to do: folded members, or a count of a part that is not read-only (or a
- *    member whose thing is not read yet – it is about to be).
+ *    member the plan asked for whose thing is not read yet – it is about to be).
  */
 import type { PlannableEntry } from './contributions';
 import type { Pile, PileArea } from './types';
@@ -77,7 +77,15 @@ const earlier = (a: string | undefined, b: string | undefined) =>
 export function foldPiles(
   parts: readonly PileEntry[],
   entries: readonly PlannableEntry[],
-  opts: { areas: ReadonlySet<PileArea>; held: ReadonlySet<string> },
+  opts: {
+    areas: ReadonlySet<PileArea>;
+    held: ReadonlySet<string>;
+    /**
+     * Keys the plan asked for whose thing may not be read yet (the planner's request rows): such a member keeps the
+     * pile a row meanwhile – a ToDo mail made a moment ago – and is not counted. Any other unknown key is ignored.
+     */
+    expected?: ReadonlySet<string>;
+  },
 ): Folded {
   const byKey = new Map(entries.map((e) => [keyOf(e), e]));
   const groups = new Map<PileArea, PileGroup>();
@@ -88,8 +96,8 @@ export function foldPiles(
     if (own.length === 0) continue;
     let members = 0;
     let waiting = 0;
-    // A member key whose thing is not read yet (a ToDo mail made a moment ago): the pile stays a row meanwhile, so it
-    // does not flicker away between the two readings; it is not counted.
+    // A member the plan asked for whose thing is not read yet (a ToDo mail made a moment ago): the pile stays a row
+    // meanwhile, so it does not flicker away between the two readings; it is not counted.
     let pending = 0;
     let due: string | undefined;
     const out: PilePart[] = [];
@@ -98,7 +106,7 @@ export function foldPiles(
       for (const key of pile.members ?? []) {
         if (members >= PILE_MAX) break;
         const e = byKey.get(key);
-        if (!e && !key.startsWith(`${NEVER}:`)) pending += 1;
+        if (!e && opts.expected?.has(key) && !key.startsWith(`${NEVER}:`)) pending += 1;
         if (!e || e.done || opts.held.has(key) || folded.has(key) || !mayFold(pile, e)) continue;
         folded.set(key, area);
         kept.push(key);

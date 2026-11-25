@@ -115,6 +115,11 @@ export interface Board {
    * in `waiting`. Oldest deadline first. A thing set to „Nicht planen“ is not listed here (it waits, as before).
    */
   late: BoardRow[];
+  /**
+   * Late money folded into a pile (package 2): not drawn as its own group, but the head's sentence still names it
+   * („Frist vorbei: n“ – late money must not get quieter).
+   */
+  lateFolded: BoardRow[];
   /** „Noch offen“: rows on a day before today whose thing is not done, „fest“ first, then by day. */
   open: OpenRow[];
   /** Open things in the plan today (first sessions). */
@@ -188,8 +193,8 @@ export function buildBoard(input: BoardInput): Board {
   }
   const folded = input.piles?.folded ?? new Set<string>();
   const idle = input.piles?.idle ?? new Set<string>();
-  const late: BoardRow[] = [...lateDue]
-    .filter(([key]) => !items.get(key)?.excluded && !folded.has(key))
+  const lateAll: BoardRow[] = [...lateDue]
+    .filter(([key]) => !items.get(key)?.excluded)
     .map(([key, due]) => {
       const entry = entries.get(key)!;
       const item = items.get(key);
@@ -215,6 +220,9 @@ export function buildBoard(input: BoardInput): Board {
         (a.entry?.createdAt ?? 0) - (b.entry?.createdAt ?? 0) ||
         a.itemKey.localeCompare(b.itemKey),
     );
+  const late = lateAll.filter((r) => !folded.has(r.itemKey));
+  const lateFolded = lateAll.filter((r) => folded.has(r.itemKey));
+
   // A row is shown while its thing is open (planner rethink: one selector hides, nothing is tidied): a thing that
   // is done is hidden at once; one that no source lists and the last pass did not know either (its module is off)
   // is hidden until it is back. The stored row stays either way.
@@ -472,5 +480,5 @@ export function buildBoard(input: BoardInput): Board {
   waiting.splice(0, waiting.length, ...waiting.filter((w) => w.reason !== 'later'), ...laterRows);
   const todayDay = days[0];
   const todayCount = todayDay ? new Set(todayDay.rows.map((r) => r.itemKey)).size : 0;
-  return { days, waiting, late, open, todayCount };
+  return { days, waiting, late, lateFolded, open, todayCount };
 }

@@ -130,7 +130,8 @@ export async function collectPiles(
       try {
         return (await (await load()).default(ctx)).map((p) => ({ ...p, moduleId: m.id }));
       } catch (e) {
-        console.error(`[pile] source "${m.id}" failed`, e);
+        // The module id and the error's name only: a part's error may carry its data.
+        console.error(`[pile] source "${m.id}" failed`, e instanceof Error ? e.name : typeof e);
         return [];
       }
     }),

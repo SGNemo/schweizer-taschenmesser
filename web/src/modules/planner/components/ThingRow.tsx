@@ -101,27 +101,44 @@ function pileFacts(group: PileGroup, data: PileData | undefined, dueClock: numbe
     const n = members.length + Math.max(0, pile.count);
     return n > 0 ? [pile.label(n)] : [];
   });
-  const late = data
-    ? group.parts
-        .flatMap((p) => p.members)
-        .filter((k) => {
-          const e = data.entries.get(k);
-          return !!e?.due?.hard && e.due.date < data.today;
-        }).length
-    : 0;
+  const members = group.parts.flatMap((p) => p.members);
+  const late = data ? members.filter((k) => data.lateKeys.has(k)).length : 0;
+  // The earliest deadline still ahead (late money is said by P4).
+  const ahead = data
+    ? members
+        .map((k) => data.entries.get(k)?.due)
+        .filter((d): d is { date: string; hard: boolean } => !!d?.hard && d.date >= data.today)
+        .map((d) => d.date)
+        .sort()[0]
+    : group.due;
   const out: ReactNode[] = [];
   if (parts.length > 0)
     out.push(
       <>
-        <span className={styles.pileWide}>{parts.join(' · ')}</span>
+        <span className={styles.pileWide}>
+          {parts.map((p, i) => (
+            <Fragment key={i}>
+              {i > 0 ? (
+                <>
+                  <span aria-hidden="true"> · </span>
+                  <span className="sr-only">, </span>
+                </>
+              ) : null}
+              {p}
+            </Fragment>
+          ))}
+        </span>
         <span className={styles.pileNarrow}>{t.planner.pile.things(group.count)}</span>
       </>,
     );
   if (late > 0) out.push(<span>{t.planner.pile.late(late)}</span>);
-  else if (group.due) {
-    const was = dueWas({ hardDue: group.due }, dueClock);
-    const when = dayName(group.due);
-    out.push(<span>{was ? t.planner.row.dueWas(when) : t.planner.row.due(when)}</span>);
+  // Desktop: P4 and the next deadline; phone: P4, else the deadline (hand-off 02 „1920 / 412“).
+  if (ahead) {
+    const when = dayName(ahead);
+    const due = dueWas({ hardDue: ahead }, dueClock)
+      ? t.planner.row.dueWas(when)
+      : t.planner.row.due(when);
+    out.push(<span className={late > 0 ? styles.pileWide : undefined}>{due}</span>);
   }
   return out;
 }
@@ -152,7 +169,7 @@ export function sourceOf(entry: Pick<PlannableEntry, 'kind' | 'moduleId'>): {
 }
 
 /** A detail line that names money („Mahnung · 92,40 € bis 20.11.“) follows „Werte ausblenden“. */
-const MONEY = /\d\s?(€|\$|£|CHF)|(€|\$|£|CHF)\s?\d/;
+export const MONEY = /\d\s?(€|\$|£|CHF)|(€|\$|£|CHF)\s?\d/;
 
 /**
  * One planned thing – the same form for every source and every place (a day, „Frist vorbei“; planner hub R1,

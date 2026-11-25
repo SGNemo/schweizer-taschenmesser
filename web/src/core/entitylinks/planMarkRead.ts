@@ -217,10 +217,13 @@ async function pilesFor(
   ]);
   if (on.size === 0) return { members, placed };
   const states = await loadModuleStates(undefined, database);
-  const sources = [module, 'mail'].flatMap((id) => {
+  // The module's own parts; mail's only where its members can be the thing or its carrier (ToDos, mail threads).
+  const ids = new Set([module, ...(module === 'todos' || module === 'mail' ? ['mail'] : [])]);
+  const sources = [...ids].flatMap((id) => {
     const m = getManifest(id);
-    return m && states[id] ? [m] : [];
+    return m?.contributions?.pile && states[id] ? [m] : [];
   });
+  if (sources.length === 0) return { members, placed };
   const from = today();
   const parts = await collectPiles({ today: from, until: addDaysStr(from, 27) }, sources);
   for (const p of parts) {
