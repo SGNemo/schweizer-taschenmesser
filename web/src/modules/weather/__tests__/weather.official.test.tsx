@@ -223,7 +223,7 @@ describe('official warnings ending on a later day', () => {
 describe('aurora (package 3b)', () => {
   it('weather switched off: the SWPC file is not asked, even on the page', async () => {
     setNow(() => Date.parse('2026-11-25T19:00:00Z'));
-    const f = vi.fn(async () => new Response('[]', { status: 200 }));
+    const f = vi.fn(async (_url: string | URL | Request) => new Response('[]', { status: 200 }));
     vi.stubGlobal('fetch', f);
     await setWeatherEnabled(false);
     renderPage();
