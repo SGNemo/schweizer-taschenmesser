@@ -648,13 +648,14 @@ export interface PlannableItem {
   createdAt?: number;
   /**
    * The thing's own steps in order (planner hub 2, package 5a, CONCEPT-ROWS idea 5): a ToDo's checklist, a list's open
-   * items, a routine's steps of today's run. At most `STEPS_MAX`. Display and „Los“ only – never part of the planner's
-   * input hash; a tick goes back through `PlannableSource.onStepDone`.
+   * entries, a routine's steps of today's run – all of them: core drops the whole list when it holds more than
+   * `STEPS_MAX` (a cut list would end the thing with steps still open), the thing is then a plain row. Display and
+   * „Los“ only – never part of the planner's input hash; a tick goes back through `PlannableSource.onStepDone`.
    */
   steps?: { id: string; title: string; done: boolean }[];
 }
 
-/** At most this many steps of one thing are handed over (CONCEPT-ROWS idea 5). */
+/** At most this many steps of one thing (CONCEPT-ROWS idea 5); a longer list is dropped by `collectPlannable`. */
 export const STEPS_MAX = 40;
 
 /**

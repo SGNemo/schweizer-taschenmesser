@@ -34,7 +34,7 @@ const entry = (over: Partial<PlannableEntry> = {}): PlannableEntry => ({
 /** What the routines module's own service does on `routine.requested` (written here through the generic repo). */
 const addRoutine = (req: { name: string; steps: string[] }) =>
   routines().create({
-    name: req.name,
+    name: req.name.trim().slice(0, 120),
     repeat: { freq: 'weekly', interval: 1 },
     startDate: '2026-11-30',
     dueDate: '2026-11-30',
@@ -120,5 +120,15 @@ describe('„Als Routine speichern“', () => {
     expect(await saveAsRoutine(entry(), {}, open)).toBe(false);
     expect(await routines().active().count()).toBe(0);
     expect(toasts()).toEqual(['Das hat nicht geklappt. Es ist nichts verändert.']);
+  });
+
+  it('a title longer than a routine name: found under the name routines keeps, one undo entry', async () => {
+    const long = `Haushalt ${'x'.repeat(140)}`;
+    expect(await saveAsRoutine(entry({ title: long }), {}, open)).toBe(true);
+    expect(await routines().active().count()).toBe(1);
+    expect(undoDepth()).toBe(1);
+    // Asked again: B25, not a second routine and not X7.
+    expect(await saveAsRoutine(entry({ title: long }), {}, open)).toBe(false);
+    expect(await routines().active().count()).toBe(1);
   });
 });

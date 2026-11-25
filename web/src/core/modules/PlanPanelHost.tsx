@@ -60,7 +60,7 @@ interface PanelContext {
    * A thing with steps (package 5a): the planner's B3 „Los“ and its ⋯ („Als Routine speichern“) in the foot, after the
    * module's own actions and before „Ganz öffnen“. The planner's, never the module's: the host only places them.
    */
-  steps?: { go: () => void; menu: RowMenuItem[] };
+  steps?: { go: () => void; title: string; menu: RowMenuItem[] };
 }
 const Ctx = createContext<PanelContext | undefined>(undefined);
 
@@ -93,7 +93,7 @@ export function PlanPanelFoot({ children }: { children?: ReactNode }) {
                 </Button>
                 {steps.menu.length > 0 ? (
                   <RowMenu
-                    label={t.planner.row.menu(t.planner.steps.go)}
+                    label={t.planner.row.menu(steps.title)}
                     items={steps.menu}
                     open={menuOpen}
                     onOpenChange={setMenuOpen}
@@ -272,7 +272,7 @@ export interface PlanPanelHostProps {
    */
   carrier?: { moduleId: string; id: string };
   /** A thing with steps (package 5a): „Los“ and the ⋯ the foot carries (`PanelContext.steps`). */
-  steps?: { go: () => void; menu: RowMenuItem[] };
+  steps?: { go: () => void; title: string; menu: RowMenuItem[] };
 }
 
 /**

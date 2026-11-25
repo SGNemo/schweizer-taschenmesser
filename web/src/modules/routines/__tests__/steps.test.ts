@@ -7,6 +7,7 @@ import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { setNow } from '@/core/time/now';
+import { undoable, undoLast } from '@/core/undo';
 import source from '../plannable';
 import { routineRepo } from '../repo';
 
@@ -49,5 +50,44 @@ describe("a routine's steps", () => {
     const before = JSON.stringify(await routineRepo.get(r.id));
     await source.onStepDone!(row!.id, 's2', true);
     expect(JSON.stringify(await routineRepo.get(r.id))).toBe(before);
+  });
+
+  it('a later turn has no steps yet; a step already in that state writes nothing', async () => {
+    await routineRepo.create({
+      name: 'Haushalt',
+      repeat: weekly,
+      startDate: '2026-10-01',
+      dueDate: '2026-10-01',
+      people: [],
+      turn: 0,
+      steps,
+    });
+    const [later] = await source.list({ today: TODAY, until: '2026-10-05' });
+    expect(later).toBeDefined();
+    expect(later).not.toHaveProperty('steps');
+    setNow(() => new Date('2026-10-01T10:00:00').getTime());
+    const [now] = await source.list({ today: '2026-10-01', until: '2026-10-05' });
+    expect(now?.steps).toHaveLength(3);
+    const before = JSON.stringify(await routineRepo.get(now!.id.split(':')[0]!));
+    await source.onStepDone!(now!.id, 's0', false);
+    expect(JSON.stringify(await routineRepo.get(now!.id.split(':')[0]!))).toBe(before);
+  });
+
+  it("a step's undo takes back only that step (another one ticked since stays)", async () => {
+    await routineRepo.create({
+      name: 'Haushalt',
+      repeat: weekly,
+      startDate: TODAY,
+      dueDate: TODAY,
+      people: [],
+      turn: 0,
+      steps,
+    });
+    const [row] = await source.list({ today: TODAY, until: '2026-10-05' });
+    await undoable('step', () => source.onStepDone!(row!.id, 's0', true));
+    await source.onStepDone!(row!.id, 's1', true);
+    await undoLast();
+    const [after] = await source.list({ today: TODAY, until: '2026-10-05' });
+    expect(after?.steps?.map((s) => s.done)).toEqual([false, true, false]);
   });
 });

@@ -2,6 +2,6 @@
 type: added
 area: app
 breaking: false
-de: Ein ToDo mit Checkliste, eine Liste oder eine Routine zeigt im Planer seine Schritte; „Los“ zeigt nur den nächsten Schritt, „Fertig“ beim letzten hakt das Ding ab.
-en: A ToDo with a checklist, a list or a routine shows its steps in the planner; “Go” shows only the next step, and “Done” on the last one ticks the thing off.
+de: ToDos mit Checkliste, Listen und Routinen zeigen im Planer ihre Schritte. „Los“ zeigt immer nur den nächsten, jeder Haken lässt sich zurücknehmen. Eine Checkliste wird auf Wunsch zur Routine.
+en: ToDos with a checklist, lists and routines show their steps in the planner. “Go” shows only the next one, and every tick can be undone. A checklist can become a routine.
 ---

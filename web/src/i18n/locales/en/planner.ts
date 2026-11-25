@@ -80,6 +80,7 @@ export const planner: Strings['planner'] = {
     next: 'Done · next',
     skip: 'Skip',
     pause: 'Pause',
+    paused: 'Paused – “Resume” carries on.',
     finish: 'Done',
     skipped: (n: number) => `${n} skipped. Now or later?`,
     now: 'Now',

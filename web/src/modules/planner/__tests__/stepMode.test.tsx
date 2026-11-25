@@ -60,9 +60,12 @@ const CHECK = ['Wäsche anstellen', 'Bad wischen', 'Müll rausbringen'].map((tex
   done: false,
 }));
 
-function page(id: string) {
+function page(id: string, state?: unknown) {
+  const path = `/planner/focus/${encodeURIComponent(`todos:${id}#0`)}?step=1`;
   return render(
-    <MemoryRouter initialEntries={[`/planner/focus/${encodeURIComponent(`todos:${id}#0`)}?step=1`]}>
+    <MemoryRouter
+      initialEntries={[state ? { pathname: path.split('?')[0]!, search: '?step=1', state } : path]}
+    >
       <Routes>
         <Route path="/planner/focus/:item" element={<FocusPage />} />
         <Route path="/planner" element={<p>Planer-Seite</p>} />
@@ -138,6 +141,8 @@ describe('„Los“ – step mode', () => {
     ).toBeInTheDocument();
     fireEvent.keyDown(screen.getByRole('button', { name: 'Fertig · weiter' }), { key: 'p' });
     expect(screen.getByRole('button', { name: 'Weiter' })).toBeInTheDocument();
+    // Paused says so: the filled button does nothing until „Weiter“.
+    expect(screen.getByText('Pausiert – „Weiter“ macht weiter.')).toBeInTheDocument();
     first.unmount();
     page(id);
     // The reload: still on the step after the skipped one, still paused; nothing was written.
@@ -179,5 +184,42 @@ describe('„Los“ – step mode', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Später' }));
     expect(await screen.findByText('Planer-Seite')).toBeInTheDocument();
     expect(await checklist(id)).toEqual([false]);
+  });
+
+  it('focus lands on the filled button; an explicit „Los“ starts the round fresh, a reload does not', async () => {
+    const id = await place('Haushalt', 0, { checklist: CHECK });
+    const first = page(id);
+    await screen.findByRole('heading', { level: 1, name: 'Wäsche anstellen' });
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Fertig · weiter' })).toHaveFocus(),
+    );
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Fertig · weiter' }), { key: 's' });
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Fertig · weiter' }), { key: 'p' });
+    first.unmount();
+    // „Los“ from the plan again (STEPS_FRESH): the first step, not paused.
+    page(id, { stepsFresh: true });
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Wäsche anstellen' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Pause' })).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Fertig · weiter' })).toHaveFocus(),
+    );
+  });
+
+  it("a step's undo takes back only that step (one ticked elsewhere since stays)", async () => {
+    const id = await place('Haushalt', 0, { checklist: CHECK });
+    page(id);
+    await screen.findByRole('heading', { level: 1, name: 'Wäsche anstellen' });
+    fireEvent.click(screen.getByRole('button', { name: 'Fertig · weiter' }));
+    await screen.findByRole('heading', { level: 1, name: 'Bad wischen' });
+    await waitFor(() => expect(undoDepth()).toBe(1));
+    // Another device ticks the third line meanwhile.
+    const task = (await taskRepo.get(id)) as unknown as { checklist: typeof CHECK };
+    await taskRepo.update(id, {
+      checklist: task.checklist.map((c, i) => (i === 2 ? { ...c, done: true } : c)),
+    });
+    await undoLast();
+    expect(await checklist(id)).toEqual([false, false, true]);
   });
 });

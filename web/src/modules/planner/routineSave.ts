@@ -26,6 +26,9 @@ export async function routinesOn(): Promise<boolean> {
   return !!(await loadModuleStates(visibleManifests))[ROUTINES];
 }
 
+/** The routines module's name length (`routines/schema`); the event carries the name, the handler cuts it there. */
+const ROUTINE_NAME_MAX = 120;
+
 /** A live routine of that name (any case), read through the generic manifest repo. */
 export async function routineNamed(name: string): Promise<boolean> {
   const manifest = getManifest(ROUTINES);
@@ -56,7 +59,8 @@ export async function saveAsRoutine(
   /** Opens a route of the app („Ansehen“ → `/routines`): the page's `navigate`. */
   open: (path: string) => void,
 ): Promise<boolean> {
-  const name = e.title.trim();
+  // As the routine will be named (routines keeps 120 characters): the lookup must find what the handler writes.
+  const name = e.title.trim().slice(0, ROUTINE_NAME_MAX);
   const steps = (e.steps ?? []).map((s) => s.title);
   const ansehen = { label: t.planner.steps.view, run: () => open(ROUTINES_PATH) };
   if (await routineNamed(name)) {

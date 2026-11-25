@@ -3,7 +3,7 @@
  * way into „Los“ and what the panel's foot carries besides the module's own actions.
  */
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import type { PlannableEntry } from '@/core/modules/contributions';
 import { t } from '@/strings';
@@ -13,6 +13,12 @@ import { canSaveAsRoutine, saveAsRoutine } from '../routineSave';
 
 /** „Los“: the focus page in step mode. */
 export const stepsPath = (unitId: string): string => `${planFocusPath(unitId)}?step=1`;
+
+/**
+ * The router state of an explicit „Los“ (foot, ⋯, start line): the round starts fresh – no skips, no pause. Only a
+ * reload (the stage drops this state once read) keeps where the round was.
+ */
+export const STEPS_FRESH = { state: { stepsFresh: true } } as const;
 
 /** A list keeps its own word in the title („Einkaufen · 7 Dinge“): only „2 von 7“ once something is ticked. */
 const LIST_KINDS = new Set(['shopping', 'packing']);
@@ -37,17 +43,36 @@ export function useStepsFoot(
   entry: PlannableEntry | undefined,
   unitId: string,
   menu: RowMenuItem[],
-): { go: () => void; menu: RowMenuItem[] } | undefined {
+): StepsFoot | undefined {
   const navigate = useNavigate();
   const open = hasOpenSteps(entry);
+  // The entries are rebuilt each render (they hold the entry as it is now): the stable foot reaches them through a ref,
+  // and their ids say when the menu itself changed.
+  const latest = useRef(menu);
+  useEffect(() => {
+    latest.current = menu;
+  });
   const menuKey = menu.map((m) => m.id).join('|');
+  const title = entry?.title ?? '';
   return useMemo(
-    () => (open ? { go: () => void navigate(stepsPath(unitId)), menu } : undefined),
-    // The entries are rebuilt each render; their ids say when they changed.
+    () =>
+      open
+        ? {
+            go: () => void navigate(stepsPath(unitId), STEPS_FRESH),
+            title,
+            menu: menu.map((m) => ({
+              ...m,
+              onSelect: () => latest.current.find((x) => x.id === m.id)?.onSelect(),
+            })),
+          }
+        : undefined,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [open, unitId, navigate, menuKey],
+    [open, unitId, navigate, menuKey, title],
   );
 }
+
+/** What the panel's foot carries for a thing with steps (`PlanPanelHost` `steps`). */
+export type StepsFoot = { go: () => void; title: string; menu: RowMenuItem[] };
 
 /** The foot's ⋯ (package 5a): „Als Routine speichern“ while it may be offered (`canSaveAsRoutine`). */
 export function useRoutineMenu(entry: PlannableEntry | undefined): RowMenuItem[] {

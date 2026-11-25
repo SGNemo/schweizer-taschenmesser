@@ -1,3 +1,4 @@
+import { recordAs } from '@/core/db/recorder';
 import { createRepo } from '@/core/db/repo';
 import { tableName } from '@/core/db/schema';
 import type { Stored } from '@/core/db/types';
@@ -124,5 +125,9 @@ export async function setChecklistLine(
   const fresh = await taskRepo.get(taskId);
   if (!fresh?.checklist?.some((c) => c.id === itemId && c.done !== done)) return;
   const checklist = fresh.checklist.map((c) => (c.id === itemId ? { ...c, done } : c));
-  await taskRepo.update(taskId, { checklist });
+  // Its undo flips only this line back (the field holds the whole list: see `recordAs`).
+  await recordAs(
+    () => setChecklistLine(taskId, itemId, !done),
+    () => taskRepo.update(taskId, { checklist }),
+  );
 }

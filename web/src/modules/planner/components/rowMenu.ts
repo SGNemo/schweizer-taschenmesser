@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { areaOfPileId } from '@/core/modules/pile';
 import { unpile } from '../pileSwitch';
-import { hasOpenSteps, stepsPath } from './steps';
+import { hasOpenSteps, STEPS_FRESH, stepsPath } from './steps';
 import { dayName } from '@/core/plan/explain';
 import { t } from '@/strings';
 import type { RowMenuItem } from '@/ui';
@@ -160,7 +160,7 @@ export function useRowMenu(ctx: {
             {
               id: 'go',
               label: t.planner.steps.go,
-              onSelect: () => void navigate(stepsPath(row.unitId)),
+              onSelect: () => void navigate(stepsPath(row.unitId), STEPS_FRESH),
             },
           ]
         : []),

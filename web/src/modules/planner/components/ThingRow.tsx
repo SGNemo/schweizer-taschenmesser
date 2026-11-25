@@ -25,7 +25,7 @@ import { compartmentId, RowCompartment } from './RowCompartment';
 import { carrierOf } from './carrier';
 import { PilePanel } from './PilePanel';
 import { usePileOf, type PileData } from './pileContext';
-import { stepsFact, useRoutineMenu, useStepsFoot } from './steps';
+import { stepsFact, useRoutineMenu, useStepsFoot, type StepsFoot } from './steps';
 import styles from '../routes/planner.module.css';
 
 /**
@@ -49,7 +49,7 @@ function expandParts(
   links: RowLinkViews,
   part?: { k: number; of: number },
   pile?: ReturnType<typeof usePileOf>,
-  stepsFoot?: { go: () => void; menu: RowMenuItem[] },
+  stepsFoot?: StepsFoot,
 ) {
   if (!expand || !entry) return undefined;
   const id = compartmentId(unitId);

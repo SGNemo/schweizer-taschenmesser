@@ -13,7 +13,7 @@
  * Durations are constants the person can override in the plan. Switch: `showInPlan`.
  */
 import { addDays } from '@/core/plan/dates';
-import { STEPS_MAX, type PlannableItem, type PlannableSource } from '@/core/modules/types';
+import type { PlannableItem, PlannableSource } from '@/core/modules/types';
 import { getSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
 import { itemRepo, itemsOf, listRepo } from './repo';
@@ -58,20 +58,18 @@ const source: PlannableSource = {
         // (by the entries' own order – the list view puts bought ones last, a step list must not jump).
         steps: [...all]
           .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-          .slice(0, STEPS_MAX)
           .map((i) => ({ id: i.id, title: i.name, done: !!i.done })),
         createdAt: l.createdAt,
       });
     }
     return items;
   },
-};
-
-/** A list entry ticked from the plan (package 5a): only an entry of that list, read fresh. */
-source.onStepDone = async (listId, itemId, done) => {
-  const item = await itemRepo.get(itemId);
-  if (!item || item.listId !== listId || !!item.done === done) return;
-  await itemRepo.update(itemId, { done });
+  /** A list entry ticked from the plan (package 5a): only an entry of that list, read fresh. */
+  async onStepDone(listId, itemId, done) {
+    const item = await itemRepo.get(itemId);
+    if (!item || item.listId !== listId || !!item.done === done) return;
+    await itemRepo.update(itemId, { done });
+  },
 };
 
 export default source;

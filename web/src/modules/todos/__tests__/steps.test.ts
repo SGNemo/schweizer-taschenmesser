@@ -4,6 +4,7 @@
  */
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
+import { undoable, undoLast } from '@/core/undo';
 import source from '../plannable';
 import { taskRepo } from '../repo';
 
@@ -50,5 +51,23 @@ describe("a ToDo's steps", () => {
     } as never);
     const [row] = await source.list({ today: '2026-11-30', until: '2026-12-13' });
     expect(row).not.toHaveProperty('steps');
+  });
+
+  it("a line's undo takes back only that line (another one ticked since stays)", async () => {
+    const task = await taskRepo.create({
+      listId: 'inbox',
+      title: 'Haushalt',
+      done: false,
+      priority: 0,
+      order: 0,
+      checklist: [
+        { id: 'c1', text: 'Wäsche anstellen', done: false },
+        { id: 'c2', text: 'Bad wischen', done: false },
+      ],
+    } as never);
+    await undoable('step', () => source.onStepDone!(task.id, 'c1', true));
+    await source.onStepDone!(task.id, 'c2', true);
+    await undoLast();
+    expect((await taskRepo.get(task.id))?.checklist?.map((c) => c.done)).toEqual([false, true]);
   });
 });

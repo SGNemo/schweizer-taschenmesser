@@ -15,20 +15,9 @@ import type { PlanPanelProps } from '@/core/modules/types';
 import { undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import { Checkbox, PanelLine, PanelLines } from '@/ui';
-import { doneSteps, stepsOf, toggleStepPatch } from '../logic';
+import { doneSteps, stepsOf } from '../logic';
+import { setTurnStep, split } from '../plannable';
 import { routineRepo } from '../repo';
-
-/** `<id>:<due day>` → its parts, split at the last colon. */
-const split = (key: string) => {
-  const at = key.lastIndexOf(':');
-  return at < 0 ? { id: key, due: '' } : { id: key.slice(0, at), due: key.slice(at + 1) };
-};
-
-/** One step of the turn `due`, read fresh: a turn that moved on meanwhile writes nothing. */
-async function setStep(id: string, due: string, stepId: string, done: boolean): Promise<void> {
-  const r = await routineRepo.get(id);
-  if (r && r.dueDate === due) await routineRepo.update(id, toggleStepPatch(r, stepId, done));
-}
 
 export default function RoutinePlanPanel({ id, compact }: PlanPanelProps) {
   const { id: routineId, due } = split(id);
@@ -48,8 +37,8 @@ export default function RoutinePlanPanel({ id, compact }: PlanPanelProps) {
     void undoableWithToast(
       word,
       word,
-      () => setStep(routineId, due, stepId, on),
-      () => setStep(routineId, due, stepId, !on),
+      () => setTurnStep(id, stepId, on),
+      () => setTurnStep(id, stepId, !on),
     );
   };
   return (

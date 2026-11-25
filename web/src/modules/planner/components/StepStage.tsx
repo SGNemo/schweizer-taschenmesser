@@ -5,11 +5,12 @@
  *
  * Every step tick is the planner's `markStep` – its own `act`, one undo entry, toast B26. B23 finishes the step and ticks
  * the thing in one `act` (`finishSteps`) and returns to the plan. Skipped steps and the pause live in this tab's session
- * storage, so a reload keeps the round where it was; the steps' own state is the source's. Keys: Enter is the focused
+ * storage, so a reload keeps the round where it was; an explicit „Los“ (`STEPS_FRESH`) starts it fresh. The steps' own
+ * state is the source's. Focus lands on the filled button on arrival and after each step. Keys: Enter is the focused
  * button's own activation; S and P only while focus is on one of the stage's buttons (WCAG 2.1.4); Esc is the page's.
  */
 import { type KeyboardEvent, type ReactNode, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import type { PlannableEntry } from '@/core/modules/contributions';
 import { t } from '@/strings';
 import { Button } from '@/ui';
@@ -33,13 +34,15 @@ function readKept(unitId: string): Kept {
     return { skipped: [], paused: false };
   }
 }
-function writeKept(unitId: string, kept: Kept) {
+function writeKept(unitId: string, kept: Kept | undefined) {
   try {
-    sessionStorage.setItem(keyOf(unitId), JSON.stringify(kept));
+    if (kept) sessionStorage.setItem(keyOf(unitId), JSON.stringify(kept));
+    else sessionStorage.removeItem(keyOf(unitId));
   } catch {
     // Storage blocked: the round still works, it only forgets its skips on a reload.
   }
 }
+const FRESH: Kept = { skipped: [], paused: false };
 
 export function StepStage({
   entry,
@@ -56,8 +59,21 @@ export function StepStage({
   header: ReactNode;
 }) {
   const navigate = useNavigate();
-  const [kept, setKeptState] = useState<Kept>(() => readKept(unitId));
+  const location = useLocation();
+  const fresh = (location.state as { stepsFresh?: boolean } | null)?.stepsFresh === true;
+  const [kept, setKeptState] = useState<Kept>(() => {
+    if (!fresh) return readKept(unitId);
+    writeKept(unitId, undefined);
+    return FRESH;
+  });
+  // The fresh mark is read once: dropped from the history entry, so a reload keeps the round.
+  useEffect(() => {
+    if (fresh)
+      void navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
+  }, [fresh, navigate, location.pathname, location.search]);
   const [busy, setBusy] = useState(false);
+  // The step a tick is running for: a held Enter never ticks the same step twice before the next one shows.
+  const ticked = useRef<string | undefined>(undefined);
   const setKept = (next: Kept) => {
     setKeptState(next);
     writeKept(unitId, next);
@@ -85,20 +101,27 @@ export function StepStage({
   }, [current, k, steps.length]);
 
   const actions = useRef<HTMLDivElement>(null);
+  const focusFirst = () => actions.current?.querySelector<HTMLButtonElement>('button')?.focus();
+  // On arrival (after the shell has moved focus to the page) and on the B10 screen: the filled button.
+  const screen = current ? 'step' : 'skipped';
+  useEffect(() => {
+    actions.current?.querySelector<HTMLButtonElement>('button')?.focus();
+  }, [screen]);
   async function done() {
-    if (!current || busy || kept.paused) return;
+    if (!current || busy || kept.paused || ticked.current === current.id) return;
+    ticked.current = current.id;
     setBusy(true);
     try {
       if (last) {
         await finishSteps(entry, current.id, titles);
-        writeKept(unitId, { skipped: [], paused: false });
+        writeKept(unitId, undefined);
         void navigate('/planner');
         return;
       }
       await markStep(entry, current.id, true, titles);
     } finally {
       setBusy(false);
-      actions.current?.querySelector<HTMLButtonElement>('button')?.focus();
+      focusFirst();
     }
   }
   const skip = () =>
@@ -118,6 +141,12 @@ export function StepStage({
   };
 
   if (allDone) return null;
+  // One live region for both screens (B24), so it is mounted before it speaks.
+  const status = (
+    <p className="sr-only" role="status" aria-live="polite">
+      {said}
+    </p>
+  );
   if (!current)
     return (
       // Only skipped steps are left (B10): walk them now, or keep them open for later.
@@ -127,18 +156,22 @@ export function StepStage({
           {title}
         </p>
         <h1 className={styles.title}>{t.planner.steps.skipped(open.length)}</h1>
-        <div className={`${styles.actions} ${styles.stepActions}`}>
-          <Button
-            variant="primary"
-            data-autofocus
-            onClick={() => setKept({ ...kept, skipped: [] })}
-          >
+        <div ref={actions} className={`${styles.actions} ${styles.stepActions}`}>
+          <Button variant="primary" onClick={() => setKept({ ...kept, skipped: [] })}>
             {t.planner.steps.now}
           </Button>
-          <Button variant="ghost" onClick={() => void navigate('/planner')}>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              // „Später“ keeps them open – not skipped: the next „Los“ walks them again.
+              writeKept(unitId, undefined);
+              void navigate('/planner');
+            }}
+          >
             {t.planner.steps.later}
           </Button>
         </div>
+        {status}
       </section>
     );
 
@@ -154,7 +187,6 @@ export function StepStage({
       <div ref={actions} className={`${styles.actions} ${styles.stepActions}`} onKeyDown={onKeys}>
         <Button
           variant="primary"
-          data-autofocus
           aria-busy={busy}
           // Paused: still focusable (P resumes from here), it only does nothing.
           aria-disabled={busy || kept.paused}
@@ -169,10 +201,9 @@ export function StepStage({
           {kept.paused ? t.focus.mode.resume : t.planner.steps.pause}
         </Button>
       </div>
+      {kept.paused ? <p className={styles.paused}>{t.planner.steps.paused}</p> : null}
       <p className={styles.keys}>{t.planner.steps.keys}</p>
-      <p className="sr-only" role="status" aria-live="polite">
-        {said}
-      </p>
+      {status}
     </section>
   );
 }

@@ -9539,6 +9539,7 @@ export const de = {
       next: 'Fertig · weiter',
       skip: 'Überspringen',
       pause: 'Pause',
+      paused: 'Pausiert – „Weiter“ macht weiter.',
       finish: 'Fertig',
       skipped: (n: number) => `${n} übersprungen. Jetzt oder später?`,
       now: 'Jetzt',

@@ -121,11 +121,14 @@ for (const [name, viewport, mobile] of [
       await expect(page.getByText('Haushalt · Schritt 1 von 3')).toBeVisible();
       // Only the next one: the other steps are nowhere on the stage.
       await expect(page.getByText(STEPS[1], { exact: true })).toHaveCount(0);
-      await page.getByRole('button', { name: 'Fertig · weiter' }).click();
+      // Focus lands on the filled button: Enter ticks the step.
+      await expect(page.getByRole('button', { name: 'Fertig · weiter' })).toBeFocused();
+      await page.keyboard.press('Enter');
       await expect(page.getByRole('heading', { level: 1, name: STEPS[1] })).toBeVisible();
       await expect.poll(async () => (await ticked(page)).steps).toEqual([true, false, false]);
       await page.reload();
       await expect(page.getByRole('heading', { level: 1, name: STEPS[1] })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Fertig · weiter' })).toBeFocused();
       await page.getByRole('button', { name: 'Fertig · weiter' }).click();
       await expect(page.getByRole('heading', { level: 1, name: STEPS[2] })).toBeVisible();
       await page.getByRole('button', { name: 'Fertig', exact: true }).click();

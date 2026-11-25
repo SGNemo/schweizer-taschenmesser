@@ -1,6 +1,7 @@
 import { compareText } from '@/core/i18n/format';
 import type { PileEntry } from './pile';
 import type { PileArea } from './types';
+import { STEPS_MAX } from './types';
 import { NEVER_LINKED, refKey, type EntityRef } from '@/core/entitylinks/types';
 import { loadModuleStates, useModuleStates } from './activation';
 import { availableManifests } from '@/core/modules/available';
@@ -88,7 +89,10 @@ export async function collectPlannable(
       const asked = requested?.[m.id];
       const own = asked?.length ? { ...ctx, requested: [...asked] } : ctx;
       try {
-        return (await (await load()).default.list(own)).map((i) => ({ ...i, moduleId: m.id }));
+        return (await (await load()).default.list(own)).map((i) => ({
+          ...withSteps(i),
+          moduleId: m.id,
+        }));
       } catch (e) {
         console.error(`[plannable] source "${m.id}" failed`, e);
         return [];
@@ -96,6 +100,25 @@ export async function collectPlannable(
     }),
   );
   return lists.flat();
+}
+
+/**
+ * A thing's steps as the planner may show them (package 5a): well-formed and at most `STEPS_MAX`, else none at all – a
+ * cut list would read „40 von 40“ or end the thing with steps still open.
+ */
+export function withSteps<T extends PlannableItem>(i: T): T {
+  if (i.steps === undefined) return i;
+  const ok =
+    Array.isArray(i.steps) &&
+    i.steps.length > 0 &&
+    i.steps.length <= STEPS_MAX &&
+    i.steps.every(
+      (s) =>
+        typeof s?.id === 'string' && typeof s.title === 'string' && typeof s.done === 'boolean',
+    );
+  if (ok) return i;
+  const { steps: _dropped, ...rest } = i;
+  return rest as T;
 }
 
 /** Live plannable things of all active modules; `undefined` while loading. `requested`: see `collectPlannable`. */

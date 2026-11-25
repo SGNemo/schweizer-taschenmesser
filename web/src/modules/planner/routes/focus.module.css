@@ -102,6 +102,12 @@
 .stepActions > button {
   min-height: 48px;
 }
+.paused {
+  text-align: center;
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
 .keys {
   text-align: center;
   margin: 0;

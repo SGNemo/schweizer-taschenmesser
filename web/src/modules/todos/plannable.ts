@@ -5,7 +5,7 @@
  * planner's only while `planMark.date === plannedFor`; `prior` carries the user's own date it overwrote.
  */
 import { fromLegacy } from '@/core/entitylinks/types';
-import { STEPS_MAX, type PlannableItem, type PlannableSource } from '@/core/modules/types';
+import { type PlannableItem, type PlannableSource } from '@/core/modules/types';
 import { today } from '@/core/time/now';
 import { nextInstanceId } from './logic';
 import { restorePatch } from './planMark';
@@ -77,9 +77,7 @@ const itemOf = (t: Task & { id: string; createdAt: number }): PlannableItem => (
   // Its checklist as steps (package 5a): display and „Los“ only, never planned.
   ...(t.checklist?.length
     ? {
-        steps: t.checklist
-          .slice(0, STEPS_MAX)
-          .map((c) => ({ id: c.id, title: c.text, done: !!c.done })),
+        steps: t.checklist.map((c) => ({ id: c.id, title: c.text, done: !!c.done })),
       }
     : {}),
   createdAt: t.createdAt,
