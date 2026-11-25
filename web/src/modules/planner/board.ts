@@ -137,6 +137,12 @@ export interface BoardInput {
   blocks?: readonly PlanBlockEntry[];
   unplaced: readonly Unplaced[];
   titles?: Record<string, string>;
+  /**
+   * Collective rows (package 2, `piles.ts`): `folded` = member keys drawn inside their pile (not in „Noch ohne Tag“,
+   * not in „Frist vorbei“); `idle` = pile keys with nothing to do – an unplaced one is no row, a placed one stays (drawn
+   * as „nichts wartet“) and never goes to „Noch offen“.
+   */
+  piles?: { folded: ReadonlySet<string>; idle: ReadonlySet<string> };
 }
 
 export const unitTitle = (titles: Record<string, string>, unitId: string): string =>
@@ -180,8 +186,10 @@ export function buildBoard(input: BoardInput): Board {
     const due = lateMoneyDue(e, items.get(key), input.today);
     if (due) lateDue.set(key, due);
   }
+  const folded = input.piles?.folded ?? new Set<string>();
+  const idle = input.piles?.idle ?? new Set<string>();
   const late: BoardRow[] = [...lateDue]
-    .filter(([key]) => !items.get(key)?.excluded)
+    .filter(([key]) => !items.get(key)?.excluded && !folded.has(key))
     .map(([key, due]) => {
       const entry = entries.get(key)!;
       const item = items.get(key);
@@ -357,6 +365,8 @@ export function buildBoard(input: BoardInput): Board {
   const waiting: WaitingRow[] = input.unplaced
     .filter((u) => u.reason !== 'after-hard-due' || !placed.has(u.itemKey) || u.date === undefined)
     .filter((u) => entries.has(u.itemKey) && !lateDue.has(u.itemKey) && !onADay.has(u.itemKey))
+    // Inside a pile, or a pile with nothing to do that lies nowhere: no row of its own.
+    .filter((u) => !folded.has(u.itemKey) && !idle.has(u.itemKey))
     // A thing with a row is never „Noch ohne Tag“, whatever the last pass said.
     .filter((u) => u.reason !== 'no-day' || !rowDates.has(u.itemKey))
     .map((u) => ({
@@ -395,7 +405,9 @@ export function buildBoard(input: BoardInput): Board {
   // „Noch offen“ (planner rethink): what lies on a day that has passed and is not done. Nothing moved it – the
   // row is still on its day; things that are „fest“ come first (they need a new day), then by day.
   const open: OpenRow[] = input.assignments
-    .filter((a) => a.date < input.today && !lateDue.has(a.itemKey) && shown(a))
+    .filter(
+      (a) => a.date < input.today && !lateDue.has(a.itemKey) && shown(a) && !idle.has(a.itemKey),
+    )
     .filter(
       (a) =>
         !items.get(a.itemKey)?.excluded &&

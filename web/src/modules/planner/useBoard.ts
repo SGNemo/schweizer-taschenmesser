@@ -6,7 +6,9 @@ import { addDays } from '@/core/plan/dates';
 import { useFocusSettings } from '@/core/settings/focus';
 import { useSettings } from '@/core/settings/settings';
 import { today } from '@/core/time/now';
+import { PILE_AREAS, pileKey, type Folded } from '@/core/modules/pile';
 import { buildBoard, type Board } from './board';
+import { foldPlan, loadPileParts, pileAreas } from './piles';
 import { assignmentRepo, dayRepo, itemRepo } from './repo';
 import { LAST_RUN_KEY, requestedIds, type LastRun } from './run';
 import {
@@ -18,6 +20,8 @@ import {
 
 export interface BoardData {
   board: Board;
+  /** The collective rows of the switched-on areas (package 2): parts, folded members, counts. */
+  piles: Folded;
   /** The days in view when they differ from the board's (package 4: a later week, the 4-week grid). */
   view?: Board['days'];
   settings: PlannerSettings;
@@ -60,8 +64,27 @@ export function useBoard(
   // As the run reads them: a thing without a date shows only while its item row asks for it.
   const requested = useMemo(() => (own ? requestedIds(own.itemRows) : undefined), [own]);
   const entries = usePlannable({ today: day, until }, requested);
+  // The parts of the switched-on piles (package 2): read live, like the things themselves.
+  const areas = pileAreas(settings);
+  const areasKey = [...areas].join(',');
+  const parts = useLiveQuery(
+    () => loadPileParts({ today: day, until }, areas),
+    // `areas` is read through its key.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [day, until, areasKey],
+  );
   return useMemo(() => {
-    if (!own || !entries || !calendar || !blocks) return undefined;
+    if (!own || !entries || !calendar || !blocks || !parts) return undefined;
+    // What stands on its own is never folded: a placement row, „Nicht planen“.
+    const placed = [
+      ...own.assignments.map((a) => a.itemKey),
+      ...own.itemRows.filter((r) => r.excluded).map((r) => r.id),
+    ];
+    const piles = foldPlan(parts, entries, pileAreas(settings), placed);
+    const fold = {
+      folded: new Set(piles.folded.keys()),
+      idle: new Set(PILE_AREAS.filter((a) => !piles.groups.get(a)?.alive).map((a) => pileKey(a))),
+    };
     const last = own.last ?? undefined;
     const titles: Record<string, string> = { ...last?.titles };
     for (const e of entries) titles[`${e.moduleId}:${e.id}`] = e.title;
@@ -77,6 +100,7 @@ export function useBoard(
       blocks,
       unplaced: last?.unplaced ?? [],
       titles,
+      piles: fold,
     });
     const shown =
       viewFrom !== undefined &&
@@ -94,9 +118,11 @@ export function useBoard(
         blocks,
         unplaced: [],
         titles,
+        piles: fold,
       }).days;
     return {
       board,
+      piles,
       ...(shown ? { view: shown } : {}),
       settings,
       planLimit: focus.planLimit,
@@ -104,5 +130,17 @@ export function useBoard(
       titles,
       today: day,
     };
-  }, [own, entries, calendar, blocks, settings, focus.planLimit, day, span, viewFrom, viewSpan]);
+  }, [
+    own,
+    entries,
+    calendar,
+    blocks,
+    parts,
+    settings,
+    focus.planLimit,
+    day,
+    span,
+    viewFrom,
+    viewSpan,
+  ]);
 }

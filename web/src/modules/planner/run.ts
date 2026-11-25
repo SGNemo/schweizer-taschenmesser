@@ -31,6 +31,7 @@ import { isPlannerOwned, type CalendarItem, type ModuleManifest } from '@/core/m
 import { fixedOf, planDays, turnDayOf } from './days';
 import { lateMoneyDue } from './late';
 import { migratePins } from './migrateModel';
+import { foldPlan, loadPileParts, pileAreas } from './piles';
 import { itemKeyOf, plannerRepos, putRow, type PlannerDb, type PlannerRepos } from './repo';
 import type { AssignmentRow, PlanItemRow } from './schema';
 import { planSettings, type PlannerSettings } from './settings';
@@ -94,6 +95,11 @@ export interface RunInputs {
   turns: PrevAssignment[];
   /** Items whose rows a run takes away: „Nicht planen“ and late money. Nothing else is ever removed by a run. */
   removeKeys: Set<string>;
+  /**
+   * Members folded into a collective row (package 2, `piles.ts`): no proposal takes them one by one – the pile is the
+   * thing „Woche vorschlagen“ and „Rest verteilen“ see. Not part of the hash: a count that changes never reruns.
+   */
+  foldedKeys?: Set<string>;
   settings: PlanSettings;
   hash: string;
   titles: Record<string, string>;
@@ -173,6 +179,20 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
   // Time a module keeps free (a habit, S4): taken off the day like an appointment, so part of the hash below.
   const blocks =
     deps.blocks ?? (await collectPlanBlocks({ today: deps.today, until }, deps.manifests));
+  // Collective rows (package 2): what is folded into a pile is not proposed one by one. Read from the same things.
+  const areas = pileAreas(deps.settings);
+  const placedOrOut = [
+    ...(await repos.assignment.active().toArray()).map((r) => r.itemKey),
+    ...[...itemRows.entries()].filter(([, r]) => r.excluded).map(([k]) => k),
+  ];
+  const foldedKeys = new Set(
+    foldPlan(
+      await loadPileParts({ today: deps.today, until }, areas, deps.manifests),
+      entries,
+      areas,
+      placedOrOut,
+    ).folded.keys(),
+  );
   const days: PlanDay[] = planDays({
     today: deps.today,
     span: settings.horizonDays,
@@ -279,6 +299,7 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
     }),
   );
   return {
+    foldedKeys,
     entries,
     items,
     days,
@@ -684,7 +705,13 @@ export async function proposeDays(
   const inputs = await buildInputs(deps, plannerRepos(deps.database));
   const laid = new Set([...inputs.prevRows.values()].map((r) => r.itemKey));
   const free = (list: readonly string[]) =>
-    list.filter((k) => !inputs.lockedKeys.has(k) && !laid.has(k) && !turnKeys(inputs).has(k));
+    list.filter(
+      (k) =>
+        !inputs.lockedKeys.has(k) &&
+        !inputs.foldedKeys?.has(k) &&
+        !laid.has(k) &&
+        !turnKeys(inputs).has(k),
+    );
   // A dated turn shown on its day without a row takes that day's time, as on the board.
   const lying = [...inputs.prev, ...inputs.turns];
   const out: Record<string, string> = {};
@@ -719,8 +746,10 @@ export interface PreviewOutcome {
 }
 
 /** Every thing a proposal may take: all that is not „fest“. */
-export function looseAll(inputs: Pick<RunInputs, 'items' | 'lockedKeys'>): string[] {
-  return inputs.items.filter((i) => !inputs.lockedKeys.has(i.key)).map((i) => i.key);
+export function looseAll(inputs: Pick<RunInputs, 'items' | 'lockedKeys' | 'foldedKeys'>): string[] {
+  return inputs.items
+    .filter((i) => !inputs.lockedKeys.has(i.key) && !inputs.foldedKeys?.has(i.key))
+    .map((i) => i.key);
 }
 
 /**
@@ -730,7 +759,7 @@ export function looseAll(inputs: Pick<RunInputs, 'items' | 'lockedKeys'>): strin
  * names herself („schieb X auf Mi“) may.
  */
 export function looseOf(
-  inputs: Pick<RunInputs, 'items' | 'lockedKeys' | 'prevRows'>,
+  inputs: Pick<RunInputs, 'items' | 'lockedKeys' | 'prevRows' | 'foldedKeys'>,
   ops: readonly PlanOp[],
   extra: readonly PlanItem[] = [],
 ): string[] {
@@ -742,7 +771,10 @@ export function looseOf(
       for (const i of inputs.items) if (op.reshuffle || !laid.has(i.key)) out.add(i.key);
   }
   const named = new Set(ops.flatMap((op) => (op.op === 'pin' ? [op.key] : [])));
-  return [...out].filter((k) => named.has(k) || !inputs.lockedKeys.has(k));
+  // A pile's folded members go with the pile, never one by one – unless an op names one.
+  return [...out].filter(
+    (k) => named.has(k) || (!inputs.lockedKeys.has(k) && !inputs.foldedKeys?.has(k)),
+  );
 }
 
 /**
