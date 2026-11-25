@@ -71,6 +71,7 @@ import { compartmentId, useOpenRow } from '../components/RowCompartment';
 import { PlanPageFoot } from '@/core/modules/PlanPanelHost';
 import { PileContext } from '../components/pileContext';
 import { PileOffer } from '../components/PileOffer';
+import { hasOpenSteps, stepsPath } from '../components/steps';
 import { appointmentsOf, Context, nextDeadlinesOf } from '../components/Context';
 import { DayPage, DayPageLoading } from '../components/DayPage';
 import { LateGroup, LateRow } from '../components/LateGroup';
@@ -1290,11 +1291,14 @@ export default function PlannerPage() {
         <Button
           size="sm"
           onClick={() =>
-            void beginPlanFocus({
-              unitId: row.unitId,
-              title: row.title,
-              minutes: row.minutes,
-            }).then(() => navigate(planFocusPath(row.unitId)))
+            // A thing with steps starts in step mode (package 5a): no round, the steps are the round.
+            hasOpenSteps(row.entry)
+              ? void navigate(stepsPath(row.unitId))
+              : void beginPlanFocus({
+                  unitId: row.unitId,
+                  title: row.title,
+                  minutes: row.minutes,
+                }).then(() => navigate(planFocusPath(row.unitId)))
           }
         >
           {t.planner.keep.startFocus}

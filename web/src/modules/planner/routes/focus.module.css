@@ -71,3 +71,52 @@
   justify-content: center;
   gap: var(--space-2);
 }
+
+/* „Los“ in step mode (planner hub 2, package 5a; hand-off 05): eyebrow, the next step large, three buttons. No ring, no
+   clock, no list of the other steps. */
+.eyebrow {
+  text-align: center;
+  margin: 0;
+  font-size: var(--text-caps);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.stepTitle {
+  max-width: 20ch;
+  margin-inline: auto;
+}
+/* The next step fades in (opacity only; `--dur` is 0 with reduced motion). */
+.fadeIn {
+  animation: stepIn var(--dur) ease-out;
+}
+@keyframes stepIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.stepActions > button {
+  min-height: 48px;
+}
+.keys {
+  text-align: center;
+  margin: 0;
+  font-size: var(--text-meta);
+  color: var(--text-3);
+}
+@media (hover: none) {
+  .keys {
+    display: none;
+  }
+}
+/* 412: the actions stacked, full width, in their order. */
+@media (max-width: 600px) {
+  .stepActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Link, useNavigate, useParams } from 'react-router';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { onFocusEnd } from '@/core/focus/music';
 import {
   clock,
@@ -24,6 +24,7 @@ import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { Button, EmptyState, Skeleton } from '@/ui';
 import { markDone } from '../actions';
+import { StepStage } from '../components/StepStage';
 import { beginPlanFocus, planFocusMinutes } from '../focus';
 import { useBoard } from '../useBoard';
 import styles from './focus.module.css';
@@ -40,6 +41,8 @@ export default function PlannerFocusPage() {
   const { item = '' } = useParams();
   const unitId = decodeURIComponent(item);
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const stepMode = params.get('step') === '1';
   const toast = useUiStore((s) => s.toast);
   const data = useBoard(7);
   const session = useFocusSession();
@@ -78,6 +81,24 @@ export default function PlannerFocusPage() {
           <Link to="/planner">{t.planner.focus.back}</Link>
         </EmptyState>
       </div>
+    );
+
+  // „Los“ (package 5a): a thing with steps in step mode – no round, no ring; the steps are the round.
+  if (stepMode && row?.entry?.steps?.length)
+    return (
+      <StepStage
+        entry={row.entry}
+        unitId={unitId}
+        title={row.title}
+        titles={data.titles}
+        header={
+          <div className={styles.top}>
+            <Button variant="ghost" onClick={() => void navigate('/planner')}>
+              {t.focus.mode.leave}
+            </Button>
+          </div>
+        }
+      />
     );
 
   const unit = { unitId, title, minutes: row?.minutes ?? 25 };
