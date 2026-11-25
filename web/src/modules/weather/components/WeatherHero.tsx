@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { dateTimeFormat } from '@/core/i18n/format';
 import type { DayRow } from '@/core/weather/api';
 import { compassIndex } from '@/core/weather/air';
@@ -43,10 +44,11 @@ export function WeatherSceneDefault() {
   const env = useSceneEnv();
   const { level } = useSceneMode();
   const phone = useMediaQuery(PHONE_QUERY);
-  const state: SceneState = {
-    ...defaultScene(env.theme, new Date(now()).getMonth() + 1, env.calm),
-    level,
-  };
+  const month = new Date(now()).getMonth() + 1;
+  const state = useMemo<SceneState>(
+    () => ({ ...defaultScene(env.theme, month, env.calm), level }),
+    [env.theme, env.calm, month, level],
+  );
   return (
     <HeroSlot area="backdrop">
       <WeatherScene state={state} phone={phone} legacyKind="clear" />
@@ -85,16 +87,22 @@ export function WeatherHero({
   const env = useSceneEnv();
   const { level, motion } = useSceneMode();
   const phone = useMediaQuery(PHONE_QUERY);
-  const scene = sceneOf({
-    forecast,
-    at,
-    nowMs: now(),
-    lat,
-    theme: env.theme,
-    calm: env.calm,
-    level,
-    motion,
-  });
+  // One state per minute and input: the scene is drawn again only when something it shows can have changed.
+  const minute = Math.floor(now() / 60_000);
+  const scene = useMemo(
+    () =>
+      sceneOf({
+        forecast,
+        at,
+        nowMs: minute * 60_000,
+        lat,
+        theme: env.theme,
+        calm: env.calm,
+        level,
+        motion,
+      }),
+    [forecast, at, minute, lat, env.theme, env.calm, level, motion],
+  );
 
   // UV only while the sun is up at the place (the day's maximum read at 02:50 said "UV 1,5" with a sun);
   // otherwise the third chip is the next sunrise. Without sunrise and sunset `is_day` decides.

@@ -648,9 +648,9 @@
       "icons": 84,
       "firstScreenActions": 40,
       "borders": 0,
-      "shadows": 1,
-      "surfaceLanguages": 1,
-      "colouredAboveFold": 13,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 17,
       "signatureBlocks": 0
     },
     "p412--accounts": {
@@ -1212,8 +1212,8 @@
       "icons": 57,
       "firstScreenActions": 20,
       "borders": 0,
-      "shadows": 1,
-      "surfaceLanguages": 1,
+      "shadows": 0,
+      "surfaceLanguages": 0,
       "colouredAboveFold": 4,
       "signatureBlocks": 0
     }

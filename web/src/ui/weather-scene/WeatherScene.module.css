@@ -55,6 +55,12 @@
 .svg[data-motion='run'] :global([class^='sc-']) {
   will-change: transform;
 }
+/* At rest the end frame holds: a redraw after the five seconds (resize, theme, a new forecast) shows the still picture
+   at once instead of playing the motion again. */
+.svg[data-motion='rest'] :global([class^='sc-']) {
+  animation-duration: 0s;
+  animation-delay: 0s;
+}
 .svg[data-paused='true'] :global([class^='sc-']) {
   animation-play-state: paused;
 }

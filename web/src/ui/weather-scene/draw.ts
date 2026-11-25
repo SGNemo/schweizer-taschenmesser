@@ -5,7 +5,16 @@
  * `color-mix()` of tokens, so the themes live in CSS. "Ruhig" is drawn by the component (greys over the same shapes).
  * Not in this package: moon, sky events, the village landscape, the porthole and the moon glyph (packages 2–4).
  */
-import { inkOf, skyOf, type SceneState, type SkyKey } from '@/core/weather/scene';
+import {
+  FALLING,
+  inkOf,
+  isDrizzle,
+  isSnow,
+  isThunder,
+  skyOf,
+  type SceneState,
+  type SkyKey,
+} from '@/core/weather/scene';
 
 /* ============================== GEOMETRY (scene units, viewBox 0 0 1600 320) ============================== */
 type Pt = readonly [number, number];
@@ -264,12 +273,15 @@ export function mix(a: string, b: string, t: number): string {
 }
 
 type Attr = string | number | boolean | null | undefined;
+const ESC: Record<string, string> = { '&': '&amp;', '<': '&lt;', '"': '&quot;' };
 function attrs(o: Record<string, Attr>): string {
   let s = '';
   for (const k of Object.keys(o)) {
     const v = o[k];
     if (v == null || v === false) continue;
-    s += ` ${k}="${typeof v === 'number' ? String(f(v)) : String(v)}"`;
+    // Values come from numbers, tables and token names only; escaped all the same, the markup goes to innerHTML.
+    const val = typeof v === 'number' ? String(f(v)) : String(v).replace(/[&<"]/g, (c) => ESC[c]!);
+    s += ` ${k}="${val}"`;
   }
   return s;
 }
@@ -384,20 +396,7 @@ function mask(X: Ctx, inner: string): string {
   return `url(#${id})`;
 }
 
-const PRECIP = new Set([
-  'drizzle',
-  'freezingDrizzle',
-  'rain',
-  'freezingRain',
-  'showers',
-  'snow',
-  'snowShowers',
-  'thunder',
-  'thunderHail',
-]);
-const isSnow = (c: string): boolean => c === 'snow' || c === 'snowShowers';
-const isThunder = (c: string): boolean => c === 'thunder' || c === 'thunderHail';
-const isDrizzle = (c: string): boolean => c === 'drizzle' || c === 'freezingDrizzle';
+const PRECIP = FALLING;
 const nightish = (s: SceneState): boolean =>
   s.phase === 'night' || s.phase === 'dawn' || s.phase === 'dusk';
 

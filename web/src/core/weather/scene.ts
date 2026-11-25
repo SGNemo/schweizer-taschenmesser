@@ -267,7 +267,8 @@ export function windLevel(wind: number | undefined, gust: number | undefined): L
   return WIND_LIMITS.find((l) => w >= l.wind || g >= l.gust)?.level ?? 0;
 }
 
-const FALLING: ReadonlySet<Cond> = new Set<Cond>([
+/** Conditions where something falls (the picture's precipitation). */
+export const FALLING: ReadonlySet<Cond> = new Set<Cond>([
   'drizzle',
   'freezingDrizzle',
   'rain',
@@ -380,11 +381,10 @@ export function defaultScene(theme: SceneTheme, month: number, calm = false): Sc
   };
 }
 
-const PRECIP: ReadonlySet<Cond> = FALLING;
 const OPEN: ReadonlySet<Cond> = new Set<Cond>(['clear', 'mostlyClear', 'partly']);
-const isSnow = (c: Cond): boolean => c === 'snow' || c === 'snowShowers';
-const isThunder = (c: Cond): boolean => c === 'thunder' || c === 'thunderHail';
-const isDrizzle = (c: Cond): boolean => c === 'drizzle' || c === 'freezingDrizzle';
+export const isSnow = (c: Cond): boolean => c === 'snow' || c === 'snowShowers';
+export const isThunder = (c: Cond): boolean => c === 'thunder' || c === 'thunderHail';
+export const isDrizzle = (c: Cond): boolean => c === 'drizzle' || c === 'freezingDrizzle';
 
 /** Which sky (mockup `skyOf`): the family by condition, the twilight glow at full or 40 % strength. */
 export function skyOf(s: SceneState): { key: SkyKey; glow?: { phase: Phase; strength: number } } {
@@ -410,7 +410,7 @@ export function skyOf(s: SceneState): { key: SkyKey; glow?: { phase: Phase; stre
   const p = s.phase;
   if (p === 'night') return { key: nightKey() };
   if (p === 'day') return { key: dayKey() };
-  if (OPEN.has(c) && !deck && !PRECIP.has(c)) return { key: p, glow: { phase: p, strength: 1 } };
+  if (OPEN.has(c) && !deck && !FALLING.has(c)) return { key: p, glow: { phase: p, strength: 1 } };
   return { key: p === 'golden' ? dayKey() : nightKey(), glow: { phase: p, strength: 0.4 } };
 }
 

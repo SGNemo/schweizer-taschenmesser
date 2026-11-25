@@ -27,7 +27,9 @@ export const weatherSettingsSchema = z.object({
   /** More places for the weather page; only the first one feeds the overview widget. */
   extra: z.array(placeSchema).max(MAX_EXTRA_PLACES),
   /** "Bild im Wetter-Kopf": with motion (default), a still picture, or sky only. Optional: stored settings stay valid. */
-  scene: z.enum(['motion', 'still', 'plain']).optional(),
+  // `.catch`: a mode a later version adds (synced from another device) reads as the default here, instead of the
+  // whole scope falling back to its defaults and hiding the place.
+  scene: z.enum(['motion', 'still', 'plain']).optional().catch(undefined),
 });
 export type SceneMode = NonNullable<WeatherSettings['scene']>;
 /** The picture setting with its default. */

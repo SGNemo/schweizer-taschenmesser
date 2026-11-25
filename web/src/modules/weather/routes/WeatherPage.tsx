@@ -75,9 +75,7 @@ export default function WeatherPage() {
         <WeatherHero weather={weather} warnings={late ? [] : warnings} lat={lat} />
       ) : loading ? (
         <WeatherHeroPending />
-      ) : (
-        <WeatherSceneDefault />
-      )}
+      ) : null}
       <PlaceChips index={index} places={places} />
       {/* A hint that came after the frame stopped waiting sits where the loading line was, under the head: nothing
           painted is below it yet, so it pushes nothing, and it stays in sight on the phone. */}

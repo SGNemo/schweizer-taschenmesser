@@ -29,16 +29,26 @@ export function useSceneMotion(
     let left = MOTION_MS;
     let started = Date.now();
     let timer: ReturnType<typeof setTimeout> | undefined = setTimeout(rest, left);
+    // UI timing, not logic: the device clock is right here (`core/time/now` is for dates the app reasons about).
     let hiddenAt = 0;
+    let out = false;
+    const pause = () => {
+      if (!timer) return;
+      clearTimeout(timer);
+      timer = undefined;
+      left -= Date.now() - started;
+    };
+    const resume = () => {
+      if (left > 0 && !timer && !document.hidden && !out) {
+        started = Date.now();
+        timer = setTimeout(rest, left);
+      }
+    };
     const onVisibility = () => {
       if (document.hidden) {
         hiddenAt = Date.now();
         setHidden(true);
-        if (timer) {
-          clearTimeout(timer);
-          timer = undefined;
-          left -= Date.now() - started;
-        }
+        pause();
         return;
       }
       setHidden(false);
@@ -46,16 +56,18 @@ export function useSceneMotion(
         setRound((r) => r + 1);
         return;
       }
-      if (left > 0 && !timer) {
-        started = Date.now();
-        timer = setTimeout(rest, left);
-      }
+      resume();
     };
     document.addEventListener('visibilitychange', onVisibility);
     const el = ref.current;
     const io =
       el && typeof IntersectionObserver === 'function'
-        ? new IntersectionObserver((entries) => setAway(!entries.some((e) => e.isIntersecting)))
+        ? new IntersectionObserver((entries) => {
+            out = !entries.some((e) => e.isIntersecting);
+            setAway(out);
+            if (out) pause();
+            else resume();
+          })
         : undefined;
     if (el) io?.observe(el);
     return () => {

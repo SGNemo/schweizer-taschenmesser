@@ -67,6 +67,9 @@ export function WarningNotice({
           </li>
         ))}
       </ul>
+      <span className={styles.sep} aria-hidden="true">
+        ·
+      </span>
       <span className={styles.computed}>{tp.warnComputed}</span>
     </div>
   );

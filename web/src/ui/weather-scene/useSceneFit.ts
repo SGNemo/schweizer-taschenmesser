@@ -1,4 +1,4 @@
-import { useEffect, useState, type RefObject } from 'react';
+import { useLayoutEffect, useState, type RefObject } from 'react';
 import { G, type SceneOptions } from './draw';
 
 /** Phone head (mockups/head.js `PHONE`): scene scale at most, body centre as a share of the width, text zone. */
@@ -32,7 +32,8 @@ export function useSceneFit(
   bodyR: number,
 ): SceneFit {
   const [fit, setFit] = useState<SceneFit>({ w: 0, h: 0, opts: {} });
-  useEffect(() => {
+  // Before the first paint: the scene is drawn for its box from the start, it does not jump into place.
+  useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
     const stage =
