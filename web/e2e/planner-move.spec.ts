@@ -97,6 +97,21 @@ async function threeToday(page: Page) {
 const rowOf = (page: Page, title: string) =>
   page.getByTestId('day-2026-11-09').locator('li').filter({ hasText: title }).first();
 
+/**
+ * Where a target stands once the page has settled (a toast, the open line, rows sorted anew): two reads 150 ms apart
+ * agree. On a busy machine a box read too early belongs to the row that slides into that place next.
+ */
+async function settledBox(page: Page, target: Locator) {
+  let last = (await target.boundingBox())!;
+  for (let i = 0; i < 40; i++) {
+    await page.waitForTimeout(150);
+    const now = (await target.boundingBox())!;
+    if (now.x === last.x && now.y === last.y && now.height === last.height) return now;
+    last = now;
+  }
+  return last;
+}
+
 /** A mouse drag from the row's title onto a target, in small steps (as a hand moves). */
 async function mouseDrag(page: Page, from: Locator, to: Locator) {
   // The page settles first (a toast, the open line): the hand grabs the row where it is now.
@@ -266,10 +281,11 @@ test.describe('Planer: Bewegen (package 5)', () => {
       await threeToday(page);
       const before = await rowDays(page);
       const cdp = await page.context().newCDPSession(page);
-      const from = (await rowOf(page, 'Steuer')
-        .getByText('Steuer', { exact: true })
-        .boundingBox())!;
-      const to = (await page.getByTestId('week-2026-11-11').boundingBox())!;
+      const from = await settledBox(
+        page,
+        rowOf(page, 'Steuer').getByText('Steuer', { exact: true }),
+      );
+      const to = await settledBox(page, page.getByTestId('week-2026-11-11'));
       const point = (x: number, y: number) => ({ touchPoints: [{ x, y }] });
       const start = { x: from.x + 10, y: from.y + from.height / 2 };
       const end = { x: to.x + to.width / 2, y: to.y + to.height / 2 };
