@@ -35,13 +35,12 @@ export interface RowExpand {
 }
 
 /**
- * The thing a ToDo row carries (package 4c): its first `origin` link when that is a mail thread – the host mounts mail's
- * panel first, the ToDo's own lines under it. Any other row carries nothing.
+ * What a row may carry (package 4c): its first `origin` link. The host decides which targets it mounts above the row's
+ * own panel (today a mail thread: mail's panel first, the ToDo's own lines under it); any other origin is ignored.
  */
 function carrierOf(entry: PlannableEntry): { moduleId: string; id: string } | undefined {
-  if (entry.moduleId !== 'todos') return undefined;
   const origin = linksOfEntry(entry).find((l) => l.rel === 'origin');
-  return origin?.to.module === 'mail' ? { moduleId: 'mail', id: origin.to.id } : undefined;
+  return origin ? { moduleId: origin.to.module, id: origin.to.id } : undefined;
 }
 
 /** The title's disclosure (COPY X1) and the compartment under the row while it is open. */

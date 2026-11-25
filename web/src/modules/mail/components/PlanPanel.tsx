@@ -11,6 +11,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { listMailAccounts } from '@/core/mail/accounts';
 import { formatAddress } from '@/core/mail/address';
+import { withPrefix } from '@/core/mail/reply';
 import { mailText } from '@/core/mail/prefill';
 import { safeThreadId } from '@/core/mail/service';
 import type { MailAccountRef, MailMessage } from '@/core/mail/types';
@@ -26,13 +27,7 @@ import { useSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
 import { Button } from '@/ui';
 import { closeAnswered } from '../answered';
-import {
-  DEMO_ACCOUNT,
-  DEMO_EMAIL,
-  loadThread,
-  loadThreadBodies,
-  type CachedThreadView,
-} from '../cache';
+import { DEMO_ACCOUNT, DEMO_EMAIL, loadPlanThread, type CachedThreadView } from '../cache';
 import { emptyCompose, type ComposeState } from '../composeState';
 import { personName, shortWhen, subjectOf } from '../format';
 import { openPlanCompose } from '../planCompose';
@@ -45,14 +40,21 @@ const DEMO_REF: MailAccountRef = { key: DEMO_ACCOUNT, connectorId: 'demo', email
 async function readThread(raw: string) {
   const thread = safeThreadId(raw);
   if (!thread) return null;
-  for (const account of [...(await listMailAccounts()), DEMO_REF]) {
-    const th = await loadThread(account.key, thread);
-    if (!th) continue;
-    const newest = (await loadThreadBodies(account.key, thread)).at(-1);
-    return { account, th, newest };
-  }
-  return null;
+  const accounts = [...(await listMailAccounts()), DEMO_REF];
+  const found = await loadPlanThread(
+    accounts.map((a) => a.key),
+    thread,
+  );
+  const account = accounts.find((a) => a.key === found?.accountKey);
+  if (!found || !account) return null;
+  return { account, th: found.view, newest: found.messages.at(-1) };
 }
+
+const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+
+/** The newest message is his own: the cache's flag, or the sender address (a background refresh drops the flag). */
+const mine = (th: CachedThreadView, account: MailAccountRef) =>
+  !!th.lastFromMe || (!!account.email && same(th.from.email, account.email));
 
 /**
  * The reply's start: from the newest cached message (quote, In-Reply-To), or – when its body is not on this device or
@@ -66,8 +68,9 @@ function replyOf(
   if (newest && newest.date >= th.date) return composeOf('reply', newest, account);
   return [
     emptyCompose({
-      to: formatAddress(th.from),
-      subject: `Re: ${th.subject.replace(/^\s*((re|aw|fwd|fw|wg):\s*)+/i, '').trim()}`,
+      // His own message last: no guess at the recipient.
+      to: mine(th, account) ? '' : formatAddress(th.from),
+      subject: withPrefix('Re', th.subject),
       threadId: th.id,
     }),
     t.mail.write.compose.titleReply,
@@ -95,7 +98,7 @@ export default function MailPlanPanel({ id }: PlanPanelProps) {
   const body = fresh ? (fresh.text ?? mailText(fresh, 1200)).slice(0, 1200) : th.snippet;
   // „Beantwortet?“ as on the mail row: only while mail shows it (its setting) and the row is the ToDo.
   const showAnswered = (prefs as { showAnswered?: boolean } | undefined)?.showAnswered !== false;
-  const answered = showAnswered && !!th.lastFromMe && row?.moduleId === 'todos';
+  const answered = showAnswered && mine(th, account) && row?.moduleId === 'todos';
   const done = () => {
     if (busy || !row) return;
     setBusy(true);
@@ -115,8 +118,17 @@ export default function MailPlanPanel({ id }: PlanPanelProps) {
       <PlanPanelFoot>
         {answered ? (
           <>
-            <PanelText kind="meta">{t.mail.answered.question}</PanelText>
-            <Button variant="secondary" aria-busy={busy} disabled={busy} onClick={done}>
+            <PanelText kind="meta" as="span">
+              {t.mail.answered.question}
+            </PanelText>
+            <Button
+              variant="secondary"
+              aria-busy={busy}
+              disabled={busy}
+              onClick={done}
+              // As on the mail row: which mail is done, for a list of buttons (starts with the visible word).
+              aria-label={t.mail.answered.doneFor(subjectOf(th.subject))}
+            >
               {t.mail.answered.done}
             </Button>
           </>

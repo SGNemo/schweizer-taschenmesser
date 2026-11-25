@@ -6,6 +6,7 @@
  *  - the send window of a confirmed reply („Wird gesendet … · Zurückziehen“, `PendingSendBar`): „Zurückziehen“
  *    reopens the compose window with the withdrawn text, so nothing typed is lost.
  */
+import { useEffect } from 'react';
 import { t } from '@/strings';
 import { closePlanCompose, openPlanCompose, usePlanCompose } from '../planCompose';
 import { ComposeDialog } from './ComposeDialog';
@@ -13,6 +14,8 @@ import { PendingSendBar } from './PendingSendBar';
 
 export default function MailPlanFoot() {
   const open = usePlanCompose((s) => s.open);
+  // Leaving the planner takes an open window along (its text lives in the window): it never pops up on the next visit.
+  useEffect(() => () => usePlanCompose.setState({ open: undefined, returnTo: undefined }), []);
   return (
     <>
       <PendingSendBar

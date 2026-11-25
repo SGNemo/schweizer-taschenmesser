@@ -49,8 +49,8 @@ interface PanelContext {
   /** The plan row itself (module and source id): what a carried target's panel acts on („Erledigt“ of the ToDo). */
   row: { moduleId: string; id: string };
   /**
-   * The row's own panel under a carried target's (a mail ToDo, package 4c): only its own lines (a checklist) – no
-   * second foot, no note, no repeated detail or links; the target's panel above holds those.
+   * The row's own panel under a carried target's (a mail ToDo, package 4c): only its own lines (a checklist, else its
+   * detail and links – the way to the mail among them) – no second foot and no note.
    */
   secondary?: boolean;
   /** A carried target's panel: the row's own lines, drawn just above that panel's foot (so the foot stays last). */
@@ -99,13 +99,19 @@ export function PanelNote({ children }: { children: ReactNode }) {
  */
 export function PanelText({
   kind,
+  as: Tag = 'p',
   children,
   ...rest
-}: { kind: 'meta' | 'title' | 'body'; children: ReactNode } & { 'data-testid'?: string }) {
+}: {
+  kind: 'meta' | 'title' | 'body';
+  /** `span` inside a panel's foot (a question beside its button). */
+  as?: 'p' | 'span';
+  children: ReactNode;
+} & { 'data-testid'?: string }) {
   return (
-    <p className={`${styles.line} ${styles[kind]}`} {...rest}>
+    <Tag className={`${styles.line} ${styles[kind]}`} {...rest}>
       {children}
-    </p>
+    </Tag>
   );
 }
 
@@ -202,7 +208,6 @@ class PanelBoundary extends Component<
  */
 export function PanelDefaultBody() {
   const ctx = useContext(Ctx);
-  if (ctx?.secondary) return null;
   return (
     <>
       {ctx?.detail ? <p className={styles.line}>{ctx.detail}</p> : null}
@@ -236,13 +241,16 @@ export interface PlanPanelHostProps {
   links?: ReactNode;
   /**
    * The thing a carrier row stands for (a ToDo whose first `origin` link is a mail thread, package 4c): its module's
-   * panel comes first, the row's own lines under it. Only modules in `CARRIED` are mounted this way.
+   * panel comes first, the row's own lines under it. Only the pairs in `CARRIED` are mounted this way.
    */
   carrier?: { moduleId: string; id: string };
 }
 
-/** Targets whose panel a carrier ToDo shows (CONCEPT-ROWS idea 4: „the one case where the host mounts two“). */
-const CARRIED = new Set(['mail']);
+/**
+ * Which row carries which target's panel (CONCEPT-ROWS idea 4: „the one case where the host mounts two“): a ToDo
+ * planned from a mail. Any other origin (an invoice read from a mail) keeps its own panel.
+ */
+const CARRIED: Record<string, string> = { mail: 'todos' };
 
 /** One module's panel for one id, or what stands in for it (off, not on this device, none of its own). */
 function ModulePanel({
@@ -307,22 +315,28 @@ export function PlanPanelHost({
     () => ({ to, detail, links, row, ...(onTakeOut ? { onTakeOut } : {}) }),
     [to, detail, links, row, onTakeOut],
   );
-  const carried = carrier && CARRIED.has(carrier.moduleId) && !compact ? carrier : undefined;
+  const carried =
+    carrier && CARRIED[carrier.moduleId] === moduleId && !compact ? carrier : undefined;
+  // Stable values, so the row's own panel is not re-rendered on every render of the host.
+  const own = useMemo(
+    () => (
+      <Ctx.Provider value={{ ...ctx, secondary: true }}>
+        <ModulePanel moduleId={moduleId} id={id} compact={false} />
+      </Ctx.Provider>
+    ),
+    [ctx, moduleId, id],
+  );
+  const carriedCtx = useMemo(() => ({ ...ctx, beforeFoot: own }), [ctx, own]);
   if (moduleId === NEVER) return null;
   if (carried) {
     // No flicker between the two forms while the module states load.
     if (states === undefined) return <PanelLoading />;
-    const own = (
-      <Ctx.Provider value={{ ...ctx, secondary: true }}>
-        <ModulePanel moduleId={moduleId} id={id} compact={false} />
-      </Ctx.Provider>
-    );
     // The target can show here: its panel, the row's own lines just above its foot. Else (off, not on this device):
     // what stands in for it (X5, on the phone X6) and the row's own lines – no button: the mail is answered at the PC.
     const shows =
       !!states?.[carried.moduleId] && availableManifests().some((m) => m.id === carried.moduleId);
     return shows ? (
-      <Ctx.Provider value={{ ...ctx, beforeFoot: own }}>
+      <Ctx.Provider value={carriedCtx}>
         <ModulePanel moduleId={carried.moduleId} id={carried.id} compact={false} carried />
       </Ctx.Provider>
     ) : (

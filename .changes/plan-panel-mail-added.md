@@ -2,6 +2,6 @@
 type: added
 area: app
 breaking: false
-de: Am PC zeigt eine geplante Mail im Planer ihren Text; „Antworten“ öffnet das Antwortfenster über dem Planer, nach eigener Antwort „Beantwortet? · Erledigt“. Am Handy: Mails beantwortest du am PC.
-en: On the computer a planned mail shows its text in the planner; “Reply” opens the reply window over it, after your reply “Answered? · Done”. The phone says mail is answered on the computer.
+de: Eine Mail, die du in den Plan gelegt hast, zeigt am PC beim Aufklappen ihren Anfang. „Antworten“ öffnet das Antwortfenster über dem Planer, dort geht auch „Zurückziehen“.
+en: On the computer, a mail you put into the plan shows its beginning when you open its row. “Reply” opens the reply window over the planner, where “Withdraw” works too.
 ---

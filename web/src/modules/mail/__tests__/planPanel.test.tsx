@@ -19,18 +19,21 @@ import { setPlatform } from '@/core/platform';
 import { createWebPlatform } from '@/core/platform/web';
 import type * as Accounts from '@/core/mail/accounts';
 import { setSettings } from '@/core/settings/settings';
+import { saveBody, saveThreads } from '../cache';
 import { emptyCompose } from '../composeState';
 import { queueSend, usePendingSends } from '../pendingSend';
 import { usePlanCompose } from '../planCompose';
 
 // A switch for the "a carried panel breaks" case: reading the accounts throws while it is set.
-const broken = vi.hoisted(() => ({ on: false }));
+const broken = vi.hoisted(() => ({ on: false, account: undefined as unknown }));
 vi.mock('@/core/mail/accounts', async (actual) => {
   const real = await actual<typeof Accounts>();
   return {
     ...real,
     listMailAccounts: () => {
       if (broken.on) throw new TypeError('boom');
+      // A real (sealed) account beside the demo one, for the cases that need the device key.
+      if (broken.account) return Promise.resolve([broken.account]);
       return real.listMailAccounts();
     },
   };
@@ -116,6 +119,7 @@ beforeEach(() => {
   usePendingSends.setState({ items: [] });
   usePlanCompose.setState({ open: undefined, returnTo: undefined });
   broken.on = false;
+  broken.account = undefined;
 });
 afterEach(() => {
   setPlatform(createWebPlatform());
@@ -159,7 +163,7 @@ describe('the mail panel of a planned mail', () => {
     panel();
     expect(await screen.findByText('Beantwortet?')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Antworten' })).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Erledigt' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Erledigt/ }));
     await waitFor(() => expect(asked).toEqual([{ id: 'todo1' }]));
     off();
   });
@@ -267,5 +271,78 @@ describe('the mail panel after review', () => {
     expect(
       await screen.findByRole('checkbox', { name: '„Termin prüfen“ abhaken' }),
     ).toBeInTheDocument();
+  });
+});
+
+describe('the mail panel after review round 2', () => {
+  const ME = { key: 'acc', connectorId: 'google', email: 'me@example.org', features: ['mail'] };
+  const head = (over: Record<string, unknown> = {}) => ({
+    id: 't1',
+    messageCount: 1,
+    from: { name: 'Anna Beispiel', email: 'anna@example.org' },
+    subject: 'Treffen am Samstag?',
+    snippet: 'Kannst du …',
+    date: new Date(2026, 10, 27, 9, 0).getTime(),
+    unread: false,
+    labelIds: ['INBOX'],
+    hasAttachment: false,
+    ...over,
+  });
+  const message = (text: string, date: number) => ({
+    id: `m${date}`,
+    threadId: 't1',
+    from: { name: 'Anna Beispiel', email: 'anna@example.org' },
+    to: [{ email: 'me@example.org' }],
+    cc: [],
+    subject: 'Treffen am Samstag?',
+    date,
+    labelIds: [],
+    unread: false,
+    text,
+    attachments: [],
+    inline: [],
+  });
+
+  async function sealedScene() {
+    await scene();
+    await db.table('mail_thread').clear();
+    await db.table('mail_body').clear();
+    broken.account = ME;
+    await saveThreads('acc', [head()]);
+  }
+
+  it('a sealed thread: its newest message shows, and a later message reaches the open panel', async () => {
+    await sealedScene();
+    const day = new Date(2026, 10, 27, 9, 0).getTime();
+    await saveBody('acc', message('Erste Nachricht.', day));
+    panel();
+    expect(await screen.findByTestId('mail-plan-body')).toHaveTextContent('Erste Nachricht.');
+    await saveThreads('acc', [head({ date: day + 60_000 })]);
+    await saveBody('acc', message('Zweite Nachricht.', day + 60_000));
+    await waitFor(() =>
+      expect(screen.getByTestId('mail-plan-body')).toHaveTextContent('Zweite Nachricht.'),
+    );
+  });
+
+  it('his own last message without the cache flag (a background refresh): still „Beantwortet?“', async () => {
+    await sealedScene();
+    await saveThreads('acc', [head({ from: { name: 'Ich', email: 'Me@Example.org' } })]);
+    panel();
+    expect(await screen.findByText('Beantwortet?')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Erledigt: Treffen am Samstag?' }),
+    ).toBeInTheDocument();
+  });
+
+  it('leaving the planner with the window open: it does not come back on the next visit', async () => {
+    await scene();
+    const first = panel();
+    fireEvent.click(await screen.findByRole('button', { name: 'Antworten' }));
+    await screen.findByRole('dialog');
+    first.unmount();
+    expect(usePlanCompose.getState().open).toBeUndefined();
+    panel();
+    await screen.findByRole('button', { name: 'Antworten' });
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 });
