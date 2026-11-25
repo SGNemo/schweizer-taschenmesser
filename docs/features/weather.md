@@ -44,6 +44,12 @@ Open-Meteo documents `Access-Control-Allow-Origin: *` for browser use, so the PW
 - On the page: the third chip at night ("Vollmond · 99 %"; on the phone the line under the stage starts with it), the card "Mond & Himmel" in the aside (named "Luft, Mond & Himmel" then), a glyph and the name at every forecast day (named "Mond: {Phase}").
 - Switch "Mond und Himmelsereignisse" (Einstellungen → Verbindungen → Wetter, synced, on): off removes the moon everywhere; the night chip is the sunrise again.
 
+## Sky events (weather scenes 3)
+- Calculated on the device (`core/sky/`, no request): solar eclipses by search (shown from 5 % covered while the sun is up, "bis n %" is the largest coverage then), lunar eclipses from a table 2026–2050 (shown from 10 % in the umbra and 10 min with the moon up; after 2050 none is announced), six meteor showers (IMO values; the night nearest the peak, radiant ≥ 25° while the sun is below −12°), solstices and equinoxes (names swap south of the equator). From the forecast: rainbow weather (rain now, sun 3°–40°, cloud ≤ 85 %), star night (cloud ≤ 20 %, no bright moon), Saharan dust (`dust` ≥ 50 µg/m³, one more variable of the air request).
+- One event at a time (`eventsFor` in `core/sky/events.ts`): the scene's picture (none of them moves), the third chip (phone: the wind chip's place), "Als Nächstes" in "Mond & Himmel" (eclipses 7 days ahead, else today's event, with the cloud sentence above 80 %), the dust row in "Atemwege & Allergie".
+- Solar eclipse day: the safety sentence as a pill in the stage until the eclipse ends (desktop: with at most one weather hint; phone: the hints go under the head) and always in the card.
+- All of it hangs on "Mond und Himmelsereignisse"; no reminder, no notification.
+
 ## Words, chips and hints (weather scenes 1a)
 - **The word follows the WMO code** (`conditionId(code, group)` in `core/weather/scene.ts`, 22 words in `tx.conditions`): head, hour cards, day rows, widget, overview line and trip weather say the same word (code 1 = "überwiegend klar", no longer "leicht bewölkt"). `codeGroup` (nine groups) still drives the rating, icons and the cache; a value cached without a code gets its group's nearest word.
 - **Data kept beside the group** (all optional, also in the cache): raw `code` (now, hour, day), `tz` (the place's IANA zone from the response), `now.snowDepth` (m; `snow_depth`, the only added variable of the forecast request).

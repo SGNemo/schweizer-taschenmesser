@@ -6,7 +6,7 @@ import { dayRows, hourRows, placeNowIso } from '@/core/weather/logic';
 import { isWeatherActive, useWeatherSettings } from '@/core/weather/settings';
 import { tWeather } from '@/strings.weather';
 import { tWeatherPage } from '@/strings.weatherPage';
-import { Button, Card, EmptyState, PageTitle } from '@/ui';
+import { Button, Card, EmptyState, PageTitle, PHONE_QUERY, useMediaQuery } from '@/ui';
 import { DaySpans } from '../components/DaySpans';
 import { HourCards } from '../components/HourCards';
 import { PlaceChips } from '../components/PlaceChips';
@@ -48,6 +48,7 @@ export default function WeatherPage() {
   const lon = viewed?.lon ?? 0;
   const moon = useMoon(lat, lon, weather?.forecast.tz, !!settings?.place);
   const events = useSkyEvents(lat, lon, weather?.forecast, !!settings?.place);
+  const phone = useMediaQuery(PHONE_QUERY);
 
   if (!settings) return null;
   const title = (weather?.place ?? settings.place ?? '').split(',')[0] || tx.title;
@@ -76,7 +77,8 @@ export default function WeatherPage() {
   const ready = !!weather?.forecast.hours && !!weather.forecast.days;
   const warnings = weather ? weatherWarnings(days) : [];
   // On an eclipse day the stage holds the safety pill and at most one weather hint; a second one goes under the head.
-  const stageCount = events?.safety ? 1 : warnings.length;
+  // On the phone the safety sentence alone takes two lines: there the weather hints go under the head (stage ≤ 300 px).
+  const stageCount = events?.safety ? (phone ? 0 : 1) : warnings.length;
   const stageWarnings = late ? [] : warnings.slice(0, stageCount);
   const belowWarnings = late ? warnings : warnings.slice(stageCount);
 
