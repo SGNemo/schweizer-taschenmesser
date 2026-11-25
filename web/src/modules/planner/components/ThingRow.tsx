@@ -131,15 +131,28 @@ function pileFacts(group: PileGroup, data: PileData | undefined, dueClock: numbe
         <span className={styles.pileNarrow}>{t.planner.pile.things(group.count)}</span>
       </>,
     );
-  if (late > 0) out.push(<span>{t.planner.pile.late(late)}</span>);
-  // Desktop: P4 and the next deadline; phone: P4, else the deadline (hand-off 02 „1920 / 412“).
-  if (ahead) {
-    const when = dayName(ahead);
-    const due = dueWas({ hardDue: ahead }, dueClock)
+  // Desktop: P4 and the next deadline; phone: P4, else the deadline (hand-off 02 „1920 / 412“) – one fact, so the
+  // phone's hidden part takes its separator along.
+  const when = ahead ? dayName(ahead) : undefined;
+  const due = when
+    ? dueWas({ hardDue: ahead }, dueClock)
       ? t.planner.row.dueWas(when)
-      : t.planner.row.due(when);
-    out.push(<span className={late > 0 ? styles.pileWide : undefined}>{due}</span>);
-  }
+      : t.planner.row.due(when)
+    : undefined;
+  if (late > 0)
+    out.push(
+      <span>
+        {t.planner.pile.late(late)}
+        {due ? (
+          <span className={styles.pileWide}>
+            <span aria-hidden="true"> · </span>
+            <span className="sr-only">, </span>
+            {due}
+          </span>
+        ) : null}
+      </span>,
+    );
+  else if (due) out.push(<span>{due}</span>);
   return out;
 }
 

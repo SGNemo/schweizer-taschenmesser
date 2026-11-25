@@ -108,13 +108,16 @@ export function PilePanel({
   const [seenKeys, setSeenKeys] = useState(keys);
   if (seenKeys !== keys) setSeenKeys(keys);
   useEffect(() => {
+    const prev = before.current;
+    before.current = seenKeys ? seenKeys.split('|') : [];
     const el = box.current;
     if (!el || document.activeElement !== document.body) return;
-    const now = new Set(seenKeys.split('|'));
-    const gone = before.current.findIndex((k) => !now.has(k));
-    before.current = seenKeys ? seenKeys.split('|') : [];
+    const now = new Set(before.current);
+    const gone = prev.findIndex((k) => !now.has(k));
+    // Only when a member left: a member that comes never takes the focus.
+    if (gone < 0) return;
     const all = [...el.querySelectorAll<HTMLElement>('[data-pile-expand]')];
-    const next = all[Math.min(Math.max(gone, 0), all.length - 1)];
+    const next = all[Math.min(gone, all.length - 1)];
     const title = el.closest('li')?.querySelector<HTMLElement>('button[data-row]');
     (next ?? title)?.focus({ preventScroll: true });
   }, [seenKeys]);

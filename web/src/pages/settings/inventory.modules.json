@@ -583,7 +583,7 @@
       },
       "pileMail": {
         "type": "boolean",
-        "label": "Stapel als eine Zeile: E-Mails"
+        "label": "Stapel als eine Zeile: E-Mail"
       },
       "calendarBlocks": {
         "type": "boolean",

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { areaOfPileId } from '@/core/modules/pile';
-import { setPileSwitch } from '../pileSwitch';
+import { unpile } from '../pileSwitch';
 import { dayName } from '@/core/plan/explain';
 import { t } from '@/strings';
 import type { RowMenuItem } from '@/ui';
@@ -107,7 +107,7 @@ export function useRowMenu(ctx: {
         {
           id: 'unpile',
           label: t.planner.pile.unpile,
-          onSelect: () => void setPileSwitch(pileArea, false),
+          onSelect: () => void unpile(pileArea),
         },
       ];
     // „Frist vorbei“: the thing sits on no day, so nothing here moves, nails or orders it. What is left:

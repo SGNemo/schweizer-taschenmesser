@@ -131,7 +131,7 @@ export async function collectPiles(
         // Only the areas the manifest declares, and a route of the app itself (`/…`, never `//` or a scheme).
         const areas = new Set(m.contributions?.pileAreas ?? []);
         return (await (await load()).default(ctx))
-          .filter((p) => areas.has(p.area) && /^\/(?!\/)/.test(p.to))
+          .filter((p) => areas.has(p.area) && /^\/(?![/\\])/.test(p.to))
           .map((p) => ({ ...p, moduleId: m.id }));
       } catch (e) {
         // The module id and the error's name only: a part's error may carry its data.

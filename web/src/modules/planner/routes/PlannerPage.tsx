@@ -171,6 +171,7 @@ export default function PlannerPage() {
   const data = useBoard(
     Math.max(READ_DAYS, daysBetween(now, viewEnd) + 1),
     viewFrom === now && !grid ? undefined : { from: viewFrom, span: viewSpan },
+    { offer: true },
   );
   // Collective rows (package 2): what a pile row draws, from the same reading as the board.
   const pileData = useMemo(

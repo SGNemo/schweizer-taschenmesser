@@ -54,6 +54,8 @@ export interface BoardData {
 export function useBoard(
   span: number,
   view?: { from: string; span: number },
+  /** The planner page only: also read what the offer P5 would fold (areas never asked, not dismissed here). */
+  opts: { offer?: boolean } = {},
 ): BoardData | undefined {
   const day = today();
   const boardEnd = addDays(day, span - 1);
@@ -80,7 +82,11 @@ export function useBoard(
   const requested = useMemo(() => (own ? requestedIds(own.itemRows) : undefined), [own]);
   const entries = usePlannable({ today: day, until }, requested);
   // Collective rows (package 2), read live like the things themselves: the parts of the switched-on areas and of those never asked about (the offer counts what would fold).
-  const areas = new Set([...pileAreas(settings), ...pileUnasked(settings)]);
+  const offerAreas = opts.offer
+    ? new Set([...pileUnasked(settings)].filter((a) => !pileOfferDismissed(a)))
+    : new Set<PileArea>();
+  const offerKey = [...offerAreas].join(',');
+  const areas = new Set([...pileAreas(settings), ...offerAreas]);
   const areasKey = [...areas].join(',');
   const parts = usePiles(
     { today: day, until },
@@ -135,7 +141,7 @@ export function useBoard(
         titles,
         piles: fold,
       }).days;
-    const unasked = pileUnasked(settings);
+    const unasked = new Set(offerKey ? (offerKey.split(',') as PileArea[]) : []);
     const pileOffer = pickOffer(
       board.waiting.map((w) => w.itemKey),
       foldRows(
@@ -167,6 +173,7 @@ export function useBoard(
     calendar,
     blocks,
     parts,
+    offerKey,
     settings,
     focus.planLimit,
     day,

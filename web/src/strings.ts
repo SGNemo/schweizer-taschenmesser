@@ -9543,6 +9543,7 @@ export const de = {
       offerAction: 'Als eine Zeile zeigen',
       offerClose: 'Nicht mehr anbieten',
       toast: (area: string) => `${area} ist jetzt eine Zeile.`,
+      unpiled: (area: string) => `${area} steht wieder einzeln.`,
       head: {
         invoices: 'Rechnungen offen',
         subscriptions: 'Kündigungsfristen',

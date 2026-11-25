@@ -84,6 +84,7 @@ export const planner: Strings['planner'] = {
     offerAction: 'Show as one row',
     offerClose: 'Do not offer again',
     toast: (area: string) => `${area} is one row now.`,
+    unpiled: (area: string) => `${area} stands one by one again.`,
     head: {
       invoices: 'Open invoices',
       subscriptions: 'Cancellation deadlines',

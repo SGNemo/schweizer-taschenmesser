@@ -165,6 +165,7 @@ describe('the pile contract', () => {
       { area: 'mail', id: 'b', count: 1, label: String, to: '/mail' },
       { area: 'money', id: 'c', count: 1, label: String, to: '//evil.example' },
       { area: 'money', id: 'd', count: 1, label: String, to: 'https://evil.example' },
+      { area: 'money', id: 'e', count: 1, label: String, to: '/\\evil.example' },
     ];
     const m = {
       id: 'x',

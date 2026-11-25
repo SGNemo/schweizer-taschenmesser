@@ -202,7 +202,8 @@ const pileSwitches = z.object({
  * The collective rows a thing of `module` may fold into (planner hub 2, package 2): for each switched-on area its
  * member keys – this module's own and, for a mail pile, the ToDos mail made – and the pile's placement. Read from the
  * modules' `pile` contributions (keys only) and the planner's rows; the 40-cap and the plan's live things are the
- * board's to check, so a member past the cap may still read „in „Finanzen checken““ here.
+ * board's to check, so a member past the cap may still read „in „Finanzen checken““ here; the window is the module page's
+ * (four weeks), not the run's horizon.
  */
 async function pilesFor(
   module: string,

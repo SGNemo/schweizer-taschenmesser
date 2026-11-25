@@ -46,6 +46,15 @@ export async function acceptPileOffer(area: PileArea): Promise<void> {
   });
 }
 
+/** „Wieder einzeln zeigen“ (P11): the switch off, with the same explicit „Rückgängig“ as the offer. */
+export async function unpile(area: PileArea): Promise<void> {
+  const before = await setPileSwitch(area, false);
+  useUiStore.getState().toast(t.planner.pile.unpiled(t.planner.pile.area[area]), {
+    label: t.ui.undo,
+    run: () => void setPileSwitch(area, before),
+  });
+}
+
 /** „Nicht mehr anbieten“ (P13): this device never shows the offer of that area again. */
 export function dismissPileOffer(area: PileArea): void {
   try {
