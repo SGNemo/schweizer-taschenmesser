@@ -1,0 +1,418 @@
+[
+ {
+  "id": "QUA",
+  "name": "Quadrantids",
+  "lambda": 283.15,
+  "usual": "Jan 03-04",
+  "ra": 230,
+  "dec": 49,
+  "zhr": 110,
+  "cls": "major (80-120)",
+  "peaks": [
+   {
+    "year": 2027,
+    "peakUtc": "2027-01-04T03:34Z",
+    "night": "2027-01-03/2027-01-04",
+    "radiantMaxAltDeg": 72,
+    "moonIllumPctMidnight": 13,
+    "moonAltMidnightDeg": -47
+   },
+   {
+    "year": 2028,
+    "peakUtc": "2028-01-04T09:39Z",
+    "night": "2028-01-03/2028-01-04",
+    "radiantMaxAltDeg": 72,
+    "moonIllumPctMidnight": 40,
+    "moonAltMidnightDeg": -7
+   },
+   {
+    "year": 2029,
+    "peakUtc": "2029-01-03T15:47Z",
+    "night": "2029-01-03/2029-01-04",
+    "radiantMaxAltDeg": 72,
+    "moonIllumPctMidnight": 87,
+    "moonAltMidnightDeg": 36
+   },
+   {
+    "year": 2030,
+    "peakUtc": "2030-01-03T21:57Z",
+    "night": "2030-01-03/2030-01-04",
+    "radiantMaxAltDeg": 72,
+    "moonIllumPctMidnight": 0,
+    "moonAltMidnightDeg": -62
+   },
+   {
+    "year": 2031,
+    "peakUtc": "2031-01-04T04:07Z",
+    "night": "2031-01-03/2031-01-04",
+    "radiantMaxAltDeg": 72,
+    "moonIllumPctMidnight": 81,
+    "moonAltMidnightDeg": 36
+   }
+  ]
+ },
+ {
+  "id": "LYR",
+  "name": "Lyrids",
+  "lambda": 32.32,
+  "usual": "Apr 22",
+  "ra": 271,
+  "dec": 34,
+  "zhr": 18,
+  "cls": "medium (18, outbursts ~90)",
+  "peaks": [
+   {
+    "year": 2027,
+    "peakUtc": "2027-04-23T01:49Z",
+    "night": "2027-04-22/2027-04-23",
+    "radiantMaxAltDeg": 74,
+    "moonIllumPctMidnight": 95,
+    "moonAltMidnightDeg": 12
+   },
+   {
+    "year": 2028,
+    "peakUtc": "2028-04-22T08:01Z",
+    "night": "2028-04-21/2028-04-22",
+    "radiantMaxAltDeg": 74,
+    "moonIllumPctMidnight": 8,
+    "moonAltMidnightDeg": -30
+   },
+   {
+    "year": 2029,
+    "peakUtc": "2029-04-22T14:10Z",
+    "night": "2029-04-22/2029-04-23",
+    "radiantMaxAltDeg": 74,
+    "moonIllumPctMidnight": 62,
+    "moonAltMidnightDeg": 20
+   },
+   {
+    "year": 2030,
+    "peakUtc": "2030-04-22T20:19Z",
+    "night": "2030-04-22/2030-04-23",
+    "radiantMaxAltDeg": 73,
+    "moonIllumPctMidnight": 70,
+    "moonAltMidnightDeg": -5
+   },
+   {
+    "year": 2031,
+    "peakUtc": "2031-04-23T02:23Z",
+    "night": "2031-04-22/2031-04-23",
+    "radiantMaxAltDeg": 74,
+    "moonIllumPctMidnight": 2,
+    "moonAltMidnightDeg": -22
+   }
+  ]
+ },
+ {
+  "id": "ETA",
+  "name": "Eta Aquariids",
+  "lambda": 45.5,
+  "usual": "May 05-06",
+  "ra": 338,
+  "dec": -1,
+  "zhr": 50,
+  "cls": "major S hemisphere (40-85)",
+  "peaks": [
+   {
+    "year": 2027,
+    "peakUtc": "2027-05-06T15:20Z",
+    "night": "2027-05-06/2027-05-07",
+    "radiantMaxAltDeg": 13,
+    "moonIllumPctMidnight": 1,
+    "moonAltMidnightDeg": -18
+   },
+   {
+    "year": 2028,
+    "peakUtc": "2028-05-05T21:30Z",
+    "night": "2028-05-05/2028-05-06",
+    "radiantMaxAltDeg": 13,
+    "moonIllumPctMidnight": 89,
+    "moonAltMidnightDeg": 23
+   },
+   {
+    "year": 2029,
+    "peakUtc": "2029-05-06T03:47Z",
+    "night": "2029-05-05/2029-05-06",
+    "radiantMaxAltDeg": 13,
+    "moonIllumPctMidnight": 45,
+    "moonAltMidnightDeg": -16
+   },
+   {
+    "year": 2030,
+    "peakUtc": "2030-05-06T09:45Z",
+    "night": "2030-05-05/2030-05-06",
+    "radiantMaxAltDeg": 13,
+    "moonIllumPctMidnight": 10,
+    "moonAltMidnightDeg": -11
+   },
+   {
+    "year": 2031,
+    "peakUtc": "2031-05-06T15:55Z",
+    "night": "2031-05-06/2031-05-07",
+    "radiantMaxAltDeg": 13,
+    "moonIllumPctMidnight": 100,
+    "moonAltMidnightDeg": 22
+   }
+  ]
+ },
+ {
+  "id": "PER",
+  "name": "Perseids",
+  "lambda": 140,
+  "usual": "Aug 12-13",
+  "ra": 48,
+  "dec": 58,
+  "zhr": 100,
+  "cls": "major (100)",
+  "peaks": [
+   {
+    "year": 2027,
+    "peakUtc": "2027-08-13T08:19Z",
+    "night": "2027-08-12/2027-08-13",
+    "radiantMaxAltDeg": 68,
+    "moonIllumPctMidnight": 84,
+    "moonAltMidnightDeg": 1
+   },
+   {
+    "year": 2028,
+    "peakUtc": "2028-08-12T14:38Z",
+    "night": "2028-08-12/2028-08-13",
+    "radiantMaxAltDeg": 68,
+    "moonIllumPctMidnight": 55,
+    "moonAltMidnightDeg": 23
+   },
+   {
+    "year": 2029,
+    "peakUtc": "2029-08-12T20:45Z",
+    "night": "2029-08-12/2029-08-13",
+    "radiantMaxAltDeg": 68,
+    "moonIllumPctMidnight": 11,
+    "moonAltMidnightDeg": -37
+   },
+   {
+    "year": 2030,
+    "peakUtc": "2030-08-13T02:47Z",
+    "night": "2030-08-12/2030-08-13",
+    "radiantMaxAltDeg": 68,
+    "moonIllumPctMidnight": 100,
+    "moonAltMidnightDeg": 27
+   },
+   {
+    "year": 2031,
+    "peakUtc": "2031-08-13T09:01Z",
+    "night": "2031-08-12/2031-08-13",
+    "radiantMaxAltDeg": 68,
+    "moonIllumPctMidnight": 23,
+    "moonAltMidnightDeg": -3
+   }
+  ]
+ },
+ {
+  "id": "ORI",
+  "name": "Orionids",
+  "lambda": 208,
+  "usual": "Oct 21",
+  "ra": 95,
+  "dec": 16,
+  "zhr": 20,
+  "cls": "medium (20)",
+  "peaks": [
+   {
+    "year": 2027,
+    "peakUtc": "2027-10-22T00:45Z",
+    "night": "2027-10-21/2027-10-22",
+    "radiantMaxAltDeg": 56,
+    "moonIllumPctMidnight": 59,
+    "moonAltMidnightDeg": 21
+   },
+   {
+    "year": 2028,
+    "peakUtc": "2028-10-21T06:48Z",
+    "night": "2028-10-20/2028-10-21",
+    "radiantMaxAltDeg": 56,
+    "moonIllumPctMidnight": 11,
+    "moonAltMidnightDeg": -52
+   },
+   {
+    "year": 2029,
+    "peakUtc": "2029-10-21T13:01Z",
+    "night": "2029-10-21/2029-10-22",
+    "radiantMaxAltDeg": 56,
+    "moonIllumPctMidnight": 100,
+    "moonAltMidnightDeg": 53
+   },
+   {
+    "year": 2030,
+    "peakUtc": "2030-10-21T19:16Z",
+    "night": "2030-10-21/2030-10-22",
+    "radiantMaxAltDeg": 56,
+    "moonIllumPctMidnight": 28,
+    "moonAltMidnightDeg": -13
+   },
+   {
+    "year": 2031,
+    "peakUtc": "2031-10-22T01:23Z",
+    "night": "2031-10-21/2031-10-22",
+    "radiantMaxAltDeg": 56,
+    "moonIllumPctMidnight": 35,
+    "moonAltMidnightDeg": -25
+   }
+  ]
+ },
+ {
+  "id": "LEO",
+  "name": "Leonids",
+  "lambda": 235.27,
+  "usual": "Nov 17",
+  "ra": 152,
+  "dec": 22,
+  "zhr": 15,
+  "cls": "minor/variable (10-20)",
+  "peaks": [
+   {
+    "year": 2027,
+    "peakUtc": "2027-11-18T06:08Z",
+    "night": "2027-11-17/2027-11-18",
+    "radiantMaxAltDeg": 62,
+    "moonIllumPctMidnight": 82,
+    "moonAltMidnightDeg": 41
+   },
+   {
+    "year": 2028,
+    "peakUtc": "2028-11-17T12:10Z",
+    "night": "2028-11-17/2028-11-18",
+    "radiantMaxAltDeg": 62,
+    "moonIllumPctMidnight": 3,
+    "moonAltMidnightDeg": -62
+   },
+   {
+    "year": 2029,
+    "peakUtc": "2029-11-17T18:20Z",
+    "night": "2029-11-17/2029-11-18",
+    "radiantMaxAltDeg": 62,
+    "moonIllumPctMidnight": 91,
+    "moonAltMidnightDeg": 42
+   },
+   {
+    "year": 2030,
+    "peakUtc": "2030-11-18T00:38Z",
+    "night": "2030-11-17/2030-11-18",
+    "radiantMaxAltDeg": 62,
+    "moonIllumPctMidnight": 54,
+    "moonAltMidnightDeg": 8
+   },
+   {
+    "year": 2031,
+    "peakUtc": "2031-11-18T06:45Z",
+    "night": "2031-11-17/2031-11-18",
+    "radiantMaxAltDeg": 62,
+    "moonIllumPctMidnight": 13,
+    "moonAltMidnightDeg": -45
+   }
+  ]
+ },
+ {
+  "id": "GEM",
+  "name": "Geminids",
+  "lambda": 262.2,
+  "usual": "Dec 14",
+  "ra": 112,
+  "dec": 33,
+  "zhr": 150,
+  "cls": "major (150)",
+  "peaks": [
+   {
+    "year": 2027,
+    "peakUtc": "2027-12-14T20:02Z",
+    "night": "2027-12-14/2027-12-15",
+    "radiantMaxAltDeg": 73,
+    "moonIllumPctMidnight": 98,
+    "moonAltMidnightDeg": 61
+   },
+   {
+    "year": 2028,
+    "peakUtc": "2028-12-14T02:06Z",
+    "night": "2028-12-13/2028-12-14",
+    "radiantMaxAltDeg": 73,
+    "moonIllumPctMidnight": 6,
+    "moonAltMidnightDeg": -55
+   },
+   {
+    "year": 2029,
+    "peakUtc": "2029-12-14T08:14Z",
+    "night": "2029-12-13/2029-12-14",
+    "radiantMaxAltDeg": 73,
+    "moonIllumPctMidnight": 62,
+    "moonAltMidnightDeg": 12
+   },
+   {
+    "year": 2030,
+    "peakUtc": "2030-12-14T14:32Z",
+    "night": "2030-12-14/2030-12-15",
+    "radiantMaxAltDeg": 73,
+    "moonIllumPctMidnight": 79,
+    "moonAltMidnightDeg": 29
+   },
+   {
+    "year": 2031,
+    "peakUtc": "2031-12-14T20:39Z",
+    "night": "2031-12-14/2031-12-15",
+    "radiantMaxAltDeg": 73,
+    "moonIllumPctMidnight": 1,
+    "moonAltMidnightDeg": -60
+   }
+  ]
+ },
+ {
+  "id": "URS",
+  "name": "Ursids",
+  "lambda": 270.7,
+  "usual": "Dec 22",
+  "ra": 217,
+  "dec": 76,
+  "zhr": 10,
+  "cls": "minor (10)",
+  "peaks": [
+   {
+    "year": 2027,
+    "peakUtc": "2027-12-23T04:30Z",
+    "night": "2027-12-22/2027-12-23",
+    "radiantMaxAltDeg": 61,
+    "moonIllumPctMidnight": 23,
+    "moonAltMidnightDeg": -32
+   },
+   {
+    "year": 2028,
+    "peakUtc": "2028-12-22T10:28Z",
+    "night": "2028-12-21/2028-12-22",
+    "radiantMaxAltDeg": 61,
+    "moonIllumPctMidnight": 32,
+    "moonAltMidnightDeg": -18
+   },
+   {
+    "year": 2029,
+    "peakUtc": "2029-12-22T16:43Z",
+    "night": "2029-12-22/2029-12-23",
+    "radiantMaxAltDeg": 62,
+    "moonIllumPctMidnight": 96,
+    "moonAltMidnightDeg": 53
+   },
+   {
+    "year": 2030,
+    "peakUtc": "2030-12-22T22:57Z",
+    "night": "2030-12-22/2030-12-23",
+    "radiantMaxAltDeg": 62,
+    "moonIllumPctMidnight": 5,
+    "moonAltMidnightDeg": -55
+   },
+   {
+    "year": 2031,
+    "peakUtc": "2031-12-23T05:02Z",
+    "night": "2031-12-22/2031-12-23",
+    "radiantMaxAltDeg": 61,
+    "moonIllumPctMidnight": 71,
+    "moonAltMidnightDeg": 22
+   }
+  ]
+ }
+]

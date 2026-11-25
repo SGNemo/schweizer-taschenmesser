@@ -111,3 +111,9 @@ export function crescentTilt(ms: number, latDeg: number, lonDeg: number, moonTer
   const q = parallacticAngle(k.moon.H, k.moon.dec, latDeg);
   return { tilt: norm180(chi - q), chi, q, sky: k };
 }
+
+/** Atmospheric refraction (deg) for a geometric altitude, the formula astronomy-engine uses ('normal'). */
+export function refraction(alt: number): number {
+  const h = Math.max(alt, -1);
+  return h > 90 ? 0 : 1.02 / Math.tan((h + 10.3 / (h + 5.11)) * DEG) / 60;
+}
