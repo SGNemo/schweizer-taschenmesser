@@ -9540,6 +9540,7 @@ export const de = {
       skip: 'Überspringen',
       pause: 'Pause',
       paused: 'Pausiert.',
+      failed: 'Das hat nicht geklappt. Probier es noch einmal.',
       resumed: 'Weiter geht’s.',
       finish: 'Fertig',
       skipped: (n: number) => `${n} übersprungen. Jetzt oder später?`,

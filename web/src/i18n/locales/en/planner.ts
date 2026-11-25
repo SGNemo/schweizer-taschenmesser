@@ -81,6 +81,7 @@ export const planner: Strings['planner'] = {
     skip: 'Skip',
     pause: 'Pause',
     paused: 'Paused.',
+    failed: 'That didn’t work. Try again.',
     resumed: 'Carrying on.',
     finish: 'Done',
     skipped: (n: number) => `${n} skipped. Now or later?`,

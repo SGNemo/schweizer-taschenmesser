@@ -73,8 +73,9 @@ export function StepStage({
       void navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
   }, [fresh, navigate, location.pathname, location.search]);
   const [busy, setBusy] = useState(false);
-  // The step a tick is running for: a held Enter never ticks the same step twice before the next one shows. New step
-  // data (the tick landed, an undo, another device) or a failed tick frees it.
+  // The step a tick is running for: a held Enter never ticks the same step twice before the next one shows. `busy`
+  // covers the tick in flight; this covers the moment after it, until new step data arrives (any re-read frees it –
+  // safe, a step already done writes nothing), or a failed tick.
   const ticked = useRef<string | undefined>(undefined);
   useEffect(() => {
     ticked.current = undefined;
@@ -113,6 +114,8 @@ export function StepStage({
   const screen = current ? 'step' : 'skipped';
   useEffect(() => {
     actions.current?.querySelector<HTMLButtonElement>('button')?.focus();
+    // Back from B10, the step is said again even if it is the one said last.
+    if (screen === 'skipped') shown.current = undefined;
   }, [screen]);
   async function done() {
     if (!current || busy || kept.paused || ticked.current === current.id) return;
@@ -129,10 +132,11 @@ export function StepStage({
       }
       if (!(await markStep(entry, current.id, true, titles))) ticked.current = undefined;
     } catch (err) {
-      // Nothing was kept (the act takes its writes back): said, and the step can be tried again.
+      // Said without claiming nothing changed (a step written before a later failure stays); trying again is safe –
+      // a step already in that state writes nothing.
       ticked.current = undefined;
       console.error('[planner] step tick failed', err);
-      useUiStore.getState().toast(t.planner.panel.failed);
+      useUiStore.getState().toast(t.planner.steps.failed);
     } finally {
       setBusy(false);
       focusFirst();
@@ -141,6 +145,7 @@ export function StepStage({
   const skip = () =>
     current && !kept.paused && setKept({ ...kept, skipped: [...kept.skipped, current.id] });
   const pause = () => {
+    if (!current) return; // B10 has no pause
     setKept({ ...kept, paused: !kept.paused });
     // Said too: focus stays on the same button, only its state changes.
     setSaid(kept.paused ? t.planner.steps.resumed : t.planner.steps.paused);
