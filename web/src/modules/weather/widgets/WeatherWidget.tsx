@@ -1,6 +1,7 @@
 import { dateTimeFormat } from '@/core/i18n/format';
 import { useWeatherSettings } from '@/core/weather/settings';
 import { useWeather } from '@/core/weather/useWeather';
+import { rainsNow } from '@/core/weather/logic';
 import { conditionId } from '@/core/weather/scene';
 import { tWeather } from '@/strings.weather';
 import { tWeatherPage } from '@/strings.weatherPage';
@@ -36,9 +37,12 @@ export default function WeatherWidget() {
           weather
             ? [
                 tx.conditions[conditionId(weather.forecast.code, weather.forecast.group)],
-                weather.forecast.rainFrom && !weather.stale
-                  ? tp.widgetRain(weather.forecast.rainFrom)
-                  : tp.widgetDry,
+                // While it rains the word already says so: no rain hint (never "no rain in sight").
+                rainsNow(weather.forecast.code, weather.forecast.group)
+                  ? undefined
+                  : weather.forecast.rainFrom && !weather.stale
+                    ? tp.widgetRain(weather.forecast.rainFrom)
+                    : tp.widgetDry,
                 stale,
               ]
                 .filter(Boolean)

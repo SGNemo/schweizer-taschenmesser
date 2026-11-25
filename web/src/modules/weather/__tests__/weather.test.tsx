@@ -132,6 +132,16 @@ describe('weather widget (overview)', () => {
     );
   });
 
+  it('while it rains (code 63) never says "Kein Regen in Sicht"', async () => {
+    const raining = { ...forecastBody, current: { ...forecastBody.current, weather_code: 63 } };
+    vi.stubGlobal('fetch', ok(raining));
+    await chooseWeatherPlace('Bern, Schweiz', 46.9481, 7.4474);
+    renderWidget();
+    const w = await screen.findByTestId('weather-widget');
+    await waitFor(() => expect(w).toHaveTextContent('Regen'));
+    expect(w).not.toHaveTextContent('Kein Regen in Sicht');
+  });
+
   it('switched off or not reachable: no values, no error text', async () => {
     const f = vi.fn(async () => {
       throw new TypeError('offline');
@@ -305,6 +315,20 @@ describe('weather page', () => {
     expect(screen.getByTestId('weather-days').querySelector('li')).toHaveTextContent(
       'Wind 20 km/h NO',
     );
+  });
+
+  it('the head while it rains (code 63): the first chip says "Regen jetzt", never "Kein Regen in Sicht"', async () => {
+    at1205();
+    const raining = { ...previewBody, current: { ...previewBody.current, weather_code: 63 } };
+    vi.stubGlobal('fetch', ok(raining));
+    await chooseWeatherPlace('Bern, Schweiz', 46.9481, 7.4474);
+    renderPage();
+    const keys = await screen.findByTestId('weather-keys');
+    await waitFor(() => expect(keys).toHaveTextContent('Regen jetzt'));
+    expect(keys).not.toHaveTextContent('Kein Regen in Sicht');
+    const first = keys.querySelector('li')!;
+    expect(first).toHaveAttribute('data-kind', 'rain');
+    expect(first.querySelector('svg')).toBeTruthy();
   });
 
   it('a hint above the head when a day calls for it (gusts), with what it is based on', async () => {
