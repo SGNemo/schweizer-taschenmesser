@@ -630,7 +630,7 @@ test.describe('Official warnings and aurora (package 3b)', () => {
       // Only the rounded position of the main place leaves the device.
       expect(asked.length).toBeGreaterThan(0);
       expect(new URL(asked[0]!).searchParams.get('CQL_FILTER')).toBe(
-        'INTERSECTS(THE_GEOM,POINT(50.1 10.2))',
+        'INTERSECTS(THE_GEOM,POINT(50.10 10.20))',
       );
     });
 
