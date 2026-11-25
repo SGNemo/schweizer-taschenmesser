@@ -40,8 +40,8 @@ import { dismissNotices } from '../helpers';
  *    the jump into a module is expand + „Ganz öffnen“; the note keeps its one-handle chip); D4 phone `taps` 22 → 23
  *    (11: Thursday's invoice waits under the phone's folded „Danach“ – one unfold; buys rows 20 → 7, switches 2 → 0);
  *  - for a while (the bound is `PRICE`, valid while the named IST word or figure still reads as before the package
- *    that ends it): (ended with 2: B `taps` 27 → 28 / phone 14 → 16 and `perThing` 17 → 21 / phone 9 → 13 from 4b);
- *    C1 `workTaps` 7 → 8 and
+ *    that ends it): (ended with 2: B `taps` 27 → 28 / phone 14 → 16 and `perThing` 17 → 21 / phone 9 → 13 from 4b;
+ *    ended with 5a:) C1 `workTaps` 7 → 8 and
  *    `taps` 19 → 20 from 4a until 5a (expand, „Ganz öffnen“, the routine's run as today).
  * Re-measured by the packages: 10b: D1 · 4a: D1, C1 · 4b/2: B · 4c: B `replySwitches` · 5a: C1 · 8: C1 `learned` · 1: D2 · 3: A1, C1 · 9: D3 · 11: D4.
  * `MEASURE=1` only measures. Facts (the click path, the module routes passed) land beside the table in
@@ -69,6 +69,10 @@ const HIGHER = ['rightKind', 'linkedToPlan', 'doneInPlanner', 'markVisible', 'ma
  * 5, `rowsAfter` 0; `taps` and `perThing` keep their IST (measured 28 / 21, phone 16 / 13: the named PRICE until 2).
  * B after 4c (2026-11-25): `replySwitches` 0 – the planned mail's row expands and „Antworten“ opens mail's compose
  * window over the planner (the demo threads carry one cached message each; the figure counts once that window is open).
+ * C1 after 5a (2026-11-25): the thing with steps is a ToDo with a checklist made from the field and filled in ToDos
+ * (create 10 – „Ganz öffnen“ opens its editor at once, so no „Bearbeiten“ – switches 2); worked off with „Los“: the
+ * next step only, the last „Fertig“ ticks the ToDo (work 7, taps 17, `nextStepOnly` ja). `perThing` keeps its IST 6
+ * (measured 7: the lasting price of 4a). The C1 prices end here.
  * B after 2 (2026-11-25): the ten things stand in two piles („Finanzen checken“, „E-Mails durchgehen“; phone: one) –
  * the pile switches are set before `rowsBefore` is read, expanding a pile is no `touch`, the budget is a read-only line;
  * the mails enter through the mail pile's P15 and are ticked as member lines. The B prices end here.
@@ -81,8 +85,8 @@ const IST: Record<string, Figures> = {
   'A2 Jedes Ding als richtige Art · pixel-7': { rows: 8, moduleSwitches: 5, taps: 34, perThing: 14, forms: 2, fields: 5, rightKind: 12, linkedToPlan: 11 },
   'B Finanzen und Mails abarbeiten · desktop-chrome': { rowsBefore: 2, taps: 17, perThing: 12, moduleSwitches: 0, doneInPlanner: 9, rowsAfter: 0, mails: 4, replySwitches: 0 },
   'B Finanzen und Mails abarbeiten · pixel-7': { rowsBefore: 1, taps: 10, perThing: 8, moduleSwitches: 0, doneInPlanner: 5, rowsAfter: 0, mails: 'nicht möglich', replySwitches: 'nicht möglich' },
-  'C1 Bündel Haushalt · desktop-chrome': { rows: 1, createTaps: 12, workTaps: 7, taps: 19, perThing: 6, moduleSwitches: 4, nextStepOnly: 'nein', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
-  'C1 Bündel Haushalt · pixel-7': { rows: 1, createTaps: 12, workTaps: 7, taps: 19, perThing: 6, moduleSwitches: 5, nextStepOnly: 'nein', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
+  'C1 Bündel Haushalt · desktop-chrome': { rows: 1, createTaps: 10, workTaps: 7, taps: 17, perThing: 6, moduleSwitches: 2, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
+  'C1 Bündel Haushalt · pixel-7': { rows: 1, createTaps: 10, workTaps: 7, taps: 17, perThing: 6, moduleSwitches: 2, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'nein' },
   'C2 Besorgung · desktop-chrome': { rows: 2, createTaps: 0, workTaps: 9, perThing: 5, moduleSwitches: 2, oneRow: 'nein', mapShown: 'nicht möglich' },
   'C2 Besorgung · pixel-7': { rows: 2, createTaps: 0, workTaps: 8, perThing: 5, moduleSwitches: 2, oneRow: 'nein', mapShown: 'nicht möglich' },
   'D1 Steht es im Plan, und wann · desktop-chrome': { taps: 11, perThing: 5, moduleSwitches: 10, markVisible: 5, markAgrees: 5, tripsToPlanner: 0 },
@@ -130,17 +134,8 @@ const TARGET: Record<string, Figures> = {
  * moves `nextStepOnly`), and from then on the usual bound holds again.
  */
 type Price = { figure: string; max: number; until: [string, number | string] };
-const untilLos: [string, string] = ['nextStepOnly', 'nein'];
-const PRICE: Record<string, Price[]> = {
-  'C1 Bündel Haushalt · desktop-chrome': [
-    { figure: 'workTaps', max: 8, until: untilLos },
-    { figure: 'taps', max: 20, until: untilLos },
-  ],
-  'C1 Bündel Haushalt · pixel-7': [
-    { figure: 'workTaps', max: 8, until: untilLos },
-    { figure: 'taps', max: 20, until: untilLos },
-  ],
-};
+// No price holds at the moment (B ended with package 2, C1 with 5a).
+const PRICE: Record<string, Price[]> = {};
 
 const base = { createdAt: 1, updatedAt: 1, deviceId: 'e2e', deletedAt: null, _f: {} };
 
@@ -1109,47 +1104,76 @@ test('C1 Bündel Haushalt', async ({ page, isMobile }, info) => {
   await planner(page);
   const hand = new Hand(page, isMobile);
   hand.start();
-  // The planner knows no thing with steps („In Teile aufteilen“ cuts a long thing into sessions; a ToDo's subtasks are
-  // never planned). The one thing with steps to tick one by one is a routine: Routinen · „Routine eintragen“ · name ·
-  // steps (one typed line each) · save. „Im Planer zeigen“ is on by default, its day is today.
-  await go(hand, page, isMobile, 'routines');
+  // Package 5a: the thing with steps is a ToDo with a checklist. Created from the planner's field („Haushalt“, on
+  // today's sheet), then its five lines in ToDos (expand, „Ganz öffnen“, „Bearbeiten“ where it opens as a panel, one typed line
+  // each, „Speichern“) and back. Making a thing names no thing (FIGURES §1).
+  const field = page.getByRole('textbox', { name: 'Eintragen oder sagen' });
+  await hand.fill(field, 'Haushalt', 'Haushalt');
+  await field.press('Enter');
+  const made = page
+    .getByTestId(`day-${TODAY}`)
+    .locator('li')
+    .filter({ hasText: 'Haushalt' })
+    .first();
+  await expect(made).toBeVisible();
+  await hand.tap(made.locator('button[data-row]').first(), 'Aufklappen: Haushalt');
   await hand.tap(
-    page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').first(),
-    'Routine eintragen',
+    made.getByTestId('row-compartment').getByRole('button', { name: 'Ganz öffnen' }),
+    'Ganz öffnen: Haushalt',
   );
-  const form = page.getByRole('dialog', { name: 'Routine eintragen' });
-  await expect(form).toBeVisible();
-  await hand.fill(form.getByLabel('Name', { exact: true }), 'Haushalt', 'Name');
-  await hand.fill(form.getByLabel('Schritte (optional)'), HOUSEHOLD.join('\n'), '5 Schritte', {
-    lines: HOUSEHOLD.length,
-  });
-  await hand.tap(form.getByRole('button', { name: 'Routine eintragen', exact: true }), 'Speichern');
-  await expect(form).toHaveCount(0);
+  // „Bearbeiten“ only where the ToDo opens as a panel and not straight in its editor.
+  const editor = page.getByRole('dialog').filter({ has: page.getByLabel('Punkt hinzufügen') });
+  if (!(await appears(editor, 2500)))
+    await hand.tap(
+      page
+        .getByRole('button', { name: 'Bearbeiten', exact: true })
+        .filter({ visible: true })
+        .first(),
+      'Bearbeiten',
+    );
+  const add = page.getByLabel('Punkt hinzufügen');
+  for (const step of HOUSEHOLD) {
+    await hand.fill(add, step, step);
+    await add.press('Enter');
+  }
+  await hand.tap(page.getByRole('button', { name: 'Speichern', exact: true }), 'Speichern');
   await go(hand, page, isMobile, 'planner');
   const created = await plannerRows(page);
   const createTaps = hand.taps;
   const createSwitches = hand.moduleSwitches;
-  // Working through it: the row's title opens its compartment (package 4a), whose „Ganz öffnen“ opens the routine's
-  // steps („Los“) in Routinen; five ticks, the last one is „Erledigt“ for the routine; back to the planner.
+  // Working through it (5a): the row opens, „Los“ shows only the next step; five times the filled button – the last
+  // one, „Fertig“, ticks the ToDo and returns to the plan.
   const row = page
     .getByTestId(`day-${TODAY}`)
     .locator('li')
     .filter({ hasText: 'Haushalt' })
     .first();
   await expect(row).toBeVisible();
-  await openWhole(hand, row, 'Haushalt');
-  const run = page.getByRole('dialog', { name: 'Haushalt' });
-  await expect(run).toBeVisible();
-  const stepsShown = await run.getByRole('checkbox').count();
-  for (const step of HOUSEHOLD)
-    await hand.tap(run.getByRole('checkbox', { name: step, exact: true }), step, 'Haushalt');
-  await expect(run).toHaveCount(0);
-  await go(hand, page, isMobile, 'planner');
+  await hand.tap(row.locator('button[data-row]').first(), 'Aufklappen: Haushalt', 'Haushalt');
+  await hand.tap(
+    row.getByTestId('row-compartment').getByRole('button', { name: 'Los', exact: true }),
+    'Los',
+    'Haushalt',
+  );
+  await expect(page.getByRole('heading', { level: 1, name: HOUSEHOLD[0] })).toBeVisible();
+  // Only the next step on the stage: how many of the five are shown at once.
+  const stepsShown = (
+    await Promise.all(HOUSEHOLD.map((step) => page.getByText(step, { exact: true }).count()))
+  ).filter((n) => n > 0).length;
+  for (const [i, step] of HOUSEHOLD.entries()) {
+    const last = i === HOUSEHOLD.length - 1;
+    await expect(page.getByRole('heading', { level: 1, name: step })).toBeVisible();
+    await hand.tap(
+      page.getByRole('button', { name: last ? 'Fertig' : 'Fertig · weiter', exact: true }),
+      last ? 'Fertig' : 'Fertig · weiter',
+      'Haushalt',
+    );
+  }
+  await expect(page).toHaveURL(/\/planner$/);
   await expect.poll(() => onDay(page, TODAY)).toBe(0);
   const workTaps = hand.taps - createTaps;
   // The duration the planner proposes for a new thing, and whether one round with „Fokus starten“ (12 minutes,
   // „Fertig“) changes the next proposal for the same thing. Not counted in the figures above.
-  const field = page.getByRole('textbox', { name: 'Eintragen oder sagen' });
   await field.fill('Wäsche anstellen');
   await field.press('Enter');
   await expect(
@@ -1163,7 +1187,12 @@ test('C1 Bündel Haushalt', async ({ page, isMobile }, info) => {
   await page.getByRole('button', { name: 'Fertig', exact: true }).click();
   await expect(page).toHaveURL(/\/planner$/);
   await expect
-    .poll(async () => (await rows<Task>(page, 'todos_task')).filter((x) => x.done).length)
+    .poll(
+      async () =>
+        (await rows<Task>(page, 'todos_task')).filter(
+          (x) => x.done && x.title === 'Wäsche anstellen',
+        ).length,
+    )
     .toBe(1);
   await field.fill('Wäsche anstellen');
   await field.press('Enter');
