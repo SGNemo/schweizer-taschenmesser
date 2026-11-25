@@ -264,14 +264,17 @@ export function RowChoice({
     <Dialog open onClose={onClose} title={heading}>
       <MeasuredLine entry={choice.entry} />
       <Chips label={heading}>
-        {ESTIMATE_CHOICES.map((min) => (
-          <Chip
-            key={min}
-            label={compact(min)}
-            selected={choice.current === min}
-            onClick={() => pickEstimate(min)}
-          />
-        ))}
+        {/* The length the row shows is always one of them (a measured 10 or 20, package 8), chosen. */}
+        {[...new Set([...ESTIMATE_CHOICES, ...(choice.current ? [choice.current] : [])])]
+          .sort((a, b) => a - b)
+          .map((min) => (
+            <Chip
+              key={min}
+              label={compact(min)}
+              selected={choice.current === min}
+              onClick={() => pickEstimate(min)}
+            />
+          ))}
       </Chips>
     </Dialog>
   );

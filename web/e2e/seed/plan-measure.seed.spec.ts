@@ -88,6 +88,11 @@ for (const [name, viewport, mobile] of [
       await page.getByRole('menuitem', { name: 'Dauer …' }).click();
       const dialog = page.getByRole('dialog', { name: 'Dauer: Wäsche anstellen' });
       await expect(dialog.getByText('zuletzt 12, 8 Min', { exact: true })).toBeVisible();
+      // The length the row shows is a chip of its own, chosen (10 is none of 5 / 15 / 30 / 60).
+      await expect(dialog.getByRole('button', { name: '10 Min', exact: true })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
       await dialog.getByRole('button', { name: '15 Min', exact: true }).click();
       await expect(row.getByText('wie zuletzt')).toHaveCount(0);
     });

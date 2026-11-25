@@ -23,6 +23,12 @@ import { beginPlanFocus, planFocusPath } from '../focus';
 import type { RowChoiceState } from './RowChoice';
 
 /** Which sources take a tick, „Später“, „Als Pause …“ or „Dauer …“ (an invoice, a cancellation: no – that stays in its module). */
+/** The length „Dauer …“ starts on: the one the row shows (a measured one too, package 8). */
+const currentLength = (
+  row: { item?: Parameters<typeof planLength>[0] },
+  e: { durationMin?: number | undefined },
+): number | undefined => planLength(row.item, e.durationMin);
+
 export function useAbilities() {
   const [abilities, setAbilities] = useState<Record<string, SourceAbility>>();
   useEffect(() => {
@@ -94,7 +100,7 @@ export function useRowMenu(ctx: {
             setChoice({
               kind: 'estimate',
               entry: e,
-              current: planLength(row.item, e.durationMin) ?? row.minutes,
+              current: currentLength(row, e) ?? row.minutes,
             }),
         },
         ...(date && 'pinned' in row && !row.pinned
@@ -135,7 +141,9 @@ export function useRowMenu(ctx: {
                   setChoice({
                     kind: 'estimate',
                     entry: e,
-                    ...(e.durationMin !== undefined ? { current: e.durationMin } : {}),
+                    ...(currentLength(row, e) !== undefined
+                      ? { current: currentLength(row, e)! }
+                      : {}),
                   }),
               },
             ]
@@ -197,7 +205,9 @@ export function useRowMenu(ctx: {
                 setChoice({
                   kind: 'estimate',
                   entry: e,
-                  ...(e.durationMin !== undefined ? { current: e.durationMin } : {}),
+                  ...(currentLength(row, e) !== undefined
+                    ? { current: currentLength(row, e)! }
+                    : {}),
                 }),
             },
           ]
