@@ -1,6 +1,6 @@
 import { useMemo, type ReactNode } from 'react';
 import type { MoonNow } from '@/core/sky/moonDay';
-import { dateTimeFormat } from '@/core/i18n/format';
+import { dateTimeFormat, numberFormat } from '@/core/i18n/format';
 import type { DayRow } from '@/core/weather/api';
 import { compassIndex } from '@/core/weather/air';
 import { bestWindow, hourRows, placeNowIso, dayRows, rainsNow } from '@/core/weather/logic';
@@ -175,7 +175,10 @@ export function WeatherHero({
         ? [
             {
               icon: 'moon' as const,
-              text: tp.keyMoon(tx.moon[moon.name], String(Math.round(moon.lit * 100))),
+              text: tp.keyMoon(
+                tx.moon[moon.name],
+                numberFormat({ maximumFractionDigits: 0 }).format(Math.round(moon.lit * 100)),
+              ),
               glyph: (
                 <MoonGlyph illum={moon.lit} size={16} mono waxing={moon.waxing} south={lat < 0} />
               ),

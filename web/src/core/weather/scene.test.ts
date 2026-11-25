@@ -333,6 +333,10 @@ describe('the moon in the scene (CONCEPT-MOON §4, §5)', () => {
   it('on the arc: east left, south top, west right; mirrored south of the equator', () => {
     expect([moonArcT(90, 50), moonArcT(180, 50), moonArcT(270, 50)]).toEqual([0, 0.5, 1]);
     expect([moonArcT(90, -34), moonArcT(0, -34), moonArcT(270, -34)]).toEqual([1, 0.5, 0]);
+    // rising east-south-east and setting west-south-west in Sydney: the ends, not the west end for both
+    expect([moonArcT(100, -34), moonArcT(80, -34), moonArcT(300, -34), moonArcT(260, -34)]).toEqual(
+      [1, (80 + 90) / 180, (-60 + 90) / 180, 0],
+    );
     expect(moonArcT(30, 50)).toBe(0);
   });
 

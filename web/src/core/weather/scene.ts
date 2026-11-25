@@ -346,7 +346,10 @@ export interface MoonInput {
 
 /** The moon on the picture's arc: east at the left end, south at the top, west at the right (mirrored south). */
 export function moonArcT(az: number, lat: number): number {
-  const t = lat >= 0 ? (az - 90) / 180 : 1 - ((90 - az + 360) % 360) / 180;
+  // South of the equator one faces north: east on the right, north at the top, west on the left; the break of the
+  // scale lies behind the observer (south), as it lies in the north for the northern branch.
+  const s180 = ((((az + 180) % 360) + 360) % 360) - 180;
+  const t = lat >= 0 ? (az - 90) / 180 : (s180 + 90) / 180;
   return Math.min(1, Math.max(0, t));
 }
 

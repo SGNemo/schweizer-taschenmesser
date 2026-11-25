@@ -130,6 +130,10 @@
   min-width: 0;
 }
 .rowMain,
+.rowMeta {
+  margin: 0;
+}
+/* The moon at a forecast day: glyph and name, quiet (package 2); wraps under the row on the phone. */
 .dayMoon {
   display: inline-flex;
   align-items: center;
@@ -141,9 +145,6 @@
   .dayMoon {
     flex-basis: 100%;
   }
-}
-.rowMeta {
-  margin: 0;
 }
 .rowMain {
   display: flex;

@@ -45,7 +45,7 @@ export default function WeatherPage() {
   const viewed = index > 0 ? settings?.extra[index - 1] : settings;
   const lat = viewed?.lat ?? 0;
   const lon = viewed?.lon ?? 0;
-  const moon = useMoon(lat, lon, weather?.forecast.tz);
+  const moon = useMoon(lat, lon, weather?.forecast.tz, !!settings?.place);
 
   if (!settings) return null;
   const title = (weather?.place ?? settings.place ?? '').split(',')[0] || tx.title;
