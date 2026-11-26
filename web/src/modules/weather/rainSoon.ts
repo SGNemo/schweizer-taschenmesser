@@ -90,7 +90,7 @@ type Tp = ReturnType<typeof tWeatherPage.get>;
 export function soonChip(tp: Tp, s: RainSoon): string {
   if (s.kind === 'burst') return s.snow ? tp.chipSnowShower(s.from) : tp.chipShower(s.from);
   if (s.kind === 'nowEnds') return s.snow ? tp.chipSnowUntil(s.until!) : tp.chipRainUntil(s.until!);
-  if (s.kind === 'nowOn') return tp.keyRainNow;
+  if (s.kind === 'nowOn') return s.snow ? tp.chipSnowNow : tp.keyRainNow;
   return s.snow ? tp.chipSnowFrom(s.from) : tp.chipRainFrom(s.from);
 }
 

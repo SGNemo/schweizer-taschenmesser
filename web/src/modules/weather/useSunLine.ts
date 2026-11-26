@@ -3,7 +3,7 @@ import { civilTwilight } from '@/core/sky/twilight';
 import { now } from '@/core/time/now';
 import type { Forecast } from '@/core/weather/api';
 import { dayLength } from '@/core/weather/derived';
-import { dayRows, placeNowIso } from '@/core/weather/logic';
+import { placeNowIso } from '@/core/weather/logic';
 import { tWeatherPage } from '@/strings.weatherPage';
 
 /** The last computed day (a render every minute must not search the day again). */
@@ -23,11 +23,14 @@ export function useSunLine(
   at: number | undefined,
   lat: number,
   lon: number,
+  /** False while "Mond & Himmel" is not shown: nothing is searched. */
+  on = true,
 ): string | undefined {
   const tp = tWeatherPage.use();
-  const date = forecast && at != null ? placeNowIso(forecast, at, now()).slice(0, 10) : undefined;
+  const date =
+    on && forecast && at != null ? placeNowIso(forecast, at, now()).slice(0, 10) : undefined;
   const tz = forecast?.tz;
-  const day = forecast && date ? dayRows(forecast, date)[0] : undefined;
+  const day = forecast?.days?.find((d) => d.date === date);
   const twilight = date ? twilightOf(date, lat, lon, tz) : undefined;
   if (!day?.sunrise || !day.sunset) return undefined;
   const length = dayLength(day.sunrise, day.sunset);

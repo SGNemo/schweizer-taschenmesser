@@ -681,7 +681,7 @@
   gap: 4px;
   align-items: end;
   height: 56px;
-  max-width: 30rem;
+  width: min(100%, 30rem);
   border-bottom: 1px solid var(--border);
 }
 .soonBars i {
@@ -700,7 +700,7 @@
 .soonTicks {
   display: flex;
   justify-content: space-between;
-  max-width: 30rem;
+  width: min(100%, 30rem);
   margin-top: 4px;
   color: var(--text-3);
   font-size: var(--text-meta);

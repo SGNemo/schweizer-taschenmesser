@@ -68,7 +68,7 @@ export default function WeatherPage() {
     aurora,
   );
   const phone = useMediaQuery(PHONE_QUERY);
-  const sunLine = useSunLine(weather?.forecast, weather?.at, lat, lon);
+  const sunLine = useSunLine(weather?.forecast, weather?.at, lat, lon, !!moon);
 
   if (!settings) return null;
   const title = (weather?.place ?? settings.place ?? '').split(',')[0] || tx.title;
@@ -164,14 +164,16 @@ export default function WeatherPage() {
                   </h2>
                   <HourCards hours={hours.slice(0, 24)} now={weather.forecast.now} />
                 </section>
-                <Card>
-                  <WeatherChart
-                    hours={hours}
-                    air={weather.forecast.air}
-                    all={weather.forecast.hours}
-                    title={tp.chartTitle}
-                  />
-                </Card>
+                {hours.length >= 2 ? (
+                  <Card>
+                    <WeatherChart
+                      hours={hours}
+                      air={weather.forecast.air}
+                      all={weather.forecast.hours}
+                      title={tp.chartTitle}
+                    />
+                  </Card>
+                ) : null}
                 <Card>
                   <h2 className={styles.sectionTitle}>{tp.daysTitle}</h2>
                   <DaySpans

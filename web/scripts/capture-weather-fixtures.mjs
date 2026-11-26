@@ -4,7 +4,9 @@
  * every variable the app asks for and one air-quality request, both for Bern at the app's ~1 km rounding. Run it on a
  * machine that reaches the hosts: `node scripts/capture-weather-fixtures.mjs`. It overwrites
  * `src/core/weather/fixtures/forecast-bern-r2.json` and `air-bern-r2.json`; the tests then run against the recorded
- * answer. It sends nothing but the rounded position of a public place.
+ * answer. It sends nothing but the rounded position of a public place. The parameters are a copy of `fetchForecast`
+ * (the request test pins them there): keep both in step. After recording, check that `minutely_15.time[0]` is the
+ * quarter of `current.time` (the parser reads from there).
  */
 import { writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
@@ -29,8 +31,11 @@ const forecast = new URLSearchParams({
 });
 const air = new URLSearchParams({
   ...position,
-  current: 'european_aqi',
-  hourly: 'european_aqi',
+  // The app's AIR_VARIABLES (core/weather/api.ts).
+  current:
+    'european_aqi,pm10,pm2_5,ozone,nitrogen_dioxide,sulphur_dioxide,alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,olive_pollen,ragweed_pollen,dust',
+  hourly:
+    'european_aqi,pm10,pm2_5,ozone,nitrogen_dioxide,sulphur_dioxide,alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,olive_pollen,ragweed_pollen,dust',
   timezone: 'auto',
   forecast_days: '5',
 });

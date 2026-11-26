@@ -308,15 +308,15 @@ const sunMinutes = (s: number | null | undefined): number | undefined =>
   s == null ? undefined : Math.min(60, Math.max(0, Math.round(s / 60)));
 
 /**
- * The eight 15-minute amounts from the current quarter on; `undefined` when the answer has none or fewer than
- * eight values (a gap is read as no rain, a missing series as nothing known).
+ * Up to eight 15-minute amounts from the current quarter on; `undefined` when the answer has none from there on (a
+ * gap is read as no rain, a missing series as nothing known).
  */
 function soonOf(m: Minutely | undefined, nowIso: string): Soon | undefined {
   if (!m?.precipitation) return undefined;
   const minute = Number(nowIso.slice(14, 16));
   const quarter = `${nowIso.slice(0, 14)}${String(Math.floor(minute / 15) * 15).padStart(2, '0')}`;
   const start = m.time.findIndex((t) => t >= quarter);
-  if (start < 0 || m.time.length - start < SOON_STEPS) return undefined;
+  if (start < 0) return undefined;
   const mm = m.precipitation
     .slice(start, start + SOON_STEPS)
     .map((v) => Math.max(0, Math.round((v ?? 0) * 10) / 10));

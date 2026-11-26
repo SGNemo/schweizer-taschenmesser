@@ -82,7 +82,8 @@ describe('round-2 values from the recorded answer', () => {
         ),
     ) as unknown as typeof fetch;
     const out = await fetchForecast(46.95, 7.45, bare);
-    expect(out.soon).toBeUndefined(); // fewer than eight steps
+    // Fewer than eight steps are kept as they come; a series that ends before now is nothing.
+    expect(out.soon).toEqual({ at: '2026-11-26T14:00', mm: [0] });
     expect(out.hours![0]!.dew).toBeUndefined();
     expect(JSON.parse(JSON.stringify(out.hours![0]))).toEqual({
       time: '2026-11-26T14:00',

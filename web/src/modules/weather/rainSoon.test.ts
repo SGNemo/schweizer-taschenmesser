@@ -58,6 +58,12 @@ describe('rainSoon: the five sentences (COPY §2) as a table', () => {
     expect(s.snow).toBe(true);
     expect(soonSentence(tp, s)).toBe('Schnee ab 14:15, etwa 45 Minuten, zusammen etwa 1,2 mm');
     expect(soonChip(tp, s)).toBe('Schnee ab 14:15');
+    const all = rainSoon(
+      { ...f, soon: { at: '2026-07-16T14:00', mm: [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3] } },
+      '2026-07-16T14:05',
+    )!;
+    expect(soonSentence(tp, all)).toBe('Schnee, hält in den nächsten zwei Stunden an');
+    expect(soonChip(tp, all)).toBe('Schnee jetzt');
   });
 
   it('is null without 15-minute values, when all is dry and when the window has passed', () => {
