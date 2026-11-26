@@ -119,7 +119,7 @@ export const en = {
     head: ["When", "Where to", "What", "Switch"],
     rows: [
       { short: true, when: "Update check, at most once a day", where: "GitHub", what: "The request for the version file. GitHub sees your IP address.", off: "Settings → Updates" },
-      { short: true, when: "Weather, after you chose a place", where: "open-meteo.com", what: "The place name while searching, then the position rounded to about 1 km.", off: "Settings → Connections → Weather" },
+      { short: true, when: "Weather, after you chose a place", where: "open-meteo.com; in Germany the Deutscher Wetterdienst; NOAA SWPC", what: "The place name while searching, then the position rounded to about 1 km (to the DWD only for official warnings, if the place lies in Germany). The aurora forecast from NOAA SWPC is a general file, without a place.", off: "Settings → Connections → Weather" },
       { short: true, when: "Opening the currency converter", where: "frankfurter.dev", what: "The request for the rates.", off: "Only when opened" },
       { short: false, when: "Clicking “Look up public IP”", where: "api.ipify.org", what: "The request.", off: "Only on click" },
       { short: false, when: "Loading the local AI model", where: "huggingface.co", what: "The download. The checksum is verified.", off: "Only after you confirm" },

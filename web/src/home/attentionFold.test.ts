@@ -14,6 +14,8 @@ import weatherAttention from '@/modules/weather/attention';
 
 // The weather source reads its warnings from the cached forecast; here they are given directly.
 vi.mock('@/modules/weather/warningsToday', () => ({
+  // No official DWD warnings here (package 3b): only the computed hints.
+  officialNow: async () => ({ warnings: [] }),
   warningsNow: async (today: string) => [
     { kind: 'storm', date: today },
     { kind: 'wind', date: '2026-10-20', value: 80 },

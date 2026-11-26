@@ -1,5 +1,6 @@
 import { useMemo, type ReactNode } from 'react';
 import type { SkyEvents } from '@/core/sky/events';
+import type { OfficialWarning } from '@/core/weather/warningsOfficial';
 import type { MoonNow } from '@/core/sky/moonDay';
 import { dateTimeFormat, numberFormat } from '@/core/i18n/format';
 import type { DayRow } from '@/core/weather/api';
@@ -25,7 +26,7 @@ import { EventGlyph, MoonGlyph, useSceneEnv, WeatherScene } from '@/ui/weather-s
 import styles from '../routes/weather.module.css';
 import { dec } from './parts';
 import { lineBuilders } from './lines';
-import { SafetyNotice, WarningNotice } from './WarningNotice';
+import { OfficialNotice, SafetyNotice, WarningNotice } from './WarningNotice';
 import type { WeatherWarning } from '../warnings';
 
 /** The scene's mode from the setting "Bild im Wetter-Kopf" (`motion`, `still`, `plain`). */
@@ -69,6 +70,8 @@ export function WeatherHero({
   lat,
   moon,
   events,
+  official = [],
+  officialMore = 0,
 }: {
   weather: WeatherView;
   /** The hints for the stage (`weatherWarnings`); empty when they came late and sit in the page instead. */
@@ -79,6 +82,9 @@ export function WeatherHero({
   moon?: MoonNow;
   /** The sky events now (package 3); absent while "Mond und Himmelsereignisse" is off. */
   events?: SkyEvents;
+  /** Official DWD warnings for the stage (package 3b) and how many more went under the head. */
+  official?: OfficialWarning[];
+  officialMore?: number;
 }) {
   const tx = tWeather.use();
   const tp = tWeatherPage.use();
@@ -207,6 +213,8 @@ export function WeatherHero({
           text: `${chip.kind === 'solar' ? tp.ev.solarShort : tp.ev.lunarShort} ${placeTime.format(chip.from)}–${placeTime.format(chip.to)}`,
           glyph: <EventGlyph name={chip.kind === 'solar' ? 'eclipse' : 'lunar'} />,
         };
+      case 'aurora':
+        return { icon: 'sun', text: tp.ev.auroraChip, glyph: <EventGlyph name="aurora" /> };
       case 'rainbow':
         return { icon: 'sun', text: tp.ev.rainbowChip, glyph: <EventGlyph name="rainbow" /> };
       case 'meteors':
@@ -258,9 +266,12 @@ export function WeatherHero({
               .join(' · ')}
             testId="weather-temp"
           />
-          {events?.safety || warnings.length > 0 ? (
+          {events?.safety || official.length > 0 || warnings.length > 0 ? (
             <div className={styles.pills} data-scene-avoid="">
               {events?.safety ? <SafetyNotice inStage /> : null}
+              {official.length > 0 ? (
+                <OfficialNotice warnings={official} tz={forecast.tz} inStage more={officialMore} />
+              ) : null}
               {warnings.length > 0 ? (
                 <WarningNotice warnings={warnings} today={nowIso.slice(0, 10)} inStage />
               ) : null}

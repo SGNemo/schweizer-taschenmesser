@@ -127,7 +127,7 @@ export const de = {
     head: ["Wann", "Wohin", "Was", "Schalter"],
     rows: [
       { short: true, when: "Update-Abfrage, höchstens einmal am Tag", where: "GitHub", what: "Die Anfrage nach der Versionsdatei. GitHub sieht deine IP-Adresse.", off: "Einstellungen → Updates" },
-      { short: true, when: "Wetter, nachdem du einen Ort gewählt hast", where: "open-meteo.com", what: "Der Ortsname beim Suchen, danach die auf etwa 1 km gerundete Position.", off: "Einstellungen → Verbindungen → Wetter" },
+      { short: true, when: "Wetter, nachdem du einen Ort gewählt hast", where: "open-meteo.com; in Deutschland der Deutsche Wetterdienst; NOAA SWPC", what: "Der Ortsname beim Suchen, danach die auf etwa 1 km gerundete Position (an den DWD nur für amtliche Warnungen, wenn der Ort in Deutschland liegt). Die Polarlicht-Vorhersage von NOAA SWPC ist eine allgemeine Datei, ohne Ort.", off: "Einstellungen → Verbindungen → Wetter" },
       { short: true, when: "Währungsrechner öffnen", where: "frankfurter.dev", what: "Die Anfrage nach den Kursen.", off: "Nur beim Öffnen" },
       { short: false, when: "Klick auf „Öffentliche IP abfragen“", where: "api.ipify.org", what: "Die Anfrage.", off: "Nur auf Klick" },
       { short: false, when: "Lokales KI-Modell laden", where: "huggingface.co", what: "Der Download. Die Prüfsumme wird kontrolliert.", off: "Nur nach deiner Bestätigung" },

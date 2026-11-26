@@ -14,6 +14,7 @@ import {
   skyKey,
   SKY_KEYS,
   inkForSky,
+  inkOf,
   windLevel,
   WMO_CODES,
   type MoonInput,
@@ -451,6 +452,25 @@ describe('sky events in the scene (handoff 03 "Scene", CONCEPT-EVENTS §1)', () 
     expect(at(DAY, 'meteors').event).toBeUndefined();
     expect(at(NIGHT, 'starNight').event).toBe('starNight');
     expect(at(DAY, 'starNight').event).toBeUndefined();
+  });
+
+  it('aurora (package 3b): at night up to 60 % cloud, never by day or in twilight; amount clamped', () => {
+    for (const amount of [0.4, 0.7, 1]) {
+      const s = at(NIGHT, 'aurora', amount, { cloud: 60 });
+      expect(s).toMatchObject({ phase: 'night', event: 'aurora', eventAmount: amount });
+      // the curtains sit in the plain night sky: same key, same (light) ink
+      expect(skyKey(s)).toBe('night');
+      expect(inkOf(s)).toBe('light');
+    }
+    expect(at(NIGHT, 'aurora', 1, { cloud: 61 }).event).toBeUndefined();
+    expect(at(NIGHT, 'aurora', 1, { cloud: 95, code: 3 }).event).toBeUndefined();
+    expect(at(DAY, 'aurora').event).toBeUndefined();
+    const dawn = at('2026-11-24T07:10', 'aurora', 1);
+    expect(dawn.phase).toBe('dawn');
+    expect(dawn.event).toBeUndefined();
+    expect(at(NIGHT, 'aurora', 1.6).eventAmount).toBe(1);
+    expect(at(NIGHT, 'aurora', -0.2)).toMatchObject({ event: 'aurora', eventAmount: 0 });
+    expect(at(DAY, 'aurora', 0.7).eventAmount).toBe(0);
   });
 
   it('the two event skies are listed and take their ink (palette.js inkOf)', () => {

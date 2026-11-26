@@ -21,6 +21,8 @@ export const DATA_FLOW_IDS = [
   'currency',
   'feeds',
   'weather',
+  'weather-warnings',
+  'weather-aurora',
   'maps',
   'browser',
   'breach',

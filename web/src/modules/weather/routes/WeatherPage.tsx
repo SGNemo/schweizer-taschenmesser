@@ -3,7 +3,8 @@ import { now } from '@/core/time/now';
 import { settingsPath } from '@/core/settings/registry/paths';
 import { useHeadReady } from '@/core/shell/heroContext';
 import { dayRows, hourRows, placeNowIso } from '@/core/weather/logic';
-import { isWeatherActive, useWeatherSettings } from '@/core/weather/settings';
+import { isWeatherActive, officialOn, skyOn, useWeatherSettings } from '@/core/weather/settings';
+import { withoutReplaced } from '@/core/weather/warningsOfficial';
 import { tWeather } from '@/strings.weather';
 import { tWeatherPage } from '@/strings.weatherPage';
 import { Button, Card, EmptyState, PageTitle, PHONE_QUERY, useMediaQuery } from '@/ui';
@@ -13,11 +14,13 @@ import { PlaceChips } from '../components/PlaceChips';
 import { MoonCard } from '../components/MoonCard';
 import { WeatherAir } from '../components/WeatherAir';
 import { WeatherChart } from '../components/WeatherChart';
-import { SafetyNotice, WarningNotice } from '../components/WarningNotice';
+import { OfficialNotice, SafetyNotice, WarningNotice } from '../components/WarningNotice';
 import { WeatherHero, WeatherHeroPending, WeatherSceneDefault } from '../components/WeatherHero';
 import { weatherWarnings } from '../warnings';
 import { SignatureMark } from '@/ui/identity';
 import { useMoon } from '../useMoon';
+import { useAurora } from '../useAurora';
+import { useOfficial } from '../useOfficial';
 import { useSkyEvents } from '../useSkyEvents';
 import { useViewedForecast } from '../useViewedForecast';
 import styles from './weather.module.css';
@@ -47,7 +50,18 @@ export default function WeatherPage() {
   const lat = viewed?.lat ?? 0;
   const lon = viewed?.lon ?? 0;
   const moon = useMoon(lat, lon, weather?.forecast.tz, !!settings?.place);
-  const events = useSkyEvents(lat, lon, weather?.forecast, !!settings?.place, !!weather?.stale);
+  // Aurora and official warnings belong to the main place only (CONCEPT-SOURCES §1); an extra place shows neither.
+  const main = index === 0 && !!settings?.place && isWeatherActive(settings);
+  const aurora = useAurora(lat, lon, main && skyOn(settings));
+  const official = useOfficial(lat, lon, weather?.forecast.tz, main && officialOn(settings));
+  const events = useSkyEvents(
+    lat,
+    lon,
+    weather?.forecast,
+    !!settings?.place,
+    !!weather?.stale,
+    aurora,
+  );
   const phone = useMediaQuery(PHONE_QUERY);
 
   if (!settings) return null;
@@ -75,12 +89,18 @@ export default function WeatherPage() {
   const hours = weather ? hourRows(weather.forecast, nowIso) : [];
   const days = weather ? dayRows(weather.forecast, nowIso.slice(0, 10)) : [];
   const ready = !!weather?.forecast.hours && !!weather.forecast.days;
-  const warnings = weather ? weatherWarnings(days) : [];
-  // On an eclipse day the stage holds the safety pill and at most one weather hint; a second one goes under the head.
-  // On the phone the safety sentence alone takes two lines: there the weather hints go under the head (stage ≤ 300 px).
-  const stageCount = events?.safety ? (phone ? 0 : 1) : warnings.length;
-  const stageWarnings = late ? [] : warnings.slice(0, stageCount);
-  const belowWarnings = late ? warnings : warnings.slice(stageCount);
+  // An official warning replaces today's computed hint of its kind (CONCEPT-SOURCES §3).
+  const warnings = weather
+    ? withoutReplaced(weatherWarnings(days), official, nowIso.slice(0, 10))
+    : [];
+  const officialAll = official ?? [];
+  // At most two hint rows in the stage, in this order: the eclipse safety sentence, official warnings, computed hints;
+  // the rest under the head. On the phone the safety sentence alone takes two lines: nothing else beside it there.
+  const budget = late ? 0 : events?.safety ? (phone ? 0 : 1) : 2;
+  const officialStage = officialAll.slice(0, budget);
+  const stageWarnings = warnings.slice(0, budget - officialStage.length);
+  const officialBelow = officialAll.slice(officialStage.length);
+  const belowWarnings = warnings.slice(stageWarnings.length);
 
   return (
     <>
@@ -89,6 +109,8 @@ export default function WeatherPage() {
         <WeatherHero
           weather={weather}
           warnings={stageWarnings}
+          official={officialStage}
+          officialMore={officialBelow.length}
           lat={lat}
           moon={moon}
           // A forecast that came late puts the safety pill under the head only (never twice, never into a painted stage).
@@ -102,6 +124,9 @@ export default function WeatherPage() {
           painted is below it yet, so it pushes nothing, and it stays in sight on the phone. */}
       <div aria-live="polite" data-testid="weather-late-warning">
         {late && events?.safety ? <SafetyNotice /> : null}
+        {officialBelow.length > 0 ? (
+          <OfficialNotice warnings={officialBelow} tz={weather?.forecast.tz} />
+        ) : null}
         {belowWarnings.length > 0 ? (
           <WarningNotice warnings={belowWarnings} today={nowIso.slice(0, 10)} />
         ) : null}

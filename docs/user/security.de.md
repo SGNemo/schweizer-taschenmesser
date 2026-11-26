@@ -18,6 +18,8 @@ Diese Verbindungen baut die App nur in den genannten Fällen auf. Wo eine Zeile 
 - **GitHub** – täglicher Update-Check (abschaltbar) und Download von Updates.
 - **frankfurter.dev** (Kurse der EZB) – beim Öffnen des Währungsrechners.
 - **open-meteo.com** (Wetter) – erst nachdem du einen Ort gewählt hast: der Ortsname beim Suchen, danach seine auf etwa einen Kilometer gerundete Position (für die 7-Tage-Vorhersage), etwa alle 30 Minuten, solange die Übersicht offen ist. Abschaltbar unter Einstellungen → Verbindungen → Wetter.
+- **maps.dwd.de** (Deutscher Wetterdienst, amtliche Warnungen) – nur wenn dein Hauptort in Deutschland liegt (auf dem Gerät entschieden) und „Amtliche Warnungen (Deutschland)“ an ist (standardmäßig an): dieselbe gerundete Position, zusammen mit der Vorhersage. Nie für weitere Orte.
+- **services.swpc.noaa.gov** (NOAA SWPC, Polarlicht-Vorhersage) – eine allgemeine Datei, für alle gleich, ohne Ort; höchstens alle 3 Stunden, nur solange „Mond und Himmelsereignisse“ an ist und vom Hauptort aus überhaupt Polarlicht zu sehen sein kann.
 - **api.ipify.org** – nur auf Klick auf „Öffentliche IP abfragen“ (Dieser PC → System).
 - **huggingface.co** – Download des lokalen KI-Modells, erst nach deiner Bestätigung (Prüfsumme wird kontrolliert).
 - **Feed- und Kalender-Adressen**, die du abonniert hast – in der App direkt, im Browser über den Proxy deines eigenen Sync-Servers.

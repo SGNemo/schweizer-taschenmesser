@@ -55,6 +55,16 @@ export const tWeatherPage = defineBundle(
     daysTitle: '7 Tage',
     warnLabel: 'Wetterhinweis',
     warnComputed: 'berechnet, keine amtliche Warnung',
+    officialLabel: 'Amtliche Warnung',
+    official: (event: string) => `Amtliche Warnung: ${event}`,
+    officialSevere: (event: string) => `Amtliche Unwetterwarnung: ${event}`,
+    officialUntil: (day: string, time: string) => `bis ${day} ${time}`,
+    officialUntilToday: (time: string) => `bis ${time}`,
+    officialSource: 'Quelle: DWD',
+    officialMore: (n: number) => `+ ${n} weitere`,
+    officialSetting: 'Amtliche Warnungen (Deutschland)',
+    officialSettingHelp:
+      'Zeigt Warnungen des Deutschen Wetterdienstes für deinen Hauptort, wenn er in Deutschland liegt. Dafür geht seine ungefähre Position an den DWD, nie deine Einträge.',
     sceneSetting: 'Bild im Wetter-Kopf',
     sceneSettingHelp:
       'Zeigt Wetter, Tageszeit und Mond als Bild. Bewegung läuft beim Öffnen fünf Sekunden und kommt dann zur Ruhe.',
@@ -63,7 +73,7 @@ export const tWeatherPage = defineBundle(
     scenePlain: 'Schlicht (nur Himmel)',
     skySetting: 'Mond und Himmelsereignisse',
     skySettingHelp:
-      'Mondphase, Finsternisse und Sternschnuppen-Nächte. Wird auf diesem Gerät berechnet, ohne Abfrage im Netz.',
+      'Mondphase, Finsternisse, Sternschnuppen-Nächte und Polarlicht. Mond und Finsternisse werden auf diesem Gerät berechnet; für Polarlicht wird eine allgemeine Vorhersage-Datei von NOAA SWPC geladen, ohne deinen Ort.',
     keyMoon: (phase: string, n: string) => `${phase} · ${n} %`,
     moonTitle: 'Mond & Himmel',
     moonNextFull: (date: string) => `Vollmond am ${date}`,
@@ -119,6 +129,13 @@ export const tWeatherPage = defineBundle(
       solsticeSummer: 'Sommersonnenwende: der längste Tag.',
       equinoxSpring: 'Tagundnachtgleiche: astronomischer Frühlingsanfang.',
       equinoxAutumn: 'Tagundnachtgleiche: astronomischer Herbstanfang.',
+      auroraChip: 'Polarlicht möglich',
+      aurora: 'Heute Nacht: Polarlicht möglich',
+      auroraLine: (from: string, to: string) =>
+        `Blick nach Norden, abseits von Licht. Am ehesten zwischen ${from} und ${to} Uhr.`,
+      auroraLineSouth: (from: string, to: string) =>
+        `Blick nach Süden, abseits von Licht. Am ehesten zwischen ${from} und ${to} Uhr.`,
+      auroraSource: (kp: string) => `Quelle: NOAA SWPC, Vorhersage Kp ${kp}`,
       shower: {
         QUA: 'Quadrantiden',
         LYR: 'Lyriden',
@@ -191,6 +208,16 @@ export const tWeatherPage = defineBundle(
       daysTitle: '7 days',
       warnLabel: 'Weather notice',
       warnComputed: 'calculated, not an official warning',
+      officialLabel: 'Official warning',
+      official: (event: string) => `Official warning: ${event}`,
+      officialSevere: (event: string) => `Official severe weather warning: ${event}`,
+      officialUntil: (day: string, time: string) => `until ${day} ${time}`,
+      officialUntilToday: (time: string) => `until ${time}`,
+      officialSource: 'Source: DWD',
+      officialMore: (n: number) => `+ ${n} more`,
+      officialSetting: 'Official warnings (Germany)',
+      officialSettingHelp:
+        'Shows warnings of the German weather service for your main place if it lies in Germany. For this its approximate position goes to the DWD, never your entries.',
       sceneSetting: 'Picture in the weather head',
       sceneSettingHelp:
         'Shows weather, time of day and moon as a picture. Motion runs for five seconds when you open the page and then comes to rest.',
@@ -199,7 +226,7 @@ export const tWeatherPage = defineBundle(
       scenePlain: 'Plain (sky only)',
       skySetting: 'Moon and sky events',
       skySettingHelp:
-        'Moon phase, eclipses and meteor nights. Calculated on this device, without a request to the network.',
+        'Moon phase, eclipses, meteor nights and aurora. Moon and eclipses are calculated on this device; for the aurora a general forecast file is loaded from NOAA SWPC, without your place.',
       keyMoon: (phase: string, n: string) => `${phase} · ${n} %`,
       moonTitle: 'Moon & sky',
       moonNextFull: (date: string) => `Full moon on ${date}`,
@@ -252,6 +279,13 @@ export const tWeatherPage = defineBundle(
         solsticeSummer: 'Summer solstice: the longest day.',
         equinoxSpring: 'Equinox: the astronomical start of spring.',
         equinoxAutumn: 'Equinox: the astronomical start of autumn.',
+        auroraChip: 'Aurora possible',
+        aurora: 'Tonight: an aurora is possible',
+        auroraLine: (from: string, to: string) =>
+          `Look north, away from lights. Most likely between ${from} and ${to}.`,
+        auroraLineSouth: (from: string, to: string) =>
+          `Look south, away from lights. Most likely between ${from} and ${to}.`,
+        auroraSource: (kp: string) => `Source: NOAA SWPC, forecast Kp ${kp}`,
         shower: {
           QUA: 'Quadrantid',
           LYR: 'Lyrid',

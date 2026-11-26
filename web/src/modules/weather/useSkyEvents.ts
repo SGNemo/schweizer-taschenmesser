@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import type { AuroraTonight } from '@/core/sky/aurora';
 import { eventsFor, type SkyEvents } from '@/core/sky/events';
 import { now } from '@/core/time/now';
 import type { Forecast } from '@/core/weather/api';
@@ -16,6 +17,8 @@ export function useSkyEvents(
   enabled = true,
   /** Old values (offline): rain, cloud and dust of hours ago say nothing about now; time and place still hold. */
   stale = false,
+  /** Aurora possible tonight at the main place (package 3b). */
+  aurora?: AuroraTonight,
 ): SkyEvents | undefined {
   const [settings] = useWeatherSettings();
   const on = enabled && !!forecast && !!settings && skyOn(settings);
@@ -25,6 +28,7 @@ export function useSkyEvents(
       on && forecast
         ? eventsFor({
             nowMs: minute * 60_000,
+            aurora,
             lat,
             lon,
             tz: forecast.tz,
@@ -36,6 +40,6 @@ export function useSkyEvents(
             }),
           })
         : undefined,
-    [on, minute, lat, lon, forecast, stale],
+    [on, minute, lat, lon, forecast, stale, aurora],
   );
 }

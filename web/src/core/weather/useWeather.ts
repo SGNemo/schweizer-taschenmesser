@@ -10,7 +10,8 @@ import {
   shouldFetch,
   writeCache,
 } from './cache';
-import { isWeatherActive, useWeatherSettings } from './settings';
+import { isWeatherActive, officialOn, useWeatherSettings } from './settings';
+import { refreshOfficial } from './warningsOfficial';
 
 export interface WeatherView {
   place: string;
@@ -93,6 +94,13 @@ export function useWeatherRequest(needsPreview = false): {
         if (mounted.current) setFailedKey(key);
       });
   }, [active, key, lat, lon, hit, needsPreview]);
+
+  // Official warnings of the main place (package 3b): asked with the forecast, on their own key and schedule; nothing
+  // leaves the device outside Germany, with the switch off or offline (`refreshOfficial` checks all of it).
+  const official = active && officialOn(settings);
+  useEffect(() => {
+    if (official && place) void refreshOfficial(lat, lon, true);
+  }, [official, place, lat, lon, fetched]);
 
   const online = typeof navigator === 'undefined' || navigator.onLine !== false;
   if (!active || !hit)
