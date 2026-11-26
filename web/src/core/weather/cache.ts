@@ -21,7 +21,12 @@ export interface Cached {
   key: string;
   at: number;
   forecast: Forecast;
+  /** Shape of the stored value; absent before round 2 (such a value stays valid and is asked again once). */
+  v?: number;
 }
+
+/** Round 2: all 168 hours, the added hourly fields, the 15-minute rain and the hourly air index. */
+export const CACHE_VERSION = 2;
 
 /** Cache key of a position (already rounded by the settings). */
 export const cacheKey = (lat: number, lon: number): string => `${lat},${lon}`;
@@ -46,7 +51,18 @@ const hourSchema = z.object({
   hpa: num,
   dir: num,
   night: z.boolean().optional(),
+  snow: num,
+  snowDepth: num,
+  vis: num,
+  cloudLow: num,
+  cloudMid: num,
+  cloudHigh: num,
+  sunMin: num,
+  dew: num,
+  cape: num,
+  freeze: num,
 });
+const soonSchema = z.object({ at: z.string(), mm: z.array(z.number().finite()).max(8) });
 const daySchema = z.object({
   date: z.string(),
   min: z.number().finite(),
@@ -84,6 +100,7 @@ const airSchema = z.object({
   now: z.object({ aqi: num, pm25: num, pm10: num, o3: num, no2: num, so2: num, dust: num }),
   pollen: pollenSchema,
   days: z.array(z.object({ date: z.string(), pollen: pollenSchema, aqi: num })),
+  hours: z.array(z.object({ t: z.string(), aqi: z.number().finite() })).optional(),
 });
 /** `time`, `hours` and `days` are optional: a value cached before the preview stays valid for the line. */
 const forecastSchema = z.object({
@@ -93,15 +110,17 @@ const forecastSchema = z.object({
   tz: z.string().optional(),
   rainFrom: z.string().optional(),
   time: z.string().optional(),
-  hours: z.array(hourSchema).optional(),
+  hours: z.array(hourSchema).max(200).optional(),
   days: z.array(daySchema).optional(),
   now: nowSchema.optional(),
   air: airSchema.optional(),
+  soon: soonSchema.optional(),
 });
 const cachedSchema = z.object({
   key: z.string(),
   at: z.number().finite(),
   forecast: forecastSchema,
+  v: z.number().finite().optional(),
 });
 const triedSchema = z.object({ key: z.string(), at: z.number().finite() });
 
@@ -129,7 +148,7 @@ export function readCache(): Cached | undefined {
 
 export function writeCache(value: Cached): void {
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(value));
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ ...value, v: CACHE_VERSION }));
   } catch {
     // Storage blocked: the line just asks again next time.
   }
@@ -169,7 +188,8 @@ export const isFresh = (cached: Cached | undefined, key: string, at: number): bo
   !!cached && cached.key === key && at - cached.at < WEATHER_TTL_MS;
 
 /**
- * A request is due when the value is not fresh (or, when the preview is open, has no preview data yet),
+ * A request is due when the value is not fresh (or, when the preview is open, has no preview data yet or was
+ * stored before round 2),
  * the device is online and the last request for this place did not fail within the retry window.
  */
 export const shouldFetch = (
@@ -182,5 +202,7 @@ export const shouldFetch = (
 ): boolean =>
   online &&
   (!isFresh(cached, key, at) ||
-    (needsPreview && cached !== undefined && !(cached.forecast.hours && cached.forecast.days))) &&
+    (needsPreview &&
+      cached !== undefined &&
+      (!(cached.forecast.hours && cached.forecast.days) || cached.v !== CACHE_VERSION))) &&
   !(tried && tried.key === key && at - tried.at < WEATHER_RETRY_MS);

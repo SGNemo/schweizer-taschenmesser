@@ -35,6 +35,8 @@ export interface Air {
   /** Current pollen, grains/m³ (only the types that have data). */
   pollen: Pollen;
   days: AirDay[];
+  /** European index per hour (five days); absent in older cached values. */
+  hours?: { t: string; aqi: number }[];
 }
 
 const series = z.array(z.number().nullable()).optional();
@@ -104,6 +106,7 @@ export function parseAir(body: unknown): Air | undefined {
   };
   const pollen = pollenOf((t) => c?.[`${t}_pollen`]);
   const byDay = new Map<string, AirDay>();
+  const hours: { t: string; aqi: number }[] = [];
   h?.time.forEach((time, i) => {
     const date = time.slice(0, 10);
     const day = byDay.get(date) ?? { date, pollen: {} };
@@ -112,10 +115,13 @@ export function parseAir(body: unknown): Air | undefined {
       if (v !== undefined) day.pollen[t] = Math.max(day.pollen[t] ?? 0, v);
     }
     const a = rnd(h.european_aqi?.[i]);
-    if (a !== undefined) day.aqi = Math.max(day.aqi ?? 0, a);
+    if (a !== undefined) {
+      day.aqi = Math.max(day.aqi ?? 0, a);
+      hours.push({ t: time, aqi: a });
+    }
     byDay.set(date, day);
   });
-  return { now, pollen, days: [...byDay.values()] };
+  return { now, pollen, days: [...byDay.values()], ...(hours.length > 0 ? { hours } : {}) };
 }
 
 export type PollenLevel = 'none' | 'low' | 'moderate' | 'high' | 'veryHigh';

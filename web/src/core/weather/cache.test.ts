@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { setNow, now } from '@/core/time/now';
 import {
   CACHE_KEY,
+  CACHE_VERSION,
   cacheKey,
   clearCache,
   isFresh,
@@ -31,7 +32,7 @@ describe('forecast cache (fixed clock)', () => {
     expect(readCache()).toBeUndefined();
     writeCache({ key, at: now(), forecast });
     expect(localStorage.getItem(CACHE_KEY)).toContain('"temp":14');
-    expect(readCache()).toEqual({ key, at: T0, forecast });
+    expect(readCache()).toEqual({ key, at: T0, forecast, v: CACHE_VERSION });
     clearCache();
     expect(readCache()).toBeUndefined();
   });
@@ -121,7 +122,7 @@ describe('forecast cache (fixed clock)', () => {
   it('keeps a valid value with a rain hour and leaves it stored', () => {
     const c = { key, at: T0, forecast: { ...forecast, rainFrom: '15' } };
     writeCache(c);
-    expect(readCache()).toEqual(c);
+    expect(readCache()).toEqual({ ...c, v: CACHE_VERSION });
     expect(localStorage.getItem(CACHE_KEY)).not.toBeNull();
   });
 
@@ -221,7 +222,12 @@ describe('preview data in the cache', () => {
     expect(shouldFetch(cached, key, T0 + 1000, true, undefined, true)).toBe(true);
     expect(shouldFetch(cached, key, T0 + 1000, false, undefined, true)).toBe(false);
     expect(shouldFetch(cached, key, T0 + 1000, true, { key, at: T0 }, true)).toBe(false);
-    const full = { key, at: T0, forecast: { ...forecast, hours, days } };
+    const full = { key, at: T0, forecast: { ...forecast, hours, days }, v: CACHE_VERSION };
     expect(shouldFetch(full, key, T0 + 1000, true, undefined, true)).toBe(false);
+    // Stored before round 2 (no `v`): still read, asked again once while the page is open, never for the line.
+    const old = { key, at: T0, forecast: { ...forecast, hours, days } };
+    expect(shouldFetch(old, key, T0 + 1000, true, undefined, true)).toBe(true);
+    expect(shouldFetch(old, key, T0 + 1000, true, undefined, false)).toBe(false);
+    expect(shouldFetch(old, key, T0 + 1000, true, { key, at: T0 }, true)).toBe(false);
   });
 });

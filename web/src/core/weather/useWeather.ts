@@ -3,6 +3,7 @@ import { now } from '@/core/time/now';
 import { fetchForecast, type Forecast } from './api';
 import {
   cacheKey,
+  CACHE_VERSION,
   isFresh,
   noteTried,
   readCache,
@@ -55,7 +56,12 @@ export function useWeatherRequest(needsPreview = false): {
   coming: boolean;
 } {
   const [settings] = useWeatherSettings();
-  const [fetched, setFetched] = useState<{ key: string; forecast: Forecast; at: number }>();
+  const [fetched, setFetched] = useState<{
+    key: string;
+    forecast: Forecast;
+    at: number;
+    v: number;
+  }>();
   const active = !!settings && isWeatherActive(settings);
   const place = settings?.place ?? '';
   const lat = settings?.lat ?? 0;
@@ -86,7 +92,7 @@ export function useWeatherRequest(needsPreview = false): {
       .then((f) => {
         const at = now();
         writeCache({ key, at, forecast: f });
-        if (mounted.current) setFetched({ key, forecast: f, at });
+        if (mounted.current) setFetched({ key, forecast: f, at, v: CACHE_VERSION });
       })
       .catch(() => {
         asked.current = undefined;

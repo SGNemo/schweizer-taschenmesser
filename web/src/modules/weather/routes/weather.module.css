@@ -672,3 +672,131 @@
   font-size: var(--text-meta);
   color: var(--text-muted);
 }
+
+/* Round 2, package B (mockups/page.css): rain in the next two hours, the hour line, "Mehr Werte". */
+.soonSentence {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+}
+.soonBars {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+  align-items: end;
+  height: 56px;
+  width: min(100%, 30rem);
+  border-bottom: 1px solid var(--border);
+}
+.soonBars i {
+  display: block;
+  background: var(--info);
+  border-radius: 3px 3px 0 0;
+}
+.soonBars i[data-zero] {
+  height: 2px;
+  background: var(--surface-2);
+  border-radius: 1px;
+}
+[data-snow] .soonBars i:not([data-zero]) {
+  background: var(--text-3);
+}
+.soonTicks {
+  display: flex;
+  justify-content: space-between;
+  width: min(100%, 30rem);
+  margin-top: 4px;
+  color: var(--text-3);
+  font-size: var(--text-meta);
+}
+.hourLine {
+  margin: var(--space-2) 0 0;
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+  font-variant-numeric: var(--font-num);
+}
+.more {
+  background: var(--surface-raised);
+  border-radius: var(--radius-lg);
+}
+.moreHead {
+  margin: 0;
+}
+.moreToggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 56px;
+  padding: 0 var(--card-pad);
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-label);
+  font-weight: var(--weight-semibold);
+  text-align: left;
+  cursor: pointer;
+}
+.moreToggle:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.moreChevron {
+  display: inline-flex;
+  margin-left: auto;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+}
+.moreToggle[aria-expanded='true'] .moreChevron {
+  transform: rotate(180deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .moreChevron {
+    transition: none;
+  }
+}
+.moreGroups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--space-5) var(--space-6);
+  padding: 0 var(--card-pad) var(--card-pad);
+}
+.moreGroups[hidden] {
+  display: none;
+}
+.moreGroup h3 {
+  margin: 0 0 var(--space-2);
+  color: var(--text-3);
+  font-size: var(--text-meta);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.moreGroup p {
+  margin: 0;
+  font-size: var(--text-sm);
+}
+.moreGroup dl {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  font-size: var(--text-sm);
+  font-variant-numeric: var(--font-num);
+}
+.moreRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.moreRow dt {
+  color: var(--text-muted);
+}
+.moreRow[data-sub] dt {
+  padding-left: var(--space-3);
+}
+.moreRow dd {
+  margin: 0;
+  text-align: right;
+}
