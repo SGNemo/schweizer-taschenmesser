@@ -21,7 +21,7 @@ import { applyBackup, moduleOfTable, planRestore, type RestorePlan } from '@/cor
 import { createBackup, parseBackup, type Backup } from '@/core/backup/backup';
 import { sha256Hex } from '@/core/backup/encrypted';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
-import { syncedTableNames } from '@/core/db/schema';
+import { personalTableNames, syncedTableNames } from '@/core/db/schema';
 import { generatePassphrase, loadWordlist } from '@nemo/vault-core';
 import { allManifests } from '@/core/modules/registry';
 import { maxHlc } from '@/core/db/hlc';
@@ -92,7 +92,8 @@ export type ShareReadResult =
 
 /** Modules that can be offered for sharing, with their tables. */
 export function shareableTables(tableNames: string[] = syncedTableNames(allManifests)): string[] {
-  return tableNames.filter((name) => !NEVER_SHARED.has(moduleOfTable(name)));
+  const personal = personalTableNames(allManifests);
+  return tableNames.filter((name) => !NEVER_SHARED.has(moduleOfTable(name)) && !personal.has(name));
 }
 
 export function shareableModules(

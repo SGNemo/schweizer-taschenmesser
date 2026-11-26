@@ -1,3 +1,4 @@
+import { createElement, Fragment, Suspense } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Link, useParams } from 'react-router';
 import { CopySchemaButton } from '@/core/dataapi/CopySchemaButton';
@@ -5,6 +6,7 @@ import { JSON_IMPORTER_ID } from '@/core/dataapi/importer';
 import { hasStartData, importersOf } from '@/core/dataapi/onboarding';
 import { StartDataButton } from '@/core/importer/StartDataButton';
 import { useModuleStates } from '@/core/modules/activation';
+import { lazyComponent } from '@/core/modules/lazy';
 import { availableManifests } from '@/core/modules/available';
 import type { ModuleManifest } from '@/core/modules/types';
 import { changedKeys, fieldBlocks } from '@/core/settings/moduleBlocks';
@@ -154,16 +156,28 @@ function ModuleSettingsBody({ manifest }: { manifest: ModuleManifest }) {
       run: () => void patch(before),
     });
   };
+  // A module's own quiet row right after one of its fields (`ModuleSettings.extra`); `lazyComponent` keeps one per loader.
+  const extra = manifest.settings.extra;
+  const Extra = extra ? lazyComponent(extra.component) : undefined;
+  // A key that names no field (renamed, mistyped) still shows the row: after the last field the page draws.
+  const extraAfter =
+    extra && fields.some((f) => f.key === extra.after)
+      ? extra.after
+      : blocks.at(-1)?.fields.at(-1)?.key;
   const rows = (list: typeof fields) =>
     list.map((f) => (
-      <FieldRow
-        key={f.key}
-        sectionId={sectionId}
-        field={f}
-        value={v[f.key]}
-        defaultValue={defaults[f.key]}
-        onChange={(value) => void patch({ [f.key]: value })}
-      />
+      <Fragment key={f.key}>
+        <FieldRow
+          sectionId={sectionId}
+          field={f}
+          value={v[f.key]}
+          defaultValue={defaults[f.key]}
+          onChange={(value) => void patch({ [f.key]: value })}
+        />
+        {Extra && f.key === extraAfter ? (
+          <Suspense fallback={null}>{createElement(Extra)}</Suspense>
+        ) : null}
+      </Fragment>
     ));
   return (
     <section

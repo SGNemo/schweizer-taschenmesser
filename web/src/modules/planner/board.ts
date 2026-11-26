@@ -11,7 +11,7 @@ import { DEFAULT_MIN, type PlaceReason, type Unplaced } from '@/core/plan/types'
 import { fixedOf, planDays, turnDayOf, type DayBlocker } from './days';
 import { lateMoneyDue } from './late';
 import { itemKeyOf } from './repo';
-import type { AssignmentRow, PlanDayRow, PlanItemRow } from './schema';
+import { planLength, type AssignmentRow, type PlanDayRow, type PlanItemRow } from './schema';
 import { defaultAvailable, type PlannerSettings } from './settings';
 import { addDaysStr as addDaysIso, isoWeekday, toEpoch } from '@/core/time/dates';
 
@@ -202,7 +202,7 @@ export function buildBoard(input: BoardInput): Board {
         unitId: `${key}#0`,
         itemKey: key,
         title: entry.title,
-        minutes: item?.durationMin ?? entry.durationMin ?? DEFAULT_MIN,
+        minutes: planLength(item, entry.durationMin) ?? DEFAULT_MIN,
         k: 0,
         of: 1,
         reason: 'deadline' as const,
@@ -284,7 +284,7 @@ export function buildBoard(input: BoardInput): Board {
       : undefined;
   const turnRow = (key: string, e: PlannableEntry): BoardRow => {
     const item = items.get(key);
-    const minutes = item?.durationMin ?? e.durationMin ?? DEFAULT_MIN;
+    const minutes = planLength(item, e.durationMin) ?? DEFAULT_MIN;
     return {
       unitId: `${key}#0`,
       itemKey: key,
@@ -402,7 +402,7 @@ export function buildBoard(input: BoardInput): Board {
       unitId: `${key}#0`,
       itemKey: key,
       title: entry.title,
-      minutes: item.durationMin ?? entry.durationMin ?? DEFAULT_MIN,
+      minutes: planLength(item, entry.durationMin) ?? DEFAULT_MIN,
       k: 0,
       of: 1,
       reason: 'excluded',

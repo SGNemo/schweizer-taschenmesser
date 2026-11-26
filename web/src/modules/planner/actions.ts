@@ -41,7 +41,7 @@ import { t } from '@/strings';
 import type { SetupThing } from './daySetup';
 import { extractLock, readFieldWithPart } from './dueWords';
 import { assignmentRepo, dayRepo, itemKeyOf, itemRepo, putRow } from './repo';
-import type { AssignmentRow, PlanDayRow, PlanItemRow } from './schema';
+import { planLength, type AssignmentRow, type PlanDayRow, type PlanItemRow } from './schema';
 import { overloadLine } from './overload';
 import { GOAL_MAX, type Known, type PasteLine, type Place } from './pastePlan';
 import { requestedIds } from './run';
@@ -49,6 +49,7 @@ import { getPlannerSettings } from './prefs';
 import { PlannerOffError, runUser, type RunScope, type UserRun } from './services';
 import { dayEndLabel, DEFAULT_PLANNER_SETTINGS, PLANNER_SCOPE } from './settings';
 import { runToast } from './toast';
+import { measureKey, proposedMinutes, recordMeasure } from './measure';
 
 const toast = (message: string, run?: UserRun, lead?: { label: string; run: () => void }) =>
   useUiStore.getState().toast(
@@ -406,7 +407,7 @@ async function layOn(
       of: 1,
       date,
       // The length the board showed: the plan's own over the source's.
-      minutes: (await itemRepo.get(key))?.durationMin ?? e.durationMin ?? DEFAULT_MIN,
+      minutes: planLength(await itemRepo.get(key), e.durationMin) ?? DEFAULT_MIN,
       order: 0,
       reason: 'new',
     });
@@ -487,22 +488,29 @@ export async function addFromField(
     lead,
     titles,
     async () => {
+      // A new thing without minutes starts with what it took the last times (package 8): the plan's own length,
+      // marked, so the row says Z1 until the minutes are set by hand. Its source's estimate stays untouched.
+      const measured =
+        fields.estimateMin === undefined && fields.title
+          ? await proposedMinutes(fields.title)
+          : undefined;
       const saved = await saveCapture('todo', todoFields);
       const key = itemKeyOf(saved.moduleId, saved.id);
       const scope = await layOn(
-        { moduleId: saved.moduleId, id: saved.id, durationMin: fields.estimateMin },
+        { moduleId: saved.moduleId, id: saved.id, durationMin: fields.estimateMin ?? measured },
         target,
       );
       if (fixedOn)
         for (const r of await rowsOf(key))
           await putRow(assignmentRepo, r.id, { ...rowOf(r), locked: true });
-      if (hardDue || part)
+      if (hardDue || part || measured)
         await putRow(itemRepo, key, {
           source: { module: saved.moduleId, id: saved.id },
           ...(hardDue
             ? { due: { date: hardDue, hard: true, ...(hardDueTime ? { time: hardDueTime } : {}) } }
             : {}),
           ...(part ? { part } : {}),
+          ...(measured ? { durationMin: measured, measured: true } : {}),
           order: 0,
         });
       return scope;
@@ -561,11 +569,19 @@ async function dayNote(
 export async function markDone(
   e: PlannableEntry,
   titles: Record<string, string>,
+  /** The minutes a focus round ran (package 8): recorded in this same act, so its undo takes the record back too. */
+  ran?: number,
 ): Promise<boolean> {
   const s = await source(e.moduleId);
   if (!s?.onDone) return false;
-  return act(t.planner.toast.done, t.planner.toast.done, titles, () => s.onDone!(e.id));
+  return act(t.planner.toast.done, t.planner.toast.done, titles, async () => {
+    await s.onDone!(e.id);
+    if (ran !== undefined) await recordMeasure(measureKey(e), ran);
+  });
 }
+
+/** What a „Los“ step ran (package 8): the step's key and minutes, recorded inside the act that ticks it. */
+export type StepRan = { key: string | undefined; minutes: number };
 
 /**
  * One step of a thing ticked or unticked from the plan („Los“, package 5a): the source's `onStepDone` in its own `act`
@@ -576,6 +592,7 @@ export async function markStep(
   stepId: string,
   done: boolean,
   titles: Record<string, string>,
+  ran?: StepRan,
 ): Promise<boolean> {
   const s = await source(e.moduleId);
   if (!s?.onStepDone) return false;
@@ -583,7 +600,10 @@ export async function markStep(
     t.planner.steps.stepDone,
     t.planner.steps.stepDone,
     titles,
-    () => s.onStepDone!(e.id, stepId, done),
+    async () => {
+      await s.onStepDone!(e.id, stepId, done);
+      if (ran) await recordMeasure(ran.key, ran.minutes);
+    },
     { leadOnly: true },
   );
 }
@@ -597,6 +617,7 @@ export async function finishSteps(
   e: PlannableEntry,
   stepId: string,
   titles: Record<string, string>,
+  ran?: StepRan,
 ): Promise<boolean> {
   const s = await source(e.moduleId);
   if (!s?.onStepDone) return false;
@@ -604,6 +625,7 @@ export async function finishSteps(
   return act(label, label, titles, async () => {
     await s.onStepDone!(e.id, stepId, true);
     if (s.onDone) await s.onDone(e.id);
+    if (ran) await recordMeasure(ran.key, ran.minutes);
   });
 }
 
@@ -679,7 +701,7 @@ export async function setEstimate(
       t.planner.row.estimate,
       t.planner.toast.estimate(short(e.title), formatMinutes(min, { compact: true })),
       titles,
-      () => itemPatch(e, { durationMin: min }),
+      () => itemPatch(e, { durationMin: min, measured: undefined }),
     );
   const s = await source(e.moduleId);
   if (!s?.onEstimate) return false;
@@ -692,7 +714,7 @@ export async function setEstimate(
       // A length the plan held itself would hide the new estimate (`run.ts`: the item row wins).
       const key = itemKeyOf(e.moduleId, e.id);
       if ((await itemRepo.get(key))?.durationMin !== undefined)
-        await itemPatch(e, { durationMin: undefined });
+        await itemPatch(e, { durationMin: undefined, measured: undefined });
     },
   );
 }

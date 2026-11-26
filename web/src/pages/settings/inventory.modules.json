@@ -585,6 +585,11 @@
         "type": "boolean",
         "label": "Stapel als eine Zeile: E-Mail"
       },
+      "measurePropose": {
+        "type": "boolean",
+        "label": "Aus gemessener Zeit vorschlagen",
+        "default": true
+      },
       "calendarBlocks": {
         "type": "boolean",
         "label": "Termine blocken Zeit",

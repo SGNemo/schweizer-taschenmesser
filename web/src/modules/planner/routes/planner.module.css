@@ -513,6 +513,16 @@ section.sheet .headEnd button[aria-expanded='true'] {
   font-variant-numeric: var(--font-num);
   white-space: nowrap;
 }
+/* Z2 (package 8): the last measured minutes, one quiet line above the choices of „Dauer …“. */
+.measuredLine {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-meta);
+  color: var(--text-3);
+}
+/* Z1 (package 8): „· wie zuletzt“ after measured minutes, quieter than the minutes; the phone shows the minutes alone. */
+.asLast {
+  color: var(--text-3);
+}
 /* The duration as the last fact of the meta line: the phone's form (see the media rule below). */
 .metaDuration {
   display: none;
@@ -838,6 +848,9 @@ section.sheet .headEnd button[aria-expanded='true'] {
      title, where the row has room for them. */
   .endFacts .duration {
     display: inline;
+  }
+  .asLast {
+    display: none;
   }
   .endFacts .chipFest,
   .endFacts .chipHint {

@@ -14,6 +14,8 @@ import type { ModuleManifest } from '@/core/modules/types';
  * v6 (planner rethink): optional assignment field `locked` („fest“ lives on the placement row). Lossless: an old row
  * has none. The pins of before become locks in `migrateModel.ts` (it reads two collections and the clock, so it
  * is no per-record step).
+ * v7 (package 8): optional item field `measured` and the collection `measure`. Lossless: an old row has no flag and
+ * reads as before; a new collection starts empty, so no row is rewritten.
  */
 export const migrations: ModuleManifest['migrations'] = {
   2: async () => {},
@@ -21,4 +23,5 @@ export const migrations: ModuleManifest['migrations'] = {
   4: async () => {},
   5: async () => {},
   6: async () => {},
+  7: async () => {},
 };
