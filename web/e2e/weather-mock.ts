@@ -77,6 +77,18 @@ export async function mockWeather(page: Page) {
           is_day: Array.from({ length: 48 }, (_, i) => (i % 24 >= 7 && i % 24 < 19 ? 1 : 0)),
           weather_code: Array.from({ length: 48 }, () => 3),
           precipitation_probability: Array.from({ length: 48 }, (_, i) => (i === 15 ? 80 : 0)),
+          cloud_cover: Array.from({ length: 48 }, (_, i) => 60 + (i % 5) * 8),
+          pressure_msl: Array.from({ length: 48 }, (_, i) => 1016 - i * 0.2),
+          wind_direction_10m: Array.from({ length: 48 }, (_, i) => 220 + i * 2),
+          dew_point_2m: Array.from({ length: 48 }, () => 7),
+          visibility: Array.from({ length: 48 }, (_, i) => (i < 8 ? 6000 : 24000)),
+          cloud_cover_low: Array.from({ length: 48 }, () => 55),
+          cloud_cover_mid: Array.from({ length: 48 }, () => 30),
+          cloud_cover_high: Array.from({ length: 48 }, () => 10),
+          sunshine_duration: Array.from({ length: 48 }, (_, i) =>
+            i % 24 >= 8 && i % 24 < 18 ? 1200 : 0,
+          ),
+          freezing_level_height: Array.from({ length: 48 }, () => 2800),
         },
         daily: {
           time: days7,
@@ -93,6 +105,14 @@ export async function mockWeather(page: Page) {
           sunrise: days7.map((d) => `${d}T07:05`),
           sunset: days7.map((d) => `${d}T18:51`),
           sunshine_duration: [18000, 7200, 36000, 3600, 14400, 3600, 30000],
+        },
+        // Round 2: light rain from 10:15 for about 45 minutes (the block "Regen in den nächsten zwei Stunden").
+        minutely_15: {
+          time: Array.from(
+            { length: 8 },
+            (_, i) => `2026-09-29T1${Math.floor(i / 4)}:${String((i % 4) * 15).padStart(2, '0')}`,
+          ),
+          precipitation: [0, 0.2, 0.5, 0.5, 0, 0, 0, 0],
         },
       },
     }),

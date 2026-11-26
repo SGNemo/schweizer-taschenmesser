@@ -18,8 +18,11 @@ const days7 = [
 ];
 const nextDay = times.map((t) => t.replace('-29T', '-30T'));
 
-/** Open-Meteo answers, made up; counts the requests that leave for the weather host. */
-async function mockWeather(page: Page) {
+/**
+ * Open-Meteo answers, made up; counts the requests that leave for the weather host. `extra` is merged into the
+ * forecast answer (round 2: the 15-minute amounts).
+ */
+async function mockWeather(page: Page, extra: Record<string, unknown> = {}) {
   const seen: string[] = [];
   await page.route('**://geocoding-api.open-meteo.com/**', async (route) => {
     seen.push(route.request().url());
@@ -109,6 +112,7 @@ async function mockWeather(page: Page) {
           sunset: days7.map((d) => `${d}T18:51`),
           sunshine_duration: [18000, 7200, 36000, 3600, 14400, 3600, 30000],
         },
+        ...extra,
       },
     });
   });
@@ -220,7 +224,10 @@ test.describe('Weather module', () => {
     const preview = page.getByTestId('weather-preview');
     await expect(preview.getByTestId('weather-hours').locator('li')).toHaveCount(24);
     await expect(preview.getByTestId('weather-days').locator('li')).toHaveCount(7);
-    await expect(preview.getByTestId('weather-hours').locator('li').first()).toContainText('10:00');
+    // Round 2: the first card says "Jetzt"; the hour line under the cards names its hour for screen readers.
+    await expect(preview.getByTestId('weather-hours').locator('li').first()).toContainText('Jetzt');
+    await expect(preview.getByTestId('weather-hours').locator('li').nth(1)).toContainText('11:00');
+    await expect(preview.getByTestId('weather-hour-line')).toContainText('Werte um 10:00');
     await expect(preview.getByTestId('weather-hours').locator('li').nth(5)).toContainText('80 %');
     await expect(preview.getByTestId('weather-days').locator('li').nth(3)).toContainText(
       'Gewitter',
@@ -289,7 +296,9 @@ test.describe('Weather module', () => {
     // The last forecast stays on the page, marked with its time; the hours start at the place's current hour.
     await ready(page, '/weather');
     await expect(page.getByTestId('weather-now')).toContainText('Stand 10:00');
-    await expect(page.getByTestId('weather-hours').locator('li').first()).toContainText('11:00');
+    await expect(page.getByTestId('weather-hours').locator('li').first()).toContainText('Jetzt');
+    await expect(page.getByTestId('weather-hours').locator('li').nth(1)).toContainText('12:00');
+    await expect(page.getByTestId('weather-hour-line')).toContainText('Werte um 11:00');
   });
 
   test('an unreachable service leaves no error on the Overview', async ({ page }) => {
@@ -411,6 +420,48 @@ async function chooseLindenau(page: Page) {
 }
 
 test.describe('Weather scene in the head (package 1b)', () => {
+  test('round 2: rain in the next two hours, the curve select kept on the device, "Mehr Werte" by keyboard', async ({
+    page,
+  }) => {
+    await mockWeather(page, {
+      minutely_15: {
+        time: Array.from(
+          { length: 8 },
+          (_, i) => `2026-09-29T1${Math.floor(i / 4)}:${String((i % 4) * 15).padStart(2, '0')}`,
+        ),
+        precipitation: [0, 0.2, 0.5, 0.5, 0, 0, 0, 0],
+      },
+    });
+    await choosePlace(page);
+    await ready(page, '/weather');
+    const soon = page.getByTestId('weather-rain-soon');
+    await expect(soon).toContainText('Regen in den nächsten zwei Stunden');
+    await expect(soon).toContainText('Regen ab 10:15, etwa 45 Minuten, zusammen etwa 1,2 mm');
+    await expect(page.getByTestId('weather-keys')).toContainText('Regen ab 10:15');
+    // The curve: one sentence for screen readers, the choice survives a reload.
+    const select = page.getByLabel('Anzeigen');
+    await expect(select).toHaveValue('tempRain');
+    await select.selectOption('wind');
+    await expect(page.getByTestId('weather-chart-alt')).toContainText('Wind von 12 bis 12 km/h');
+    await page.reload();
+    await expect(page.getByLabel('Anzeigen')).toHaveValue('wind');
+    // "Mehr Werte" is closed; Enter opens it.
+    const toggle = page.getByRole('button', { name: 'Mehr Werte' });
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await toggle.focus();
+    await page.keyboard.press('Enter');
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(page.getByRole('region', { name: 'Mehr Werte' })).toContainText('Luftfeuchte');
+  });
+
+  test('round 2: without 15-minute values there is no rain block', async ({ page }) => {
+    await mockWeather(page);
+    await choosePlace(page);
+    await ready(page, '/weather');
+    await expect(page.getByTestId('weather-hours')).toBeVisible();
+    await expect(page.getByTestId('weather-rain-soon')).toHaveCount(0);
+  });
+
   test('the hint lives in the stage as a pill, nothing above the head', async ({ page }) => {
     await mockScene(page, { night: true, hints: 2 });
     await chooseLindenau(page);

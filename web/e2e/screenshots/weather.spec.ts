@@ -44,6 +44,8 @@ interface Scenario {
   warn?: Warn[];
   /** Kp of every step of the mocked SWPC file (aurora needs Kp 7 at the default place). */
   kp?: number;
+  /** Round 2: the eight 15-minute amounts (mm) from the current quarter hour. */
+  soon?: number[];
 }
 
 /** Lindenau (invented, 49.6° N 11.0° E, Europe/Berlin): the round's sample place. */
@@ -54,6 +56,19 @@ const BASE = { lat: 49.6, lon: 11.0, tz: 'Europe/Berlin' };
  * eclipses, meteor nights, an aurora night and plain weather by day and night.
  */
 const SCENARIOS: Scenario[] = [
+  {
+    // Round 2 (mockups/p4-seite-heute-regen.html): a summer day, light rain from 14:15 for about 45 minutes.
+    id: 'day-rain-soon',
+    utc: '2026-07-16T12:05:00Z',
+    local: '2026-07-16T14:05',
+    day: 1,
+    code: 3,
+    cloud: 90,
+    temp: 17,
+    sunrise: '05:28',
+    sunset: '21:22',
+    soon: [0, 0.2, 0.5, 0.5, 0, 0, 0, 0],
+  },
   {
     id: 'day-clear',
     utc: '2026-06-10T10:00:00Z',
@@ -212,7 +227,12 @@ async function mock(page: Page, s: Scenario & typeof BASE) {
     }),
   );
   await page.route('**://air-quality-api.open-meteo.com/**', (r) =>
-    r.fulfill({ json: { current: { european_aqi: 22, pm10: 14, pm2_5: 8, dust: s.dust ?? 3 } } }),
+    r.fulfill({
+      json: {
+        current: { european_aqi: 22, pm10: 14, pm2_5: 8, dust: s.dust ?? 3 },
+        hourly: { time: hours, european_aqi: hours.map((_, i) => 18 + (i % 12)) },
+      },
+    }),
   );
   await page.route('**://api.open-meteo.com/**', (r) =>
     r.fulfill({
@@ -238,7 +258,38 @@ async function mock(page: Page, s: Scenario & typeof BASE) {
           weather_code: hours.map(() => code),
           precipitation_probability: hours.map(() => (code >= 51 ? 70 : 0)),
           cloud_cover: hours.map(() => s.cloud ?? 10),
+          // Round 2: values for the hour line, the curve and "Mehr Werte".
+          apparent_temperature: hours.map((_, i) => (s.temp ?? 12) - 2 + (i % 4)),
+          precipitation: hours.map((_, i) => (code >= 51 || (s.soon && i % 24 === 14) ? 0.8 : 0)),
+          wind_speed_10m: hours.map((_, i) => 8 + (i % 6)),
+          wind_gusts_10m: hours.map((_, i) => 18 + (i % 9) * 2),
+          relative_humidity_2m: hours.map(() => 78),
+          uv_index: hours.map((_, i) => (i % 24 >= 9 && i % 24 < 18 ? 3 : 0)),
+          is_day: hours.map((_, i) => (i % 24 >= 6 && i % 24 < 21 ? 1 : 0)),
+          pressure_msl: hours.map((_, i) => 1016 - i * 0.15),
+          wind_direction_10m: hours.map((_, i) => 225 + i),
+          dew_point_2m: hours.map(() => 9),
+          visibility: hours.map((_, i) => (i % 24 < 7 ? 4000 : 24000)),
+          cloud_cover_low: hours.map(() => Math.round((s.cloud ?? 10) * 0.8)),
+          cloud_cover_mid: hours.map(() => Math.round((s.cloud ?? 10) * 0.5)),
+          cloud_cover_high: hours.map(() => 10),
+          sunshine_duration: hours.map((_, i) => (i % 24 >= 8 && i % 24 < 19 ? 1800 : 0)),
+          freezing_level_height: hours.map(() => 3100),
         },
+        ...(s.soon
+          ? {
+              minutely_15: {
+                time: Array.from({ length: 8 }, (_, i) => {
+                  const m =
+                    Number(s.local.slice(11, 13)) * 60 +
+                    Math.floor(Number(s.local.slice(14, 16)) / 15) * 15 +
+                    i * 15;
+                  return `${s.local.slice(0, 11)}${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+                }),
+                precipitation: s.soon,
+              },
+            }
+          : {}),
         daily: {
           time: dates,
           weather_code: dates.map(() => code),

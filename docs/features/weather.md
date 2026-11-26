@@ -67,5 +67,13 @@ Open-Meteo documents `Access-Control-Allow-Origin: *` for browser use, so the PW
 - **Chips:** "Kein Regen in Sicht" with an umbrella; UV only between sunrise and sunset, otherwise "Sonnenaufgang hh:mm" (today's or tomorrow's).
 - **Hints:** kinds storm, wind, ice (codes 56, 57, 66, 67: "gefrierender Regen, es kann glatt sein"), rain, heat, frost in that order; frost has the thermometer icon.
 
+## More values (round 2, package B)
+- **Request:** the same forecast request asks ten more hourly variables (`HOURLY_ADDED` in `core/weather/api.ts`: snowfall, snow depth, visibility, cloud in three heights, sunshine, dew point, `cape`, 0 °C level) and `minutely_15=precipitation` with 8 steps; the air request's hourly index is kept (`Air.hours`). No new host, same rounded position. Fixtures: `fixtures/*-r2.json`, recorded with `node scripts/capture-weather-fixtures.mjs`.
+- **Cache:** all 168 hours from today's midnight (`HOURS_KEPT`), every new field optional; `Cached.v` (2) marks the shape, an older value stays valid and the open page asks once. About 30 KB for a week.
+- **Rain in the next two hours** (`modules/weather/rainSoon.ts`, `RainSoonCard`): the first wet stretch (≥ 0.1 mm per quarter) read against the place's clock, five sentences (snow by the hour it starts in); only while it returns a value. Head chip 1 uses it before the hourly rule.
+- **Hours:** "Jetzt" first, the amount beside the chance ("60 % · 0,8 mm", snow in cm); the hour line under the cards (`hourLine.ts`) starts with the gusts.
+- **Curve** (`chartSeries.ts`, `WeatherChart`): select "Anzeigen" with six series, choice in `localStorage` `tm-weather-chart` (device-local, not synced, not in diagnostics); the picture is `aria-hidden`, one sentence per series; without data the series says so.
+- **Mehr Werte** (`moreValues.ts`, `MoreValues`): a closed button + region, groups of COPY §6; computed values in `core/weather/derived.ts` (day length, pressure tendency, snowfall line, dew word, thunder tendency). "Mond & Himmel" starts with sun times, day length and civil twilight (`core/sky/twilight.ts`).
+
 ## Parked
 Setup-assistant step "Stadt für das Wetter" (skippable): not built; the settings entry and the one-time hint cover it, and an extra step would add load to the first run.

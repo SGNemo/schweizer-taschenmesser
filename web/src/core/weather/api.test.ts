@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { FORECAST_URL, fetchForecast, searchPlaces, WeatherError } from './api';
+import { FORECAST_URL, fetchForecast, HOURLY_ADDED, searchPlaces, WeatherError } from './api';
 import forecastFixture from './fixtures/forecast-bern.json';
 import geocodingEmpty from './fixtures/geocoding-empty.json';
 import geocodingFixture from './fixtures/geocoding-bern.json';
@@ -62,7 +62,7 @@ describe('fetchForecast', () => {
     expect(url).toContain('longitude=13.41');
   });
 
-  it('asks for hours and days in one request and keeps them rounded from the current hour on', async () => {
+  it('asks for hours and days in one request and keeps them rounded, today from midnight on', async () => {
     const days = ['2026-10-19', '2026-10-20'];
     const f = ok({
       current: { time: '2026-10-19T12:20', temperature_2m: 13.6, weather_code: 2 },
@@ -85,21 +85,22 @@ describe('fetchForecast', () => {
     expect(url).toContain('forecast_days=7');
     expect(url).toContain('hourly=temperature_2m%2Cweather_code%2Cprecipitation_probability');
     expect(url).toContain('daily=weather_code%2Ctemperature_2m_max');
-    expect(out.hours?.[0]).toEqual({
+    expect(out.hours?.[12]).toEqual({
       time: '2026-10-19T12:00',
       temp: 12,
       group: 'cloudy',
       code: 3,
       rain: 0,
     });
-    expect(out.hours?.[2]).toEqual({
+    expect(out.hours?.[14]).toEqual({
       time: '2026-10-19T14:00',
       temp: 14,
       group: 'thunder',
       code: 95,
       rain: 42,
     });
-    expect(out.hours).toHaveLength(12); // the answer holds 24 hours; from the current hour on 12 remain
+    // Round 2: today's past hours stay (a chosen day needs them whole); the page still starts at the current hour.
+    expect(out.hours).toHaveLength(24);
     // A day with a missing value is left out rather than invented.
     expect(out.days).toEqual([
       { date: '2026-10-19', min: 7, max: 16, group: 'rain', code: 61, rain: 80 },
@@ -308,7 +309,7 @@ describe('recorded response shapes (fixtures follow the documented Open-Meteo JS
     expect(bare.now).toBeUndefined();
   });
 
-  it('asks the same request as before, plus only `snow_depth` in the current values', async () => {
+  it('asks the same request as before, plus `snow_depth` now and the round-2 variables (same host, same position)', async () => {
     const f = ok({ current: { time: '2026-11-24T02:50', temperature_2m: 1, weather_code: 0 } });
     await fetchForecast(52.52, 13.41, f);
     const url = new URL(String((f as unknown as ReturnType<typeof vi.fn>).mock.calls[0]![0]));
@@ -329,6 +330,21 @@ describe('recorded response shapes (fixtures follow the documented Open-Meteo JS
     expect(Object.fromEntries(url.searchParams)).toEqual({
       ...before,
       current: `${before.current},snow_depth`,
+      hourly: `${before.hourly},${HOURLY_ADDED}`,
+      minutely_15: 'precipitation',
+      forecast_minutely_15: '8',
     });
+    expect(HOURLY_ADDED.split(',')).toEqual([
+      'snowfall',
+      'snow_depth',
+      'visibility',
+      'cloud_cover_low',
+      'cloud_cover_mid',
+      'cloud_cover_high',
+      'sunshine_duration',
+      'dew_point_2m',
+      'cape',
+      'freezing_level_height',
+    ]);
   });
 });
