@@ -8,7 +8,7 @@
     color-mix(in srgb, var(--tone) calc(var(--tone-a) * 0.25), var(--surface)) 78%
   );
 }
-/* "Ruhig" / module colours off: no cover tone (the guard of BankCard and Sky; C03). */
+/* "Ruhig" / module colours off: no cover tone (the guard of BankCard and the weather scene; C03). */
 :global(:root[data-color='calm']) .tone,
 :global(:root[data-module-colors='off']) .tone {
   display: none;

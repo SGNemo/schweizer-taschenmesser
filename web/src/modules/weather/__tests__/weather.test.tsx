@@ -227,12 +227,11 @@ describe('weather page', () => {
     renderPage();
     const frame = await screen.findByTestId('module-frame');
     expect(await within(frame).findByRole('heading', { level: 1, name: 'Bern' })).toBeTruthy();
-    await waitFor(() =>
-      expect(within(frame).getByTestId('sky')).toHaveAttribute('data-sky', 'cloudy'),
-    );
     expect(frame).toHaveAttribute('data-signature', 'sky');
-    // The scene behind the stage (weather scenes 1b): phase and condition of the forecast.
-    const scene = within(frame).getByTestId('weather-scene');
+    // The scene behind the stage (weather scenes 1b): phase and condition of the forecast (package 4 removed the old
+    // sky kind `data-sky` it carried beside them).
+    const scene = await within(frame).findByTestId('weather-scene');
+    expect(within(frame).getByTestId('sky')).not.toHaveAttribute('data-sky');
     expect(scene).toHaveAttribute('data-phase', 'day');
     expect(scene).toHaveAttribute('data-cond', 'partly');
     expect(scene).toHaveAttribute('aria-hidden', 'true');

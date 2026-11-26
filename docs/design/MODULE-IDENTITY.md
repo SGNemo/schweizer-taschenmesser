@@ -75,7 +75,7 @@ Every id in `SIGNATURES` has a **mark** (`SignatureMark`, 24-grid line drawing i
 
 ## Widgets
 
-The frame (`home/Home.module.css`, `data-widget`, `data-hue`; Identity 4.0, package 0b-7): a tone step (`--surface-raised`) without a tinted head, pattern or wash; the module icon on a tinted plate, the signature mark at the end of the head. A card is as high as its content (`align-items: start`, no minimum height per size class; size classes are widths); cards never stretch to the row. **Only what matters today**; urgency stays in the card, the tint never signals state. Bars and rings fill with `--module-color`; `--accent` stays the primary action. **Widget titles are unique app-wide** (registry test).
+The frame (`home/Home.module.css`, `data-widget`, `data-hue`; Identity 4.0, package 0b-7): a tone step (`--surface-raised`) without a tinted head, pattern or wash; the module icon on a tinted plate, the signature mark at the end of the head. A card is as high as its content (`align-items: start`, no minimum height per size class; size classes are widths); cards never stretch to the row. **Only what matters today**; urgency stays in the card, the tint never signals state. Bars and rings fill with `--module-color`; `--accent` stays the primary action. **Widget titles are unique app-wide** (registry test). **One named exception:** the weather widget shows its scene as the card's background (the maintainer's yes, 2026-11-24, `docs/decisions/weather.md`): text on the sky in the scene's ink, the rain hint as an opaque chip; in "Ruhig" and "Modulfarben: Aus" it falls back to the plain card with a 64 px scene porthole.
 
 | Variant | Shape | Body in `@/ui/widgets` |
 | --- | --- | --- |

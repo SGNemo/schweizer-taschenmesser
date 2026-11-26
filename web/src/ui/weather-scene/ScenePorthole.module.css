@@ -1,0 +1,35 @@
+/* The porthole (docs/design/weather-scenes CONCEPT §8): a round crop of the scene, 28 or 64 px, never moving. */
+.porthole {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  width: var(--porthole);
+  height: var(--porthole);
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  vertical-align: middle;
+}
+.svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+/* "Ruhig" / "Modulfarben: Aus": the same shapes in greys, mixed toward the surface (as WeatherScene.module.css). */
+.calm .svg {
+  filter: grayscale(1);
+}
+.calm::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--surface);
+  opacity: 0.6;
+}
+:global(:root[data-theme='dark']) .calm::after {
+  opacity: 0.45;
+}
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme='light'])) .calm::after {
+    opacity: 0.45;
+  }
+}
