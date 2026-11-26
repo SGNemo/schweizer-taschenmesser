@@ -643,7 +643,7 @@
     },
     "d1920--weather": {
       "height": 2063,
-      "buttons": 21,
+      "buttons": 24,
       "links": 22,
       "icons": 94,
       "firstScreenActions": 40,
@@ -1207,7 +1207,7 @@
     },
     "p412--weather": {
       "height": 3400,
-      "buttons": 6,
+      "buttons": 9,
       "links": 17,
       "icons": 64,
       "firstScreenActions": 20,
