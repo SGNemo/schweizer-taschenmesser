@@ -1,0 +1,20 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wetter Runde 2 – Ereignisse am Himmel</title><link rel="stylesheet" href="mock.css"><script src="palette.js"></script><script src="scene.js"></script><script src="events.js"></script><script src="gallery2.js"></script></head>
+<body><h1>Ereignisse am Himmel</h1><p class="intro">Regenbogen, Sternschnuppen, Sternennacht (Milchstraße), Sonnenfinsternisse, Mondfinsternisse, Polarlicht und Staub in der neuen Zeichnung (events.js über Scene.hooks) – jeweils breit und als Handy-Ausschnitt.</p>
+<div id="a"></div>
+<script>
+var night = { phase: 'night', cond: 'clear' };
+Gallery2.tiles('#a', [
+  ['Regenbogen', { cond: 'partly', cover: 2, event: 'rainbow' }, 'die Sonne steht hinter dem Betrachter; leichter Regenschleier'],
+  ['Sternschnuppen', Object.assign({ event: 'meteors', body: null }, night)],
+  ['Sternennacht (Milchstraße)', Object.assign({ event: 'starNight', body: null }, night)],
+  ['Partielle Sonnenfinsternis 30 %', { cond: 'clear', event: 'solarPartial', eventAmount: 0.3, body: { kind: 'sun', t: 0.5 } }],
+  ['Partielle Sonnenfinsternis 75 %', { cond: 'clear', event: 'solarPartial', eventAmount: 0.75, body: { kind: 'sun', t: 0.5 } }, 'Himmel eine Stufe dunkler'],
+  ['Ringförmige Sonnenfinsternis', { cond: 'clear', event: 'solarAnnular', body: { kind: 'sun', t: 0.5 } }],
+  ['Totale Sonnenfinsternis', { cond: 'clear', event: 'solarTotal', body: { kind: 'sun', t: 0.5 } }, 'dunkle Scheibe mit Korona, Sterne, Glut am Horizont'],
+  ['Partielle Mondfinsternis 50 %', Object.assign({ event: 'lunarPartial', eventAmount: 0.5, moon: { illum: 1 } }, night)],
+  ['Totale Mondfinsternis', Object.assign({ event: 'lunarTotal', moon: { illum: 1 } }, night), 'Kupfermond ohne Schein, mehr Sterne'],
+  ['Polarlicht möglich (schwach)', Object.assign({ event: 'aurora', eventAmount: 0.4, body: null }, night)],
+  ['Polarlicht', Object.assign({ event: 'aurora', eventAmount: 1, body: null }, night)],
+  ['Staub in der Luft', { cond: 'clear', event: 'dust' }, 'milchiger Himmel, blasse Sonne ohne Strahlen, das Gebirge verblasst'],
+].map(function (e) { return { label: e[0], note: e[2], state: e[1] }; }), { crops: ['wide', 'phone'], cols: 'one' });
+</script></body></html>

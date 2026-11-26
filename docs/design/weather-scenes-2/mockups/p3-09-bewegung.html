@@ -1,0 +1,26 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wetter Runde 2 – Bewegung</title><link rel="stylesheet" href="mock.css"><script src="palette.js"></script><script src="scene.js"></script><script src="events.js"></script><script src="gallery2.js"></script><script src="motion.js"></script><link rel="stylesheet" href="scene-motion.css">
+<style>.mrow{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap}.btn{min-height:44px;padding:0 16px;border-radius:8px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font:inherit;cursor:pointer}.mhead{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:32px 0 12px}.mhead .label{margin:0}</style></head>
+<body><h1>Bewegung</h1><p class="intro">Die Bewegung läuft 5 s nach dem Öffnen und steht dann still – am Ende steht genau das Standbild. Niederschlag fällt, Wolken ziehen einmal 16 Einheiten in Windrichtung, Rauch steigt, die Fahne weht ab Wind 1 (dreimal), Bäume wiegen sich ab Wind 2 (einmal), der Schein am Blitzaustritt leuchtet einmal auf (ab 1 s: 1,2 s hell, 1,2 s zurück). Die Blitze bewegen sich nie. Bei „Bewegung reduzieren“ bleibt alles still; ist die Seite verdeckt, pausiert die Bewegung.</p>
+<div id="m"></div>
+<script>
+var M = [
+  ['Regen 2 · Wind 1', { cond: 'rain', intensity: 2, wind: 1, season: 'autumn' }],
+  ['Schneefall 2 · Wind 2', { cond: 'snow', intensity: 2, snowCover: 2, season: 'winter', wind: 2 }],
+  ['Leicht bewölkt · Wind 2', { cond: 'partly', cover: 2, wind: 2 }],
+  ['Starkes Gewitter · Wind 2', Scene.presets.storm],
+  ['Schauer · Wind 1 nach links', { cond: 'showers', wind: 1, windTo: 'left', season: 'spring' }],
+  ['Bedeckte Nacht · Wind 1', { phase: 'night', cond: 'overcast', wind: 1, moon: { illum: 0.8 } }],
+];
+var seq = 0;
+function scene(i, still) {
+  var s = Gallery2.withTheme(M[i][1]), wide = SceneMotion.svg(s, { idp: 'm' + seq++ }), phone = SceneMotion.svg(s, Object.assign(Scene.phoneOpts(256, 412), { idp: 'm' + seq++ }));
+  return '<div class="crops' + (still ? '' : ' scene-m') + '"><div class="box wide" style="aspect-ratio:1650/320">' + wide + '</div><div class="box phone" style="width:412px;height:256px">' + phone + '</div></div>' +
+    '<figcaption>' + (still ? 'Standbild (ohne Bewegung)' : 'mit Bewegung') + '<small>' + SceneMotion.count(wide) + ' bewegte Gruppen · ' + Gallery2.keys(M[i][1]) + '</small></figcaption>';
+}
+document.getElementById('m').innerHTML = M.map(function (x, i) {
+  return '<div class="mhead"><p class="label">' + x[0] + '</p><button class="btn" data-i="' + i + '">Noch einmal abspielen</button></div><figure class="tile" id="t' + i + '">' + scene(i) + '</figure>' +
+    (i === 0 ? '<figure class="tile" style="margin-top:16px">' + scene(0, true) + '</figure>' : '');
+}).join('');
+document.querySelectorAll('button[data-i]').forEach(function (b) { b.onclick = function () { var i = +b.dataset.i; document.getElementById('t' + i).innerHTML = scene(i); }; });
+document.addEventListener('visibilitychange', function () { document.documentElement.classList.toggle('scene-paused', document.hidden); });
+</script></body></html>

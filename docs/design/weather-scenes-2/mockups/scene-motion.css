@@ -1,0 +1,21 @@
+/* Scene motion, round 2 (maintainer's rule): motion runs within 5 s after opening, then stands still on the still picture;
+   none with prefers-reduced-motion; only transform and opacity. Classes come from motion.js (SceneMotion.svg); only
+   a container with class .scene-m animates (the "Standbild" twin has none). The bolts never move or blink. */
+.scene-m .sc-fall { animation: sc-fall var(--dur) linear var(--n) none; }
+.scene-m .sc-drift { animation: sc-drift 5s cubic-bezier(0.2, 0.7, 0.3, 1) 1 none; }
+.scene-m .sc-smoke { animation: sc-smoke 5s ease-out 1 none; }
+.scene-m .sc-flag { animation: sc-flag 1.6667s ease-in-out 3 none; transform-box: fill-box; transform-origin: 0% 0%; }
+.scene-m .sc-flag.sc-left { transform-origin: 100% 0%; }
+.scene-m .sc-sway { animation: sc-sway 5s ease-in-out 1 none; transform-box: fill-box; transform-origin: 50% 100%; }
+.sc-glow-up { opacity: 0; } /* the glow's hidden copy: at rest the picture is the still */
+.scene-m .sc-glow-up { animation: sc-glow 2.4s ease-in-out 1s 1 none; }
+@keyframes sc-fall { from { transform: none; } to { transform: translate(var(--fx), var(--fy)); } }
+@keyframes sc-drift { from { transform: translateX(calc(-1 * var(--lee))); } to { transform: none; } }
+@keyframes sc-smoke { 0% { transform: translate(-2px, 6px); } 45% { transform: translate(2px, 2px); } 100% { transform: none; } }
+@keyframes sc-flag { 0%, 100% { transform: none; } 35% { transform: scaleX(0.9) skewY(3deg); } 70% { transform: scaleX(0.96) skewY(-2deg); } }
+@keyframes sc-sway { 0%, 100% { transform: none; } 30% { transform: skewX(calc(-1.6deg * var(--dir))); } 70% { transform: skewX(calc(0.8deg * var(--dir))); } }
+@keyframes sc-glow { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+.scene-paused .scene-m [class*='sc-'] { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .scene-m [class*='sc-'] { animation: none; }
+}
