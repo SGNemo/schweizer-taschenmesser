@@ -1327,6 +1327,7 @@ export function sceneSvg(state: SceneState, o: SceneOptions = {}): SceneSvg {
       const r = 0.6 + q() * 0.9;
       if (aroundBody) {
         const a = q() * 6.28;
+        // package A's ring; in the porthole the larger body hides the inner stars, on purpose
         const rr = 30 + q() * 60;
         x = body[0] + Math.cos(a) * rr * 1.5;
         y = body[1] - 4 + Math.sin(a) * rr * 0.6;
@@ -2684,7 +2685,7 @@ export function sceneSvg(state: SceneState, o: SceneOptions = {}): SceneSvg {
     }
     if (falling) {
       const q = prng(41);
-      const cnt = (pt < 48 ? 5 : 7) + Math.min(3, s.intensity);
+      const cnt = (tiny ? 5 : 7) + Math.min(3, s.intensity);
       // marks of at least about 0.8 px: below 64 px they grow with the crop's scale
       const m = markK;
       const slant = G.slant[s.wind]! * dir;
