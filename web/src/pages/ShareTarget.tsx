@@ -214,13 +214,26 @@ export function shareNote(
   rest: string,
   asNote: boolean,
 ): { note?: string; cut: boolean } {
-  const ticked = asNote && rest ? rest : '';
-  if (kind !== 'plan') return ticked ? { note: ticked, cut: false } : { cut: false };
-  // A rest that starts with the same address does not store it twice.
+  const raw = asNote && rest ? rest : '';
+  if (kind !== 'plan') return raw ? { note: raw, cut: false } : { cut: false };
+  // Under `plan` the rest is screened line by line like the line: an address the gate rejects is never stored.
+  const ticked = raw
+    .split('\n')
+    .map((l) => (l.trim() ? screenLine(l) : ''))
+    .join('\n')
+    .trim();
   const restLines = ticked.split('\n');
   // Compared as URL reads both (a bare origin gains its „/“, trailing punctuation goes).
-  const first = webAddress(trimTrailing(restLines[0]?.trim() ?? ''))?.url;
-  const own = address && first === address ? restLines.slice(1).join('\n').trim() : ticked;
+  const lead = webAddress(trimTrailing(restLines[0]?.trim() ?? ''));
+  const first = lead?.url;
+  // A rest that starts with the same address does not store it twice; one that starts with another kept address
+  // stores it in the form the chip will read.
+  const own =
+    address && first === address
+      ? restLines.slice(1).join('\n').trim()
+      : !address && lead && restLines[0]?.trim().split(/\s+/).length === 1
+        ? [lead.url, ...restLines.slice(1)].join('\n')
+        : ticked;
   const room = SHARE_NOTE_MAX - (address ? address.length + 1 : 0);
   let kept = own.slice(0, Math.max(0, room));
   // Never half a character at the cut.

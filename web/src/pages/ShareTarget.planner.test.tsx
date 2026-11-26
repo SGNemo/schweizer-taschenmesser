@@ -316,3 +316,30 @@ describe('council round 4', () => {
     expect(performance.now() - started).toBeLessThan(500);
   });
 });
+
+describe('council round 5', () => {
+  it('a ticked rest is screened too: a rejected address on line 2 is never stored, S19 says so', async () => {
+    const user = userEvent.setup();
+    open({ text: 'Hallo\nhttps://user@evil.example/x\nmehr' });
+    await waitFor(() => expect(lines()).toHaveTextContent(t.planner.share.linkNotSaved));
+    await user.click(screen.getByRole('checkbox', { name: t.quickCapture.share.asNote }));
+    await user.click(screen.getByRole('button', { name: t.quickCapture.save }));
+    await waitFor(async () => expect(await tasks()).toHaveLength(1));
+    const [task] = await tasks();
+    expect(task!.note ?? '').not.toContain('evil');
+    expect(task!.note).toContain('mehr');
+  });
+
+  it('shareNote screens www., user-info and over-long tokens after a kept address; a leading kept one is stored canonical', () => {
+    const r = shareNote(
+      'plan',
+      URL_,
+      `Siehe www.example.org und https://a@b.example/x\nund https://example.org/${'a'.repeat(2100)}\nEnde`,
+      true,
+    );
+    expect(r.note).toBe(`${URL_}\nSiehe und\nund\nEnde`);
+    expect(shareNote('plan', undefined, 'https://a.example/x.\nmehr', true).note).toBe(
+      'https://a.example/x\nmehr',
+    );
+  });
+});
