@@ -960,10 +960,11 @@ export function arcPoint(s: SceneState): Pt {
   const A = G.arc;
   const t = s.body.t;
   const x = A.x0 + (A.x1 - A.x0) * t;
-  const up =
-    s.body.kind === 'moon' && s.body.alt != null
-      ? Math.min(1, Math.max(0, s.body.alt / 60))
-      : Math.sin(Math.PI * t);
+  // One arc for sun and moon (mockup `G.arc`); a moon close to the horizon (< 12°) sinks toward the saddles, any
+  // higher moon stays on the arc above the massif (CONCEPT §0 sentence 9: seen whenever it is above the horizon).
+  const low =
+    s.body.kind === 'moon' && s.body.alt != null ? Math.min(1, Math.max(0, s.body.alt / 12)) : 1;
+  const up = Math.sin(Math.PI * t) * low;
   return [x, A.yLow - A.rise * up];
 }
 /** The phone's body: between the main summit and the third, y = 46 + 0.6 × (arc y − 70) (CONCEPT §5). */

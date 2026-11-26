@@ -293,6 +293,30 @@ describe('the body is seen whenever it is above the horizon', () => {
     }
   });
 
+  it.each([0.25, 0.35, 0.45, 0.5, 0.55, 0.6, 0.65, 0.75])(
+    'a moon 30° up at t %f stands clear of the massif (at least the upper half of its disc)',
+    (t) => {
+      const s = {
+        ...hourScene({ code: 0 }, { night: true }),
+        body: { kind: 'moon' as const, t, alt: 30 },
+      };
+      const b = draw(s).out.body!;
+      for (const m of G.mountains) {
+        const sil = m.sil;
+        if (b.x < sil[0]![0] || b.x > sil[sil.length - 1]![0]) continue;
+        let y = 218;
+        for (let i = 1; i < sil.length; i++)
+          if (b.x <= sil[i]![0]) {
+            const p = sil[i - 1]!;
+            const q = sil[i]!;
+            y = p[1] + ((q[1] - p[1]) * (b.x - p[0])) / (q[0] - p[0] || 1);
+            break;
+          }
+        expect(b.y, `${m.id} at x ${Math.round(b.x)}`).toBeLessThanOrEqual(y);
+      }
+    },
+  );
+
   it('a moon below the horizon: no body, no lit rims, no opening', () => {
     const s = sceneOf({
       forecast: forecast(true),
