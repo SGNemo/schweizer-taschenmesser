@@ -4,7 +4,7 @@ import { G, phoneView, type SceneOptions } from './draw';
 /** The overview widget's text ends at this share of the card's width (handoff 04). */
 export const CARD_QUIET_SHARE = 0.55;
 /** Card (overview widget): the body's centre as shares of the card's width from the right and of its height. */
-const CARD = { bodyX: 0.2, bodyY: 0.5, kMax: G.phone.k } as const;
+const CARD = { bodyX: 0.2, bodyY: 0.5, kMax: G.phone.k, bodyMaxY: 110 } as const;
 /** Width of the text column on a wide stage, rem. */
 const TEXT_REM = 36;
 /** Fog bands start this far left of the quiet edge and fade in (draw.ts `fogBand`): the card's text stays clear of them. */
@@ -42,18 +42,26 @@ export function cardFit(W: number, H: number, share: number, text?: CardText): S
   const fit = (k: number) => {
     const vw = W / k;
     const x0 = G.W - vw;
-    const h = Math.max(G.H, H / k);
+    // the card's own aspect: a wide, low card shows less sky above, never a crop by the browser
+    const h = H / k;
     const y0 = G.H - h;
     const quietX = Math.round(x0 + right / k) + FOG_LEAD;
     return { k, x0, y0, h, quietX };
   };
-  let f = fit(kMin);
-  for (let k = Math.max(kMin, CARD.kMax); k > kMin; k -= 0.01) {
-    const c = fit(k);
+  const fits = (c: ReturnType<typeof fit>) => (landTop(c.x0, c.quietX) - c.y0) * c.k >= bottom;
+  let f: ReturnType<typeof fit> | undefined;
+  for (let i = 0; CARD.kMax - i / 100 > kMin && !f; i++) {
+    const c = fit(CARD.kMax - i / 100);
     // the land on the text's side starts below the lowest text row
-    if ((landTop(c.x0, c.quietX) - c.y0) * k >= bottom) {
-      f = c;
-      break;
+    if (fits(c)) f = c;
+  }
+  if (!f) {
+    f = fit(kMin);
+    // A wide, low card (its scale fixed by the width): the view rises by what is missing, so the bottom edge cuts a
+    // few units of ground instead of the text standing on it.
+    if (!fits(f)) {
+      f.y0 = landTop(f.x0, f.quietX) - bottom / f.k - 1;
+      f.h = H / f.k;
     }
   }
   return {
@@ -61,7 +69,8 @@ export function cardFit(W: number, H: number, share: number, text?: CardText): S
     quietX: f.quietX,
     bodyAt: [
       Math.round(f.x0 + (W * (1 - CARD.bodyX)) / f.k),
-      Math.round(f.y0 + (H * CARD.bodyY) / f.k),
+      // never behind the massif (a low, wide card): above its summit line, inside the view
+      Math.round(Math.max(f.y0 + 30, Math.min(f.y0 + (H * CARD.bodyY) / f.k, CARD.bodyMaxY))),
     ],
   };
 }
@@ -103,6 +112,10 @@ export function useSceneFit(
     if (!el) return;
     const stage =
       (el.closest('[data-head="stage"]') as HTMLElement | null) ?? el.parentElement ?? el;
+    // The card's text is watched too: a rain chip or a longer line changes where the land may begin.
+    let watched = false;
+    const ro: ResizeObserver | undefined =
+      typeof ResizeObserver === 'function' ? new ResizeObserver(() => measure()) : undefined;
     const measure = () => {
       const box = el.getBoundingClientRect();
       const W = Math.round(box.width);
@@ -112,6 +125,10 @@ export function useSceneFit(
       if (quietShare != null) {
         // The card's text (`[data-scene-text]` beside the backdrop): the picture grows into the room below it.
         const t = (el.parentElement?.parentElement ?? el).querySelector('[data-scene-text]');
+        if (t && ro && !watched) {
+          watched = true;
+          ro.observe(t);
+        }
         const r = t?.getBoundingClientRect();
         next.card = cardFit(
           W,
@@ -136,8 +153,7 @@ export function useSceneFit(
       setFit((prev) => (key(prev) === key(next) ? prev : next));
     };
     measure();
-    if (typeof ResizeObserver !== 'function') return;
-    const ro = new ResizeObserver(measure);
+    if (!ro) return;
     ro.observe(el);
     ro.observe(stage);
     return () => ro.disconnect();

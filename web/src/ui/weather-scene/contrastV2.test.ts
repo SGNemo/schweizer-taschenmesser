@@ -221,6 +221,10 @@ describe('round 2: the widget card at its sizes', () => {
     [380, 400, TEXT],
     [780, 400, TEXT],
     [1180, 400, TEXT],
+    [780, 205, { right: 240, bottom: 181 }],
+    [780, 282, { right: 240, bottom: 258 }],
+    [1180, 205, { right: 240, bottom: 181 }],
+    [1180, 282, { right: 240, bottom: 258 }],
   ] as const;
   it.each(SIZES)(
     '%i × %i: as large as the text allows, ground and trees below the text',
