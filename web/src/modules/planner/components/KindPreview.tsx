@@ -6,6 +6,7 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { formatMoney } from '@/core/money';
+import { dayName } from '@/core/plan/explain';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Button, Icon, SensitiveValue, type IconName } from '@/ui';
@@ -26,7 +27,8 @@ const GLYPH: Record<FieldKindName, IconName> = {
 const NAMES_SHOWN = 3;
 const SPOKEN_AFTER_MS = 400;
 
-const day = (date: string) => formatDay(date, 'EEE d. MMM');
+/** „Fr 4. Dez.“ (COPY K1) / “Fri 4 Dec”: the short weekday and the localised day. */
+const day = (date: string) => `${dayName(date)} ${formatDay(date, 'd. MMM')}`;
 
 /** The read parts after the kind word, as plain text (the amount on its own, for `SensitiveValue`). */
 function partsOf(r: FieldKind): { before: string[]; amount?: string; after: string[] } {

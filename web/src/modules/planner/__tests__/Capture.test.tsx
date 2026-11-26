@@ -42,7 +42,7 @@ describe('Capture – the preview line', () => {
     );
     expect(screen.getByTestId('planner-kind').textContent).toMatch(
       // The amount through `SensitiveValue` (hidden here: „Werte ausblenden“ is on by default in tests).
-      /^Wird:\s*Rechnung · Stadtwerke · (80,00\s€|•+) · Frist Fr\.? 4\. Dez/,
+      /^Wird:\s*Rechnung · Stadtwerke · (80,00\s€|•+) · Frist Fr 4\. Dez/,
     );
     expect(screen.queryByRole('group', { name: 'Zum Beispiel' })).toBeNull();
   });
