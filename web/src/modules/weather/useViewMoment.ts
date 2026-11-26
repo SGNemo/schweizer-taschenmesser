@@ -52,7 +52,12 @@ export function useViewMoment(
       if (p.hour) next.set('hour', p.hour);
       setParams(next, {
         replace: !opts.push,
-        state: opts.push || opts.pushed ? { [PUSHED]: true } : location.state,
+        state:
+          opts.push || opts.pushed
+            ? { [PUSHED]: true }
+            : isNowMoment(m, today)
+              ? null
+              : location.state,
         preventScrollReset: true,
       });
     },

@@ -225,10 +225,16 @@ test.describe('Weather module', () => {
     await expect(preview.getByTestId('weather-hours').locator('label')).toHaveCount(24);
     await expect(preview.getByTestId('weather-days').locator('label')).toHaveCount(7);
     // Round 2: the first card says "Jetzt"; the hour line under the cards names its hour for screen readers.
-    await expect(preview.getByTestId('weather-hours').locator('label').first()).toContainText('Jetzt');
-    await expect(preview.getByTestId('weather-hours').locator('label').nth(1)).toContainText('11:00');
+    await expect(preview.getByTestId('weather-hours').locator('label').first()).toContainText(
+      'Jetzt',
+    );
+    await expect(preview.getByTestId('weather-hours').locator('label').nth(1)).toContainText(
+      '11:00',
+    );
     await expect(preview.getByTestId('weather-hour-line')).toContainText('Werte um 10:00');
-    await expect(preview.getByTestId('weather-hours').locator('label').nth(5)).toContainText('80 %');
+    await expect(preview.getByTestId('weather-hours').locator('label').nth(5)).toContainText(
+      '80 %',
+    );
     await expect(preview.getByTestId('weather-days').locator('label').nth(3)).toContainText(
       'Gewitter',
     );

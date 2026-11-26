@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useLocation, useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { requireNotice } from '@/core/legal/notices';
 import { searchPlaces, type Place } from '@/core/weather/api';
 import {
@@ -31,7 +31,6 @@ function placeHref(i: number, params: URLSearchParams): string {
 
 export function PlaceChips({ index, places }: { index: number; places: string[] }) {
   const [params] = useSearchParams();
-  const location = useLocation();
   const tx = tWeather.use();
   const tp = tWeatherPage.use();
   const [settings] = useWeatherSettings();
@@ -77,8 +76,8 @@ export function PlaceChips({ index, places }: { index: number; places: string[] 
           >
             <Link
               to={placeHref(i, params)}
+              // No history state: "Heute" after a change of place replaces instead of going back to the old place.
               replace
-              state={location.state}
               aria-current={i === index ? 'true' : undefined}
             >
               {name.split(',')[0]}

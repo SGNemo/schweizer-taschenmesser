@@ -43,6 +43,7 @@ async function mockWeek(page: Page) {
             latitude: 46.9481,
             longitude: 7.4474,
           },
+          { name: 'Thun', admin1: 'Bern', country: 'Schweiz', latitude: 46.758, longitude: 7.628 },
         ],
       },
     }),
@@ -115,7 +116,7 @@ async function choosePlace(page: Page) {
     .locator('#weather--place')
     .getByRole('button', { name: 'Suchen', exact: true })
     .click();
-  await page.getByRole('button', { name: 'Bern, Schweiz wählen' }).click();
+  await page.getByRole('button', { name: 'Bern, Schweiz wählen', exact: true }).click();
   await expect(page.getByTestId('weather-place')).toHaveText('Bern, Schweiz');
 }
 
@@ -206,6 +207,37 @@ test.describe('Weather days and hours (round 2, package C)', () => {
     await page.getByTestId('weather-hour-back').click();
     await expect(page).toHaveURL(/day=2026-11-28$/);
     await expect(page.getByTestId('weather-hour-back')).toHaveCount(0);
+  });
+
+  test('today: an hour after midnight keeps the list of the next hours', async ({ page }) => {
+    await ready(page, '/weather');
+    const hours = page.getByRole('radiogroup', { name: 'Stunde wählen' });
+    // 10:00 now: card 17 is Friday 03:00.
+    await hours.locator('label').nth(17).click();
+    await expect(page).toHaveURL(/day=2026-11-27&hour=03/);
+    await expect(hours.locator('label')).toHaveCount(24);
+    await expect(hours.locator('label').first()).toContainText('Jetzt');
+    await expect(hours.getByRole('radio', { checked: true })).toBeFocused();
+    await expect(page.getByRole('heading', { name: 'Nächste Stunden' })).toBeVisible();
+    await expect(page.getByTestId('weather-step-label')).toContainText('Freitag');
+    await page.getByTestId('weather-hour-back').click();
+    await expect(page).not.toHaveURL(/day=/);
+  });
+
+  test('another place while a day is shown: the day stays, "Heute" keeps the place', async ({
+    page,
+  }) => {
+    await ready(page, '/weather');
+    await page.getByTestId('weather-add-place').click();
+    await page.getByLabel('Ort suchen').fill('Thun');
+    await page.getByRole('dialog').getByRole('button', { name: 'Suchen', exact: true }).click();
+    await page.getByRole('button', { name: /^Thun.*wählen$/ }).click();
+    await page.getByTestId('weather-step-next').click();
+    await expect(page).toHaveURL(/day=2026-11-27/);
+    await page.getByRole('link', { name: 'Thun' }).click();
+    await expect(page).toHaveURL(/place=1&day=2026-11-27/);
+    await page.getByTestId('weather-step-today').click();
+    await expect(page).toHaveURL(/place=1$/);
   });
 
   test('Back from another day returns to now with one press', async ({ page }) => {

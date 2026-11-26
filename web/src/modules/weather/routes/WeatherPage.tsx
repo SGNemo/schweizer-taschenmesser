@@ -131,6 +131,8 @@ export default function WeatherPage() {
   // One polite sentence per change of the moment, never on the first render (CONCEPT-DAYS §3).
   const momentKey = `${moment.date}|${moment.hour ?? ''}`;
   const [live, setLive] = useState('');
+  // An hour picked from today's list of the next 24 hours keeps that list, also past midnight (CONCEPT-DAYS §2).
+  const [fromNext, setFromNext] = useState(false);
   const lastKey = useRef<string | null>(null);
   const sentence = forecast ? liveOf(tp, tx, forecast, moment, shownDay, shown?.row) : '';
   useEffect(() => {
@@ -181,31 +183,31 @@ export default function WeatherPage() {
     ? withoutReplaced(
         isNow ? weatherWarnings(days) : dayHints(shownDay),
         isNow ? official : officialAll,
-        today,
+        isNow ? today : moment.date,
       )
     : [];
   const shownEvents = isNow ? events : undefined;
   // The hour cards: the next 24 hours on today, 00–23 of another day (CONCEPT-DAYS §2).
-  const cards = !weather
-    ? []
-    : isToday
-      ? hours.slice(0, 24)
-      : hoursOf(weather.forecast, moment.date);
+  const next24 = hours.slice(0, 24);
+  const nextList =
+    isToday || (fromNext && !!shown?.chosen && next24.some((h) => h.time === shown.row.time));
+  const cards = !weather ? [] : nextList ? next24 : hoursOf(weather.forecast, moment.date);
   const checkedCard = isNow
     ? 0
     : shown?.chosen
       ? cards.findIndex((h) => h.time === shown.row.time)
       : -1;
   const lineHour = isNow ? cards[0] : shown?.chosen ? shown.row : undefined;
-  const chartHours = isToday ? hours : cards;
+  const chartHours = nextList ? hours : cards;
   const weekday = dateTimeFormat({ weekday: 'long' });
-  const dayIndex = offered.indexOf(moment.date);
+  // Another day: its air values, or one sentence where the air forecast (five days) ends.
   const airDay = isToday
     ? undefined
-    : dayIndex >= 0 && dayIndex < AIR_DAYS
-      ? (weather?.forecast.air?.days.find((d) => d.date === moment.date) ?? null)
-      : null;
-  const pick = (m: ViewMoment) => show(m);
+    : (weather?.forecast.air?.days.find((d) => d.date === moment.date) ?? null);
+  const pick = (m: ViewMoment, fromList = false) => {
+    setFromNext(fromList);
+    show(m);
+  };
   // At most two hint rows with the head, in this order: the eclipse safety sentence, official warnings, computed hints;
   // the rest under the head. On the phone they stand directly under the picture (round 2, CONCEPT §5).
   const budget = late ? 0 : shownEvents?.safety ? 1 : 2;
@@ -277,15 +279,15 @@ export default function WeatherPage() {
                 <section aria-labelledby="weather-hours-title">
                   <div className={styles.secHead}>
                     <h2 id="weather-hours-title" className={styles.sectionTitle}>
-                      {isToday ? tp.hoursTitle : tp.hoursTitleDay}
+                      {nextList ? tp.hoursTitle : tp.hoursTitleDay}
                     </h2>
                     {moment.hour != null ? (
                       <Button
                         size="sm"
-                        onClick={() => pick({ date: moment.date, hour: null })}
+                        onClick={() => pick({ date: nextList ? today : moment.date, hour: null })}
                         data-testid="weather-hour-back"
                       >
-                        {isToday ? tp.hourBack : tp.hourBackDay}
+                        {nextList ? tp.hourBack : tp.hourBackDay}
                       </Button>
                     ) : null}
                   </div>
@@ -293,14 +295,15 @@ export default function WeatherPage() {
                     <HourCards
                       hours={cards}
                       now={isNow ? weather.forecast.now : undefined}
-                      firstIsNow={isToday}
+                      firstIsNow={nextList}
                       checked={checkedCard}
                       lineHour={lineHour}
                       onPick={(h, i) =>
                         pick(
-                          isToday && i === 0
+                          nextList && i === 0
                             ? { date: today, hour: null }
                             : { date: h.time.slice(0, 10), hour: Number(h.time.slice(11, 13)) },
+                          nextList,
                         )
                       }
                     />
@@ -317,11 +320,11 @@ export default function WeatherPage() {
                       air={weather.forecast.air}
                       all={weather.forecast.hours}
                       title={
-                        isToday
+                        nextList
                           ? tp.chartTitle
                           : tp.chartTitleDay(weekday.format(localDate(moment.date, 12)))
                       }
-                      marker={moment.hour != null ? shown?.row.time : undefined}
+                      marker={shown?.chosen ? shown.row.time : undefined}
                     />
                   </Card>
                 ) : null}
@@ -374,9 +377,6 @@ export default function WeatherPage() {
     </>
   );
 }
-
-/** Days of the air forecast (CONCEPT-DAYS §2: "5 days ahead"); beyond them one sentence. */
-const AIR_DAYS = 5;
 
 /** The live region's sentence for a moment (COPY §4). */
 function liveOf(
