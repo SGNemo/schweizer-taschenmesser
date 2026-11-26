@@ -1,0 +1,185 @@
+// @vitest-environment jsdom
+/**
+ * Shared into the planner (planner hub 2, package 1; hand-off 01 „Tests“, LAUNCH-REVIEW B9): with the planner on the form
+ * starts with the kind `plan`; nothing is written before „Speichern“; every stored field is shown on the page (the title
+ * in the form, the address as S16, the rest behind the tick); the address only for http/https ≤ 2 048 and only under
+ * `plan`; S8 → „Rückgängig“ → S14, also through the capture toast; another kind keeps the built way (toast, home).
+ */
+import { render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes } from 'react-router';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { clearAll } from '@/core/ai/testing';
+import { db } from '@/core/db/db';
+import { enableModule } from '@/core/modules/activation';
+import { getManifest } from '@/core/modules/registry';
+import { setNow } from '@/core/time/now';
+import { useUiStore } from '@/stores/ui';
+import { t } from '@/strings';
+import { SHARE_NOTE_MAX, ShareTarget, shareNote } from './ShareTarget';
+
+vi.setConfig({ testTimeout: 20_000 });
+
+const URL_ = 'https://example.org/fahrradtraeger';
+const shareUrl = (v: Record<string, string>) => `/share?${new URLSearchParams(v).toString()}`;
+
+beforeEach(async () => {
+  setNow(() => new Date(2026, 10, 30, 10, 0).getTime());
+  localStorage.clear();
+  await clearAll();
+  useUiStore.setState({ toasts: [] });
+  for (const id of ['todos', 'planner']) await enableModule(getManifest(id)!);
+});
+afterEach(() => setNow());
+
+function open(v: Record<string, string>) {
+  return render(
+    <MemoryRouter initialEntries={[shareUrl(v)]}>
+      <Routes>
+        <Route path="/share" element={<ShareTarget />} />
+        <Route path="/" element={<p>Startseite</p>} />
+        <Route path="/planner" element={<p>Planer-Seite</p>} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+const tasks = async () =>
+  (await db.table('todos_task').toArray()) as { id: string; title: string; note?: string }[];
+const lines = () => screen.queryByTestId('share-plan-lines');
+const pickKind = async (name: string) =>
+  userEvent.setup().click(await screen.findByRole('radio', { name }));
+
+describe('shareNote', () => {
+  it('under `plan` the address leads (also without the tick), the rest is cut to fit; any other kind as built', () => {
+    expect(shareNote('plan', URL_, 'Rest', false)).toEqual({ note: URL_, cut: false });
+    expect(shareNote('plan', URL_, 'Rest', true)).toEqual({ note: `${URL_}\nRest`, cut: false });
+    const long = 'x'.repeat(5000);
+    const r = shareNote('plan', URL_, long, true);
+    expect(r.cut).toBe(true);
+    expect(r.note!.length).toBe(SHARE_NOTE_MAX);
+    expect(shareNote('todo', URL_, 'Rest', true)).toEqual({ note: 'Rest', cut: false });
+    expect(shareNote('note', URL_, 'Rest', false)).toEqual({ cut: false });
+  });
+});
+
+describe('ShareTarget with the planner on', () => {
+  it('starts with the kind `plan`, says S2 and S16, writes nothing before „Speichern“', async () => {
+    open({ title: 'Fahrradträger', text: URL_ });
+    await waitFor(() => expect(lines()).toHaveTextContent(t.planner.share.lands));
+    expect(lines()).toHaveTextContent(t.planner.share.linkSaved('example.org'));
+    expect(screen.getByRole('radio', { checked: true })).toBeInTheDocument();
+    // Never the vault.
+    expect(screen.queryByRole('radio', { name: /Konten|Passw/ })).toBeNull();
+    expect(await db.table('todos_task').count()).toBe(0);
+    expect(await db.table('planner_item').count()).toBe(0);
+  });
+
+  it('every stored field is on the page: title in the form, address as S16, the ticked rest in „Geteilt“', async () => {
+    const user = userEvent.setup();
+    open({ title: 'Fahrradträger', text: `${URL_}\nPasst auf die Kupplung.\nGrüße` });
+    await waitFor(() => expect(lines()).toHaveTextContent('example.org'));
+    await user.click(screen.getByRole('checkbox', { name: t.quickCapture.share.asNote }));
+    await user.click(screen.getByRole('button', { name: t.quickCapture.save }));
+    await waitFor(async () => expect(await tasks()).toHaveLength(1));
+    const [task] = await tasks();
+    expect(task!.title).toBe('Fahrradträger');
+    const shared = screen.getByTestId('shared-content').textContent ?? '';
+    // The note's every line was on the page before: the address (S16, „Geteilt“) and the rest („Geteilt“).
+    for (const l of task!.note!.split('\n')) expect(shared).toContain(l);
+    expect(task!.note!.split('\n')[0]).toBe(URL_);
+    expect(await db.table('planner_item').get(`todos:${task!.id}`)).toBeTruthy();
+  });
+
+  it('an address without http/https or over 2 048 characters: S19, nothing of it stored', async () => {
+    const user = userEvent.setup();
+    const { unmount } = open({ title: 'Seite', url: 'www.example.org/x' });
+    await waitFor(() => expect(lines()).toHaveTextContent(t.planner.share.linkNotSaved));
+    expect(screen.getByTestId('shared-content')).toHaveTextContent('www.example.org/x');
+    await user.click(screen.getByRole('button', { name: t.quickCapture.save }));
+    await waitFor(async () => expect(await tasks()).toHaveLength(1));
+    expect((await tasks())[0]!.note ?? '').toBe('');
+    unmount();
+    await db.table('todos_task').clear();
+    open({ title: 'Lang', url: `https://example.org/${'a'.repeat(2100)}` });
+    await waitFor(() => expect(lines()).toHaveTextContent(t.planner.share.linkNotSaved));
+  });
+
+  it('another kind (Notiz, ToDo): S2 and S16 go, the note is exactly the ticked rest', async () => {
+    const user = userEvent.setup();
+    // The address beside the text (a text that holds it keeps it in its rest, as built).
+    open({ title: 'Fahrradträger', url: URL_, text: 'Passt auf die Kupplung.\nGrüße' });
+    await waitFor(() => expect(lines()).not.toBeNull());
+    await pickKind(t.quickCapture.type.todo);
+    await waitFor(() => expect(lines()).toBeNull());
+    await user.click(screen.getByRole('checkbox', { name: t.quickCapture.share.asNote }));
+    await user.click(screen.getByRole('button', { name: t.quickCapture.save }));
+    await waitFor(async () => expect(await tasks()).toHaveLength(1));
+    const [task] = await tasks();
+    expect(task!.note).not.toContain(URL_);
+    expect(task!.note).toContain('Passt auf die Kupplung.');
+    // The built way: the capture toast, then home.
+    expect(await screen.findByText('Startseite')).toBeInTheDocument();
+    expect(screen.queryByTestId('share-saved')).toBeNull();
+  });
+
+  it('a Notiz keeps the built note too', async () => {
+    const user = userEvent.setup();
+    await enableModule(getManifest('notes')!);
+    open({ title: 'Fahrradträger', text: `${URL_}\nPasst auf die Kupplung.` });
+    await waitFor(() => expect(lines()).not.toBeNull());
+    // „Notiz“ stands behind „Mehr (n)“.
+    const more = screen.queryByTestId('capture-more-types');
+    if (more) await user.click(more);
+    await pickKind(t.quickCapture.type.note);
+    await waitFor(() => expect(lines()).toBeNull());
+    await user.click(screen.getByRole('button', { name: t.quickCapture.save }));
+    expect(await screen.findByText('Startseite')).toBeInTheDocument();
+  });
+
+  it('stored as `plan`: S8 with „Ansehen“; „Rückgängig“ turns the page to S14 without „Ansehen“', async () => {
+    const user = userEvent.setup();
+    open({ title: 'Fahrradträger', text: URL_ });
+    await waitFor(() => expect(lines()).not.toBeNull());
+    await user.click(screen.getByRole('button', { name: t.quickCapture.save }));
+    const status = await screen.findByTestId('share-saved');
+    expect(status).toHaveTextContent(t.planner.share.saved);
+    const [task] = await tasks();
+    const card = status.parentElement!;
+    expect(await within(card).findByRole('link', { name: t.planner.share.view })).toHaveAttribute(
+      'href',
+      `/planner?item=${encodeURIComponent(`todos:${task!.id}`)}`,
+    );
+    await user.click(within(card).getByRole('button', { name: t.ui.undo }));
+    await waitFor(() => expect(status).toHaveTextContent(t.planner.share.undone));
+    expect(within(card).queryByRole('link', { name: t.planner.share.view })).toBeNull();
+    expect(
+      await db
+        .table('todos_task')
+        .filter((r) => r.deletedAt === null)
+        .count(),
+    ).toBe(0);
+    await user.click(within(card).getByRole('button', { name: t.planner.share.done }));
+    expect(await screen.findByText('Planer-Seite')).toBeInTheDocument();
+  });
+
+  it("the capture toast's „Rückgängig“ turns the page to S14 as well", async () => {
+    const user = userEvent.setup();
+    open({ title: 'Fahrradträger', text: URL_ });
+    await waitFor(() => expect(lines()).not.toBeNull());
+    await user.click(screen.getByRole('button', { name: t.quickCapture.save }));
+    const status = await screen.findByTestId('share-saved');
+    await waitFor(() => expect(useUiStore.getState().toasts.at(-1)?.action).toBeTruthy());
+    useUiStore.getState().toasts.at(-1)!.action!.run();
+    await waitFor(() => expect(status).toHaveTextContent(t.planner.share.undone));
+  });
+});
+
+describe('ShareTarget with the planner off', () => {
+  it('the page as today: no S2, no stored state', async () => {
+    await db.table('_modules').delete('planner');
+    open({ title: 'Fahrradträger', text: URL_ });
+    await screen.findByRole('textbox', { name: t.quickCapture.inputLabel });
+    await new Promise((r) => setTimeout(r, 50));
+    expect(lines()).toBeNull();
+  });
+});

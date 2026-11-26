@@ -1,12 +1,53 @@
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { enableModule, useModuleStates } from '@/core/modules/activation';
 import { getManifest } from '@/core/modules/registry';
+import { createCollectionRepo } from '@/core/db/repo';
+import { webAddress } from '@/core/net/webAddress';
+import type { SavedCapture } from '@/quickCapture/targets/types';
 import { CaptureForm } from '@/quickCapture/ui/CaptureForm';
 import { announceSaved } from '@/quickCapture/ui/announceSaved';
 import { t } from '@/strings';
 import { Button, Card, Checkbox, EmptyState, Icon, patternStyles, type IconName } from '@/ui';
 import styles from './Page.module.css';
+
+/**
+ * After „Speichern“ as `plan` (package 1, COPY S8 / S9 / S14): „Abgelegt.“ with „Ansehen“, „Rückgängig“ and „Fertig“.
+ * The page follows the saved ToDo live: once it is gone – this „Rückgängig“ or the capture toast's – it says S14 and
+ * offers only „Fertig“. Nothing closes by itself.
+ */
+function SavedCard({ saved }: { saved: SavedCapture }) {
+  const navigate = useNavigate();
+  const alive = useLiveQuery(async () => {
+    const manifest = getManifest('todos');
+    if (!manifest) return false;
+    const row = (await createCollectionRepo(manifest, 'task').table.get(saved.id)) as
+      { deletedAt: number | null } | undefined;
+    return !!row && row.deletedAt === null;
+  }, [saved.id]);
+  const s = t.planner.share;
+  return (
+    <Card>
+      <p role="status" data-testid="share-saved">
+        {alive === false ? s.undone : s.saved}
+      </p>
+      <div className={styles.savedActions}>
+        {alive ? (
+          <>
+            <Link to={`/planner?item=${encodeURIComponent(`todos:${saved.id}`)}`}>{s.view}</Link>
+            <Button variant="ghost" onClick={() => void saved.undo()}>
+              {t.ui.undo}
+            </Button>
+          </>
+        ) : null}
+        <Button variant="primary" onClick={() => void navigate('/planner')}>
+          {s.done}
+        </Button>
+      </div>
+    </Card>
+  );
+}
 
 /** What Android's "Share" hands over: `title`, `text` and/or `url` (apps differ in what they fill). */
 export function sharedContent(params: URLSearchParams): {
@@ -106,6 +147,28 @@ const TARGETS: Target[] = [
   },
 ];
 
+/** The note of a thing shared into the planner may hold this much (the address line included). */
+export const SHARE_NOTE_MAX = 4000;
+
+/**
+ * What „Speichern“ stores as the note (package 1, LAUNCH-REVIEW B9). Under the kind `plan` a storable address (http/https,
+ * ≤ 2 048 characters) is its first line – also without the tick – and the ticked rest follows, cut so the whole stays at
+ * `SHARE_NOTE_MAX`. Any other kind: exactly the ticked rest, as built.
+ */
+export function shareNote(
+  kind: string | undefined,
+  address: string | undefined,
+  rest: string,
+  asNote: boolean,
+): { note?: string; cut: boolean } {
+  const ticked = asNote && rest ? rest : '';
+  if (kind !== 'plan') return ticked ? { note: ticked, cut: false } : { cut: false };
+  const room = SHARE_NOTE_MAX - (address ? address.length + 1 : 0);
+  const kept = ticked.slice(0, Math.max(0, room));
+  const note = [address, kept].filter(Boolean).join('\n');
+  return { ...(note ? { note } : {}), cut: kept.length < ticked.length };
+}
+
 /** `/share`: the neutral target of the PWA share sheet – you choose where the content goes. */
 export function ShareTarget() {
   const [params] = useSearchParams();
@@ -122,6 +185,14 @@ export function ShareTarget() {
   const has = content.title || content.text || content.url;
   const { line, rest } = sharedLine(content);
   const [asNote, setAsNote] = useState(false);
+  // Package 1: with the planner on, the form starts with the kind `plan`; what it reads now decides S2 / S16 / S19.
+  const plannerOn = states?.planner === true;
+  const [read, setRead] = useState<{ type: string; title: string }>();
+  const asPlan = read?.type === 'plan';
+  const address = webAddress(content.url);
+  const { note, cut } = shareNote(read?.type, address?.url, rest, asNote);
+  // After „Speichern“ as `plan`: the page stays and follows the saved ToDo live (S8, then S14 once it is gone).
+  const [saved, setSaved] = useState<SavedCapture>();
 
   return (
     <>
@@ -140,24 +211,45 @@ export function ShareTarget() {
               {parts.join('\n')}
             </p>
           </Card>
-          <Card title={t.quickCapture.share.suggestion}>
-            {rest ? (
-              <Checkbox
-                label={t.quickCapture.share.asNote}
-                checked={asNote}
-                onChange={(e) => setAsNote(e.target.checked)}
-              />
-            ) : null}
-            <CaptureForm
-              oneEntry
-              initialText={line}
-              extra={asNote && rest ? { note: rest } : undefined}
-              onSaved={(saved) => {
-                void announceSaved(saved);
-                void navigate('/');
-              }}
-            />
-          </Card>
+          {saved ? (
+            <SavedCard saved={saved} />
+          ) : (
+            <Card title={t.quickCapture.share.suggestion}>
+              {rest ? (
+                <Checkbox
+                  label={t.quickCapture.share.asNote}
+                  checked={asNote}
+                  onChange={(e) => setAsNote(e.target.checked)}
+                />
+              ) : null}
+              {/* The form waits for the module states: it starts with the kind `plan` only while the planner is on. */}
+              {states ? (
+                <CaptureForm
+                  oneEntry
+                  initialText={line}
+                  {...(plannerOn ? { initialType: 'plan' as const } : {})}
+                  extra={note ? { note } : undefined}
+                  onRead={setRead}
+                  onSaved={(s) => {
+                    void announceSaved(s);
+                    if (s.type === 'plan') setSaved(s);
+                    else void navigate('/');
+                  }}
+                />
+              ) : null}
+              {asPlan ? (
+                <div className={styles.lead} data-testid="share-plan-lines">
+                  <p>{t.planner.share.lands}</p>
+                  {address ? (
+                    <p>{t.planner.share.linkSaved(address.host)}</p>
+                  ) : content.url ? (
+                    <p>{t.planner.share.linkNotSaved}</p>
+                  ) : null}
+                  {cut ? <p>{t.planner.share.cut}</p> : null}
+                </div>
+              ) : null}
+            </Card>
+          )}
           <h2>{t.quickCapture.share.or}</h2>
           <ul className={styles.list} aria-label={t.share.where}>
             {states
@@ -175,7 +267,7 @@ export function ShareTarget() {
                           <Icon name={x.icon} size={18} /> {x.label}
                         </span>
                         <Button
-                          aria-label={`${t.share.enable}: ${x.label}`}
+                          aria-label={`${t.actions.enable}: ${x.label}`}
                           onClick={() => {
                             const m = getManifest(x.module);
                             if (m) void enableModule(m);

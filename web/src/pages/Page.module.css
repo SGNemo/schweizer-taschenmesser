@@ -77,3 +77,16 @@
   gap: var(--space-2);
   flex-wrap: wrap;
 }
+
+/* The share page after „Speichern“ as `plan` (package 1): „Ansehen“ · „Rückgängig“ · „Fertig“; on the phone „Fertig“ takes the row. */
+.savedActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+@media (max-width: 599px) {
+  .savedActions > :last-child {
+    flex-basis: 100%;
+  }
+}

@@ -718,6 +718,10 @@ FO-F7. _Android, App geschlossen:_ Erinnerungen und das Ende einer Fokus-Runde k
 
 LT-L3. _Teilen (Android, PWA in Chrome installiert):_ in einer anderen App „Teilen“ → Nemo → Seite „Teilen“ mit den Zielen (nur eingeschaltete Module); Merkliste/Notiz/ToDo öffnen vorbefüllt. Die **APK** hat kein Teilen-Ziel (nicht gebaut). ☐
 
+#### Teilen → Planer (Planer-Zentrale 2, Paket 1, `feat/share-planner`)
+
+PZ2-S1. _Teilen in den Planer, echtes Handy:_ Planer an. (1) Aus dem Browser eine Seite teilen → Nemo → „Teilen“: das Formular steht auf „Planer“, darunter „Landet im Planer unter „Noch ohne Tag“.“ und „Der Link wird mit abgelegt: ‹Host›“; „Speichern“ → „Abgelegt.“ mit „Ansehen“, „Rückgängig“, „Fertig“. „Ansehen“ → Planer, „Noch ohne Tag“ aufgeklappt, die Zeile mit Chip „Im Browser öffnen · ‹Host›“; Chip → der Systembrowser öffnet die Seite. (2) Aus einem Messenger einen Text ohne Link teilen → kein Link-Satz; „Text als Notiz“ ankreuzen, „Speichern“ → die Notiz des ToDos ist der Rest. (3) Aus einer Notiz-App einen langen Text teilen → mit Haken „Gekürzt auf 4 000 Zeichen.“ (4) Nach „Speichern“ den „Rückgängig“ des Hinweises unten tippen → die Seite sagt „Zurückgenommen.“, kein „Ansehen“. (5) Im Formular „ToDo“ wählen → die Sätze verschwinden; „Speichern“ → Hinweis und Startseite wie bisher. (6) „Fertig“ öffnet den Planer; die Zurück-Geste führt in die teilende App. ☐
+
 #### Mit Partner teilen: QR-Bilder (Kamera) – nur von Hand prüfbar
 
 QR-Q5. _Android-App:_ QR-Lesen braucht Kamera-Berechtigung und eine WebView mit QR-Erkennung; wenn das Lesen nicht startet, gilt der Dateiweg. ☐

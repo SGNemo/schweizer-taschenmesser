@@ -665,6 +665,12 @@ export interface PlannableItem {
    * „Los“ only – never part of the planner's input hash; a tick goes back through `PlannableSource.onStepDone`.
    */
   steps?: { id: string; title: string; done: boolean }[];
+  /**
+   * A shared web address the thing came with (planner hub 2, package 1): the row's chip S7 „Im Browser öffnen · host“,
+   * opened only on a tap, never fetched. Display only – never in the input hash, a copy text, the calendar chip, a
+   * widget or a run's titles. Checked with `core/net/webAddress` where it is handed over, drawn and opened.
+   */
+  url?: string;
 }
 
 /** At most this many steps of one thing (CONCEPT-ROWS idea 5); a longer list is dropped by `collectPlannable`. */
