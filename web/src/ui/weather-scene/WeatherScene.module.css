@@ -171,3 +171,24 @@
 :global(:root[data-motion='reduce']) .svg :global([class^='sc-']) {
   animation: none;
 }
+/* A new moment (round 2, CONCEPT-DAYS §3): the old picture fades out over the new one, 200 ms, opacity only. */
+.fadeOut {
+  animation: sc-fade-out 200ms linear 1 forwards;
+  pointer-events: none;
+}
+@keyframes sc-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fadeOut {
+    display: none;
+  }
+}
+:global(:root[data-motion='reduce']) .fadeOut {
+  display: none;
+}

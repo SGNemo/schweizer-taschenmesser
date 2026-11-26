@@ -118,7 +118,7 @@
   border-top: 1px solid var(--border);
   color: var(--text);
 }
-.row:first-child {
+.row:first-of-type {
   border-top: 0;
 }
 /* No rail (stripe rule, C07): the rating chip on the row says it in words; a poor slot gets a quiet tint. */
@@ -476,7 +476,9 @@
 .hourScroll {
   overflow-x: auto;
   scroll-snap-type: x proximity;
-  padding-bottom: var(--space-2);
+  /* room for the focus ring of the first and last card */
+  padding: 4px 4px var(--space-2);
+  margin: -4px;
   border-radius: var(--radius-md);
 }
 .hourCards {
@@ -500,14 +502,63 @@
   text-align: center;
 }
 /* The current hour: one tone step down and its time in the strong ink (no frame). */
-.hourCard[data-now='true'] {
-  background: var(--surface-sunken);
-  /* a line, not a shadow (B7): the tone step alone is no cue for the current hour */
-  box-shadow: inset 0 0 0 1px var(--border-strong);
+/* Round 2 (CONCEPT-DAYS §1, mockups/page.css): the cards and the day rows are labels of hidden radios. The picked look
+   replaces round 1's "now" frame: tint + 2 px frame in the module colour + a check mark (colour is never the only sign). */
+.hourCard,
+.row {
+  position: relative;
+  cursor: pointer;
 }
-.hourCard[data-now='true'] .hourTime {
+.hourCard[data-checked='true'],
+.row[data-checked='true'] {
+  background: color-mix(in srgb, var(--module-color) 12%, var(--surface-raised));
+  box-shadow: inset 0 0 0 2px var(--module-color);
+}
+.hourCard[data-checked='true'] .hourTime {
   color: var(--text);
   font-weight: var(--weight-semibold);
+}
+.row[data-checked='true'] .dayName {
+  font-weight: var(--weight-bold);
+}
+.hourCard:hover:not([data-checked]),
+.row:hover:not([data-checked]) {
+  background: color-mix(in srgb, var(--module-color) 5%, var(--surface-raised));
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+.row[data-checked='true'],
+.row:hover {
+  border-radius: var(--radius-md);
+}
+.row[data-checked='true'] + .row,
+.row:hover + .row {
+  border-top-color: transparent;
+}
+.hourCard:has(:focus-visible),
+.row:has(:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.tick {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--module-color);
+  color: var(--surface);
+}
+.tickCol {
+  position: relative;
+  flex: 0 0 18px;
+  align-self: stretch;
+}
+.tickCol .tick {
+  top: 2px;
+  right: 0;
 }
 .hourTime {
   color: var(--text-3);
@@ -799,4 +850,79 @@
 .moreRow dd {
   margin: 0;
   text-align: right;
+}
+
+/* Round 2, package C: the hour section's head line ("Stunden" + "Jetzt" / "Ganzer Tag" while an hour is chosen). */
+.secHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.secHead .sectionTitle {
+  margin: 0;
+}
+.missing {
+  margin: 0;
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+/* The day stepper (CONCEPT-DAYS §1): at the end of the place row; on the phone its own row. */
+.placeRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.placeRow .places {
+  margin-bottom: 0;
+}
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+.stepLabel {
+  min-width: 11rem;
+  text-align: center;
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-md);
+  font-variant-numeric: var(--font-num);
+}
+.stepBtn {
+  display: grid;
+  place-items: center;
+  width: var(--touch);
+  height: var(--touch);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  color: var(--text);
+  cursor: pointer;
+}
+.stepBtn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.stepBtn[aria-disabled='true'] {
+  color: var(--text-3);
+  background: transparent;
+  cursor: default;
+}
+@media (max-width: 899px) {
+  .stepper {
+    margin-left: 0;
+    width: 100%;
+  }
+  .stepLabel {
+    flex: 1;
+    min-width: 0;
+  }
 }

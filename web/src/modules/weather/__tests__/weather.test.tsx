@@ -243,8 +243,8 @@ describe('weather page', () => {
     await chooseWeatherPlace('Bern, Schweiz', 46.9481, 7.4474);
     renderPage();
     const hoursList = await screen.findByTestId('weather-hours');
-    const hours = hoursList.querySelectorAll('li');
-    const days = screen.getByTestId('weather-days').querySelectorAll('li');
+    const hours = hoursList.querySelectorAll('label');
+    const days = screen.getByTestId('weather-days').querySelectorAll('label');
     expect(hours).toHaveLength(24);
     expect(days).toHaveLength(7);
     expect(hours[0]).toHaveTextContent('Jetzt');
@@ -259,10 +259,9 @@ describe('weather page', () => {
     for (const li of days)
       expect(li.querySelector('[data-rating]')?.textContent).toMatch(/Gut|Geht so|Ungemütlich/);
     expect(hours[3]).toHaveAttribute('data-rating', 'poor');
-    expect(screen.getByRole('region', { name: 'Stunde für Stunde' })).toHaveAttribute(
-      'tabindex',
-      '0',
-    );
+    // Round 2: the cards are one radio group (one tab stop); "Jetzt" is checked by default.
+    expect(screen.getByRole('radiogroup', { name: 'Stunde wählen' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /^Jetzt/ })).toBeChecked();
   });
 
   it('colours only carry meaning and always sit next to words: rain blue with its percentage, temperature tone', async () => {
@@ -270,9 +269,9 @@ describe('weather page', () => {
     vi.stubGlobal('fetch', ok(previewBody));
     await chooseWeatherPlace('Bern, Schweiz', 46.9481, 7.4474);
     renderPage();
-    const hours = (await screen.findByTestId('weather-hours')).querySelectorAll('li');
+    const hours = (await screen.findByTestId('weather-hours')).querySelectorAll('label');
     expect(hours[3]!.querySelector('[data-tone]')).toHaveTextContent('°');
-    const days = screen.getByTestId('weather-days').querySelectorAll('li');
+    const days = screen.getByTestId('weather-days').querySelectorAll('label');
     expect(days[0]!.querySelector('[data-kind="rain"]')).toHaveTextContent('Regen 40 %');
     // The head's chips carry an icon each, next to their words.
     const keys = await screen.findByTestId('weather-keys');
@@ -311,10 +310,10 @@ describe('weather page', () => {
     expect(chart).toHaveTextContent('Nacht');
     expect(screen.getByLabelText('Anzeigen')).toHaveValue('tempRain');
     expect(screen.getByRole('option', { name: 'Wind und Böen' })).toBeInTheDocument();
-    expect(screen.getByTestId('weather-days').querySelector('li')).toHaveTextContent(
+    expect(screen.getByTestId('weather-days').querySelector('label')).toHaveTextContent(
       '3 h Niederschlag',
     );
-    expect(screen.getByTestId('weather-days').querySelector('li')).toHaveTextContent(
+    expect(screen.getByTestId('weather-days').querySelector('label')).toHaveTextContent(
       'Wind 20 km/h NO',
     );
   });
@@ -492,7 +491,7 @@ describe('weather page', () => {
     expect(rows[0]).toHaveTextContent('120 Pollen/m³');
     expect(rows[rows.length - 1]).toHaveTextContent('Erle');
     expect(air.querySelector('[data-rating]')).toHaveTextContent('Ungemütlich');
-    const days = screen.getByTestId('weather-days').querySelectorAll('li');
+    const days = screen.getByTestId('weather-days').querySelectorAll('label');
     expect(days[1]).toHaveTextContent('Pollen: Birke hoch');
     expect(days[0]).not.toHaveTextContent('Pollen:');
   });
@@ -511,7 +510,7 @@ describe('weather page', () => {
     expect(await screen.findByTestId('weather-air')).toHaveTextContent(
       'Luft- und Pollenwerte sind gerade nicht verfügbar.',
     );
-    expect(screen.getByTestId('weather-hours').querySelectorAll('li')).toHaveLength(24);
+    expect(screen.getByTestId('weather-hours').querySelectorAll('label')).toHaveLength(24);
   });
 
   it('links to the weather settings and credits Open-Meteo', async () => {
@@ -549,7 +548,7 @@ describe('weather page', () => {
     renderPage();
     const now = await screen.findByTestId('weather-now');
     expect(now).toHaveTextContent(/Stand 0?11:05/);
-    expect(screen.getByTestId('weather-hours').querySelectorAll('li')).toHaveLength(1);
+    expect(screen.getByTestId('weather-hours').querySelectorAll('label')).toHaveLength(1);
     expect(f).not.toHaveBeenCalled();
   });
 
@@ -631,5 +630,63 @@ describe('more places', () => {
         within(screen.getByRole('navigation', { name: 'Orte' })).getAllByRole('link'),
       ).toHaveLength(1),
     );
+  });
+});
+
+describe('days and hours to choose (round 2, package C)', () => {
+  const at1205 = () => setNow(() => new Date(2026, 9, 19, 12, 5).getTime());
+
+  it('the day group, the stepper and the live region follow the chosen day', async () => {
+    at1205();
+    vi.stubGlobal('fetch', ok(previewBody));
+    await chooseWeatherPlace('Bern, Schweiz', 46.9481, 7.4474);
+    renderPage();
+    const group = await screen.findByRole('radiogroup', { name: 'Tag wählen' });
+    expect(within(group).getAllByRole('radio')).toHaveLength(7);
+    expect(within(group).getByRole('radio', { checked: true })).toHaveAccessibleName(/^Heute/);
+    // On today there is no "Heute" and no way back; the live region says nothing on the first render.
+    expect(screen.queryByTestId('weather-step-today')).toBeNull();
+    expect(screen.getByTestId('weather-step-prev')).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByTestId('weather-live')).toHaveTextContent('');
+    fireEvent.click(screen.getByTestId('weather-step-next'));
+    await waitFor(() =>
+      expect(screen.getByTestId('weather-now')).toHaveTextContent('Dienstag, 20. Oktober'),
+    );
+    expect(screen.getByTestId('weather-now')).toHaveTextContent('15° / 7°');
+    expect(screen.getByText('Höchstwert 15°, Tiefstwert 7°')).toBeInTheDocument();
+    expect(within(group).getByRole('radio', { checked: true })).toHaveAccessibleName(/^Di/);
+    expect(screen.getByTestId('weather-live')).toHaveTextContent(
+      'Dienstag, 20. Oktober: leichter Regen, 15° / 7°',
+    );
+    expect(screen.getByRole('heading', { name: 'Stunden' })).toBeInTheDocument();
+    const hours = within(screen.getByRole('radiogroup', { name: 'Stunde wählen' }));
+    expect(hours.getAllByRole('radio')).toHaveLength(24);
+    expect(hours.queryByRole('radio', { checked: true })).toBeNull();
+    // Rain soon belongs to now only.
+    expect(screen.queryByTestId('weather-rain-soon')).toBeNull();
+    // An hour: the head shows it, "Ganzer Tag" goes back to the day.
+    fireEvent.click(hours.getAllByRole('radio')[9]!);
+    await waitFor(() => expect(screen.getByTestId('weather-now')).toHaveTextContent('09:00'));
+    expect(screen.getByTestId('weather-hour-line')).toHaveTextContent('Werte um 09:00');
+    fireEvent.click(screen.getByRole('button', { name: 'Ganzer Tag' }));
+    await waitFor(() => expect(screen.queryByTestId('weather-hour-back')).toBeNull());
+    fireEvent.click(screen.getByTestId('weather-step-today'));
+    await waitFor(() =>
+      expect(screen.getByTestId('weather-now')).toHaveTextContent('fühlt sich an'),
+    );
+    expect(screen.queryByTestId('weather-step-today')).toBeNull();
+  });
+
+  it('a day without cached hours (CONCEPT-DAYS §4): the sentence instead of the cards, no curve', async () => {
+    at1205();
+    vi.stubGlobal('fetch', ok(previewBody));
+    await chooseWeatherPlace('Bern, Schweiz', 46.9481, 7.4474);
+    renderPage('/weather?day=2026-10-23');
+    expect(await screen.findByTestId('weather-hours-missing')).toHaveTextContent(
+      'Stundenwerte für diesen Tag kommen mit der nächsten Aktualisierung.',
+    );
+    expect(screen.queryByTestId('weather-chart-card')).toBeNull();
+    expect(screen.getByTestId('weather-now')).toHaveTextContent('Freitag, 23. Oktober');
+    expect(screen.getByTestId('weather-step-label')).toHaveTextContent('Freitag, 23. Okt.');
   });
 });

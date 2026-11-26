@@ -1,3 +1,5 @@
+import { useId } from 'react';
+import { edgeKey } from './edgeKey';
 import { dateTimeFormat } from '@/core/i18n/format';
 import type { DayRow, Forecast } from '@/core/weather/api';
 import { rateDay } from '@/core/weather/logic';
@@ -51,14 +53,21 @@ export function DaySpans({
   today,
   forecast,
   moon,
+  checked,
+  onPick,
 }: {
   days: readonly DayRow[];
   today: string;
+  /** The shown day (round 2: the rows are one radio group "Tag wählen", CONCEPT-DAYS §1). */
+  checked: string;
+  onPick: (date: string) => void;
   /** The place of the moon glyphs (absent while "Mond und Himmelsereignisse" is off). */
   moon?: { lat: number; lon: number; tz: string | undefined };
   forecast: Forecast;
 }) {
   const tx = tWeather.use();
+  const tp = tWeatherPage.use();
+  const name = useId();
   const { dayLine } = lineBuilders(tx, forecast);
   const dayFmt = dateTimeFormat({ weekday: 'short', day: 'numeric', month: 'numeric' });
   const lo = Math.min(...days.map((d) => d.min));
@@ -75,35 +84,67 @@ export function DaySpans({
     };
   };
   return (
-    <ul className={styles.rows} data-testid="weather-days">
-      {days.map((d) => (
-        <li key={d.date} className={styles.row} data-rating={rateDay(d)}>
-          <Icon name={weatherIcon(d.group)} size={20} />
-          <div className={styles.rowBody}>
-            <p className={styles.rowMain}>
-              <span className={styles.dayName}>
-                {d.date === today ? tx.today : dayFmt.format(localDate(d.date))}
-              </span>
-              <span>{tx.conditions[conditionId(d.code, d.group, { gust: d.gust })]}</span>
-              <RatingChip rating={rateDay(d)} />
-              {moon ? <DayMoon date={d.date} {...moon} /> : null}
-            </p>
-            <div className={styles.range}>
-              <span className={styles.rangeLabel} data-tone={tone(d.min)}>
-                {tx.temp(d.min)}
-              </span>
-              <span className={styles.track} aria-hidden="true">
-                <span className={styles.fill} style={fillStyle(d)} />
-              </span>
-              <span className={styles.rangeLabel} data-tone={tone(d.max)}>
-                {tx.temp(d.max)}
-              </span>
-              <span className={styles.srOnly}>{tx.range(d.min, d.max)}</span>
+    <div
+      className={styles.rows}
+      role="radiogroup"
+      aria-label={tp.day.group}
+      data-testid="weather-days"
+      onKeyDown={(e) => {
+        const to = edgeKey(e, days);
+        if (to) onPick(to.date);
+      }}
+    >
+      {days.map((d) => {
+        const on = d.date === checked;
+        return (
+          <label
+            key={d.date}
+            className={styles.row}
+            data-rating={rateDay(d)}
+            data-checked={on ? 'true' : undefined}
+            data-date={d.date}
+          >
+            <input
+              type="radio"
+              className="sr-only"
+              name={name}
+              checked={on}
+              onChange={() => onPick(d.date)}
+            />
+            <Icon name={weatherIcon(d.group)} size={20} />
+            <div className={styles.rowBody}>
+              <p className={styles.rowMain}>
+                <span className={styles.dayName}>
+                  {d.date === today ? tx.today : dayFmt.format(localDate(d.date))}
+                </span>
+                <span>{tx.conditions[conditionId(d.code, d.group, { gust: d.gust })]}</span>
+                <RatingChip rating={rateDay(d)} />
+                {moon ? <DayMoon date={d.date} {...moon} /> : null}
+              </p>
+              <div className={styles.range}>
+                <span className={styles.rangeLabel} data-tone={tone(d.min)}>
+                  {tx.temp(d.min)}
+                </span>
+                <span className={styles.track} aria-hidden="true">
+                  <span className={styles.fill} style={fillStyle(d)} />
+                </span>
+                <span className={styles.rangeLabel} data-tone={tone(d.max)}>
+                  {tx.temp(d.max)}
+                </span>
+                <span className={styles.srOnly}>{tx.range(d.min, d.max)}</span>
+              </div>
+              <Meta className={styles.rowMeta} parts={dayLine(d)} />
             </div>
-            <Meta className={styles.rowMeta} parts={dayLine(d)} />
-          </div>
-        </li>
-      ))}
-    </ul>
+            <span className={styles.tickCol} aria-hidden="true">
+              {on ? (
+                <span className={styles.tick}>
+                  <Icon name="check" size={12} />
+                </span>
+              ) : null}
+            </span>
+          </label>
+        );
+      })}
+    </div>
   );
 }

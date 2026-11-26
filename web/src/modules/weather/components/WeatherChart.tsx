@@ -109,7 +109,17 @@ const SWATCH: Record<string, string | undefined> = {
   uv: styles.swSun,
 };
 
-function Plot({ s, hours, width }: { s: Series; hours: readonly HourRow[]; width: number }) {
+function Plot({
+  s,
+  hours,
+  width,
+  marker,
+}: {
+  s: Series;
+  hours: readonly HourRow[];
+  width: number;
+  marker?: string;
+}) {
   const tx = tWeather.use();
   const hourFmt = dateTimeFormat({ hour: '2-digit' });
   const n = hours.length;
@@ -133,6 +143,7 @@ function Plot({ s, hours, width }: { s: Series; hours: readonly HourRow[]; width
       Number(h.time.slice(8, 10)),
       Number(h.time.slice(11, 13)),
     );
+  const mark = marker ? hours.findIndex((h) => h.time === marker) : -1;
   // Night shading across both bands, one rectangle per run of night hours.
   const nights: [number, number][] = [];
   hours.forEach((h, i) => {
@@ -200,6 +211,16 @@ function Plot({ s, hours, width }: { s: Series; hours: readonly HourRow[]; width
             <path key={`a${i}`} className={styles.line} d={d} data-series="line" />
           ))
         : null}
+      {mark >= 0 ? (
+        <line
+          className={styles.marker}
+          x1={X(mark)}
+          x2={X(mark)}
+          y1={T0 - 4}
+          y2={B1}
+          data-testid="weather-chart-marker"
+        />
+      ) : null}
       {s.word ? (
         <text className={styles.word} x={L + 8} y={T0 + 16}>
           {s.word}
@@ -268,8 +289,11 @@ export function WeatherChart({
   air,
   all,
   title,
+  marker,
 }: {
   hours: readonly HourRow[];
+  /** The chosen hour (`time` of its row): a thin line marks it (CONCEPT-DAYS §2). */
+  marker?: string;
   air?: Air;
   /** Every cached hour (the pressure tendency looks three hours back). */
   all?: readonly HourRow[];
@@ -310,7 +334,7 @@ export function WeatherChart({
       <div ref={ref} className={styles.chart} data-testid="weather-chart" data-option={option}>
         {s.has ? (
           <>
-            <Plot s={s} hours={hours} width={width} />
+            <Plot s={s} hours={hours} width={width} marker={marker} />
             <ul className={styles.legend} aria-hidden="true">
               {LEGEND[option].map((k) => (
                 <li key={k}>

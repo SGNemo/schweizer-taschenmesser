@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link } from 'react-router';
+import { Link, useLocation, useSearchParams } from 'react-router';
 import { requireNotice } from '@/core/legal/notices';
 import { searchPlaces, type Place } from '@/core/weather/api';
 import {
@@ -18,7 +18,20 @@ import styles from '../routes/weather.module.css';
  * The places of the page as chips (the first is the main place from the settings): a tap shows that place, "+ Ort" opens a short
  * search dialog (a short task, so a dialog is right), a small × takes an extra place away again. Three places at most.
  */
+/** The address of a place chip: the shown day and hour stay (CONCEPT-DAYS §3: kept if that place has the day). */
+function placeHref(i: number, params: URLSearchParams): string {
+  const next = new URLSearchParams();
+  if (i > 0) next.set('place', String(i));
+  for (const k of ['day', 'hour']) {
+    const v = params.get(k);
+    if (v != null) next.set(k, v);
+  }
+  return `?${next.toString()}`;
+}
+
 export function PlaceChips({ index, places }: { index: number; places: string[] }) {
+  const [params] = useSearchParams();
+  const location = useLocation();
   const tx = tWeather.use();
   const tp = tWeatherPage.use();
   const [settings] = useWeatherSettings();
@@ -63,8 +76,9 @@ export function PlaceChips({ index, places }: { index: number; places: string[] 
             data-on={i === index ? 'true' : undefined}
           >
             <Link
-              to={i === 0 ? '?' : `?place=${i}`}
+              to={placeHref(i, params)}
               replace
+              state={location.state}
               aria-current={i === index ? 'true' : undefined}
             >
               {name.split(',')[0]}

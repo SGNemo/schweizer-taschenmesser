@@ -155,3 +155,8 @@
   border-radius: 2px;
   background: color-mix(in srgb, var(--text) 10%, transparent);
 }
+/* The chosen hour (round 2, package C): a thin line in the module colour. */
+.marker {
+  stroke: var(--module-color);
+  stroke-width: 2;
+}
