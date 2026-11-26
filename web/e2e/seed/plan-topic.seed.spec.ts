@@ -233,3 +233,25 @@ for (const scheme of ['light', 'dark'] as const)
     await filterUmzug(page);
     expect(await axe()).toEqual([]);
   });
+
+test('the filter chooser says when no topic has the typed name; ending the filter is said once', async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize(DESKTOP);
+  await prepare(page);
+  await giveUmzug(page);
+  await page.getByRole('button', { name: 'Weitere Optionen', exact: true }).first().click();
+  await page.getByRole('menuitem', { name: 'Nur ein Thema zeigen …', exact: true }).click();
+  const chooser = page.getByRole('dialog');
+  await chooser.getByRole('combobox', { name: 'Thema' }).fill('Steuer');
+  await expect(chooser.getByRole('status')).toHaveText('Kein Thema heißt so.');
+  await chooser.getByRole('combobox', { name: 'Thema' }).fill('Umz');
+  await chooser.getByRole('option', { name: /Umzug/ }).click();
+  await expect(page.getByTestId('planner-topic-head')).toBeVisible();
+  await page
+    .getByTestId('planner-topic-head')
+    .getByRole('button', { name: 'Alles zeigen' })
+    .click();
+  await expect(page.getByRole('status').filter({ hasText: 'Alles sichtbar.' })).toHaveCount(1);
+});
