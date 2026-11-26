@@ -77,15 +77,20 @@
     // the massif: five mountains, each its own shape, drawn back to front. sil: left foot → right foot; top: index of the summit;
     // arete: the zig-zag edge from the summit to the foot that parts the lit face from the shaded one; spurs: buttresses [sil index, foot x]
     mountains: [
-      { id: 'main', size: 1.25, top: 6, sil: [[1206, 218], [1240, 180], [1262, 162], [1286, 152], [1310, 114], [1330, 104], [1352, 76], [1366, 89], [1384, 93], [1404, 87], [1422, 112], [1452, 134], [1482, 170], [1516, 218]],
-        arete: [[1352, 76], [1347, 98], [1356, 116], [1344, 138], [1354, 160], [1340, 186], [1348, 218]], spurs: [[4, 1296], [9, 1418]], gullies: [[1338, 100, 16], [1370, 96, 20], [1408, 96, 14]] },
-      { id: 'edge', size: 0.6, top: 2, sil: [[1516, 218], [1546, 160], [1574, 131], [1600, 146], [1600, 218]], arete: [[1574, 131], [1570, 152], [1578, 172], [1568, 196], [1574, 218]], spurs: [], gullies: [] },
-      { id: 'shoulder', size: 0.6, top: 4, sil: [[956, 218], [998, 178], [1022, 171], [1046, 142], [1074, 128], [1090, 139], [1114, 152], [1150, 192], [1176, 218]],
-        arete: [[1074, 128], [1070, 148], [1078, 166], [1068, 188], [1074, 218]], spurs: [[2, 1006]], gullies: [[1066, 140, 10]] },
-      { id: 'west', size: 0.95, top: 4, sil: [[1038, 218], [1082, 162], [1104, 147], [1128, 113], [1150, 98], [1162, 109], [1178, 105], [1196, 127], [1224, 152], [1262, 192], [1292, 218]],
-        arete: [[1150, 98], [1146, 118], [1154, 134], [1143, 156], [1151, 176], [1140, 198], [1146, 218]], spurs: [[2, 1090], [7, 1210]], gullies: [[1136, 116, 14], [1168, 114, 12]] },
-      { id: 'east', size: 0.8, top: 3, sil: [[1398, 218], [1440, 162], [1462, 147], [1490, 112], [1506, 123], [1524, 141], [1548, 151], [1580, 192], [1600, 208], [1600, 218]],
-        arete: [[1490, 112], [1486, 132], [1494, 150], [1484, 172], [1491, 194], [1485, 218]], spurs: [[5, 1534]], gullies: [[1480, 128, 12], [1500, 128, 10]] },
+      { id: 'outlier', size: 0.5, top: 4, haze: 0.3, sil: [[836, 218], [872, 190], [900, 178], [924, 160], [948, 148], [962, 158], [984, 166], [1010, 192], [1030, 218]],
+        arete: [[948, 148], [944, 164], [951, 180], [942, 198], [947, 218]], ribs: [[2, 884, 22], [6, 996, 20]], gullies: [], fields: [] },
+      { id: 'main', size: 1.25, top: 6, haze: 0.14, sil: [[1206, 218], [1240, 180], [1262, 162], [1286, 152], [1310, 114], [1330, 104], [1352, 76], [1366, 89], [1384, 93], [1404, 87], [1422, 112], [1452, 134], [1482, 170], [1516, 218]],
+        arete: [[1352, 76], [1347, 98], [1356, 116], [1344, 138], [1354, 160], [1340, 186], [1348, 218]], ribs: [[2, 1250, 26], [4, 1292, 34], [8, 1392, 30], [10, 1440, 36]],
+        gullies: [[1338, 100, 16], [1370, 96, 20], [1408, 96, 14], [1322, 118, 18]], fields: ['M1322,130l14,-6l10,8l-6,12l-14,4Z', 'M1372,114l12,-4l8,10l-10,10Z', 'M1300,152l12,-4l6,8l-12,8Z', 'M1418,128l10,-2l6,10l-10,6Z'] },
+      { id: 'edge', size: 0.6, top: 2, haze: 0, sil: [[1516, 218], [1546, 160], [1574, 131], [1600, 146], [1600, 218]], arete: [[1574, 131], [1570, 152], [1578, 172], [1568, 196], [1574, 218]], ribs: [[1, 1548, 20]], gullies: [[1570, 144, 10]], fields: [] },
+      { id: 'shoulder', size: 0.6, top: 4, haze: 0, sil: [[956, 218], [998, 178], [1022, 171], [1046, 142], [1074, 128], [1090, 139], [1114, 152], [1150, 192], [1176, 218]],
+        arete: [[1074, 128], [1070, 148], [1078, 166], [1068, 188], [1074, 218]], ribs: [[2, 1012, 24], [6, 1122, 24]], gullies: [[1066, 140, 10], [1084, 142, 9]], fields: ['M1056,150l8,-4l6,8l-8,6Z'] },
+      { id: 'west', size: 0.95, top: 4, haze: 0, sil: [[1038, 218], [1082, 162], [1104, 147], [1128, 113], [1150, 98], [1162, 109], [1178, 105], [1196, 127], [1224, 152], [1262, 192], [1292, 218]],
+        arete: [[1150, 98], [1146, 118], [1154, 134], [1143, 156], [1151, 176], [1140, 198], [1146, 218]], ribs: [[2, 1088, 28], [6, 1188, 26], [8, 1238, 30]],
+        gullies: [[1136, 116, 14], [1168, 114, 12], [1122, 130, 12]], fields: ['M1128,134l10,-6l8,10l-12,8Z', 'M1170,130l8,-2l6,10l-10,4Z', 'M1206,150l10,-3l5,8l-11,5Z'] },
+      { id: 'east', size: 0.8, top: 3, haze: 0, sil: [[1398, 218], [1440, 162], [1462, 147], [1490, 112], [1506, 123], [1524, 141], [1548, 151], [1580, 192], [1600, 208], [1600, 218]],
+        arete: [[1490, 112], [1486, 132], [1494, 150], [1484, 172], [1491, 194], [1485, 218]], ribs: [[1, 1434, 24], [5, 1532, 28], [6, 1564, 24]],
+        gullies: [[1480, 128, 12], [1500, 128, 10]], fields: ['M1472,138l8,-4l6,8l-8,8Z', 'M1508,144l10,-2l4,10l-10,4Z'] },
     ],
     // round wooded hills in front of the massif, and the clearings on them
     hills: [[-20, 236], [130, 222], [250, 232], [390, 214], [520, 228], [650, 212], [790, 224], [900, 206], [990, 218], [1060, 196], [1120, 206], [1190, 188], [1262, 208], [1330, 198], [1400, 212], [1466, 184], [1530, 198], [1620, 180]],
@@ -104,6 +109,7 @@
     behind: [['spruce', 1396, 264, 62], ['spruce', 1484, 260, 76], ['fir', 1502, 262, 40]], // behind the cabin
     trees: [['spruce', 1562, 268, 118], ['spruce', 1592, 262, 84], ['pine', 1512, 268, 70], ['birch', 1546, 272, 46], ['bush', 1578, 274, 7], ['leaf', 1324, 298, 15], ['birch', 1372, 284, 40],
       ['spruce', 958, 296, 64], ['fir', 930, 293, 44], ['pine', 984, 298, 50], ['leaf', 890, 291, 13], ['bush', 1004, 300, 6], ['bush', 906, 296, 5],
+      ['spruce', 842, 293, 40], ['leaf', 812, 294, 10], ['birch', 1014, 303, 34], ['spruce', 1446, 300, 30], ['fir', 1470, 304, 22], ['leaf', 1610, 296, 14],
       ['fir', 640, 290, 30], ['fir', 300, 288, 26], ['leaf', 470, 291, 9], ['fir', 760, 291, 22], ['fir', 1182, 258, 14], ['fir', 1194, 259, 11], ['fir', 1150, 257, 12]],
     // four bolts, each its own figure: the long strike, the crawler under the base, the forked one, the far one
     bolts: [
@@ -162,6 +168,7 @@
   }
   function skyKey(s) {
     s = s.falling == null ? state(s) : s;
+    var hk = s.event && window.Scene && window.Scene.hooks[s.event]; if (hk && hk.skyKey && hk.skyKey(s)) return hk.skyKey(s); // an event may pick its own sky (solarTotal → eclipse-sky)
     if (s.event === 'dust') return 'dust';
     var grey = s.cover === 4 || s.falling || s.fog;
     if (s.phase === 'night' || ((s.phase === 'dawn' || s.phase === 'dusk') && grey)) {
@@ -235,8 +242,9 @@
       if (!hzc[fill]) { var m = mix(fill, C.haze, 0.6); hzc[fill] = grad([[0, m], [0.5, m], [0.8, fill]], { x1: 0, y1: 0, x2: quietEnd, y2: 0, gradientUnits: 'userSpaceOnUse' }); }
       return hzc[fill];
     }
-    var hooks = window.Scene && window.Scene.hooks, X = { s: s, C: C, G: G, PAL: PAL, key: key, body: body, mode: mode, el: el, path: path, line: line, add: add, grad: grad, radial: radial, circ: circ, pts: pts, prng: prng, mix: mix, f: f, top: top };
-    function hook(slot) { if (hooks && s.event && hooks[s.event] && hooks[s.event][slot]) { var r = hooks[s.event][slot](X); if (typeof r === 'string') out += r; return r; } }
+    var hooks = window.Scene && window.Scene.hooks, X = { s: s, C: C, G: G, PAL: PAL, key: key, body: body, mode: mode, el: el, path: path, line: line, add: add, grad: grad, radial: radial, circ: circ, pts: pts, prng: prng, mix: mix, f: f, top: top, id: id, view: view };
+    // a hook returns an SVG string (appended at its slot) or { svg, replace: true } (appended; for `body` it replaces the drawn body). arg: body → pale
+    function hook(slot, arg) { if (hooks && s.event && hooks[s.event] && hooks[s.event][slot]) { var r = hooks[s.event][slot](X, arg); if (r && typeof r === 'object') { out += r.svg || ''; return r.replace === true; } if (typeof r === 'string') out += r; return r; } }
 
     /* ---- sky ---- */
     open('sky');
@@ -262,7 +270,7 @@
 
     /* ---- body ---- */
     function drawBody(pale) {
-      if (!s.body || hook('body') === true) return;
+      if (!s.body || hook('body', pale) === true) return;
       var g = '', R;
       if (s.body.kind === 'moon') {
         R = 24 * s.moon.size;
@@ -401,21 +409,27 @@
       path(pts([[0, H]].concat(bc, [[W, H]]), true), hz(bcol), { 'data-part': 'back' });
       if (cold) G.backPeaks.forEach(function (pk) { var d = pk[2] * capK * 0.8; if (d > 4) bcaps += capOf(bc, pk, d); });
       if (bcaps) path(bcaps, mix(C.snow, C.haze, 0.55));
+      var glowC = PAL.glow[key], rockGlow = glowC && s.cover < 4 ? 0.34 : 0; // twilight: the lit faces and the snow take the colour of the low sun
       G.mountains.forEach(function (m, mi) {
-        var sil = jag(m.sil, 40 + mi, 1.6, 15), S = m.sil[m.top], shadeLeft = lightRight(S[0]), it = sil.indexOf(S);
-        var col = mix(mi === 0 ? mix(C.far, C.haze, 0.14) : C.far, C.snow, cover2 ? 0.55 : 0);
+        var sil = jag(m.sil, 40 + mi, 1.6, 15), S = m.sil[m.top], shadeLeft = lightRight(S[0]), it = sil.indexOf(S), sd = shadeLeft ? -1 : 1, q4 = prng(900 + mi);
+        var col = mix(mix(mix(C.far, C.haze, m.haze), C.snow, cover2 ? 0.55 : 0), glowC || '#000000', rockGlow), snowC = mix(mix(C.snow, C.haze, m.haze), glowC || '#000000', rockGlow * 1.1);
         out += '<g data-part="' + m.id + '">';
         path(pts(sil, true), col);
-        var spur = '';
-        m.spurs.forEach(function (sp) { var a = m.sil[sp[0]]; spur += pts([a, [sp[1] - 16, 218], [sp[1] + 24, 218]], true); });
-        if (spur) path(spur, cover2 ? C.snowShade : C.dark, { opacity: cover2 ? 0.35 : 0.13 });
+        // snow: the cap, the gullies under it, and fields lower down (more of them when it is cold)
         var depth = m.size * capK, cap = capOf(sil, S, depth);
-        if (cold) m.gullies.forEach(function (g) { cap += 'M' + g[0] + ',' + g[1] + 'l2.6,' + g[2] + 'l-5.4,' + f(-g[2] * 0.25) + 'Z'; }); // snow in the gullies
-        path(cap, C.snow, { 'data-part': 'caps' });
+        m.gullies.slice(0, cold ? 9 : 2).forEach(function (g) { cap += 'M' + g[0] + ',' + g[1] + 'l2.6,' + g[2] + 'l-5.4,' + f(-g[2] * 0.25) + 'Z'; });
+        cap += m.fields.slice(0, cover2 ? 9 : cold ? 3 : 0).join('');
+        path(cap, snowC, { 'data-part': 'caps' });
+        // every rib throws a shaded flank; the main arête parts the lit face from the shaded one
+        var ribs = '';
+        m.ribs.forEach(function (rb) {
+          var a = m.sil[rb[0]], n2 = 4, d = 'M' + a[0] + ',' + a[1];
+          for (var k2 = 1; k2 <= n2; k2++) { var tt = k2 / n2; d += 'L' + f(a[0] + (rb[1] - a[0]) * tt + (k2 < n2 ? (k2 % 2 ? 1 : -1) * (2 + q4() * 3) : 0)) + ',' + f(a[1] + (218 - a[1]) * tt); }
+          ribs += d + 'L' + f(rb[1] + sd * rb[2]) + ',218Z';
+        });
+        if (ribs) path(ribs, cover2 ? C.snowShade : C.dark, { opacity: cover2 ? 0.45 : 0.2, 'data-part': 'ribs' });
         var face = shadeLeft ? sil.slice(0, it + 1).concat(m.arete.slice(1)) : sil.slice(it).concat(m.arete.slice(1).reverse());
-        path(pts(face, true), cover2 ? C.snowShade : C.dark, { opacity: cover2 ? 0.7 : 0.34, 'data-part': 'shade' });
-        var ld = shadeLeft ? 1 : -1, strata = 'M' + m.arete[2][0] + ',' + m.arete[2][1] + 'l' + 16 * ld + ',5M' + m.arete[4 % m.arete.length][0] + ',' + m.arete[4 % m.arete.length][1] + 'l' + 20 * ld + ',6'; // rock bands on the lit face
-        line(strata, C.dark, 1.1, { opacity: 0.2 });
+        path(pts(face, true), cover2 ? C.snowShade : C.dark, { opacity: cover2 ? 0.7 : 0.36, 'data-part': 'shade' });
         if (s.wind === 3 && cover2 && m.size >= 0.8) path('M' + S[0] + ',' + S[1] + 'q' + f(dir * 22) + ',-9 ' + f(dir * 52) + ',-4q' + f(-dir * 20) + ',1 ' + f(-dir * 44) + ',10Z', C.snow, { opacity: 0.6, 'data-part': 'spindrift' });
         out += '</g>';
       });
@@ -479,7 +493,6 @@
         'M' + x0 + ',' + f(y0 - r2 * 1.5) + 'l' + f(-r2 * 0.35) + ',' + f(-r2 * 0.9) + 'M' + x0 + ',' + f(y0 - r2 * 1.5) + 'l' + f(r2 * 0.4) + ',' + f(-r2 * 0.8) +
         'M' + f(x0 - r2 * 0.5) + ',' + f(y0 - r2 * 1.6) + 'l' + f(-r2 * 0.5) + ',' + f(-r2 * 0.25) + 'M' + f(x0 + r2 * 0.55) + ',' + f(y0 - r2 * 1.75) + 'l' + f(r2 * 0.5) + ',' + f(-r2 * 0.15);
     }
-    var leafless = s.season === 'winter' || cover2;
     function leafTree(x, yb, r, acc, ci) { // a round crown of six lobes on a forked stem
       if (leafless) { acc.bare += bareD(x, yb, r); return; }
       var cx = x + lean * r * 2.8, cy = yb - r * 2.2, side = lightRight(x) ? -1 : 1;
@@ -518,7 +531,15 @@
       if (acc.bare) { line(acc.bare, cover2 ? C.wood : C.dark, 1.8); if (s.frost || s.snowCover) line(acc.bare, s.snowCover ? C.snow : C.rime, 0.9, { opacity: s.snowCover ? 0.9 : 0.55, transform: 'translate(-0.6 -0.9)' }); }
       out += '</g>';
     }
+    function leafy(lineKeys, seed, n3, r0, r1, col, op) { // round crowns of broadleaf trees in front of a staffel (not in winter)
+      if (leafless) return;
+      var q = prng(seed), d = '', end = lineKeys[lineKeys.length - 1][0];
+      for (var i3 = 0; i3 < n3; i3++) { var x = q() * end, r = r0 + q() * (r1 - r0); d += circ(x + lean * r, yAt(lineKeys, x) + r * 0.2 + q() * r, r) + circ(x + r * 0.9 + lean * r, yAt(lineKeys, x) + r * 0.7 + q() * r * 0.5, r * 0.75); }
+      path(d, hz(col), { opacity: op, 'data-layer': 'ridgeMid', 'data-part': 'leafy' });
+    }
+    var leafless = s.season === 'winter' || cover2;
     skyline(G.f1, 61, 8, 13, 9, 15, C.f1, 'ridgeMid', [1, 0.8, 0.45][s.fog]);
+    leafy(G.f1, 64, 46, 3, 5, mix(C.crowns[0] || C.f1, C.haze, 0.3), [0.9, 0.7, 0.35][s.fog]);
     if (s.fog) { open('fog'); fogBand(222, 20, 0.5); if (s.fog >= 2) fogBand(240, 26, 0.6); close(); }
 
     /* ---- the lake: round, whole, in a meadow; far houses, jetty and boat ---- */
@@ -559,6 +580,7 @@
       el('path', { d: 'M-12,-3.4h24l-3,5.2q-9,2.4 -18,0Z', fill: C.wall }) + el('path', { d: 'M-12,-3.4h24l-1,1.6h-22Z', fill: mix(C.wall, C.dark, 0.5) }));
     close();
     skyline(G.f2, 62, 12, 19, 16, 26, C.f2, 'ridgeMid', [1, 0.9, 0.7][s.fog]);
+    leafy(G.f2, 65, 30, 5, 8, mix(C.crowns[1] || C.f2, C.haze, 0.12), [0.95, 0.8, 0.5][s.fog]);
     open('ridgeMid', s.fog >= 2 ? ' opacity="0.7"' : ''); // right of the lake the second staffel is single firs behind the cabin
     (function () {
       var acc = newAcc(), q = prng(63), x = 1356, i2 = 0;
@@ -573,6 +595,7 @@
     var gfill = cover2 ? C.snow : s.snowCover ? mix(C.meadow, C.snow, 0.7) : C.meadow, gy = function (x) { return yAt(G.ground, x) + 2; };
     path(smooth(G.ground, H), gfill, { 'data-part': 'ground' });
     path('M-20,320L-20,307Q240,298 520,309T990,309Q1160,318 1340,311Q1470,292 1620,290L1620,320Z', cover2 ? C.snowShade : C.near, { opacity: cover2 ? 0.5 : 0.32, 'data-part': 'fold' });
+    if (s.sun >= 2 && !s.snowCover) path('M300,294Q560,284 860,294Q960,298 990,301Q700,292 300,300Z M1380,284Q1470,270 1600,270Q1500,276 1400,292Z', mix(C.meadow, '#fff7c0', 0.3), { opacity: 0.7, 'data-part': 'sunband' });
     if (s.frost && !s.snowCover) line(smooth(G.ground), C.rime, 2.6, { opacity: 0.45, 'data-part': 'hoar' });
     path(G.way, cover2 ? C.snowShade : mix(gfill, C.haze, 0.35), { opacity: cover2 ? 0.7 : 0.85, 'data-part': 'way' });
     if (s.sun >= 2 || (s.dark && mode === 'clear' && s.moon && s.moon.illum > 0.9 && cover2)) { // cast shadows: only under a clear body
@@ -624,7 +647,7 @@
       if (s.season === 'spring' && !s.snowCover) path(dots, C.lit(PAL.c.flower), { 'data-part': 'flowers' });
       if (s.season === 'autumn' && !s.snowCover) path(dots, C.lit(PAL.c.leaf), { 'data-part': 'fallen' });
     }
-    path('M996,300q2,-8 9,-9q8,0 10,9Z M1334,296q2,-6 8,-6q6,1 7,6Z M1150,309q1,-4 6,-4q5,0 6,4Z', cover2 ? mix(C.mid, C.snow, 0.4) : mix(C.far, C.dark, 0.25), { 'data-part': 'rocks' });
+    path('M996,300q2,-8 9,-9q8,0 10,9Z M1334,296q2,-6 8,-6q6,1 7,6Z M1150,309q1,-4 6,-4q5,0 6,4Z M1060,307q1,-5 7,-5q6,1 7,5Z M1226,308q2,-6 8,-6q7,1 8,6Z M1244,309q1,-3 4,-3q4,0 5,3Z', cover2 ? mix(C.mid, C.snow, 0.4) : mix(C.far, C.dark, 0.25), { 'data-part': 'rocks' });
     if (cover2 && (s.sun >= 2 || s.frost >= 2)) { // sparkle
       var sp2 = '', pq2 = prng(95);
       for (i = 0; i < 8; i++) { var px = 900 + pq2() * 680, py = 296 + pq2() * 20; sp2 += 'M' + f(px) + ',' + f(py - 4) + 'l1,3l3,1l-3,1l-1,3l-1,-3l-3,-1l3,-1Z'; }

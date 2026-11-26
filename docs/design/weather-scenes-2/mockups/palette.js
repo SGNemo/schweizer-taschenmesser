@@ -65,7 +65,12 @@
       rain: '#d6e3f0', fog: '#ffffff', bolt: '#ffe9a6', 'bolt-core': '#fffbe6', hail: '#f2f6fa', 'hail-edge': '#b8c6d6',
       'heat-haze': '#fbe7b0', 'dry-meadow': '#a39a55', leaf: '#c98a3c', 'leaf-green': '#8fa66a', flower: '#f3e9a8',
       wall: '#8b5e48', roof: '#5a3b2f', window: '#ffd98a', smoke: '#e3e8ee', 'smoke-dark': '#5a6580', flag: '#c9584a', wood: '#3a2e28',
-      'water-deep': '#2d5d86',
+      'water-deep': '#1f7f9c',
+      // sky events (events.js), round 1's values
+      'dust-sun': '#f6e7c0', 'dim-target': '#1b2340',
+      'eclipse-disc': '#0b0f22', 'eclipse-red': '#c8694a', 'eclipse-red-dark': '#8f3d2e', 'eclipse-umbra': '#5a2a25',
+      'aurora-1': '#7fe0a8', 'aurora-2': '#58c7b0', 'aurora-3': '#a98be0', // aurora: base green, mid teal, violet top
+      'rb-1': '#e8807a', 'rb-2': '#f2b56b', 'rb-3': '#f1dd7a', 'rb-4': '#8fcf9a', 'rb-5': '#7fb2e6',
     },
   };
 })();
