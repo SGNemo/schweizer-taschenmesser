@@ -2,7 +2,6 @@ import { useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties }
 import { motionReduced } from '@/core/shell/topbarCollapse';
 import type { SceneState } from '@/core/weather/scene';
 import { sceneSvg } from './draw';
-import { sceneSvg as cardSvg } from './drawV1';
 import { useSceneFit } from './useSceneFit';
 import { useSceneMotion } from './useSceneMotion';
 import styles from './WeatherScene.module.css';
@@ -11,10 +10,7 @@ export interface WeatherSceneProps {
   state: SceneState;
   /** The phone's head: the picture's right part at scale 0.46 (never zoomed out past the whole width; CONCEPT §5). */
   phone?: boolean;
-  /**
-   * A card behind its text (the overview widget): the quiet zone ends at this share of the box's width. Until package
-   * D of round 2 the card keeps round 1's drawing.
-   */
+  /** A card behind its text (the overview widget): the quiet zone ends at this share of the box's width. */
   quietShare?: number;
   /**
    * The moment the picture shows (round 2, CONCEPT-DAYS §3): when it changes, the old picture fades out over the new
@@ -50,10 +46,11 @@ export function WeatherScene({
   const isCard = quietShare != null;
   const drawn = useMemo(
     () =>
-      isCard
-        ? cardSvg({ ...state, motion: allowed }, { ...fit.card, idPrefix })
-        : sceneSvg({ ...state, motion: allowed }, { ...fit.opts, phone, idPrefix }),
-    [state, allowed, fit, idPrefix, isCard, phone],
+      sceneSvg(
+        { ...state, motion: allowed },
+        fit.card ? { ...fit.card, idPrefix } : { ...fit.opts, phone, idPrefix },
+      ),
+    [state, allowed, fit, idPrefix, phone],
   );
   const [ghost, setGhost] = useState<{ drawn: Drawn; n: number } | null>(null);
   const last = useRef<{ key?: string; drawn: Drawn } | null>(null);

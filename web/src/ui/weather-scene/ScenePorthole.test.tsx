@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { defaultScene, type SceneState } from '@/core/weather/scene';
-import { portholeSvg } from './drawV1';
+import type { Forecast } from '@/core/weather/api';
+import { defaultScene, sceneOf, type SceneHour, type SceneState } from '@/core/weather/scene';
+import { countElements, PORTHOLE, portholeSvg } from './draw';
 import { ScenePorthole } from './ScenePorthole';
 
 afterEach(cleanup);
 
-const base = (o: Partial<SceneState> = {}): SceneState => ({ ...defaultScene('light', 7), ...o });
 const parse = (s: SceneState, px = 64): Document =>
   new DOMParser().parseFromString(
     `<svg xmlns="http://www.w3.org/2000/svg">${portholeSvg(s, px).inner}</svg>`,
@@ -15,113 +15,228 @@ const parse = (s: SceneState, px = 64): Document =>
   );
 const layers = (s: SceneState, px = 64): string[] =>
   [...parse(s, px).querySelectorAll('[data-layer]')].map((g) => g.getAttribute('data-layer')!);
+const parts = (s: SceneState, px = 64): string[] =>
+  [...parse(s, px).querySelectorAll('[data-part]')].map((g) => g.getAttribute('data-part')!);
 
-const sun = { kind: 'sun', t: 0.5 } as const;
-const moonUp = {
-  body: { kind: 'moon', t: 0.6, alt: 30 },
-  moon: { illum: 0.6, tilt: -100, size: 1, t: 0.6, alt: 30 },
-} as const;
-
-/** The twelve states of mockups/06-klein.html "Bullauge" and the layers each must show (handoff 04 "Tests"). */
-const STATES: [string, Partial<SceneState>, string[]][] = [
-  ['clear', { cond: 'clear', cloud: 5, body: sun }, ['sky', 'body', 'ridgeFar', 'ridgeNear']],
-  [
-    'partly',
-    { cond: 'partly', cloud: 50, body: sun },
-    ['sky', 'body', 'clouds', 'ridgeFar', 'ridgeNear'],
-  ],
-  ['overcast', { cond: 'overcast', cloud: 95, body: sun }, ['sky', 'body', 'clouds', 'ridgeNear']],
-  ['fog', { cond: 'fog', cloud: 95, body: sun }, ['sky', 'body', 'fog']],
-  ['drizzle', { cond: 'drizzle', cloud: 95 }, ['sky', 'clouds', 'precip']],
-  ['rain', { cond: 'rain', intensity: 2, cloud: 95, body: sun }, ['sky', 'clouds', 'precip']],
-  ['showers', { cond: 'showers', cloud: 60, body: sun }, ['sky', 'body', 'clouds', 'precip']],
-  ['snow', { cond: 'snow', cloud: 95, season: 'winter' }, ['sky', 'clouds', 'precip']],
-  ['thunder', { cond: 'thunder', cloud: 95 }, ['sky', 'clouds', 'precip']],
-  [
-    'clear night with moon',
-    { phase: 'night', cond: 'clear', cloud: 5, ...moonUp },
-    ['sky', 'stars', 'body'],
-  ],
-  [
-    'mostly clear night, full moon',
+const forecast = (night: boolean, time: string): Forecast => ({
+  temp: 12,
+  group: 'clear',
+  time,
+  now: { night },
+  days: [
     {
-      phase: 'night',
-      cond: 'mostlyClear',
-      cloud: 25,
-      body: { kind: 'moon', t: 0.6, alt: 30 },
-      moon: { illum: 1, tilt: -100, size: 1.2, t: 0.6, alt: 30 },
+      date: time.slice(0, 10),
+      min: 8,
+      max: 20,
+      group: 'clear',
+      rain: 0,
+      sunrise: '05:20',
+      sunset: '21:30',
     },
-    ['sky', 'stars', 'body', 'clouds'],
   ],
-  [
-    'golden hour',
-    { phase: 'golden', cond: 'clear', cloud: 5, body: { kind: 'sun', t: 0.92 } },
-    ['sky', 'body'],
-  ],
+});
+const MOON = { lit: 0.6, tilt: 30, alt: 35, az: 170, full: false, superMoon: false };
+/** A state the model produces for an hour (the same `sceneOf` as the head and `useSmallScene`). */
+function stateOf(time: string, h: SceneHour, theme: 'light' | 'dark' = 'light'): SceneState {
+  const night = !!h.night;
+  return sceneOf({
+    forecast: forecast(night, `2026-01-15T${time}`),
+    hour: { temp: 12, ...h, time: `2026-01-15T${time}` },
+    at: 0,
+    nowMs: 0,
+    lat: 47,
+    theme,
+    motion: true,
+    moon: night ? MOON : undefined,
+  });
+}
+
+/** One hour per sky (the round's measure list) and the heavy cases; the mode each must come out in. */
+const SKIES: [string, string, SceneHour][] = [
+  ['clear day', '12:00', { code: 0, cloud: 5 }],
+  ['a few clouds', '12:00', { code: 1, cloud: 25 }],
+  ['broken cover', '12:00', { code: 2, cloud: 80 }],
+  ['golden hour', '20:50', { code: 0 }],
+  ['dawn', '05:00', { code: 0, night: true }],
+  ['overcast', '12:00', { code: 3, cloud: 95 }],
+  ['drizzle', '12:00', { code: 53, cloud: 100 }],
+  ['rain', '12:00', { code: 63, cloud: 100 }],
+  ['showers', '12:00', { code: 81, cloud: 70 }],
+  ['thunder 1 (open sky)', '12:00', { code: 95, mm: 1, cloud: 40 }],
+  ['thunder', '12:00', { code: 95, mm: 4 }],
+  ['thunder with hail, wind 3', '12:00', { code: 99, wind: 60, mm: 12 }],
+  ['snow 3, wind 3', '12:00', { code: 75, wind: 60, snowDepth: 0.3, temp: -3 }],
+  ['fog 1', '12:00', { code: 45, vis: 800 }],
+  ['fog 2', '12:00', { code: 45, vis: 200 }],
+  ['clear night', '01:00', { code: 0, night: true }],
+  ['overcast night', '01:00', { code: 3, cloud: 95, night: true }],
+  ['rainy night', '01:00', { code: 63, cloud: 100, night: true }],
+  ['snowy night', '01:00', { code: 73, cloud: 100, night: true, temp: -2 }],
 ];
+/** The only layers a porthole may draw (a new layer of the head's drawing fails here until it is placed). */
+const ALLOWED = ['sky', 'stars', 'body', 'clouds', 'ridgeAlp', 'fog', 'event', 'precip'];
 
-describe('porthole (package 4, mockup porthole())', () => {
-  it.each(STATES)('%s: its layers, round, never moving', (_, o, expected) => {
-    for (const theme of ['light', 'dark'] as const) {
-      const s = base({ ...o, theme, motion: true });
-      const got = layers(s);
-      expect(got).toEqual(expect.arrayContaining(expected));
-      // the order of the mockup: sky behind, the land in front
-      expect(got[0]).toBe('sky');
-      const svg = portholeSvg(s, 64);
-      expect(svg.viewBox).toBe('0 0 100 100');
-      // never moves: no motion class or attribute in the drawing, even when the head's state asks for motion
-      expect(svg.inner).not.toMatch(/sc-[a-z]+|data-motion|<animate/);
-      // one round crop
-      expect(parse(s).querySelector('clipPath circle')).not.toBeNull();
-    }
+describe('porthole on the new drawing (round 2, CONCEPT §6, handoff D)', () => {
+  it.each(SKIES)(
+    '%s: sky, body in its mode, the main summit, one bank or cloud, a few marks',
+    (_, time, h) => {
+      for (const theme of ['light', 'dark'] as const) {
+        const s = stateOf(time, h, theme);
+        const svg = portholeSvg(s, 64);
+        expect(svg.viewBox).toBe(PORTHOLE.view.join(' '));
+        const got = layers(s);
+        expect(got[0]).toBe('sky');
+        for (const l of got) expect(ALLOWED, l).toContain(l);
+        // the body whenever it is up, in every sky (CONCEPT §0 sentence 9), in the head's mode
+        expect(got.includes('body')).toBe(s.body.kind !== 'none');
+        if (s.body.kind !== 'none') {
+          expect(parse(s).querySelector('[data-layer="body"]')!.getAttribute('data-mode')).toBe(
+            s.mode,
+          );
+          // nothing opaque is drawn over a clear body: no deck after it
+          if (s.mode === 'clear' || s.mode === 'veil')
+            expect(
+              parse(s).querySelector('[data-layer="body"] ~ [data-layer] [data-part="deck"]'),
+            ).toBeNull();
+        }
+        // the main summit alone, with its shaded face
+        const p = parts(s);
+        if (s.fog < 2) {
+          expect(p).toContain('main');
+          expect(p).toContain('shade');
+        }
+        for (const other of ['outlier', 'edge', 'shoulder', 'west', 'east', 'back'])
+          expect(p).not.toContain(other);
+        // one deck bank or one cloud by cover
+        const clouds = parse(s).querySelectorAll('[data-layer="clouds"]');
+        if (s.cover === 0 && !s.thunder) expect(clouds).toHaveLength(0);
+        else {
+          const decks = parse(s).querySelectorAll('[data-part="deck"]').length;
+          const banks = parse(s).querySelectorAll('[data-bank]').length;
+          const cumuli = parse(s).querySelectorAll('[data-layer="clouds"] > g').length;
+          if (s.cover === 4 || s.thunder >= 2) {
+            expect(decks).toBe(1);
+            expect(banks).toBeLessThanOrEqual(1);
+            expect(cumuli).toBe(0);
+          } else expect([decks, banks, cumuli]).toEqual([0, 0, 1]);
+        }
+        // a few marks of rain or snow, in one path
+        const precip = parse(s).querySelectorAll(
+          '[data-layer="precip"] path:not([data-part="hail"])',
+        );
+        if (/rain|rizzle|howers|thunder|snow/i.test(s.cond)) {
+          expect(precip).toHaveLength(1);
+          const marks = (precip[0]!.getAttribute('d')!.match(/m/gi) ?? []).length;
+          expect(marks).toBeGreaterThanOrEqual(5);
+          expect(marks).toBeLessThanOrEqual(10);
+        } else expect(precip).toHaveLength(0);
+        // never moves, even when the head's state asks for motion
+        expect(s.motion).toBe(true);
+        expect(svg.inner).not.toMatch(/sc-[a-z]+|data-motion|<animate|<use/);
+        // small: a fraction of the head's ceiling (A11Y §4)
+        expect(countElements(svg.inner)).toBeLessThanOrEqual(48);
+        expect(svg.inner.length + JSON.stringify(svg.vars).length).toBeLessThanOrEqual(12 * 1024);
+        // colours are tokens, never literals
+        expect(svg.inner).not.toMatch(/#[0-9a-fA-F]{3,6}\b(?!\))/);
+      }
+    },
+  );
+
+  it('every mode: clear with rays, the veil ring, the hole with its one bank, the pale schein', () => {
+    const clear = stateOf('12:00', { code: 0, cloud: 5 });
+    expect(clear.mode).toBe('clear');
+    expect(parts(clear)).toContain('rays');
+    const veil: SceneState = { ...clear, veil: true, mode: 'veil' };
+    expect(parse(veil).querySelector('[data-layer="body"] path[stroke]')).not.toBeNull();
+    const hole: SceneState = { ...stateOf('12:00', { code: 3, cloud: 95 }), mode: 'hole' };
+    expect(parts(hole)).toEqual(expect.arrayContaining(['opening', 'spill', 'rim']));
+    expect(parse(hole).querySelectorAll('[data-bank]')).toHaveLength(1);
+    const schein = stateOf('12:00', { code: 63, cloud: 100 });
+    expect(schein.mode).toBe('schein');
+    expect(parts(schein)).toContain('schein');
+    expect(parts(schein)).not.toContain('rays');
   });
 
-  it('thunder draws the bolt, snow round flakes, rain strokes; the precipitation is one path', () => {
-    const marks = (s: SceneState) => parse(s).querySelectorAll('[data-layer="precip"] path');
-    expect(marks(base({ cond: 'rain', cloud: 95 }))).toHaveLength(1);
-    expect(marks(base({ cond: 'rain', cloud: 95 }))[0]!.getAttribute('stroke')).toBeTruthy();
-    expect(marks(base({ cond: 'snow', cloud: 95 }))[0]!.getAttribute('fill')).toBeTruthy();
-    expect(marks(base({ cond: 'thunder', cloud: 95 }))).toHaveLength(2);
+  it('thunder: the main bolt; hail: its stones; snow: flakes, rain: strokes', () => {
+    expect(parts(stateOf('12:00', { code: 95, mm: 4 }))).toContain('bolt');
+    expect(parts(stateOf('12:00', { code: 99, wind: 60, mm: 12 }))).toContain('hail');
+    expect(parts(stateOf('12:00', { code: 95, mm: 4 }))).not.toContain('hail');
+    expect(parts(stateOf('12:00', { code: 75, temp: -3 }))).toContain('flakes');
+    expect(parts(stateOf('12:00', { code: 63, cloud: 100 }))).toContain('rain');
   });
 
-  it('the moon shows its true phase: the lit shape, the maria only from 48 px', () => {
-    const s = base({ phase: 'night', cond: 'clear', cloud: 5, ...moonUp });
-    expect(parse(s, 64).querySelector('[data-part="moon"] [data-part="lit"]')).not.toBeNull();
-    expect(parse(s, 64).querySelector('[data-part="moon"] ellipse')).not.toBeNull();
-    expect(parse(s, 28).querySelector('[data-part="moon"] ellipse')).toBeNull();
-    expect(parse(s, 64).querySelector('[data-part="moon"]')!.getAttribute('data-tilt')).toBe(
-      '-100',
+  it('the moon shows its true phase, turned to its tilt, at the body size of the porthole', () => {
+    const s = stateOf('01:00', { code: 0, night: true });
+    expect(s.body.kind).toBe('moon');
+    expect(parse(s).querySelector('[data-part="moon"]')!.getAttribute('transform')).toMatch(
+      /^rotate\(/,
+    );
+    expect(parse(s).querySelector('[data-layer="body"]')!.getAttribute('transform')).toContain(
+      `scale(${PORTHOLE.bodyK})`,
     );
   });
 
+  it('at 28 px every mark is at least about 0.8 px; moon maria and stars only from 48 px', () => {
+    const k = (px: number) => px / PORTHOLE.view[2];
+    const rain = parse(stateOf('12:00', { code: 63, cloud: 100 }), 28).querySelector(
+      '[data-part="rain"]',
+    )!;
+    expect(Number(rain.getAttribute('stroke-width')) * k(28)).toBeGreaterThanOrEqual(0.79);
+    const flakes = parse(stateOf('12:00', { code: 75, temp: -3 }), 28).querySelector(
+      '[data-part="flakes"]',
+    )!;
+    const r = Number(/a(-?[\d.]+)/.exec(flakes.getAttribute('d')!)![1]);
+    expect(2 * r * k(28)).toBeGreaterThanOrEqual(0.79);
+    const night = stateOf('01:00', { code: 0, night: true });
+    const maria = (px: number) =>
+      parse(night, px).querySelectorAll('[data-part="moon"] path').length;
+    expect(maria(28)).toBe(1); // the lit shape alone
+    expect(maria(64)).toBe(2); // with its maria
+    expect(layers(night, 28)).not.toContain('stars');
+    expect(layers(night, 64)).toContain('stars');
+  });
+
+  it('no sky event in the small versions (CONCEPT §6, open)', () => {
+    const night = stateOf('01:00', { code: 0, night: true });
+    for (const event of ['aurora', 'meteors', 'starNight', 'lunarTotal'] as const) {
+      const p = parts({ ...night, event, eventAmount: 1 });
+      for (const e of ['aurora', 'auroraGlow', 'meteors', 'milky', 'copper'])
+        expect(p, event).not.toContain(e);
+    }
+  });
+
   it('"Schlicht" keeps sky and body only', () => {
-    for (const [, o] of STATES) {
-      const got = layers(base({ ...o, level: 'plain' }));
+    for (const [, time, h] of SKIES) {
+      const got = layers({ ...stateOf(time, h), level: 'plain' });
       expect(got.every((l) => l === 'sky' || l === 'body')).toBe(true);
       expect(got).toContain('sky');
     }
   });
 
   it('"Mond und Himmelsereignisse" off (no moon in the state): no moon in the porthole', () => {
-    // sceneOf leaves `moon` out and the night body `none` while the switch is off
-    const s = base({ phase: 'night', cond: 'clear', cloud: 5, body: { kind: 'none', t: 0.5 } });
+    const s: SceneState = {
+      ...stateOf('01:00', { code: 0, night: true }),
+      body: { kind: 'none', t: 0.5 },
+      moon: undefined,
+    };
     expect(layers(s)).not.toContain('body');
     expect(parse(s).querySelector('[data-part="moon"]')).toBeNull();
   });
 
   it('two portholes on one page keep their own ids; colours are declared once as custom properties', () => {
-    const s = base({ cond: 'partly', cloud: 50, body: sun });
+    const s = stateOf('12:00', { code: 2, cloud: 50 });
     const a = portholeSvg(s, 28, 'a');
     const b = portholeSvg(s, 28, 'b');
     const ids = (x: string) => [...x.matchAll(/id="([^"]+)"/g)].map((m) => m[1]);
     expect(ids(a.inner).some((id) => ids(b.inner).includes(id))).toBe(false);
-    expect(a.inner).not.toMatch(/"(var|color-mix)\(--scene/);
     expect(Object.values(a.vars).length).toBeGreaterThan(0);
   });
 
   it('the component: hidden from assistive tech, 28 / 64 px, no motion attribute, grey in "Ruhig"', () => {
-    const s = base({ cond: 'rain', cloud: 95, motion: true });
+    const s: SceneState = {
+      ...defaultScene('light', 7),
+      ...stateOf('12:00', { code: 63, cloud: 100 }),
+    };
     const { rerender } = render(<ScenePorthole state={s} size={28} />);
     const p = screen.getByTestId('scene-porthole');
     expect(p).toHaveAttribute('aria-hidden', 'true');

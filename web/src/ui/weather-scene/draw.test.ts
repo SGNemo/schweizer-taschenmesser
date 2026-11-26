@@ -340,6 +340,13 @@ describe('the body is seen whenever it is above the horizon', () => {
       'body',
     ]);
     expect(out.inner).toContain('data-mode="schein"');
+    // a clear night too: the moon, no stars
+    const night = draw(
+      hourScene({ code: 0, cloud: 5 }, { level: 'plain', night: true, moon: true }),
+    );
+    expect(
+      [...night.q('svg > g > [data-layer]')].map((e) => e.getAttribute('data-layer')),
+    ).not.toContain('stars');
   });
 });
 
@@ -387,6 +394,30 @@ describe('motion (CONCEPT §7, A11Y §3)', () => {
     const t = draw(hourScene({ code: 95, mm: 4 }, { motion: true })).out.inner;
     expect(t).toContain('sc-fall');
     expect((t.match(/sc-glow-up/g) ?? []).length).toBe(1);
+  });
+
+  it('precipitation falls in ONE 5 s iteration over a stack of n + 1 tiles and ends on the still (handoff D, perf)', () => {
+    for (const [hour, n] of [
+      [{ code: 99, wind: 60, mm: 12 }, 10], // thunder 3 with hail and wind 3: rain at 0.5 s a tile
+      [{ code: 63, cloud: 100 }, 10],
+      [{ code: 53, cloud: 100 }, 6], // drizzle: 5 / 6 s a tile
+      [{ code: 75, temp: -3 }, 1], // snow: one tile in 5 s
+    ] as const) {
+      const fall = draw(hourScene(hour, { motion: true })).doc.querySelector('.sc-fall')!;
+      const style = fall.getAttribute('style')!;
+      expect(style).toContain('--dur:5s');
+      expect(style).toContain('--n:1');
+      const T = Number(/--fy:(-?[\d.]+)px/.exec(style)![1]) / n;
+      // the uses repeat the tile at 1, 2, 4 … tiles up: together at least n + 1 tiles, the last one moved in by n
+      const ups = [...fall.querySelectorAll('use')].map((u) =>
+        Number(/translate\(-?[\d.]+ (-?[\d.]+)\)/.exec(u.getAttribute('transform')!)![1]),
+      );
+      expect(ups.length).toBe(Math.ceil(Math.log2(n + 1)));
+      ups.forEach((y, i) => expect(y).toBeCloseTo(-T * 2 ** i, 0));
+      expect(2 ** ups.length).toBeGreaterThanOrEqual(n + 1);
+    }
+    // the keyframes move from the still by (--fx, --fy); `--n` iterations of `--dur`
+    expect(css).toMatch(/animation: sc-fall var\(--dur\) linear var\(--n\) both;/);
   });
 
   it('the glow brightens exactly once: 2.4 s, from second 1, one iteration, only while running; hidden at rest', () => {

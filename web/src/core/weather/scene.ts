@@ -219,8 +219,6 @@ export interface SceneState {
   /** 0 none, 1 at 0° and below with nothing falling (and rime fog), 2 at −5° and below. */
   frost: 0 | 1 | 2;
   heat: boolean;
-  /** Round 1's flag, kept for the porthole (package D): `snowCover >= 1`. */
-  snowGround: boolean;
   season: Season;
   /**
    * The sun on its arc (`t` 0 = sunrise, 1 = sunset), or the moon while it is up at night, dawn and dusk (`t` from its
@@ -656,7 +654,6 @@ export function sceneOf(i: SceneInput): SceneState {
     wind: windLevel(h.wind, h.gust),
     frost: frostLevel(temp, cond, code),
     heat: temp >= HEAT_C && byDay,
-    snowGround: snowCover >= 1,
     season: seasonOf(Number(nowIso.slice(5, 7)), i.lat),
     body,
     moon,
@@ -723,7 +720,6 @@ export function defaultScene(theme: SceneTheme, month: number, calm = false): Sc
     wind: 0,
     frost: 0,
     heat: false,
-    snowGround: false,
     season: seasonOf(month, 47),
     body: { kind: 'none', t: 0.5 },
     eventAmount: 0,

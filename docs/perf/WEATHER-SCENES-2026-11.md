@@ -107,3 +107,37 @@ boundaries and their whole-page restyles are gone (snow with wind 3: 122 → 14 
   need the tile to cover n heights; or "Standbild" for these states on weak devices (A11Y §4: the fallback).
 - Overview at rest: 5–14 ms in some runs, 145–230 ms in others over 5 s; no animation runs there (portholes and the
   widget have none), so it is app work after start (not traced further).
+
+## 7. Round 2, package D (new drawing, small versions, one-iteration precipitation)
+
+Measured 2026-11-26 on `feat/weather-scene-2-small` with `npm run measure:weather` (same setup as above; CPU ×4),
+ceilings of round 2's [A11Y §4](../design/weather-scenes-2/A11Y.md). New scenario `overcast-night-banks` (code 3,
+95 %, night, moon between the banks). "Before" = the same build with package A's `fall()` (`5 / dur` iterations).
+
+| Head, desktop / Pixel 7                    | Ceiling        | Snow 3, wind 3, aurora | Thunder 3, hail, wind 3: before → after | Overcast night, banks | Snow, still air |
+| ------------------------------------------ | -------------- | ---------------------- | --------------------------------------- | --------------------- | --------------- |
+| Elements                                   | ≤ 220          | 197 / 197              | 221 → **227** / 221 → **227**           | 194 / 193             | 191 / 191       |
+| `outerHTML` (with the `--cN` style)        | ≤ 64 KB        | 69.1 / 68.9 KB         | 82.9 → 83.1 KB                          | 64.4 / 64.0 KB        | 67.5 / 67.4 KB  |
+| Animated groups                            | ≤ 9            | 6                      | 6                                       | 2                     | 3               |
+| Motion s 1–5, `TaskDuration` without trace | ≤ 60 ms        | 8.8 / 8.3 ms           | 340 → **72** / 462 → **88** ms          | 9.6 / 11.1 ms         | 4.9 / 7.7 ms    |
+| same, traced (merged tasks)                | –              | 371 / 334 ms           | 1038 → 492 / 939 → 595 ms               | 374 / 376 ms          | 393 / 455 ms    |
+| Paints / layouts s 1–5 (traced)            | ≤ 30 paints    | 7 / 3 · 9 / 4          | 106 / 52 → 21 / 10 · 107 / 53 → 31 / 15 | 8 / 3 · 9 / 4         | 7 / 3 · 9 / 4   |
+| Long tasks during the motion               | 0              | 1 / 0                  | 0 → 1 / 0 → 0                           | 0 / 0                 | 0 / 1           |
+| At rest, 5 s traced                        | about 0        | 2.2 / 1.2 ms, 0 paints | 4.3 / 1.4 ms, 0 paints                  | 4.0 / 1.1 ms          | 2.1 / 0 ms      |
+| `sceneOf` + `sceneSvg`, ×4 (median)        | within a frame | 29.5 / 31.1 ms         | 35.9 / 36.3 ms                          | 29.2 / 30.2 ms        | 30.0 / 32.7 ms  |
+
+| Small versions (no motion)            | Snow         | Thunder      | Overcast night | Still air    |
+| ------------------------------------- | ------------ | ------------ | -------------- | ------------ |
+| Porthole 28 px: elements, `outerHTML` | 31, 8.1 KB   | 34, 7.9 KB   | 43, 9.6 KB     | 30, 8.0 KB   |
+| Widget card: elements, `outerHTML`    | 175, 64.9 KB | 214, 82.3 KB | 194, 64.1 KB   | 169, 63.5 KB |
+| `portholeSvg` 64 px, ×4 (median)      | 1.0 ms       | 1.0 ms       | –              | –            |
+
+- **Closed (round 1's open item):** precipitation falls in one 5 s iteration over a stack of n + 1 tiles (doubling
+  `<use>`, 4 for rain). Thunder with hail: 340 → 72 ms desktop, 462 → 88 ms phone; paints 106 → 21 / 31.
+- **Still above:** thunder 3 with hail and wind 3 at 72 / 88 ms (6 layouts at the start and end of the glow and the
+  motion's end); every other state under 12 ms. The stack costs 6 elements (3 `<use>`, 3 `<g>`): the heaviest head is
+  227 elements; package A's drawing was at 221 and over 64 KB there already (83 KB with the colour style). The drawing's
+  build time (≈ 30–36 ms at ×4) is package A's and above one frame; the porthole builds in 1 ms.
+- The porthole rows were measured before the council's 28 px changes (no stars and maria below 48 px, larger marks) and were not measured again.
+- At rest the ceiling holds everywhere (1–4 ms traced, 0 paints, 0 frames). The untraced 4 s rest window shows
+  67–80 ms in two desktop runs and 0.3–2 ms in the others: app work after start, as in §2 (traced: 4 ms).
