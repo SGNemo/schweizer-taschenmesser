@@ -24,6 +24,7 @@ import { unitId } from '@/core/plan/units';
 import { spanMin, windowText, type TimeWindow } from '@/core/plan/windows';
 import { now, today } from '@/core/time/now';
 import { UndoReplayError, undoEntry } from '@/core/undo';
+import { addLink } from '@/core/entitylinks';
 import { NEVER_LINKED, type EntityRef } from '@/core/entitylinks/types';
 import { bus } from '@/core/events';
 import type { EventMap } from '@/core/events/events';
@@ -423,12 +424,35 @@ async function layOn(
  * lock word next to a day („Zahnarzt Do fest“, „… lock“, „…!“) lays it there „fest“; without a day the word stays the
  * title. The `p` prefix keeps its pin: the thing lies „fest“ on that day (ANALYSIS R13).
  */
+/**
+ * The lead chip A2 of „Vorbereiten …“ / „Danach …“ (package 9): the appointment a new thing is linked to and the day it
+ * lies on – the appointment's own, or with A3 the day before (after).
+ */
+export interface FieldLead {
+  /** The appointment as a link stores it (the event, never an occurrence key). */
+  ref: EntityRef;
+  title: string;
+  /** The appointment's day, 'YYYY-MM-DD'. */
+  date: string;
+  rel: 'before' | 'after';
+  /** A3: the day before („vor“) or after („nach“). */
+  shift: boolean;
+  /** One occurrence of a series: the link names its day, so the next one starts clean. */
+  series?: true;
+}
+
+/** The day a lead chip gives. */
+export const leadDay = (lead: FieldLead): string =>
+  lead.shift ? addDays(lead.date, lead.rel === 'before' ? -1 : 1) : lead.date;
+
 export async function addFromField(
   text: string,
   titles: Record<string, string>,
   shown?: string,
   /** An Aufgabe mit Schritten (package 3): `text` is its name, these its tick-off lines. */
   steps?: readonly string[],
+  /** A lead chip (package 9): the day and a `before` / `after` link to the appointment, in this one action. */
+  appointment?: FieldLead,
 ): Promise<boolean> {
   // The phrase is German, like the quick-capture parser (CONCEPT §6c); elsewhere the ⋯ action sets a deadline.
   // „Duschen nachmittags“ (package 4b): the part word becomes the item's part (`readFieldWithPart`).
@@ -483,7 +507,9 @@ export async function addFromField(
   // The new thing lies on the day on the sheet, else today; a day in the text wins (a deadline is no day).
   const dated = !hardDue && fields.date && fields.date >= day ? fields.date : undefined;
   const fixedOn = lockDay ?? pin;
-  const target = fixedOn ?? dated ?? (shown && shown >= day ? shown : day);
+  // A day word he types wins over the chip's day; the link stays.
+  const chipDay = appointment && leadDay(appointment) >= day ? leadDay(appointment) : undefined;
+  const target = fixedOn ?? dated ?? chipDay ?? (shown && shown >= day ? shown : day);
   const lead = hardDue
     ? t.planner.toast.addedWithDue(dayName(hardDue))
     : fixedOn
@@ -492,7 +518,11 @@ export async function addFromField(
         ? t.planner.toast.part(short(fields.title), partWord(part))
         : steps?.length
           ? t.planner.kinds.toast.steps(steps.length, dayName(target))
-          : t.planner.toast.laid(dayName(target));
+          : appointment
+            ? (appointment.rel === 'before'
+                ? t.planner.appointment.laidBefore
+                : t.planner.appointment.laidAfter)(dayName(target), short(appointment.title))
+            : t.planner.toast.laid(dayName(target));
   return act(
     t.planner.toast.added,
     lead,
@@ -506,6 +536,17 @@ export async function addFromField(
           : undefined;
       const saved = await saveCapture('todo', todoFields);
       const key = itemKeyOf(saved.moduleId, saved.id);
+      // The link to the appointment: a planner row of its own in the link store, never the ToDo's `links[]`.
+      if (appointment)
+        await addLink({
+          from: { module: saved.moduleId, id: saved.id },
+          to: appointment.ref,
+          rel: appointment.rel,
+          label: appointment.title,
+          // A series' occurrence: the day it is for, so the next one starts clean. A single appointment keeps its
+          // things wherever it is moved.
+          ...(appointment.series ? { on: appointment.date } : {}),
+        });
       const scope = await layOn(
         { moduleId: saved.moduleId, id: saved.id, durationMin: fields.estimateMin ?? measured },
         target,
@@ -528,7 +569,10 @@ export async function addFromField(
     // A deadline or a part says its own fact; otherwise a full or kept-free day says so in the one line.
     hardDue || (part && !fixedOn)
       ? {}
-      : { leadAfter: (run) => dayNote(target, run, fixedOn || steps?.length ? lead : undefined) },
+      : {
+          leadAfter: (run) =>
+            dayNote(target, run, fixedOn || steps?.length || appointment ? lead : undefined),
+        },
   );
 }
 
@@ -546,8 +590,11 @@ export async function addKindFromField(
   reading: FieldKind,
   titles: Record<string, string>,
   shown?: string,
+  /** A lead chip: only a task with steps takes it; every other kind leaves it unapplied (drawn struck). */
+  appointment?: FieldLead,
 ): Promise<boolean> {
-  if (reading.kind === 'steps') return addFromField(reading.title, titles, shown, reading.steps);
+  if (reading.kind === 'steps')
+    return addFromField(reading.title, titles, shown, reading.steps, appointment);
   let key: string | undefined;
   let noteRef: { id: string; title: string } | undefined;
   // A failure halfway (the second shopping entry, a shopping list made on the way, the item row, the run) is taken

@@ -1,4 +1,4 @@
-import { type FormEvent, type Ref, useId } from 'react';
+import { type FormEvent, type ReactNode, type Ref, useId } from 'react';
 import { t } from '@/strings';
 import { Button, Chip, TextField } from '@/ui';
 import type { FieldKind } from '../fieldKind';
@@ -26,6 +26,7 @@ export function Capture({
   preview,
   onAsTask,
   previewAbove,
+  lead,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -54,6 +55,11 @@ export function Capture({
   onAsTask?: () => void;
   /** The phone's last row: the line stands above the field, never under the keyboard. */
   previewAbove?: boolean;
+  /**
+   * The lead chip before the input (A2, package 9): drawn by the page, given the kind K1 shows when it is no task
+   * (the chip is then struck through and not applied). Backspace in the empty field removes it.
+   */
+  lead?: { chip: (struckFor?: string) => ReactNode; onRemove: () => void };
 }) {
   const examples = Object.values(t.planner.add.examples);
   const errorId = useId();
@@ -72,6 +78,11 @@ export function Capture({
         data-keep-visible
         aria-busy={reading || undefined}
       >
+        {lead
+          ? lead.chip(
+              preview && preview.kind !== 'steps' ? t.planner.kinds.name[preview.kind] : undefined,
+            )
+          : null}
         <div className={styles.grow}>
           <TextField
             label={t.planner.add.label}
@@ -88,6 +99,11 @@ export function Capture({
               if (e.key === 'Enter' && e.altKey && preview && onAsTask) {
                 e.preventDefault();
                 onAsTask();
+              }
+              // The chip goes with Backspace in the empty field (A11Y „Appointment“).
+              if (e.key === 'Backspace' && !value && lead) {
+                e.preventDefault();
+                lead.onRemove();
               }
             }}
             readOnly={reading}

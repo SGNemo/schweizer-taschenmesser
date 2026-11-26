@@ -22,6 +22,7 @@ import {
   withLinks,
 } from './RowLinks';
 import { compartmentId, RowCompartment } from './RowCompartment';
+import { useAppointmentLink } from './appointmentLinks';
 import { carrierOf } from './carrier';
 import { PilePanel } from './PilePanel';
 import { usePileOf, type PileData } from './pileContext';
@@ -270,6 +271,7 @@ export function ThingRow({
     stepsFoot,
   );
   const linkedMenu = withLinks(menu, useActionMenu(action), useLinkMenu(links));
+  const appointment = useAppointmentLink(row.itemKey);
   // „Noch offen“: the row's steps are on the row itself – no ⋯.
   const fullMenu = onMove ? [] : linkedMenu;
   const done =
@@ -413,7 +415,17 @@ export function ThingRow({
           </span>
         )
       }
-      below={links.length > 0 ? <LinkChips views={links} /> : undefined}
+      below={
+        appointment || links.length > 0 ? (
+          <>
+            {/* A4 (package 9): the appointment it prepares or follows; X3 once that is gone. Plain text. */}
+            {appointment ? (
+              <span className={styles.chipAppointment}>{appointment.text}</span>
+            ) : null}
+            {links.length > 0 ? <LinkChips views={links} /> : null}
+          </>
+        ) : undefined
+      }
       end={
         noDuration ? undefined : (
           <span className={styles.endFacts}>

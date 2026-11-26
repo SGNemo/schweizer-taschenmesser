@@ -77,6 +77,8 @@ const manifest: ModuleManifest = {
     attention: () => import('./attention'),
     // What a link to one of these says about its target (alive, gone); read through `resolveLink` only.
     linkTarget: () => import('./linkTarget'),
+    // An appointment's panel under its blocker row in the planner (planner hub 2, package 9): own data only.
+    planPanel: () => import('./components/PlanPanel'),
     onboarding: onboarding,
     quickAdd: [
       {

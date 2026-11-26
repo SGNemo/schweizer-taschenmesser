@@ -78,6 +78,21 @@ export const planner: Strings['planner'] = {
     tick: (step: string) => `Tick “${step}”`,
     more: (n: number) => `${n} more`,
   },
+  appointment: {
+    prepare: 'Prepare …',
+    afterwards: 'Afterwards …',
+    chipBefore: (title: string, day: string) => `before ${title}, ${day}`,
+    chipAfter: (title: string, day: string) => `after ${title}, ${day}`,
+    dayBefore: 'the day before',
+    dayAfter: 'the day after',
+    rowBefore: (title: string) => `before ${title}`,
+    rowAfter: (title: string) => `after ${title}`,
+    change: (chip: string) => `${chip}. Change`,
+    remove: 'Remove',
+    notFor: (chip: string, kind: string) => `${chip} – does not apply to ${kind}`,
+    laidBefore: (day: string, title: string) => `On ${day}, before ${title}.`,
+    laidAfter: (day: string, title: string) => `On ${day}, after ${title}.`,
+  },
   kinds: {
     becomes: 'Becomes:',
     name: {

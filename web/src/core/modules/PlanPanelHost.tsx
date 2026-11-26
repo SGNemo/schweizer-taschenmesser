@@ -61,6 +61,11 @@ interface PanelContext {
    * module's own actions and before „Ganz öffnen“. The planner's, never the module's: the host only places them.
    */
   steps?: { go: () => void; title: string; menu: RowMenuItem[] };
+  /**
+   * The planner's own actions for this row (package 9: „Vorbereiten …“ / „Danach …“ on an appointment): first in the
+   * foot, before the module's. The planner's, never the module's: the host only places them.
+   */
+  actions?: ReactNode;
 }
 const Ctx = createContext<PanelContext | undefined>(undefined);
 
@@ -83,8 +88,9 @@ export function PlanPanelFoot({ children }: { children?: ReactNode }) {
     <>
       {ctx?.beforeFoot}
       <div className={styles.foot} data-panel-foot="">
-        {children || steps ? (
+        {children || steps || ctx?.actions ? (
           <span className={styles.footStart}>
+            {ctx?.actions}
             {children}
             {steps ? (
               <>
@@ -273,6 +279,8 @@ export interface PlanPanelHostProps {
   carrier?: { moduleId: string; id: string };
   /** A thing with steps (package 5a): „Los“ and the ⋯ the foot carries (`PanelContext.steps`). */
   steps?: { go: () => void; title: string; menu: RowMenuItem[] };
+  /** The planner's own actions first in the foot (`PanelContext.actions`). */
+  actions?: ReactNode;
 }
 
 /**
@@ -338,6 +346,7 @@ export function PlanPanelHost({
   links,
   carrier,
   steps,
+  actions,
 }: PlanPanelHostProps) {
   const states = useModuleStates();
   const row = useMemo(() => ({ moduleId, id }), [moduleId, id]);
@@ -349,8 +358,9 @@ export function PlanPanelHost({
       row,
       ...(onTakeOut ? { onTakeOut } : {}),
       ...(steps ? { steps } : {}),
+      ...(actions ? { actions } : {}),
     }),
-    [to, detail, links, row, onTakeOut, steps],
+    [to, detail, links, row, onTakeOut, steps, actions],
   );
   const carried =
     carrier && CARRIED[carrier.moduleId] === moduleId && !compact ? carrier : undefined;
