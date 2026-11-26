@@ -23,11 +23,11 @@ import { DEFAULT_MIN, type DayPart } from '@/core/plan/types';
 import { unitId } from '@/core/plan/units';
 import { spanMin, windowText, type TimeWindow } from '@/core/plan/windows';
 import { now, today } from '@/core/time/now';
-import { undoEntry } from '@/core/undo';
+import { UndoReplayError, undoEntry } from '@/core/undo';
 import { NEVER_LINKED, type EntityRef } from '@/core/entitylinks/types';
 import { bus } from '@/core/events';
 import type { EventMap } from '@/core/events/events';
-import type { CaptureFields, CaptureType } from '@/quickCapture/parser';
+import type { CaptureFields } from '@/quickCapture/parser';
 import {
   breakOf,
   captureLive,
@@ -550,60 +550,50 @@ export async function addKindFromField(
   if (reading.kind === 'steps') return addFromField(reading.title, titles, shown, reading.steps);
   let key: string | undefined;
   let noteRef: { id: string; title: string } | undefined;
-  // What the action wrote so far: `undoable` keeps no entry when its function throws, so a failure halfway (the
-  // second shopping entry, the item row, the run) takes these back itself – never a half entry while the field says
+  // A failure halfway (the second shopping entry, a shopping list made on the way, the item row, the run) is taken
+  // back by `undoable` itself (it replays every write of the action): never a half entry while the field says
   // nothing was stored.
-  const written: (() => Promise<void>)[] = [];
-  const save = async (type: CaptureType, fields: CaptureFields) => {
-    const saved = await saveCapture(type, fields);
-    written.push(saved.undo);
-    return saved;
-  };
-  const own = async (ref: { moduleId: string; id: string }) => {
-    const row = await ownRow(ref);
-    if (row.created) written.push(() => itemRepo.remove(itemKeyOf(ref.moduleId, ref.id)));
-    return row.key;
-  };
   let run: UserRun;
   try {
     run = await runUser(t.planner.toast.added, async () => {
       switch (reading.kind) {
         case 'invoice': {
-          const saved = await save('invoice', reading.fields);
-          key = await own({ moduleId: saved.moduleId, id: saved.id });
+          const saved = await saveCapture('invoice', reading.fields);
+          key = await ownRow({ moduleId: saved.moduleId, id: saved.id });
           return {};
         }
         case 'list': {
           let ref: { moduleId: string; id: string } | undefined;
           for (const name of reading.names) {
-            const saved = await save('list', { title: name });
+            const saved = await saveCapture('list', { title: name });
             ref ??= saved.planRef;
           }
           // Fails closed: a list entry that names no list would skip the check below.
           if (!ref) throw new Error('shopping entry without a list');
-          key = await own(ref);
+          key = await ownRow(ref);
           return {};
         }
         case 'event':
-          await save('event', reading.fields);
+          await saveCapture('event', reading.fields);
           return {};
         case 'note': {
-          const saved = await save('note', { title: reading.title });
+          const saved = await saveCapture('note', { title: reading.title });
           noteRef = { id: saved.id, title: reading.title };
           return {};
         }
         case 'bookmark':
-          await save('bookmark', { title: '', url: reading.url });
+          await saveCapture('bookmark', { title: '', url: reading.url });
           return {};
       }
     });
   } catch (e) {
-    for (const undo of written.reverse()) await undo().catch(() => undefined);
     if (e instanceof PlannerOffError) {
       toast(t.planner.toast.off);
       return false;
     }
-    // The target refused (its module went off, an impossible date): nothing stays stored, the field says so.
+    // The target refused (its module went off, an impossible date): nothing stays stored, the field says so. Should
+    // taking a write back fail, something did stay: the undo toast says so.
+    if (e instanceof UndoReplayError) toast(t.ui.undoFailed);
     console.error('[planner] kind entry failed', e instanceof Error ? e.name : 'error');
     return false;
   }
@@ -637,14 +627,11 @@ export async function addKindFromField(
  * The planner's own item row for a thing of the field, only when it has none (a row kept as it is, `excluded` too).
  * Returns the key to check against the run – none for a thing he put on „Nicht planen“: it stays off the plan.
  */
-async function ownRow(ref: {
-  moduleId: string;
-  id: string;
-}): Promise<{ key: string | undefined; created: boolean }> {
+async function ownRow(ref: { moduleId: string; id: string }): Promise<string | undefined> {
   const key = itemKeyOf(ref.moduleId, ref.id);
   const row = await itemRepo.get(key);
   if (!row) await itemPatch(ref, {});
-  return { key: row?.excluded ? undefined : key, created: !row };
+  return row?.excluded ? undefined : key;
 }
 
 /**
@@ -797,18 +784,13 @@ export async function asBreak(
       // The thing goes first: a second tap or a thing removed on another device adds no second blocker.
       const restore = await s.onRemove!(e.id);
       if (!restore) return;
-      // The source's own undo joins this action: a source whose removal is no recorded write comes back too.
+      // The source's own undo joins this action: a source whose removal is no recorded write comes back too – also
+      // when the blocker's write fails (`undoable` replays the recorded steps): never removed without its blocker.
       recordWrite(restore);
-      try {
-        const row = await dayRepo.get(date);
-        await dayPatch(date, {
-          blockers: [...(row?.blockers ?? []), { id: randomId(), label: e.title, min }],
-        });
-      } catch (err) {
-        // A failed write drops the action's undo: the thing must not stay removed without its blocker.
-        await restore().catch(() => undefined);
-        throw err;
-      }
+      const row = await dayRepo.get(date);
+      await dayPatch(date, {
+        blockers: [...(row?.blockers ?? []), { id: randomId(), label: e.title, min }],
+      });
     },
     { leadOnly: true },
   );

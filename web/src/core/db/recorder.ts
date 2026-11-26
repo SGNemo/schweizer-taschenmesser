@@ -30,10 +30,10 @@ export async function recordAs<R>(inverse: UndoStep, fn: () => Promise<R>): Prom
     wrote = true;
   };
   try {
-    const result = await fn();
-    if (wrote) outer(inverse);
-    return result;
+    return await fn();
   } finally {
     recorder = outer;
+    // Also when `fn` throws after its write: the rollback of `undoable` must take it back.
+    if (wrote) outer(inverse);
   }
 }
