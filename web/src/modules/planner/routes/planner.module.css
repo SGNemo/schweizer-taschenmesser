@@ -103,9 +103,9 @@
   align-items: center;
   align-self: flex-end;
   gap: var(--space-1);
-  /* A long name never squeezes the field: the chip gives way first (its full text is its title and the ✕'s name). */
+  /* A long name never squeezes the field: the chip shrinks and is cut (its full text is its title and the ✕'s name);
+     the field keeps 10rem and wraps to its own line. */
   min-width: 0;
-  max-width: min(50%, 24ch);
   min-height: var(--touch);
 }
 .leadChip {
@@ -183,11 +183,10 @@ button.leadChip {
 }
 .topicHeadText {
   display: grid;
-  justify-items: end;
   min-width: 0;
+  text-align: end;
 }
 .topicHeadName {
-  max-width: 100%;
   overflow: hidden;
   font-size: var(--text-2xl);
   font-weight: var(--weight-bold);
@@ -197,7 +196,6 @@ button.leadChip {
   white-space: nowrap;
 }
 .topicHeadCount {
-  max-width: 100%;
   overflow: hidden;
   font-size: var(--text-meta);
   line-height: 1.3;
