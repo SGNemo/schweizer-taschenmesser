@@ -452,6 +452,20 @@ test.describe('Weather scene in the head (package 1b)', () => {
     await page.keyboard.press('Enter');
     await expect(toggle).toHaveAttribute('aria-expanded', 'true');
     await expect(page.getByRole('region', { name: 'Mehr Werte' })).toContainText('Luftfeuchte');
+    // axe over the new parts, light and dark: the rain block, the curve with its select, "Mehr Werte" open.
+    const { default: AxeBuilder } = await import('@axe-core/playwright');
+    for (const colorScheme of ['light', 'dark'] as const) {
+      await page.emulateMedia({ colorScheme });
+      const results = await new AxeBuilder({ page })
+        .include('[data-testid="weather-preview"]')
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+        .analyze();
+      expect(
+        results.violations.map(
+          (v) => `${colorScheme} ${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`,
+        ),
+      ).toEqual([]);
+    }
   });
 
   test('round 2: without 15-minute values there is no rain block', async ({ page }) => {
