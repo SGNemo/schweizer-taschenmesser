@@ -67,7 +67,7 @@ export const tWeatherPage = defineBundle(
       'Zeigt Warnungen des Deutschen Wetterdienstes für deinen Hauptort, wenn er in Deutschland liegt. Dafür geht seine ungefähre Position an den DWD, nie deine Einträge.',
     sceneSetting: 'Bild im Wetter-Kopf',
     sceneSettingHelp:
-      'Zeigt Wetter, Tageszeit und Mond als Bild. Bewegung läuft beim Öffnen fünf Sekunden und kommt dann zur Ruhe.',
+      'Zeigt Wetter, Tageszeit und Mond als Bild. Bewegung läuft beim Öffnen fünf Sekunden und kommt dann zur Ruhe. Bei Gewitter leuchtet die Wolke einmal langsam auf.',
     sceneMotion: 'Mit Bewegung',
     sceneStill: 'Standbild',
     scenePlain: 'Schlicht (nur Himmel)',
@@ -220,7 +220,7 @@ export const tWeatherPage = defineBundle(
         'Shows warnings of the German weather service for your main place if it lies in Germany. For this its approximate position goes to the DWD, never your entries.',
       sceneSetting: 'Picture in the weather head',
       sceneSettingHelp:
-        'Shows weather, time of day and moon as a picture. Motion runs for five seconds when you open the page and then comes to rest.',
+        'Shows weather, time of day and moon as a picture. Motion runs for five seconds when you open the page and then comes to rest. In a thunderstorm the cloud brightens once, slowly.',
       sceneMotion: 'With motion',
       sceneStill: 'Still picture',
       scenePlain: 'Plain (sky only)',

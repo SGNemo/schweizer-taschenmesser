@@ -2,7 +2,7 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { defaultScene, type SceneState } from '@/core/weather/scene';
-import { litPath, sceneSvg, tiltRotation } from './draw';
+import { litPath, sceneSvg, tiltRotation } from './drawV1';
 import { WeatherScene } from './WeatherScene';
 
 afterEach(() => {

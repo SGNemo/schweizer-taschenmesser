@@ -1,6 +1,6 @@
 import { useId, useMemo, type CSSProperties } from 'react';
 import type { SceneState } from '@/core/weather/scene';
-import { portholeSvg } from './draw';
+import { portholeSvg } from './drawV1';
 import styles from './ScenePorthole.module.css';
 
 export interface ScenePortholeProps {
