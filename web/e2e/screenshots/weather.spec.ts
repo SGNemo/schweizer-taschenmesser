@@ -1,5 +1,6 @@
 import { mkdirSync } from 'node:fs';
 import { expect, test, type Browser, type Page } from '@playwright/test';
+import { ready } from '../helpers';
 
 /**
  * Weather pictures for PR texts (manual tooling, not CI; howto: docs/howto/weather-screenshots.md). Every situation is
@@ -305,7 +306,8 @@ async function open(
   const page = await context.newPage();
   await page.clock.setFixedTime(new Date(s.utc));
   await mock(page, s);
-  await page.goto('/settings/verbindungen');
+  // `ready` skips the first-start assistant and waits for the app, like every e2e spec.
+  await ready(page, '/settings/verbindungen');
   await page.getByLabel('Ort suchen').fill('Lindenau');
   await page
     .locator('#weather--place')
@@ -325,11 +327,11 @@ for (const raw of SCENARIOS.filter((x) => !ONLY || ONLY.test(x.id)))
         const name = (part: string) => `${OUT}/${s.id}-${part}-${w}-${scheme}.png`;
         const { page, context } = await open(browser, s, w, h, scheme);
         if (PARTS.has('overview')) {
-          await page.goto('/');
+          await ready(page, '/');
           await page.waitForTimeout(600);
           await page.screenshot({ path: name('overview') });
         }
-        await page.goto('/weather');
+        await ready(page, '/weather');
         await expect(page.getByTestId('weather-keys')).toBeVisible();
         await page.waitForTimeout(400);
         if (PARTS.has('head')) {

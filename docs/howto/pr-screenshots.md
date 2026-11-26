@@ -24,6 +24,7 @@ node e2e/screenshots/montage.mjs .screens/weather head-412-dark 1300 3 .screens/
 - **Motion.** Shoot with `reducedMotion: 'reduce'`: the scene moves for 5 s after opening, and a picture taken then lands on a random frame.
 - **One Playwright run per checkout.** Two runs at once share `test-results/` and one wipes the other (a stimulus or e2e run dies silently). Shoot before or after the e2e runs, or give one run `--output <other dir>`.
 - **Montage.** A page built with `setContent` cannot load `file://` images – they come out as broken icons. `montage.mjs` embeds them as `data:` URLs.
+- **First start.** A fresh browser context opens the setup assistant; go through `ready(page, url)` from `e2e/helpers.ts` (it dismisses it and waits for the page), not `page.goto`.
 - **Parallel workers** (`--workers=4`) sometimes miss an element on a loaded machine; re-take the missing ones alone (`-g '<id> 1920 dark'`).
 - **Hosts.** The cloud sandbox blocks hosts that are not allowed (403 from the proxy). Mocked routes never reach the network, so the tool works without them; a live check of a source needs the host in the environment.
 
