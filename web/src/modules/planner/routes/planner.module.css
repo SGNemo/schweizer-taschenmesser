@@ -25,11 +25,13 @@
 }
 .add {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-2);
   align-items: flex-end;
 }
+/* The field keeps room to type (10rem): with a lead chip on a narrow phone, field and „Eintragen“ go to their own line. */
 .grow {
-  flex: 1;
+  flex: 1 1 10rem;
   min-width: 0;
 }
 /* Nothing was stored: said under the row, in words and in the danger ink (an error, the one place for it here). */
@@ -97,9 +99,13 @@
 .leadWrap {
   position: relative;
   display: inline-flex;
+  flex: 0 1 auto;
   align-items: center;
   align-self: flex-end;
   gap: var(--space-1);
+  /* A long name never squeezes the field: the chip shrinks and is cut (its full text is its title and the ✕'s name);
+     the field keeps 10rem and wraps to its own line. */
+  min-width: 0;
   min-height: var(--touch);
 }
 .leadChip {
@@ -114,6 +120,9 @@
   font: inherit;
   font-size: var(--text-sm);
   white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 button.leadChip {
   cursor: pointer;
@@ -158,6 +167,109 @@ button.leadChip {
   font: inherit;
   white-space: nowrap;
   cursor: pointer;
+}
+/* T4 (package 11): the topic in the figure's place, in the head's one-line row (the row has one height, it never
+   wraps). The name is cut after one line (its full text stays the name); „Alles zeigen“ beside it on the desktop, on
+   its own line under the head on the phone (.topicShowAll). */
+.topicHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.topicHead > button {
+  flex: none;
+  white-space: nowrap;
+}
+.topicHeadText {
+  display: grid;
+  min-width: 0;
+  text-align: end;
+}
+.topicHeadName {
+  overflow: hidden;
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.topicHeadCount {
+  overflow: hidden;
+  font-size: var(--text-meta);
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-on-tint);
+}
+.topicShowAll {
+  display: flex;
+  justify-content: flex-end;
+  margin-block-end: var(--space-2);
+}
+.topicShowAll > button {
+  min-height: 44px;
+}
+@media (max-width: 899px) {
+  .topicHeadName {
+    font-size: var(--text-lg);
+  }
+  .topicHeadCount {
+    font-size: var(--text-xs);
+  }
+}
+/* „Themen“ in the planner's settings (package 11). */
+.topicSettings {
+  margin-block-start: var(--space-4);
+}
+.topicSettingsHead {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-label);
+  font-weight: var(--weight-semibold);
+}
+/* The topic chooser (package 11): radio lines under the field, the list scrolls inside the dialog. */
+.topicHint {
+  margin: var(--space-2) 0 0;
+  color: var(--text-3);
+  font-size: var(--text-meta);
+}
+.topicList {
+  max-height: calc(8 * var(--touch));
+  overflow-y: auto;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.topicLine {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.topicActive {
+  background: var(--surface-raised);
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+.topicRadio {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full);
+  color: var(--text);
+}
+.topicName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 /* „Zum Beispiel“ and three chips under the field: they fill the field, they never submit. */
 .examples {

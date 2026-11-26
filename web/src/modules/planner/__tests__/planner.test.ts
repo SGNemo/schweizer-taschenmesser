@@ -29,6 +29,7 @@ describe('planner module', () => {
       'item',
       'assignment',
       'measure',
+      'topic',
     ]);
     expect(manifest.dataSchema.collections.assignment!.indexes).toEqual(['date', 'itemKey']);
   });

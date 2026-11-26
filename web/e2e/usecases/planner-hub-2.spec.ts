@@ -43,7 +43,7 @@ import { dismissNotices } from '../helpers';
  *    that ends it): (ended with 2: B `taps` 27 → 28 / phone 14 → 16 and `perThing` 17 → 21 / phone 9 → 13 from 4b;
  *    ended with 5a:) C1 `workTaps` 7 → 8 and
  *    `taps` 19 → 20 from 4a until 5a (expand, „Ganz öffnen“, the routine's run as today).
- * Re-measured by the packages: 10b: D1 · 4a: D1, C1 · 4b/2: B · 4c: B `replySwitches` · 5a: C1 · 8: C1 `learned` · 1: D2 (done) · 3: A1, C1 (done) · 9: D3 (done) · 11: D4.
+ * Re-measured by the packages: 10b: D1 · 4a: D1, C1 · 4b/2: B · 4c: B `replySwitches` · 5a: C1 · 8: C1 `learned` · 1: D2 (done) · 3: A1, C1 (done) · 9: D3 (done) · 11: D4 (done).
  * `MEASURE=1` only measures. Facts (the click path, the module routes passed) land beside the table in
  * `test-results/usecase-planner-hub-2/`.
  *
@@ -73,6 +73,10 @@ const HIGHER = ['rightKind', 'linkedToPlan', 'doneInPlanner', 'markVisible', 'ma
  * (create 10 – „Ganz öffnen“ opens its editor at once, so no „Bearbeiten“ – switches 2); worked off with „Los“: the
  * next step only, the last „Fertig“ ticks the ToDo (work 7, taps 17, `nextStepOnly` ja). `perThing` keeps its IST 6
  * (measured 7: the lasting price of 4a). The C1 prices end here.
+ * D4 after 11 (2026-11-26): a topic in the planner itself – Monday's ⋯ „Thema …“ „Umzug“, then „Thema: Umzug“ in each
+ * row's ⋯ (Thursday's invoice, Friday's appointment too), the page's ⋯ „Nur ein Thema zeigen …“ (rows 7, taps 22,
+ * perThing 15, switches 0, planFilter ja). `rows` and `planFilter` are read after the filter is on. The phone measured
+ * 22: Thursday's invoice was reachable without unfolding „Danach“, so TARGET's named price (23) did not fall due.
  * D3 after 9 (2026-11-26): Wednesday's tile, the appointment's blocker row opens, „Vorbereiten …“, the typed line –
  * taps 4, switches 0. `linked` now reads the link store (`before` from the ToDo to `calendar:ev1`, `todo.links[]` empty).
  * A1 and C1 after 3 (2026-11-26): the field reads sure kinds (K1) – the two invoices and the list wait under „Noch ohne
@@ -101,8 +105,8 @@ const IST: Record<string, Figures> = {
   'D2 Geteilter Link in den Planer · pixel-7': { taps: 2, moduleSwitches: 1, forms: 1, inPlanner: 'ja', wayBack: 'ja' },
   'D3 Vor einem Termin · desktop-chrome': { taps: 4, perThing: 0, moduleSwitches: 0, linked: 'ja', onWednesday: 'ja' },
   'D3 Vor einem Termin · pixel-7': { taps: 4, perThing: 0, moduleSwitches: 0, linked: 'ja', onWednesday: 'ja' },
-  'D4 Ein Thema · desktop-chrome': { rows: 20, taps: 27, perThing: 20, moduleSwitches: 2, planFilter: 'nein' },
-  'D4 Ein Thema · pixel-7': { rows: 20, taps: 22, perThing: 15, moduleSwitches: 2, planFilter: 'nein' },
+  'D4 Ein Thema · desktop-chrome': { rows: 7, taps: 22, perThing: 15, moduleSwitches: 0, planFilter: 'ja' },
+  'D4 Ein Thema · pixel-7': { rows: 7, taps: 22, perThing: 15, moduleSwitches: 0, planFilter: 'ja' },
   'D5 Warte auf Antwort · desktop-chrome': { taps: 7, perThing: 3, moduleSwitches: 0, rowsOffSheet: 3, comesBackByItself: 'ja' },
   'D5 Warte auf Antwort · pixel-7': { taps: 7, perThing: 3, moduleSwitches: 0, rowsOffSheet: 3, comesBackByItself: 'ja' },
 };
@@ -1704,80 +1708,82 @@ test('D4 Ein Thema', async ({ page, isMobile }, info) => {
     ],
   });
   await planner(page);
-  // What the planner shows of the week: the things on the days (the tiles) and the appointments beside them. A view of
-  // one topic only: a control that filters the plan (none today: every thing stays on its day).
+  const hand = new Hand(page, isMobile);
+  hand.start();
+  // Package 11: a topic is a bracket in the planner itself. Monday: the ToDo's ⋯, „Thema …“, „Umzug“ typed + Enter. From
+  // then on every row's ⋯ (a blocker's too) offers „Thema: Umzug“ directly. Last, the page's ⋯ shows only that topic.
+  const menuOf = (title: string) =>
+    page.getByRole('button', { name: `Aktionen für ${title}`, exact: true }).first();
+  const give = async (title: string, thing: string, first = false) => {
+    await hand.tap(menuOf(title), `⋯ ${title}`, thing);
+    if (first) {
+      await hand.tap(
+        page.getByRole('menuitem', { name: 'Thema …', exact: true }),
+        'Thema …',
+        thing,
+      );
+      const chooser = page.getByRole('dialog', { name: 'Thema wählen oder neu eintippen' });
+      const field = chooser.getByRole('combobox', { name: 'Thema' });
+      await hand.fill(field, 'Umzug', 'Thema Umzug', { thing });
+      await field.press('Enter');
+      await expect(chooser).toHaveCount(0);
+    } else
+      await hand.tap(
+        page.getByRole('menuitem', { name: 'Thema: Umzug', exact: true }),
+        'Thema: Umzug',
+        thing,
+      );
+    await expect(page.getByText(/gehört jetzt zu „Umzug“/).last()).toBeVisible();
+  };
+  for (const [i, date] of WEEK.entries()) {
+    await showDay(hand, page, date);
+    await give(MOVE[i]!, MOVE[i]!, i === 0);
+    if (date === '2026-12-03') {
+      // The invoice is Thursday's last row: on the phone it waits under the folded „Danach“ (the named price).
+      const invoice = menuOf('Umzugsfirma Beispiel bezahlen');
+      if (!(await invoice.isVisible()))
+        await hand.tap(
+          page.getByTestId(`day-${date}`).locator('button[aria-controls$="-then"]').first(),
+          'Danach aufklappen',
+        );
+      await give('Umzugsfirma Beispiel bezahlen', 'Umzugsfirma');
+    }
+    if (date === '2026-12-04') await give('Wohnungsübergabe Umzug', 'Wohnungsübergabe');
+  }
+  await hand.tap(
+    page.getByRole('button', { name: 'Weitere Optionen', exact: true }).first(),
+    'Seite ⋯',
+  );
+  await hand.tap(
+    page.getByRole('menuitem', { name: 'Nur ein Thema zeigen …', exact: true }),
+    'Nur ein Thema zeigen …',
+  );
+  await hand.tap(
+    page.getByRole('dialog').getByRole('option', { name: /Umzug/ }).first(),
+    'Umzug wählen',
+  );
+  await expect(page.getByTestId('planner-topic-head')).toBeVisible();
+  // What the planner shows now: the things on the days (the tiles) and the appointments beside them.
   let onDays = 0;
   for (const date of WEEK) onDays += await settled(() => onDay(page, date));
   const appointments = await page.getByTestId('planner-appointments').locator('li').count();
-  const filters = await page
-    .locator('main')
-    .getByRole('button', { name: /filter|thema/i })
-    .count();
-  const hand = new Hand(page, isMobile);
-  hand.start();
-  // Marking the five as belonging together: the ToDos' lists (no bulk step for a list or a tag – the selection
-  // only offers „In den Plan …“): a list „Umzug“, then each ToDo's editor · „Liste“ · „Speichern“.
-  await go(hand, page, isMobile, 'todos');
-  await hand.tap(
-    page.locator('main').getByRole('button', { name: 'Weitere Optionen' }).first(),
-    'ToDos ⋯',
+  const filtered = await page.getByTestId('planner-topic-head').count();
+  const links = (await rows<{ rel: string; to: { module: string } }>(page, '_links')).filter(
+    (l) => l.rel === 'topic',
   );
-  await hand.tap(page.getByRole('menuitem', { name: 'Neue Liste' }), 'Neue Liste');
-  const listForm = page.getByRole('dialog');
-  await hand.fill(listForm.getByRole('textbox').first(), 'Umzug', 'Name');
-  await hand.tap(
-    listForm.getByRole('button', { name: /^(Speichern|Anlegen|Liste anlegen|Erstellen)$/ }).last(),
-    'Speichern',
-  );
-  await expect(listForm).toHaveCount(0);
-  // The new list is shown (empty): back to all open ToDos.
-  const allOpen = page.locator('main').getByRole('button', { name: 'Alle offenen' });
-  // (The switch to the new list comes after the dialog has closed: wait for it, not for the rows it replaces.)
-  if (await appears(allOpen, 5000)) await hand.tap(allOpen, 'Alle offenen');
-  for (const title of MOVE) {
-    await hand.tap(
-      page
-        .locator('main')
-        .getByRole('button', { name: new RegExp(`^${title}`) })
-        .first(),
-      title,
-      title,
-    );
-    const editor = page.getByRole('dialog', { name: 'Aufgabe bearbeiten' });
-    if (!(await appears(editor)))
-      await hand.tap(
-        page.locator('main').getByRole('button', { name: 'Bearbeiten' }).first(),
-        'Bearbeiten',
-        title,
-      );
-    await expect(editor).toBeVisible();
-    await hand.choose(editor.getByLabel('Liste', { exact: true }), 'Umzug', 'Liste Umzug', title);
-    await hand.tap(
-      editor.getByRole('button', { name: 'Speichern', exact: true }),
-      'Speichern',
-      title,
-    );
-    await expect(editor).toHaveCount(0);
-  }
-  await go(hand, page, isMobile, 'planner');
-  const lists = await rows<{ id: string; name: string }>(page, 'todos_list');
-  const umzug = lists.find((l) => l.name === 'Umzug');
-  const inList = (await rows<Task & { listId: string }>(page, 'todos_task')).filter(
-    (x) => x.listId === umzug?.id,
-  ).length;
   record(
     info,
     name,
     {
-      rows: filters > 0 ? 'Filter da – messen' : onDays + appointments,
+      rows: onDays + appointments,
       taps: hand.taps,
       perThing: hand.perThing,
       moduleSwitches: hand.moduleSwitches,
-      planFilter: filters > 0 ? 'ja' : 'nein',
+      planFilter: filtered > 0 ? 'ja' : 'nein',
     },
-    { onDays, appointments, filters, inList, places: hand.places, path: hand.path },
+    { onDays, appointments, links: links.length, places: hand.places, path: hand.path },
   );
-  expect(inList).toBe(MOVE.length);
+  expect(links.length).toBe(7);
 });
 
 const WAITING = ['Antwort Vermieter abwarten', 'Rückmeldung Werkstatt', 'Angebot Maler abwarten'];

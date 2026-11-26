@@ -65,6 +65,10 @@ export function useRowMenu(ctx: {
   why: string | undefined;
   setWhy: (unitId: string | undefined) => void;
   setChoice: (choice: RowChoiceState) => void;
+  /**
+   * T12 / T1 of a thing (package 11): the page decides – only a linkable source, never a pile row. Empty: none here.
+   */
+  topic?: (entry: NonNullable<(BoardRow | WaitingRow)['entry']>) => RowMenuItem[];
 }) {
   const navigate = useNavigate();
   const { titles, abilities, why, setWhy, setChoice } = ctx;
@@ -240,6 +244,8 @@ export function useRowMenu(ctx: {
         : []),
     ];
     const more: RowMenuItem[] = [
+      // T12 „Thema: Umzug“ and T1 „Thema …“ (package 11) lead „Mehr“.
+      ...(ctx.topic?.(e) ?? []),
       ...(excluded
         ? [{ id: 'include', label: t.planner.row.include, onSelect: () => void include(e, titles) }]
         : [

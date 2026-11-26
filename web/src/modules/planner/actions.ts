@@ -54,6 +54,7 @@ import { dayEndLabel, DEFAULT_PLANNER_SETTINGS, PLANNER_SCOPE } from './settings
 import { runToast } from './toast';
 import { measureKey, proposedMinutes, recordMeasure } from './measure';
 import type { FieldKind } from './fieldKind';
+import { setTopicFilter, topicRef } from './topic';
 
 const toast = (message: string, run?: UserRun, lead?: { label: string; run: () => void }) =>
   useUiStore.getState().toast(
@@ -453,7 +454,23 @@ export async function addFromField(
   steps?: readonly string[],
   /** A lead chip (package 9): the day and a `before` / `after` link to the appointment, in this one action. */
   appointment?: FieldLead,
+  /**
+   * Package 11: `topic` – the lead chip T11 (the shown topic, applied in this one action); `filtered` – the topic shown
+   * while the chip was not taken: the toast ends with K9 so the thing does not vanish without a word.
+   */
+  field: FieldTopic = {},
 ): Promise<boolean> {
+  // K9: „Nicht im Thema „Umzug“ · Alles zeigen“ – the line and the button that ends the filter. A break never takes
+  // the topic (it is no linkable thing), so it gets K9 with the chip on as well.
+  const k9For = (outside?: { title: string }) => ({
+    line: (line: string) => (outside ? `${line}\n${t.planner.topic.notIn(outside.title)}` : line),
+    action: outside
+      ? { view: { label: t.planner.topic.showAll, run: () => void setTopicFilter(null) } }
+      : {},
+  });
+  const notIn = field.filtered && !field.topic ? field.filtered : undefined;
+  const { line: k9, action: showAll } = k9For(notIn);
+  const inTopic = field.topic ?? field.filtered;
   // The phrase is German, like the quick-capture parser (CONCEPT §6c); elsewhere the ⋯ action sets a deadline.
   // „Duschen nachmittags“ (package 4b): the part word becomes the item's part (`readFieldWithPart`).
   const de = getLang() === 'de';
@@ -482,18 +499,21 @@ export async function addFromField(
   // „Pause 2 Std Zocken“: a blocker of its day through the quick-capture target, no ToDo (package 4a).
   if (isBreak) {
     const b = breakOf(fields, { today: day });
+    const brk = k9For(inTopic);
     return act(
       t.planner.day.addBlocker,
-      t.planner.toast.asBreak(
-        short(b.label),
-        dayName(b.date),
-        formatMinutes(b.min, { compact: true }),
+      brk.line(
+        t.planner.toast.asBreak(
+          short(b.label),
+          dayName(b.date),
+          formatMinutes(b.min, { compact: true }),
+        ),
       ),
       titles,
       async () => {
         await saveCapture('break', fields);
       },
-      { leadOnly: true },
+      { leadOnly: true, ...brk.action },
     );
   }
   // „p Zahnarzt Donnerstag“: the plan capture's pin – the day, „fest“ (the global capture's pin becomes the same).
@@ -522,10 +542,12 @@ export async function addFromField(
             ? (appointment.rel === 'before'
                 ? t.planner.appointment.laidBefore
                 : t.planner.appointment.laidAfter)(dayName(target), short(appointment.title))
-            : t.planner.toast.laid(dayName(target));
+            : field.topic
+              ? t.planner.topic.laidIn(dayName(target), short(field.topic.title))
+              : t.planner.toast.laid(dayName(target));
   return act(
     t.planner.toast.added,
-    lead,
+    k9(lead),
     titles,
     async () => {
       // A new thing without minutes starts with what it took the last times (package 8): the plan's own length,
@@ -547,6 +569,14 @@ export async function addFromField(
           // things wherever it is moved.
           ...(appointment.series ? { on: appointment.date } : {}),
         });
+      // T11 (package 11): the shown topic, in this same action (a new thing has no other topic to replace).
+      if (field.topic)
+        await addLink({
+          from: topicRef(field.topic.id),
+          to: { module: saved.moduleId, id: saved.id },
+          rel: 'topic',
+          label: field.topic.title,
+        });
       const scope = await layOn(
         { moduleId: saved.moduleId, id: saved.id, durationMin: fields.estimateMin ?? measured },
         target,
@@ -567,13 +597,28 @@ export async function addFromField(
       return scope;
     },
     // A deadline or a part says its own fact; otherwise a full or kept-free day says so in the one line.
-    hardDue || (part && !fixedOn)
-      ? {}
-      : {
-          leadAfter: (run) =>
-            dayNote(target, run, fixedOn || steps?.length || appointment ? lead : undefined),
-        },
+    {
+      ...showAll,
+      ...(hardDue || (part && !fixedOn)
+        ? {}
+        : {
+            leadAfter: (run: UserRun) =>
+              dayNote(
+                target,
+                run,
+                fixedOn || steps?.length || appointment || field.topic || notIn
+                  ? k9(lead)
+                  : undefined,
+              ),
+          }),
+    },
   );
+}
+
+/** What the field knows of the shown topic (package 11): the chip T11 taken, or only the filter. */
+export interface FieldTopic {
+  topic?: { id: string; title: string };
+  filtered?: { title: string };
 }
 
 /**
@@ -592,9 +637,12 @@ export async function addKindFromField(
   shown?: string,
   /** A lead chip: only a task with steps takes it; every other kind leaves it unapplied (drawn struck). */
   appointment?: FieldLead,
+  /** Package 11: only a task with steps takes T11; any other kind made while a topic is shown gets K9. */
+  field: FieldTopic = {},
 ): Promise<boolean> {
   if (reading.kind === 'steps')
-    return addFromField(reading.title, titles, shown, reading.steps, appointment);
+    return addFromField(reading.title, titles, shown, reading.steps, appointment, field);
+  const shownTopic = field.filtered ?? field.topic;
   let key: string | undefined;
   let noteRef: { id: string; title: string } | undefined;
   // A failure halfway (the second shopping entry, a shopping list made on the way, the item row, the run) is taken
@@ -666,7 +714,15 @@ export async function addKindFromField(
           ),
       }
     : undefined;
-  toast(withOverload(t.planner.kinds.toast[reading.kind], await overloadNotice(run)), run, offer);
+  // K9 (package 11): this kind takes no topic – while one is shown, the toast says so and offers to show everything (that
+  // offer takes the toast's one action slot, before the note's „In den Plan“).
+  const line = shownTopic
+    ? `${t.planner.kinds.toast[reading.kind]}\n${t.planner.topic.notIn(shownTopic.title)}`
+    : t.planner.kinds.toast[reading.kind];
+  const action = shownTopic
+    ? { label: t.planner.topic.showAll, run: () => void setTopicFilter(null) }
+    : offer;
+  toast(withOverload(line, await overloadNotice(run)), run, action);
   return true;
 }
 

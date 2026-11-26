@@ -158,9 +158,10 @@ export function WeekBand({
                 {/* The button's name says the load in words; the bar is its picture (none for a passed day). */}
                 <div className={styles.bar} aria-hidden="true" hidden={passed}>
                   <Progress
-                    value={d.off ? 0 : d.planned}
+                    // A topic shown (package 11): the bar is the topic's share; the face and name stay the whole day's.
+                    value={d.off ? 0 : (d.bar ?? d.planned)}
                     max={Math.max(d.usable, 1)}
-                    label={t.planner.board.load(compact(d.planned), compact(d.usable))}
+                    label={t.planner.board.load(compact(d.bar ?? d.planned), compact(d.usable))}
                     valueText={capacityLabel(d)}
                     scale={d.off || d.usable === 0 ? 1 : Math.max(0.25, d.usable / most)}
                     over={state === 'over' ? 'hatch' : undefined}

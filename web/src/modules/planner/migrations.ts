@@ -16,6 +16,7 @@ import type { ModuleManifest } from '@/core/modules/types';
  * is no per-record step).
  * v7 (package 8): optional item field `measured` and the collection `measure`. Lossless: an old row has no flag and
  * reads as before; a new collection starts empty, so no row is rewritten.
+ * v8 (package 11): the collection `topic`. A new collection starts empty: no row is rewritten.
  */
 export const migrations: ModuleManifest['migrations'] = {
   2: async () => {},
@@ -24,4 +25,5 @@ export const migrations: ModuleManifest['migrations'] = {
   5: async () => {},
   6: async () => {},
   7: async () => {},
+  8: async () => {},
 };

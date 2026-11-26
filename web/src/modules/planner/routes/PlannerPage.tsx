@@ -66,7 +66,7 @@ import { beginPlanFocus, planFocusPath } from '../focus';
 import { useLater } from '../useLater';
 import { readKeepSentence } from '../keepSentence';
 import type { PlannableEntry } from '@/core/modules/contributions';
-import type { BoardBlocker, BoardDay, BoardRow, OpenRow } from '../board';
+import { type BoardBlocker, type BoardDay, type BoardRow, type OpenRow } from '../board';
 import { Capture } from '../components/Capture';
 import { CaptureDialog } from '../components/CaptureDialog';
 import { useAbilities, useRowMenu } from '../components/rowMenu';
@@ -79,7 +79,13 @@ import { PileOffer } from '../components/PileOffer';
 import { hasOpenSteps, STEPS_FRESH, stepsPath } from '../components/steps';
 import { appointmentsOf, Context, nextDeadlinesOf } from '../components/Context';
 import { BlockRow, DayPage, DayPageLoading } from '../components/DayPage';
-import { LeadChip } from '../components/LeadChip';
+import { LeadChip, TopicLeadChip } from '../components/LeadChip';
+import { TopicChooser } from '../components/TopicChooser';
+import { filterBoard, memberOf, topicBand, useTopicView } from '../components/topicView';
+import { setTopic, setTopicFilter, topicsOf, topicThing, type TopicChoice } from '../topic';
+import { TOPIC_ID } from '../schema';
+import { isLinkable } from '@/core/entitylinks';
+import { refKey, type EntityRef } from '@/core/entitylinks/types';
 import { AppointmentLinks, useAppointmentLinks } from '../components/appointmentLinks';
 import { LateGroup, LateRow } from '../components/LateGroup';
 import { PassedTrainings } from '../components/PassedTrainings';
@@ -177,10 +183,23 @@ export default function PlannerPage() {
   const viewFrom = grid ? mondayOf(start) : start;
   const viewSpan = grid ? GRID_DAYS : SPAN;
   const viewEnd = addDaysStr(viewFrom, viewSpan - 1);
-  const data = useBoard(
+  const read = useBoard(
     Math.max(READ_DAYS, daysBetween(now, viewEnd) + 1),
     viewFrom === now && !grid ? undefined : { from: viewFrom, span: viewSpan },
     { offer: true },
+  );
+  // A topic shown (package 11): every view below reads only its members (display only, device state).
+  const topics = useTopicView();
+  // T11 removed with ✕ for this topic: new things stay out of it until the filter changes.
+  const [topicChipOff, setTopicChipOff] = useState<string | undefined>();
+  const topicChip = topics.filter && topicChipOff !== topics.filter.id ? topics.filter : undefined;
+  const fieldTopic = {
+    ...(topicChip ? { topic: topicChip } : {}),
+    ...(topics.filter ? { filtered: { title: topics.filter.title } } : {}),
+  };
+  const data = useMemo(
+    () => (read && topics.filter && topics.members ? filterBoard(read, topics.members) : read),
+    [read, topics.filter, topics.members],
   );
   // Collective rows (package 2): what a pile row draws, from the same reading as the board.
   const pileData = useMemo(
@@ -356,12 +375,14 @@ export default function PlannerPage() {
    * fixed ones stay and are named („1 bleibt: fest“).
    */
   async function showSpread(day: BoardDay) {
-    return previewSpread(day.rows, day.date, false);
+    // With a topic shown the sheet lists only its things, but the day is over-full as a whole: all of it is spread.
+    const whole = read?.board.days.find((d) => d.date === day.date) ?? day;
+    return previewSpread(whole.rows, day.date, false);
   }
 
   /** „Verteilen …“ of the tab „Noch offen“: its things that are not „fest“, today first – as a preview. */
   function showSpreadOpen() {
-    return previewSpread(data?.board.open ?? [], data?.today ?? today(), true);
+    return previewSpread(read?.board.open ?? [], read?.today ?? today(), true);
   }
 
   async function previewSpread(rows: readonly BoardRow[], from: string, open: boolean) {
@@ -586,6 +607,7 @@ export default function PlannerPage() {
         titles,
         tab === 'open' ? undefined : shownDate,
         lead,
+        fieldTopic,
       );
       // Only a task with steps took the chip; any other kind left it standing.
       if (ok && kindReading.kind === 'steps') setLead(undefined);
@@ -679,6 +701,7 @@ export default function PlannerPage() {
       tab === 'open' ? undefined : shownDate,
       undefined,
       lead,
+      fieldTopic,
     );
     // K3 held for this entry only: the next one is read afresh; the chip was used.
     if (ok) {
@@ -696,6 +719,43 @@ export default function PlannerPage() {
 
   // The head reports the next day that asks for something (CONCEPT-DESIGN §5): `head.ts`. With no thing on any
   // day there is no figure; the unseen placeholder keeps the head's height (U01).
+  // T4's count: the things of the shown topic that lie in the plan (rows of any day, waiting, open, late) and its
+  // appointments – each thing once, however many days or occurrences it has.
+  const topicKeys =
+    board && topics.members
+      ? new Set([
+          ...board.days.flatMap((d) => [
+            ...d.rows.map((r) => r.itemKey),
+            ...d.blockers.flatMap((b) => (b.ref ? [refKey(b.ref)] : [])),
+          ]),
+          ...board.waiting.map((w) => w.itemKey),
+          ...board.open.map((r) => r.itemKey),
+          ...board.late.map((r) => r.itemKey),
+          ...board.lateFolded.map((r) => r.itemKey),
+        ])
+      : undefined;
+  const topicOf = topics.members ? memberOf(topics.members) : undefined;
+  const topicCount =
+    topicKeys && topicOf ? new Set([...topicKeys].flatMap((k) => topicOf(k) ?? [])).size : 0;
+  // T4's „Alles zeigen“: in the head on the desktop, on its own line under it on the phone (hand-off 11, 44 px).
+  const showAll = (
+    <Button
+      variant="ghost"
+      onClick={() => {
+        // The button goes with the head: on a desktop with a keyboard the focus moves on to the field,
+        // elsewhere to the page (no keyboard sliding in), never to nowhere.
+        void setTopicFilter(null);
+        const keyboard = window.matchMedia?.('(hover: hover) and (pointer: fine)').matches === true;
+        const to =
+          keyboard && !phone
+            ? addRef.current?.querySelector('input')
+            : document.getElementById('main');
+        to?.focus({ preventScroll: true });
+      }}
+    >
+      {t.planner.topic.showAll}
+    </Button>
+  );
   const head = board
     ? plannerHead(board.days.slice(0, SPAN), {
         short: phone,
@@ -756,6 +816,38 @@ export default function PlannerPage() {
       : titleOf(unitId);
   };
 
+  // Topics (package 11): „Thema …“ opens the chooser for these things; T12 gives the last used topic at once.
+  const [chooser, setChooser] = useState<
+    | { mode: 'give'; things: EntityRef[]; current?: string; onDone?: () => void }
+    | { mode: 'filter' }
+  >();
+  const giveTopic = async (things: EntityRef[], onDone?: () => void) => {
+    // One thing: its topic is marked; several: none is.
+    const current =
+      things.length === 1 ? (await topicsOf(things)).get(refKey(things[0]!)) : undefined;
+    setChooser({
+      mode: 'give',
+      things,
+      ...(current ? { current } : {}),
+      ...(onDone ? { onDone } : {}),
+    });
+  };
+  const topicRefOf = topicThing;
+  const topicItems = (ref: EntityRef | undefined): RowMenuItem[] =>
+    ref
+      ? [
+          ...(topics.last
+            ? [
+                {
+                  id: 'topicLast',
+                  label: t.planner.topic.last(topics.last.title),
+                  onSelect: () => void setTopic([ref], { id: topics.last!.id }),
+                },
+              ]
+            : []),
+          { id: 'topic', label: t.planner.topic.menu, onSelect: () => void giveTopic([ref]) },
+        ]
+      : [];
   const rowMenu = useRowMenu({
     today: data?.today,
     titles,
@@ -763,7 +855,17 @@ export default function PlannerPage() {
     why,
     setWhy,
     setChoice,
+    topic: (e) => topicItems(topicRefOf(e)),
   });
+  // A link to a topic (`/planner?topic=…`, its `linkTarget`): the planner shows that topic; the parameter goes.
+  useEffect(() => {
+    const id = params.get('topic');
+    if (!id) return;
+    if (TOPIC_ID.test(id)) void setTopicFilter(id);
+    const next = new URLSearchParams(params);
+    next.delete('topic');
+    setParams(next, { replace: true });
+  }, [params, setParams]);
 
   /** The tick: one tap. The status line says it, the focus moves on to the next tick of the sheet. */
   async function done(row: BoardRow): Promise<boolean> {
@@ -872,13 +974,17 @@ export default function PlannerPage() {
   };
   const renderBlocker = (b: BoardBlocker, day: BoardDay) => {
     const ref = b.ref;
-    if (!expandOn || !ref) return <BlockRow blocker={b} />;
+    // An appointment takes a topic like a thing (package 11): its event, as its links store it.
+    const menu =
+      ref && isLinkable(ref.module) ? topicItems({ module: ref.module, id: ref.id }) : undefined;
+    if (!expandOn || !ref) return <BlockRow blocker={b} {...(menu ? { menu } : {})} />;
     const unit = `block:${b.id}`;
     const isOpen = openRow.open === unit;
     const controls = compartmentId(unit);
     return (
       <BlockRow
         blocker={b}
+        {...(menu ? { menu } : {})}
         open={{
           open: isOpen,
           controls,
@@ -1072,6 +1178,16 @@ export default function PlannerPage() {
           >
             {t.planner.open.moveSelected}
           </Button>
+          {(() => {
+            const refs = openEntries(chosen)
+              .map(topicRefOf)
+              .filter((r): r is EntityRef => !!r);
+            return refs.length ? (
+              <Button variant="secondary" onClick={() => void giveTopic(refs, endSelection)}>
+                {t.planner.topic.menu}
+              </Button>
+            ) : null;
+          })()}
         </SelectionBar>
       ) : (
         <div className={styles.openActions} data-testid="open-actions">
@@ -1198,6 +1314,12 @@ export default function PlannerPage() {
   const week = days?.slice(0, SPAN);
   /** The days in view: the band's week, or the grid's four weeks (passed days included). */
   const bandDays = data?.view ?? week;
+  // With a topic shown the band's bars carry only its things (hand-off 11, `bar`); the face, hatch, name and drop
+  // preview keep the whole day („the day is as full as it is“), as the sheet's „frei“ does.
+  const bandTiles =
+    topics.filter && bandDays
+      ? topicBand(bandDays, read?.view ?? read?.board.days ?? [])
+      : bandDays;
   /** The week in view from today on („Zeiten dieser Woche“, the context column). */
   const viewWeek = bandDays?.filter((d) => d.date >= (data?.today ?? now)).slice(0, SPAN);
   const storedDate = storedPick && storedPick.on === data?.today ? storedPick.date : undefined;
@@ -1320,6 +1442,14 @@ export default function PlannerPage() {
         <Button onClick={() => setChoice({ kind: 'moveMany', entries, onDone: endDayPick })}>
           {t.planner.open.moveSelected}
         </Button>
+        {(() => {
+          const refs = entries.map(topicRefOf).filter((r): r is EntityRef => !!r);
+          return refs.length ? (
+            <Button variant="secondary" onClick={() => void giveTopic(refs, endDayPick)}>
+              {t.planner.topic.menu}
+            </Button>
+          ) : null;
+        })()}
       </SelectionBar>
     ) : (
       <p className={styles.openActions} data-testid="day-select">
@@ -1471,6 +1601,16 @@ export default function PlannerPage() {
               setDayPicking(shownDay.date);
               if (sayLine === t.planner.keep.fromSentence) setSayLine(undefined);
             },
+          },
+        ]
+      : []),
+    // T3 (package 11): once a topic exists.
+    ...(topics.any
+      ? [
+          {
+            id: 'topicFilter',
+            label: t.planner.topic.filterMenu,
+            onSelect: () => setChooser({ mode: 'filter' }),
           },
         ]
       : []),
@@ -1925,22 +2065,38 @@ export default function PlannerPage() {
         void add(undefined, { plain: true });
       }}
       previewAbove={phone && !inDialog}
-      {...(lead
+      {...(lead || topicChip
         ? {
             lead: {
+              // A2 first, then T11 (hand-off 00 „One slot, an order“).
               chip: (struckFor?: string) => (
-                <LeadChip
-                  lead={lead}
-                  today={data?.today ?? today()}
-                  onChange={setLead}
-                  onRemove={() => {
-                    setLead(undefined);
-                    addRef.current?.querySelector('input')?.focus({ preventScroll: true });
-                  }}
-                  {...(struckFor ? { struckFor } : {})}
-                />
+                <>
+                  {lead ? (
+                    <LeadChip
+                      lead={lead}
+                      today={data?.today ?? today()}
+                      onChange={setLead}
+                      onRemove={() => {
+                        setLead(undefined);
+                        addRef.current?.querySelector('input')?.focus({ preventScroll: true });
+                      }}
+                      {...(struckFor ? { struckFor } : {})}
+                    />
+                  ) : null}
+                  {topicChip ? (
+                    <TopicLeadChip
+                      title={topicChip.title}
+                      onRemove={() => {
+                        setTopicChipOff(topicChip.id);
+                        addRef.current?.querySelector('input')?.focus({ preventScroll: true });
+                      }}
+                      {...(struckFor ? { struckFor } : {})}
+                    />
+                  ) : null}
+                </>
               ),
-              onRemove: () => setLead(undefined),
+              // Backspace in the empty field: the last chip goes.
+              onRemove: () => (topicChip ? setTopicChipOff(topicChip.id) : setLead(undefined)),
             },
           }
         : {})}
@@ -1964,37 +2120,43 @@ export default function PlannerPage() {
 
   // What the sheet says while its day holds nothing: the one empty state of a board without things, else a line.
   const firstFull = week ? firstDayWithRows(week) : undefined;
-  const emptySheet = boardEmpty ? (
-    <EmptyState
-      title={t.planner.empty}
-      testId="planner-empty"
-      motif={<SignatureMark id="weekBars" size={64} />}
-    >
-      <p className={styles.emptyNext}>{phone ? t.planner.emptyNextPhone : t.planner.emptyNext}</p>
-      {/* Its one action (TARGET F1): the three-step sheet. Secondary: „Eintragen“ stays the page's one filled button. */}
-      <Button onClick={() => setSettingUp(true)} data-testid="planner-days-setup">
-        {t.planner.daySetup.open}
-      </Button>
-    </EmptyState>
-  ) : (
-    <p className={styles.emptyDay} data-testid="planner-empty-day">
-      {shownDay?.isToday && firstFull
-        ? t.planner.sheet.dayOffNext(formatDay(firstFull.date, 'EEEE'))
-        : nothingPlanned && openCount > 0 && !(shownDay?.isToday && focus.openLine)
-          ? // Everything he had lies on passed days: say where it is (the tab), not that nothing is there – unless
-            // the line over today's sheet says it already.
-            t.planner.sheet.onlyOpen
-          : nothingPlanned && waiting.some((w) => w.reason === 'no-day')
-            ? // Nothing lies on a day yet, things wait without one: name the one next step (also beside late
-              // money – „only the invoices are open“ would be untrue).
-              t.planner.sheet.noDayNext
-            : nothingPlanned && late.length > 0
-              ? late.every((r) => r.entry?.kind === 'invoice')
-                ? t.planner.sheet.onlyLate
-                : t.planner.sheet.onlyLateThings
-              : t.planner.sheet.emptyDay}
-    </p>
-  );
+  // T6 (package 11): the shown topic has nothing in the plan – one line; „Alles zeigen“ stands in the head only.
+  const emptySheet =
+    topics.filter && topicCount === 0 ? (
+      <p className={styles.emptyDay} data-testid="planner-topic-empty">
+        {t.planner.topic.empty}
+      </p>
+    ) : boardEmpty ? (
+      <EmptyState
+        title={t.planner.empty}
+        testId="planner-empty"
+        motif={<SignatureMark id="weekBars" size={64} />}
+      >
+        <p className={styles.emptyNext}>{phone ? t.planner.emptyNextPhone : t.planner.emptyNext}</p>
+        {/* Its one action (TARGET F1): the three-step sheet. Secondary: „Eintragen“ stays the page's one filled button. */}
+        <Button onClick={() => setSettingUp(true)} data-testid="planner-days-setup">
+          {t.planner.daySetup.open}
+        </Button>
+      </EmptyState>
+    ) : (
+      <p className={styles.emptyDay} data-testid="planner-empty-day">
+        {shownDay?.isToday && firstFull
+          ? t.planner.sheet.dayOffNext(formatDay(firstFull.date, 'EEEE'))
+          : nothingPlanned && openCount > 0 && !(shownDay?.isToday && focus.openLine)
+            ? // Everything he had lies on passed days: say where it is (the tab), not that nothing is there – unless
+              // the line over today's sheet says it already.
+              t.planner.sheet.onlyOpen
+            : nothingPlanned && waiting.some((w) => w.reason === 'no-day')
+              ? // Nothing lies on a day yet, things wait without one: name the one next step (also beside late
+                // money – „only the invoices are open“ would be untrue).
+                t.planner.sheet.noDayNext
+              : nothingPlanned && late.length > 0
+                ? late.every((r) => r.entry?.kind === 'invoice')
+                  ? t.planner.sheet.onlyLate
+                  : t.planner.sheet.onlyLateThings
+                : t.planner.sheet.emptyDay}
+      </p>
+    );
 
   // „Frist vorbei“ is the first card of the context column where there is one (wide); elsewhere it is one row
   // above the day's sheet.
@@ -2021,7 +2183,26 @@ export default function PlannerPage() {
           read – and while no day holds a thing – the page holds the row itself, in the figure's own shape, unseen, so
           the head keeps its height. */}
           <HeroSlot area="figure">
-            {head ? (
+            {topics.filter ? (
+              // T4: the topic in place of the figure, how many of its things lie in the plan, „Alles zeigen“.
+              // Its own block, not the figure: a topic name is cut after one line (the figure's number never is); the
+              // full name stays its accessible name. On the phone „Alles zeigen“ stands on its own line under the head.
+              <div className={styles.topicHead} data-testid="planner-topic-head">
+                <span className={styles.topicHeadText}>
+                  <span
+                    className={styles.topicHeadName}
+                    data-testid="planner-head"
+                    title={t.planner.topic.headTitle(topics.filter.title)}
+                  >
+                    {t.planner.topic.headTitle(topics.filter.title)}
+                  </span>
+                  <span className={styles.topicHeadCount}>
+                    {t.planner.topic.headCount(topicCount)}
+                  </span>
+                </span>
+                {phone ? null : showAll}
+              </div>
+            ) : head ? (
               <HeroFigure
                 value={head.value}
                 detail={head.detail}
@@ -2069,6 +2250,10 @@ export default function PlannerPage() {
               and never moves under the typing hand (U01). */}
                 {phone ? null : capture(false)}
                 {phone ? null : answer}
+                {/* T4's „Alles zeigen“ on the phone: its own line right under the head, first in the column. */}
+                {phone && topics.filter ? (
+                  <div className={styles.topicShowAll}>{showAll}</div>
+                ) : null}
 
                 {/* The tabs are there while something is open from earlier (or that tab is shown): an empty „Noch
               offen“ is no control worth a row – on the phone it would push the field under the bottom bar. */}
@@ -2096,7 +2281,7 @@ export default function PlannerPage() {
                   openBlock
                 ) : (
                   <>
-                    {bandDays && data ? (
+                    {bandDays && bandTiles && data ? (
                       <>
                         {bandRow}
                         {grid ? (
@@ -2109,7 +2294,7 @@ export default function PlannerPage() {
                           />
                         ) : (
                           <WeekBand
-                            days={bandDays}
+                            days={bandTiles}
                             picked={shownDate}
                             onPick={pick}
                             today={data.today}
@@ -2231,6 +2416,23 @@ export default function PlannerPage() {
               {answer}
             </CaptureDialog>
           ) : null}
+          {/* T4 said once when a topic is shown (always mounted, no button inside, no count that changes with every add). */}
+          <p role="status" className="sr-only">
+            {topics.filter ? t.planner.topic.headTitle(topics.filter.title) : ''}
+          </p>
+          <TopicChooser
+            open={!!chooser}
+            mode={chooser?.mode ?? 'give'}
+            current={chooser?.mode === 'give' ? chooser.current : topics.filter?.id}
+            onClose={() => setChooser(undefined)}
+            onChoose={(choice: TopicChoice) => {
+              const open = chooser;
+              setChooser(undefined);
+              if (open?.mode === 'give')
+                void setTopic(open.things, choice).then(() => open.onDone?.());
+              else if (choice && 'id' in choice) void setTopicFilter(choice.id);
+            }}
+          />
           {pasting !== undefined ? (
             <PasteDialog
               initial={pasting}

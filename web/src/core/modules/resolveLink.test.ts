@@ -53,6 +53,8 @@ describe('resolveLink', () => {
       'mail',
       'notes',
       'pantry',
+      // Its topics only (planner hub 2, package 11).
+      'planner',
       'routines',
       'subscriptions',
       'todos',

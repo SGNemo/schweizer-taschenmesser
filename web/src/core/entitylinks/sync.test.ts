@@ -12,7 +12,15 @@ import { MemoryServer } from '@/core/sync/testing';
 import { purgeTombstones, TOMBSTONE_RETENTION_MS } from '@/core/sync/tombstones';
 import { setNow } from '@/core/time/now';
 import { createTestDb } from '@/test-utils';
-import { addLink, addLinkIfAbsent, linkEntries, linkId, removeLink, removeLinkOf } from './index';
+import {
+  addLink,
+  addLinkIfAbsent,
+  linkEntries,
+  linkId,
+  linksTo,
+  removeLink,
+  removeLinkOf,
+} from './index';
 import { copyTodoLinks, todoLink } from './migrate';
 import { LINKS_TABLE } from './store';
 import type { EntityLink } from './types';
@@ -327,6 +335,60 @@ describe('the new relations between two devices (planner hub 2, 10a)', () => {
     await a.sync();
     await b.sync();
     for (const d of [a, b]) expect(await count(d.db)).toBe(0);
+  });
+});
+
+describe('topics between two devices (planner hub 2, package 11)', () => {
+  // A topic's members: `planner:t_<id>` → the thing (the planner is a link target for its topics only).
+  const topic = (id: string, title: string): EntityLink => ({
+    from: { module: 'planner', id },
+    to: { module: 'todos', id: 'task-umzug' },
+    rel: 'topic',
+    label: title,
+  });
+
+  it('the same thing given two topics offline: both rows stay on both devices, nothing tidies up by itself', async () => {
+    const a = device();
+    const b = device();
+    await addLink(topic('t_aaaaaaaa-umzug', 'Umzug'), a.db);
+    clock += 60_000;
+    await addLink(topic('t_bbbbbbbb-steuer', 'Steuer'), b.db);
+    await a.sync();
+    await b.sync();
+    await a.sync();
+    for (const d of [a, b]) {
+      const rows = (await linkEntries({ module: 'todos', id: 'task-umzug' }, d.db)).filter(
+        (e) => e.link.rel === 'topic',
+      );
+      expect(rows.map((e) => e.link.from.id).sort()).toEqual([
+        't_aaaaaaaa-umzug',
+        't_bbbbbbbb-steuer',
+      ]);
+    }
+    // The reader takes the later row (a tie: the larger row id, as `topicOfLinks` does): both devices see the same
+    // `updatedAt`s and ids, so both pick the same topic.
+    const latest = async (d: ReturnType<typeof device>) => {
+      const rows = await linksTo([{ module: 'todos', id: 'task-umzug' }], ['topic'], d.db);
+      return rows.reduce((x, y) =>
+        y.updatedAt > x.updatedAt || (y.updatedAt === x.updatedAt && y.id > x.id) ? y : x,
+      ).link.from.id;
+    };
+    expect(await latest(a)).toBe('t_bbbbbbbb-steuer');
+    expect(await latest(b)).toBe('t_bbbbbbbb-steuer');
+  });
+
+  it('a removed topic link stays removed on the other device', async () => {
+    const a = device();
+    const b = device();
+    const l = topic('t_aaaaaaaa-umzug', 'Umzug');
+    await addLink(l, a.db);
+    await a.sync();
+    await b.sync();
+    await removeLink(await linkId(l), b.db);
+    await b.sync();
+    await a.sync();
+    for (const d of [a, b])
+      expect((await linkEntries(l.to, d.db)).filter((e) => e.link.rel === 'topic')).toHaveLength(0);
   });
 });
 

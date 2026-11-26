@@ -84,7 +84,12 @@ export function LeadChip({
           {label}
         </span>
       )}
-      <button type="button" className={styles.leadRemove} aria-label={a.remove} onClick={onRemove}>
+      <button
+        type="button"
+        className={styles.leadRemove}
+        aria-label={`${label}. ${a.remove}`}
+        onClick={onRemove}
+      >
         <Icon name="close" size={16} />
       </button>
       {struckFor ? (
@@ -111,6 +116,48 @@ export function LeadChip({
             </button>
           </li>
         </ul>
+      ) : null}
+    </span>
+  );
+}
+
+/**
+ * T11 „Thema: Umzug“ (package 11): the shown topic, before the input after A2. One chip and its ✕ (A6 „Entfernen“); no
+ * menu. Struck through with A7 while K1 shows a kind that takes no topic.
+ */
+export function TopicLeadChip({
+  title,
+  onRemove,
+  struckFor,
+}: {
+  title: string;
+  onRemove: () => void;
+  struckFor?: string;
+}) {
+  const id = useId();
+  const label = t.planner.topic.chip(title);
+  return (
+    <span className={styles.leadWrap} data-testid="planner-topic-chip">
+      <span
+        className={struckFor ? `${styles.leadChip} ${styles.leadStruck}` : styles.leadChip}
+        title={label}
+      >
+        {label}
+      </span>
+      {/* The ✕ is the chip's one focus stop: it carries the struck sentence (A7), a plain span would not be read. */}
+      <button
+        type="button"
+        className={styles.leadRemove}
+        aria-label={`${label}. ${t.planner.appointment.remove}`}
+        aria-describedby={struckFor ? `${id}-not` : undefined}
+        onClick={onRemove}
+      >
+        <Icon name="close" size={16} />
+      </button>
+      {struckFor ? (
+        <span id={`${id}-not`} className="sr-only">
+          {t.planner.appointment.notFor(label, struckFor)}
+        </span>
       ) : null}
     </span>
   );

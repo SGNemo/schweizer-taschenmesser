@@ -2,7 +2,7 @@ import { noOnboarding } from '@/core/importer/types';
 import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { t } from '@/strings';
 import { migrations } from './migrations';
-import { assignmentSchema, daySchema, itemSchema, measureSchema } from './schema';
+import { assignmentSchema, daySchema, itemSchema, measureSchema, topicSchema } from './schema';
 import { settings } from './settings';
 
 /**
@@ -25,7 +25,7 @@ const manifest: ModuleManifest = {
     signature: 'weekBars',
     type: 'sans',
   },
-  version: 7,
+  version: 8,
   get description() {
     return t.planner.meta.description;
   },
@@ -55,6 +55,8 @@ const manifest: ModuleManifest = {
       assignment: { schema: assignmentSchema, indexes: ['date', 'itemKey'] },
       // Personal (CollectionDef.personal): never in a share file or a diagnosis; the module has no data API.
       measure: { schema: measureSchema, indexes: ['key'], personal: true },
+      // Topics (package 11): a title only; the members are `topic` links (`planner:t_<id>` → thing).
+      topic: { schema: topicSchema, indexes: [] },
     },
   },
   dataApi: false,
@@ -81,6 +83,8 @@ const manifest: ModuleManifest = {
   area: 'plan',
   requires: ['todos'],
   contributions: {
+    // Only its topics are link targets (package 11): `planner:t_<id>` → a thing, rel `topic`.
+    linkTarget: () => import('./linkTarget'),
     notifications: () => import('./notifications'),
     plannable: () => import('./plannable'),
     onboarding: noOnboarding,

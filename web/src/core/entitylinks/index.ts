@@ -38,7 +38,7 @@ import {
   type LinkRel,
 } from './types';
 
-export { linkId } from './store';
+export { isLinkable, linkId } from './store';
 export type { EntityLink, EntityRef, LinkRel } from './types';
 
 /** A link as stored, seen from one of its ends. */
@@ -240,6 +240,27 @@ export async function linksFrom(
     .flatMap((r) => {
       const link = readLink(r);
       return link ? [link] : [];
+    });
+}
+
+/**
+ * The live links that lead to any of `refs` with one of `rels` (one indexed read), with their row id and when they were
+ * last written: a reader that must pick one of several (two devices gave a thing two topics offline) takes the later.
+ * Unresolved.
+ */
+export async function linksTo(
+  refs: readonly EntityRef[],
+  rels: readonly LinkRel[],
+  database: TaschenmesserDB = defaultDb,
+): Promise<{ id: string; link: EntityLink; updatedAt: number }[]> {
+  if (refs.length === 0) return [];
+  const want = new Set<string>(rels);
+  const rows = await linksRepo(database).table.where('toKey').anyOf(refs.map(refKey)).toArray();
+  return rows
+    .filter((r) => r.deletedAt === null && want.has(r.rel))
+    .flatMap((r) => {
+      const link = readLink(r);
+      return link ? [{ id: r.id, link, updatedAt: r.updatedAt }] : [];
     });
 }
 
