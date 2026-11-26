@@ -2537,7 +2537,8 @@ export function sceneSvg(state: SceneState, o: SceneOptions = {}): SceneSvg {
       clipAttr = ` clip-path="url(#${cid})"`;
     }
     // The stack by doubling: each step repeats what is there one stack higher with a `<use>` (log2(n + 1) of them),
-    // so the markup is not multiplied.
+    // so the markup is not multiplied. It ends on a power of two (rain: 16 for 11): the extra copies lie above the
+    // clip, and covering the exact rest would cost more `<use>` elements than it saves.
     let tile = id('t');
     let stack = `<g id="${tile}">${inner}</g>`;
     for (let h = 1; h < n2 + 1; h *= 2) {
