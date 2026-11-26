@@ -124,6 +124,7 @@ describe('hour cards and the hour line (COPY §3)', () => {
     );
     expect(cardRain(tp, { time: 't', temp: 1, group: 'rain', rain: 60, mm: 0 })).toBe('60 %');
     expect(cardRain(tp, { time: 't', temp: 1, group: 'cloudy', rain: 10 })).toBe('');
+    expect(cardRain(tp, { time: 't', temp: 1, group: 'rain', rain: 10, mm: 0.8 })).toBe('');
   });
 
   it('the line of "Jetzt" starts with the gusts, takes the current values and leaves out what is missing', () => {

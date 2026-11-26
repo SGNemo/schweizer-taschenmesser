@@ -13,13 +13,17 @@ import { weatherIcon } from './weatherIcon';
 /** An amount of precipitation (mm, or cm of snow) from which a card names it. */
 export const AMOUNT_SHOWN = 0.1;
 
-/** The rain line of a card: "60 %", "60 % · 0,8 mm", snow "40 % · 1 cm"; empty when nothing matters. */
+/**
+ * The rain line of a card (mockup `hourCard`): from 30 % the chance, with the amount beside it from 0.1 mm ("60 % · 0,8
+ * mm", snow "40 % · 1 cm"); empty below 30 %.
+ */
 export function cardRain(tp: ReturnType<typeof tWeatherPage.get>, h: HourRow): string {
+  if (h.rain < RAIN_SHOWN_PERCENT) return '';
   const snow = h.snow != null && h.snow >= AMOUNT_SHOWN;
   const mm = h.mm != null && h.mm >= AMOUNT_SHOWN;
   if (snow) return tp.hourSnow(h.rain, dec(h.snow!));
   if (mm) return tp.hourRain(h.rain, dec(h.mm!));
-  return h.rain >= RAIN_SHOWN_PERCENT ? `${h.rain} %` : '';
+  return `${h.rain} %`;
 }
 
 /**

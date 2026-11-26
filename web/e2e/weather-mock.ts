@@ -106,14 +106,6 @@ export async function mockWeather(page: Page) {
           sunset: days7.map((d) => `${d}T18:51`),
           sunshine_duration: [18000, 7200, 36000, 3600, 14400, 3600, 30000],
         },
-        // Round 2: light rain from 10:15 for about 45 minutes (the block "Regen in den nächsten zwei Stunden").
-        minutely_15: {
-          time: Array.from(
-            { length: 8 },
-            (_, i) => `2026-09-29T1${Math.floor(i / 4)}:${String((i % 4) * 15).padStart(2, '0')}`,
-          ),
-          precipitation: [0, 0.2, 0.5, 0.5, 0, 0, 0, 0],
-        },
       },
     }),
   );
