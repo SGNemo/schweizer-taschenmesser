@@ -8,6 +8,9 @@ import { ReadAidContext, type ReadAidConfig } from '@/core/text/ReadableText';
 import { READ_START_TAG, READ_TEXT_TAG } from '@/core/text/readable';
 import { NoReadAid, ReadableText } from './ReadableText';
 
+/** Ink and weight are written in one batch right after the render pass (a microtask, still before the frame paints). */
+const inkWritten = () => new Promise<void>((resolve) => queueMicrotask(resolve));
+
 const on = (cover: ReadAidConfig['cover']): ReadAidConfig => ({
   cover,
   share: 0.4,
@@ -39,8 +42,9 @@ describe('ReadableText', () => {
     ]);
   });
 
-  it('tells the stylesheet what ink surrounds the text (primary / muted / other)', () => {
+  it('tells the stylesheet what ink surrounds the text (primary / muted / other)', async () => {
     const { container } = wrap(on(100), <h2>Wochenplan</h2>);
+    await inkWritten();
     // jsdom resolves no custom properties, so only the classification itself can be checked here (e2e covers the colours).
     expect(['p', 'm', 'o']).toContain(
       container.querySelector('[data-rt]')?.getAttribute('data-ink'),
@@ -100,7 +104,7 @@ describe('the aid keeps every word one piece in the host layout', () => {
     expect(container.textContent).toBe('SchmierzettelNotizzettel in Notizen');
   });
 
-  it('notes bold text around it, so the start takes the heavy weight instead of a thinner one', () => {
+  it('notes bold text around it, so the start takes the heavy weight instead of a thinner one', async () => {
     const { container } = wrap(
       on(100),
       <div>
@@ -108,6 +112,7 @@ describe('the aid keeps every word one piece in the host layout', () => {
         <p style={{ fontWeight: 400 }}>Kalender</p>
       </div>,
     );
+    await inkWritten();
     const [bold, plain] = [...container.querySelectorAll('[data-rt]')];
     expect(bold?.hasAttribute('data-bold')).toBe(true);
     expect(plain?.hasAttribute('data-bold')).toBe(false);
@@ -125,6 +130,7 @@ describe('the aid keeps every word one piece in the host layout', () => {
     );
     const link = container.querySelector('a')!;
     const rt = () => container.querySelector('[data-rt]')!;
+    await inkWritten();
     expect(rt().hasAttribute('data-bold')).toBe(true);
     link.style.fontWeight = '400';
     link.removeAttribute('aria-current');

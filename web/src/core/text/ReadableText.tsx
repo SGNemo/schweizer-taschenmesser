@@ -32,12 +32,34 @@ const CONTROL =
 /** The moments such a passing state ends (the state is already gone when they fire). */
 const STATE_ENDS = ['pointerleave', 'pointerup', 'focusout'] as const;
 
-/** Writes the ink and the boldness of the text around the aid onto its wrapper (the parent's colour and weight). */
+/**
+ * Writes the ink and the boldness of the text around the aid onto its wrapper (the parent's colour and weight).
+ * Batched: every wrapper of a render pass queues itself in its layout effect, and one microtask (still before the
+ * frame is painted) first reads all colours, then writes all attributes. Reading and writing in turn per wrapper made
+ * the browser recompute the styles once per text – on a page with many texts and a large SVG (the weather scene) that
+ * was most of a second. An attribute is only written when it changes, so measuring again costs no new style pass.
+ */
+const pending = new Map<HTMLElement, HTMLElement>();
+function flushInk(): void {
+  const batch = [...pending];
+  pending.clear();
+  const read = batch
+    .filter(([el, parent]) => el.isConnected && parent.isConnected)
+    .map(([el, parent]) => {
+      const style = getComputedStyle(parent);
+      return { el, ink: inkOf(style.color), bold: isBoldWeight(style.fontWeight) };
+    });
+  for (const { el, ink, bold } of read) {
+    if (el.dataset.ink !== ink) el.dataset.ink = ink;
+    if (bold !== el.hasAttribute('data-bold')) {
+      if (bold) el.dataset.bold = '';
+      else delete el.dataset.bold;
+    }
+  }
+}
 function measureInk(el: HTMLElement, parent: HTMLElement): void {
-  const style = getComputedStyle(parent);
-  el.dataset.ink = inkOf(style.color);
-  if (isBoldWeight(style.fontWeight)) el.dataset.bold = '';
-  else delete el.dataset.bold;
+  if (pending.size === 0) queueMicrotask(flushInk);
+  pending.set(el, parent);
 }
 
 /** Coverage levels (percent): the aid is shown where the element's level is at most the chosen coverage. */
