@@ -1337,7 +1337,8 @@ export function sceneSvg(state: SceneState, o: SceneOptions = {}): SceneSvg {
       if (d[j]) path(d[j]!, 'star', { opacity: op });
     });
   };
-  if (starry && s.cover < 4 && !falling) {
+  // "Schlicht" is sky and body only (CONCEPT §6): no stars either
+  if (starry && s.cover < 4 && !falling && !plain) {
     open('stars');
     const moonLight = moonBody ? moonIllum : 0;
     stars(

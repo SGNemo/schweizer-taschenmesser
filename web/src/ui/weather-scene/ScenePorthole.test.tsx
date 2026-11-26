@@ -181,7 +181,7 @@ describe('porthole on the new drawing (round 2, CONCEPT §6, handoff D)', () => 
   it('"Schlicht" keeps sky and body only', () => {
     for (const [, time, h] of SKIES) {
       const got = layers({ ...stateOf(time, h), level: 'plain' });
-      expect(got.every((l) => l === 'sky' || l === 'stars' || l === 'body')).toBe(true);
+      expect(got.every((l) => l === 'sky' || l === 'body')).toBe(true);
       expect(got).toContain('sky');
     }
   });

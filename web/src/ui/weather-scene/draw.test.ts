@@ -340,6 +340,13 @@ describe('the body is seen whenever it is above the horizon', () => {
       'body',
     ]);
     expect(out.inner).toContain('data-mode="schein"');
+    // a clear night too: the moon, no stars
+    const night = draw(
+      hourScene({ code: 0, cloud: 5 }, { level: 'plain', night: true, moon: true }),
+    );
+    expect(
+      [...night.q('svg > g > [data-layer]')].map((e) => e.getAttribute('data-layer')),
+    ).not.toContain('stars');
   });
 });
 

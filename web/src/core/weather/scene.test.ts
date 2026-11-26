@@ -220,7 +220,9 @@ describe('scene model (CONCEPT §3)', () => {
       // No moon before package 2: the night has no body.
       expect(byNight.body.kind).toBe('none');
       // Round 2: snow on the ground while it snows at level ≥ 2 (CONCEPT §3); rime fog is frost 1 even when mild.
-      expect(byDay.snowCover >= 1).toBe((cond === 'snow' || cond === 'snowShowers') && intensity >= 2);
+      expect(byDay.snowCover >= 1).toBe(
+        (cond === 'snow' || cond === 'snowShowers') && intensity >= 2,
+      );
       expect(byDay.frost).toBe(code === 48 ? 1 : 0);
     },
   );
@@ -258,7 +260,9 @@ describe('scene model (CONCEPT §3)', () => {
     expect(sceneAt('2026-11-24T12:00', { temp: 30 }).heat).toBe(true);
     expect(sceneAt('2026-11-24T02:50', { temp: 30 }, { night: true }).heat).toBe(false);
     expect(sceneAt('2026-11-24T12:00', {}, { snowDepth: 0.009 }).snowCover).toBe(0);
-    expect(sceneAt('2026-11-24T12:00', {}, { snowDepth: 0.01 }).snowCover).toBeGreaterThanOrEqual(1);
+    expect(sceneAt('2026-11-24T12:00', {}, { snowDepth: 0.01 }).snowCover).toBeGreaterThanOrEqual(
+      1,
+    );
   });
 
   it.each([
