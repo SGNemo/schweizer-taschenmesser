@@ -1,54 +1,6 @@
-# Planner hub 2 – prompts, packages 11, M, the parked 5b and the struck 7 and 6
+# Planner hub 2 – parked and struck prompts
 
-Plan, order, target figures, the shared block `#common` and „as built“: [PACKAGES](PACKAGES.md). One prompt per chat, pasted as it stands. Model: Claude Opus.
-
-## Prompt – package 11: topic (`feat/plan-topic`)
-
-```
-# Aufgabe: Planer-Zentrale 2, Paket 11 – Thema als Klammer: Dinge aus mehreren Modulen zusammenhalten, den Planer auf ein Thema schrumpfen
-Routing: Claude Code · Planer-Zentrale 2 Paket 11 · Opus
-Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
-Gemeinsamer Block (gilt ganz): docs/design/planner-hub-2/PACKAGES.md#common
-Branch `feat/plan-topic` von frischem `develop`, nach dem Merge von Paket 9. Hotspots ansagen: Dexie-Version / `schema.snapshot.json`, `PlannerPage.tsx`, `strings.ts`.
-
-## Ausgangslage
-CONCEPT.md §0.1, §1.1 (`topic`); CONCEPT-INTAKE.md „Idea 11“ (mit „Why a topic and not a tag“); handoff/11-topic.md; COPY.md T1–T4, T6, T8–T12, K8, K9.
-
-## Pflichtliste
-- Sammlung `planner_topic` (`title` ≤ 60; Datensatz-id `t_<uuid>`, damit der Link-Schlüssel `planner:<Datensatz-id>` ist und `sweepPurged` ihn findet); `db:bump`, Schema-Historie, `manifest.version`; `planner`-`linkTarget` nur für Themen; Mitgliedschaft nur als `topic`-Link (Thema → Ding), geschrieben nur von der eigenen Aktion „Thema …“ (`addLink` in ihrer rückgängig machbaren Aktion), ein Thema je Ding (ein zweites ersetzt das erste im selben Undo). Der Link speichert das Ding selbst (`entityId` bei Vorkommens-Zeilen); der Filter trifft Zeilen nach der Präfix-Regel aus CONCEPT §1.2; „Thema …“ gibt es nur auf Zeilen, deren Modul verknüpfbar ist (`isLinkable`), und auf Termin-(Blocker-)Zeilen; nie auf Stapel-Zeilen (und Bündel-Zeilen, sollte 5b je gebaut werden). Wird `planner` hier (für Themen) verknüpfbar und wird 5b später gebaut, bleibt „Bündeln …“ für Zeilen der Art `pile` und `bundle` ausgeschlossen. `sync.test.ts` um den `topic`-Fall (aus 10a hierher verschoben).
-- Wähler (Dialog T2) aus Zeilen-⋯ und Auswahlleiste; der Planer liest keine ToDo-Tags. Nach dem ersten Gebrauch bietet das ⋯ einer Zeile das zuletzt benutzte Thema direkt als T12 „Thema: {Umzug}“ über T1 an (gerätelokal gemerkt, nicht synchronisiert).
-- Filter aus dem Seiten-⋯ (T3): Zeile T4, Blatt, Band, „Noch ohne Tag“, „Noch offen“ zeigen nur Mitglieder; die Frei-Zeit des Tagesblatts zählt weiter den ganzen Tag; die Kopfzahl weicht T4. Ein Termin mit dem Thema bleibt als Blocker-Zeile sichtbar, Blocker ohne das Thema sind ausgeblendet. Filter ist Gerätezustand (`_meta`), schreibt nichts Synchronisiertes (Schreib-Spion).
-- Neues im Feld bei aktivem Filter bekommt das Thema (Vor-Chip T11 mit ✕ vor der Eingabe, nach A2; über die eigene `addFromField` des Planers, nicht über den Bus; Regel aus Paket 3). Ein Ding, das bei aktivem Filter entsteht und T11 nicht annimmt (Rechnung, Einkaufsliste, Termin, Notiz, Merkliste), endet im Toast mit K9 „Nicht im Thema „Umzug“ · Alles zeigen“ (beendet den Filter), damit es nicht wortlos verschwindet (Test); eine Aufgabe nur mit T11 bekommt K8. Nur eine einfache Aufgabe – auch eine mit Schritten – nimmt die Vor-Chips an (A2 → Link und Tag, T11 → Thema). Bei jeder anderen Art (Rechnung, Einkaufsliste, Termin, Notiz, Merkliste) werden die Chips durchgestrichen gezeichnet, solange K1 steht, und nicht angewendet. Gibt ein Chip den Tag, nennt K1 bzw. der Toast des Feldes diesen Tag.
-- Verwalten in den Planer-Einstellungen: umbenennen, löschen (T9: entfernt nur die Links, ein Undo).
-- Zwei Geräte: dasselbe Ding offline in zwei Themen → beide Zeilen bleiben, gelesen wird die spätere; aufgeräumt wird nur in der nächsten Aktion „Thema …“ an diesem Ding – nie im Hintergrund, nie im Undo-Eintrag einer anderen Aktion.
-
-## Nicht in diesem Paket
-Eine Themen-Seite außerhalb des Planers, Farben je Thema, Thema in der Eingabe-Syntax, Verschachtelung, neue Felder in anderen Modulen.
-
-## Abnahme
-Tests der Übergabe; `e2e/seed/plan-topic.seed.spec.ts`; Mess-Skript D4: `rows` 20 → 7, `moduleSwitches` 2 → 0, `planFilter` nein → ja, `perThing` 20 / 15 → 15, `taps` Desktop 27 → 22, Handy gemessen 23 – ein im Skript-Kopf benannter Preis, dauerhaft; `IST` bleibt 22 (Donnerstags Rechnung wartet unter dem gefalteten „Danach“ des Handys). Lesart des Skripts ändern: `rows` (die „· n Dinge“ der Kacheln plus „Termine“) und `planFilter` nach dem Einschalten des Filters lesen; heute werden beide vor dem Weg über einen Knopfnamen gelesen. Herleitung je Griff, Stufen und Lesart des Skripts: docs/design/planner-hub-2/FIGURES.md.
-
-## Skills
-`council` (Daten, Link-Vertrag, zwei Geräte), `design:accessibility-review`, `file-pr`, `babysit-pr`, `leaving-pr-comments`. Full stop.
-```
-
-## Prompt – package M: measure after, close the round (`qa/planner-hub-2-remeasure`)
-
-```
-# Aufgabe: Planer-Zentrale 2, Paket M – nachmessen und die Runde schließen
-Routing: Claude Code · Planer-Zentrale 2 Paket M · Opus
-Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
-Gemeinsamer Block (gilt ganz): docs/design/planner-hub-2/PACKAGES.md#common
-Branch `qa/planner-hub-2-remeasure` von frischem `develop`, nach dem letzten gebauten Paket.
-
-## Pflichtliste
-- `web/e2e/usecases/planner-hub-2.spec.ts`: jede Zahl gegen `TARGET` und die Stufen in docs/design/planner-hub-2/FIGURES.md prüfen; wo eine Zahl ihr Ziel nicht erreicht, steht der Grund im PR und in ANALYSIS.md („measured after“-Tabelle), nichts wird gelockert. C2 heißt dort „nicht gebaut: 5b geparkt“ – kein verfehltes Ziel; sein `IST` bleibt, `TARGET` bleibt im Skript für den Tag, an dem 5b gebaut wird.
-- `npm run measure:stimulus` für Planer 1920 und 412: vorher/nachher gegen `web/e2e/stimulus-budget.json`.
-- Das Gestrichene und Geparkte bleibt: der geparkte Prompt 5b und die gestrichenen Prompts 7, 6 aus `PACKAGES-PROMPTS-5.md`, die Abschnitte „parked with 5b“ von `handoff/05-bundle.md` (als eigene Datei), `handoff/06-errand.md`, `07-wait.md`, `mockups/05-bundle-a.html` (wegen der geparkten 5b-Zustände), `06-errand.html`, `07-wait.html`, `mock.css`, `render.mjs` und `CONCEPT-STRUCK.md` wandern nach `docs/design/planner-hub-2/struck/`; dazu kommen Kopien des Blocks `#common` aus PACKAGES.md und von `handoff/00-common.md` nach `struck/` (die gestrichenen und geparkten Prompts zitieren sie), und deren Links zeigen auf diese Kopien. Paket 8 ist gebaut und bleibt nicht in `struck/`. Die übrigen Arbeitsdokumente der Runde werden gelöscht (PACKAGES*.md, die anderen Übergaben und Mockups); FIGURES.md bleibt, auf ihn zeigt der Kopf des Mess-Skripts; README.md auf „gebaut“ stellen, Entscheidungen stehen in docs/decisions/plan-hub-2.md; Label `no-changelog`.
-
-## Skills
-`review-loop` (eine Runde), `file-pr`, `babysit-pr`, `leaving-pr-comments`. Full stop.
-```
+Kept when the round closed (package M, 2026-11-26): 5b is parked (build only on the maintainer's explicit yes, not before 5a – 5a is built), 7 and 6 are struck by principle 1. Paths in the prompts are from the repository root; the shared block they cite is [common](common.md), the hand-off rules [00-common](00-common.md).
 
 ## Prompt – package 5b (parked by the figures – only on the maintainer's explicit yes; not before 5a): bundling things (`feat/plan-bundles`)
 
@@ -56,11 +8,11 @@ Branch `qa/planner-hub-2-remeasure` von frischem `develop`, nach dem letzten geb
 # Aufgabe: Planer-Zentrale 2, Paket 5b – mehrere Dinge zu einem Bündel: eine Zeile, ein Startpunkt, ein Undo
 Routing: Claude Code · Planer-Zentrale 2 Paket 5b · Opus
 Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
-Gemeinsamer Block (gilt ganz): docs/design/planner-hub-2/PACKAGES.md#common
+Gemeinsamer Block (gilt ganz): docs/design/planner-hub-2/struck/common.md
 Branch `feat/plan-bundles` von frischem `develop`, frühestens nach 5a; nur auf das ausdrückliche „ja“ des Maintainers (geparkt nach den Zahlen: eine Zeile und drei Arbeitsgriffe weniger gegen 14 / 13 Griffe einmal und einen Weg nach Listen). Hotspots ansagen: Dexie-Version / `schema.snapshot.json`, `PlannerPage.tsx`, `strings.ts`.
 
 ## Ausgangslage
-CONCEPT.md §0.1; CONCEPT-ROWS.md „Idea 5“ (5b); handoff/05-bundle.md („5b: making and unmaking“, Zustände); COPY.md B2, B11–B18, B20, B21, B25, M5.
+CONCEPT.md §0.1; CONCEPT-ROWS.md „Idea 5“ (5b); struck/05-bundle-parked.md („5b: making and unmaking“, Zustände); COPY.md B2, B11–B18, B20, B21, B25, M5.
 
 ## Pflichtliste
 - Daten: Sammlung `planner_bundle` (`title`; Datensatz-id `b_<uuid>`), Felder `bundle`, `step` auf `planner_item`; `npm run db:bump`, vorherige Stores nach `core/db/schema-history.json`, `manifest.version` + leerer Migrationsschritt; `dataApi: false` bleibt für das ganze Modul.
@@ -89,11 +41,11 @@ Tests der Übergabe (5b); `e2e/seed/plan-bundle.seed.spec.ts`; Mess-Skript C2: `
 # Aufgabe: Planer-Zentrale 2, Paket 7 – „Warte auf Antwort“: eine Zeile verschwindet bis zu einem Tag und kommt mit Person oder Mail wieder
 Routing: Claude Code · Planer-Zentrale 2 Paket 7 · Opus
 Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
-Gemeinsamer Block (gilt ganz): docs/design/planner-hub-2/PACKAGES.md#common
+Gemeinsamer Block (gilt ganz): docs/design/planner-hub-2/struck/common.md
 Branch `feat/plan-wait` von frischem `develop`, frühestens nach Paket 11. Hotspot ansagen: `core/modules/types.ts`.
 
 ## Ausgangslage
-CONCEPT-STRUCK.md „Idea 7“; handoff/07-wait.md; COPY.md W1–W6. Bestand: ToDos `startDate` (blendet bis zu dem Tag aus), `onLater`/`listLater` als Muster.
+struck/CONCEPT-STRUCK.md „Idea 7“; struck/07-wait.md; COPY.md W1–W6. Bestand: ToDos `startDate` (blendet bis zu dem Tag aus), `onLater`/`listLater` als Muster.
 
 ## Pflichtliste
 - Vertrag: `LinkRel` um `wait`; `PlannableSource.onWait?(id, until | undefined)` und `listWaiting?()`; ToDos setzen `startDate`.
@@ -117,11 +69,11 @@ Tests der Übergabe; `e2e/seed/plan-wait.seed.spec.ts`; Mess-Skript D5: Griffe 7
 # Aufgabe: Planer-Zentrale 2, Paket 6 – Besorgungsrunde mit Orten: Stopps, „Ort …“, Sprung auf die Karte
 Routing: Claude Code · Planer-Zentrale 2 Paket 6 · Opus
 Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
-Gemeinsamer Block (gilt ganz): docs/design/planner-hub-2/PACKAGES.md#common
+Gemeinsamer Block (gilt ganz): docs/design/planner-hub-2/struck/common.md
 Branch `feat/plan-errand` von frischem `develop`, frühestens nach 5b (das selbst geparkt ist).
 
 ## Ausgangslage
-Setzt 5b voraus (geparkt): die Runde als Bündel, die Liste im Bündel abhaken. Gestrichen und hier nachzuholen: CONCEPT-INTAKE.md „Idea 6“ (Abschnitt „Struck parts“); handoff/06-errand.md; COPY.md E1–E3.
+Setzt 5b voraus (geparkt): die Runde als Bündel, die Liste im Bündel abhaken. Gestrichen und hier nachzuholen: CONCEPT-INTAKE.md „Idea 6“ (Abschnitt „Struck parts“); struck/06-errand.md; COPY.md E1–E3.
 
 ## Pflichtliste
 - `LinkRel` um `place`; `maps`-`linkTarget` für Orte (Name; nur eigene Daten, id nicht vertrauenswürdig) und ein fauler Namens-Leser für den Dialog „Ort …“.

@@ -11,7 +11,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const require = createRequire(path.join(process.cwd(), 'package.json'));
 const { chromium } = require('playwright-core');
 const here = path.dirname(fileURLToPath(import.meta.url));
-const out = path.join(here, '../../../../web/.screens/planner-hub-2');
+const out = path.join(here, '../../../../../web/.screens/planner-hub-2');
 mkdirSync(out, { recursive: true });
 const all = readdirSync(here).filter((f) => f.endsWith('.html')).map((f) => f.slice(0, -5));
 const names = process.env.MOCKUPS ? process.env.MOCKUPS.split(',') : all;

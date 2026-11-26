@@ -1,6 +1,6 @@
 # Planner hub 2 – concept: the frame and the link contract (idea 10)
 
-Ideas 4, 2, 5, 8: [CONCEPT-ROWS](CONCEPT-ROWS.md). Ideas 1, 3, 6, 9, 11: [CONCEPT-INTAKE](CONCEPT-INTAKE.md). Struck 7: [CONCEPT-STRUCK](CONCEPT-STRUCK.md). Figures: [ANALYSIS](ANALYSIS.md). Sample day everywhere: Monday 2026-11-30, invented things only.
+Ideas 4, 2, 5, 8: [CONCEPT-ROWS](CONCEPT-ROWS.md). Ideas 1, 3, 6, 9, 11: [CONCEPT-INTAKE](CONCEPT-INTAKE.md). Struck 7: [CONCEPT-STRUCK](struck/CONCEPT-STRUCK.md). Figures: [ANALYSIS](ANALYSIS.md). Sample day everywhere: Monday 2026-11-30, invented things only.
 
 ## 0. Seven sentences every package keeps
 
