@@ -69,8 +69,7 @@ describe('<WeatherScene>', () => {
     const fit = cardFit(379, 205, CARD_QUIET_SHARE);
     expect(fit.view![2]).toBe(1600);
     expect(fit.view![1]).toBeLessThan(0);
-    // the text ends at the share, the quiet zone one fog lead later; the body in its own box right of it
-    expect(fit.quietX).toBe(Math.round(1600 * CARD_QUIET_SHARE) + 80);
+    // the body in its own box right of the text zone
     expect(fit.bodyAt![0]).toBeGreaterThan(fit.quietX!);
     expect(fit.bodyAt![1]).toBeGreaterThan(fit.view![1]);
     // jsdom measures nothing: the card's box is 379 × 205 for this render

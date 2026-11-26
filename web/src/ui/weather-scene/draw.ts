@@ -1064,6 +1064,10 @@ export function sceneSvg(state: SceneState, o: SceneOptions = {}): SceneSvg {
   const pt = o.porthole ?? 0;
   // The small versions show no sky event (CONCEPT §6, open) and never move.
   const s: SceneState = pt ? { ...state, event: undefined, eventAmount: 0, motion: false } : state;
+  /** A porthole under 48 px: no stars, no maria (specks under a pixel). */
+  const tiny = pt > 0 && pt < 48;
+  /** The porthole's marks grow below 64 px, so they stay at least about 0.8 px wide. */
+  const markK = pt ? Math.max(1, 64 / pt) : 1;
   const B = new Book();
   const key = skyOf(s).key;
   const th = s.theme === 'dark' ? 'dark' : 'light';
@@ -1323,7 +1327,7 @@ export function sceneSvg(state: SceneState, o: SceneOptions = {}): SceneSvg {
       const r = 0.6 + q() * 0.9;
       if (aroundBody) {
         const a = q() * 6.28;
-        const rr = (30 + q() * 60) * bodyK;
+        const rr = 30 + q() * 60;
         x = body[0] + Math.cos(a) * rr * 1.5;
         y = body[1] - 4 + Math.sin(a) * rr * 0.6;
       } else {
@@ -1339,7 +1343,7 @@ export function sceneSvg(state: SceneState, o: SceneOptions = {}): SceneSvg {
   };
   // "Schlicht" is sky and body only (CONCEPT §6): no stars either
   // the porthole below 48 px: stars would be specks under a pixel
-  if (starry && s.cover < 4 && !falling && !plain && !(pt && pt < 48)) {
+  if (starry && s.cover < 4 && !falling && !plain && !tiny) {
     open('stars');
     const moonLight = moonBody ? moonIllum : 0;
     stars(
@@ -1406,7 +1410,7 @@ export function sceneSvg(state: SceneState, o: SceneOptions = {}): SceneSvg {
             'data-part': 'moon',
           },
           el('path', { d: lp, fill: tok('moon') }) +
-            (k > 0.3 && !(pt && pt < 48)
+            (k > 0.3 && !tiny
               ? el('path', {
                   d:
                     circ(R * 0.17, -R * 0.33, R * 0.23) +
@@ -1558,7 +1562,7 @@ export function sceneSvg(state: SceneState, o: SceneOptions = {}): SceneSvg {
       );
       if (dark) {
         open('stars');
-        if (!(pt && pt < 48)) stars(12, true);
+        if (!tiny) stars(12, true);
         close();
       }
       out += glow(
@@ -2671,7 +2675,7 @@ export function sceneSvg(state: SceneState, o: SceneOptions = {}): SceneSvg {
       open('event', ' data-part="thunder"');
       // the main bolt's figure, moved into the round crop (its own place lies on the crop's left rim)
       const b = G.bolts[0]!;
-      path(ribbon(b.p, b.w * 2.4 * Math.max(1, 64 / pt), 1.6), 'bolt', {
+      path(ribbon(b.p, b.w * 2.4 * markK, 1.6), 'bolt', {
         opacity: b.op,
         transform: `translate(${PORTHOLE.boltDx} 0)`,
         'data-part': 'bolt',
@@ -2682,7 +2686,7 @@ export function sceneSvg(state: SceneState, o: SceneOptions = {}): SceneSvg {
       const q = prng(41);
       const cnt = (pt < 48 ? 5 : 7) + Math.min(3, s.intensity);
       // marks of at least about 0.8 px: below 64 px they grow with the crop's scale
-      const m = Math.max(1, 64 / pt);
+      const m = markK;
       const slant = G.slant[s.wind]! * dir;
       const snowy = falling === 'snow';
       let d = '';
@@ -2699,7 +2703,11 @@ export function sceneSvg(state: SceneState, o: SceneOptions = {}): SceneSvg {
         let hd2 = '';
         for (let i = 0; i < 4; i++)
           hd2 += circ(view[0] + 90 + i * 52, 150 + ((i * 29) % 50), 6 * m);
-        path(hd2, 'hail', { stroke: tok('hail-edge'), 'stroke-width': 1.5, 'data-part': 'hail' });
+        path(hd2, 'hail', {
+          stroke: tok('hail-edge'),
+          'stroke-width': 1.5 * m,
+          'data-part': 'hail',
+        });
       }
       close();
     }
