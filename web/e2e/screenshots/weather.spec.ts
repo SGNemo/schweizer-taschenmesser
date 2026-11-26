@@ -10,7 +10,7 @@ import { ready } from '../helpers';
  *
  * Usage (in web/): `npm run screenshots -- weather.spec.ts --project=plain`
  *   WEATHER_SCENES=eclipse|aurora   regex on the scenario id (default: all)
- *   WEATHER_PARTS=head,card         head | card | air | days | overview | page (default: head,card)
+ *   WEATHER_PARTS=head,card         head | card | air | days | overview | widget | page (default: head,card)
  *   SCREENS_VIEWPORTS=1920x1080     default 1920x1080,412x915
  *   SCREENS_SCHEME=dark             default light and dark
  *   SCREENS_DIR=.screens/weather    output directory
@@ -326,10 +326,27 @@ for (const raw of SCENARIOS.filter((x) => !ONLY || ONLY.test(x.id)))
         mkdirSync(OUT, { recursive: true });
         const name = (part: string) => `${OUT}/${s.id}-${part}-${w}-${scheme}.png`;
         const { page, context } = await open(browser, s, w, h, scheme);
-        if (PARTS.has('overview')) {
+        if (PARTS.has('overview') || PARTS.has('widget')) {
           await ready(page, '/');
-          await page.waitForTimeout(600);
-          await page.screenshot({ path: name('overview') });
+          // "Ruhig" shows only the first cards; "Ausführlich" brings the weather widget onto a fresh overview.
+          await page
+            .getByRole('radio', { name: 'Ausführlich' })
+            .or(page.getByRole('button', { name: 'Ausführlich' }))
+            .first()
+            .click()
+            .catch(() => undefined);
+          // The widget loads after first paint (lazy chunk): wait for its scene or porthole, if it is on the overview.
+          await page
+            .locator('[data-variant="scene"], [data-variant="porthole"]')
+            .first()
+            .waitFor({ timeout: 5000 })
+            .catch(() => undefined);
+          await page.waitForTimeout(400);
+          if (PARTS.has('overview')) await page.screenshot({ path: name('overview') });
+          // The whole card (the frame's `[data-widget]` cell), not only its body.
+          const widget = page.locator('[data-widget]:has([data-testid="weather-widget"])');
+          if (PARTS.has('widget') && (await widget.count()))
+            await widget.first().screenshot({ path: name('widget') });
         }
         await ready(page, '/weather');
         await expect(page.getByTestId('weather-keys')).toBeVisible();

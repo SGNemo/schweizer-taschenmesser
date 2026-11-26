@@ -15,7 +15,7 @@ node e2e/screenshots/montage.mjs .screens/weather head-412-dark 1300 3 .screens/
 ```
 
 - **Scenarios** are rows of `SCENARIOS` (instant, place, WMO code, day/night, cloud, gusts, dust, DWD warnings, Kp). The list holds checked dates for full moon, eclipses, meteor nights, rainbow, dust, aurora and official warnings; add a row, or pass one as JSON in `WEATHER_SCENARIO`.
-- **Parts:** `head` (head plus what went under it), `card` ("Mond & Himmel"), `air`, `days`, `overview`, `page` (full page).
+- **Parts:** `head` (head plus what went under it), `card` ("Mond & Himmel"), `air`, `days`, `overview` (switched to „Ausführlich“, so the weather widget is on it), `widget` (the card alone), `page` (full page).
 - **Filters:** `SCREENS_VIEWPORTS=1920x1080,412x915`, `SCREENS_SCHEME=light,dark`.
 
 ## Pitfalls that cost time

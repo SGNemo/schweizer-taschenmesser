@@ -25,7 +25,7 @@ if (files.length === 0) {
   process.exit(1);
 }
 // The label is the scenario id (the part of the name before "-head-", "-card-" …).
-const label = (f) => f.replace(/-(head|card|air|days|overview|page)-.*$/, '');
+const label = (f) => f.replace(/-(head|card|air|days|overview|widget|page)-.*$/, '');
 const cell = (f) =>
   `<figure style="margin:0"><figcaption style="font:13px system-ui;color:#fff;padding:2px 0">${label(f)}</figcaption>` +
   `<img src="data:image/png;base64,${readFileSync(`${dir}/${f}`).toString('base64')}" style="display:block;max-width:100%"></figure>`;
