@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { t } from '@/strings';
 import { Button, Dialog, SettingRow, TextField } from '@/ui';
 import { topicRepo } from '../repo';
+import { TOPIC_TITLE_MAX } from '../schema';
 import { deleteTopic, renameTopic } from '../topic';
 import styles from '../routes/planner.module.css';
 
@@ -52,7 +53,7 @@ export function TopicSettings() {
       <Dialog
         open={!!deleting}
         onClose={() => setDeleting(undefined)}
-        title={p.delete}
+        title={deleting ? p.deleteTitle(deleting.title) : p.delete}
         footer={
           <>
             <Button data-autofocus onClick={() => setDeleting(undefined)}>
@@ -82,26 +83,32 @@ export function TopicSettings() {
             <Button variant="ghost" onClick={() => setRenaming(undefined)}>
               {t.actions.cancel}
             </Button>
-            <Button
-              onClick={() => {
-                const r = renaming;
-                setRenaming(undefined);
-                if (r) void renameTopic(r.id, r.value);
-              }}
-            >
+            <Button type="submit" form="planner-topic-rename" disabled={!renaming?.value.trim()}>
               {t.actions.save}
             </Button>
           </>
         }
       >
         {renaming ? (
-          <TextField
-            label={p.renameLabel(renaming.title)}
-            value={renaming.value}
-            maxLength={60}
-            data-autofocus
-            onChange={(e) => setRenaming({ ...renaming, value: e.target.value })}
-          />
+          // A form, so Enter saves (an empty name cannot: „Speichern“ waits for one).
+          <form
+            id="planner-topic-rename"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const r = renaming;
+              if (!r.value.trim()) return;
+              setRenaming(undefined);
+              void renameTopic(r.id, r.value);
+            }}
+          >
+            <TextField
+              label={p.renameLabel(renaming.title)}
+              value={renaming.value}
+              maxLength={TOPIC_TITLE_MAX}
+              data-autofocus
+              onChange={(e) => setRenaming({ ...renaming, value: e.target.value })}
+            />
+          </form>
         ) : null}
       </Dialog>
     </section>

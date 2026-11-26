@@ -138,16 +138,15 @@ export function TopicLeadChip({
   const label = t.planner.topic.chip(title);
   return (
     <span className={styles.leadWrap} data-testid="planner-topic-chip">
-      <span
-        className={struckFor ? `${styles.leadChip} ${styles.leadStruck}` : styles.leadChip}
-        aria-describedby={struckFor ? `${id}-not` : undefined}
-      >
+      <span className={struckFor ? `${styles.leadChip} ${styles.leadStruck}` : styles.leadChip}>
         {label}
       </span>
+      {/* The ✕ is the chip's one focus stop: it carries the struck sentence (A7), a plain span would not be read. */}
       <button
         type="button"
         className={styles.leadRemove}
         aria-label={`${label}. ${t.planner.appointment.remove}`}
+        aria-describedby={struckFor ? `${id}-not` : undefined}
         onClick={onRemove}
       >
         <Icon name="close" size={16} />

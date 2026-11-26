@@ -9570,7 +9570,10 @@ export const de = {
       delete: 'Thema löschen …',
       deleteSentence: 'Die Dinge bleiben, nur die Klammer geht.',
       deleteConfirm: 'Löschen',
+      deleteTitle: (title: string) => `„${title}“ löschen?`,
       deleted: (title: string) => `Thema „${title}“ gelöscht.`,
+      /** The chooser's mark on the topic the things have now (for screen readers). */
+      chosen: 'gewählt',
       rename: 'Umbenennen',
       renamed: (title: string) => `Heißt jetzt „${title}“.`,
       renameLabel: (title: string) => `Neuer Name für „${title}“`,

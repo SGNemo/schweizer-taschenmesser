@@ -13,8 +13,7 @@
  */
 import { getMeta, setMeta } from '@/core/db/metaKv';
 import { randomId } from '@/core/db/util';
-import { addLink, linksFrom, linksTo, removeLink } from '@/core/entitylinks';
-import { isLinkable } from '@/core/entitylinks/store';
+import { addLink, isLinkable, linksFrom, linksTo, removeLink } from '@/core/entitylinks';
 import { entityRefOf, refKey, type EntityRef } from '@/core/entitylinks/types';
 import type { PlannableEntry } from '@/core/modules/contributions';
 import { undoableWithToast } from '@/core/undo/withToast';
@@ -46,7 +45,13 @@ export function topicThing(
 export function topicTitle(raw: string): string | undefined {
   const one = raw.replace(/\s+/gu, ' ').trim();
   if (!one) return undefined;
-  return Array.from(one).slice(0, TOPIC_TITLE_MAX).join('');
+  // Counted as the schema counts (`.length`), never cutting a character in two.
+  let out = '';
+  for (const ch of one) {
+    if (out.length + ch.length > TOPIC_TITLE_MAX) break;
+    out += ch;
+  }
+  return out;
 }
 
 /** The topic a thing has: of several `topic` links to it (two devices, offline), the later one. */
@@ -61,9 +66,17 @@ export function topicOfLinks(
   return latest.link.from.id;
 }
 
-/** The topic of each thing (by `refKey`), read at once. */
+/**
+ * The topic of each thing (by `refKey`), read at once. A link from a topic deleted elsewhere is not counted (device B
+ * gave it while A deleted the topic), so it never shadows the thing's live topic.
+ */
 export async function topicsOf(things: readonly EntityRef[]): Promise<Map<string, string>> {
-  const links = await linksTo(things, ['topic']);
+  const all = (await linksTo(things, ['topic'])).filter((l) => l.link.from.module === MODULE_ID);
+  const ids = [...new Set(all.map((l) => l.link.from.id))];
+  const alive = new Set(
+    (await Promise.all(ids.map((id) => topicRepo.get(id)))).flatMap((x) => (x ? [x.id] : [])),
+  );
+  const links = all.filter((l) => alive.has(l.link.from.id));
   const by = new Map<string, typeof links>();
   for (const l of links) {
     const key = refKey(l.link.to);
@@ -80,6 +93,15 @@ export async function topicsOf(things: readonly EntityRef[]): Promise<Map<string
 /** The members of a topic: the things its `topic` links lead to. */
 export async function membersOf(topicId: string): Promise<EntityRef[]> {
   return (await linksFrom([topicRef(topicId)], ['topic'])).map((l) => l.to);
+}
+
+/**
+ * The things the filter shows for a topic: its members, less those two devices gave another topic offline that the
+ * reader takes (the later one) – the same answer the chooser gives (`refKey`s).
+ */
+export async function shownMembers(topicId: string): Promise<Set<string>> {
+  const of = await topicsOf(await membersOf(topicId));
+  return new Set([...of].filter(([, id]) => id === topicId).map(([key]) => key));
 }
 
 /** What „Thema …“ chose: an existing topic, a new name, or none. */

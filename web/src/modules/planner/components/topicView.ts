@@ -8,11 +8,10 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo } from 'react';
 import { getMeta } from '@/core/db/metaKv';
-import { linksFrom } from '@/core/entitylinks';
 import { refKey } from '@/core/entitylinks/types';
 import type { BoardData } from '../useBoard';
 import { topicRepo } from '../repo';
-import { TOPIC_FILTER_KEY, TOPIC_LAST_KEY, topicRef } from '../topic';
+import { TOPIC_FILTER_KEY, TOPIC_LAST_KEY, shownMembers } from '../topic';
 
 /** A row's item key matches a member when it is that thing or one of its occurrences (CONCEPT §1.2 prefix rule). */
 export function matcher(members: ReadonlySet<string>): (itemKey: string) => boolean {
@@ -71,9 +70,7 @@ export function useTopicView(): TopicView {
       filterId ? topicRepo.get(filterId) : undefined,
       lastId ? topicRepo.get(lastId) : undefined,
     ]);
-    const members = filter
-      ? new Set((await linksFrom([topicRef(filter.id)], ['topic'])).map((l) => refKey(l.to)))
-      : undefined;
+    const members = filter ? await shownMembers(filter.id) : undefined;
     return {
       filter: filter ? { id: filter.id, title: filter.title } : undefined,
       last: last ? { id: last.id, title: last.title } : undefined,

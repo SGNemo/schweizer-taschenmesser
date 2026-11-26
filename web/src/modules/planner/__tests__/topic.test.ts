@@ -11,11 +11,13 @@ import { addFromField, addKindFromField } from '../actions';
 import linkTarget from '../linkTarget';
 import { setManifestsForTests } from '../services';
 import { topicRepo } from '../repo';
+import { topicSchema } from '../schema';
 import {
   deleteTopic,
   renameTopic,
   setTopic,
   setTopicFilter,
+  shownMembers,
   TOPIC_FILTER_KEY,
   TOPIC_LAST_KEY,
   topicOfLinks,
@@ -97,8 +99,25 @@ describe('„Thema …“', () => {
     });
     expect((await live('_links')).length).toBe(2);
     expect((await topicsOf([todo('a')])).get('todos:a')).toBe('t_00000000-steuer');
+    // The filter reads the same: the thing shows under the later topic only.
+    expect([...(await shownMembers('t_00000000-steuer'))]).toEqual(['todos:a']);
+    expect((await shownMembers(move)).size).toBe(0);
     await setTopic([todo('a')], { id: move });
     expect((await live('_links')).map((l) => l.from.id)).toEqual([move]);
+  });
+
+  it('a link from a topic deleted elsewhere never shadows the live one', async () => {
+    const move = (await setTopic([todo('a')], { title: 'Umzug' }))!;
+    setNow(() => new Date(2026, 10, 30, 10, 0).getTime());
+    // Device B gave the thing „Steuer“ offline while device A deleted „Steuer“: the link arrives, the topic is gone.
+    await addLink({
+      from: { module: 'planner', id: 't_00000000-steuer' },
+      to: todo('a'),
+      rel: 'topic',
+      label: 'Steuer',
+    });
+    expect((await topicsOf([todo('a')])).get('todos:a')).toBe(move);
+    expect([...(await shownMembers(move))]).toEqual(['todos:a']);
   });
 
   it('the later of two rows; a tie by the row id', () => {
@@ -121,6 +140,10 @@ describe('„Thema …“', () => {
     expect(topicTitle('  Umzug \n Wien ')).toBe('Umzug Wien');
     expect(topicTitle('   ')).toBeUndefined();
     expect(Array.from(topicTitle('x'.repeat(80))!)).toHaveLength(60);
+    // Counted as the schema counts: an emoji is two, and never cut in half.
+    const emoji = topicTitle('😀'.repeat(40))!;
+    expect(emoji).toHaveLength(60);
+    expect(topicSchema.safeParse({ title: topicTitle('x' + '😀'.repeat(40)) }).success).toBe(true);
   });
 });
 
@@ -214,6 +237,19 @@ describe('the field while a topic is shown', () => {
     await undoLast();
     expect((await live('_links')).filter((l) => l.to.id === made.id)).toHaveLength(0);
     expect((await live('todos_task')).some((x) => x.id === made.id)).toBe(false);
+  });
+
+  it('a break typed with the chip on takes no topic either: K9', async () => {
+    const id = (await setTopic([todo('a')], { title: 'Umzug' }))!;
+    expect(
+      await addFromField('Pause 2 Std Zocken', {}, undefined, undefined, undefined, {
+        topic: { id, title: 'Umzug' },
+        filtered: { title: 'Umzug' },
+      }),
+    ).toBe(true);
+    const last = useUiStore.getState().toasts.at(-1)!;
+    expect(last.message).toMatch(/\nNicht im Thema „Umzug“$/);
+    expect(last.lead?.label).toBe('Alles zeigen');
   });
 
   it('K9: another kind takes no topic – the toast says so and „Alles zeigen“ ends the filter', async () => {

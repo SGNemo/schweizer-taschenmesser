@@ -81,9 +81,10 @@ import { appointmentsOf, Context, nextDeadlinesOf } from '../components/Context'
 import { BlockRow, DayPage, DayPageLoading } from '../components/DayPage';
 import { LeadChip, TopicLeadChip } from '../components/LeadChip';
 import { TopicChooser } from '../components/TopicChooser';
-import { filterBoard, useTopicView } from '../components/topicView';
+import { filterBoard, matcher, useTopicView } from '../components/topicView';
 import { setTopic, setTopicFilter, topicsOf, topicThing, type TopicChoice } from '../topic';
-import { isLinkable } from '@/core/entitylinks/store';
+import { TOPIC_ID } from '../schema';
+import { isLinkable } from '@/core/entitylinks';
 import { refKey, type EntityRef } from '@/core/entitylinks/types';
 import { AppointmentLinks, useAppointmentLinks } from '../components/appointmentLinks';
 import { LateGroup, LateRow } from '../components/LateGroup';
@@ -374,12 +375,14 @@ export default function PlannerPage() {
    * fixed ones stay and are named („1 bleibt: fest“).
    */
   async function showSpread(day: BoardDay) {
-    return previewSpread(day.rows, day.date, false);
+    // With a topic shown the sheet lists only its things, but the day is over-full as a whole: all of it is spread.
+    const whole = read?.board.days.find((d) => d.date === day.date) ?? day;
+    return previewSpread(whole.rows, day.date, false);
   }
 
   /** „Verteilen …“ of the tab „Noch offen“: its things that are not „fest“, today first – as a preview. */
   function showSpreadOpen() {
-    return previewSpread(data?.board.open ?? [], data?.today ?? today(), true);
+    return previewSpread(read?.board.open ?? [], read?.today ?? today(), true);
   }
 
   async function previewSpread(rows: readonly BoardRow[], from: string, open: boolean) {
@@ -717,18 +720,25 @@ export default function PlannerPage() {
   // The head reports the next day that asks for something (CONCEPT-DESIGN §5): `head.ts`. With no thing on any
   // day there is no figure; the unseen placeholder keeps the head's height (U01).
   // T4's count: the things of the shown topic that lie in the plan (rows of any day, waiting, open, late) and its
-  // appointments.
-  const topicCount = board
-    ? new Set([
-        ...board.days.flatMap((d) => [
-          ...d.rows.map((r) => r.itemKey),
-          ...d.blockers.map((b) => b.id),
-        ]),
-        ...board.waiting.map((w) => w.itemKey),
-        ...board.open.map((r) => r.itemKey),
-        ...board.late.map((r) => r.itemKey),
-        ...board.lateFolded.map((r) => r.itemKey),
-      ]).size
+  // appointments – each thing once, however many days or occurrences it has.
+  const topicKeys =
+    board && topics.members
+      ? new Set([
+          ...board.days.flatMap((d) => [
+            ...d.rows.map((r) => r.itemKey),
+            ...d.blockers.flatMap((b) => (b.ref ? [refKey(b.ref)] : [])),
+          ]),
+          ...board.waiting.map((w) => w.itemKey),
+          ...board.open.map((r) => r.itemKey),
+          ...board.late.map((r) => r.itemKey),
+          ...board.lateFolded.map((r) => r.itemKey),
+        ])
+      : undefined;
+  const topicCount = topicKeys
+    ? [...(topics.members ?? [])].filter((m) => {
+        const has = matcher(new Set([m]));
+        return [...topicKeys].some(has);
+      }).length
     : 0;
   const head = board
     ? plannerHead(board.days.slice(0, SPAN), {
@@ -835,7 +845,7 @@ export default function PlannerPage() {
   useEffect(() => {
     const id = params.get('topic');
     if (!id) return;
-    void setTopicFilter(id);
+    if (TOPIC_ID.test(id)) void setTopicFilter(id);
     const next = new URLSearchParams(params);
     next.delete('topic');
     setParams(next, { replace: true });
@@ -1287,7 +1297,12 @@ export default function PlannerPage() {
   /** The days from today the page speaks of (head, empty texts): one week. */
   const week = days?.slice(0, SPAN);
   /** The days in view: the band's week, or the grid's four weeks (passed days included). */
-  const bandDays = data?.view ?? week;
+  // With a topic shown the band's bars carry only its things (hand-off 11); the sheet's „frei“ counts the whole day.
+  const bandList = data?.view ?? week;
+  const bandDays =
+    topics.filter && bandList
+      ? bandList.map((d) => ({ ...d, planned: d.rows.reduce((n, r) => n + r.minutes, 0) }))
+      : bandList;
   /** The week in view from today on („Zeiten dieser Woche“, the context column). */
   const viewWeek = bandDays?.filter((d) => d.date >= (data?.today ?? now)).slice(0, SPAN);
   const storedDate = storedPick && storedPick.on === data?.today ? storedPick.date : undefined;
@@ -2153,14 +2168,21 @@ export default function PlannerPage() {
           <HeroSlot area="figure">
             {topics.filter ? (
               // T4: the topic in place of the figure, how many of its things lie in the plan, „Alles zeigen“.
-              <div className={styles.topicHead} data-testid="planner-topic-head">
+              <div className={styles.topicHead} role="status" data-testid="planner-topic-head">
                 <HeroFigure
                   value={t.planner.topic.headTitle(topics.filter.title)}
                   detail={t.planner.topic.headCount(topicCount)}
                   type="sans"
                   testId="planner-head"
                 />
-                <Button variant="ghost" onClick={() => void setTopicFilter(null)}>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    // The button goes with the head: the focus moves on to the field, never to the page's top.
+                    void setTopicFilter(null);
+                    addRef.current?.querySelector('input')?.focus({ preventScroll: true });
+                  }}
+                >
                   {t.planner.topic.showAll}
                 </Button>
               </div>

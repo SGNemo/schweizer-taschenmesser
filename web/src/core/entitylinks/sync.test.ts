@@ -12,7 +12,15 @@ import { MemoryServer } from '@/core/sync/testing';
 import { purgeTombstones, TOMBSTONE_RETENTION_MS } from '@/core/sync/tombstones';
 import { setNow } from '@/core/time/now';
 import { createTestDb } from '@/test-utils';
-import { addLink, addLinkIfAbsent, linkEntries, linkId, removeLink, removeLinkOf } from './index';
+import {
+  addLink,
+  addLinkIfAbsent,
+  linkEntries,
+  linkId,
+  linksTo,
+  removeLink,
+  removeLinkOf,
+} from './index';
 import { copyTodoLinks, todoLink } from './migrate';
 import { LINKS_TABLE } from './store';
 import type { EntityLink } from './types';
@@ -357,6 +365,13 @@ describe('topics between two devices (planner hub 2, package 11)', () => {
         't_bbbbbbbb-steuer',
       ]);
     }
+    // The reader takes the later row: both devices see the same `updatedAt`s, so both pick the same topic.
+    const latest = async (d: ReturnType<typeof device>) => {
+      const rows = await linksTo([{ module: 'todos', id: 'task-umzug' }], ['topic'], d.db);
+      return rows.reduce((x, y) => (y.updatedAt > x.updatedAt ? y : x)).link.from.id;
+    };
+    expect(await latest(a)).toBe('t_bbbbbbbb-steuer');
+    expect(await latest(b)).toBe('t_bbbbbbbb-steuer');
   });
 
   it('a removed topic link stays removed on the other device', async () => {

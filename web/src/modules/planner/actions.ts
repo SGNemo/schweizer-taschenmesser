@@ -460,12 +460,17 @@ export async function addFromField(
    */
   field: FieldTopic = {},
 ): Promise<boolean> {
+  // K9: „Nicht im Thema „Umzug“ · Alles zeigen“ – the line and the button that ends the filter. A break never takes
+  // the topic (it is no linkable thing), so it gets K9 with the chip on as well.
+  const k9For = (outside?: { title: string }) => ({
+    line: (line: string) => (outside ? `${line}\n${t.planner.topic.notIn(outside.title)}` : line),
+    action: outside
+      ? { view: { label: t.planner.topic.showAll, run: () => void setTopicFilter(null) } }
+      : {},
+  });
   const notIn = field.filtered && !field.topic ? field.filtered : undefined;
-  // K9: „Nicht im Thema „Umzug“ · Alles zeigen“ – the line and the button that ends the filter.
-  const k9 = (line: string) => (notIn ? `${line}\n${t.planner.topic.notIn(notIn.title)}` : line);
-  const showAll = notIn
-    ? { view: { label: t.planner.topic.showAll, run: () => void setTopicFilter(null) } }
-    : {};
+  const { line: k9, action: showAll } = k9For(notIn);
+  const inTopic = field.topic ?? field.filtered;
   // The phrase is German, like the quick-capture parser (CONCEPT §6c); elsewhere the ⋯ action sets a deadline.
   // „Duschen nachmittags“ (package 4b): the part word becomes the item's part (`readFieldWithPart`).
   const de = getLang() === 'de';
@@ -494,9 +499,10 @@ export async function addFromField(
   // „Pause 2 Std Zocken“: a blocker of its day through the quick-capture target, no ToDo (package 4a).
   if (isBreak) {
     const b = breakOf(fields, { today: day });
+    const brk = k9For(inTopic);
     return act(
       t.planner.day.addBlocker,
-      k9(
+      brk.line(
         t.planner.toast.asBreak(
           short(b.label),
           dayName(b.date),
@@ -507,7 +513,7 @@ export async function addFromField(
       async () => {
         await saveCapture('break', fields);
       },
-      { leadOnly: true, ...showAll },
+      { leadOnly: true, ...brk.action },
     );
   }
   // „p Zahnarzt Donnerstag“: the plan capture's pin – the day, „fest“ (the global capture's pin becomes the same).

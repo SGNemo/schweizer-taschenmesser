@@ -166,7 +166,7 @@ test('the settings delete a topic (T9); a topic with nothing in the plan shows T
   await page.goto('/settings/module/planner');
   await expect(page.getByRole('heading', { name: 'Themen' })).toBeVisible();
   await page.getByRole('button', { name: 'Thema löschen … Umzug' }).click();
-  const confirm = page.getByRole('dialog', { name: 'Thema löschen …' });
+  const confirm = page.getByRole('dialog', { name: '„Umzug“ löschen?' });
   await expect(confirm.getByText('Die Dinge bleiben, nur die Klammer geht.')).toBeVisible();
   await confirm.getByRole('button', { name: 'Löschen' }).click();
   await expect(page.getByText('Thema „Umzug“ gelöscht.')).toBeVisible();

@@ -136,6 +136,7 @@ export function TopicChooser({
               {line.chosen ? <Icon name="check" size={16} /> : null}
             </span>
             <span className={styles.topicName}>{line.label}</span>
+            {line.chosen ? <span className="sr-only">{`, ${p.chosen}`}</span> : null}
           </li>
         ))}
       </ul>

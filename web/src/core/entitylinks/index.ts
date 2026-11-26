@@ -38,7 +38,7 @@ import {
   type LinkRel,
 } from './types';
 
-export { linkId } from './store';
+export { isLinkable, linkId } from './store';
 export type { EntityLink, EntityRef, LinkRel } from './types';
 
 /** A link as stored, seen from one of its ends. */
