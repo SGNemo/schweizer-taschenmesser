@@ -65,12 +65,13 @@ describe('<WeatherScene>', () => {
     expect(screen.getByTestId('weather-scene')).toHaveAttribute('data-ink', 'dark');
   });
 
-  it('as a card (the overview widget): the new panorama at the card width, reaching up into more sky', () => {
+  it('as a card (the overview widget): the new panorama, right-aligned, reaching up into more sky', () => {
     const fit = cardFit(379, 205, CARD_QUIET_SHARE);
-    expect(fit.view![2]).toBe(1600);
+    const [x0, , vw] = fit.view!;
+    expect(x0 + vw).toBe(1600);
     expect(fit.view![1]).toBeLessThan(0);
     // the quiet zone ends right of the text (a fog band starts only after it), the body right of that
-    expect(fit.quietX).toBeGreaterThan(Math.round(1600 * CARD_QUIET_SHARE));
+    expect(fit.quietX).toBeGreaterThan(Math.round(x0 + (379 * CARD_QUIET_SHARE * vw) / 379));
     expect(fit.bodyAt![0]).toBeGreaterThan(fit.quietX!);
     expect(fit.bodyAt![1]).toBeGreaterThan(fit.view![1]);
     // jsdom measures nothing: the card's box is 379 × 205 for this render

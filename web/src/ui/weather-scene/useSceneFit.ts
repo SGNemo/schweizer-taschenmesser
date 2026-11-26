@@ -4,27 +4,65 @@ import { G, phoneView, type SceneOptions } from './draw';
 /** The overview widget's text ends at this share of the card's width (handoff 04). */
 export const CARD_QUIET_SHARE = 0.55;
 /** Card (overview widget): the body's centre as shares of the card's width from the right and of its height. */
-const CARD = { bodyX: 0.2, bodyY: 0.5 } as const;
+const CARD = { bodyX: 0.2, bodyY: 0.5, kMax: G.phone.k } as const;
 /** Width of the text column on a wide stage, rem. */
 const TEXT_REM = 36;
 /** Fog bands start this far left of the quiet edge and fade in (draw.ts `fogBand`): the card's text stays clear of them. */
 const FOG_LEAD = 80;
 
+/** The card's text as measured in the box, px: its right edge and its bottom (the lowest text row). */
+export interface CardText {
+  right: number;
+  bottom: number;
+}
+
+/** The highest land (ground or a tree) in view between `x0` and `x`, scene units (smaller y = higher). */
+function landTop(x0: number, x: number): number {
+  let top = G.H;
+  for (const [gx, gy] of G.ground) if (gx >= x0 && gx <= x) top = Math.min(top, gy);
+  for (const t of [...G.trees, ...G.behind])
+    if (t[1] + t[3] >= x0 && t[1] - t[3] <= x)
+      top = Math.min(top, t[2] - (t[0] === 'bush' ? 2 * t[3] : t[3]));
+  return top;
+}
+
 /**
- * The scene behind a card (the overview widget) with the frame's head above its text: the whole panorama at the card's
- * width (`k = W / 1600`), the view reaching up into more sky (`view[1] < 0`), so the text rows lie on the sky and the
- * haze and never on the massif, the forest or the lake. The text ends at `share` of the width and the quiet zone one
- * fog lead later (`FOG_LEAD`), so a fog band only begins where the text ends; the body sits in its own box on the
- * right, at the card's mid height.
+ * The scene behind a card (the overview widget) with the frame's head above its text. The picture is drawn as large
+ * as the text allows, up to the phone head's scale (0.46): right-aligned like the phone's head (cabin and summit in
+ * view), bottom-aligned, the land filling the room under the text. Land left of the text's right edge (ground and
+ * trees) always lies below the lowest text row, so the text rows meet the sky, the deck and the hazed far layers
+ * only; a card too low for that falls back to the whole panorama at the card's width (`k = W / 1600`) with more sky
+ * above. The quiet zone begins one fog lead after the text (`FOG_LEAD`); the body sits in its own box on the right,
+ * at the card's mid height. Without a measured text: the text ends at `share` of the width, 24 px above the bottom.
  */
-export function cardFit(W: number, H: number, share: number): SceneOptions {
-  const k = W / G.W;
-  const h = Math.round(Math.max(G.H, H / k));
-  const y0 = G.H - h;
+export function cardFit(W: number, H: number, share: number, text?: CardText): SceneOptions {
+  const right = text?.right ?? W * share;
+  const bottom = text?.bottom ?? H - 24;
+  const kMin = W / G.W;
+  const fit = (k: number) => {
+    const vw = W / k;
+    const x0 = G.W - vw;
+    const h = Math.max(G.H, H / k);
+    const y0 = G.H - h;
+    const quietX = Math.round(x0 + right / k) + FOG_LEAD;
+    return { k, x0, y0, h, quietX };
+  };
+  let f = fit(kMin);
+  for (let k = Math.max(kMin, CARD.kMax); k > kMin; k -= 0.01) {
+    const c = fit(k);
+    // the land on the text's side starts below the lowest text row
+    if ((landTop(c.x0, c.quietX) - c.y0) * k >= bottom) {
+      f = c;
+      break;
+    }
+  }
   return {
-    view: [0, y0, G.W, h],
-    quietX: Math.round(G.W * share) + FOG_LEAD,
-    bodyAt: [Math.round(G.W * (1 - CARD.bodyX)), Math.round(y0 + (H * CARD.bodyY) / k)],
+    view: [Math.round(f.x0), Math.round(f.y0), Math.round(W / f.k), Math.round(f.h)],
+    quietX: f.quietX,
+    bodyAt: [
+      Math.round(f.x0 + (W * (1 - CARD.bodyX)) / f.k),
+      Math.round(f.y0 + (H * CARD.bodyY) / f.k),
+    ],
   };
 }
 
@@ -71,8 +109,19 @@ export function useSceneFit(
       const H = Math.round(box.height);
       if (!W || !H) return;
       const next: SceneFit = { w: W, h: H, opts: {} };
-      if (quietShare != null) next.card = cardFit(W, H, quietShare);
-      else if (phone) next.opts = { phone: true, view: phoneView(W, H), quietX: G.phone.quietX };
+      if (quietShare != null) {
+        // The card's text (`[data-scene-text]` beside the backdrop): the picture grows into the room below it.
+        const t = (el.parentElement?.parentElement ?? el).querySelector('[data-scene-text]');
+        const r = t?.getBoundingClientRect();
+        next.card = cardFit(
+          W,
+          H,
+          quietShare,
+          r && r.height > 0
+            ? { right: Math.round(r.right - box.left), bottom: Math.round(r.bottom - box.top) }
+            : undefined,
+        );
+      } else if (phone) next.opts = { phone: true, view: phoneView(W, H), quietX: G.phone.quietX };
       else {
         const scale = Math.max(W / G.W, H / G.H);
         const units = W / scale;
