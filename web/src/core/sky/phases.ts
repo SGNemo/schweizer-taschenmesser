@@ -1,6 +1,6 @@
 /**
  * Instants of the principal moon phases (Meeus ch. 49) and of equinoxes and solstices (Meeus ch. 27), ported from
- * docs/design/weather-scenes/reference/astro/phases.js. Results are ms (UTC); Meeus yields JDE (TT), converted with ΔT.
+ * docs/design/weather-scenes@ca90c392f/reference/astro/phases.js. Results are ms (UTC); Meeus yields JDE (TT), converted with ΔT.
  */
 import { cosd, deltaT, msFromJdUT, sind } from './core';
 

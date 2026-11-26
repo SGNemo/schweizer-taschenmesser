@@ -198,7 +198,7 @@
   --shape-soft: 16px;
   --shape-round: 20px;
   --shape-sharp: 10px;
-  /* Weather scene (docs/design/weather-scenes, mockups/palette.js): sky stops per family, then the drawing's colours.
+  /* Weather scene (docs/design/weather-scenes@ca90c392f, mockups/palette.js): sky stops per family, then the drawing's colours.
      Dark-theme skies below in both dark blocks; the rest is the same in both themes. Ink on the scene: --ink-*. */
   --scene-sky-night-0: #0b1330;
   --scene-sky-night-1: #24356a;

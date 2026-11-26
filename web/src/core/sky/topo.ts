@@ -1,6 +1,6 @@
 /**
  * Topocentric altitude / azimuth of sun and moon, bright-limb position angle, parallactic angle and the crescent's
- * tilt, ported from docs/design/weather-scenes/reference/astro/topo.js. Vector method: the observer (WGS-84, sea
+ * tilt, ported from docs/design/weather-scenes@ca90c392f/reference/astro/topo.js. Vector method: the observer (WGS-84, sea
  * level) subtracted from the geocentric body in the true-equator-of-date frame.
  */
 import {

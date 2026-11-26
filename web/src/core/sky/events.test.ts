@@ -10,7 +10,7 @@ import { localSolarEclipses, obscurationAt, SOLAR_MIN } from './solarEclipse';
 
 /**
  * Sky events of package 3 against `__fixtures__/` (astronomy-engine 2.1.19 and the IMO calendar, copied from
- * docs/design/weather-scenes/reference/) with the tolerances of CONCEPT-EVENTS §4.
+ * docs/design/weather-scenes@ca90c392f/reference/) with the tolerances of CONCEPT-EVENTS §4.
  */
 const ms = (iso: string): number => Date.parse(iso);
 const MIN = 60000;

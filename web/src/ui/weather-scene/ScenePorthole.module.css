@@ -1,4 +1,4 @@
-/* The porthole (docs/design/weather-scenes CONCEPT §8): a round crop of the scene, 28 or 64 px, never moving. */
+/* The porthole (docs/design/weather-scenes@ca90c392f CONCEPT §8): a round crop of the scene, 28 or 64 px, never moving. */
 .porthole {
   position: relative;
   display: inline-block;

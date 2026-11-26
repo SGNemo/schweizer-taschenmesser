@@ -5,7 +5,7 @@ import { ready } from '../helpers';
 
 /**
  * Performance pass of the weather scenes (manual tooling, not CI; handoff 04 "Performance pass", ceilings in
- * docs/design/weather-scenes/A11Y.md §4, numbers in docs/perf/WEATHER-SCENES-2026-11.md).
+ * docs/design/weather-scenes@ca90c392f/A11Y.md §4, numbers in docs/perf/WEATHER-SCENES-2026-11.md).
  *
  * Runs on the e2e build (`npm run build:e2e && npm run preview`, :4173) on a desktop and a Pixel 7 profile with the
  * CPU slowed through CDP (`Emulation.setCPUThrottlingRate`, WS_RATE, default 4). The whole network is mocked like

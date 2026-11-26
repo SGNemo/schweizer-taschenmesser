@@ -1,4 +1,4 @@
-/* The weather scene (docs/design/weather-scenes): fills the stage's backdrop; the ink of the stage's text follows
+/* The weather scene (docs/design/weather-scenes@ca90c392f): fills the stage's backdrop; the ink of the stage's text follows
    the scene's `data-ink` (ui/HeadSurface.module.css). Motion: mockups/scene-motion.css, 5 s, transform only. */
 .scene {
   position: absolute;

@@ -6,7 +6,7 @@ import { crestAt, G, skyOffsets } from './draw';
 import { cardFit } from './useSceneFit';
 
 /**
- * Contrast of the text on the weather scene (docs/design/weather-scenes/A11Y.md §1, find A9): for every sky × theme the
+ * Contrast of the text on the weather scene (docs/design/weather-scenes@ca90c392f/A11Y.md §1, find A9): for every sky × theme the
  * scene's ink against every stop of the sky's gradient and against the shelter haze (the sky's bottom colour over the
  * low ridges); the opaque parts (chips, hint, module row) and "Ruhig" carry the theme's ink.
  */

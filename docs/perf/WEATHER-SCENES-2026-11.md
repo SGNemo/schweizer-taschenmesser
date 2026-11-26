@@ -1,7 +1,7 @@
 # Weather scenes – performance pass (package 4, 2026-11)
 
-Handoff [04-small.md](../design/weather-scenes/handoff/04-small.md) "Performance pass", ceilings from
-[A11Y §4](../design/weather-scenes/A11Y.md). Measured 2026-11-26 on `feat/weather-scene-small` @ `81ad06a10` (product
+Handoff `04-small.md` "Performance pass", ceilings from
+A11Y §4 (both in the weather-scenes design round, deleted with package 4; `git show ca90c392f:docs/design/weather-scenes/A11Y.md`). Measured 2026-11-26 on `feat/weather-scene-small` @ `81ad06a10` (product
 code as in `d0064b387`), e2e build (`npm run build:e2e`, served by `vite preview` on :4173), 4-core sandbox, headless
 Chromium with software raster. Compare rows, not absolute values.
 

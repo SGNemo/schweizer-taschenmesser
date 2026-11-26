@@ -1,6 +1,6 @@
 /**
  * Low-precision sun and moon positions (Meeus, "Astronomical Algorithms", 2nd ed.), ported from
- * docs/design/weather-scenes/reference/astro/core.js (CONCEPT-MOON §1: measured against astronomy-engine 2.1.19).
+ * docs/design/weather-scenes@ca90c392f/reference/astro/core.js (CONCEPT-MOON §1: measured against astronomy-engine 2.1.19).
  * Time scales, nutation, sun (ch. 25), moon (ch. 47, all 60 terms). Angles in degrees unless a name ends in "Rad";
  * input time = ms since the epoch (UTC). Pure, no dependency, no network.
  */
