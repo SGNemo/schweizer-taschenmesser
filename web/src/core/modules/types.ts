@@ -497,6 +497,8 @@ export interface CalendarItem {
    * to (`linkTarget` resolves it). Absent for items that are no link target of their source (external events).
    */
   entityId?: string;
+  /** The item is one occurrence of a series (a recurring event): a link for it names its day. */
+  series?: true;
 }
 
 export type CalendarSource = (range: DateRange) => Promise<CalendarItem[]>;

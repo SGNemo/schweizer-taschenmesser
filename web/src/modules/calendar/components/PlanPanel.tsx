@@ -57,6 +57,9 @@ export default function CalendarPlanPanel({ id }: PlanPanelProps) {
       l.direction === 'in' &&
       l.other.module === 'todos' &&
       l.link.rel === rel &&
+      // A series: only this occurrence's things (a link without a day is the whole event's). A single event keeps its
+      // things wherever it was moved.
+      (!event.recurrence || !l.link.on || l.link.on === day) &&
       l.state.state === 'alive'
         ? [{ key: l.id, id: l.other.id, title: l.state.title, done: !!l.state.done }]
         : [],

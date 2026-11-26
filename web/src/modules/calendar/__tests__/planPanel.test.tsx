@@ -111,6 +111,36 @@ describe('the appointment panel', () => {
     await waitFor(() => expect(undoDepth()).toBe(depth + 1));
   });
 
+  it('a series: a thing made for one occurrence is not on the next one’s panel', async () => {
+    await taskRepo().create({ title: 'Bargeld holen', listId: 'inbox' } as never, { id: 't1' });
+    await addLink({
+      from: { module: 'todos', id: 't1' },
+      to: { module: 'calendar', id: 'ev1' },
+      rel: 'before',
+      label: 'Friseur',
+      on: '2026-12-02',
+    });
+    const first = panel('ev1:2026-12-02');
+    expect(await screen.findByText('Bargeld holen')).toBeTruthy();
+    first.unmount();
+    panel('ev1:2026-12-09');
+    await screen.findByText(/9\. Dez/);
+    expect(screen.queryByText('Bargeld holen')).toBeNull();
+  });
+
+  it('a single appointment moved in the calendar keeps its things', async () => {
+    await eventRepo.update('ev1', { recurrence: undefined, startDate: '2026-12-04' } as never);
+    await taskRepo().create({ title: 'Bargeld holen', listId: 'inbox' } as never, { id: 't1' });
+    await addLink({
+      from: { module: 'todos', id: 't1' },
+      to: { module: 'calendar', id: 'ev1' },
+      rel: 'before',
+      label: 'Friseur',
+    });
+    panel('ev1:2026-12-04');
+    expect(await screen.findByText('Bargeld holen')).toBeTruthy();
+  });
+
   it('an event that is gone: X3', async () => {
     panel('nope:2026-12-09');
     expect(await screen.findByText('Gibt es nicht mehr.')).toBeTruthy();

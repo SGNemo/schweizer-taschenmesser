@@ -184,18 +184,27 @@ export function DayPage({
   for (const r of day.rows) {
     if (r.fixed) continue;
     const l = links.get(r.itemKey);
+    // A series' link names its occurrence: only that day's. A single appointment (also one that was a series once)
+    // takes its things wherever it lies – the same rule as calendar's panel.
     const b = l
-      ? day.blockers.find((x) => x.ref?.module === l.to.module && x.ref.id === l.to.id)
+      ? day.blockers.find(
+          (x) =>
+            x.ref?.module === l.to.module &&
+            x.ref.id === l.to.id &&
+            (!x.ref.series || !l.on || l.on === day.date),
+        )
       : undefined;
     if (l && b) beside.set(r.unitId, { blocker: b, rank: l.rel === 'before' ? 0 : 2 });
   }
+  // „Als Nächstes“ stays on the stored first thing, also when it stands beside its blocker.
+  const nextUnit = day.rows.find((r) => !r.fixed)?.unitId;
   const things = day.rows.filter((r) => !r.fixed && !beside.has(r.unitId));
   const blocks = [
     ...day.rows
       .filter((r) => beside.has(r.unitId))
       .map((r) => {
         const { blocker, rank } = beside.get(r.unitId)!;
-        return { at: blocker.from, rank, key: r.unitId, node: renderRow(r, false) };
+        return { at: blocker.from, rank, key: r.unitId, node: renderRow(r, r.unitId === nextUnit) };
       }),
     ...day.blockers.map((b) => ({
       at: b.from,
@@ -346,7 +355,7 @@ export function DayPage({
         {hasRows ? (
           <>
             <ItemList label={t.planner.sheet.first}>
-              {first.map((row, i) => renderRow(row, i === 0))}
+              {first.map((row) => renderRow(row, row.unitId === nextUnit))}
             </ItemList>
           </>
         ) : day.rows.length > 0 ? null : (

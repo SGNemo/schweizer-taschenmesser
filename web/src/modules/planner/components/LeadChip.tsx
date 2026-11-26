@@ -35,9 +35,8 @@ export function LeadChip({
   const id = useId();
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLSpanElement>(null);
+  // A6 names the full weekday; the name must hold what the chip shows (WCAG 2.5.3): the shown text + „Ändern“.
   const label = leadLabel(lead);
-  // A6 names the full weekday; the name must hold what the chip shows (WCAG 2.5.3), so it is the shown text + „Ändern“.
-  const full = label;
   // „am Tag davor“ only when that day is still ahead; „am Tag danach“ always is.
   const choice =
     lead.rel === 'after' || lead.date > today
@@ -71,7 +70,7 @@ export function LeadChip({
         <button
           type="button"
           className={chipClass}
-          aria-label={a.change(full)}
+          aria-label={a.change(label)}
           aria-haspopup="menu"
           aria-expanded={open}
           aria-controls={open ? `${id}-menu` : undefined}
@@ -94,7 +93,7 @@ export function LeadChip({
         </span>
       ) : null}
       {open && choice ? (
-        <ul id={`${id}-menu`} role="menu" aria-label={a.change(full)} className={styles.leadMenu}>
+        <ul id={`${id}-menu`} role="menu" aria-label={a.change(label)} className={styles.leadMenu}>
           <li role="none">
             <button
               type="button"

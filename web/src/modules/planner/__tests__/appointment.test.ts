@@ -88,6 +88,8 @@ describe('the field with a lead chip', () => {
       rel: 'before',
       label: 'Friseur',
     });
+    // A single appointment: the link names no day (moved, it keeps its things).
+    expect(links[0].on).toBeUndefined();
     expect(messages()[0]).toBe('Liegt auf Mi, vor Friseur.');
     expect(undoDepth()).toBe(depth + 1);
     await undoLast();
@@ -104,6 +106,13 @@ describe('the field with a lead chip', () => {
     ).toBe(true);
     expect(messages()[0]).toBe('Liegt auf Mi, nach Friseur.');
     expect((await live('_links'))[0].rel).toBe('after');
+  });
+
+  it('an occurrence of a series: the link names its day', async () => {
+    expect(
+      await addFromField('Bargeld holen', {}, undefined, undefined, lead({ series: true })),
+    ).toBe(true);
+    expect((await live('_links'))[0].on).toBe('2026-12-02');
   });
 
   it('his own day word wins over the chip’s day; the link stays', async () => {

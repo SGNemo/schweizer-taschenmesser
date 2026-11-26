@@ -437,6 +437,8 @@ export interface FieldLead {
   rel: 'before' | 'after';
   /** A3: the day before („vor“) or after („nach“). */
   shift: boolean;
+  /** One occurrence of a series: the link names its day, so the next one starts clean. */
+  series?: true;
 }
 
 /** The day a lead chip gives. */
@@ -541,6 +543,9 @@ export async function addFromField(
           to: appointment.ref,
           rel: appointment.rel,
           label: appointment.title,
+          // A series' occurrence: the day it is for, so the next one starts clean. A single appointment keeps its
+          // things wherever it is moved.
+          ...(appointment.series ? { on: appointment.date } : {}),
         });
       const scope = await layOn(
         { moduleId: saved.moduleId, id: saved.id, durationMin: fields.estimateMin ?? measured },

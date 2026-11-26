@@ -114,6 +114,7 @@ export function expandEvent(
         id: `${id}:${date}`,
         // The event itself: what a link points to (planner hub 2, package 9).
         entityId: id,
+        ...(e.recurrence ? { series: true as const } : {}),
         source: 'calendar',
         kind: e.kind === 'reminder' ? 'reminder' : 'event',
         title: e.title,

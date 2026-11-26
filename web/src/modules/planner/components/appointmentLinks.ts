@@ -16,6 +16,8 @@ export interface AppointmentLink {
   rel: 'before' | 'after';
   /** The appointment (the event). */
   to: EntityRef;
+  /** The occurrence's day the link was made for (`EntityLink.on`); absent = the whole event. */
+  on?: string;
   /** A4 „vor Friseur“, or X3 when the appointment is gone. */
   text: string;
 }
@@ -47,9 +49,11 @@ export function useAppointmentLinks(
   const states = useResolvedLinks(targets);
   return useMemo(() => {
     const out = new Map<string, AppointmentLink>();
-    // One per thing: the same order on every device (the link's own key decides between two).
+    // One per thing: the same order on every device (relation, appointment, day).
     const sorted = [...(links ?? [])].sort((a, b) =>
-      `${a.rel}|${refKey(a.to)}`.localeCompare(`${b.rel}|${refKey(b.to)}`),
+      `${a.rel}|${refKey(a.to)}|${a.on ?? ''}`.localeCompare(
+        `${b.rel}|${refKey(b.to)}|${b.on ?? ''}`,
+      ),
     );
     for (const l of sorted) {
       const key = itemKeyOf(l.from.module, l.from.id);
@@ -60,6 +64,7 @@ export function useAppointmentLinks(
       out.set(key, {
         rel: l.rel,
         to: l.to,
+        ...(l.on ? { on: l.on } : {}),
         text:
           state?.state === 'gone'
             ? t.planner.panel.gone

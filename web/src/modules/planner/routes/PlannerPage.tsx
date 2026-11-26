@@ -866,6 +866,7 @@ export default function PlannerPage() {
       date: day.date,
       rel,
       shift: false,
+      ...(b.ref.series ? { series: true as const } : {}),
     });
     addRef.current?.querySelector('input')?.focus({ preventScroll: true });
   };

@@ -26,6 +26,8 @@ export interface BlockerRef {
   item: string;
   /** The item's route in its module (`CalendarItem.to`): „Ganz öffnen“. */
   to?: string;
+  /** One occurrence of a series (`CalendarItem.series`). */
+  series?: true;
 }
 
 export function calendarBlockers(
@@ -60,7 +62,15 @@ export function calendarBlockers(
       ...(to > start ? { to: toTime(to) } : {}),
       // A timed appointment that is a link target (package 9): its row opens, „Vorbereiten …“ links to it.
       ...(i.entityId && i.kind === 'event'
-        ? { ref: { module: i.source, id: i.entityId, item: i.id, ...(i.to ? { to: i.to } : {}) } }
+        ? {
+            ref: {
+              module: i.source,
+              id: i.entityId,
+              item: i.id,
+              ...(i.to ? { to: i.to } : {}),
+              ...(i.series ? { series: true as const } : {}),
+            },
+          }
         : {}),
     });
   }
