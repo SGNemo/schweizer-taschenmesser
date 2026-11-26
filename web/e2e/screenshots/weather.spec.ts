@@ -3,12 +3,12 @@ import { expect, test, type Browser, type Page } from '@playwright/test';
 import { ready } from '../helpers';
 
 /**
- * Weather pictures for PR texts (manual tooling, not CI; howto: docs/howto/weather-screenshots.md). Every situation is
+ * Weather pictures for PR texts (manual tooling, not CI; howto: docs/howto/pr-screenshots.md). Every situation is
  * one row of SCENARIOS: the instant, the place, the forecast now, optional DWD warnings, Kp forecast and dust. The
  * network is mocked completely, the clock is fixed and the browser runs in the place's time zone, so every run gives
  * the same pictures.
  *
- * Usage (in web/): `npm run screenshots -- weather.spec.ts --project=plain`
+ * Usage (in web/): `npm run screenshots -- --project=weather`
  *   WEATHER_SCENES=eclipse|aurora   regex on the scenario id (default: all)
  *   WEATHER_PARTS=head,card         head | card | air | days | overview | widget | page (default: head,card)
  *   SCREENS_VIEWPORTS=1920x1080     default 1920x1080,412x915
@@ -202,6 +202,8 @@ async function mock(page: Page, s: Scenario & typeof BASE) {
     .flatMap((d) => Array.from({ length: 24 }, (_, h) => `${d}T${String(h).padStart(2, '0')}:00`));
   const code = s.code ?? 1;
   const day = s.day ?? 1;
+  // Anything not mocked below never reaches the network (the specific routes, registered later, win).
+  await page.route(/^https?:\/\/(?!localhost|127\.0\.0\.1)/, (r) => r.abort());
   await page.route('**://geocoding-api.open-meteo.com/**', (r) =>
     r.fulfill({
       json: {

@@ -93,6 +93,26 @@ describe('weather widget: scene as the background (variant B) or the porthole (v
     await waitFor(() => expect(scene.querySelector('[data-part="moon"]')).not.toBeNull());
   });
 
+  it('a wide card (sizes m and l) keeps the porthole: the panorama is checked for the one-column card only', async () => {
+    await cached();
+    const RO = class {
+      constructor(private cb: () => void) {}
+      observe() {
+        this.cb();
+      }
+      disconnect() {}
+    };
+    vi.stubGlobal('ResizeObserver', RO);
+    const rect = vi
+      .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+      .mockReturnValue({ width: 780, height: 205 } as DOMRect);
+    renderWidget();
+    const w = await screen.findByTestId('weather-widget');
+    await waitFor(() => expect(w).toHaveAttribute('data-variant', 'porthole'));
+    rect.mockRestore();
+    vi.unstubAllGlobals();
+  });
+
   it.each([
     ['"Ruhig"', () => (root.dataset.color = 'calm')],
     ['"Modulfarben: Aus"', () => (root.dataset.moduleColors = 'off')],

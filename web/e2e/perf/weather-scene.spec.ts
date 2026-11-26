@@ -10,9 +10,7 @@ import { ready } from '../helpers';
  * Runs on the e2e build (`npm run build:e2e && npm run preview`, :4173) on a desktop and a Pixel 7 profile with the
  * CPU slowed through CDP (`Emulation.setCPUThrottlingRate`, WS_RATE, default 4). The whole network is mocked like
  * e2e/screenshots/weather.spec.ts (invented place "Lindenau"), the clock starts at the scenario's instant, the browser runs in Europe/Berlin.
- * There is no config of its own: point a config with `testDir: './e2e/perf'`, `testMatch: ['weather-scene.spec.ts']`,
- * `workers: 1`, baseURL :4173 and the projects `desktop-chrome` / `pixel-7` at it.
- *
+ * Run with `npm run measure:weather` (playwright.weather-perf.config.ts: the e2e build on :4173, desktop and Pixel 7).
  * Per scenario (the heaviest states the product can reach):
  * - `/weather` with a CDP trace: SVG elements and bytes of the head scene, animated groups, time from navigation to
  *   the scene's insertion and to the frame after it, main-thread time (merged `RunTask` on the renderer's main thread),

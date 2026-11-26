@@ -599,14 +599,18 @@
   gap: var(--space-1) var(--space-2);
   font-size: var(--text-sm);
 }
-/* The card around the scene (the frame's section, which also holds the head): text in the scene's ink. */
+/* The card around the scene (the frame's section, which also holds the head): text and the focus ring in the scene's
+   ink (the theme's focus colour falls below 3:1 on a dark sky). Relies on the widget root being a direct child of
+   the card inside home's `[data-widget]` frame. */
 :has(> .widgetScene[data-ink='light']) {
+  --focus: var(--ink-light);
   --text: var(--ink-light);
   --text-muted: var(--ink-light);
   --text-3: var(--ink-light);
   color: var(--text);
 }
 :has(> .widgetScene[data-ink='dark']) {
+  --focus: var(--ink-dark);
   --text: var(--ink-dark);
   --text-muted: var(--ink-dark);
   --text-3: var(--ink-dark);

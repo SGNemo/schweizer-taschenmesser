@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState } from 'react';
 import { dateTimeFormat } from '@/core/i18n/format';
 import { useWeatherSettings } from '@/core/weather/settings';
 import { useWeather } from '@/core/weather/useWeather';
@@ -12,6 +13,8 @@ import styles from '../routes/weather.module.css';
 
 /** Where the quiet zone of the scene ends behind the card's text, as a share of the card's width (handoff 04). */
 const QUIET_SHARE = 0.55;
+/** Wider than one column (the checked card is ~380 px): the porthole instead of the scene. */
+const WIDE_PX = 520;
 
 /**
  * Overview widget: only what matters today (place, temperature, word, the rain hint), the rest is one tap away in the
@@ -30,6 +33,19 @@ export default function WeatherWidget() {
   const lat = settings?.lat ?? 0;
   const moon = useMoon(lat, settings?.lon ?? 0, weather?.forecast.tz, !!weather);
   const scene = useSmallScene(weather, lat, moon);
+  // Wide cards (sizes m and l: two columns or the full row) keep the porthole: the panorama scaled to that width would
+  // lift ridges and trees into the text rows (only the single-column card is checked for contrast).
+  const box = useRef<HTMLDivElement>(null);
+  const [wide, setWide] = useState(false);
+  useLayoutEffect(() => {
+    const el = box.current?.closest('[data-widget]') ?? box.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const check = () => setWide(el.getBoundingClientRect().width > WIDE_PX);
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const stale = weather?.stale
     ? tx.asOf(dateTimeFormat({ hour: '2-digit', minute: '2-digit' }).format(weather.at))
     : undefined;
@@ -43,9 +59,10 @@ export default function WeatherWidget() {
       : weather.forecast.rainFrom && !weather.stale
         ? tp.widgetRain(weather.forecast.rainFrom)
         : tp.widgetDry;
-  if (weather && scene && !scene.calm)
+  if (weather && scene && !scene.calm && !wide)
     return (
       <div
+        ref={box}
         className={styles.widgetScene}
         data-testid="weather-widget"
         data-variant="scene"
@@ -68,7 +85,7 @@ export default function WeatherWidget() {
     );
 
   return (
-    <div className={styles.widget} data-testid="weather-widget" data-variant="porthole">
+    <div ref={box} className={styles.widget} data-testid="weather-widget" data-variant="porthole">
       {scene ? (
         <span className={styles.widgetSky}>
           <ScenePorthole state={scene} size={64} />

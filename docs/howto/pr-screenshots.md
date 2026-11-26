@@ -9,7 +9,7 @@ Learned in the weather scenes rounds (#1102–#1116). Pictures go into the PR te
 ```bash
 cd web
 WEATHER_SCENES='eclipse|aurora' WEATHER_PARTS=head,card SCREENS_DIR=.screens/weather \
-  npm run screenshots -- weather.spec.ts --project=plain
+  npm run screenshots -- --project=weather
 node e2e/screenshots/montage.mjs .screens/weather head-1920-light 1920 1 .screens/heads-1920-light.png
 node e2e/screenshots/montage.mjs .screens/weather head-412-dark 1300 3 .screens/heads-412-dark.png
 ```
@@ -26,11 +26,12 @@ node e2e/screenshots/montage.mjs .screens/weather head-412-dark 1300 3 .screens/
 - **Montage.** A page built with `setContent` cannot load `file://` images – they come out as broken icons. `montage.mjs` embeds them as `data:` URLs.
 - **First start.** A fresh browser context opens the setup assistant; go through `ready(page, url)` from `e2e/helpers.ts` (it dismisses it and waits for the page), not `page.goto`.
 - **Parallel workers** (`--workers=4`) sometimes miss an element on a loaded machine; re-take the missing ones alone (`-g '<id> 1920 dark'`).
+- **Old build.** The tool builds the e2e app and reuses a server already on :4173: stop a `preview` of another build first, or that build is shot.
 - **Hosts.** The cloud sandbox blocks hosts that are not allowed (403 from the proxy). Mocked routes never reach the network, so the tool works without them; a live check of a source needs the host in the environment.
 
 ## Getting them into the PR text
 
 1. Lay them out (`montage.mjs`): one picture per viewport and scheme reads better than twenty.
-2. Push them to a picture branch with no common history, e.g. `shots/<topic>`: `git init -b shots/<topic>` in an empty folder, add the PNGs, commit, `git push origin shots/<topic>`. Never into the code branch.
+2. Push them to a picture branch with no common history, e.g. `shots/<topic>`: in an empty folder `git init -b shots/<topic>`, add the PNGs, commit, `git remote add origin https://github.com/SGNemo/schweizer-taschenmesser.git`, `git push -u origin shots/<topic>`. Never into the code branch. The repo is public: only mocked or demo places and data, never your own.
 3. Link them in the PR text as `https://raw.githubusercontent.com/SGNemo/schweizer-taschenmesser/shots/<topic>/<file>.png`; `<img width="450" src="…">` for phone pictures, two columns in a table for light | dark.
 4. Look at every picture before you link it (Read the PNG): a wrong date, an empty montage or a missing event shows at once.

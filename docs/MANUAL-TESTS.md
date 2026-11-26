@@ -850,10 +850,9 @@ Dev-Preview-APK auf dem eigenen Handy, Testdaten „Mittel“, Messung wie bei P
 - **PF-K5 Einstellungen und Übersicht:** nach dem Start Einstellungen öffnen (erster Inhalt, fertig, springen die Status-Zeilen?); aus ToDos zurück zur Übersicht (bis alle Widgets stehen). ☐
 - **PF-K6 Eintragen über den Plus-Knopf:** auf ToDos und Finanzen den Plus-Knopf: Zeit bis das Blatt steht und die Tastatur offen ist; zweimal je Seite. ☐
 
-
 ### Wetter
 
-#### Wetterbild klein, Paket 4 (`feat/weather-scene-small`) – nur am echten Handy prüfbar
+#### Wetterbild am Handy (Wetter-Szenen 1b–4) – nur am echten Handy prüfbar
 
 - **WB-W1 Wetterbild am Handy (Android-APK):** Ort wählen, Wetter öffnen (am besten bei Wind oder Regen/Schnee, sonst zu einer klaren Nacht): (1) Die Bewegung im Kopf läuft gleichmäßig, ohne Ruckeln, und Scrollen bleibt flüssig. (2) Nach etwa 5 Sekunden steht das Bild still und bleibt still. (3) App kurz verlassen und zurück: nichts springt; nach über einer Minute zurück läuft die Bewegung einmal neu und kommt wieder zur Ruhe. (4) Draußen in der Sonne bei voller Helligkeit: Ort, Grad, Wort und die Chips im Kopf, das kleine runde Bild in der Übersicht und die Wetter-Karte sind gut lesbar, hell und dunkel. (5) „Bild im Wetter-Kopf: Standbild“ und „Bewegung reduzieren“ (System) lassen das Bild still. Ruckelt es bei Gewitter (gemessen: Hauptthread über der Grenze, docs/perf/WEATHER-SCENES-2026-11.md), Gerät und Wetterlage notieren. ☐
 
