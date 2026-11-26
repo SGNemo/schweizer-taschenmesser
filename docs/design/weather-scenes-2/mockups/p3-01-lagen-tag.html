@@ -1,0 +1,6 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wetter Runde 2 – Lagen am Tag</title><link rel="stylesheet" href="mock.css"><script src="palette.js"></script><script src="scene.js"></script><script src="events.js"></script><script src="gallery2.js"></script><script src="lagen2.js"></script></head>
+<body><h1>Lagen am Tag</h1><p class="intro">Jedes Wetter in jeder Stufe am Sommertag (Schnee und Frost im Winter), Richtung B „Facetten“. Breit im gebauten Maß 1650 × 320, daneben der Handy-Ausschnitt 412 × 256. Unter jedem Bild die Zustandsschlüssel.</p>
+<p class="label">Wie bewölkt (klarer Sommertag)</p><div id="c"></div>
+<p class="label">Alle Lagen</p><div id="a"></div>
+<script>Gallery2.tiles('#c', Lagen2.cloudRow('day'), { crops: ['wide', 'phone'], cols: 'one' }); Gallery2.tiles('#a', Lagen2.list('day'), { crops: ['wide', 'phone'], cols: 'one' });</script>
+</body></html>

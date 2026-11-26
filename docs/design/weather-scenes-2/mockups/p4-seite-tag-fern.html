@@ -1,0 +1,32 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wetter Runde 2 – Seite: Tag 7, Stundenwerte fehlen</title><link rel="stylesheet" href="mock.css"><link rel="stylesheet" href="page.css">
+<script src="palette.js"></script><script src="scene.js"></script><script src="page.js"></script></head>
+<body class="p4"><div class="wpage" id="page"></div>
+<script>
+/* Day 7 chosen: Wednesday 2 December 2026. CONCEPT-DAYS §4 row 1: the cache is from before this round (48 hours), so this
+   day has no hours – head from the daily values, scene from the daily code (level 2, wind from the day's maximum),
+   the sentence instead of the cards; the curve has nothing to draw and is left out. Air beyond five days: one sentence.
+   The stepper's "›" is shown inactive: there is no day 8. */
+Page.render('#page', {
+  place: 'Lindenau',
+  scene: { phase: 'day', cond: 'rain', intensity: 2, season: 'winter', wind: 1 },
+  head: {
+    temp: '6° / 2°', tempAria: 'Höchstwert 6°, Tiefstwert 2°', detail: 'Mittwoch, 2. Dezember · Regen', hints: [],
+    chips: [{ icon: 'rain', kind: 'rain', text: 'Regen 10–19 Uhr · 6,4 mm' }, { icon: 'wind', text: 'Wind bis 24 km/h, Böen 41' }, { icon: 'sun', text: 'UV bis 1' }],
+    rest: ['6° / 2°', '9 Stunden mit Regen', 'Sonne 07:49–16:18'],
+  },
+  stepper: { label: 'Mittwoch, 2. Dez.', today: false, nextOff: true },
+  rainSoon: null,
+  hours: { title: 'Stunden', missing: 'Stundenwerte für diesen Tag kommen mit der nächsten Aktualisierung.' },
+  chart: null,
+  days: Page.sample.week(6),
+  more: { open: false, groups: [
+    { title: 'Niederschlag', items: [['Menge', '6,4 mm'], ['Stunden mit Regen', '9']] },
+    { title: 'Wind', items: [['Böen', 'bis 41 km/h'], ['Richtung', 'aus Südwest']] },
+  ] },
+  air: { missing: 'Für diesen Tag liegt noch keine Luftvorhersage vor.' },
+  moon: { sun: 'Sonne 07:49–16:18 · 8 h 29 min Tageslicht · Dämmerung 07:13–16:54', name: 'Abnehmender Halbmond', illum: 0.43,
+    times: 'Monduntergang 13:21 · Mondaufgang 23:58', next: 'Neumond am Mi., 9. Dez. · Vollmond am Do., 24. Dez.' },
+  live: 'Mittwoch, 2. Dezember: Regen, 6° / 2°',
+});
+</script></body></html>

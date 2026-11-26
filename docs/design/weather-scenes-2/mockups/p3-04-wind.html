@@ -1,0 +1,10 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wetter Runde 2 – Wind</title><link rel="stylesheet" href="mock.css"><script src="palette.js"></script><script src="scene.js"></script><script src="events.js"></script><script src="gallery2.js"></script></head>
+<body><h1>Wind</h1><p class="intro">Windstufe 0 bis 3 an Rauch, Fahne, Bäumen, Wolken, Regen und See; zuletzt Wind 2 nach links. Breit und Handy.</p>
+<div id="a"></div>
+<script>
+var B = [['Klarer Sommertag', { cond: 'clear' }], ['Regen 2', { cond: 'rain', intensity: 2 }], ['Schneedecke 2, klar', { cond: 'clear', snowCover: 2, season: 'winter' }], ['Herbsttag, bewölkt', { cond: 'partly', cover: 3, season: 'autumn' }]];
+var items = [];
+B.forEach(function (b) { [0, 1, 2, 3].forEach(function (w) { items.push({ label: b[0] + ' · Wind ' + w, state: Object.assign({ wind: w }, b[1]) }); }); });
+B.forEach(function (b) { items.push({ label: b[0] + ' · Wind 2 nach links', state: Object.assign({ wind: 2, windTo: 'left' }, b[1]) }); });
+Gallery2.tiles('#a', items, { crops: ['wide', 'phone'], cols: 'one' });
+</script></body></html>

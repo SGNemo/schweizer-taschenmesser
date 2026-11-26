@@ -1,0 +1,16 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wetter Runde 2 – Mond</title><link rel="stylesheet" href="mock.css"><script src="palette.js"></script><script src="scene.js"></script><script src="events.js"></script><script src="gallery2.js"></script></head>
+<body><h1>Mond</h1><p class="intro">Acht Phasen in klarer Nacht und unter bedecktem Himmel (der Mond zwischen den Wolkenbänken); der Mond tief und hoch; „Schein“: bedeckt mit Regen. Breit und Handy.</p>
+<p class="label">Phasen, klare Nacht</p><div id="a"></div>
+<p class="label">Phasen, bedeckt</p><div id="b"></div>
+<p class="label">Lage und Schein</p><div id="c"></div>
+<script>
+var PH = [[0.02, true, 'Neumond'], [0.25, true, 'Zunehmende Sichel'], [0.5, true, 'Zunehmender Halbmond'], [0.75, true, 'Zunehmender Mond'], [1, true, 'Vollmond'], [0.75, false, 'Abnehmender Mond'], [0.5, false, 'Abnehmender Halbmond'], [0.25, false, 'Abnehmende Sichel']];
+function ph(cond) { return PH.map(function (p) { return { label: p[2], note: Math.round(p[0] * 100) + ' % beleuchtet', state: { phase: 'night', cond: cond, moon: { illum: p[0], waxing: p[1] } } }; }); }
+Gallery2.tiles('#a', ph('clear'), { crops: ['wide', 'phone'], cols: 'one' });
+Gallery2.tiles('#b', ph('overcast'), { crops: ['wide', 'phone'], cols: 'one' });
+Gallery2.tiles('#c', [
+  { label: 'Mond tief', state: { phase: 'night', cond: 'clear', body: { kind: 'moon', t: 0.08 }, moon: { illum: 0.75, waxing: true } } },
+  { label: 'Mond hoch', state: { phase: 'night', cond: 'clear', body: { kind: 'moon', t: 0.5 }, moon: { illum: 0.75, waxing: true } } },
+  { label: 'Schein: bedeckt mit Regen', note: 'der Mond blass durch nasse Wolken', state: { phase: 'night', cond: 'rain', intensity: 2, moon: { illum: 0.75, waxing: true } } },
+], { crops: ['wide', 'phone'], cols: 'one' });
+</script></body></html>

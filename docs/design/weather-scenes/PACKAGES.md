@@ -4,6 +4,8 @@ Prompts: [PACKAGES-PROMPTS](PACKAGES-PROMPTS.md). One package = one Opus chat, o
 
 ## Order
 
+**Round 2 follows:** package 4 below is built (#1120); its small versions move to the new drawing in [round 2, package D](../weather-scenes-2/PACKAGES.md), and the drawing of 1b–3b is replaced by round 2's package A.
+
 **1a → 1b → 2 → 3 → 3b → 4**, strictly one after another, each from fresh `develop` after the previous merge: all touch `modules/weather/**`, `core/weather/**` and the weather string bundles. The first to start is **1a**. The proposed order of the brief is kept; package 1 is split for size (root CLAUDE.md "small PRs"): 1a is everything without a picture, so the big drawing PR (1b) carries no data or wording change.
 
 | # | Package | Branch | Scope (short) | Hotspots to announce | Review |

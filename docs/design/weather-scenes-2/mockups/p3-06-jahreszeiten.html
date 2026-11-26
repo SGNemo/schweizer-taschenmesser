@@ -1,0 +1,11 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wetter Runde 2 – Jahreszeiten</title><link rel="stylesheet" href="mock.css"><script src="palette.js"></script><script src="scene.js"></script><script src="events.js"></script><script src="gallery2.js"></script></head>
+<body><h1>Jahreszeiten</h1><p class="intro">Frühling, Sommer, Herbst, Winter – klar und Regen 2, am Tag. Breit und Handy.</p>
+<div id="a"></div>
+<script>
+var items = [];
+[['spring', 'Frühling'], ['summer', 'Sommer'], ['autumn', 'Herbst'], ['winter', 'Winter']].forEach(function (z) {
+  items.push({ label: z[1] + ' · klar', state: { season: z[0], cond: 'clear' } });
+  items.push({ label: z[1] + ' · Regen 2', state: { season: z[0], cond: 'rain', intensity: 2 } });
+});
+Gallery2.tiles('#a', items, { crops: ['wide', 'phone'], cols: 'one' });
+</script></body></html>
