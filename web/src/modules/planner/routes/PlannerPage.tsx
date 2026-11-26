@@ -737,6 +737,25 @@ export default function PlannerPage() {
   const topicOf = topics.members ? memberOf(topics.members) : undefined;
   const topicCount =
     topicKeys && topicOf ? new Set([...topicKeys].flatMap((k) => topicOf(k) ?? [])).size : 0;
+  // T4's „Alles zeigen“: in the head on the desktop, on its own line under it on the phone (hand-off 11, 44 px).
+  const showAll = (
+    <Button
+      variant="ghost"
+      onClick={() => {
+        // The button goes with the head: on a desktop with a keyboard the focus moves on to the field,
+        // elsewhere to the page (no keyboard sliding in), never to nowhere.
+        void setTopicFilter(null);
+        const keyboard = window.matchMedia?.('(hover: hover) and (pointer: fine)').matches === true;
+        const to =
+          keyboard && !phone
+            ? addRef.current?.querySelector('input')
+            : document.getElementById('main');
+        to?.focus({ preventScroll: true });
+      }}
+    >
+      {t.planner.topic.showAll}
+    </Button>
+  );
   const head = board
     ? plannerHead(board.days.slice(0, SPAN), {
         short: phone,
@@ -1294,15 +1313,13 @@ export default function PlannerPage() {
   /** The days from today the page speaks of (head, empty texts): one week. */
   const week = days?.slice(0, SPAN);
   /** The days in view: the band's week, or the grid's four weeks (passed days included). */
-  // With a topic shown the band's bars carry only its things (hand-off 11); the sheet's „frei“ counts the whole day.
-  const bandList = data?.view ?? week;
-  const bandDays = bandList;
-  // With a topic shown the band's bars carry only its things (hand-off 11); the face, hatch, name and drop preview keep
-  // the whole day („the day is as full as it is“), as the sheet's „frei“ does.
+  const bandDays = data?.view ?? week;
+  // With a topic shown the band's bars carry only its things (hand-off 11, `bar`); the face, hatch, name and drop
+  // preview keep the whole day („the day is as full as it is“), as the sheet's „frei“ does.
   const bandTiles =
-    topics.filter && bandList
-      ? topicBand(bandList, read?.view ?? read?.board.days ?? [])
-      : bandList;
+    topics.filter && bandDays
+      ? topicBand(bandDays, read?.view ?? read?.board.days ?? [])
+      : bandDays;
   /** The week in view from today on („Zeiten dieser Woche“, the context column). */
   const viewWeek = bandDays?.filter((d) => d.date >= (data?.today ?? now)).slice(0, SPAN);
   const storedDate = storedPick && storedPick.on === data?.today ? storedPick.date : undefined;
@@ -2168,30 +2185,22 @@ export default function PlannerPage() {
           <HeroSlot area="figure">
             {topics.filter ? (
               // T4: the topic in place of the figure, how many of its things lie in the plan, „Alles zeigen“.
+              // Its own block, not the figure: a topic name is cut after one line (the figure's number never is); the
+              // full name stays its accessible name. On the phone „Alles zeigen“ stands on its own line under the head.
               <div className={styles.topicHead} data-testid="planner-topic-head">
-                <HeroFigure
-                  value={t.planner.topic.headTitle(topics.filter.title)}
-                  detail={t.planner.topic.headCount(topicCount)}
-                  type="sans"
-                  testId="planner-head"
-                />
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    // The button goes with the head: on a desktop with a keyboard the focus moves on to the field,
-                    // elsewhere to the page (no keyboard sliding in), never to nowhere.
-                    void setTopicFilter(null);
-                    const keyboard =
-                      window.matchMedia?.('(hover: hover) and (pointer: fine)').matches === true;
-                    const to =
-                      keyboard && !phone
-                        ? addRef.current?.querySelector('input')
-                        : document.getElementById('main');
-                    to?.focus({ preventScroll: true });
-                  }}
-                >
-                  {t.planner.topic.showAll}
-                </Button>
+                <span className={styles.topicHeadText}>
+                  <span
+                    className={styles.topicHeadName}
+                    data-testid="planner-head"
+                    title={t.planner.topic.headTitle(topics.filter.title)}
+                  >
+                    {t.planner.topic.headTitle(topics.filter.title)}
+                  </span>
+                  <span className={styles.topicHeadCount}>
+                    {t.planner.topic.headCount(topicCount)}
+                  </span>
+                </span>
+                {phone ? null : showAll}
               </div>
             ) : head ? (
               <HeroFigure
@@ -2264,16 +2273,19 @@ export default function PlannerPage() {
                   </p>
                 ) : null}
 
+                {phone && topics.filter ? (
+                  <div className={styles.topicShowAll}>{showAll}</div>
+                ) : null}
                 {tab === 'open' ? (
                   openBlock
                 ) : (
                   <>
-                    {bandTiles && data ? (
+                    {bandDays && bandTiles && data ? (
                       <>
                         {bandRow}
                         {grid ? (
                           <WeekGrid
-                            days={bandTiles}
+                            days={bandDays}
                             picked={shownDate}
                             today={data.today}
                             onPick={pick}

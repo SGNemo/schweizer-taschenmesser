@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { capacityState } from '../components/capacity';
+import { withDropped } from '../components/dragMove';
 import { filterBoard, matcher, topicBand } from '../components/topicView';
 import type { BoardData } from '../useBoard';
 
@@ -92,7 +94,7 @@ describe('filterBoard', () => {
 });
 
 describe('topicBand', () => {
-  it('the bar carries the topic’s minutes; a fixed row is charged against the whole day’s appointments; free stays', () => {
+  it('the bar carries the topic’s minutes (a fixed row charged against the whole day’s appointments); face, state and drop preview stay the whole day', () => {
     const fixed = {
       itemKey: 'todos:a',
       unitId: 'todos:a#0',
@@ -103,7 +105,8 @@ describe('topicBand', () => {
     const shown = [
       {
         date: '2026-12-01',
-        planned: 300,
+        planned: 285,
+        off: false,
         free: 0,
         over: 45,
         usable: 240,
@@ -120,8 +123,12 @@ describe('topicBand', () => {
       },
     ];
     const [d] = topicBand(shown as never, whole as never);
-    expect(d!.planned).toBe(30 + 30);
+    expect(d!.bar).toBe(30 + 30);
+    // The tile's face, state and drop preview read the whole day: full and over.
+    expect(d!.planned).toBe(285);
     expect(d!.free).toBe(0);
     expect(d!.over).toBe(45);
+    expect(capacityState(d!)).toBe('over');
+    expect(withDropped(d!, 60).over).toBe(105);
   });
 });

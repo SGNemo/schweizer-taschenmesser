@@ -3,7 +3,7 @@
  * device state (the filter and the last used topic, `_meta`) and the members of the shown topic, read once for the page.
  * `filterBoard` is pure: the sheet, the band, „Noch ohne Tag“ and „Noch offen“ show only members; a blocker stays when
  * its appointment is a member. Display only – the day's free time keeps counting the whole day (`free`, `planned` are
- * the board's own), nothing is written.
+ * the board's own; `topicBand` adds only the band's `bar`), nothing is written.
  */
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo } from 'react';
@@ -56,8 +56,9 @@ export function filterBoard(data: BoardData, members: ReadonlySet<string>): Boar
 }
 
 /**
- * The week band's tiles while a topic is shown: each bar's fill is the topic's planned minutes (as the engine counts,
- * a fixed row charged against the whole day's appointments); `free`, `over` and the rest stay the whole day's.
+ * The week band's tiles while a topic is shown: each bar's fill (`bar`) is the topic's planned minutes (as the engine
+ * counts, a fixed row charged against the whole day's appointments). `planned`, `free`, `over` stay the whole day's, so
+ * the tile's face, hatch, name and drop preview say how full the day is.
  */
 export function topicBand(
   shown: BoardData['board']['days'],
@@ -65,7 +66,7 @@ export function topicBand(
 ): BoardData['board']['days'] {
   return shown.map((d) => ({
     ...d,
-    planned: plannedOf(d.rows, whole.find((x) => x.date === d.date)?.blockers ?? []),
+    bar: plannedOf(d.rows, whole.find((x) => x.date === d.date)?.blockers ?? []),
   }));
 }
 

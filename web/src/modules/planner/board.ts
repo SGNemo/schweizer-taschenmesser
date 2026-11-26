@@ -84,6 +84,11 @@ export interface BoardDay {
   ownWindow?: boolean;
   blockers: BoardBlocker[];
   rows: BoardRow[];
+  /**
+   * The week band's bar while a topic is shown (package 11): the topic's planned minutes. Only the bar's fill reads
+   * it; `planned`, `free` and `over` stay the whole day's.
+   */
+  bar?: number;
   /** Muted rows „In ToDos: Do“ (never counted); empty when left out. */
   hints?: TodoHint[];
 }

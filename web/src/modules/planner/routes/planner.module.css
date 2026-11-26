@@ -159,8 +159,9 @@ button.leadChip {
   white-space: nowrap;
   cursor: pointer;
 }
-/* T4 (package 11): the topic in the figure's place, „Alles zeigen“ beside it (wraps on the phone). */
-/* T4 in the head's one-line title row (it never wraps: the row has one height). */
+/* T4 (package 11): the topic in the figure's place, in the head's one-line row (the row has one height, it never
+   wraps). The name is cut after one line (its full text stays the name); „Alles zeigen“ beside it on the desktop, on
+   its own line under the head on the phone (.topicShowAll). */
 .topicHead {
   display: flex;
   align-items: center;
@@ -170,6 +171,46 @@ button.leadChip {
 .topicHead > button {
   flex: none;
   white-space: nowrap;
+}
+.topicHeadText {
+  display: grid;
+  justify-items: end;
+  min-width: 0;
+}
+.topicHeadName {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.topicHeadCount {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: var(--text-meta);
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-on-tint);
+}
+.topicShowAll {
+  display: flex;
+  justify-content: flex-end;
+  margin-block-end: var(--space-2);
+}
+.topicShowAll > button {
+  min-height: 44px;
+}
+@media (max-width: 899px) {
+  .topicHeadName {
+    font-size: var(--text-lg);
+  }
+  .topicHeadCount {
+    font-size: var(--text-xs);
+  }
 }
 /* „Themen“ in the planner's settings (package 11). */
 .topicSettings {

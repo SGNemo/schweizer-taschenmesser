@@ -173,6 +173,37 @@ test('the settings delete a topic (T9); a topic with nothing in the plan shows T
   await expect(page.getByText('Noch kein Thema.')).toBeVisible();
 });
 
+test.describe('topic (11), a long name on a small phone', () => {
+  test.use({ viewport: { width: 360, height: 800 }, isMobile: true, hasTouch: true });
+  test('T4 cuts the name after one line; „Alles zeigen“ stands on its own line, on screen, 44 px', async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    const long = 'Steuererklärung und Nebenkostenabrechnung 2026';
+    await prepare(page);
+    await menuOf(page, 'Umzugskartons holen').click();
+    await page.getByRole('menuitem', { name: 'Thema …', exact: true }).click();
+    const field = page.getByRole('combobox', { name: 'Thema' });
+    await field.fill(long);
+    await field.press('Enter');
+    await page.getByRole('button', { name: 'Weitere Optionen', exact: true }).first().click();
+    await page.getByRole('menuitem', { name: 'Nur ein Thema zeigen …', exact: true }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('option', { name: /Steuererklärung/ })
+      .first()
+      .click();
+    const name = page.getByTestId('planner-head');
+    await expect(name).toHaveAttribute('title', `Thema: ${long}`);
+    expect(await name.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
+    const button = page.getByRole('button', { name: 'Alles zeigen', exact: true });
+    await expect(button).toBeInViewport({ ratio: 1 });
+    expect((await button.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    await button.click();
+    await expect(page.getByTestId('planner-topic-head')).toHaveCount(0);
+  });
+});
+
 for (const scheme of ['light', 'dark'] as const)
   test(`topic (11): the chooser and the filtered page pass axe (${scheme})`, async ({ page }) => {
     test.setTimeout(120_000);
