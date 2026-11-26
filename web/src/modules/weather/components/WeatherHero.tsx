@@ -202,7 +202,7 @@ export function WeatherHero({
           : []),
   ];
   // A sky event takes the third chip's place (CONCEPT-EVENTS §2); on the phone it takes the wind chip's place and the
-  // wind goes to the line under the stage.
+  // wind goes to the line of values under the picture.
   const chip = events?.chip;
   const eventKey = ((): Key | undefined => {
     if (!chip) return undefined;
@@ -231,7 +231,7 @@ export function WeatherHero({
       ? [...rainKey, eventKey, ...keys.slice(rainKey.length)]
       : [...keys.slice(0, rainKey.length + (wind != null ? 1 : 0)), eventKey]
     : keys;
-  // Phone: two chips in the stage (rain / dry and wind or the event); the rest opens the line under the stage.
+  // Phone: two chips under the picture (rain / dry and wind or the event); the rest opens the line of values.
   const stageKeys = phone ? withEvent.slice(0, 2) : withEvent;
   const moved = phone ? withEvent.slice(2, eventKey ? 3 : undefined).map((k) => k.text) : [];
   const rest = [

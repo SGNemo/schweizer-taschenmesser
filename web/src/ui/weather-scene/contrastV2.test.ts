@@ -9,7 +9,7 @@ import { G, phoneView, sceneSvg, skyOffsets, type SceneSvg } from './draw';
  * Contrast of the text on the round-2 picture (docs/design/weather-scenes-2/A11Y.md §1): every sky key × theme, the
  * scene's ink against what can stand under text – every stop of the sky, every far layer's hazed tone (the quiet
  * side), the deck and storm sheets, and, on the phone, the sky and the deck above the summits. The colours are the
- * scene's own CSS (`color-mix`, the greying), evaluated with the token values of the theme.
+ * scene's own CSS (`color-mix` of tokens, the grey tokens included), evaluated with the token values of the theme.
  */
 const css = readFileSync(resolve(__dirname, '../tokens.css'), 'utf8');
 function block(header: string): Record<string, string> {
@@ -39,7 +39,7 @@ const ratio = (a: RGB, b: RGB) => {
 };
 const mixRgb = (a: RGB, b: RGB, t: number): RGB => a.map((v, i) => v + (b[i]! - v) * t) as RGB;
 
-/** Evaluates the scene's colour expressions: `var(--cN)`, `var(--scene-*)`, keywords, `color-mix`, the greying. */
+/** Evaluates the scene's colour expressions: `var(--cN)`, `var(--scene-*)`, keywords, `color-mix`. */
 function evaluator(vars: Record<string, string>, theme: 'light' | 'dark') {
   const t = themes[theme];
   const memo = new Map<string, RGB>();
@@ -63,10 +63,6 @@ function evaluator(vars: Record<string, string>, theme: 'light' | 'dark') {
     } else if (x.startsWith('color-mix(')) {
       const m = /^color-mix\(in srgb, (var\([^)]+\)|\w+), (var\([^)]+\)|\w+) ([\d.]+)%\)$/.exec(x)!;
       r = mixRgb(ev(m[1]!), ev(m[2]!), Number(m[3]) / 100);
-    } else if (x.startsWith('rgb(from ')) {
-      const c = ev(/^rgb\(from (var\([^)]+\)|\w+) /.exec(x)![1]!);
-      const g = 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2];
-      r = [g, g, g];
     } else throw new Error(`cannot read ${x}`);
     const rounded = r.map((v) => Math.max(0, Math.min(255, Math.round(v)))) as RGB;
     memo.set(x, rounded);

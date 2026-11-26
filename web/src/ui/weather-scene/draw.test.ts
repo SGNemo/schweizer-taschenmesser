@@ -382,6 +382,7 @@ describe('motion (CONCEPT §7, A11Y §3)', () => {
 });
 
 /* ---- every sky draws ---- */
+const tokenCss = readFileSync(resolve(__dirname, '../tokens.css'), 'utf8');
 describe('every sky key', () => {
   it('has its gradient from tokens, never a literal colour', () => {
     for (const [, h, o] of SKY_STATES) {
@@ -396,8 +397,11 @@ describe('every sky key', () => {
     for (const [, h, o] of [...SKY_STATES, ...HEAVY]) {
       const { out } = draw(hourScene(h, o), { quietX: 640 });
       const all = out.inner + Object.values(out.vars).join(' ');
-      for (const m of all.matchAll(/var\(--scene-([^)]*)\)/g))
+      for (const m of all.matchAll(/var\(--scene-([^)]*)\)/g)) {
         expect(m[1], m[0]).toMatch(/^[a-z0-9-]+$/);
+        // and every token exists: a missing one (a grey, a land tone) would draw black without an error
+        expect(tokenCss, m[0]).toContain(`--scene-${m[1]}:`);
+      }
     }
   });
 });

@@ -889,7 +889,10 @@ function ribbon(p: readonly Pt[], w0: number, w1: number): string {
 }
 
 /* ============================== colours as CSS ============================== */
-/** A colour: a palette key becomes its token; an expression (`var(…)`, a keyword) stays. */
+/**
+ * A colour: a palette key becomes its token; an expression (`var(…)`, a keyword) stays. Only ever called with literals
+ * and expressions built in this file, never with outside data.
+ */
 export function tok(h: string): string {
   return /^(var\(|color-mix\(|url\(|white$|black$|none$|currentColor$)/.test(h)
     ? h

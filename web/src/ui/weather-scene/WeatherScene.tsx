@@ -8,7 +8,7 @@ import styles from './WeatherScene.module.css';
 
 export interface WeatherSceneProps {
   state: SceneState;
-  /** The phone's head: the picture's right part at scale 0.46 (CONCEPT §5). */
+  /** The phone's head: the picture's right part at scale 0.46 (never zoomed out past the whole width; CONCEPT §5). */
   phone?: boolean;
   /**
    * A card behind its text (the overview widget): the quiet zone ends at this share of the box's width. Until package
