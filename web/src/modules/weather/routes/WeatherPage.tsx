@@ -10,6 +10,11 @@ import { tWeatherPage } from '@/strings.weatherPage';
 import { Button, Card, EmptyState, PageTitle } from '@/ui';
 import { DaySpans } from '../components/DaySpans';
 import { HourCards } from '../components/HourCards';
+import { MoreValues } from '../components/MoreValues';
+import { RainSoonCard } from '../components/RainSoonCard';
+import { moreGroups } from '../moreValues';
+import { rainSoon } from '../rainSoon';
+import { useSunLine } from '../useSunLine';
 import { PlaceChips } from '../components/PlaceChips';
 import { MoonCard } from '../components/MoonCard';
 import { WeatherAir } from '../components/WeatherAir';
@@ -62,6 +67,7 @@ export default function WeatherPage() {
     !!weather?.stale,
     aurora,
   );
+  const sunLine = useSunLine(weather?.forecast, weather?.at, lat, lon, !!moon);
 
   if (!settings) return null;
   const title = (weather?.place ?? settings.place ?? '').split(',')[0] || tx.title;
@@ -88,6 +94,9 @@ export default function WeatherPage() {
   const hours = weather ? hourRows(weather.forecast, nowIso) : [];
   const days = weather ? dayRows(weather.forecast, nowIso.slice(0, 10)) : [];
   const ready = !!weather?.forecast.hours && !!weather.forecast.days;
+  const soon = weather && !weather.stale ? rainSoon(weather.forecast, nowIso) : null;
+  const more =
+    weather && ready && days[0] ? moreGroups(tp, weather.forecast, days[0], nowIso, true) : [];
   // An official warning replaces today's computed hint of its kind (CONCEPT-SOURCES §3).
   const warnings = weather
     ? withoutReplaced(weatherWarnings(days), official, nowIso.slice(0, 10))
@@ -147,16 +156,23 @@ export default function WeatherPage() {
           <div className={styles.main}>
             {ready ? (
               <>
+                {soon ? <RainSoonCard soon={soon} /> : null}
                 <section aria-labelledby="weather-hours-title">
                   <h2 id="weather-hours-title" className={styles.sectionTitle}>
                     {tp.hoursTitle}
                   </h2>
-                  <HourCards hours={hours.slice(0, 24)} />
+                  <HourCards hours={hours.slice(0, 24)} now={weather.forecast.now} />
                 </section>
-                <Card>
-                  <h2 className={styles.sectionTitle}>{tp.chartTitle}</h2>
-                  <WeatherChart hours={hours} large />
-                </Card>
+                {hours.length >= 2 ? (
+                  <Card>
+                    <WeatherChart
+                      hours={hours}
+                      air={weather.forecast.air}
+                      all={weather.forecast.hours}
+                      title={tp.chartTitle}
+                    />
+                  </Card>
+                ) : null}
                 <Card>
                   <h2 className={styles.sectionTitle}>{tp.daysTitle}</h2>
                   <DaySpans
@@ -166,6 +182,7 @@ export default function WeatherPage() {
                     moon={moon ? { lat, lon, tz: weather.forecast.tz } : undefined}
                   />
                 </Card>
+                <MoreValues groups={more} />
               </>
             ) : (
               <p className={styles.loading}>{tx.previewLoading}</p>
@@ -174,7 +191,13 @@ export default function WeatherPage() {
           <aside className={styles.aside} aria-label={moon ? tp.asideLabel : tx.airTitle}>
             <WeatherAir air={weather.forecast.air} dust={!!events} />
             {moon ? (
-              <MoonCard moon={moon} tz={weather.forecast.tz} lat={lat} next={events?.card} />
+              <MoonCard
+                moon={moon}
+                tz={weather.forecast.tz}
+                lat={lat}
+                next={events?.card}
+                sun={sunLine}
+              />
             ) : null}
           </aside>
         </div>

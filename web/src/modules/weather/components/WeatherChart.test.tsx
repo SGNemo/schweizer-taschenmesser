@@ -40,11 +40,11 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe('WeatherChart width', () => {
   it('follows the element even when the chart appears only after a later fetch', () => {
-    const { rerender } = render(<WeatherChart hours={hours.slice(0, 1)} />);
+    const { rerender } = render(<WeatherChart hours={hours.slice(0, 1)} title="t" />);
     expect(screen.queryByTestId('weather-chart')).toBeNull();
     expect(FakeResizeObserver.instances.flatMap((o) => o.observed)).toHaveLength(0);
 
-    rerender(<WeatherChart hours={hours} />);
+    rerender(<WeatherChart hours={hours} title="t" />);
     const chart = screen.getByTestId('weather-chart');
     const observers = FakeResizeObserver.instances.filter((o) => o.observed.includes(chart));
     expect(observers).toHaveLength(1);
@@ -54,7 +54,7 @@ describe('WeatherChart width', () => {
   });
 
   it('stops observing when the chart goes away', () => {
-    const { unmount } = render(<WeatherChart hours={hours} />);
+    const { unmount } = render(<WeatherChart hours={hours} title="t" />);
     const chart = screen.getByTestId('weather-chart');
     const observer = FakeResizeObserver.instances.find((o) => o.observed.includes(chart))!;
     unmount();

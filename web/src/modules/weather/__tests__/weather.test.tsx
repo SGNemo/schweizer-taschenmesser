@@ -247,7 +247,7 @@ describe('weather page', () => {
     const days = screen.getByTestId('weather-days').querySelectorAll('li');
     expect(hours).toHaveLength(24);
     expect(days).toHaveLength(7);
-    expect(hours[0]).toHaveTextContent('12:00');
+    expect(hours[0]).toHaveTextContent('Jetzt');
     expect(hours[0]).toHaveTextContent('bedeckt');
     expect(hours[0]).toHaveTextContent('Wind 12 km/h');
     expect(hours[3]).toHaveTextContent('15:00');
@@ -303,11 +303,14 @@ describe('weather page', () => {
     expect(facts).toHaveTextContent('1015 hPa');
     expect(facts).toHaveTextContent('Sonne 07:32–18:21');
     expect(facts).toHaveTextContent(/Beste Zeit: \d\d–\d\d Uhr/);
-    // Chart: a picture with a label, rain bars and the wind line are in it.
+    // Chart: the picture is hidden from screen readers, one sentence says what it shows; the wind moved into its
+    // own series of the select (round 2).
     const chart = screen.getByTestId('weather-chart');
-    expect(chart.querySelector('svg')?.getAttribute('role')).toBe('img');
-    expect(chart).toHaveTextContent('Wind');
+    expect(chart.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
+    expect(screen.getByTestId('weather-chart-alt')).toHaveTextContent(/^Temperatur von -?\d+° bis/);
     expect(chart).toHaveTextContent('Nacht');
+    expect(screen.getByLabelText('Anzeigen')).toHaveValue('tempRain');
+    expect(screen.getByRole('option', { name: 'Wind und Böen' })).toBeInTheDocument();
     expect(screen.getByTestId('weather-days').querySelector('li')).toHaveTextContent(
       '3 h Niederschlag',
     );

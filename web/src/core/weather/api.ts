@@ -54,6 +54,29 @@ export interface HourRow {
   dir?: number;
   /** True when the sun is down. */
   night?: boolean;
+  /** Snowfall of the hour, cm (one decimal); snow on the ground, m (whole centimetres). */
+  snow?: number;
+  snowDepth?: number;
+  /** Visibility, m. */
+  vis?: number;
+  /** Cloud cover in three heights, percent. */
+  cloudLow?: number;
+  cloudMid?: number;
+  cloudHigh?: number;
+  /** Minutes of sunshine in the hour, 0–60. */
+  sunMin?: number;
+  /** Dew point, °C. */
+  dew?: number;
+  /** Convective available potential energy, J/kg. */
+  cape?: number;
+  /** Height of the 0 °C level above sea level, m. */
+  freeze?: number;
+}
+
+/** The next two hours in 15-minute steps: eight amounts (mm) from `at` (the place's local `YYYY-MM-DDTHH:mm`). */
+export interface Soon {
+  at: string;
+  mm: number[];
 }
 
 /** One day of the preview; `date` is the place's local `YYYY-MM-DD`. */
@@ -113,10 +136,18 @@ export interface Forecast {
   now?: NowDetail;
   /** Air quality and pollen; absent in older cached values and when that request failed. */
   air?: Air;
+  /** Precipitation of the next two hours in 15-minute steps; absent in older cached values. */
+  soon?: Soon;
 }
 
-/** Hours kept for the preview (a stale offline view still finds its next 12). */
-export const HOURS_KEPT = 48;
+/** Hours kept: the whole answer (seven days from today's midnight), today's past hours included. */
+export const HOURS_KEPT = 168;
+/** 15-minute steps asked for: the next two hours. */
+export const SOON_STEPS = 8;
+
+/** Round 2 (CONCEPT-INFO §4): more hourly variables in the same request; no new host. */
+export const HOURLY_ADDED =
+  'snowfall,snow_depth,visibility,cloud_cover_low,cloud_cover_mid,cloud_cover_high,sunshine_duration,dew_point_2m,cape,freezing_level_height';
 
 const AIR_VARIABLES =
   'european_aqi,pm10,pm2_5,ozone,nitrogen_dioxide,sulphur_dioxide,alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,olive_pollen,ragweed_pollen,dust';
@@ -174,6 +205,22 @@ const forecastSchema = z.object({
       cloud_cover: series,
       pressure_msl: series,
       wind_direction_10m: series,
+      snowfall: series,
+      snow_depth: series,
+      visibility: series,
+      cloud_cover_low: series,
+      cloud_cover_mid: series,
+      cloud_cover_high: series,
+      sunshine_duration: series,
+      dew_point_2m: series,
+      cape: series,
+      freezing_level_height: series,
+    })
+    .optional(),
+  minutely_15: z
+    .object({
+      time: z.array(z.string()),
+      precipitation: series,
     })
     .optional(),
   daily: z
@@ -201,6 +248,7 @@ const forecastSchema = z.object({
 type Hourly = NonNullable<z.infer<typeof forecastSchema>['hourly']>;
 type Daily = NonNullable<z.infer<typeof forecastSchema>['daily']>;
 type Current = z.infer<typeof forecastSchema>['current'];
+type Minutely = NonNullable<z.infer<typeof forecastSchema>['minutely_15']>;
 
 const round = (n: number | null | undefined): number | undefined =>
   n == null ? undefined : Math.round(n);
@@ -210,9 +258,14 @@ const round1 = (n: number | null | undefined): number | undefined =>
 const clock = (iso: string | null | undefined): string | undefined =>
   iso && iso.length >= 16 ? iso.slice(11, 16) : undefined;
 
+/** Whole centimetres of a depth in metres, rounded down (a few millimetres are no snow cover). */
+const depthM = (n: number | null | undefined): number | undefined =>
+  n == null ? undefined : Math.floor(n * 100 + 1e-9) / 100;
+
+/** Every hour from today's midnight on (today's past hours stay: a chosen day of package C needs them whole). */
 function hourRowsOf(h: Hourly | undefined, nowIso: string): HourRow[] | undefined {
   if (!h?.temperature_2m || !h.weather_code) return undefined;
-  const from = `${nowIso.slice(0, 13)}:00`;
+  const from = `${nowIso.slice(0, 10)}T00:00`;
   const rows: HourRow[] = [];
   h.time.forEach((time, i) => {
     const temp = h.temperature_2m![i];
@@ -235,9 +288,39 @@ function hourRowsOf(h: Hourly | undefined, nowIso: string): HourRow[] | undefine
       hpa: round(h.pressure_msl?.[i]),
       dir: round(h.wind_direction_10m?.[i]),
       night: isDay == null ? undefined : isDay === 0,
+      snow: round1(h.snowfall?.[i]),
+      snowDepth: depthM(h.snow_depth?.[i]),
+      vis: round(h.visibility?.[i]),
+      cloudLow: round(h.cloud_cover_low?.[i]),
+      cloudMid: round(h.cloud_cover_mid?.[i]),
+      cloudHigh: round(h.cloud_cover_high?.[i]),
+      sunMin: sunMinutes(h.sunshine_duration?.[i]),
+      dew: round(h.dew_point_2m?.[i]),
+      cape: round(h.cape?.[i]),
+      freeze: round(h.freezing_level_height?.[i]),
     });
   });
   return rows.slice(0, HOURS_KEPT);
+}
+
+/** Seconds of sunshine in an hour as whole minutes, 0–60. */
+const sunMinutes = (s: number | null | undefined): number | undefined =>
+  s == null ? undefined : Math.min(60, Math.max(0, Math.round(s / 60)));
+
+/**
+ * Up to eight 15-minute amounts from the current quarter on; `undefined` when the answer has none from there on (a
+ * gap is read as no rain, a missing series as nothing known).
+ */
+function soonOf(m: Minutely | undefined, nowIso: string): Soon | undefined {
+  if (!m?.precipitation) return undefined;
+  const minute = Number(nowIso.slice(14, 16));
+  const quarter = `${nowIso.slice(0, 14)}${String(Math.floor(minute / 15) * 15).padStart(2, '0')}`;
+  const start = m.time.findIndex((t) => t >= quarter);
+  if (start < 0) return undefined;
+  const mm = m.precipitation
+    .slice(start, start + SOON_STEPS)
+    .map((v) => Math.max(0, Math.round((v ?? 0) * 10) / 10));
+  return { at: m.time[start]!, mm };
 }
 
 function dayRowsOf(d: Daily | undefined): DayRow[] | undefined {
@@ -282,7 +365,7 @@ function nowOf(c: Current): NowDetail | undefined {
     hpa: round(c.pressure_msl),
     dir: round(c.wind_direction_10m),
     night: c.is_day == null ? undefined : c.is_day === 0,
-    snowDepth: c.snow_depth == null ? undefined : Math.floor(c.snow_depth * 100 + 1e-9) / 100,
+    snowDepth: depthM(c.snow_depth),
   };
   return Object.values(out).some((v) => v !== undefined) ? out : undefined;
 }
@@ -331,7 +414,10 @@ export async function fetchForecast(
     current:
       'temperature_2m,weather_code,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_gusts_10m,is_day,cloud_cover,pressure_msl,wind_direction_10m,snow_depth',
     hourly:
-      'temperature_2m,weather_code,precipitation_probability,apparent_temperature,precipitation,wind_speed_10m,wind_gusts_10m,relative_humidity_2m,uv_index,is_day,cloud_cover,pressure_msl,wind_direction_10m',
+      'temperature_2m,weather_code,precipitation_probability,apparent_temperature,precipitation,wind_speed_10m,wind_gusts_10m,relative_humidity_2m,uv_index,is_day,cloud_cover,pressure_msl,wind_direction_10m,' +
+      HOURLY_ADDED,
+    minutely_15: 'precipitation',
+    forecast_minutely_15: String(SOON_STEPS),
     daily:
       'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,apparent_temperature_max,apparent_temperature_min,precipitation_sum,wind_speed_10m_max,wind_gusts_10m_max,uv_index_max,sunrise,sunset,sunshine_duration,precipitation_hours,wind_direction_10m_dominant',
     timezone: 'auto',
@@ -349,7 +435,13 @@ export async function fetchForecast(
   })}`;
   const forecastBody = getJson(url, f);
   const airBody = getJson(airUrl, f).catch(() => undefined);
-  const { timezone, current: c, hourly, daily } = parse(forecastSchema, await forecastBody);
+  const {
+    timezone,
+    current: c,
+    hourly,
+    daily,
+    minutely_15,
+  } = parse(forecastSchema, await forecastBody);
   const group = codeGroup(c.weather_code);
   return {
     temp: Math.round(c.temperature_2m),
@@ -362,5 +454,6 @@ export async function fetchForecast(
     days: dayRowsOf(daily),
     now: nowOf(c),
     air: parseAir(await airBody),
+    soon: soonOf(minutely_15, c.time),
   };
 }

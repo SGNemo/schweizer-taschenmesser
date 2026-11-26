@@ -1,33 +1,31 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { dateTimeFormat } from '@/core/i18n/format';
+import type { Air } from '@/core/weather/air';
 import type { HourRow } from '@/core/weather/api';
-import { rateHour, type Rating } from '@/core/weather/logic';
 import { tWeather } from '@/strings.weather';
 import { tWeatherPage } from '@/strings.weatherPage';
+import { SelectField } from '@/ui';
+import {
+  CHART_OPTIONS,
+  isChartOption,
+  readChartChoice,
+  seriesOf,
+  writeChartChoice,
+  type ChartOption,
+  type Series,
+  type Values,
+} from '../chartSeries';
 import styles from './WeatherChart.module.css';
 
-const PAD = { left: 34, right: 14, top: 22 };
-const RAIN_H = 34;
-const STRIP_H = 8;
-/** Vertical layout; `large` (the module page) draws the temperature band taller. */
-function geometry(large: boolean) {
-  const tempH = large ? 176 : 112;
-  const rainTop = PAD.top + tempH + 16;
-  const stripY = rainTop + RAIN_H + 8;
-  return {
-    tempH,
-    rainTop,
-    stripY,
-    labelY: stripY + STRIP_H + 16,
-    height: stripY + STRIP_H + 16 + 8,
-  };
-}
-
-export const RATING_COLOR: Record<Rating, string> = {
-  good: 'var(--success)',
-  fair: 'var(--text-3)',
-  poor: 'var(--warning)',
-};
+/** The two bands of the mockup (`page.js` `drawChart`): lines on top, bars and arrows under them. */
+const L = 40;
+const R = 8;
+const T0 = 12;
+const T1 = 172;
+const B0 = 192;
+const B1 = 236;
+const LY = 258;
+const H = 266;
 
 /**
  * Width of the element, kept up to date; a fixed guess where there is no ResizeObserver (tests). A
@@ -65,183 +63,278 @@ function smoothPath(pts: readonly [number, number][]): string {
   return d;
 }
 
-/**
- * The next hours as one picture: the temperature as a line (day and night shaded), the chance of rain
- * as bars underneath and one small strip with the rating of every hour. Drawn by hand in SVG; the
- * text rows below the picture carry every number, so the picture itself is `role="img"`.
- */
-export function WeatherChart({
-  hours,
-  large = false,
-}: {
-  hours: readonly HourRow[];
-  large?: boolean;
-}) {
-  const tx = tWeather.use();
-  const tp = tWeatherPage.use();
-  const {
-    tempH: TEMP_H,
-    rainTop: RAIN_TOP,
-    stripY: STRIP_Y,
-    labelY: LABEL_Y,
-    height: HEIGHT,
-  } = geometry(large);
-  const [ref, width] = useWidth<HTMLDivElement>();
-  if (hours.length < 2) return null;
+/** Runs of consecutive values (a line stops where the data stops, e.g. air after five days). */
+function runs(v: Values, x: (i: number) => number, y: (n: number) => number): string[] {
+  const out: string[] = [];
+  let pts: [number, number][] = [];
+  v.forEach((n, i) => {
+    if (n == null) {
+      if (pts.length > 1) out.push(smoothPath(pts));
+      pts = [];
+    } else pts.push([x(i), y(n)]);
+  });
+  if (pts.length > 1) out.push(smoothPath(pts));
+  return out;
+}
 
+const LEGEND: Record<
+  ChartOption,
+  (
+    | 'temp'
+    | 'feels'
+    | 'amount'
+    | 'chance'
+    | 'wind'
+    | 'gusts'
+    | 'sunshine'
+    | 'cloud'
+    | 'pressure'
+    | 'uv'
+    | 'aqi'
+  )[]
+> = {
+  tempRain: ['temp', 'feels', 'amount', 'chance'],
+  wind: ['wind', 'gusts'],
+  sun: ['sunshine', 'cloud'],
+  pressure: ['pressure'],
+  uv: ['uv'],
+  air: ['aqi'],
+};
+const SWATCH: Record<string, string | undefined> = {
+  feels: styles.swDash,
+  gusts: styles.swDash,
+  amount: styles.swBox,
+  chance: styles.swThin,
+  sunshine: styles.swSun,
+  uv: styles.swSun,
+};
+
+function Plot({ s, hours, width }: { s: Series; hours: readonly HourRow[]; width: number }) {
+  const tx = tWeather.use();
   const hourFmt = dateTimeFormat({ hour: '2-digit' });
-  const temps = hours.map((h) => h.temp);
-  const lo = Math.floor(Math.min(...temps) - 1);
-  const hi = Math.ceil(Math.max(...temps) + 1);
-  const innerW = Math.max(120, width - PAD.left - PAD.right);
-  const step = innerW / (hours.length - 1);
-  const x = (i: number) => PAD.left + i * step;
-  const y = (t: number) => PAD.top + TEMP_H - ((t - lo) / (hi - lo || 1)) * TEMP_H;
-  const pts = hours.map((h, i): [number, number] => [x(i), y(h.temp)]);
-  const line = smoothPath(pts);
-  const area = `${line}L${x(hours.length - 1).toFixed(1)},${PAD.top + TEMP_H}L${PAD.left},${PAD.top + TEMP_H}Z`;
-  // Wind as a dashed line on its own scale in the same band (km/h, 0 at the bottom): the legend and the row texts carry the numbers.
-  const winds = hours.map((h) => h.wind).filter((w): w is number => w != null);
-  const windMax = Math.max(20, ...winds);
-  const windLine =
-    winds.length === hours.length
-      ? hours
-          .map(
-            (h, i) =>
-              `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${(PAD.top + TEMP_H - ((h.wind ?? 0) / windMax) * (TEMP_H * 0.55)).toFixed(1)}`,
-          )
-          .join('')
-      : '';
-  const minI = temps.indexOf(Math.min(...temps));
-  const maxI = temps.indexOf(Math.max(...temps));
-  const ticks = [lo, Math.round((lo + hi) / 2), hi];
-  const labelEvery = width < 480 ? 6 : 3;
-  const barW = Math.max(3, Math.min(14, step * 0.6));
-  const hourOf = (h: HourRow) => Number(h.time.slice(11, 13));
+  const n = hours.length;
+  const slot = (width - L - R) / n;
+  const X = (i: number) => L + (i + 0.5) * slot;
+  const vals = [...(s.line ?? []), ...(s.line2 ?? [])].filter((v): v is number => v != null);
+  const lo = s.top?.lo ?? Math.floor(Math.min(...vals)) - 1;
+  const hi = s.top?.hi ?? Math.ceil(Math.max(...vals)) + 1;
+  const Y = (v: number) => T1 - ((v - lo) / (hi - lo || 1)) * (T1 - T0);
+  const temp = s.option === 'tempRain';
+  const ticks = temp
+    ? [lo, hi, lo < 0 && hi > 0 ? 0 : Math.round((lo + hi) / 2)]
+    : [lo, Math.round((lo + hi) / 2), hi];
+  const label = (v: number) => (temp ? tx.temp(v) : String(v));
+  const bw = Math.max(3, slot * 0.56);
+  const every = width < 480 ? 6 : 3;
   const dateOf = (h: HourRow) =>
     new Date(
       Number(h.time.slice(0, 4)),
       Number(h.time.slice(5, 7)) - 1,
       Number(h.time.slice(8, 10)),
-      hourOf(h),
+      Number(h.time.slice(11, 13)),
     );
-
-  // The first value is labelled unless an extreme sits right next to it.
-  const marks = [...new Set([...(Math.min(minI, maxI) > 2 ? [0] : []), minI, maxI])];
+  // Night shading across both bands, one rectangle per run of night hours.
+  const nights: [number, number][] = [];
+  hours.forEach((h, i) => {
+    if (!h.night) return;
+    const last = nights[nights.length - 1];
+    if (last && last[1] === i - 1) last[1] = i;
+    else nights.push([i, i]);
+  });
   return (
-    <div ref={ref} className={styles.chart} data-testid="weather-chart">
-      <svg
-        width={width}
-        height={HEIGHT}
-        viewBox={`0 0 ${width} ${HEIGHT}`}
-        role="img"
-        aria-label={tx.chartLabel(Math.min(...temps), Math.max(...temps))}
-      >
-        {hours.map((h, i) =>
-          h.night ? (
-            <rect
-              key={`n${h.time}`}
-              className={styles.night}
-              x={x(i) - step / 2 < PAD.left ? PAD.left : x(i) - step / 2}
-              y={PAD.top}
-              width={i === 0 || i === hours.length - 1 ? step / 2 : step}
-              height={TEMP_H}
-            />
-          ) : null,
+    <svg
+      width={width}
+      height={H}
+      viewBox={`0 0 ${width} ${H}`}
+      aria-hidden="true"
+      focusable="false"
+      data-option={s.option}
+    >
+      {nights.map(([a, b]) => (
+        <rect
+          key={`n${a}`}
+          className={styles.night}
+          x={L + a * slot}
+          y={T0}
+          width={(b - a + 1) * slot}
+          height={B1 - T0}
+        />
+      ))}
+      {ticks.map((v) => (
+        <g key={`t${v}`}>
+          <line
+            className={v === 0 && temp ? styles.zero : styles.grid}
+            x1={L}
+            x2={width - R}
+            y1={Y(v)}
+            y2={Y(v)}
+          />
+          <text className={styles.axis} x={L - 6} y={Y(v) + 4} textAnchor="end">
+            {label(v)}
+          </text>
+        </g>
+      ))}
+      {s.top?.unit ? (
+        <text className={styles.axis} x={L - 6} y={T0 + 28} textAnchor="end">
+          {s.top.unit}
+        </text>
+      ) : null}
+      {s.topBars?.map((v, i) =>
+        v != null && v > 0 ? (
+          <rect
+            key={`u${i}`}
+            className={styles.sun}
+            x={X(i) - bw / 2}
+            y={Y(v)}
+            width={bw}
+            height={T1 - Y(v)}
+            rx={1.5}
+          />
+        ) : null,
+      )}
+      {s.line2
+        ? runs(s.line2, X, Y).map((d, i) => <path key={`b${i}`} className={styles.line2} d={d} />)
+        : null}
+      {s.line
+        ? runs(s.line, X, Y).map((d, i) => (
+            <path key={`a${i}`} className={styles.line} d={d} data-series="line" />
+          ))
+        : null}
+      {s.word ? (
+        <text className={styles.word} x={L + 8} y={T0 + 16}>
+          {s.word}
+        </text>
+      ) : null}
+      {s.bars ? (
+        <>
+          <line className={styles.base} x1={L} x2={width - R} y1={B1} y2={B1} />
+          {s.bars.map((v, i) => {
+            if (v == null || v <= 0) return null;
+            const h = Math.max(2, (v / (s.barsMax || 1)) * (B1 - B0));
+            return (
+              <rect
+                key={`r${i}`}
+                className={s.option === 'sun' ? styles.sun : styles.bar}
+                x={X(i) - bw / 2}
+                y={B1 - h}
+                width={bw}
+                height={h}
+                rx={1.5}
+              />
+            );
+          })}
+        </>
+      ) : null}
+      {s.thin ? (
+        <>
+          {runs(s.thin, X, (v) => B1 - (v / 100) * (B1 - B0)).map((d, i) => (
+            <path key={`c${i}`} className={styles.chance} d={d} />
+          ))}
+          <text className={styles.axis} x={L - 6} y={B0 + 4} textAnchor="end">
+            100 %
+          </text>
+          <text className={styles.axis} x={L - 6} y={B1 + 4} textAnchor="end">
+            0
+          </text>
+        </>
+      ) : null}
+      {s.arrows?.map((d, i) =>
+        d == null || i % 3 ? null : (
+          <g
+            key={`d${i}`}
+            transform={`translate(${X(i).toFixed(1)},${(B0 + B1) / 2}) rotate(${d + 180})`}
+          >
+            <path className={styles.arrow} d="M0,7L0,-7M-4,-3L0,-7L4,-3" />
+          </g>
+        ),
+      )}
+      {hours.map((h, i) =>
+        i % every === 0 ? (
+          <text key={`l${h.time}`} className={styles.axis} x={X(i)} y={LY} textAnchor="middle">
+            {hourFmt.format(dateOf(h))}
+          </text>
+        ) : null,
+      )}
+    </svg>
+  );
+}
+
+/**
+ * The curve with the select "Anzeigen" (CONCEPT-INFO §2): six series, the choice kept on the device. The picture is
+ * `aria-hidden`; one sentence per series says what it shows, and a series without data says that instead.
+ */
+export function WeatherChart({
+  hours,
+  air,
+  all,
+  title,
+}: {
+  hours: readonly HourRow[];
+  air?: Air;
+  /** Every cached hour (the pressure tendency looks three hours back). */
+  all?: readonly HourRow[];
+  title: string;
+}) {
+  const tp = tWeatherPage.use();
+  const [ref, width] = useWidth<HTMLDivElement>();
+  const [option, setOption] = useState<ChartOption>(readChartChoice);
+  const titleId = useId();
+  if (hours.length < 2) return null;
+  const s = seriesOf(tp, option, hours, air, all);
+  return (
+    <section aria-labelledby={titleId} data-testid="weather-chart-card">
+      <div className={styles.head}>
+        <h2 id={titleId} className={styles.title}>
+          {title}
+        </h2>
+        <div className={styles.select}>
+          <SelectField
+            label={tp.chartShow}
+            value={option}
+            onChange={(e) => {
+              const v = e.target.value;
+              if (!isChartOption(v)) return;
+              setOption(v);
+              writeChartChoice(v);
+            }}
+            data-testid="weather-chart-select"
+          >
+            {CHART_OPTIONS.map((o) => (
+              <option key={o} value={o}>
+                {tp.chartOptions[o]}
+              </option>
+            ))}
+          </SelectField>
+        </div>
+      </div>
+      <div ref={ref} className={styles.chart} data-testid="weather-chart" data-option={option}>
+        {s.has ? (
+          <>
+            <Plot s={s} hours={hours} width={width} />
+            <ul className={styles.legend} aria-hidden="true">
+              {LEGEND[option].map((k) => (
+                <li key={k}>
+                  <span className={`${styles.swatch} ${SWATCH[k] ?? ''}`} />
+                  {tp.legend[k]}
+                </li>
+              ))}
+              {hours.some((h) => h.night) ? (
+                <li>
+                  <span className={`${styles.swatch} ${styles.swNight}`} />
+                  {tp.legendNight}
+                </li>
+              ) : null}
+            </ul>
+            <p className="sr-only" data-testid="weather-chart-alt">
+              {s.alt}
+            </p>
+          </>
+        ) : (
+          <p className={styles.missing} data-testid="weather-chart-alt">
+            {s.alt}
+          </p>
         )}
-        {ticks.map((t) => (
-          <g key={t}>
-            <line
-              className={styles.grid}
-              x1={PAD.left}
-              x2={width - PAD.right}
-              y1={y(t)}
-              y2={y(t)}
-            />
-            <text className={styles.axis} x={PAD.left - 6} y={y(t) + 4} textAnchor="end">
-              {tx.temp(t)}
-            </text>
-          </g>
-        ))}
-        {winds.length > 1 ? <path className={styles.wind} d={windLine} /> : null}
-        <path className={styles.area} d={area} />
-        <path className={styles.line} d={line} />
-        {marks.map((i) => (
-          <g key={`m${i}`}>
-            <circle className={styles.dot} cx={x(i)} cy={y(hours[i]!.temp)} r={4} />
-            <text
-              className={styles.value}
-              x={Math.min(Math.max(x(i), PAD.left + 8), width - PAD.right - 8)}
-              y={y(hours[i]!.temp) + (i === maxI && i !== 0 ? -9 : i === minI ? 17 : -9)}
-              textAnchor="middle"
-            >
-              {tx.temp(hours[i]!.temp)}
-            </text>
-          </g>
-        ))}
-        {hours.map((h, i) => (
-          <g key={`r${h.time}`}>
-            <rect
-              className={styles.rain}
-              x={x(i) - barW / 2}
-              y={RAIN_TOP + RAIN_H - (Math.min(100, h.rain) / 100) * RAIN_H}
-              width={barW}
-              height={(Math.min(100, h.rain) / 100) * RAIN_H}
-              rx={1.5}
-            />
-            <rect
-              x={x(i) - step / 2 + 0.5}
-              y={STRIP_Y}
-              width={Math.max(1, step - 1)}
-              height={STRIP_H}
-              rx={2}
-              fill={RATING_COLOR[rateHour(h)]}
-              opacity={0.85}
-            />
-            {i % labelEvery === 0 ? (
-              <text className={styles.axis} x={x(i)} y={LABEL_Y} textAnchor="middle">
-                {hourFmt.format(dateOf(h))}
-              </text>
-            ) : null}
-          </g>
-        ))}
-        <text className={styles.axis} x={PAD.left - 6} y={RAIN_TOP + 9} textAnchor="end">
-          100%
-        </text>
-        <text className={styles.axis} x={PAD.left - 6} y={RAIN_TOP + RAIN_H} textAnchor="end">
-          0
-        </text>
-      </svg>
-      <ul className={styles.legend}>
-        <li>
-          <span className={`${styles.swatch} ${styles.swatchLine}`} aria-hidden="true" />
-          {tx.legendTemp}
-        </li>
-        {windLine ? (
-          <li>
-            <span className={`${styles.swatch} ${styles.swatchWind}`} aria-hidden="true" />
-            {tp.legendWind}
-          </li>
-        ) : null}
-        <li>
-          <span className={`${styles.swatch} ${styles.swatchNight}`} aria-hidden="true" />
-          {tp.legendNight}
-        </li>
-        <li>
-          <span className={`${styles.swatch} ${styles.swatchRain}`} aria-hidden="true" />
-          {tx.legendRain}
-        </li>
-        {(['good', 'fair', 'poor'] as const).map((r) => (
-          <li key={r}>
-            <span
-              className={styles.swatch}
-              style={{ background: RATING_COLOR[r] }}
-              aria-hidden="true"
-            />
-            {tx.ratings[r]}
-          </li>
-        ))}
-      </ul>
-    </div>
+      </div>
+    </section>
   );
 }

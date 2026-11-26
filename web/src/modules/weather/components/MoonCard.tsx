@@ -17,7 +17,10 @@ export function MoonCard({
   tz,
   lat,
   next,
+  sun,
 }: {
+  /** First line (round 2): sun times, day length and civil twilight of the day. */
+  sun?: string;
   moon: MoonNow;
   tz: string | undefined;
   lat: number;
@@ -51,6 +54,11 @@ export function MoonCard({
       <h3 id="weather-moon-title" className={styles.title}>
         {tp.moonTitle}
       </h3>
+      {sun ? (
+        <p className={styles.line} data-testid="weather-moon-sun">
+          {sun}
+        </p>
+      ) : null}
       <div className={styles.now}>
         <MoonGlyph
           illum={moon.lit}

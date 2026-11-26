@@ -21,6 +21,7 @@ import { now } from '@/core/time/now';
 import { useKeepHeadRoom } from '@/core/shell/heroContext';
 import { tWeather } from '@/strings.weather';
 import { tWeatherPage } from '@/strings.weatherPage';
+import { rainSoon, soonChip } from '../rainSoon';
 import { Icon, PHONE_QUERY, useMediaQuery, type IconName } from '@/ui';
 import { HeroFigure, HeroSlot } from '@/ui/identity';
 import { EventGlyph, MoonGlyph, useSceneEnv, WeatherScene } from '@/ui/weather-scene';
@@ -163,13 +164,17 @@ export function WeatherHero({
   const compass = detail?.dir != null ? tx.compass[compassIndex(detail.dir)] : undefined;
   type Key = { icon: IconName; text: string; kind?: 'rain'; glyph?: ReactNode };
   // While it rains the first chip says so (never "no rain in sight" next to the word "rain"); with old values it stays out.
-  const rainKey: Key[] = rainsNow(forecast.code, forecast.group)
-    ? stale
-      ? []
-      : [{ icon: 'cloudRain', text: tp.keyRainNow, kind: 'rain' }]
-    : forecast.rainFrom && !stale
-      ? [{ icon: 'cloudRain', text: tp.keyRain(forecast.rainFrom), kind: 'rain' }]
-      : [{ icon: 'umbrella', text: tp.keyDry }];
+  // Within two hours the 15-minute values say it to the minute (round 2, `rainSoon.ts`); otherwise as before.
+  const soon = stale ? null : rainSoon(forecast, nowIso);
+  const rainKey: Key[] = soon
+    ? [{ icon: 'cloudRain', text: soonChip(tp, soon), kind: 'rain' }]
+    : rainsNow(forecast.code, forecast.group)
+      ? stale
+        ? []
+        : [{ icon: 'cloudRain', text: tp.keyRainNow, kind: 'rain' }]
+      : forecast.rainFrom && !stale
+        ? [{ icon: 'cloudRain', text: tp.keyRain(forecast.rainFrom), kind: 'rain' }]
+        : [{ icon: 'umbrella', text: tp.keyDry }];
   const keys: Key[] = [
     ...rainKey,
     ...(wind != null

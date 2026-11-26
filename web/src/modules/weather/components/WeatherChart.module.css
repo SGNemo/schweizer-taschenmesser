@@ -1,3 +1,40 @@
+/* The curve card (mockups/page.css "curve"): title and the select "Anzeigen" in one row, the picture, the legend. */
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin: 0 0 var(--space-3);
+}
+.title {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-label);
+  font-weight: var(--weight-semibold);
+}
+.select {
+  margin-left: auto;
+}
+.select > div {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+}
+.select label {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+@media (max-width: 40rem) {
+  .select {
+    margin-left: 0;
+    width: 100%;
+  }
+  .select > div > span {
+    flex: 1;
+  }
+}
 .chart {
   width: 100%;
   min-width: 0;
@@ -13,44 +50,68 @@
   stroke-width: 1;
   stroke-dasharray: 2 4;
 }
+.zero,
+.base {
+  stroke: var(--border);
+  stroke-width: 1;
+}
 .night {
-  fill: var(--text);
-  opacity: 0.1;
+  fill: color-mix(in srgb, var(--text) 6%, transparent);
 }
 .line {
   fill: none;
   stroke: var(--text);
-  stroke-width: 2.25;
+  stroke-width: 2;
   stroke-linejoin: round;
   stroke-linecap: round;
 }
-.area {
-  fill: color-mix(in srgb, var(--text) 8%, transparent);
-  stroke: none;
+.line2 {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+  stroke-linecap: round;
 }
-.dot {
-  fill: var(--surface);
-  stroke: var(--text);
-  stroke-width: 2;
+.chance {
+  fill: none;
+  stroke: var(--info);
+  stroke-width: 1;
+}
+.bar {
+  fill: var(--info);
+}
+.sun {
+  fill: var(--warning);
+  opacity: 0.75;
+}
+.arrow {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .axis {
   fill: var(--text-3);
   font-size: var(--text-meta);
 }
-.value {
-  fill: var(--text);
+.word {
+  fill: var(--text-muted);
   font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
 }
-.rain {
-  fill: var(--info);
-  opacity: 0.8;
+.missing {
+  margin: 0;
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
 }
 .legend {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-1) var(--space-4);
-  margin: var(--space-2) 0 0;
+  margin: var(--space-3) 0 0;
   padding: 0;
   list-style: none;
   color: var(--text-muted);
@@ -59,33 +120,38 @@
 .legend li {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: 6px;
 }
 .swatch {
   display: inline-block;
-  width: 0.75rem;
-  height: 0.5rem;
-  border-radius: var(--radius-sm);
+  width: 16px;
+  height: 0;
+  border-top: 2px solid var(--text);
 }
-.swatchLine {
-  height: 2px;
-  background: var(--text);
+.swDash {
+  border-top: 2px dashed var(--text-muted);
 }
-.swatchRain {
+.swThin {
+  border-top: 1px solid var(--info);
+}
+.swBox {
+  width: 10px;
+  height: 10px;
+  border: 0;
+  border-radius: 2px;
   background: var(--info);
 }
-.wind {
-  fill: none;
-  stroke: var(--text-3);
-  stroke-width: 1.5;
-  stroke-dasharray: 5 4;
-  stroke-linecap: round;
+.swSun {
+  width: 10px;
+  height: 10px;
+  border: 0;
+  border-radius: 2px;
+  background: var(--warning);
 }
-.swatchWind {
-  height: 0;
-  border-top: 2px dashed var(--text-3);
-  background: none;
-}
-.swatchNight {
-  background: color-mix(in srgb, var(--text) 12%, transparent);
+.swNight {
+  width: 12px;
+  height: 12px;
+  border: 0;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--text) 10%, transparent);
 }
