@@ -119,7 +119,8 @@ function viewOf(link: RowLink, state: ResolvedState | undefined): LinkView {
       : { ...base, name: w.stateName(word, label, w.gone), loading: false, note: w.gone };
   if (state.state === 'gone')
     return { ...base, name: w.stateName(word, label, w.gone), loading: false, note: w.gone };
-  const url = state.url;
+  // An address leaves the app only through the one gate: one it rejects is said, never a dead button.
+  const url = webAddress(state.url)?.url;
   return url
     ? { ...base, name: w.stateName(word, label, w.browser), loading: false, url }
     : { ...base, name: w.stateName(word, label, w.elsewhere), loading: false, note: w.elsewhere };
@@ -129,7 +130,7 @@ function viewOf(link: RowLink, state: ResolvedState | undefined): LinkView {
  * A shared web address (package 1, COPY S7): one chip „Im Browser öffnen · host“, checked again here (scheme, length,
  * host) – opened only on a tap, never fetched.
  */
-export const SHARED_KEY = 'shared-url';
+const SHARED_KEY = 'shared-url';
 function sharedView(url: string | undefined): LinkView | undefined {
   const a = webAddress(url);
   if (!a) return undefined;

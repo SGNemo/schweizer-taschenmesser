@@ -9,6 +9,7 @@ import type { CaptureType } from '@/quickCapture/parser';
 import type { SavedCapture } from '@/quickCapture/targets/types';
 import { CaptureForm } from '@/quickCapture/ui/CaptureForm';
 import { announceSaved } from '@/quickCapture/ui/announceSaved';
+import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { Button, Card, Checkbox, EmptyState, Icon, patternStyles, type IconName } from '@/ui';
 import styles from './Page.module.css';
@@ -58,7 +59,9 @@ function SavedCard({
               variant="ghost"
               onClick={() => {
                 undoing.current = true;
-                void saved.undo();
+                void saved.undo().catch(() => {
+                  undoing.current = false;
+                });
               }}
             >
               {t.ui.undo}
@@ -197,8 +200,9 @@ export function shareNote(
   if (kind !== 'plan') return ticked ? { note: ticked, cut: false } : { cut: false };
   // A rest that starts with the same address does not store it twice.
   const restLines = ticked.split('\n');
-  const own =
-    address && restLines[0]?.trim() === address ? restLines.slice(1).join('\n').trim() : ticked;
+  // Compared as URL reads both (a bare origin gains its „/“, trailing punctuation goes).
+  const first = webAddress(restLines[0]?.trim().replace(/[.,;:!?)]+$/, ''))?.url;
+  const own = address && first === address ? restLines.slice(1).join('\n').trim() : ticked;
   const room = SHARE_NOTE_MAX - (address ? address.length + 1 : 0);
   let kept = own.slice(0, Math.max(0, room));
   // Never half a character at the cut.
@@ -224,9 +228,14 @@ export function ShareTarget() {
   // With the planner on, an address that will not be stored (not http/https, too long) never enters the line either:
   // the parser would keep `javascript:` or `intent:` in the title. The „Geteilt“ card still shows it.
   const address = webAddress(content.url);
-  const { line, rest } = sharedLine(
-    states?.planner === true && !address ? { ...content, url: '' } : content,
-  );
+  const unsafe = states?.planner === true && !address && content.url !== '';
+  const shared = sharedLine(unsafe ? { ...content, url: '' } : content);
+  // Also when the address came inside the text (Android hands over title and text only): it leaves the line, or the
+  // parser would keep it as the title. A line that was only the address starts empty.
+  const line = unsafe
+    ? shared.line.split(content.url).join(' ').replace(/\s+/g, ' ').trim()
+    : shared.line;
+  const rest = shared.rest;
   const [asNote, setAsNote] = useState(false);
   // Package 1: with the planner on, the form starts with the kind `plan`; what it reads now decides S2 / S16 / S19.
   const plannerOn = states?.planner === true;
@@ -234,21 +243,26 @@ export function ShareTarget() {
   const [read, setRead] = useState<CaptureType | undefined>(() =>
     states?.planner === true ? 'plan' : undefined,
   );
-  const asPlan = read === 'plan';
-  const { note, cut } = shareNote(read, address?.url, rest, asNote);
+  // Before the form has read anything, the kind it starts with counts (a cold open says S2 from its first frame too).
+  const kind = read ?? (plannerOn ? 'plan' : undefined);
+  const asPlan = kind === 'plan';
+  const { note, cut } = shareNote(kind, address?.url, rest, asNote);
+  // A ticked rest that starts with another address leads the note: the page names its host too (S16).
+  const noteLead = !address && note ? webAddress(note.split('\n', 1)[0]) : undefined;
   // After „Speichern“ as `plan`: the page stays and follows the saved ToDo live (S8, then S14 once it is gone).
   const [saved, setSaved] = useState<SavedCapture>();
   const savedId = saved?.id;
   // The capture's own view of what it saved (its plan row, which every undo takes away with the ToDo).
   const savedType = saved?.type;
   const live = useLiveQuery(
-    async () =>
-      savedId && savedType ? (await secondStage(savedType, savedId)) === 'live' : undefined,
+    async () => (savedId && savedType ? await secondStage(savedType, savedId) : undefined),
     [savedId, savedType],
   );
   // Still loading counts as there (it was just written): the three actions stand from the first frame.
-  const alive = live !== false;
+  // Only a deleted plan row is gone; unknown (loading, or the planner switched off meanwhile) is not „undone“.
+  const alive = live !== 'deleted';
   const head = useRef<HTMLHeadingElement>(null);
+  const toastId = useRef<number | undefined>(undefined);
 
   return (
     <>
@@ -274,7 +288,16 @@ export function ShareTarget() {
             {saved ? (alive ? t.planner.share.saved : t.planner.share.undone) : ''}
           </p>
           {saved ? (
-            <SavedCard saved={saved} alive={alive} onUndone={() => head.current?.focus()} />
+            <SavedCard
+              saved={saved}
+              alive={alive}
+              onUndone={() => {
+                // The capture toast's „Rückgängig“ would undo nothing now: it goes with the page's undo.
+                if (toastId.current !== undefined)
+                  useUiStore.getState().dismissToast(toastId.current);
+                head.current?.focus();
+              }}
+            />
           ) : (
             <Card title={t.quickCapture.share.suggestion}>
               {rest ? (
@@ -293,9 +316,16 @@ export function ShareTarget() {
                   extra={note ? { note } : undefined}
                   onRead={setRead}
                   onSaved={(s) => {
-                    void announceSaved(s);
-                    if (s.type === 'plan') setSaved(s);
-                    else void navigate('/');
+                    if (s.type !== 'plan') {
+                      void announceSaved(s);
+                      void navigate('/');
+                      return;
+                    }
+                    setSaved(s);
+                    // The capture toast as built; the page remembers it, so its own „Rückgängig“ can close it.
+                    void announceSaved(s).then(() => {
+                      toastId.current = useUiStore.getState().toasts.at(-1)?.id;
+                    });
                   }}
                 />
               ) : null}
@@ -307,42 +337,48 @@ export function ShareTarget() {
                   ) : content.url ? (
                     <p>{t.planner.share.linkNotSaved}</p>
                   ) : null}
+                  {noteLead ? <p>{t.planner.share.linkSaved(noteLead.host)}</p> : null}
                   {cut ? <p>{t.planner.share.cut}</p> : null}
                 </div>
               ) : null}
             </Card>
           )}
-          <h2>{t.quickCapture.share.or}</h2>
-          <ul className={styles.list} aria-label={t.share.where}>
-            {states
-              ? TARGETS.filter(
-                  (x) => (x.when?.(content) ?? true) && (!x.onlyWhenOn || states[x.module]),
-                ).map((x) => (
-                  <Card as="li" key={x.module}>
-                    {states[x.module] ? (
-                      <Link to={x.to(content)} data-testid={`share-${x.module}`}>
-                        <Icon name={x.icon} size={18} /> {x.label}
-                      </Link>
-                    ) : (
-                      <span className={patternStyles.hstack}>
-                        <span data-testid={`share-${x.module}-off`}>
-                          <Icon name={x.icon} size={18} /> {x.label}
-                        </span>
-                        <Button
-                          aria-label={`${t.actions.enable}: ${x.label}`}
-                          onClick={() => {
-                            const m = getManifest(x.module);
-                            if (m) void enableModule(m);
-                          }}
-                        >
-                          {t.actions.enable}
-                        </Button>
-                      </span>
-                    )}
-                  </Card>
-                ))
-              : null}
-          </ul>
+          {/* Once saved, the other ways go: one share, one thing (a second tap would store a copy). */}
+          {saved ? null : (
+            <>
+              <h2>{t.quickCapture.share.or}</h2>
+              <ul className={styles.list} aria-label={t.share.where}>
+                {states
+                  ? TARGETS.filter(
+                      (x) => (x.when?.(content) ?? true) && (!x.onlyWhenOn || states[x.module]),
+                    ).map((x) => (
+                      <Card as="li" key={x.module}>
+                        {states[x.module] ? (
+                          <Link to={x.to(content)} data-testid={`share-${x.module}`}>
+                            <Icon name={x.icon} size={18} /> {x.label}
+                          </Link>
+                        ) : (
+                          <span className={patternStyles.hstack}>
+                            <span data-testid={`share-${x.module}-off`}>
+                              <Icon name={x.icon} size={18} /> {x.label}
+                            </span>
+                            <Button
+                              aria-label={`${t.actions.enable}: ${x.label}`}
+                              onClick={() => {
+                                const m = getManifest(x.module);
+                                if (m) void enableModule(m);
+                              }}
+                            >
+                              {t.actions.enable}
+                            </Button>
+                          </span>
+                        )}
+                      </Card>
+                    ))
+                  : null}
+              </ul>
+            </>
+          )}
         </>
       )}
     </>

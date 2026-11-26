@@ -111,7 +111,7 @@ const source: PlannableSource = {
     const tasks = (await taskRepo.active().toArray()).filter(
       (t) => !t.done && t.someday && !t.parentId,
     );
-    return tasks.map(itemOf);
+    return Promise.all(tasks.map((t) => withUrl(t, itemOf(t))));
   },
   // „Kleiner machen …“: the task keeps its id, list, links and place in the plan under the first step's title; the rest
   // is a new top-level task of the old title with the same list, priority, estimate, deadline (and its reminder), tags,

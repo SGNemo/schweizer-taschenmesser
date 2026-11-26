@@ -214,6 +214,13 @@ describe('council round 1', () => {
     await user.click(screen.getByRole('button', { name: t.ui.undo }));
     await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveFocus());
     expect(screen.getByRole('status')).toHaveTextContent(t.planner.share.undone);
+    // The capture toast's „Rückgängig“ goes with it; the other ways to save are gone since „Speichern“.
+    await waitFor(() =>
+      expect(
+        useUiStore.getState().toasts.some((x) => x.action?.label === t.quickCapture.undo),
+      ).toBe(false),
+    );
+    expect(screen.queryByText(t.quickCapture.share.or)).toBeNull();
   });
 
   it('shareNote: a rest that starts with the address stores it once; the cut never splits a character', () => {
@@ -222,5 +229,48 @@ describe('council round 1', () => {
     const r = shareNote('plan', URL_, emoji, true);
     expect(r.cut).toBe(true);
     expect(/[\ud800-\udbff]$/.test(r.note!)).toBe(false);
+  });
+});
+
+describe('council round 2', () => {
+  it('an address inside the text that is not stored never becomes the title (Android path)', async () => {
+    const user = userEvent.setup();
+    for (const bad of [
+      `https://example.org/${'a'.repeat(2100)}`,
+      'https://good.example@evil.example/x',
+    ]) {
+      const { unmount } = open({ text: bad });
+      await waitFor(() => expect(lines()).toHaveTextContent(t.planner.share.linkNotSaved));
+      const box = await screen.findByRole('textbox', { name: t.quickCapture.inputLabel });
+      await user.type(box, 'Seite merken');
+      await user.click(screen.getByRole('button', { name: t.quickCapture.save }));
+      await waitFor(async () => expect(await tasks()).toHaveLength(1));
+      const [task] = await tasks();
+      expect(task!.title).toBe('Seite merken');
+      expect(task!.note ?? '').not.toContain('example');
+      unmount();
+      await db.table('todos_task').clear();
+      await db.table('planner_item').clear();
+    }
+  });
+
+  it('a rest that starts with the same address as URL reads it stores it once (bare origin, trailing dot)', () => {
+    expect(shareNote('plan', 'https://example.com/', 'https://example.com\nRest', true).note).toBe(
+      'https://example.com/\nRest',
+    );
+    expect(
+      shareNote('plan', 'https://example.com/a', 'https://example.com/a.\nRest', true).note,
+    ).toBe('https://example.com/a\nRest');
+  });
+
+  it('a ticked rest led by another address is named on the page (S16) before „Speichern“', async () => {
+    const user = userEvent.setup();
+    open({ title: 'Seite', url: 'www.example.org/x', text: 'https://other.example/a\nmehr' });
+    await waitFor(() => expect(lines()).toHaveTextContent(t.planner.share.linkNotSaved));
+    expect(lines()).not.toHaveTextContent('other.example');
+    await user.click(screen.getByRole('checkbox', { name: t.quickCapture.share.asNote }));
+    await waitFor(() =>
+      expect(lines()).toHaveTextContent(t.planner.share.linkSaved('other.example')),
+    );
   });
 });
