@@ -138,5 +138,6 @@ ceilings of round 2's [A11Y §4](../design/weather-scenes-2/A11Y.md). New scenar
   motion's end); every other state under 12 ms. The stack costs 6 elements (3 `<use>`, 3 `<g>`): the heaviest head is
   227 elements; package A's drawing was at 221 and over 64 KB there already (83 KB with the colour style). The drawing's
   build time (≈ 30–36 ms at ×4) is package A's and above one frame; the porthole builds in 1 ms.
+- The porthole rows were measured before the council's 28 px changes (no stars and maria below 48 px, larger marks): at 28 px it now has fewer elements.
 - At rest the ceiling holds everywhere (1–4 ms traced, 0 paints, 0 frames). The untraced 4 s rest window shows
   67–80 ms in two desktop runs and 0.3–2 ms in the others: app work after start, as in §2 (traced: 4 ms).
