@@ -9536,7 +9536,7 @@ export const de = {
       tick: (step: string) => `„${step}“ abhaken`,
       more: (n: number) => `${n} weitere`,
     },
-    /** Kinds in the field (package 3, COPY K1–K4, K6, A7). */
+    /** Kinds in the field (package 3, COPY K1–K4, K6). */
     kinds: {
       /** K1: the line's lead word. */
       becomes: 'Wird:',
@@ -9557,8 +9557,6 @@ export const de = {
       more: (n: number) => `+ ${n}`,
       /** K3 */
       asTask: 'Als Aufgabe eintragen',
-      /** K3's key, for a screen reader. */
-      asTaskKeys: 'Alt+Eingabe',
       /** K4 */
       toast: {
         invoice: 'Rechnung angelegt, liegt unter „Noch ohne Tag“.',
@@ -9570,8 +9568,6 @@ export const de = {
       },
       /** K4: the note's offer. */
       toPlan: 'In den Plan',
-      /** A7: a struck lead chip's description. */
-      chipNotFor: (chip: string, kind: string) => `${chip} – gilt nicht für ${kind}`,
     },
     /** Shared into the planner (package 1, COPY S2, S5, S7–S9, S14, S16, S19). */
     share: {

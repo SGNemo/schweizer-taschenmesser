@@ -1,23 +1,10 @@
-import { type FormEvent, type ReactNode, type Ref, useId } from 'react';
+import { type FormEvent, type Ref, useId } from 'react';
 import { t } from '@/strings';
 import { Button, Chip, TextField } from '@/ui';
 import type { FieldKind } from '../fieldKind';
 import styles from '../routes/planner.module.css';
 import { KindAnnouncer, KindPreview } from './KindPreview';
 
-/** A lead chip before the input (A2 from package 9, T11 from package 11): only a plain ToDo takes it. */
-export interface LeadChip {
-  id: string;
-  label: string;
-  onRemove?: () => void;
-}
-
-/**
- * The planner's one field (planner hub R1): a thing to enter, or a sentence the planner reads („Donnerstag frei“).
- * Three example chips under it fill the field and focus it; they never submit. The page owns the text and what is
- * done with it. States: empty (the button waits), reading (the local model reads: the field is read-only), error
- * (nothing was stored: the text is still there and the field says so).
- */
 export function Capture({
   value,
   onChange,
@@ -32,7 +19,6 @@ export function Capture({
   preview,
   onAsTask,
   previewAbove,
-  lead = [],
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -61,40 +47,17 @@ export function Capture({
   onAsTask?: () => void;
   /** The phone's last row: the line stands above the field, never under the keyboard. */
   previewAbove?: boolean;
-  /** Lead chips (at most two, A2 first); struck through while the preview shows a kind that is no task. */
-  lead?: readonly LeadChip[];
 }) {
   const examples = Object.values(t.planner.add.examples);
   const errorId = useId();
   const kindId = useId();
-  const struckId = useId();
-  const chips = lead.slice(0, 2);
-  // Only a plain ToDo – also one with steps – takes the lead chips.
-  const struck = !!preview && preview.kind !== 'steps' && chips.length > 0;
   const line =
     preview && onAsTask ? <KindPreview reading={preview} onAsTask={onAsTask} id={kindId} /> : null;
-  const leadChips: ReactNode = chips.length ? (
-    <div className={styles.leadChips}>
-      {chips.map((c) => (
-        <span
-          key={c.id}
-          className={struck ? `${styles.leadChip} ${styles.leadStruck}` : styles.leadChip}
-          aria-describedby={struck ? `${struckId}-${c.id}` : undefined}
-        >
-          {c.label}
-          {struck ? (
-            <span id={`${struckId}-${c.id}`} className="sr-only">
-              {t.planner.kinds.chipNotFor(c.label, t.planner.kinds.name[preview.kind])}
-            </span>
-          ) : null}
-        </span>
-      ))}
-    </div>
-  ) : null;
   return (
-    <div>
+    // The phone's last row draws the line above the field (CSS order) – in the DOM it stays after it, so Tab reaches
+    // „Als Aufgabe eintragen“ after the field (A11Y).
+    <div className={previewAbove ? styles.lineAbove : undefined}>
       <KindAnnouncer reading={preview} />
-      {previewAbove ? line : null}
       <form
         ref={formRef}
         onSubmit={onSubmit}
@@ -102,7 +65,6 @@ export function Capture({
         data-keep-visible
         aria-busy={reading || undefined}
       >
-        {leadChips}
         <div className={styles.grow}>
           <TextField
             label={t.planner.add.label}
@@ -141,7 +103,7 @@ export function Capture({
           {t.planner.add.error}
         </p>
       ) : null}
-      {previewAbove ? null : line}
+      {line}
       {withExamples && !line ? (
         <div className={styles.examples} role="group" aria-label={t.planner.add.examplesLead}>
           <span className={styles.examplesLead} aria-hidden="true">

@@ -20,9 +20,12 @@ describe('fieldKind – the sure table', () => {
       fields: { title: 'Stadtwerke', amountMinor: 8000, date: '2026-12-04' },
       deadline: '2026-12-04',
     });
-    expect(fieldKind('Rechnung Zahnarzt 120,50 €', ctx())).toEqual({
+    // No deadline said: the capture's usual 14 days, named on the line – here past the planned days, so no line.
+    expect(kind('Rechnung Zahnarzt 120,50 €')).toBeUndefined();
+    expect(fieldKind('Rechnung Zahnarzt 120,50 €', ctx({ until: '2026-12-31' }))).toEqual({
       kind: 'invoice',
-      fields: { title: 'Zahnarzt', amountMinor: 12050 },
+      fields: { title: 'Zahnarzt', amountMinor: 12050, date: '2026-12-14' },
+      deadline: '2026-12-14',
     });
     // Near misses: no amount, „Mahnung“ (it would double an open invoice), the plural word.
     expect(kind('Rechnung schreiben an Müller')).toBeUndefined();
@@ -88,6 +91,13 @@ describe('fieldKind – the sure table', () => {
       steps: ['Wäsche', 'Bad', 'Küche'],
     });
     expect(kind('Steuer vorbereiten: Belege, Formular')).toBe('steps');
+    // A name the field would read a day or a part from is no sure reading.
+    for (const near of [
+      'Heute: Wäsche, Bad',
+      'Haushalt Freitag: Wäsche, Bad',
+      'Putzen abends: Bad, Küche',
+    ])
+      expect(kind(near), near).toBeUndefined();
     // Near misses: one part, a clock time („15:00“ is no colon of a name), an address.
     expect(kind('Haushalt: Wäsche')).toBeUndefined();
     expect(kind('Treffen 15:00, Raum 2')).toBeUndefined();
@@ -113,10 +123,13 @@ describe('fieldKind – the order of readings', () => {
 
   it('two kinds sure: the first of the order', () => {
     // An address inside an invoice line: the invoice, the address kept as its note.
-    expect(fieldKind('Rechnung https://example.org 80 €', ctx())).toMatchObject({
+    expect(fieldKind('Rechnung https://example.org/a. 80 € bis Fr', ctx())).toMatchObject({
       kind: 'invoice',
-      fields: { amountMinor: 8000, note: 'https://example.org' },
+      fields: { amountMinor: 8000, note: 'https://example.org/a' },
+      host: 'example.org',
     });
+    // An address the gate refuses (user info): no sure reading at all.
+    expect(kind('Rechnung https://a:b@example.org 80 € bis Fr')).toBeUndefined();
     // „Einkauf:“ is also „Name: a, b“: the list.
     expect(kind('Einkauf: Milch, Brot')).toBe('list');
     expect(kind('Idee: Regal, Lampe')).toBe('note');

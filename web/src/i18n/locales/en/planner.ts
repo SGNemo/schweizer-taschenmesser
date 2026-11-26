@@ -92,7 +92,6 @@ export const planner: Strings['planner'] = {
     stepCount: (n: number) => (n === 1 ? '1 step' : `${n} steps`),
     more: (n: number) => `+ ${n}`,
     asTask: 'Enter as a task',
-    asTaskKeys: 'Alt+Enter',
     toast: {
       invoice: 'Invoice created, under “No day yet”.',
       list: 'On the shopping list.',
@@ -102,7 +101,6 @@ export const planner: Strings['planner'] = {
       steps: (n: number, day: string) => `Task with ${n} steps created, on ${day}.`,
     },
     toPlan: 'Add to plan',
-    chipNotFor: (chip: string, kind: string) => `${chip} – does not apply to ${kind}`,
   },
   share: {
     lands: 'Lands in the planner under “No day yet”.',

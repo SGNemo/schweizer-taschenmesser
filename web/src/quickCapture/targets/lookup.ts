@@ -172,7 +172,8 @@ export async function knownShoppingNames(
           unknown
         >[]
       )
-        .filter((l) => l.kind === 'shopping')
+        // An archived list is put away: what it holds is not what he buys now.
+        .filter((l) => l.kind === 'shopping' && !l.archived)
         .map((l) => String(l.id)),
     );
     const rows = (await createCollectionRepo(lists, 'item', opts.database)

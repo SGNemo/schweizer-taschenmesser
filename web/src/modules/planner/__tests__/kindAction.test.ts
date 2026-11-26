@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
 import { createCollectionRepo } from '@/core/db/repo';
 import { bus } from '@/core/events';
@@ -204,5 +204,13 @@ describe('addKindFromField', () => {
       ),
     ).toBe(false);
     expect(await live('calendar_event')).toHaveLength(0);
+  });
+
+  it('a failure halfway leaves nothing behind: the invoice saved before it is taken back', async () => {
+    const spy = vi.spyOn(itemRepo, 'get').mockRejectedValueOnce(new Error('disk'));
+    expect(await addKindFromField(invoice, {})).toBe(false);
+    spy.mockRestore();
+    expect(await live('invoices_invoice')).toHaveLength(0);
+    expect(await live('planner_item')).toHaveLength(0);
   });
 });

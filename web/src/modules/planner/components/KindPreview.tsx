@@ -35,7 +35,7 @@ function partsOf(r: FieldKind): { before: string[]; amount?: string; after: stri
       return {
         before: [r.fields.title],
         amount: formatMoney(r.fields.amountMinor ?? 0),
-        after: r.deadline ? [t.planner.kinds.deadline(day(r.deadline))] : [],
+        after: [t.planner.kinds.deadline(day(r.deadline)), ...(r.host ? [r.host] : [])],
       };
     case 'list': {
       const shown = r.names.slice(0, NAMES_SHOWN).join(', ');
@@ -43,7 +43,14 @@ function partsOf(r: FieldKind): { before: string[]; amount?: string; after: stri
       return { before: [more > 0 ? `${shown} ${t.planner.kinds.more(more)}` : shown], after: [] };
     }
     case 'event':
-      return { before: [r.fields.title, day(r.fields.date!), r.fields.time!], after: [] };
+      return {
+        before: [
+          r.fields.title,
+          day(r.fields.date!),
+          r.fields.endTime ? `${r.fields.time}–${r.fields.endTime}` : r.fields.time!,
+        ],
+        after: [],
+      };
     case 'note':
       return { before: [r.title], after: [] };
     case 'bookmark':

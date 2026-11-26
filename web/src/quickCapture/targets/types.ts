@@ -119,7 +119,8 @@ export interface CaptureTarget {
   save?(fields: CaptureFields, ctx: AmendContext): Promise<SavedCapture>;
   /**
    * The thing the planner lists for a saved record when it is not the record itself (a shopping-list entry: its
-   * list). Read from the written data; `SavedCapture.planRef` carries it.
+   * list). Read from the written data; `SavedCapture.planRef` carries it – only on the plain create path (no `via`,
+   * `save` or fixed `id`).
    */
   planRef?(data: Record<string, unknown>): CaptureRef | undefined;
 }

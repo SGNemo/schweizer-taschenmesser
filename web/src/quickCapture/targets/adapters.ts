@@ -66,14 +66,10 @@ const todos: CaptureTarget = {
   },
 };
 
-/** At most this many tick-off lines from one capture (a pasted paragraph is no checklist). */
-export const CHECKLIST_MAX = 30;
-
 /** The capture's lines as the task's checklist: trimmed, empty ones dropped, each with its own id. */
 function checklistOf(lines: readonly string[] | undefined): { checklist?: object[] } {
   const kept = (lines ?? []).map((l) => l.trim()).filter(Boolean);
   if (kept.length === 0) return {};
-  if (kept.length > CHECKLIST_MAX) throw new CaptureError('invalid');
   return { checklist: kept.map((text) => ({ id: randomId(), text, done: false })) };
 }
 

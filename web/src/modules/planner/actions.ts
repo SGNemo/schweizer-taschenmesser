@@ -27,9 +27,10 @@ import { undoEntry } from '@/core/undo';
 import { NEVER_LINKED, type EntityRef } from '@/core/entitylinks/types';
 import { bus } from '@/core/events';
 import type { EventMap } from '@/core/events/events';
-import type { CaptureFields } from '@/quickCapture/parser';
+import type { CaptureFields, CaptureType } from '@/quickCapture/parser';
 import {
   breakOf,
+  captureLive,
   saveCapture,
   saveCaptures,
   targetFor,
@@ -549,61 +550,82 @@ export async function addKindFromField(
   if (reading.kind === 'steps') return addFromField(reading.title, titles, shown, reading.steps);
   let key: string | undefined;
   let noteRef: { id: string; title: string } | undefined;
+  // What the action wrote so far: `undoable` keeps no entry when its function throws, so a failure halfway (the
+  // second shopping entry, the item row, the run) takes these back itself – never a half entry while the field says
+  // nothing was stored.
+  const written: (() => Promise<void>)[] = [];
+  const save = async (type: CaptureType, fields: CaptureFields) => {
+    const saved = await saveCapture(type, fields);
+    written.push(saved.undo);
+    return saved;
+  };
+  const own = async (ref: { moduleId: string; id: string }) => {
+    const had = await itemRepo.get(itemKeyOf(ref.moduleId, ref.id));
+    const k = await ownRow(ref);
+    if (!had) written.push(() => itemRepo.remove(itemKeyOf(ref.moduleId, ref.id)));
+    return k;
+  };
   let run: UserRun;
   try {
     run = await runUser(t.planner.toast.added, async () => {
       switch (reading.kind) {
         case 'invoice': {
-          const saved = await saveCapture('invoice', reading.fields);
-          key = await ownRow({ moduleId: saved.moduleId, id: saved.id });
+          const saved = await save('invoice', reading.fields);
+          key = await own({ moduleId: saved.moduleId, id: saved.id });
           return {};
         }
         case 'list': {
           let ref: { moduleId: string; id: string } | undefined;
           for (const name of reading.names) {
-            const saved = await saveCapture('list', { title: name });
+            const saved = await save('list', { title: name });
             ref ??= saved.planRef;
           }
-          if (!ref) throw new Error('shopping entry without a list');
-          key = await ownRow(ref);
+          if (ref) key = await own(ref);
           return {};
         }
         case 'event':
-          await saveCapture('event', reading.fields);
+          await save('event', reading.fields);
           return {};
         case 'note': {
-          const saved = await saveCapture('note', { title: reading.title });
+          const saved = await save('note', { title: reading.title });
           noteRef = { id: saved.id, title: reading.title };
           return {};
         }
         case 'bookmark':
-          await saveCapture('bookmark', { title: '', url: reading.url });
+          await save('bookmark', { title: '', url: reading.url });
           return {};
       }
     });
   } catch (e) {
+    for (const undo of written.reverse()) await undo().catch(() => undefined);
     if (e instanceof PlannerOffError) {
       toast(t.planner.toast.off);
       return false;
     }
-    // The target refused (its module went off, an impossible date): nothing was stored, the field says so.
+    // The target refused (its module went off, an impossible date): nothing stays stored, the field says so.
     console.error('[planner] kind entry failed', e instanceof Error ? e.name : 'error');
     return false;
   }
   if (key !== undefined && run.outcome.inputs.titles[key] === undefined) {
     // Not a thing of the plan (the source's switch is off, the list put away): the whole entry is taken back.
-    if (run.entry) await undoEntry(run.entry.id);
+    const back = run.entry ? await undoEntry(run.entry.id) : true;
+    if (!back) toast(t.ui.undoFailed);
     return false;
   }
   const note = noteRef;
   const offer = note
     ? {
         label: t.planner.kinds.toPlan,
+        // A later tap: only while the note is still there (not undone meanwhile).
         run: () =>
-          void bus.emit('plan.requested', {
-            title: note.title,
-            link: { kind: 'note', id: note.id, label: note.title },
-          }),
+          void captureLive('note', note.id).then((live) =>
+            live
+              ? bus.emit('plan.requested', {
+                  title: note.title,
+                  link: { kind: 'note', id: note.id, label: note.title },
+                })
+              : undefined,
+          ),
       }
     : undefined;
   toast(withOverload(t.planner.kinds.toast[reading.kind], await overloadNotice(run)), run, offer);

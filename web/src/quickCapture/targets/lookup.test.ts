@@ -51,6 +51,12 @@ describe('knownShoppingNames', () => {
       expect(known.has(nameKey(near)), near).toBe(false);
   });
 
+  it('an archived shopping list is put away: its names are not known', async () => {
+    await seed();
+    await repo('lists', 'list').update('shop', { archived: true });
+    expect((await knownShoppingNames({ states: ON })).has('spülmittel')).toBe(false);
+  });
+
   it('nothing from a module that is off; a deleted entry is forgotten', async () => {
     await seed();
     const noPantry = await knownShoppingNames({ states: { ...ON, pantry: false } });

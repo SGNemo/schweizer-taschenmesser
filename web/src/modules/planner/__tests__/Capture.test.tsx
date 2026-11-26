@@ -60,11 +60,16 @@ describe('Capture – the preview line', () => {
     expect(onSubmit).toHaveBeenCalledTimes(1);
   });
 
-  it('the phone: the line stands above the field', () => {
-    field({ preview: invoice, onAsTask: () => undefined, previewAbove: true });
+  it('the phone draws the line above the field, but Tab reaches K3 after the field', () => {
+    const { container } = field({
+      preview: invoice,
+      onAsTask: () => undefined,
+      previewAbove: true,
+    });
     const line = screen.getByTestId('planner-kind');
     const input = screen.getByRole('textbox');
-    expect(line.compareDocumentPosition(input) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(input.compareDocumentPosition(line) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect((container.firstElementChild as HTMLElement).className).toMatch(/lineAbove/);
   });
 
   it('the live region speaks once the kind stood still for 400 ms, never per keystroke', () => {
@@ -90,16 +95,5 @@ describe('Capture – the preview line', () => {
     expect(said()).toMatch(/^Wird: Rechnung · Stadtwerke · Frist/);
     // No amount is spoken.
     expect(said()).not.toMatch(/€/);
-  });
-
-  it('a lead chip is struck through with A7 while the line shows a kind that takes none', () => {
-    field({
-      preview: invoice,
-      onAsTask: () => undefined,
-      lead: [{ id: 'a2', label: 'vor Friseur, Mi' }],
-    });
-    const chip = screen.getByText('vor Friseur, Mi', { selector: 'span' });
-    const desc = document.getElementById(chip.getAttribute('aria-describedby')!);
-    expect(desc?.textContent).toBe('vor Friseur, Mi – gilt nicht für Rechnung');
   });
 });

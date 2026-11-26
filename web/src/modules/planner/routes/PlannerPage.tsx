@@ -202,7 +202,7 @@ export default function PlannerPage() {
   // Kinds in the field (package 3): the sure reading of the line, derived – never stored. Off with K5, in English, and
   // for the entry K3 made a plain ToDo.
   const states = useModuleStates();
-  const knownNames = useLiveQuery(() => knownShoppingNames(), []);
+
   const [sheetDate, setSheetDate] = useState<string | undefined>();
   // `?check=1` (the lists' „Woche prüfen im Planer“ link, a tap of the user) opens the week sheet.
   const [checking, setChecking] = useState(() => params.get('check') === '1');
@@ -289,19 +289,34 @@ export default function PlannerPage() {
   const titles = data?.titles ?? {};
   const board = data?.board;
   const [plainFor, setPlainFor] = useState<string | undefined>();
-  const kindsOn = data?.settings.kindsInField !== false;
+  const kindsOn = data?.settings.kindsInField !== false && getLang() === 'de';
+  // Read only while a line can show: the switch on and German lines.
+  const knownNames = useLiveQuery(
+    () => (kindsOn ? knownShoppingNames() : Promise.resolve(new Set<string>())),
+    [kindsOn],
+  );
+  const kindItems = useMemo(() => (board ? instructionItems(board) : undefined), [board]);
   const kindReading = useMemo(() => {
     const day = data?.today ?? today();
-    if (!kindsOn || getLang() !== 'de' || !states || text === plainFor) return undefined;
+    if (!kindsOn || !states || text === plainFor) return undefined;
     return fieldKind(text, {
       now: new Date(nowMs()),
       today: day,
       until: addDaysStr(day, Number(data?.settings.horizonDays ?? 14) - 1),
       on: (id) => !!states[id],
       ...(knownNames ? { known: knownNames } : {}),
-      ...(board ? { items: instructionItems(board) } : {}),
+      ...(kindItems ? { items: kindItems } : {}),
     });
-  }, [text, plainFor, kindsOn, states, knownNames, board, data?.today, data?.settings.horizonDays]);
+  }, [
+    text,
+    plainFor,
+    kindsOn,
+    states,
+    knownNames,
+    kindItems,
+    data?.today,
+    data?.settings.horizonDays,
+  ]);
   const todayDay = board?.days[0];
 
   // The local stage reads the shell's status once (the desktop app with AI on; nowhere else).
@@ -1836,6 +1851,8 @@ export default function PlannerPage() {
       onAsTask={() => {
         // K3: this entry is a plain ToDo; the line is gone for it.
         setPlainFor(text);
+        // A plain ToDo: the local model never reads it as an instruction either.
+        declinedRef.current = text.trim();
         void add(undefined, { plain: true });
       }}
       previewAbove={phone && !inDialog}

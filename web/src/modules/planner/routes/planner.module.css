@@ -76,25 +76,14 @@
   margin-inline-start: auto;
   min-height: var(--touch);
 }
-/* Lead chips before the input (A2, T11): at most two; struck through while the line shows a kind that takes none. */
-.leadChips {
+/* The phone's last row: the line drawn above the field, after it in the DOM (Tab order). */
+.lineAbove {
   display: flex;
-  gap: var(--space-1);
-  align-self: center;
+  flex-direction: column;
 }
-.leadChip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 32px;
-  padding: 0 var(--space-2);
-  border-radius: var(--radius-full);
-  background: var(--surface-raised);
-  color: var(--text-muted);
-  font-size: var(--text-meta);
-  white-space: nowrap;
-}
-.leadStruck {
-  text-decoration: line-through;
+.lineAbove > [data-testid='planner-kind'] {
+  order: -1;
+  margin: 0 0 var(--space-1);
 }
 /* „Zum Beispiel“ and three chips under the field: they fill the field, they never submit. */
 .examples {

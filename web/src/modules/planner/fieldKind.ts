@@ -11,16 +11,16 @@
  * the planner's. Two kinds sure at once: the first of Rechnung, Termin, Einkaufsliste, Link, Notiz, Aufgabe mit
  * Schritten. German only, like the parser.
  */
-import { webAddress } from '@/core/net/webAddress';
+import { trimTrailing, webAddress } from '@/core/net/webAddress';
 import { parseInstruction, type InstructionItem } from '@/core/plan/instructions';
 import { parseCapture, type CaptureFields } from '@/quickCapture/parser';
 import { nameKey } from '@/quickCapture/targets/lookup';
-import { extractLock } from './dueWords';
+import { extractLock, readFieldWithPart } from './dueWords';
 import { looksLikePlan } from './pastePlan';
 
 export type FieldKind =
-  /** An invoice: payee (`fields.title`), amount, deadline when said. */
-  | { kind: 'invoice'; fields: CaptureFields; deadline?: string }
+  /** An invoice: payee (`fields.title`), amount, its deadline (said, or the capture's usual 14 days); `host` of an address kept as its note. */
+  | { kind: 'invoice'; fields: CaptureFields; deadline: string; host?: string }
   /** Entries of the shopping list (one per comma). */
   | { kind: 'list'; names: string[] }
   /** An appointment: a day and a clock time. */
@@ -58,8 +58,8 @@ export interface FieldKindContext {
   items?: readonly InstructionItem[];
 }
 
-/** At most this many steps from one line; a longer list is no sure reading. */
-export const STEPS_MAX = 20;
+/** At most this many steps from one line; a longer list is no sure reading (below core's `STEPS_MAX`). */
+export const FIELD_STEPS_MAX = 20;
 /** At most this many shopping entries from one line. */
 export const LIST_MAX = 20;
 
@@ -91,24 +91,26 @@ function plannerReads(text: string, ctx: FieldKindContext): boolean {
 
 function invoiceOf(text: string, ctx: FieldKindContext): FieldKind | undefined {
   if (!INVOICE_WORD.test(text) || DUNNING_WORD.test(text)) return undefined;
-  // An address in the line is not the invoice's (the parser would make it a bookmark): it is kept as its note.
-  const address = /https?:\/\/\S+/iu.exec(text)?.[0];
-  const line = address ? text.replace(address, ' ').replace(/\s+/gu, ' ').trim() : text;
+  // An address in the line is not the invoice's (the parser would make it a bookmark): kept as its note, through the
+  // gate, and named on the line by its host. One the gate refuses: no sure reading.
+  const token = /https?:\/\/\S+/iu.exec(text)?.[0];
+  const web = token ? webAddress(trimTrailing(token)) : undefined;
+  if (token && !web) return undefined;
+  const line = token ? text.replace(token, ' ').replace(/\s+/gu, ' ').trim() : text;
   const r = parseCapture(line, { now: ctx.now, defaultType: 'todo' });
   const f = r.fields;
   if (r.type !== 'invoice' || f.dunning || !f.amountMinor || f.amountMinor < 1) return undefined;
-  if (!f.title.trim() || (f.currency && f.currency !== 'EUR')) return undefined;
-  // The deadline only when said: the parser's assumed one is dropped (the invoice is then due today, the target's
-  // default, so the plan lists it). A said deadline past the planned days: not a thing of the plan yet – no line.
-  const date = r.notes.includes('assumed-date') ? undefined : f.date;
-  if (date && (date > ctx.until || r.notes.length > 0)) return undefined;
+  if (!f.title.trim() || (f.currency && f.currency !== 'EUR') || !f.date) return undefined;
+  // The deadline the invoice gets – said, or the capture's usual 14 days – is on the line. One past the planned days
+  // is not a thing of the plan yet, a rolled or impossible one is unsure: no line, a ToDo as today.
+  if (f.date > ctx.until || r.notes.some((n) => n !== 'assumed-date')) return undefined;
   const fields: CaptureFields = {
     title: f.title.trim(),
     amountMinor: f.amountMinor,
-    ...(date ? { date } : {}),
-    ...(address ? { note: address } : {}),
+    date: f.date,
+    ...(web ? { note: web.url } : {}),
   };
-  return { kind: 'invoice', fields, ...(date ? { deadline: date } : {}) };
+  return { kind: 'invoice', fields, deadline: f.date, ...(web ? { host: web.host } : {}) };
 }
 
 function eventOf(text: string, ctx: FieldKindContext): FieldKind | undefined {
@@ -151,12 +153,19 @@ function noteOf(text: string): FieldKind | undefined {
   return title ? { kind: 'note', title } : undefined;
 }
 
-function stepsOf(text: string): FieldKind | undefined {
+function stepsOf(text: string, ctx: FieldKindContext): FieldKind | undefined {
   const m = STEPS.exec(text);
   if (!m) return undefined;
   const steps = parts(m[2]!);
-  if (steps.length < 2 || steps.length > STEPS_MAX) return undefined;
-  return { kind: 'steps', title: m[1]!.trim(), steps };
+  if (steps.length < 2 || steps.length > FIELD_STEPS_MAX) return undefined;
+  const title = m[1]!.trim();
+  // The name is stored as it reads: one the field would read a day, a part, minutes or a deadline from („Heute“,
+  // „Haushalt Fr“) is no sure reading – the line could not say what Enter stores.
+  const read = readFieldWithPart(title, ctx.now, ctx.today, true);
+  const f = read.fields;
+  if (read.isBreak || read.hardDue || read.part || f.title !== title) return undefined;
+  if (f.date || f.time || f.estimateMin || f.priority || f.recurrence) return undefined;
+  return { kind: 'steps', title, steps };
 }
 
 /** What the line surely is, or `undefined` (a ToDo, the planner's own reading, or a module that is off). */
@@ -169,7 +178,7 @@ export function fieldKind(raw: string, ctx: FieldKindContext): FieldKind | undef
     ['list', () => listOf(text, ctx)],
     ['bookmark', () => bookmarkOf(text)],
     ['note', () => noteOf(text)],
-    ['steps', () => stepsOf(text)],
+    ['steps', () => stepsOf(text, ctx)],
   ];
   for (const [kind, read] of readers) {
     const got = read();
