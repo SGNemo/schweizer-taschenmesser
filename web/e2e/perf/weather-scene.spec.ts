@@ -98,6 +98,8 @@ const SCENARIOS: Scenario[] = [
 test.use({ timezoneId: BASE.tz, colorScheme: 'light', trace: 'off' });
 
 async function mock(page: Page, s: Scenario) {
+  // Anything not mocked below never reaches the network (the specific routes, registered later, win).
+  await page.route(/^https?:\/\/(?!localhost|127\.0\.0\.1)/, (r) => r.abort());
   const d0 = Date.parse(`${s.local.slice(0, 10)}T12:00:00Z`);
   const dates = Array.from({ length: 7 }, (_, i) =>
     new Date(d0 + i * 864e5).toISOString().slice(0, 10),

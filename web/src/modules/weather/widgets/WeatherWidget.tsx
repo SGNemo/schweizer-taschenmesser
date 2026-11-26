@@ -20,7 +20,7 @@ const WIDE_PX = 520;
  * Overview widget: only what matters today (place, temperature, word, the rain hint), the rest is one tap away in the
  * module. With a forecast the card carries the weather scene as its background (variant B, the one named exception
  * to "a widget is a tone step", MODULE-IDENTITY "Widgets"): the text on the quiet left in the scene's ink, the rain
- * hint as an opaque chip, never moving. "Ruhig" and "Modulfarben: Aus" keep the plain card with the 64 px porthole
+ * hint as an opaque chip, never moving. "Ruhig", "Modulfarben: Aus" and cards wider than one column (`WIDE_PX`) keep the plain card with the 64 px porthole
  * (variant A). No place yet: one calm next step. Reads the cached forecast of the main place, never asks more than the
  * page does; the moon is the page's (`useMoon`), absent while "Mond und Himmelsereignisse" is off.
  */
@@ -33,7 +33,7 @@ export default function WeatherWidget() {
   const lat = settings?.lat ?? 0;
   const moon = useMoon(lat, settings?.lon ?? 0, weather?.forecast.tz, !!weather);
   const scene = useSmallScene(weather, lat, moon);
-  // Wide cards (sizes m and l: two columns or the full row) keep the porthole: the panorama scaled to that width would
+  // Cards wider than the one checked column (sizes m and l, or a single column wider than 520 px) keep the porthole: the panorama scaled to that width would
   // lift ridges and trees into the text rows (only the single-column card is checked for contrast).
   const box = useRef<HTMLDivElement>(null);
   const [wide, setWide] = useState(false);

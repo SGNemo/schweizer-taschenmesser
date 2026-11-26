@@ -106,11 +106,20 @@ describe('weather widget: scene as the background (variant B) or the porthole (v
     const rect = vi
       .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
       .mockReturnValue({ width: 780, height: 205 } as DOMRect);
-    renderWidget();
-    const w = await screen.findByTestId('weather-widget');
-    await waitFor(() => expect(w).toHaveAttribute('data-variant', 'porthole'));
-    rect.mockRestore();
-    vi.unstubAllGlobals();
+    try {
+      renderWidget();
+      const w = await screen.findByTestId('weather-widget');
+      await waitFor(() => expect(w).toHaveAttribute('data-variant', 'porthole'));
+      // The one checked column keeps the scene.
+      cleanup();
+      rect.mockReturnValue({ width: 380, height: 205 } as DOMRect);
+      renderWidget();
+      const narrow = await screen.findByTestId('weather-widget');
+      await waitFor(() => expect(narrow).toHaveAttribute('data-variant', 'scene'));
+    } finally {
+      rect.mockRestore();
+      vi.unstubAllGlobals();
+    }
   });
 
   it.each([
