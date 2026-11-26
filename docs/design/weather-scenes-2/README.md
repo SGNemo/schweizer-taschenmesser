@@ -8,6 +8,6 @@ Brief (maintainer, 2026-11-26, after round 1 was built, with a picture of an ove
 | [STYLES](STYLES.md) | phase 2: three drawing languages on the same three scenes, cost, recommendation, the three questions |
 | `mockups/` | `styles.js` (the three languages), `head2.js`, `p2-stile.html`, `render.mjs` (pictures into `web/.screens/weather-scenes-2/`, never committed) |
 
-**State: stopped after phase 2** – the maintainer picks the direction. Phase 3 (drawing v2, gallery, days, values, copy, a11y, hand-offs) and phase 4 (packages A–D) follow in this folder.
+**Decided at the stop (2026-11-26):** direction B "Facetten", the picture grows, bolts stand and the glow brightens once ([STYLES](STYLES.md)).
 
 Sample data: the invented place "Lindenau", Thursday 2026-11-26.

@@ -22,3 +22,11 @@ Cost note: all three stay far under the element ceiling of round 1 and paint wit
 1. **Direction:** B (recommended), A or C.
 2. **May the picture grow?** Recommended: yes. Desktop stage 280 → **320 px** (the existing guard's limit). Phone: the picture carries only the temperature and the word and is 256 px high; the hint and the chips move directly under it (head with one hint 272 → about 350 px, without a hint about 310 px). Reason: today the chips cover the foreground (K11) – exactly the part where wind, rain and snow are seen. Alternative: keep 280 / 272 and accept that the phone shows mostly sky.
 3. **May bolts move?** Recommended: **no, they stand.** More storm is more drawn bolts (1 / 2 / 3) and a still glow where the main bolt leaves the cloud. Alternative, inside FOCUS and WCAG 2.3.1: the glow brightens once, slowly (1.2 s up, 1.2 s down, one time in the five seconds of opening motion, never a second time, off with reduced motion and "Standbild") – one brightening, far under three per second, but it is the first thing in the app that lights up by itself.
+
+## Decided by the maintainer (2026-11-26, after this stop)
+
+1. **Direction B · Facetten.**
+2. **The picture grows:** desktop stage 320 px; on the phone the picture carries only the temperature and the word, the hint and the chips stand directly under it.
+3. **Bolts stand; the glow where the main bolt leaves the cloud brightens once, slowly** (1.2 s up, 1.2 s down, one time while the opening motion runs, never again; not with reduced motion, "Standbild", "Ruhig" or in a small version).
+
+`mockups/styles.js` and `p2-stile.html` stay as the record of the choice; the drawing every package ports is `mockups/scene.js` + `palette.js`.
