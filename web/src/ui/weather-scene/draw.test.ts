@@ -490,6 +490,56 @@ function absPoints(d: string): number[][] {
   }
   return out;
 }
+/** The furthest x a scene reaches: paths by their points, rects and circles by their boxes, through translate/scale. */
+function rightmost(inner: string): { x: number; what: string } {
+  const doc = new DOMParser().parseFromString(
+    `<svg xmlns="http://www.w3.org/2000/svg">${inner}</svg>`,
+    'image/svg+xml',
+  );
+  let best = { x: -Infinity, what: '' };
+  const walk = (el: Element, ox: number, k: number) => {
+    if (el.tagName === 'defs' || el.tagName === 'clipPath' || el.tagName === 'mask') return;
+    const t = el.getAttribute('transform') ?? '';
+    const tr = /translate\(([-\d.]+)[ ,]/.exec(t);
+    const sc = /scale\(([-\d.]+)/.exec(t);
+    const nx = ox + (tr ? Number(tr[1]) * k : 0);
+    const nk = k * (sc ? Number(sc[1]) : 1);
+    let r = -Infinity;
+    if (el.tagName === 'path' && el.getAttribute('d'))
+      r = Math.max(...absPoints(el.getAttribute('d')!).map((p) => p[0]!));
+    if (el.tagName === 'rect')
+      r = Number(el.getAttribute('x') ?? 0) + Number(el.getAttribute('width') ?? 0);
+    if (el.tagName === 'circle')
+      r = Number(el.getAttribute('cx') ?? 0) + Number(el.getAttribute('r') ?? 0);
+    if (el.tagName === 'ellipse')
+      r = Number(el.getAttribute('cx') ?? 0) + Number(el.getAttribute('rx') ?? 0);
+    if (r > -Infinity && nx + r * nk > best.x)
+      best = {
+        x: nx + r * nk,
+        what: `${el.tagName} ${el.getAttribute('data-part') ?? el.closest('[data-part]')?.getAttribute('data-part') ?? el.closest('[data-layer]')?.getAttribute('data-layer') ?? ''}`,
+      };
+    for (const c of el.children) walk(c, nx, nk);
+  };
+  walk(doc.documentElement, 0, 1);
+  return best;
+}
+
+describe('nothing reaches past the right edge of the picture (e2e/seed/layout-overflow counts SVG geometry)', () => {
+  it.each([...SKY_STATES, ...HEAVY].map((c) => [c[0], c[1], c[2]] as const))('%s', (_n, h, o) => {
+    for (const motion of [false, true])
+      for (const opts of [
+        { quietX: 640 },
+        { phone: true, view: phoneView(412, 256), quietX: G.phone.quietX },
+      ] as SceneOptions[]) {
+        for (const dir of [90, 270]) {
+          const { out } = draw(hourScene({ ...h, dir }, { ...o, motion }), opts);
+          const r = rightmost(out.inner);
+          expect(r.x, r.what).toBeLessThanOrEqual(G.W + 0.05);
+        }
+      }
+  });
+});
+
 describe('phoneView', () => {
   it.each([320, 360, 412, 600, 737, 899])(
     'a %i px phone box never shows left of x 0 and ends at the right edge',

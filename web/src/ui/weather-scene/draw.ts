@@ -749,6 +749,12 @@ const num = (v: number): string => {
   const t = String(Object.is(r, -0) ? 0 : r);
   return t.replace(/^(-?)0\./, '$1.');
 };
+/**
+ * The right edge every shape is cut at (scene units). The picture's right edge is x 1600 – nothing right of it is ever
+ * seen, but a shape that reaches past it still counts as wider than the window (`e2e/seed/layout-overflow`). Inside the
+ * body's translated group it is `W − body x` (see `drawBody`).
+ */
+let LIM = 1600;
 const ARGS: Record<string, number> = { m: 2, l: 2, h: 1, v: 1, q: 4, t: 2, c: 6, s: 4, a: 7, z: 0 };
 /**
  * The same path, written short (A11Y §4 markup ceiling): every command relative, one decimal, no leading zeros. The
@@ -757,8 +763,13 @@ const ARGS: Record<string, number> = { m: 2, l: 2, h: 1, v: 1, q: 4, t: 2, c: 6,
 export function compactPath(d: string): string {
   const tokens = d.match(/[a-zA-Z]|-?(?:\d+\.?\d*|\.\d+)(?:e-?\d+)?/g) ?? [];
   let out = '';
+  // `ux, uy`: where the pen is in the drawing; `x, y`: where the written path is (cut at the right edge `LIM`).
+  let ux = 0;
+  let uy = 0;
   let x = 0;
   let y = 0;
+  let usx = 0;
+  let usy = 0;
   let sx = 0;
   let sy = 0;
   let i = 0;
@@ -777,14 +788,41 @@ export function compactPath(d: string): string {
     last = c === 'm' ? 'l' : c;
   };
   const r = (v: number): number => Math.round(v * 10) / 10;
+  const cx = (v: number): number => Math.min(LIM, v);
+  /** A straight piece to the drawing's (tx, ty): where it crosses the edge, the crossing comes first. */
+  const lineTo = (tx: number, ty: number): void => {
+    if (ux <= LIM !== tx <= LIM && tx !== ux) {
+      const yi = r(uy + ((ty - uy) * (LIM - ux)) / (tx - ux));
+      put('l', [r(LIM - x), r(yi - y)]);
+      x = LIM;
+      y = yi;
+    }
+    const nx = cx(tx);
+    const dx = r(nx - x);
+    const dy = r(ty - y);
+    if (dy === 0) put('h', [dx]);
+    else if (dx === 0) put('v', [dy]);
+    else put('l', [dx, dy]);
+    x = nx;
+    y = ty;
+    ux = tx;
+    uy = ty;
+  };
   while (i < tokens.length) {
     const tk = tokens[i]!;
     if (/[a-zA-Z]/.test(tk)) {
       cmd = tk;
       i++;
       if (cmd === 'z' || cmd === 'Z') {
+        // the closing piece may cross the edge too
+        if (ux <= LIM !== usx <= LIM && usx !== ux) {
+          const yi = r(uy + ((usy - uy) * (LIM - ux)) / (usx - ux));
+          put('l', [r(LIM - x), r(yi - y)]);
+        }
         out += 'z';
         last = 'z';
+        ux = usx;
+        uy = usy;
         x = sx;
         y = sy;
         continue;
@@ -795,37 +833,44 @@ export function compactPath(d: string): string {
     const a = tokens.slice(i, i + n).map(Number);
     i += n;
     const rel = cmd === lower;
-    const ax = (k: number): number => r(rel ? x + a[k]! : a[k]!);
-    const ay = (k: number): number => r(rel ? y + a[k]! : a[k]!);
-    if (lower === 'h') {
-      const nx = r(rel ? x + a[0]! : a[0]!);
-      put('h', [nx - x]);
-      x = nx;
-    } else if (lower === 'v') {
-      const ny = r(rel ? y + a[0]! : a[0]!);
-      put('v', [ny - y]);
-      y = ny;
+    const px = (k: number): number => r(rel ? ux + a[k]! : a[k]!);
+    const py = (k: number): number => r(rel ? uy + a[k]! : a[k]!);
+    if (lower === 'h') lineTo(px(0), uy);
+    else if (lower === 'v') lineTo(ux, r(rel ? uy + a[0]! : a[0]!));
+    else if (lower === 'l') lineTo(px(0), py(1));
+    else if (lower === 'm') {
+      const tx = px(0);
+      const ty = py(1);
+      put('m', [r(cx(tx) - x), r(ty - y)]);
+      ux = usx = tx;
+      uy = usy = ty;
+      x = sx = cx(tx);
+      y = sy = ty;
+      cmd = rel ? 'l' : 'L';
     } else if (lower === 'a') {
-      const nx = ax(5);
-      const ny = ay(6);
+      const tx = px(5);
+      const ty = py(6);
+      const nx = cx(tx);
       // the two flags need no separator (SVG path grammar): `a5 5 0 1110 0`
       put('a', [a[0]!, a[1]!, a[2]!]);
-      const dy = num(ny - y);
+      const dy = num(ty - y);
       out += ` ${a[3] ? 1 : 0}${a[4] ? 1 : 0}${num(nx - x)}${dy.startsWith('-') ? '' : ' '}${dy}`;
       last = 'a+';
       x = nx;
-      y = ny;
+      y = ty;
+      ux = tx;
+      uy = ty;
     } else {
+      // curves: control and end points held at the edge (only ever the last units of a crown or a billow)
       const vals: number[] = [];
-      for (let k = 0; k < n; k += 2) vals.push(ax(k) - x, ay(k + 1) - y);
+      for (let k = 0; k < n; k += 2) vals.push(r(cx(px(k)) - x), r(py(k + 1) - y));
       put(lower, vals);
-      x = ax(n - 2);
-      y = ay(n - 1);
-      if (lower === 'm') {
-        sx = x;
-        sy = y;
-        cmd = rel ? 'l' : 'L';
-      }
+      const tx = px(n - 2);
+      const ty = py(n - 1);
+      x = cx(tx);
+      y = ty;
+      ux = tx;
+      uy = ty;
     }
   }
   return out;
@@ -857,12 +902,21 @@ function jag(line: readonly Pt[], seed: number, amp: number, step: number): Pt[]
   }
   return out;
 }
-const circ = (x: number, y: number, r: number): string =>
-  `M${f(x - r)},${f(y)}a${f(r)},${f(r)} 0 1,1 ${f(2 * r)},0a${f(r)},${f(r)} 0 1,1 ${f(-2 * r)},0Z`;
+/** An ellipse, cut at `lim` (the right edge): the part left of it, closed along the edge. */
+function ellCut(cx: number, cy: number, rx: number, ry: number, lim: number): string {
+  if (cx + rx <= lim)
+    return `M${f(cx - rx)},${f(cy)}a${f(rx)},${f(ry)} 0 1,1 ${f(2 * rx)},0a${f(rx)},${f(ry)} 0 1,1 ${f(-2 * rx)},0Z`;
+  if (cx - rx >= lim) return '';
+  const dy = ry * Math.sqrt(1 - ((lim - cx) / rx) ** 2);
+  // From the lower cut point round the left side to the upper one: clockwise on screen, the same winding as a whole
+  // circle (`a … 0 1,1`), so cut and whole lobes in one path never cancel each other out (non-zero fill).
+  return `M${f(lim)},${f(cy + dy)}A${f(rx)},${f(ry)} 0 ${cx < lim ? 1 : 0},1 ${f(lim)},${f(cy - dy)}Z`;
+}
+const circ = (x: number, y: number, r: number, lim = LIM): string => ellCut(x, y, r, r, lim);
 const rrect = (x: number, y: number, w: number, h: number, r: number): string =>
   `M${f(x + r)},${f(y)}h${f(w - 2 * r)}a${f(r)},${f(r)} 0 0,1 0,${f(h)}h${f(-(w - 2 * r))}a${f(r)},${f(r)} 0 0,1 0,${f(-h)}Z`;
-const ell = (cx: number, cy: number, rx: number, ry: number): string =>
-  `M${f(cx - rx)},${f(cy)}a${f(rx)},${f(ry)} 0 1,1 ${f(2 * rx)},0a${f(rx)},${f(ry)} 0 1,1 ${f(-2 * rx)},0Z`;
+const ell = (cx: number, cy: number, rx: number, ry: number, lim = LIM): string =>
+  ellCut(cx, cy, rx, ry, lim);
 function smooth(p: readonly Pt[], closeTo?: number): string {
   let d = `M${f(p[0]![0])},${f(p[0]![1])}`;
   for (let i = 1; i < p.length - 1; i++)
@@ -1130,6 +1184,44 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
       { cx: 0.5, cy: 0.5, r: 0.5 },
       true,
     );
+  type GlowStop = readonly [number, string, number];
+  /**
+   * A radial glow (circle or ellipse, optionally turned): a rect cut at the right edge (`LIM`), filled with the same
+   * radial gradient in user space – the same pixels inside the picture, nothing reaching past its edge.
+   */
+  const glow = (
+    cx: number,
+    cy: number,
+    rx: number,
+    ry: number,
+    stops: readonly GlowStop[],
+    extra: Record<string, Attr> = {},
+    rot = 0,
+  ): string => {
+    const a = (rot * Math.PI) / 180;
+    const hw = rot ? Math.hypot(rx * Math.cos(a), ry * Math.sin(a)) : rx;
+    const hh = rot ? Math.hypot(rx * Math.sin(a), ry * Math.cos(a)) : ry;
+    const x0 = cx - hw;
+    const x1 = Math.min(cx + hw, LIM);
+    if (x1 <= x0) return '';
+    const shape =
+      ry !== rx || rot
+        ? `${rot ? `rotate(${rot} ${f(cx)} ${f(cy)}) ` : ''}translate(${f(cx)} ${f(cy)}) scale(1 ${Math.round((ry / rx) * 1000) / 1000}) translate(${f(-cx)} ${f(-cy)})`
+        : null;
+    const fill = grad(
+      stops,
+      { gradientUnits: 'userSpaceOnUse', cx: f(cx), cy: f(cy), r: f(rx), gradientTransform: shape },
+      true,
+    );
+    return el('rect', {
+      x: f(x0),
+      y: f(cy - hh),
+      width: f(x1 - x0),
+      height: f(2 * hh),
+      fill,
+      ...extra,
+    });
+  };
   const lightRight = (x: number): boolean => x < body[0];
   const hk = (x: number): number => (x <= q0 ? 0.85 : x >= q1 ? 0 : (0.85 * (q1 - x)) / (q1 - q0));
   const hzc = new Map<string, string>();
@@ -1176,13 +1268,10 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
     ),
   });
   if (GLOW.has(key))
-    add('ellipse', {
-      cx: f(body[0]),
-      cy: 236,
-      rx: 520,
-      ry: 120,
-      fill: radial(`glow-${key}`, 0.55, 0),
-    });
+    out += glow(body[0], 236, 520, 120, [
+      [0, `glow-${key}`, 0.55],
+      [1, `glow-${key}`, 0],
+    ]);
   if (s.heat && !plain)
     add('rect', {
       x: 0,
@@ -1237,7 +1326,17 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
   /* ---- body ---- */
   let bodyR = 0;
   let bodyDrawn = false;
+  // The body is drawn in its own translated group: there the right edge is `W − body x`.
   const drawBody = (pale: boolean): void => {
+    const prev = LIM;
+    LIM = W - body[0];
+    try {
+      drawBodyAt(pale);
+    } finally {
+      LIM = prev;
+    }
+  };
+  const drawBodyAt = (pale: boolean): void => {
     if (!hasBody || bodyDrawn) return;
     bodyDrawn = true;
     const ev = eventBody(pale);
@@ -1250,10 +1349,13 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
       const R = 24 * moonSize;
       bodyR = R;
       const k = moonIllum;
-      g += el('circle', { r: f(R * 2.7), fill: radial('moon', pale ? 0.5 : 0.34, 0) });
+      g += glow(0, 0, R * 2.7, R * 2.7, [
+        [0, 'moon', pale ? 0.5 : 0.34],
+        [1, 'moon', 0],
+      ]);
       if (mode === 'veil')
-        g += el('circle', {
-          r: f(R * 2.1),
+        g += el('path', {
+          d: circ(0, 0, R * 2.1),
           fill: 'none',
           stroke: tok('moon'),
           'stroke-width': 2.2,
@@ -1291,21 +1393,14 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
       bodyR = R;
       const col = pale ? 'sun-pale' : low ? 'sun-low' : 'sun';
       const rays = pale ? 0 : s.heat ? 16 : s.sun >= 3 ? 12 : s.sun === 2 ? 8 : 0;
-      g += el('circle', {
-        r: f(R * 3.4),
-        fill: grad(
-          [
-            [0, 'sun-core', pale ? 0.5 : 0.6],
-            [0.45, 'sun-core', 0.22],
-            [1, 'sun-core', 0],
-          ],
-          { cx: 0.5, cy: 0.5, r: 0.5 },
-          true,
-        ),
-      });
+      g += glow(0, 0, R * 3.4, R * 3.4, [
+        [0, 'sun-core', pale ? 0.5 : 0.6],
+        [0.45, 'sun-core', 0.22],
+        [1, 'sun-core', 0],
+      ]);
       if (mode === 'veil')
-        g += el('circle', {
-          r: f(R * 2.2),
+        g += el('path', {
+          d: circ(0, 0, R * 2.2),
           fill: 'none',
           stroke: 'white',
           'stroke-width': 2.4,
@@ -1407,36 +1502,35 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
       const hk2 = s.phase === 'night' ? 'night' : s.phase;
       const ho = skyOffsets(hk2, th);
       const hsCol = B.mix(`sky-${hk2}-0`, `sky-${hk2}-${ho.length - 1}`, 0.45);
-      add('ellipse', {
-        cx: f(body[0] - 6),
-        cy: f(body[1] - 4),
-        rx: 196,
-        ry: 92,
-        fill: grad(
-          [
-            [0, hsCol, 1],
-            [0.5, hsCol, 0.96],
-            [0.78, hsCol, 0.55],
-            [1, hsCol, 0],
-          ],
-          { cx: 0.5, cy: 0.5, r: 0.5 },
-          true,
-        ),
-        'data-layer': 'sky',
-        'data-part': 'opening',
-      });
+      out += glow(
+        body[0] - 6,
+        body[1] - 4,
+        196,
+        92,
+        [
+          [0, hsCol, 1],
+          [0.5, hsCol, 0.96],
+          [0.78, hsCol, 0.55],
+          [1, hsCol, 0],
+        ],
+        { 'data-layer': 'sky', 'data-part': 'opening' },
+      );
       if (dark) {
         open('stars');
         stars(12, true);
         close();
       }
-      add('circle', {
-        cx: f(body[0]),
-        cy: f(body[1]),
-        r: 170,
-        fill: radial(DT[4]!, 0.24, 0, 0.2),
-        'data-part': 'spill',
-      });
+      out += glow(
+        body[0],
+        body[1],
+        170,
+        170,
+        [
+          [0.2, DT[4]!, 0.24],
+          [1, DT[4]!, 0],
+        ],
+        { 'data-part': 'spill' },
+      );
       drawBody(false);
       open('clouds', ` data-part="banks"${drift}`);
       G.banks.forEach((b, bi) => {
@@ -1474,17 +1568,31 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
       close();
     }
     if (mode === 'schein') {
-      add('circle', {
-        cx: f(body[0]),
-        cy: f(body[1]),
-        r: 120,
-        fill: radial(DT[4]!, 0.5, 0),
-        'data-part': 'schein',
-      });
+      out += glow(
+        body[0],
+        body[1],
+        120,
+        120,
+        [
+          [0, DT[4]!, 0.5],
+          [1, DT[4]!, 0],
+        ],
+        { 'data-part': 'schein' },
+      );
       drawBody(true);
     }
   }
   const cumulus = (x: number, y: number, sc: number, shape: number): string => {
+    // drawn in its own translated, scaled (and sheared) group: the right edge in its units, less the shear's reach
+    const prev = LIM;
+    LIM = (W - x) / sc - (lean ? Math.abs(Math.tan((lean * 55 * Math.PI) / 180)) * 60 : 0);
+    try {
+      return cumulusAt(x, y, sc, shape);
+    } finally {
+      LIM = prev;
+    }
+  };
+  const cumulusAt = (x: number, y: number, sc: number, shape: number): string => {
     const Sh = G.cloudShapes[shape]!;
     let d = '';
     let inner = '';
@@ -1559,13 +1667,18 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
   // The body stays seen in every sky (CONCEPT §0 sentence 9): pale in a soft light on the cloud when the deck,
   // the storm base or dense fog hides its disc (the mockup drew only the light there – closed the smallest way).
   if (mode === 'schein' && !bodyDrawn) {
-    add('circle', {
-      cx: f(body[0]),
-      cy: f(s.thunder >= 2 ? Math.max(40, body[1] - 30) : body[1]),
-      r: s.thunder >= 2 ? 110 : 120,
-      fill: radial(DT[4]!, s.thunder >= 2 ? 0.42 : 0.5, 0),
-      'data-part': 'schein',
-    });
+    const sr = s.thunder >= 2 ? 110 : 120;
+    out += glow(
+      body[0],
+      s.thunder >= 2 ? Math.max(40, body[1] - 30) : body[1],
+      sr,
+      sr,
+      [
+        [0, DT[4]!, s.thunder >= 2 ? 0.42 : 0.5],
+        [1, DT[4]!, 0],
+      ],
+      { 'data-part': 'schein' },
+    );
     drawBody(true);
   }
 
@@ -1604,23 +1717,20 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
   const fogC = B.mix(C.haze, 'white', 0.55);
   let fogG: string | null = null;
   const fogBand = (y: number, h: number, op: number, x0?: number, w?: number): void => {
-    fogG ??= grad(
+    // the band's gradient spans its whole length in user space; the rect stops at the picture's right edge
+    const bx = x0 == null ? q0 - 80 : Math.max(x0, q0 - 80);
+    const bw = w ?? W + 200 - q0;
+    const g = grad(
       [
         [0, fogC, 0],
         [0.22, fogC, 1],
         [0.8, fogC, 1],
         [1, fogC, 0],
       ],
-      { x1: 0, y1: 0, x2: 1, y2: 0 },
+      { x1: f(bx), y1: 0, x2: f(bx + bw), y2: 0, gradientUnits: 'userSpaceOnUse' },
     );
-    add('rect', {
-      x: x0 == null ? q0 - 80 : Math.max(x0, q0 - 80),
-      y,
-      width: w ?? W + 200 - q0,
-      height: h,
-      fill: fogG,
-      opacity: op,
-    });
+    fogG ??= g;
+    add('rect', { x: f(bx), y, width: f(Math.min(bw, W - bx)), height: h, fill: g, opacity: op });
   };
   if (farOp > 0) {
     open('ridgeAlp', farOp < 1 ? ` opacity="${farOp}"` : '');
@@ -2073,7 +2183,7 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
   const gy = (x: number): number => yAt(G.ground, x) + 2;
   path(smooth(G.ground, H), gfill, { 'data-part': 'ground' });
   path(
-    'M-20,320L-20,307Q240,298 520,309T990,309Q1160,318 1340,311Q1470,292 1620,290L1620,320Z',
+    'M-20,320L-20,307Q240,298 520,309T990,309Q1160,318 1340,311Q1461.3,293.3 1600,290.3L1600,320Z',
     cover2 ? C.snowShade : C.near,
     { opacity: cover2 ? 0.5 : 0.32, 'data-part': 'fold' },
   );
@@ -2174,12 +2284,10 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
   building(G.shed, false);
   building(G.cabin, true);
   if (C.lightsOn)
-    add('circle', {
-      cx: G.cabin[0] + 62,
-      cy: G.cabin[1] - 14,
-      r: 30,
-      fill: radial('window', 0.3, 0),
-    });
+    out += glow(G.cabin[0] + 62, G.cabin[1] - 14, 30, 30, [
+      [0, 'window', 0.3],
+      [1, 'window', 0],
+    ]);
   let fd = '';
   [
     [1384, 1406],
@@ -2305,7 +2413,7 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
     add('rect', {
       x: q0 - 80,
       y: top,
-      width: W + 200 - q0,
+      width: W - (q0 - 80),
       height: H - top,
       fill: fogG ?? fogC,
       opacity: 0.24,
@@ -2530,15 +2638,18 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
       const q = prng(131);
       let md = '';
       const rot = (M.rot * Math.PI) / 180;
-      const o2 = el('ellipse', {
-        cx: M.cx,
-        cy: M.cy,
-        rx: M.rx,
-        ry: M.ry,
-        fill: radial('white', 1, 0),
-        opacity: M.op,
-        transform: `rotate(${M.rot} ${M.cx} ${M.cy})`,
-      });
+      const o2 = glow(
+        M.cx,
+        M.cy,
+        M.rx,
+        M.ry,
+        [
+          [0, 'white', 1],
+          [1, 'white', 0],
+        ],
+        { opacity: M.op },
+        M.rot,
+      );
       for (let j = 0; j < M.n; j++) {
         const u = (q() * 2 - 1) * M.rx * 0.9;
         const v = (q() + q() - 1) * M.ry * 0.7;
@@ -2586,14 +2697,17 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
     let o2 = '';
     const op = A.op[0]! + A.op[1]! * amt;
     const gl = A.glow;
-    o2 += el('ellipse', {
-      cx: Math.max(gl[0]!, A.left + 200),
-      cy: gl[1],
-      rx: f(gl[2]! * (0.6 + 0.4 * amt)),
-      ry: f(gl[3]! * (0.5 + 0.5 * amt)),
-      fill: radial('aurora-1', 0.3 * amt + 0.08, 0),
-      'data-part': 'auroraGlow',
-    });
+    o2 += glow(
+      Math.max(gl[0]!, A.left + 200),
+      gl[1]!,
+      f(gl[2]! * (0.6 + 0.4 * amt)),
+      f(gl[3]! * (0.5 + 0.5 * amt)),
+      [
+        [0, 'aurora-1', 0.3 * amt + 0.08],
+        [1, 'aurora-1', 0],
+      ],
+      { 'data-part': 'auroraGlow' },
+    );
     const fill = grad(
       [
         [0, 'aurora-3', 0],
@@ -2651,36 +2765,22 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
             transform: `rotate(${a})`,
           });
         }
-        o2 += el('circle', {
-          r: R * 2.8,
-          fill: grad(
-            [
-              [0, 'white', 0.85],
-              [0.36, 'white', 0.45],
-              [1, 'white', 0],
-            ],
-            { cx: 0.5, cy: 0.5, r: 0.5 },
-            true,
-          ),
-        });
+        o2 += glow(0, 0, R * 2.8, R * 2.8, [
+          [0, 'white', 0.85],
+          [0.36, 'white', 0.45],
+          [1, 'white', 0],
+        ]);
         o2 +=
           el('g', { fill: 'white', opacity: 0.42, 'data-part': 'corona' }, petals) +
           el('circle', { r: R, fill: tok('eclipse-disc') });
         return wrapBody(o2);
       }
       const amt = ev === 'solarPartial' ? amount(0.5) : 0.85;
-      o2 += el('circle', {
-        r: R * 3.4,
-        fill: grad(
-          [
-            [0, 'sun-core', 0.6 * (1 - amt * 0.7)],
-            [0.45, 'sun-core', 0.22 * (1 - amt * 0.7)],
-            [1, 'sun-core', 0],
-          ],
-          { cx: 0.5, cy: 0.5, r: 0.5 },
-          true,
-        ),
-      });
+      o2 += glow(0, 0, R * 3.4, R * 3.4, [
+        [0, 'sun-core', 0.6 * (1 - amt * 0.7)],
+        [0.45, 'sun-core', 0.22 * (1 - amt * 0.7)],
+        [1, 'sun-core', 0],
+      ]);
       let disc =
         el('circle', { r: R, fill: tok('sun') }) +
         (ev === 'solarAnnular'
@@ -2729,7 +2829,10 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
         });
         return wrapBody(o2);
       }
-      o2 += el('circle', { r: f(Rm * 2.7), fill: radial('moon', pale ? 0.5 : 0.34, 0) });
+      o2 += glow(0, 0, Rm * 2.7, Rm * 2.7, [
+        [0, 'moon', pale ? 0.5 : 0.34],
+        [1, 'moon', 0],
+      ]);
       o2 += el('circle', { r: Rm, fill: tok('moon') });
       o2 += el('path', {
         d:
