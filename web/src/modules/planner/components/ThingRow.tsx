@@ -25,6 +25,7 @@ import { compartmentId, RowCompartment } from './RowCompartment';
 import { carrierOf } from './carrier';
 import { PilePanel } from './PilePanel';
 import { usePileOf, type PileData } from './pileContext';
+import { useMeasured } from './measureShown';
 import { stepsFact, useRoutineMenu, useStepsFoot, type StepsFoot } from './steps';
 import styles from '../routes/planner.module.css';
 
@@ -283,7 +284,22 @@ export function ThingRow({
         }
       : undefined;
 
-  const duration = row.approx ? t.planner.row.approx(compact(row.minutes)) : compact(row.minutes);
+  // Z1 (package 8): a length taken from measured time says so until it is set by hand; the phone shows the minutes alone
+  // and keeps the whole text for a screen reader.
+  const measured = useMeasured(row.item, row.entry?.durationMin, row.minutes);
+  const duration = measured ? (
+    <>
+      <span aria-hidden="true">
+        {compact(row.minutes)}
+        <span className={styles.asLast}>{` · ${t.planner.measure.asLast}`}</span>
+      </span>
+      <span className="sr-only">{t.planner.measure.asLastFull(compact(row.minutes))}</span>
+    </>
+  ) : row.approx ? (
+    t.planner.row.approx(compact(row.minutes))
+  ) : (
+    compact(row.minutes)
+  );
   const facts: ReactNode[] = [];
   // Direction A: the row is one line – title, chips, minutes, lock, ⋯. The source is no fact of the meta any more (the
   // row's name and its lead say it); the meta holds only what is particular to this thing (a deadline, „war Mo“ …).

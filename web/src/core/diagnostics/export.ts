@@ -81,7 +81,9 @@ async function recordCounts(
   for (const m of manifests) {
     if (!active.has(m.id) || NO_COUNTS.has(m.id)) continue;
     let total = 0;
-    for (const c of Object.keys(m.dataSchema.collections)) {
+    for (const [c, def] of Object.entries(m.dataSchema.collections)) {
+      // A personal collection (how long things took him) is not even counted.
+      if (def.personal) continue;
       try {
         total += await db
           .table(tableName(m.id, c))

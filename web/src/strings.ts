@@ -9507,6 +9507,9 @@ export const de = {
         expandRows: 'Zeilen aufklappen',
         expandRowsHelp:
           'Ein Tipp auf den Titel zeigt das Ding im Planer. Aus: der Titel öffnet es in seinem Modul.',
+        measurePropose: 'Aus gemessener Zeit vorschlagen',
+        measureProposeHelp:
+          'Ein neues Ding ohne Minuten bekommt die Zeit, die es die letzten Male mit „Fokus starten“ oder „Los“ gebraucht hat. Aus: nichts wird mehr gemessen, Gemessenes bleibt.',
         // Planner hub 2, package 2 (COPY P10): one switch per area.
         pileMoney: 'Stapel als eine Zeile: Finanzen',
         pileMail: 'Stapel als eine Zeile: E-Mail',
@@ -9529,6 +9532,22 @@ export const de = {
       failed: 'Das hat nicht geklappt. Es ist nichts verändert.',
       tick: (step: string) => `„${step}“ abhaken`,
       more: (n: number) => `${n} weitere`,
+    },
+    /** Measured duration (package 8, COPY Z1–Z3). */
+    measure: {
+      /** Z1: after the minutes in the row („20 Min · wie zuletzt“). */
+      asLast: 'wie zuletzt',
+      asLastFull: (min: string) => `${min} · wie zuletzt`,
+      /** Z2: above the choices of „Dauer …“, newest first. */
+      last: (minutes: number[]) => `zuletzt ${minutes.join(', ')} Min`,
+      /** Z3: the quiet button beside the switch. */
+      deleteAll: 'Gemessene Zeiten löschen',
+      deleted: 'Gemessene Zeiten gelöscht.',
+      /** Z3's confirm: what goes, what stays. */
+      deleteHint:
+        'Minuten, die schon im Plan stehen, bleiben. „Rückgängig“ holt die Zeiten zurück.',
+      /** Z3 with nothing measured yet. */
+      none: 'Noch nichts gemessen.',
     },
     // A thing with steps and „Los“ (planner hub 2, package 5a; COPY B1, B3–B7, B10, B16, B19, B23–B26).
     steps: {

@@ -33,7 +33,7 @@ import { lateMoneyDue } from './late';
 import { migratePins } from './migrateModel';
 import { foldRows, loadPileParts, pileAreas } from './piles';
 import { itemKeyOf, plannerRepos, putRow, type PlannerDb, type PlannerRepos } from './repo';
-import type { AssignmentRow, PlanItemRow } from './schema';
+import { planLength, type AssignmentRow, type PlanItemRow } from './schema';
 import { planSettings, type PlannerSettings } from './settings';
 
 export const LAST_RUN_KEY = 'planner.lastRun';
@@ -234,7 +234,7 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
     const dueAny = row?.due?.hard ? row.due : (e.due ?? row?.due);
     // The engine places by day: a deadline's hour (`due.time`, package 5b) never reaches it.
     const due = dueAny ? { date: dueAny.date, hard: dueAny.hard } : undefined;
-    const durationMin = row?.durationMin ?? e.durationMin;
+    const durationMin = planLength(row, e.durationMin);
     // A fixed block (S4) moves things, so it is an engine field and enters the hash with the items.
     const fixed = fixedOf(e);
     items.push({

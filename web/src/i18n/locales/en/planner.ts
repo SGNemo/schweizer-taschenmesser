@@ -53,6 +53,9 @@ export const planner: Strings['planner'] = {
       expandRows: 'Expand rows',
       expandRowsHelp:
         'A tap on the title shows the thing in the planner. Off: the title opens it in its module.',
+      measurePropose: 'Propose from measured time',
+      measureProposeHelp:
+        'A new thing without minutes gets the time it took recently with “Start focus” or “Go”. Off: nothing more is measured; what was measured stays.',
       pileMoney: 'Piles as one row: finances',
       pileMail: 'Piles as one row: mail',
       pileHelp:
@@ -71,6 +74,15 @@ export const planner: Strings['planner'] = {
     failed: 'That did not work. Nothing was changed.',
     tick: (step: string) => `Tick “${step}”`,
     more: (n: number) => `${n} more`,
+  },
+  measure: {
+    asLast: 'as last time',
+    asLastFull: (min: string) => `${min} · as last time`,
+    last: (minutes: number[]) => `last ${minutes.join(', ')} min`,
+    deleteAll: 'Delete measured times',
+    deleted: 'Measured times deleted.',
+    deleteHint: 'Minutes already in the plan stay. “Undo” brings the times back.',
+    none: 'Nothing measured yet.',
   },
   steps: {
     count: (n: number) => (n === 1 ? '1 step' : `${n} steps`),

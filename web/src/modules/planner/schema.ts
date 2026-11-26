@@ -70,6 +70,11 @@ export const itemSchema = z.object({
    * for it; a session moved to another day asks again. Never read by the run.
    */
   skipped: z.string().regex(DATE_RE).optional(),
+  /**
+   * `durationMin` came from measured time (v7, package 8): a new thing without minutes took the median of its last
+   * records. The row says Z1 „20 Min · wie zuletzt“ until its minutes are set by hand („Dauer …“ clears both).
+   */
+  measured: z.boolean().optional(),
   order: z.number().default(0),
 });
 
@@ -107,7 +112,38 @@ export const assignmentSchema = z.object({
   to: z.string().regex(TIME_RE).optional(),
 });
 
+/**
+ * The length the plan works with: its own row's over the source's – except a measured one (package 8), which only stood
+ * in for a missing estimate and gives way as soon as the source has one (set in ToDos, say).
+ */
+export function planLength(
+  row: Pick<PlanItemRow, 'durationMin' | 'measured'> | undefined,
+  source: number | undefined,
+): number | undefined {
+  if (row?.measured && source !== undefined) return source;
+  return row?.durationMin ?? source;
+}
+
+/** Longest record (8 h): a timer left running teaches nothing. */
+export const MEASURE_MAX_MIN = 480;
+
+/** Longest key: a longer title is compared by its beginning (`measure.ts capped`). */
+export const MEASURE_KEY_MAX = 240;
+
+/**
+ * One measured duration (package 8, CONCEPT-ROWS idea 8): the minutes a focus round or a „Los“ step ran, pauses
+ * removed. `key` names „the same thing“ (`measure.ts measureKey`), `on` the day it was recorded. At most five per key –
+ * pruned inside the recording action. Synced between his own devices like the plan; never exported, copied, offered to
+ * the data API, an assistant or a diagnosis.
+ */
+export const measureSchema = z.object({
+  key: z.string().min(1).max(MEASURE_KEY_MAX),
+  minutes: z.number().int().min(1).max(MEASURE_MAX_MIN),
+  on: z.string().regex(DATE_RE),
+});
+
 export type PlanBlockerRow = z.output<typeof blockerSchema>;
 export type PlanDayRow = z.output<typeof daySchema>;
 export type PlanItemRow = z.output<typeof itemSchema>;
 export type AssignmentRow = z.output<typeof assignmentSchema>;
+export type MeasureRow = z.output<typeof measureSchema>;

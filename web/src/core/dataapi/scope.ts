@@ -20,9 +20,12 @@ export const BLOCKED_MODULES: readonly string[] = [
 export function apiCollections(manifest: ModuleManifest): string[] {
   if (manifest.dataApi === false || manifest.retired || BLOCKED_MODULES.includes(manifest.id))
     return [];
-  return Object.entries(manifest.dataSchema.collections)
-    .filter(([, def]) => !def.local && def.dataApi !== false)
-    .map(([name]) => name);
+  return (
+    Object.entries(manifest.dataSchema.collections)
+      // A personal collection (`CollectionDef.personal`) is never offered, whatever the module says.
+      .filter(([, def]) => !def.local && def.dataApi !== false && !def.personal)
+      .map(([name]) => name)
+  );
 }
 
 export const isDataApiModule = (manifest: ModuleManifest): boolean =>

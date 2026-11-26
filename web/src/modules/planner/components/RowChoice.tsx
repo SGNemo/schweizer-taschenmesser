@@ -1,3 +1,4 @@
+import { useLiveQuery } from 'dexie-react-hooks';
 import { type KeyboardEvent, useState } from 'react';
 import type { PlannableEntry } from '@/core/modules/contributions';
 import { dayName } from '@/core/plan/explain';
@@ -19,6 +20,7 @@ import {
   setPart,
 } from '../actions';
 import { BOARD_DAYS } from '../calendar';
+import { measureKey, recordsOf } from '../measure';
 import { compact } from './capacity';
 import styles from '../routes/planner.module.css';
 
@@ -260,18 +262,33 @@ export function RowChoice({
     );
   return (
     <Dialog open onClose={onClose} title={heading}>
+      <MeasuredLine entry={choice.entry} />
       <Chips label={heading}>
-        {ESTIMATE_CHOICES.map((min) => (
-          <Chip
-            key={min}
-            label={compact(min)}
-            selected={choice.current === min}
-            onClick={() => pickEstimate(min)}
-          />
-        ))}
+        {/* The length the row shows is always one of them (a measured 10 or 20, package 8), chosen. */}
+        {[...new Set([...ESTIMATE_CHOICES, ...(choice.current ? [choice.current] : [])])]
+          .sort((a, b) => a - b)
+          .map((min) => (
+            <Chip
+              key={min}
+              label={compact(min)}
+              selected={choice.current === min}
+              onClick={() => pickEstimate(min)}
+            />
+          ))}
       </Chips>
     </Dialog>
   );
+}
+
+/** Z2 above the choices of „Dauer …“ (package 8): the last measured minutes of this thing, newest first. */
+function MeasuredLine({ entry }: { entry: PlannableEntry }) {
+  const key = measureKey(entry);
+  const minutes = useLiveQuery(
+    async () => (key ? (await recordsOf(key)).map((r) => r.minutes) : []),
+    [key],
+  );
+  if (!minutes?.length) return null;
+  return <p className={styles.measuredLine}>{t.planner.measure.last(minutes)}</p>;
 }
 
 /**

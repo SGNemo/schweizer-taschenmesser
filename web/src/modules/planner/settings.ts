@@ -88,6 +88,12 @@ export const plannerSettingsSchema = z.object({
    */
   pileMoney: z.boolean().optional(),
   pileMail: z.boolean().optional(),
+  /**
+   * „Aus gemessener Zeit vorschlagen“ (package 8, COPY Z3): a focus round or a „Los“ step records its minutes, and a
+   * new thing without minutes takes the median of its last records. Off: nothing is recorded or proposed; what was
+   * measured stays until „Gemessene Zeiten löschen“.
+   */
+  measurePropose: z.boolean(),
 });
 export type PlannerSettings = z.output<typeof plannerSettingsSchema>;
 
@@ -110,6 +116,7 @@ export const DEFAULT_PLANNER_SETTINGS: PlannerSettings = {
   overloadToast: true,
   dayEnd: '',
   expandRows: true,
+  measurePropose: true,
 };
 
 /** The day end of the settings as 'HH:mm'; `undefined` = none (empty or not readable). */
@@ -156,6 +163,8 @@ const s = () => t.planner.meta.settings;
 export const settings: ModuleSettings = {
   schema: plannerSettingsSchema,
   defaults: DEFAULT_PLANNER_SETTINGS,
+  // „Gemessene Zeiten löschen“ right after its switch (package 8, COPY Z3).
+  extra: { after: 'measurePropose', component: () => import('./components/MeasureSettings') },
   fields: [
     {
       key: 'availableWeekday',
@@ -311,6 +320,16 @@ export const settings: ModuleSettings = {
       },
       get help() {
         return s().pileHelp;
+      },
+    },
+    {
+      key: 'measurePropose',
+      type: 'boolean',
+      get label() {
+        return s().measurePropose;
+      },
+      get help() {
+        return s().measureProposeHelp;
       },
     },
     {
