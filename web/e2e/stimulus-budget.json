@@ -650,7 +650,7 @@
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
-      "colouredAboveFold": 17,
+      "colouredAboveFold": 13,
       "signatureBlocks": 0
     },
     "p412--accounts": {
@@ -1206,7 +1206,7 @@
       "signatureBlocks": 34
     },
     "p412--weather": {
-      "height": 3018,
+      "height": 3400,
       "buttons": 6,
       "links": 17,
       "icons": 64,
