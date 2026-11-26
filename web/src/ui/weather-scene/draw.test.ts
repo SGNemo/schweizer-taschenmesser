@@ -396,7 +396,8 @@ describe('every sky key', () => {
     for (const [, h, o] of [...SKY_STATES, ...HEAVY]) {
       const { out } = draw(hourScene(h, o), { quietX: 640 });
       const all = out.inner + Object.values(out.vars).join(' ');
-      for (const m of all.matchAll(/var\(--scene-([^)]*)\)/g)) expect(m[1], m[0]).toMatch(/^[a-z0-9-]+$/);
+      for (const m of all.matchAll(/var\(--scene-([^)]*)\)/g))
+        expect(m[1], m[0]).toMatch(/^[a-z0-9-]+$/);
     }
   });
 });

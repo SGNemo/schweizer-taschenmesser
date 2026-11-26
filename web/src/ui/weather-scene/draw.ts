@@ -891,7 +891,9 @@ function ribbon(p: readonly Pt[], w0: number, w1: number): string {
 /* ============================== colours as CSS ============================== */
 /** A colour: a palette key becomes its token; an expression (`var(…)`, a keyword) stays. */
 export function tok(h: string): string {
-  return /^(var\(|color-mix\(|url\(|white$|black$|none$|currentColor$)/.test(h) ? h : `var(--scene-${h})`;
+  return /^(var\(|color-mix\(|url\(|white$|black$|none$|currentColor$)/.test(h)
+    ? h
+    : `var(--scene-${h})`;
 }
 /** The colour expressions of one scene, each declared once (`--c0` …) on the `<svg>`. */
 class Book {
