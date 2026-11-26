@@ -126,3 +126,4 @@ h1 { font-size: 22px; margin: 0 0 4px; }
 .whead .backdrop svg { width: 100%; height: 100%; }
 @media (max-width: 700px) { .phones { gap: 20px; margin: 0 -16px; } .phones .phonebox { outline: 0; } .style .label { display: none; } }
 @media (max-width: 700px) { .phones .phonebox { margin: 0; width: 100%; } }
+@media (max-width: 700px) { body:has(.style) { padding: 16px 0 40px; } body:has(.style) > h1, body:has(.style) > p, .style > h2, .style > p { padding: 0 16px; } .phones { margin: 0; } }
