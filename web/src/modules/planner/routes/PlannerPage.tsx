@@ -2250,6 +2250,10 @@ export default function PlannerPage() {
               and never moves under the typing hand (U01). */}
                 {phone ? null : capture(false)}
                 {phone ? null : answer}
+                {/* T4's „Alles zeigen“ on the phone: its own line right under the head, first in the column. */}
+                {phone && topics.filter ? (
+                  <div className={styles.topicShowAll}>{showAll}</div>
+                ) : null}
 
                 {/* The tabs are there while something is open from earlier (or that tab is shown): an empty „Noch
               offen“ is no control worth a row – on the phone it would push the field under the bottom bar. */}
@@ -2273,9 +2277,6 @@ export default function PlannerPage() {
                   </p>
                 ) : null}
 
-                {phone && topics.filter ? (
-                  <div className={styles.topicShowAll}>{showAll}</div>
-                ) : null}
                 {tab === 'open' ? (
                   openBlock
                 ) : (

@@ -199,6 +199,14 @@ test.describe('topic (11), a long name on a small phone', () => {
     const button = page.getByRole('button', { name: 'Alles zeigen', exact: true });
     await expect(button).toBeInViewport({ ratio: 1 });
     expect((await button.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    // The field (the phone's last row) with the chip T11 stays usable: the chip is cut, the field on screen and wide enough to type in.
+    const input = page.getByRole('textbox', { name: 'Eintragen oder sagen' });
+    await expect(page.getByTestId('planner-topic-chip')).toBeVisible();
+    await expect(input).toBeInViewport({ ratio: 1 });
+    expect((await input.boundingBox())!.width).toBeGreaterThanOrEqual(120);
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true);
     await button.click();
     await expect(page.getByTestId('planner-topic-head')).toHaveCount(0);
   });

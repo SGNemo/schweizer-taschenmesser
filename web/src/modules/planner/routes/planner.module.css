@@ -25,11 +25,13 @@
 }
 .add {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-2);
   align-items: flex-end;
 }
+/* The field keeps room to type (10rem): with a lead chip on a narrow phone, field and „Eintragen“ go to their own line. */
 .grow {
-  flex: 1;
+  flex: 1 1 10rem;
   min-width: 0;
 }
 /* Nothing was stored: said under the row, in words and in the danger ink (an error, the one place for it here). */
@@ -97,9 +99,13 @@
 .leadWrap {
   position: relative;
   display: inline-flex;
+  flex: 0 1 auto;
   align-items: center;
   align-self: flex-end;
   gap: var(--space-1);
+  /* A long name never squeezes the field: the chip gives way first (its full text is its title and the ✕'s name). */
+  min-width: 0;
+  max-width: min(50%, 24ch);
   min-height: var(--touch);
 }
 .leadChip {
@@ -114,6 +120,9 @@
   font: inherit;
   font-size: var(--text-sm);
   white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 button.leadChip {
   cursor: pointer;
