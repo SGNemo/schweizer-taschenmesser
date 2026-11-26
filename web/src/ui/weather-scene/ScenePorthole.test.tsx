@@ -62,6 +62,7 @@ const SKIES: [string, string, SceneHour][] = [
   ['drizzle', '12:00', { code: 53, cloud: 100 }],
   ['rain', '12:00', { code: 63, cloud: 100 }],
   ['showers', '12:00', { code: 81, cloud: 70 }],
+  ['thunder 1 (open sky)', '12:00', { code: 95, mm: 1, cloud: 40 }],
   ['thunder', '12:00', { code: 95, mm: 4 }],
   ['thunder with hail, wind 3', '12:00', { code: 99, wind: 60, mm: 12 }],
   ['snow 3, wind 3', '12:00', { code: 75, wind: 60, snowDepth: 0.3, temp: -3 }],
@@ -72,8 +73,8 @@ const SKIES: [string, string, SceneHour][] = [
   ['rainy night', '01:00', { code: 63, cloud: 100, night: true }],
   ['snowy night', '01:00', { code: 73, cloud: 100, night: true, temp: -2 }],
 ];
-/** Layers of the foreground and the other mountains: never in the porthole. */
-const NEVER = ['ridgeFar', 'ridgeMid', 'water', 'ridgeNear', 'wind', 'cloudsFar'];
+/** The only layers a porthole may draw (a new layer of the head's drawing fails here until it is placed). */
+const ALLOWED = ['sky', 'stars', 'body', 'clouds', 'ridgeAlp', 'fog', 'event', 'precip'];
 
 describe('porthole on the new drawing (round 2, CONCEPT §6, handoff D)', () => {
   it.each(SKIES)(
@@ -85,13 +86,19 @@ describe('porthole on the new drawing (round 2, CONCEPT §6, handoff D)', () => 
         expect(svg.viewBox).toBe(PORTHOLE.view.join(' '));
         const got = layers(s);
         expect(got[0]).toBe('sky');
-        for (const l of NEVER) expect(got, l).not.toContain(l);
+        for (const l of got) expect(ALLOWED, l).toContain(l);
         // the body whenever it is up, in every sky (CONCEPT §0 sentence 9), in the head's mode
         expect(got.includes('body')).toBe(s.body.kind !== 'none');
-        if (s.body.kind !== 'none')
+        if (s.body.kind !== 'none') {
           expect(parse(s).querySelector('[data-layer="body"]')!.getAttribute('data-mode')).toBe(
             s.mode,
           );
+          // nothing opaque is drawn over a clear body: no deck after it
+          if (s.mode === 'clear' || s.mode === 'veil')
+            expect(
+              parse(s).querySelector('[data-layer="body"] ~ [data-layer] [data-part="deck"]'),
+            ).toBeNull();
+        }
         // the main summit alone, with its shaded face
         const p = parts(s);
         if (s.fog < 2) {
@@ -107,7 +114,7 @@ describe('porthole on the new drawing (round 2, CONCEPT §6, handoff D)', () => 
           const decks = parse(s).querySelectorAll('[data-part="deck"]').length;
           const banks = parse(s).querySelectorAll('[data-bank]').length;
           const cumuli = parse(s).querySelectorAll('[data-layer="clouds"] > g').length;
-          if (s.cover === 4 || s.thunder) {
+          if (s.cover === 4 || s.thunder >= 2) {
             expect(decks).toBe(1);
             expect(banks).toBeLessThanOrEqual(1);
             expect(cumuli).toBe(0);
@@ -167,6 +174,26 @@ describe('porthole on the new drawing (round 2, CONCEPT §6, handoff D)', () => 
     expect(parse(s).querySelector('[data-layer="body"]')!.getAttribute('transform')).toContain(
       `scale(${PORTHOLE.bodyK})`,
     );
+  });
+
+  it('at 28 px every mark is at least about 0.8 px; moon maria and stars only from 48 px', () => {
+    const k = (px: number) => px / PORTHOLE.view[2];
+    const rain = parse(stateOf('12:00', { code: 63, cloud: 100 }), 28).querySelector(
+      '[data-part="rain"]',
+    )!;
+    expect(Number(rain.getAttribute('stroke-width')) * k(28)).toBeGreaterThanOrEqual(0.79);
+    const flakes = parse(stateOf('12:00', { code: 75, temp: -3 }), 28).querySelector(
+      '[data-part="flakes"]',
+    )!;
+    const r = Number(/a(-?[\d.]+)/.exec(flakes.getAttribute('d')!)![1]);
+    expect(2 * r * k(28)).toBeGreaterThanOrEqual(0.79);
+    const night = stateOf('01:00', { code: 0, night: true });
+    const maria = (px: number) =>
+      parse(night, px).querySelectorAll('[data-part="moon"] path').length;
+    expect(maria(28)).toBe(1); // the lit shape alone
+    expect(maria(64)).toBe(2); // with its maria
+    expect(layers(night, 28)).not.toContain('stars');
+    expect(layers(night, 64)).toContain('stars');
   });
 
   it('no sky event in the small versions (CONCEPT §6, open)', () => {

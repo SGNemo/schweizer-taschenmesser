@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { Forecast } from '@/core/weather/api';
 import { sceneOf, type SceneHour, type SceneState, type SkyKey } from '@/core/weather/scene';
 import { G, phoneView, sceneSvg, skyOffsets, type SceneSvg } from './draw';
-import { cardFit } from './useSceneFit';
+import { CARD_QUIET_SHARE, cardFit } from './useSceneFit';
 
 /**
  * Contrast of the text on the round-2 picture (docs/design/weather-scenes-2/A11Y.md §1): every sky key × theme, the
@@ -217,14 +217,14 @@ describe('round 2: the widget card at its three sizes (handoff D)', () => {
     [380, 192],
   ] as const;
   it.each(SIZES)('%i × %i: the whole panorama, ground and trees below the text', (W, H) => {
-    const fit = cardFit(W, H, 0.55);
+    const fit = cardFit(W, H, CARD_QUIET_SHARE);
     const [, y0, vw, vh] = fit.view!;
     expect(vw).toBe(G.W);
     expect(W / vw).toBeCloseTo(H / vh, 2);
     const k = W / vw;
     const textBottom = y0 + (H - 24) / k;
     let top = Infinity;
-    for (const [x, y] of G.ground) if (x <= G.W * 0.55) top = Math.min(top, y);
+    for (const [x, y] of G.ground) if (x <= G.W * CARD_QUIET_SHARE) top = Math.min(top, y);
     for (const t of [...G.trees, ...G.behind])
       if (t[1] - t[3] <= fit.quietX!)
         top = Math.min(top, t[2] - (t[0] === 'bush' ? 2 * t[3] : t[3]));
@@ -237,11 +237,11 @@ describe('round 2: the widget card at its three sizes (handoff D)', () => {
         (key, time, h, over = {}) => {
           const s = stateOf(time, h, over, theme, season);
           for (const [W, H] of SIZES) {
-            const fit = cardFit(W, H, 0.55);
+            const fit = cardFit(W, H, CARD_QUIET_SHARE);
             const d = sceneSvg(s, fit);
             expect(d.sky).toBe(key);
             const ink = hexRgb(light[d.ink === 'light' ? '--ink-light' : '--ink-dark']!);
-            for (const t of tonesUnderText(d, s, theme, false, fit.quietX, G.W * 0.55))
+            for (const t of tonesUnderText(d, s, theme, false, fit.quietX, G.W * CARD_QUIET_SHARE))
               expect(
                 ratio(ink, t.c),
                 `${key} ${theme} ${season} ${W}×${H} ${t.what} rgb(${t.c.join(',')})`,

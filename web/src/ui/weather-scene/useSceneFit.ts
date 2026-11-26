@@ -1,6 +1,8 @@
 import { useLayoutEffect, useState, type RefObject } from 'react';
 import { G, phoneView, type SceneOptions } from './draw';
 
+/** The overview widget's text ends at this share of the card's width (handoff 04). */
+export const CARD_QUIET_SHARE = 0.55;
 /** Card (overview widget): the body's centre as shares of the card's width from the right and of its height. */
 const CARD = { bodyX: 0.2, bodyY: 0.5 } as const;
 /** Width of the text column on a wide stage, rem. */

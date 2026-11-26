@@ -1323,7 +1323,7 @@ export function sceneSvg(state: SceneState, o: SceneOptions = {}): SceneSvg {
       const r = 0.6 + q() * 0.9;
       if (aroundBody) {
         const a = q() * 6.28;
-        const rr = 30 + q() * 60;
+        const rr = (30 + q() * 60) * bodyK;
         x = body[0] + Math.cos(a) * rr * 1.5;
         y = body[1] - 4 + Math.sin(a) * rr * 0.6;
       } else {
@@ -1338,7 +1338,8 @@ export function sceneSvg(state: SceneState, o: SceneOptions = {}): SceneSvg {
     });
   };
   // "Schlicht" is sky and body only (CONCEPT §6): no stars either
-  if (starry && s.cover < 4 && !falling && !plain) {
+  // the porthole below 48 px: stars would be specks under a pixel
+  if (starry && s.cover < 4 && !falling && !plain && !(pt && pt < 48)) {
     open('stars');
     const moonLight = moonBody ? moonIllum : 0;
     stars(
@@ -1405,7 +1406,7 @@ export function sceneSvg(state: SceneState, o: SceneOptions = {}): SceneSvg {
             'data-part': 'moon',
           },
           el('path', { d: lp, fill: tok('moon') }) +
-            (k > 0.3
+            (k > 0.3 && !(pt && pt < 48)
               ? el('path', {
                   d:
                     circ(R * 0.17, -R * 0.33, R * 0.23) +
@@ -1557,7 +1558,7 @@ export function sceneSvg(state: SceneState, o: SceneOptions = {}): SceneSvg {
       );
       if (dark) {
         open('stars');
-        stars(12, true);
+        if (!(pt && pt < 48)) stars(12, true);
         close();
       }
       out += glow(
@@ -1661,8 +1662,8 @@ export function sceneSvg(state: SceneState, o: SceneOptions = {}): SceneSvg {
         el('path', { d: inner, fill: tok(shade), opacity: 0.45 }),
     );
   };
-  if (s.cover >= 1 && s.cover <= 3 && s.thunder === 0 && pt) {
-    // the porthole: one cloud, beside the body
+  if (pt && ((s.cover >= 1 && s.cover <= 3 && s.thunder === 0) || s.thunder === 1)) {
+    // the porthole: one cloud, beside the body (thunder 1 too: its tower stands in open sky)
     open('clouds');
     out += cumulus(...PORTHOLE.cloud);
     close();
@@ -1681,11 +1682,11 @@ export function sceneSvg(state: SceneState, o: SceneOptions = {}): SceneSvg {
       out += el('g', { opacity: 0.55 }, cumulus(300, 46, 1.3, 1) + cumulus(660, 64, 1.1, 3));
     close();
   }
-  if (s.thunder && pt) {
+  if (s.thunder >= 2 && pt) {
     open('clouds');
     portholeSheet(PORTHOLE.stormY, DT[0]!);
     close();
-  } else if (s.thunder) {
+  } else if (s.thunder && !pt) {
     const wall = s.thunder >= 2;
     const baseY = (x: number): number =>
       x < 760 ? 86 : x > 1040 ? 124 : 86 + (38 * (x - 760)) / 280;
@@ -1766,7 +1767,8 @@ export function sceneSvg(state: SceneState, o: SceneOptions = {}): SceneSvg {
   const fogFar = [1, 0.35, 0][s.fog]!;
   const fogMid = [1, 0.65, 0.22][s.fog]!;
   const snowHaze = falling === 'snow' && s.intensity >= 3 ? 0.55 : 1;
-  const farOp = Math.min(fogFar, snowHaze);
+  // the porthole's summit is its land: only fog veils it, never the snow haze of the far range
+  const farOp = pt ? fogFar : Math.min(fogFar, snowHaze);
   const fogC = B.mix(C.haze, 'white', 0.55);
   let fogG: string | null = null;
   const fogBand = (y: number, h: number, op: number, x0?: number, w?: number): void => {
@@ -2669,7 +2671,7 @@ export function sceneSvg(state: SceneState, o: SceneOptions = {}): SceneSvg {
       open('event', ' data-part="thunder"');
       // the main bolt's figure, moved into the round crop (its own place lies on the crop's left rim)
       const b = G.bolts[0]!;
-      path(ribbon(b.p, b.w * 2.4, 1.6), 'bolt', {
+      path(ribbon(b.p, b.w * 2.4 * Math.max(1, 64 / pt), 1.6), 'bolt', {
         opacity: b.op,
         transform: `translate(${PORTHOLE.boltDx} 0)`,
         'data-part': 'bolt',
@@ -2679,20 +2681,24 @@ export function sceneSvg(state: SceneState, o: SceneOptions = {}): SceneSvg {
     if (falling) {
       const q = prng(41);
       const cnt = (pt < 48 ? 5 : 7) + Math.min(3, s.intensity);
+      // marks of at least about 0.8 px: below 64 px they grow with the crop's scale
+      const m = Math.max(1, 64 / pt);
       const slant = G.slant[s.wind]! * dir;
       const snowy = falling === 'snow';
       let d = '';
       for (let i = 0; i < cnt; i++) {
         const x = view[0] + 40 + ((i + q() * 0.6) * (view[2] - 90)) / cnt;
         const y = 116 + ((i * 37) % 64) + q() * 12;
-        d += snowy ? circ(x, y, 5.5) : `M${f(x)},${f(y)}l${f(22 * slant)},22`;
+        d += snowy ? circ(x, y, 5.5 * m) : `M${f(x)},${f(y)}l${f(22 * m * slant)},${f(22 * m)}`;
       }
       open('precip', ` data-level="${s.intensity}"`);
       if (snowy) path(d, C.snow, { 'data-part': 'flakes' });
-      else line(d, 'rain', 4, { 'stroke-linecap': 'round', opacity: 0.85, 'data-part': 'rain' });
+      else
+        line(d, 'rain', 4 * m, { 'stroke-linecap': 'round', opacity: 0.85, 'data-part': 'rain' });
       if (s.cond === 'thunderHail') {
         let hd2 = '';
-        for (let i = 0; i < 4; i++) hd2 += circ(view[0] + 90 + i * 52, 150 + ((i * 29) % 50), 6);
+        for (let i = 0; i < 4; i++)
+          hd2 += circ(view[0] + 90 + i * 52, 150 + ((i * 29) % 50), 6 * m);
         path(hd2, 'hail', { stroke: tok('hail-edge'), 'stroke-width': 1.5, 'data-part': 'hail' });
       }
       close();

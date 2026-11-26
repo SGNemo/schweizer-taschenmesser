@@ -3,7 +3,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { defaultScene, type SceneState } from '@/core/weather/scene';
 import { litPath, sceneSvg, tiltRotation } from './draw';
-import { cardFit } from './useSceneFit';
+import { CARD_QUIET_SHARE, cardFit } from './useSceneFit';
 import { WeatherScene } from './WeatherScene';
 
 afterEach(() => {
@@ -66,17 +66,36 @@ describe('<WeatherScene>', () => {
   });
 
   it('as a card (the overview widget): the new panorama at the card width, reaching up into more sky', () => {
-    const fit = cardFit(379, 205, 0.55);
+    const fit = cardFit(379, 205, CARD_QUIET_SHARE);
     expect(fit.view![2]).toBe(1600);
     expect(fit.view![1]).toBeLessThan(0);
-    // the body in its own box right of the text zone, inside the view
+    // the text ends at the share, the quiet zone one fog lead later; the body in its own box right of it
+    expect(fit.quietX).toBe(Math.round(1600 * CARD_QUIET_SHARE) + 80);
     expect(fit.bodyAt![0]).toBeGreaterThan(fit.quietX!);
     expect(fit.bodyAt![1]).toBeGreaterThan(fit.view![1]);
-    render(<WeatherScene state={base({ cond: 'partly', cover: 2 })} quietShare={0.55} />);
-    const svg = screen.getByTestId('weather-scene');
-    // round 2's massif (`G.mountains`), not round 1's ridges
-    expect(svg.querySelector('[data-part="main"]')).not.toBeNull();
-    expect(svg.querySelector('[data-layer="ridgeAlp"]')).not.toBeNull();
+    // jsdom measures nothing: the card's box is 379 × 205 for this render
+    const box = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+      x: 0,
+      y: 0,
+      left: 0,
+      top: 0,
+      right: 379,
+      bottom: 205,
+      width: 379,
+      height: 205,
+    } as DOMRect);
+    try {
+      render(
+        <WeatherScene state={base({ cond: 'partly', cover: 2 })} quietShare={CARD_QUIET_SHARE} />,
+      );
+      const svg = screen.getByTestId('weather-scene');
+      // the card's view (cardFit), not the head's
+      expect(svg.getAttribute('viewBox')).toBe(fit.view!.join(' '));
+      // round 2's massif (`G.mountains`), not round 1's ridges
+      expect(svg.querySelector('[data-part="main"]')).not.toBeNull();
+    } finally {
+      box.mockRestore();
+    }
   });
 });
 
