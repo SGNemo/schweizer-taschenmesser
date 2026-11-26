@@ -19,6 +19,7 @@ Index. Each area file holds one bullet per decision (**what** – why, with date
 | Karten & Orte | [decisions/maps.md](decisions/maps.md) | Module, own tile map, nothing requested until the map is opened |
 | Page data from the web | [decisions/web-page-data.md](decisions/web-page-data.md) | `fetchPublic` kinds (feed, page, image), proxy `?kind=`, plain-data page meta and reader text, no script into tabs |
 | Weather line | [decisions/weather.md](decisions/weather.md) | Open-Meteo, a place chosen once, nothing sent without it |
+| Weather scenes | [decisions/weather-scenes.md](decisions/weather-scenes.md) | the picture in the head: drawing as tokens and CSS, levels from the data, moon and sky events on the device |
 | Readability | [decisions/readability.md](decisions/readability.md) | reading aid off by default, colour only with meaning, grouped lists, "Ruhig" mode |
 | Supporter mode | [decisions/supporter.md](decisions/supporter.md) | cosmetic only, Ed25519 codes verified offline, status derived from the code, Cloudflare Worker issuer |
 | Languages | [decisions/language.md](decisions/language.md) | English docs source with German `*.de.md` copies, brand claim per language, app UI in German and English (es/fr/pt-BR frozen) |

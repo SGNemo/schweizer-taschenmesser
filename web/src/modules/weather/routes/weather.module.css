@@ -280,28 +280,32 @@
   gap: var(--space-2);
   min-width: 0;
 }
-/* Phone (design check K3, stage ≤ 320 px): the long line of further values lies in the page, right under the head. */
+/* Phone (round 2, CONCEPT §5): the picture carries only the temperature and the word; the hint, two chips and the
+   line of further values stand directly under it, on the page's own surface (theme ink). */
+.below {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+}
 .restBelow {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+}
+.sigNone {
   display: none;
 }
 @media (max-width: 899px) {
-  .heroFacts .rest {
-    display: none;
-  }
-  /* the scene's body sits right of the figure: a long detail line wraps instead of running into it */
   .heroBlock {
     max-width: none;
     width: 100%;
     gap: var(--space-1);
   }
+  /* the scene's body sits right of the figure: a long detail line wraps instead of running into it */
   .heroBlock > :first-child {
     max-width: calc(100% - 96px);
-  }
-  .restBelow {
-    display: block;
-    margin: 0 0 var(--space-3);
-    color: var(--text-muted);
-    font-size: var(--text-meta);
   }
 }
 /* Official DWD warnings (package 3b): stronger tint and a hairline, no stripe, no red; the level is a word. */

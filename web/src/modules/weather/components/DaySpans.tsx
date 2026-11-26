@@ -84,7 +84,7 @@ export function DaySpans({
               <span className={styles.dayName}>
                 {d.date === today ? tx.today : dayFmt.format(localDate(d.date))}
               </span>
-              <span>{tx.conditions[conditionId(d.code, d.group)]}</span>
+              <span>{tx.conditions[conditionId(d.code, d.group, { gust: d.gust })]}</span>
               <RatingChip rating={rateDay(d)} />
               {moon ? <DayMoon date={d.date} {...moon} /> : null}
             </p>

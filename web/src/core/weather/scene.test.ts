@@ -62,7 +62,7 @@ describe('conditionId', () => {
     [86, 'snowShowers', 'Schneeschauer', 'snow showers'],
     [95, 'thunder', 'Gewitter', 'thunderstorm'],
     [96, 'thunderHail', 'Gewitter mit Hagel', 'thunderstorm with hail'],
-    [99, 'thunderHail', 'Gewitter mit Hagel', 'thunderstorm with hail'],
+    [99, 'thunderHailSevere', 'starkes Gewitter mit Hagel', 'severe thunderstorm with hail'],
   ] as const)('code %i → %s (%s / %s)', (code, id, de, en) => {
     expect(conditionId(code, codeGroup(code))).toBe(id);
     expect(tWeather.de.conditions[id]).toBe(de);
@@ -143,23 +143,23 @@ const TABLE: [number, string, number, string, string][] = [
   [3, 'overcast', 2, 'overcast', 'night-overcast'],
   [45, 'fog', 2, 'fog', 'night-fog'],
   [48, 'fog', 2, 'fog', 'night-fog'],
-  [51, 'drizzle', 1, 'drizzle', 'night-overcast'],
-  [53, 'drizzle', 2, 'drizzle', 'night-overcast'],
-  [55, 'drizzle', 3, 'drizzle', 'night-overcast'],
-  [56, 'freezingDrizzle', 1, 'drizzle', 'night-overcast'],
-  [57, 'freezingDrizzle', 3, 'drizzle', 'night-overcast'],
-  [61, 'rain', 1, 'rain', 'night-rain'],
+  [51, 'drizzle', 1, 'drizzle', 'night-rain'],
+  [53, 'drizzle', 2, 'drizzle', 'night-rain'],
+  [55, 'drizzle', 3, 'drizzle', 'night-rain'],
+  [56, 'freezingDrizzle', 1, 'drizzle', 'night-rain'],
+  [57, 'freezingDrizzle', 3, 'drizzle', 'night-rain'],
+  [61, 'rain', 1, 'drizzle', 'night-rain'],
   [63, 'rain', 2, 'rain', 'night-rain'],
   [65, 'rain', 3, 'rain', 'night-rain'],
-  [66, 'freezingRain', 1, 'rain', 'night-rain'],
+  [66, 'freezingRain', 1, 'drizzle', 'night-rain'],
   [67, 'freezingRain', 3, 'rain', 'night-rain'],
   [71, 'snow', 1, 'snow', 'night-snow'],
   [73, 'snow', 2, 'snow', 'night-snow'],
   [75, 'snow', 3, 'snow', 'night-snow'],
   [77, 'snow', 1, 'snow', 'night-snow'],
   [80, 'showers', 1, 'drizzle', 'night-rain'],
-  [81, 'showers', 2, 'drizzle', 'night-rain'],
-  [82, 'showers', 3, 'drizzle', 'night-rain'],
+  [81, 'showers', 2, 'rain', 'night-rain'],
+  [82, 'showers', 3, 'rain', 'night-rain'],
   [85, 'snowShowers', 1, 'snow', 'night-snow'],
   [86, 'snowShowers', 3, 'snow', 'night-snow'],
   [95, 'thunder', 2, 'storm', 'night-rain'],
@@ -219,8 +219,8 @@ describe('scene model (CONCEPT §3)', () => {
       expect(skyKey(byNight)).toBe(night);
       // No moon before package 2: the night has no body.
       expect(byNight.body.kind).toBe('none');
-      // Snow on the ground while it snows; rime fog is frost 1 even when mild.
-      expect(byDay.snowGround).toBe(cond === 'snow' || cond === 'snowShowers');
+      // Round 2: snow on the ground while it snows at level ≥ 2 (CONCEPT §3); rime fog is frost 1 even when mild.
+      expect(byDay.snowGround).toBe((cond === 'snow' || cond === 'snowShowers') && intensity >= 2);
       expect(byDay.frost).toBe(code === 48 ? 1 : 0);
     },
   );

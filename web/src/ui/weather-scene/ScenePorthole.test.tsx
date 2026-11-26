@@ -2,7 +2,7 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { defaultScene, type SceneState } from '@/core/weather/scene';
-import { portholeSvg } from './draw';
+import { portholeSvg } from './drawV1';
 import { ScenePorthole } from './ScenePorthole';
 
 afterEach(cleanup);

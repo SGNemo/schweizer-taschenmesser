@@ -34,6 +34,10 @@ interface Scenario {
   temp?: number;
   cloud?: number;
   gust?: number;
+  /** km/h wind now (default 12). */
+  wind?: number;
+  /** Snow on the ground now, m (default 0). */
+  snow?: number;
   min?: number;
   max?: number;
   sunrise?: string;
@@ -107,6 +111,57 @@ const SCENARIOS: Scenario[] = [
     min: -6,
     sunrise: '07:38',
     sunset: '16:24',
+  },
+  // Round 2 (weather-scenes-2): the stop's frost night with the moon between the banks, the sunny winter day with
+  // snow lying, dense-free fog and a broken sky in a breeze.
+  {
+    id: 'stop-frost-night',
+    utc: '2026-11-24T01:50:00Z',
+    local: '2026-11-24T02:50',
+    day: 0,
+    code: 3,
+    cloud: 95,
+    temp: -3,
+    min: -6,
+    sunrise: '07:38',
+    sunset: '16:24',
+  },
+  {
+    id: 'stop-winter',
+    utc: '2026-01-15T11:00:00Z',
+    local: '2026-01-15T12:00',
+    day: 1,
+    code: 0,
+    cloud: 0,
+    temp: -3,
+    min: -8,
+    snow: 0.12,
+    sunrise: '08:05',
+    sunset: '16:45',
+  },
+  {
+    id: 'day-fog',
+    utc: '2026-10-20T07:00:00Z',
+    local: '2026-10-20T09:00',
+    day: 1,
+    code: 45,
+    cloud: 100,
+    temp: 6,
+    sunrise: '07:50',
+    sunset: '18:20',
+  },
+  {
+    id: 'day-broken-wind',
+    utc: '2026-05-12T12:00:00Z',
+    local: '2026-05-12T14:00',
+    day: 1,
+    code: 2,
+    cloud: 80,
+    wind: 38,
+    gust: 55,
+    temp: 17,
+    sunrise: '05:30',
+    sunset: '20:50',
   },
   {
     id: 'eclipse-solar',
@@ -224,13 +279,13 @@ async function mock(page: Page, s: Scenario & typeof BASE) {
           weather_code: code,
           apparent_temperature: (s.temp ?? (day ? 19 : 4)) - 2,
           relative_humidity_2m: 70,
-          wind_speed_10m: 12,
+          wind_speed_10m: s.wind ?? 12,
           wind_gusts_10m: s.gust ?? 25,
           is_day: day,
           cloud_cover: s.cloud ?? 10,
           pressure_msl: 1014,
           wind_direction_10m: 250,
-          snow_depth: 0,
+          snow_depth: s.snow ?? 0,
         },
         hourly: {
           time: hours,

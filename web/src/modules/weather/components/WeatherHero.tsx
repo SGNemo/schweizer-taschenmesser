@@ -10,6 +10,7 @@ import {
   conditionId,
   defaultScene,
   sceneAddition,
+  sceneHourOf,
   sceneOf,
   type SceneAddition,
   type SceneState,
@@ -141,7 +142,7 @@ export function WeatherHero({
     : first?.sunrise && clockNow < first.sunrise
       ? first.sunrise
       : days[1]?.sunrise;
-  const word = conditionId(forecast.code, forecast.group);
+  const word = conditionId(forecast.code, forecast.group, sceneHourOf(forecast, nowIso));
   const addition = sceneAddition({
     id: word,
     temp: forecast.temp,
@@ -246,6 +247,29 @@ export function WeatherHero({
     best ? tx.bestTime(best.from, best.to) : undefined,
   ].filter(Boolean);
 
+  const pills =
+    events?.safety || official.length > 0 || warnings.length > 0 ? (
+      <div className={styles.pills} data-scene-avoid="">
+        {events?.safety ? <SafetyNotice inStage /> : null}
+        {official.length > 0 ? (
+          <OfficialNotice warnings={official} tz={forecast.tz} inStage more={officialMore} />
+        ) : null}
+        {warnings.length > 0 ? (
+          <WarningNotice warnings={warnings} today={nowIso.slice(0, 10)} inStage />
+        ) : null}
+      </div>
+    ) : null;
+  const chips = (
+    <ul className={styles.keys} data-testid="weather-keys" data-scene-avoid="">
+      {stageKeys.map((k) => (
+        <li key={k.text} className={styles.key} data-kind={k.kind}>
+          {k.glyph ?? <Icon name={k.icon} size={16} />}
+          {k.text}
+        </li>
+      ))}
+    </ul>
+  );
+
   return (
     <>
       <HeroSlot area="backdrop">
@@ -266,38 +290,33 @@ export function WeatherHero({
               .join(' · ')}
             testId="weather-temp"
           />
-          {events?.safety || official.length > 0 || warnings.length > 0 ? (
-            <div className={styles.pills} data-scene-avoid="">
-              {events?.safety ? <SafetyNotice inStage /> : null}
-              {official.length > 0 ? (
-                <OfficialNotice warnings={official} tz={forecast.tz} inStage more={officialMore} />
-              ) : null}
-              {warnings.length > 0 ? (
-                <WarningNotice warnings={warnings} today={nowIso.slice(0, 10)} inStage />
-              ) : null}
-            </div>
-          ) : null}
+          {phone ? null : pills}
         </div>
       </HeroSlot>
-      {/* The three facts and the line of further values fill the stage's signature slot: with them there the frame
-          draws no mark of its own, and they start right after the short temperature block. */}
-      <HeroSlot area="signature">
-        <div className={styles.heroFacts} data-testid="weather-facts" data-scene-text="">
-          <ul className={styles.keys} data-testid="weather-keys" data-scene-avoid="">
-            {stageKeys.map((k) => (
-              <li key={k.text} className={styles.key} data-kind={k.kind}>
-                {k.glyph ?? <Icon name={k.icon} size={16} />}
-                {k.text}
-              </li>
-            ))}
-          </ul>
-          <p className={styles.rest}>{rest.join(' · ')}</p>
-        </div>
-      </HeroSlot>
-      {/* The same line for the phone, in the page under the head (the stage keeps its height there). */}
-      {rest.length > 0 ? (
-        <p className={`${styles.rest} ${styles.restBelow}`}>{rest.join(' · ')}</p>
-      ) : null}
+      {phone ? (
+        <>
+          {/* Phone (round 2, CONCEPT §5): the picture carries only the temperature and the word; the hint, two
+              chips and the line of further values are the first block of the page, directly under it. The empty
+              signature keeps the frame from drawing a mark of its own on the picture. */}
+          <HeroSlot area="signature">
+            <span className={styles.sigNone} />
+          </HeroSlot>
+          <div className={styles.below} data-testid="weather-facts">
+            {pills}
+            {chips}
+            {rest.length > 0 ? <p className={styles.restBelow}>{rest.join(' · ')}</p> : null}
+          </div>
+        </>
+      ) : (
+        // The chips and the line of further values fill the stage's signature slot: with them there the frame draws
+        // no mark of its own, and they start right after the short temperature block.
+        <HeroSlot area="signature">
+          <div className={styles.heroFacts} data-testid="weather-facts" data-scene-text="">
+            {chips}
+            <p className={styles.rest}>{rest.join(' · ')}</p>
+          </div>
+        </HeroSlot>
+      )}
     </>
   );
 }
@@ -309,8 +328,14 @@ export function WeatherHero({
  * the calm default scene (a clear day), as without a place.
  */
 export function WeatherHeroPending() {
-  // The stage keeps the room of the last visit (U01) until the forecast fills it: on the phone the chips wrap.
+  // The stage keeps the room of the last visit (U01) until the forecast fills it.
   useKeepHeadRoom(true);
+  const phone = useMediaQuery(PHONE_QUERY);
+  const facts = (
+    <ul className={styles.keys}>
+      <li className={styles.key}>–</li>
+    </ul>
+  );
   return (
     <>
       <WeatherSceneDefault />
@@ -320,17 +345,24 @@ export function WeatherHeroPending() {
           <HeroFigure type="thin" value="–" detail={'\u00a0'} />
         </div>
       </HeroSlot>
-      <HeroSlot area="signature">
-        <div className={styles.heroFacts} aria-hidden="true">
-          <ul className={styles.keys}>
-            <li className={styles.key}>–</li>
-          </ul>
-          <p className={styles.rest}>–</p>
-        </div>
-      </HeroSlot>
-      <p className={`${styles.rest} ${styles.restBelow}`} aria-hidden="true">
-        –
-      </p>
+      {phone ? (
+        <>
+          <HeroSlot area="signature">
+            <span className={styles.sigNone} />
+          </HeroSlot>
+          <div className={styles.below} aria-hidden="true">
+            {facts}
+            <p className={styles.restBelow}>–</p>
+          </div>
+        </>
+      ) : (
+        <HeroSlot area="signature">
+          <div className={styles.heroFacts} aria-hidden="true">
+            {facts}
+            <p className={styles.rest}>–</p>
+          </div>
+        </HeroSlot>
+      )}
     </>
   );
 }

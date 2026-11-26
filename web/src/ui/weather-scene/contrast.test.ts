@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { defaultScene, inkForSky, skyOf, SKY_KEYS, type SkyKey } from '@/core/weather/scene';
-import { crestAt, G, skyOffsets } from './draw';
+import { crestAt, G, skyOffsets } from './drawV1';
 import { cardFit } from './useSceneFit';
 
 /**

@@ -60,9 +60,46 @@ const CODE_ID: Readonly<Record<number, ConditionId>> = {
 /** Every WMO code Open-Meteo reports. */
 export const WMO_CODES: readonly number[] = Object.keys(CODE_ID).map(Number);
 
-/** The word's id for a WMO code; without a code (older cache) or for an unknown one, the group's nearest id. */
-export function conditionId(code: number | undefined, group: CodeGroup): ConditionId {
-  return (code != null ? CODE_ID[code] : undefined) ?? GROUP_ID[group];
+/**
+ * What a row may know beyond its code (round 2, handoff 00 "Hour row"): the amount, gusts, CAPE, visibility and the
+ * three cloud heights. Every field is optional – package B fetches the new ones; until then they are absent.
+ */
+export interface WordData {
+  /** mm in the hour. */
+  mm?: number;
+  /** km/h. */
+  gust?: number;
+  /** J/kg. */
+  cape?: number;
+  /** Visibility, m. */
+  vis?: number;
+  cloudLow?: number;
+  cloudMid?: number;
+  cloudHigh?: number;
+}
+
+/**
+ * The word's id for a WMO code; without a code (older cache) or for an unknown one, the group's nearest id. With the
+ * row's data the thunder and fog words say their level and thin high cloud says "Schleierwolken" (COPY §1): the same
+ * level functions the picture draws from, so the word and the picture never disagree.
+ */
+export function conditionId(
+  code: number | undefined,
+  group: CodeGroup,
+  data: WordData = {},
+): ConditionId {
+  const id = (code != null ? CODE_ID[code] : undefined) ?? GROUP_ID[group];
+  if (id === 'thunder' || id === 'thunderHail') {
+    const lvl = thunderLevel(code ?? 95, data.mm, data.gust, data.cape);
+    if (id === 'thunderHail') return lvl >= 3 ? 'thunderHailSevere' : 'thunderHail';
+    return lvl === 1 ? 'thunderLight' : lvl === 3 ? 'thunderSevere' : 'thunder';
+  }
+  if (id === 'fog' || id === 'rimeFog') {
+    const dense = fogLevel(code ?? 45, data.vis) === 2;
+    return dense ? (id === 'rimeFog' ? 'rimeFogDense' : 'fogDense') : id;
+  }
+  if ((code === 1 || code === 2 || code === 3) && veilOf(data)) return 'veil';
+  return id;
 }
 
 /** The words that already say snow: "Schnee liegt" and "Frost" stand back behind them. */
@@ -126,6 +163,8 @@ export type Cond =
   | 'thunderHail';
 export type Intensity = 1 | 2 | 3;
 export type Level = 0 | 1 | 2 | 3;
+export type Cover = 0 | 1 | 2 | 3 | 4;
+export type BodyMode = 'clear' | 'veil' | 'hole' | 'schein' | '';
 export type Season = 'spring' | 'summer' | 'autumn' | 'winter';
 export type SceneTheme = 'light' | 'dark';
 /** "Bild im Wetter-Kopf": `full` = every layer, `plain` = sky and body only ("Schlicht"). */
@@ -158,10 +197,29 @@ export interface SceneState {
   intensity: Intensity;
   /** Cloud cover, percent (the condition's default when the forecast has none). */
   cloud: number;
+  /** Round 2 (CONCEPT §3): cloud level 0 none … 4 the deck. */
+  cover: Cover;
+  /** Thin high cloud: streaks and a ring round the body. */
+  veil: boolean;
+  /** How sunny (day): 0 … 3. */
+  sun: Level;
+  /** Thunder level, 0 without. */
+  thunder: Level;
+  /** Fog level, 0 without. */
+  fog: 0 | 1 | 2;
+  /** Snow on the ground: 1 dusted, 2 closed, 3 deep. */
+  snowCover: Level;
+  /** Where the wind blows in the picture (the lee side). */
+  windTo: 'left' | 'right';
+  /** Puddles: rain now or in the hour before. */
+  wet: boolean;
+  /** How the body is seen (CONCEPT §2); '' without a body. */
+  mode: BodyMode;
   wind: Level;
   /** 0 none, 1 at 0° and below with nothing falling (and rime fog), 2 at −5° and below. */
   frost: 0 | 1 | 2;
   heat: boolean;
+  /** Round 1's flag, kept for the porthole (package D): `snowCover >= 1`. */
   snowGround: boolean;
   season: Season;
   /**
@@ -328,6 +386,128 @@ const CLOUD_DEFAULT: Record<Cond, number> = {
   thunderHail: 92,
 };
 
+/* ============================== round 2: levels (CONCEPT §2–§3) ============================== */
+
+/** Cloud: limits of `c` (percent) for levels 0 … 3; above the last one the deck. */
+export const COVER_LIMITS: readonly number[] = [10, 35, 60, 85];
+
+/** What one hour row may carry (handoff 00 "Hour row"); every field is optional until package B delivers it. */
+export interface SceneHour extends WordData {
+  time?: string;
+  temp?: number;
+  code?: number;
+  group?: CodeGroup;
+  wind?: number;
+  dir?: number;
+  cloud?: number;
+  /** Minutes of sunshine in the hour (0–60). */
+  sunMin?: number;
+  /** Snow on the ground, m. */
+  snowDepth?: number;
+  night?: boolean;
+}
+
+/**
+ * The cloud level: `c` is the larger of low and middle cloud when the three heights are known (so thin high cloud alone
+ * is never a deck), else the total cover; without any value the condition's default.
+ */
+export function coverOf(h: SceneHour, fallback?: number): Cover {
+  const heights = h.cloudLow != null && h.cloudMid != null && h.cloudHigh != null;
+  const c = heights ? Math.max(h.cloudLow!, h.cloudMid!) : (h.cloud ?? fallback);
+  if (c == null) return 4;
+  const i = COVER_LIMITS.findIndex((l) => c <= l);
+  return (i < 0 ? 4 : i) as Cover;
+}
+
+/** Thin high cloud: high ≥ 50 % with low and middle cloud ≤ 30 %; needs all three heights. */
+export function veilOf(h: WordData): boolean {
+  if (h.cloudLow == null || h.cloudMid == null || h.cloudHigh == null) return false;
+  return h.cloudHigh >= 50 && h.cloudLow <= 30 && h.cloudMid <= 30;
+}
+
+/**
+ * How sunny (by day): the minutes of sunshine win where they exist (≥ 45 · 20 · 5), else the cover (≤ 1 → 3,
+ * 2 → 2, 3 → 1). Under a deck never rays: 0.
+ */
+export function sunLevel(h: { sunMin?: number }, cover: Cover): Level {
+  if (cover === 4) return 0;
+  const m = h.sunMin;
+  if (m != null) return m >= 45 ? 3 : m >= 20 ? 2 : m >= 5 ? 1 : 0;
+  return cover <= 1 ? 3 : cover === 2 ? 2 : 1;
+}
+
+/** Rain or snow strength from the amount, for a cached value without a code: < 2.5 · < 7.5 · ≥ 7.5 mm/h. */
+export function intensityOfAmount(mm: number): Intensity {
+  return mm < 2.5 ? 1 : mm < 7.5 ? 2 : 3;
+}
+
+/**
+ * Thunder level: 0 without thunder (WMO 95, 96, 99). 3 for 99, or ≥ 10 mm, gusts ≥ 70 km/h or CAPE ≥ 2000 J/kg.
+ * 1 for 95 with a known amount < 2.5 mm, gusts < 50 and CAPE < 800 (unknown gusts and CAPE count as low; an unknown
+ * amount does not make a storm light). 2 in every other case; 96 is at least 2.
+ */
+export function thunderLevel(
+  code: number | undefined,
+  mm: number | undefined,
+  gust: number | undefined,
+  cape: number | undefined,
+): Level {
+  if (code !== 95 && code !== 96 && code !== 99) return 0;
+  if (code === 99 || (mm ?? 0) >= 10 || (gust ?? 0) >= 70 || (cape ?? 0) >= 2000) return 3;
+  if (code === 95 && mm != null && mm < 2.5 && (gust ?? 0) < 50 && (cape ?? 0) < 800) return 1;
+  return 2;
+}
+
+/** Fog level: 0 without fog (WMO 45 / 48), 2 with visibility < 300 m, else 1 (no other fallback). */
+export function fogLevel(code: number | undefined, vis: number | undefined): 0 | 1 | 2 {
+  if (code !== 45 && code !== 48) return 0;
+  return vis != null && vis < 300 ? 2 : 1;
+}
+
+/** Snow on the ground: ≥ 1 · ≥ 5 · ≥ 20 cm; snowing at level ≥ 2 is at least 1. */
+export function snowCoverOf(depthM: number | undefined, snowLevel: number): Level {
+  const cm = (depthM ?? 0) * 100;
+  const lvl: Level = cm >= 20 ? 3 : cm >= 5 ? 2 : cm >= 1 ? 1 : 0;
+  return snowLevel >= 2 && lvl === 0 ? 1 : lvl;
+}
+
+/**
+ * Where the wind blows in the picture. It looks toward the sun's arc: south in the northern hemisphere (east left,
+ * west right), north in the southern. North: from 180°–360° (a westerly) to the left, from 0°–180° to the right;
+ * south mirrored. Without a direction: to the right.
+ */
+export function windTo(dirDeg: number | undefined, lat: number): 'left' | 'right' {
+  if (dirDeg == null) return 'right';
+  const d = ((dirDeg % 360) + 360) % 360;
+  const westerly = d >= 180;
+  return westerly === lat >= 0 ? 'left' : 'right';
+}
+
+/** Puddles: it rains now, or ≥ 0.2 mm fell in the hour before. */
+export function wetOf(rainingNow: boolean, previous: { mm?: number } | undefined): boolean {
+  return rainingNow || (previous?.mm ?? 0) >= 0.2;
+}
+
+/**
+ * How the body is seen (CONCEPT §2): `schein` (pale) under a deck with rain, snow or fog, in fog level 2 and in
+ * thunder from level 2; `hole` under a dry deck; `veil` with thin high cloud; else `clear`. "Schlicht" under a deck
+ * draws no clouds, so the body stands pale. No body: ''.
+ */
+export function bodyMode(s: {
+  body: { kind: string };
+  cover: Cover;
+  veil: boolean;
+  thunder: Level;
+  fog: 0 | 1 | 2;
+  falling: boolean;
+  level?: SceneLevel;
+}): BodyMode {
+  if (s.body.kind === 'none') return '';
+  if (s.fog >= 2 || (s.cover === 4 && (s.falling || s.fog > 0)) || s.thunder >= 2) return 'schein';
+  if (s.cover === 4) return s.level === 'plain' ? 'schein' : 'hole';
+  return s.veil ? 'veil' : 'clear';
+}
+
 export interface SceneInput {
   forecast: Forecast;
   /** When the forecast was fetched and the clock now (ms): the place's local time follows from both. */
@@ -335,6 +515,11 @@ export interface SceneInput {
   nowMs: number;
   lat: number;
   theme: SceneTheme;
+  /**
+   * The hour row the scene is drawn for (package C passes a chosen one); without it the current values and the
+   * hour row of now (amount, CAPE …) are used.
+   */
+  hour?: SceneHour;
   calm?: boolean;
   level?: SceneLevel;
   motion?: boolean;
@@ -367,14 +552,56 @@ export function moonArcT(az: number, lat: number): number {
 /** Day moon: by day, moon up, 20–97 % lit, cloud cover ≤ 60 %. */
 const DAY_MOON = { min: 0.2, max: 0.97, cloud: 60 } as const;
 
-/** The picture's state for a forecast (handoff 01b "Model", CONCEPT-MOON §4). */
+/** The hour row of a moment (`YYYY-MM-DDTHH:mm`) and the one before it. */
+function rowsAround(f: Forecast, iso: string): { now?: SceneHour; prev?: SceneHour } {
+  const hours = (f.hours ?? []) as SceneHour[];
+  const key = `${iso.slice(0, 13)}:00`;
+  const i = hours.findIndex((h) => h.time === key);
+  return i < 0 ? {} : { now: hours[i], prev: i > 0 ? hours[i - 1] : undefined };
+}
+
+/**
+ * The hour row of now as the scene and the head's word read it: now's values over the forecast's hour row of now
+ * (amount, CAPE, cloud heights … where the cache has them).
+ */
+export function sceneHourOf(f: Forecast, nowIso: string): SceneHour {
+  const row = rowsAround(f, nowIso).now;
+  return {
+    ...row,
+    time: nowIso,
+    temp: f.temp,
+    code: f.code,
+    group: f.group,
+    wind: f.now?.wind ?? row?.wind,
+    gust: f.now?.gust ?? row?.gust,
+    dir: f.now?.dir ?? row?.dir,
+    cloud: f.now?.cloud ?? row?.cloud,
+    snowDepth: f.now?.snowDepth ?? row?.snowDepth,
+    night: f.now?.night ?? row?.night,
+  };
+}
+
+/** The picture's state for a forecast (handoff 01b "Model", CONCEPT-MOON §4; round 2: handoff 00 "Scene state"). */
 export function sceneOf(i: SceneInput): SceneState {
   const f = i.forecast;
-  const nowIso = placeNowIso(f, i.at, i.nowMs);
+  const nowIso = i.hour?.time ?? placeNowIso(f, i.at, i.nowMs);
   const today = f.days?.find((d) => d.date === nowIso.slice(0, 10));
-  const isDay = f.now?.night == null ? true : !f.now.night;
+  const around = rowsAround(f, nowIso);
+  // The drawn hour: a chosen row, else now's values over the hour row of now.
+  const h: SceneHour = i.hour ?? sceneHourOf(f, nowIso);
+  const prev = around.prev;
+  const temp = h.temp ?? f.temp;
+  const isDay = h.night == null ? true : !h.night;
   const phase = phaseOf(nowIso, today?.sunrise, today?.sunset, isDay);
-  const { cond, intensity } = condOf(f.code, f.group);
+  const code = h.code;
+  const base = condOf(code, h.group ?? f.group);
+  const cond = base.cond;
+  const thunder = thunderLevel(code ?? (isThunder(cond) ? 95 : undefined), h.mm, h.gust, h.cape);
+  // Without a code the amount says the strength; a thunderstorm's rain takes its level (CONCEPT §3).
+  let intensity: Intensity =
+    code == null && h.mm != null && FALLING.has(cond) ? intensityOfAmount(h.mm) : base.intensity;
+  if (thunder) intensity = Math.min(3, thunder) as Intensity;
+  const fog = fogLevel(code ?? (cond === 'fog' ? 45 : undefined), h.vis);
   const byDay = phase === 'day' || phase === 'golden';
   let t = 0.5;
   if (today?.sunrise && today.sunset) {
@@ -382,7 +609,13 @@ export function sceneOf(i: SceneInput): SceneState {
     const span = minutes(today.sunset) - sr;
     if (span > 0) t = Math.min(1, Math.max(0, (minutes(nowIso.slice(11, 16)) - sr) / span));
   }
-  const cloud = f.now?.cloud ?? CLOUD_DEFAULT[cond];
+  const cloud = h.cloud ?? CLOUD_DEFAULT[cond];
+  let cover = coverOf(h, CLOUD_DEFAULT[cond]);
+  // The tower needs sky around it; from level 2 the storm base spans the sky.
+  if (thunder === 1) cover = Math.min(cover, 3) as Cover;
+  if (thunder >= 2) cover = 4;
+  const veil = veilOf(h) && cover < 4;
+  const falling = FALLING.has(cond);
   const m = i.moon;
   const moonUp = !!m && m.alt > 0;
   let body: SceneState['body'] = { kind: byDay ? 'sun' : 'none', t };
@@ -401,16 +634,29 @@ export function sceneOf(i: SceneInput): SceneState {
   const event = eventOf(i.event?.event, body.kind, phase, cloud);
   // Rainbow: the sun stands behind the viewer, so no disc (handoff 03 "Scene").
   if (event === 'rainbow') body = { kind: 'none', t };
+  const snowing = SNOWING.has(cond);
+  const snowCover = snowCoverOf(h.snowDepth, snowing ? intensity : 0);
+  const level = i.level ?? 'full';
+  const sun: Level = byDay && body.kind === 'sun' && !falling && !fog ? sunLevel(h, cover) : 0;
   return {
     phase,
     theme: i.theme,
     cond,
     intensity,
     cloud,
-    wind: windLevel(f.now?.wind, f.now?.gust),
-    frost: frostLevel(f.temp, cond, f.code),
-    heat: f.temp >= HEAT_C && byDay,
-    snowGround: SNOWING.has(cond) || (f.now?.snowDepth ?? 0) >= SNOW_LIES_M,
+    cover,
+    veil,
+    sun,
+    thunder,
+    fog,
+    snowCover,
+    windTo: windTo(h.dir, i.lat),
+    wet: wetOf(falling && !snowing, prev),
+    mode: bodyMode({ body, cover, veil, thunder, fog, falling, level }),
+    wind: windLevel(h.wind, h.gust),
+    frost: frostLevel(temp, cond, code),
+    heat: temp >= HEAT_C && byDay,
+    snowGround: snowCover >= 1,
     season: seasonOf(Number(nowIso.slice(5, 7)), i.lat),
     body,
     moon,
@@ -418,7 +664,7 @@ export function sceneOf(i: SceneInput): SceneState {
     event,
     eventAmount: event ? Math.min(1, Math.max(0, i.event?.amount ?? 0)) : 0,
     calm: !!i.calm,
-    level: i.level ?? 'full',
+    level,
     motion: !!i.motion,
     landscape: 'mountains',
     seed: 7,
@@ -465,6 +711,15 @@ export function defaultScene(theme: SceneTheme, month: number, calm = false): Sc
     cond: 'clear',
     intensity: 2,
     cloud: 5,
+    cover: 0,
+    veil: false,
+    sun: 0,
+    thunder: 0,
+    fog: 0,
+    snowCover: 0,
+    windTo: 'right',
+    wet: false,
+    mode: '',
     wind: 0,
     frost: 0,
     heat: false,
@@ -480,39 +735,45 @@ export function defaultScene(theme: SceneTheme, month: number, calm = false): Sc
   };
 }
 
-const OPEN: ReadonlySet<Cond> = new Set<Cond>(['clear', 'mostlyClear', 'partly']);
 export const isSnow = (c: Cond): boolean => c === 'snow' || c === 'snowShowers';
 export const isThunder = (c: Cond): boolean => c === 'thunder' || c === 'thunderHail';
 export const isDrizzle = (c: Cond): boolean => c === 'drizzle' || c === 'freezingDrizzle';
 
-/** Which sky (mockup `skyOf`): the family by condition, the twilight glow at full or 40 % strength. */
+/** Skies with their own twilight glow (palette `glow`). */
+const GLOW_KEYS: ReadonlySet<SkyKey> = new Set<SkyKey>(['dawn', 'dusk', 'golden', 'eclipse-sky']);
+
+/**
+ * Which sky (round 2 mockup `skyKey`, CONCEPT §4): grey weather at dawn and dusk takes the night family; thunder level 1
+ * the `rain` sky, `storm` from level 2; rain level 1 and drizzle the pale `drizzle` sky, levels 2–3 `rain`; drizzle at
+ * night `night-rain`; an overcast night the lighter sky under the deck. `night-full` keeps the full-moon flag.
+ */
 export function skyOf(s: SceneState): { key: SkyKey; glow?: { phase: Phase; strength: number } } {
-  if (s.event === 'solarTotal') return { key: 'eclipse-sky' };
-  if (s.event === 'dust') return { key: 'dust' };
-  const c = s.cond;
-  const deck = s.cloud > 85 && c !== 'fog';
-  const nightKey = (): SkyKey => {
-    if (c === 'fog') return 'night-fog';
-    if (isSnow(c)) return 'night-snow';
-    if (c === 'rain' || c === 'freezingRain' || c === 'showers' || isThunder(c))
-      return 'night-rain';
-    if (c === 'overcast' || isDrizzle(c) || deck) return 'night-overcast';
-    return s.body.kind === 'moon' && (s.moon?.size ?? 1) >= 1.2 ? 'night-full' : 'night';
-  };
-  const dayKey = (): SkyKey => {
-    if (c === 'fog') return 'fog';
+  const key = ((): SkyKey => {
+    if (s.event === 'solarTotal') return 'eclipse-sky';
+    if (s.event === 'dust') return 'dust';
+    const c = s.cond;
+    const falling = FALLING.has(c);
+    const grey = s.cover === 4 || falling || s.fog > 0;
+    const p = s.phase;
+    if (p === 'night' || ((p === 'dawn' || p === 'dusk') && grey)) {
+      if (s.fog) return 'night-fog';
+      if (isSnow(c)) return 'night-snow';
+      if (falling || s.thunder) return 'night-rain';
+      if (s.cover === 4) return 'night-overcast';
+      return s.body.kind === 'moon' && (s.moon?.size ?? 1) >= 1.2 ? 'night-full' : 'night';
+    }
+    if (p === 'dawn' || p === 'dusk') return p;
+    if (s.thunder >= 2) return 'storm';
+    if (s.fog) return 'fog';
     if (isSnow(c)) return 'snow';
-    if (isThunder(c)) return 'storm';
-    if (c === 'rain' || c === 'freezingRain') return 'rain';
-    if (isDrizzle(c) || c === 'showers') return 'drizzle';
-    if (c === 'overcast' || deck) return 'overcast';
+    if (falling) return s.thunder || (s.intensity >= 2 && !isDrizzle(c)) ? 'rain' : 'drizzle';
+    if (s.cover === 4) return 'overcast';
+    if (p === 'golden') return 'golden';
     return s.heat ? 'heat' : 'day';
-  };
-  const p = s.phase;
-  if (p === 'night') return { key: nightKey() };
-  if (p === 'day') return { key: dayKey() };
-  if (OPEN.has(c) && !deck && !FALLING.has(c)) return { key: p, glow: { phase: p, strength: 1 } };
-  return { key: p === 'golden' ? dayKey() : nightKey(), glow: { phase: p, strength: 0.4 } };
+  })();
+  return GLOW_KEYS.has(key) && key !== 'eclipse-sky'
+    ? { key, glow: { phase: s.phase, strength: 1 } }
+    : { key };
 }
 
 export const skyKey = (s: SceneState): SkyKey => skyOf(s).key;
