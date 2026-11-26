@@ -247,10 +247,6 @@
   --scene-star: #ffffff;
   --scene-cloud: #ffffff;
   --scene-cloud-shade: #d6e2ee;
-  --scene-cloud-rain: #6f7d8e;
-  --scene-cloud-rain-shade: #5a6878;
-  --scene-cloud-storm: #4a5463;
-  --scene-cloud-storm-shade: #363f4c;
   --scene-cloud-night: #3a466e;
   --scene-cloud-night-shade: #2a3458;
   --scene-snow: #f7fbfe;
@@ -263,15 +259,9 @@
   --scene-hail-edge: #b8c6d6;
   --scene-heat-haze: #fbe7b0;
   --scene-dry-meadow: #a39a55;
-  --scene-trunk: #4a3b30;
   --scene-glow-dawn: #f7b08a;
   --scene-glow-dusk: #f29a6b;
   --scene-glow-golden: #ffd9a0;
-  --scene-cloud-golden-shade: #e2b7a0;
-  --scene-land-dusk: #2a2240;
-  --scene-haze-night: #6a7aae;
-  --scene-crest-night: #8090c0;
-  --scene-grass-heat: #c9b46a;
   --scene-land-night: #0c1430;
   --scene-moon: #f1ecd8;
   --scene-moon-mare: #d6cfb6;
@@ -293,22 +283,6 @@
   --scene-aurora-1: #7fe0a8;
   --scene-aurora-2: #58c7b0;
   --scene-aurora-3: #a98be0;
-  --scene-land-spring: #3f7a58;
-  --scene-land-spring-1: #5f9a62;
-  --scene-land-spring-2: #4f8c5a;
-  --scene-land-spring-3: #6aa36a;
-  --scene-land-summer: #2f6650;
-  --scene-land-summer-1: #3f7a52;
-  --scene-land-summer-2: #356f4c;
-  --scene-land-summer-3: #4a8558;
-  --scene-land-autumn: #5b6a45;
-  --scene-land-autumn-1: #c98a3c;
-  --scene-land-autumn-2: #b5562f;
-  --scene-land-autumn-3: #d9a441;
-  --scene-land-winter: #47594f;
-  --scene-land-winter-1: #6f6a62;
-  --scene-land-winter-2: #6f6a62;
-  --scene-land-winter-3: #6f6a62;
   /* Weather scene v2 (docs/design/weather-scenes-2, mockups/palette.js): cloud decks per sky (lowest roll … lit rim),
      how a sky lights the land (`--scene-light-*`, the mix numbers live in draw.ts), land tones by season and depth,
      the foreground. Dark-theme decks below in both dark blocks. */

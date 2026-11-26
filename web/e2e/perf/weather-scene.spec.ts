@@ -4,8 +4,8 @@ import { expect, test, type CDPSession, type Page } from '@playwright/test';
 import { ready } from '../helpers';
 
 /**
- * Performance pass of the weather scenes (manual tooling, not CI; handoff 04 "Performance pass", ceilings in
- * docs/design/weather-scenes/A11Y.md §4, numbers in docs/perf/WEATHER-SCENES-2026-11.md).
+ * Performance pass of the weather scenes (manual tooling, not CI; round 1 handoff 04 and round 2 handoff D, ceilings in
+ * docs/design/weather-scenes-2/A11Y.md §4, numbers in docs/perf/WEATHER-SCENES-2026-11.md).
  *
  * Runs on the e2e build (`npm run build:e2e && npm run preview`, :4173) on a desktop and a Pixel 7 profile with the
  * CPU slowed through CDP (`Emulation.setCPUThrottlingRate`, WS_RATE, default 4). The whole network is mocked like
@@ -73,6 +73,21 @@ const SCENARIOS: Scenario[] = [
     min: -7,
     gust: 85,
     cloud: 50,
+    kp: 2,
+    snowDepth: 0,
+    sunrise: '07:38',
+    sunset: '16:24',
+  },
+  {
+    // Round 2 (handoff D): an overcast night with the moon between the banks (body mode `hole`), little wind.
+    id: 'overcast-night-banks',
+    utc: '2026-11-24T21:00:00Z',
+    local: '2026-11-24T22:00',
+    code: 3,
+    temp: 2,
+    min: 0,
+    gust: 20,
+    cloud: 95,
     kp: 2,
     snowDepth: 0,
     sunrise: '07:38',

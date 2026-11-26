@@ -1,4 +1,4 @@
-import { litPath, MARIA, tiltRotation } from './drawV1';
+import { litPath, MARIA, tiltRotation } from './draw';
 
 export interface MoonGlyphProps {
   /** Lit fraction 0…1. */
