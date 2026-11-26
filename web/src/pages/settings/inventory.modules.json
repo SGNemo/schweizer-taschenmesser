@@ -585,6 +585,11 @@
         "type": "boolean",
         "label": "Stapel als eine Zeile: E-Mail"
       },
+      "kindsInField": {
+        "type": "boolean",
+        "label": "Arten im Feld erkennen",
+        "default": true
+      },
       "measurePropose": {
         "type": "boolean",
         "label": "Aus gemessener Zeit vorschlagen",

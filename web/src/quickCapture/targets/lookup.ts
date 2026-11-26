@@ -137,3 +137,48 @@ export async function findOpenInvoice(
   const best = pool.filter((r) => r.dueDate === oldest);
   return best.length === 1 ? { match: strip(best[0]!) } : { candidates: pool.map(strip) };
 }
+
+/** A name as the field compares it: trimmed, inner spaces folded, case-blind. */
+export const nameKey = (name: string): string =>
+  name.trim().replace(/\s+/gu, ' ').toLocaleLowerCase('de');
+
+/**
+ * The names the shopping list or the pantry already knows (planner hub 2, package 3: „Milch“ typed alone in the planner's
+ * field is a shopping-list entry). A pure local read through the manifest repos – the pantry's item names and the names
+ * of every entry on a shopping list (bought ones too: the list knows them) – compared by `nameKey` (exact, case-blind).
+ * Nothing from a module that is off; an empty set when both are.
+ */
+export async function knownShoppingNames(
+  opts: { database?: TaschenmesserDB; states?: ModuleStates } = {},
+): Promise<Set<string>> {
+  const states = opts.states ?? (await loadModuleStates(visibleManifests, opts.database));
+  const out = new Set<string>();
+  const add = (v: unknown) => {
+    if (typeof v === 'string' && v.trim()) out.add(nameKey(v));
+  };
+  const pantry = getManifest('pantry');
+  if (pantry && states.pantry) {
+    const rows = (await createCollectionRepo(pantry, 'item', opts.database)
+      .active()
+      .toArray()) as Record<string, unknown>[];
+    for (const r of rows) add(r.name);
+  }
+  const lists = getManifest('lists');
+  if (lists && states.lists) {
+    const shopping = new Set(
+      (
+        (await createCollectionRepo(lists, 'list', opts.database).active().toArray()) as Record<
+          string,
+          unknown
+        >[]
+      )
+        .filter((l) => l.kind === 'shopping')
+        .map((l) => String(l.id)),
+    );
+    const rows = (await createCollectionRepo(lists, 'item', opts.database)
+      .active()
+      .toArray()) as Record<string, unknown>[];
+    for (const r of rows) if (shopping.has(String(r.listId))) add(r.name);
+  }
+  return out;
+}

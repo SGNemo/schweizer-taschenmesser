@@ -9506,6 +9506,10 @@ export const de = {
         expandRows: 'Zeilen aufklappen',
         expandRowsHelp:
           'Ein Tipp auf den Titel zeigt das Ding im Planer. Aus: der Titel öffnet es in seinem Modul.',
+        // Planner hub 2, package 3 (COPY K5).
+        kindsInField: 'Arten im Feld erkennen',
+        kindsInFieldHelp:
+          'Zeigt vor dem Eintragen, was aus der Zeile wird. Ohne die Zeile wird es eine Aufgabe.',
         measurePropose: 'Aus gemessener Zeit vorschlagen',
         measureProposeHelp:
           'Ein neues Ding ohne Minuten bekommt die Zeit, die es die letzten Male mit „Fokus starten“ oder „Los“ gebraucht hat. Aus: nichts wird mehr gemessen, Gemessenes bleibt.',
@@ -9531,6 +9535,43 @@ export const de = {
       failed: 'Das hat nicht geklappt. Es ist nichts verändert.',
       tick: (step: string) => `„${step}“ abhaken`,
       more: (n: number) => `${n} weitere`,
+    },
+    /** Kinds in the field (package 3, COPY K1–K4, K6, A7). */
+    kinds: {
+      /** K1: the line's lead word. */
+      becomes: 'Wird:',
+      /** K2 */
+      name: {
+        invoice: 'Rechnung',
+        list: 'Einkaufsliste',
+        event: 'Termin',
+        note: 'Notiz',
+        bookmark: 'Merkliste',
+        steps: 'Aufgabe mit Schritten',
+      },
+      /** K1: an invoice's deadline. */
+      deadline: (day: string) => `Frist ${day}`,
+      /** K1: an Aufgabe mit Schritten's count. */
+      stepCount: (n: number) => (n === 1 ? '1 Schritt' : `${n} Schritte`),
+      /** K6: more names after three. */
+      more: (n: number) => `+ ${n}`,
+      /** K3 */
+      asTask: 'Als Aufgabe eintragen',
+      /** K3's key, for a screen reader. */
+      asTaskKeys: 'Alt+Eingabe',
+      /** K4 */
+      toast: {
+        invoice: 'Rechnung angelegt, liegt unter „Noch ohne Tag“.',
+        list: 'Steht auf der Einkaufsliste.',
+        event: 'Termin eingetragen.',
+        note: 'Notiz angelegt.',
+        bookmark: 'Auf der Merkliste.',
+        steps: (n: number, day: string) => `Aufgabe mit ${n} Schritten angelegt, liegt auf ${day}.`,
+      },
+      /** K4: the note's offer. */
+      toPlan: 'In den Plan',
+      /** A7: a struck lead chip's description. */
+      chipNotFor: (chip: string, kind: string) => `${chip} – gilt nicht für ${kind}`,
     },
     /** Shared into the planner (package 1, COPY S2, S5, S7–S9, S14, S16, S19). */
     share: {

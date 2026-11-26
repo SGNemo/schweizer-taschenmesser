@@ -43,7 +43,7 @@ import { dismissNotices } from '../helpers';
  *    that ends it): (ended with 2: B `taps` 27 → 28 / phone 14 → 16 and `perThing` 17 → 21 / phone 9 → 13 from 4b;
  *    ended with 5a:) C1 `workTaps` 7 → 8 and
  *    `taps` 19 → 20 from 4a until 5a (expand, „Ganz öffnen“, the routine's run as today).
- * Re-measured by the packages: 10b: D1 · 4a: D1, C1 · 4b/2: B · 4c: B `replySwitches` · 5a: C1 · 8: C1 `learned` · 1: D2 (done) · 3: A1, C1 · 9: D3 · 11: D4.
+ * Re-measured by the packages: 10b: D1 · 4a: D1, C1 · 4b/2: B · 4c: B `replySwitches` · 5a: C1 · 8: C1 `learned` · 1: D2 (done) · 3: A1, C1 (done) · 9: D3 · 11: D4.
  * `MEASURE=1` only measures. Facts (the click path, the module routes passed) land beside the table in
  * `test-results/usecase-planner-hub-2/`.
  *
@@ -73,20 +73,24 @@ const HIGHER = ['rightKind', 'linkedToPlan', 'doneInPlanner', 'markVisible', 'ma
  * (create 10 – „Ganz öffnen“ opens its editor at once, so no „Bearbeiten“ – switches 2); worked off with „Los“: the
  * next step only, the last „Fertig“ ticks the ToDo (work 7, taps 17, `nextStepOnly` ja). `perThing` keeps its IST 6
  * (measured 7: the lasting price of 4a). The C1 prices end here.
+ * A1 and C1 after 3 (2026-11-26): the field reads sure kinds (K1) – the two invoices and the list wait under „Noch ohne
+ * Tag“, the appointment is in the calendar, note and link get no row (rows 7, rightKind 12, linkedToPlan 10); A1 now
+ * waits for any stored thing, not a ToDo. C1's round is typed as one line „Haushalt: a, b, c, d, e“ (create 1, taps 8,
+ * switches 0); `perThing` keeps its IST 6 (measured 7, the price of 4a).
  * B after 2 (2026-11-25): the ten things stand in two piles („Finanzen checken“, „E-Mails durchgehen“; phone: one) –
  * the pile switches are set before `rowsBefore` is read, expanding a pile is no `touch`, the budget is a read-only line;
  * the mails enter through the mail pile's P15 and are ticked as member lines. The B prices end here.
  */
 // prettier-ignore
 const IST: Record<string, Figures> = {
-  'A1 Alles ins Planer-Feld · desktop-chrome': { rows: 11, moduleSwitches: 0, taps: 12, perThing: 0, rightKind: 4, linkedToPlan: 4 },
-  'A1 Alles ins Planer-Feld · pixel-7': { rows: 11, moduleSwitches: 0, taps: 12, perThing: 0, rightKind: 4, linkedToPlan: 4 },
+  'A1 Alles ins Planer-Feld · desktop-chrome': { rows: 7, moduleSwitches: 0, taps: 12, perThing: 0, rightKind: 12, linkedToPlan: 10 },
+  'A1 Alles ins Planer-Feld · pixel-7': { rows: 7, moduleSwitches: 0, taps: 12, perThing: 0, rightKind: 12, linkedToPlan: 10 },
   'A2 Jedes Ding als richtige Art · desktop-chrome': { rows: 8, moduleSwitches: 3, taps: 33, perThing: 13, forms: 2, fields: 5, rightKind: 12, linkedToPlan: 11 },
   'A2 Jedes Ding als richtige Art · pixel-7': { rows: 8, moduleSwitches: 5, taps: 34, perThing: 14, forms: 2, fields: 5, rightKind: 12, linkedToPlan: 11 },
   'B Finanzen und Mails abarbeiten · desktop-chrome': { rowsBefore: 2, taps: 17, perThing: 12, moduleSwitches: 0, doneInPlanner: 9, rowsAfter: 0, mails: 4, replySwitches: 0 },
   'B Finanzen und Mails abarbeiten · pixel-7': { rowsBefore: 1, taps: 10, perThing: 8, moduleSwitches: 0, doneInPlanner: 5, rowsAfter: 0, mails: 'nicht möglich', replySwitches: 'nicht möglich' },
-  'C1 Bündel Haushalt · desktop-chrome': { rows: 1, createTaps: 10, workTaps: 7, taps: 17, perThing: 6, moduleSwitches: 2, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'ja' },
-  'C1 Bündel Haushalt · pixel-7': { rows: 1, createTaps: 10, workTaps: 7, taps: 17, perThing: 6, moduleSwitches: 2, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'ja' },
+  'C1 Bündel Haushalt · desktop-chrome': { rows: 1, createTaps: 1, workTaps: 7, taps: 8, perThing: 6, moduleSwitches: 0, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'ja' },
+  'C1 Bündel Haushalt · pixel-7': { rows: 1, createTaps: 1, workTaps: 7, taps: 8, perThing: 6, moduleSwitches: 0, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'ja' },
   'C2 Besorgung · desktop-chrome': { rows: 2, createTaps: 0, workTaps: 9, perThing: 5, moduleSwitches: 2, oneRow: 'nein', mapShown: 'nicht möglich' },
   'C2 Besorgung · pixel-7': { rows: 2, createTaps: 0, workTaps: 8, perThing: 5, moduleSwitches: 2, oneRow: 'nein', mapShown: 'nicht möglich' },
   'D1 Steht es im Plan, und wann · desktop-chrome': { taps: 11, perThing: 5, moduleSwitches: 10, markVisible: 5, markAgrees: 5, tripsToPlanner: 0 },
@@ -677,11 +681,25 @@ test('A1 Alles ins Planer-Feld', async ({ page, isMobile }, info) => {
   const hand = new Hand(page, isMobile);
   hand.start();
   const field = page.getByRole('textbox', { name: 'Eintragen oder sagen' });
+  // Package 3: a line can land as another kind, so the wait is for any stored thing, not a ToDo.
+  const stored = async () =>
+    (
+      await Promise.all(
+        [
+          'todos_task',
+          'invoices_invoice',
+          'lists_item',
+          'calendar_event',
+          'notes_note',
+          'bookmarks_item',
+        ].map((table) => rows(page, table)),
+      )
+    ).reduce((n, r) => n + r.length, 0);
   for (const [i, line] of DUMP.entries()) {
     await hand.fill(field, line, `Feld: ${line}`);
     await field.press('Enter');
     await expect(field).toHaveValue('');
-    await expect.poll(async () => (await rows<Task>(page, 'todos_task')).length).toBe(i + 1);
+    await expect.poll(stored).toBe(i + 1);
   }
   const after = await plannerRows(page);
   const switches = hand.moduleSwitches;
@@ -1104,40 +1122,15 @@ test('C1 Bündel Haushalt', async ({ page, isMobile }, info) => {
   await planner(page);
   const hand = new Hand(page, isMobile);
   hand.start();
-  // Package 5a: the thing with steps is a ToDo with a checklist. Created from the planner's field („Haushalt“, on
-  // today's sheet), then its five lines in ToDos (expand, „Ganz öffnen“, „Bearbeiten“ where it opens as a panel, one typed line
-  // each, „Speichern“) and back. Making a thing names no thing (FIGURES §1).
+  // Package 3: the thing with steps is typed as one line – „Haushalt: a, b, c, d, e“ is an Aufgabe mit Schritten (K1),
+  // one ToDo with its checklist on today's sheet. Making a thing names no thing (FIGURES §1).
   const field = page.getByRole('textbox', { name: 'Eintragen oder sagen' });
-  await hand.fill(field, 'Haushalt', 'Haushalt');
+  await hand.fill(field, `Haushalt: ${HOUSEHOLD.join(', ')}`, 'Haushalt: fünf Schritte');
+  await expect(page.getByTestId('planner-kind')).toContainText('Aufgabe mit Schritten');
   await field.press('Enter');
-  const made = page
-    .getByTestId(`day-${TODAY}`)
-    .locator('li')
-    .filter({ hasText: 'Haushalt' })
-    .first();
-  await expect(made).toBeVisible();
-  await hand.tap(made.locator('button[data-row]').first(), 'Aufklappen: Haushalt');
-  await hand.tap(
-    made.getByTestId('row-compartment').getByRole('button', { name: 'Ganz öffnen' }),
-    'Ganz öffnen: Haushalt',
-  );
-  // „Bearbeiten“ only where the ToDo opens as a panel and not straight in its editor.
-  const editor = page.getByRole('dialog').filter({ has: page.getByLabel('Punkt hinzufügen') });
-  if (!(await appears(editor, 2500)))
-    await hand.tap(
-      page
-        .getByRole('button', { name: 'Bearbeiten', exact: true })
-        .filter({ visible: true })
-        .first(),
-      'Bearbeiten',
-    );
-  const add = page.getByLabel('Punkt hinzufügen');
-  for (const step of HOUSEHOLD) {
-    await hand.fill(add, step, step);
-    await add.press('Enter');
-  }
-  await hand.tap(page.getByRole('button', { name: 'Speichern', exact: true }), 'Speichern');
-  await go(hand, page, isMobile, 'planner');
+  await expect(
+    page.getByTestId(`day-${TODAY}`).locator('li').filter({ hasText: 'Haushalt' }).first(),
+  ).toBeVisible();
   const created = await plannerRows(page);
   const createTaps = hand.taps;
   const createSwitches = hand.moduleSwitches;

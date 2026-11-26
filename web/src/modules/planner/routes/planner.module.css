@@ -38,6 +38,64 @@
   color: var(--danger);
   font-size: var(--text-meta);
 }
+/* Kinds in the field (package 3, hand-off 03): the preview line K1 in the examples' place (never both), 44 px while it
+   shows; the read parts in --text (never grey on grey), only „Wird:“ and the glyph quiet. K3 a quiet button. */
+.kindLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 var(--space-2);
+  min-height: var(--touch);
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-sm);
+  color: var(--text);
+}
+.kindText {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--space-1);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.kindGlyph {
+  display: inline-flex;
+  color: var(--text-3);
+}
+.kindLead {
+  color: var(--text-3);
+}
+.kindName {
+  font-weight: var(--weight-semibold);
+}
+.kindSep {
+  color: var(--text-3);
+}
+.kindAsTask {
+  margin-inline-start: auto;
+  min-height: var(--touch);
+}
+/* Lead chips before the input (A2, T11): at most two; struck through while the line shows a kind that takes none. */
+.leadChips {
+  display: flex;
+  gap: var(--space-1);
+  align-self: center;
+}
+.leadChip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--surface-raised);
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+  white-space: nowrap;
+}
+.leadStruck {
+  text-decoration: line-through;
+}
 /* „Zum Beispiel“ and three chips under the field: they fill the field, they never submit. */
 .examples {
   display: flex;

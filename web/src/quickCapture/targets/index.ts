@@ -138,11 +138,13 @@ export async function saveCapture(
     // Zod rejected the record (e.g. an impossible date); never echo user text into the error.
     throw new CaptureError('invalid');
   }
+  const planRef = target.planRef?.(data);
   return {
     id: saved.id,
     type,
     moduleId: target.moduleId,
     undo: () => repo.remove(saved.id),
+    ...(planRef ? { planRef } : {}),
   };
 }
 
