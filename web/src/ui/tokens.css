@@ -198,18 +198,6 @@
   --shape-soft: 16px;
   --shape-round: 20px;
   --shape-sharp: 10px;
-  /* Sky (weather head and widget, ui/identity/Sky): gradients by condition and daytime. Text on them is --text; night
-     sets its own light ink because the page may be in the light theme (tokens.test.ts checks both). */
-  --sky-day-0: #6fb3e8;
-  --sky-day-1: #cfe7f7;
-  --sky-rain-0: #5b6f84;
-  --sky-rain-1: #9db0c0;
-  --sky-night-0: #101a33;
-  --sky-night-1: #2a3b66;
-  --sky-night-ink: #eceff1;
-  --sky-sun: #ffd36a;
-  --sky-sun-core: #fff5c8;
-  --sky-cloud: rgb(255 255 255 / 0.75);
   /* Weather scene (docs/design/weather-scenes, mockups/palette.js): sky stops per family, then the drawing's colours.
      Dark-theme skies below in both dark blocks; the rest is the same in both themes. Ink on the scene: --ink-*. */
   --scene-sky-night-0: #0b1330;
@@ -393,11 +381,6 @@
   --mod-slate: #a9b7c0;
   --pattern-head: 0.03;
   --pattern-widget: 0.02;
-  --sky-day-0: #1c3a5c;
-  --sky-day-1: #2e5a86;
-  --sky-rain-0: #1d2733;
-  --sky-rain-1: #3a4b5c;
-  --sky-cloud: rgb(255 255 255 / 0.22);
   --scene-sky-golden-0: #22355a;
   --scene-sky-golden-1: #5a4f6e;
   --scene-sky-golden-2: #7a5c50;
@@ -473,11 +456,6 @@
     --mod-slate: #a9b7c0;
     --pattern-head: 0.03;
     --pattern-widget: 0.02;
-    --sky-day-0: #1c3a5c;
-    --sky-day-1: #2e5a86;
-    --sky-rain-0: #1d2733;
-    --sky-rain-1: #3a4b5c;
-    --sky-cloud: rgb(255 255 255 / 0.22);
     --scene-sky-golden-0: #22355a;
     --scene-sky-golden-1: #5a4f6e;
     --scene-sky-golden-2: #7a5c50;

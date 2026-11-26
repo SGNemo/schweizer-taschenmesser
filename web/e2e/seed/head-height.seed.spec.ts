@@ -217,30 +217,15 @@ test.describe('weather stage with weather data (K3)', () => {
           STAGE,
         );
         expect(head?.outside, 'nothing in the stage leaves its box').toEqual([]);
-        // The module row (phone) and the sun do not share a place.
-        const overlap = await page.evaluate(() => {
-          const row = document.querySelector('nav[data-module-row]')?.getBoundingClientRect();
-          const sun = document
-            .querySelector('[data-testid="module-frame"] [data-sky] span')
-            ?.getBoundingClientRect();
-          if (!sun || sun.height === 0) return 'no sun';
-          if (!row || row.height === 0) return 'no module row';
-          return !(
-            sun.bottom <= row.top ||
-            sun.top >= row.bottom ||
-            sun.right <= row.left ||
-            sun.left >= row.right
-          );
-        });
         if (SHOTS) {
           mkdirSync(SHOTS, { recursive: true });
           await page.screenshot({
             path: join(SHOTS, `${phone ? 'phone' : 'desktop'}-weather-data.png`),
           });
         }
-        // The phone has a module row: both must be found, or the check says nothing. Desktop has none.
-        expect(overlap, 'the module row lies across the sun').toBe(phone ? false : 'no module row');
-        // Weather scenes 1b: the scene's own body (the sun's disc, not its soft halo) is clear of the module row too.
+        // The module row (phone) and the sun do not share a place. Weather scenes 4 removed the old sky swatch and the
+        // span it was found by: the scene's own body (the sun's disc, not its soft halo) is the sun now. The phone has
+        // a module row: both must be found, or the check says nothing. Desktop has none.
         const bodyOverlap = await page.evaluate(() => {
           const row = document.querySelector('nav[data-module-row]')?.getBoundingClientRect();
           const discs = [

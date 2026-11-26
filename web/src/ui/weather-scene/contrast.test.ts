@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { defaultScene, inkForSky, skyOf, SKY_KEYS, type SkyKey } from '@/core/weather/scene';
 import { crestAt, G, skyOffsets } from './draw';
+import { cardFit } from './useSceneFit';
 
 /**
  * Contrast of the text on the weather scene (docs/design/weather-scenes/A11Y.md §1, find A9): for every sky × theme the
@@ -181,4 +182,60 @@ describe('weather scene contrast (A11Y §1)', () => {
     expect(light['--ink-theme']).toBe('var(--text)');
     expect(light['--ink-theme-muted']).toBe('var(--text-muted)');
   });
+
+  // Weather scenes 4: the overview widget (variant B) carries the scene behind its text with the same ink rule
+  // (`inkOf`, set as `data-ink` on the card). Its fit is the desktop head's composition: the whole panorama at the
+  // card's width, the text left of the shelter's edge – so the text rows meet the sky stops, the shelter haze and, at
+  // most, the alpine ridge (78 % toward the sky's bottom) under the haze, never a close ridge or a tree.
+  it.each([
+    [379, 205],
+    [379, 282],
+    [380, 192],
+  ])('widget %i × %i: the whole panorama, the text zone left of the shelter edge', (W, H) => {
+    const fit = cardFit(W, H, 0.55);
+    // scale W / 1600 (rounding of `extendTop` aside): every unit of the width is shown, no close crop
+    const k = Math.max(W / G.W, H / (G.H + fit.extendTop!));
+    expect(k).toBeCloseTo(W / G.W, 3);
+    expect(fit.quietX).toBeLessThanOrEqual(G.shelterX);
+    // the body in its own box right of the text zone
+    expect(fit.bodyAt![0]).toBeGreaterThan(fit.quietX! + G.sun.r);
+    // Left of the quiet edge the mid ridge with its tallest trees and the near ridge lie below the lowest text row
+    // (the word line ends 24 px above the card's bottom, measured at 380 × 192): only the alpine and the far ridge,
+    // both mixed toward the sky's bottom, can meet a letter.
+    const mid = G.ridges.mid;
+    const near = G.ridges.near;
+    const yAt = (keys: readonly (readonly [number, number])[], x: number): number => {
+      for (let i = 0; i < keys.length - 1; i++)
+        if (x <= keys[i + 1]![0]) return Math.min(keys[i]![1], keys[i + 1]![1]);
+      return keys[keys.length - 1]![1];
+    };
+    let top = Infinity;
+    for (let x = 0; x <= fit.quietX!; x += 10)
+      top = Math.min(top, yAt(mid, x) - G.conifers.hMax, yAt(near, x));
+    const yPx = (top + fit.extendTop!) * k;
+    expect(yPx, `trees at ${Math.round(yPx)} px of ${H}`).toBeGreaterThanOrEqual(H - 24);
+  });
+
+  it.each(SKY_KEYS.flatMap((k) => [[k, 'light'] as const, [k, 'dark'] as const]))(
+    'widget on %s, %s theme: the ink is ≥ 4.5 : 1 against the stops, the haze and the alpine ridge',
+    (key, theme) => {
+      const t = themes[theme];
+      const ink = light[inkForSky(key, theme) === 'light' ? '--ink-light' : '--ink-dark']!;
+      const stops = stopsOf(key, theme);
+      const bottom = stops[stops.length - 1]!;
+      for (const s of [...stops, bottom])
+        expect(ratio(ink, s), `${key} ${theme} ${s}`).toBeGreaterThanOrEqual(4.5);
+      const night = /^(night|dawn|dusk|eclipse)/.test(key);
+      for (const season of ['spring', 'summer', 'autumn', 'winter']) {
+        let base = night ? t['--scene-land-night']! : t[`--scene-land-${season}`]!;
+        if (!night && theme === 'dark') base = mix(base, t['--scene-land-night']!, 0.45);
+        if (key === 'dawn' || key === 'dusk') base = mix(base, t['--scene-land-dusk']!, 0.25);
+        let alp = mix(base, bottom, 0.78);
+        if (night) alp = mix(alp, t['--scene-haze-night']!, 0.22);
+        expect(ratio(ink, alp), `${key} ${theme} ${season} alpine ridge`).toBeGreaterThanOrEqual(
+          4.5,
+        );
+      }
+    },
+  );
 });

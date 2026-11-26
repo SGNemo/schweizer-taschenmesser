@@ -49,7 +49,14 @@ export default defineConfig({
         'measure-focus.spec.ts',
         'mobile-layout.spec.ts',
         'clipped-text.spec.ts',
+        'weather.spec.ts',
       ],
+      use: { baseURL: 'http://localhost:4173' },
+    },
+    {
+      // Weather situations for PR texts (docs/howto/pr-screenshots.md): all network mocked, on the empty e2e build.
+      name: 'weather',
+      testMatch: ['weather.spec.ts'],
       use: { baseURL: 'http://localhost:4173' },
     },
   ],

@@ -12,11 +12,6 @@
   width: 100%;
   height: 100%;
 }
-/* The body's box, for the head-height check that looks for the sun (no paint). */
-.bodyBox {
-  position: absolute;
-  pointer-events: none;
-}
 /* "Ruhig" / "Modulfarben: Aus": the same shapes in greys, mixed toward the surface; ink by the theme. */
 .calm .svg {
   filter: grayscale(1);
@@ -48,7 +43,9 @@
   animation: sc-fog 5s ease-in-out 1 both;
 }
 .svg[data-motion] :global(.sc-sway) {
-  animation: sc-sway 1.66s ease-in-out 3 both;
+  /* One 5 s iteration holding the three sways: iteration boundaries made the browser restyle and repaint the
+     whole page three times (docs/perf/WEATHER-SCENES-2026-11.md). */
+  animation: sc-sway 5s ease-in-out 1 both;
   transform-box: fill-box;
   transform-origin: 50% 100%;
 }
@@ -94,13 +91,19 @@
 }
 @keyframes sc-sway {
   0%,
+  33.33%,
+  66.67%,
   100% {
     transform: none;
   }
-  25% {
+  8.33%,
+  41.67%,
+  75% {
     transform: rotate(2deg);
   }
-  75% {
+  25%,
+  58.33%,
+  91.67% {
     transform: rotate(-2deg);
   }
 }
