@@ -1,6 +1,6 @@
 # Planner hub 2 – concept: what a row can do (ideas 4, 2, 5, 8)
 
-Frame and link contract: [CONCEPT](CONCEPT.md). Looks and measures: [DESIGN](DESIGN.md), `handoff/`. Words: [COPY](COPY.md).
+Frame and link contract: [CONCEPT](CONCEPT.md). Looks and measures: [DESIGN](DESIGN.md); 5b parked: [struck/05-bundle-parked](struck/05-bundle-parked.md). Words: [COPY](COPY.md).
 
 ## Idea 4 – expand instead of jumping
 

@@ -1,6 +1,6 @@
 # Planner hub 2 – figures per path and package
 
-The measuring script is `web/e2e/usecases/planner-hub-2.spec.ts`. This file derives every `TARGET` handle by handle from the designed paths, using the script's own counting. It also lists the acceptance figures for each package. Summary: [ANALYSIS §3](ANALYSIS.md). Order of packages: [PACKAGES](PACKAGES.md). Desktop = `desktop-chrome`, phone = `pixel-7`; „d / p“ gives desktop / phone where they differ.
+The measuring script is `web/e2e/usecases/planner-hub-2.spec.ts`. This file derives every `TARGET` handle by handle from the designed paths, using the script's own counting. It also lists the acceptance figures for each package. Summary: [ANALYSIS §3](ANALYSIS.md). What the packages built: their decision bullets in [decisions/plan-hub-2](../../decisions/plan-hub-2.md). Desktop = `desktop-chrome`, phone = `pixel-7`; „d / p“ gives desktop / phone where they differ.
 
 ## 1. How the script counts
 

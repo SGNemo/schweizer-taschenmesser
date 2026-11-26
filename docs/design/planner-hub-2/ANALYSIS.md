@@ -114,3 +114,38 @@ Target = the script's `TARGET` (the designed path after the last package of the 
 - **Bundles (C):** the planner knows parts of a duration but not steps of a thing; the one tool with steps (routines) lives elsewhere and shows everything at once. The start line of „Tag kippt“ is the right idea for one thing and has nothing to hold on to for five.
 - **What works and stays:** one field; rows of one grammar; „fest“; previews before anything moves; the undo on every action; counts as text.
 - **Research:** the material behind the eleven ideas is the maintainer's own use (`../planner-hub/ANALYSIS-RESEARCH.md`, the three use cases); ideas 6, 9 and 11 have no earlier evidence beyond his order – their target figures are the only argument, which is why the script got flows D3 and D4 and why 6 shrank to what C2 shows.
+
+## 6. Measured after (package M, 2026-11-26, `develop` after 11)
+
+`E2E_SEED=0 MEASURE=1 npx playwright test e2e/usecases/planner-hub-2.spec.ts` on the closed round (20 of 20 paths green, `MEASURE` off as well). „a / b“ = desktop / phone.
+
+| Flow | Figure | Before (2026-11-23) | Target | Measured after |
+| --- | --- | --- | --- | --- |
+| A1 | rows · right kind · linked | 11 · 4 · 4 | 7 · 12 · 10 | **7 · 12 · 10** |
+| A1 | handles · per thing · switches | 12 · 0 · 0 | 12 · 0 · 0 | 12 · 0 · 0 |
+| A2 | handles · per thing · switches | 33 / 34 · 13 / 14 · 3 / 5 | as measured (A1 does it) | 33 / 34 · 13 / 14 · 3 / 5 |
+| B | rows before · switches | 5 · 5 | 2 / 1 · 0 | **2 / 1 · 0** |
+| B | handles · per thing | 27 / 14 · 17 / 9 | 17 / 10 · 12 / 8 | **17 / 10 · 12 / 8** |
+| B | done in the planner · rows after · `replySwitches` | 1 · 1 · 1 | 9 / 5 · 0 · 0 | **9 / 5 · 0 · 0** (no mail on the phone) |
+| C1 | create · work · all handles | 12 · 7 · 19 | 1 · 7 · 8 | **1 · 7 · 8** |
+| C1 | per thing · switches | 6 · 4 / 5 | 7 (lasting price) · 0 | 7 (the price) · **0** |
+| C1 | next step only · learned | nein · nein | ja · ja | **ja · ja** |
+| C2 | all figures | rows 2, create 0, work 9 / 8, per thing 5, switches 2 | (5b) rows 1, create 14 / 13, work 6, per thing 7 | **nicht gebaut: 5b geparkt** – unchanged, `TARGET` kept for the day 5b is built |
+| D1 | mark visible · agrees · `tripsToPlanner` | 1 · 2 · 8 | 5 · 5 · 0 | **5 · 5 · 0** |
+| D1 | handles · per thing · switches | 11 · 5 · 10 | 15 · 9 (lasting price) · 10 | 15 · 9 (the price) · 10 |
+| D2 | handles · switches · way back | 5 · 2 / 3 · nein | 2 · 1 · ja | **2 · 1 · ja** |
+| D3 | handles · per thing · switches | 14 · 0 · 4 | 4 · 0 · 0 | **4 · 0 · 0** |
+| D4 | rows · switches · filter | 20 · 2 · nein | 7 · 0 · ja | **7 · 0 · ja** |
+| D4 | handles · per thing | 27 / 22 · 20 / 15 | 22 / 23 · 15 | **22 / 22** · 15 (the phone's price did not fall due) |
+| D5 | handles · switches · rows off the sheet | 7 · 0 · 3 | unchanged (7 struck) | 7 · 0 · 3 |
+
+Every target is met; no figure was loosened. The prices stayed what the script's header names: C1 `perThing` 7 and D1 15 · 9, both from the expanding row (4a).
+
+**Stimulus** (`npm run measure:stimulus` / `check:stimulus`, all pages within budget). Planner before the round (budget of 2026-11-23) → after, measured = budget:
+
+| Page | buttons | links | icons | first-screen actions | coloured above the fold |
+| --- | --- | --- | --- | --- | --- |
+| `d1920--planner` | 56 → 66 | 19 → 19 | 75 → 75 | 69 → 79 | 6 → 6 |
+| `p412--planner` | 22 → 29 | 14 → 14 | 34 → 36 | 33 → 38 | 6 → 6 |
+
+Only two packages moved the planner's budget, each named as a ratchet hit in its PR and merged by the maintainer: 9 (4d673542c – the expandable appointment rows: d1920 buttons 56 → 63, first-screen actions 69 → 76, height 1080 → 1093; p412 buttons 22 → 26, first-screen actions 33 → 35, height 2052 → 2088) and 11 (98188f434 – the ⋯ with „Thema …“ on appointment rows: → 66 / 79 and → 29 / 38, icons 33 → 36 on the phone). Every other package held the shared block's „unchanged“. Heights: d1920 1080 → 1093, p412 2052 → 2088.

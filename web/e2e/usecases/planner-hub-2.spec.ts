@@ -43,7 +43,7 @@ import { dismissNotices } from '../helpers';
  *    that ends it): (ended with 2: B `taps` 27 → 28 / phone 14 → 16 and `perThing` 17 → 21 / phone 9 → 13 from 4b;
  *    ended with 5a:) C1 `workTaps` 7 → 8 and
  *    `taps` 19 → 20 from 4a until 5a (expand, „Ganz öffnen“, the routine's run as today).
- * Re-measured by the packages: 10b: D1 · 4a: D1, C1 · 4b/2: B · 4c: B `replySwitches` · 5a: C1 · 8: C1 `learned` · 1: D2 (done) · 3: A1, C1 (done) · 9: D3 (done) · 11: D4 (done).
+ * Re-measured by the packages: 10b: D1 · 4a: D1, C1 · 4b/2: B · 4c: B `replySwitches` · 5a: C1 · 8: C1 `learned` · 1: D2 (done) · 3: A1, C1 (done) · 9: D3 (done) · 11: D4 (done) · M: every path re-measured, all at TARGET (C2 not built), docs/design/planner-hub-2/ANALYSIS.md §6.
  * `MEASURE=1` only measures. Facts (the click path, the module routes passed) land beside the table in
  * `test-results/usecase-planner-hub-2/`.
  *

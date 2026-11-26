@@ -55,7 +55,7 @@ Everything else – and every kind whose module is off – is a ToDo. **Order of
 
 **What 5b would build – no package of its own.** A „Besorgungsrunde“ is a bundle whose members are the errands and the shopping list: one row („Besorgungen · 3 Dinge“), and the list member shows its open items as tick lines right in the bundle's panel, so the round is worked through without leaving the planner. „Los“ walks the members; the list is one step with its tick lines.
 
-**Struck parts** ([ANALYSIS §4](ANALYSIS.md)): a place per stop, the `place` relation, maps as a link target, „Auf der Karte ansehen“, a map inside the planner, the word „Stopps“. None lowers a figure the bundle and the lists panel do not already lower (`mapShown` stays „nicht möglich“ in the script). The drawn version is kept in `handoff/06-errand.md` and `mockups/06-errand.html` for a later „ja“.
+**Struck parts** ([ANALYSIS §4](ANALYSIS.md)): a place per stop, the `place` relation, maps as a link target, „Auf der Karte ansehen“, a map inside the planner, the word „Stopps“. None lowers a figure the bundle and the lists panel do not already lower (`mapShown` stays „nicht möglich“ in the script). The drawn version is kept in [struck/06-errand](struck/06-errand.md) and `struck/mockups/06-errand.html` for a later „ja“.
 
 **Target (script, should 5b be built).** C2: rows 2 → 1, working handles 9 / 8 → 6. Getting the round together costs 14 handles (phone 13) once, including one trip to Listen for „In den Plan“ (a shopping list is a plan row only when asked in), and per thing rises 5 → 7 – so the module switches stay 2.
 

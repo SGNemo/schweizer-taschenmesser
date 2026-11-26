@@ -1,6 +1,6 @@
 # Hand-off 00 – what every hub-2 surface shares
 
-Read with the package's own hand-off. Words: [COPY](../COPY.md) (ids `M1` …). Keyboard and names: [A11Y](../A11Y.md). Mockups: `../mockups/*.html` (look only; the tokens below are the truth, the mockup CSS approximates them).
+Read with the package's own hand-off. Words: [COPY](../COPY.md) (ids `M1` …). Keyboard and names: [A11Y](../A11Y.md). Mockups: `mockups/*.html` (the parked and struck ones; look only; the tokens below are the truth, the mockup CSS approximates them).
 
 ## The row as built (do not rebuild)
 
