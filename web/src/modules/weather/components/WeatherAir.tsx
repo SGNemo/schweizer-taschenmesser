@@ -6,6 +6,7 @@ import {
   pollenRows,
   rateAir,
   type Air,
+  type AirDay,
   type PollenLevel,
 } from '@/core/weather/air';
 import { DUST_MIN } from '@/core/sky/events';
@@ -35,12 +36,28 @@ function Meter({ level }: { level: PollenLevel }) {
  * sentence instead of an empty list. Orientation only: the hint says so. Saharan dust (package 3): one row under the
  * pollutants while it is in the air (`dust` only while "Mond und Himmelsereignisse" is on).
  */
-export function WeatherAir({ air, dust = false }: { air: Air | undefined; dust?: boolean }) {
+export function WeatherAir({
+  air,
+  dust = false,
+  day,
+}: {
+  air: Air | undefined;
+  dust?: boolean;
+  /**
+   * Another day (round 2, CONCEPT-DAYS §2): its highest index and its pollen; `null` = beyond the five days of the air
+   * forecast (one sentence). Absent: now.
+   */
+  day?: AirDay | null;
+}) {
   const tx = tWeather.use();
   const tp = tWeatherPage.use();
-  const rating = rateAir(air);
-  const rows = air ? pollenRows(air.pollen) : [];
-  const now = air?.now;
+  const shown: Air | undefined =
+    air && day
+      ? { ...air, now: { ...(day.aqi != null ? { aqi: day.aqi } : {}) }, pollen: day.pollen }
+      : air;
+  const rating = day === null ? undefined : rateAir(shown);
+  const rows = shown ? pollenRows(shown.pollen) : [];
+  const now = shown?.now;
   const pollutants = now
     ? [
         ...(now.pm25 != null ? [[tx.pm25, now.pm25] as const] : []),
@@ -58,7 +75,11 @@ export function WeatherAir({ air, dust = false }: { air: Air | undefined; dust?:
         </h3>
         {rating ? <RatingChip rating={rating} /> : null}
       </div>
-      {!air ? (
+      {day === null && air ? (
+        <p className={styles.note} data-testid="weather-air-missing">
+          {tp.airMissing}
+        </p>
+      ) : !air ? (
         <p className={styles.note}>{tx.airUnavailable}</p>
       ) : (
         <>
@@ -78,7 +99,7 @@ export function WeatherAir({ air, dust = false }: { air: Air | undefined; dust?:
               ))}
             </ul>
           ) : null}
-          {dust && now?.dust != null && now.dust >= DUST_MIN ? (
+          {dust && !day && now?.dust != null && now.dust >= DUST_MIN ? (
             <p className={styles.dust} data-testid="weather-dust">
               <EventGlyph name="dust" />
               <span>{tp.ev.dust(formatNumber(now.dust, { maximumFractionDigits: 0 }))}</span>

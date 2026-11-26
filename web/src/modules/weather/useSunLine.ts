@@ -25,10 +25,14 @@ export function useSunLine(
   lon: number,
   /** False while "Mond & Himmel" is not shown: nothing is searched. */
   on = true,
+  /** The shown day (round 2, package C); absent = today. */
+  shown?: string,
 ): string | undefined {
   const tp = tWeatherPage.use();
   const date =
-    on && forecast && at != null ? placeNowIso(forecast, at, now()).slice(0, 10) : undefined;
+    on && forecast && at != null
+      ? (shown ?? placeNowIso(forecast, at, now()).slice(0, 10))
+      : undefined;
   const tz = forecast?.tz;
   const day = forecast?.days?.find((d) => d.date === date);
   const twilight = date ? twilightOf(date, lat, lon, tz) : undefined;

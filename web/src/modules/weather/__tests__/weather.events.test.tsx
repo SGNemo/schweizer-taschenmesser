@@ -130,7 +130,10 @@ describe('sky events on the weather page (package 3)', () => {
     const next = await screen.findByTestId('weather-sky-next', undefined, SLOW);
     expect(next).toHaveTextContent(/Partielle Sonnenfinsternis am Mo\., 2\. Aug\. · 10:10–12:14/);
     expect(screen.queryByTestId('weather-safety')).toBeNull();
-    expect(screen.getByTestId('weather-keys')).not.toHaveTextContent('Sonnenfinsternis');
+    // The chips sit in the head, which may paint a moment after the aside under load.
+    expect(await screen.findByTestId('weather-keys', undefined, SLOW)).not.toHaveTextContent(
+      'Sonnenfinsternis',
+    );
   });
 
   it('2028-12-31: the moon rises during the eclipse', async () => {

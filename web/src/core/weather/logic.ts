@@ -1,6 +1,7 @@
 /** Pure parts of the weather line: weather code → words, rain hint, one-line text. */
 import type { tWeather } from '@/strings.weather';
 import type { DayRow, Forecast, HourRow } from './api';
+import { hoursOfDay } from './derived';
 
 export type CodeGroup = keyof typeof tWeather.de.codes;
 
@@ -171,5 +172,71 @@ export function bestWindow(hours: readonly HourRow[]): { from: string; to: strin
   return {
     from: h(hours[best.start]!.time),
     to: String((Number(h(last.time)) + 1) % 24).padStart(2, '0'),
+  };
+}
+
+/** The hours of the place's local day `date` (00–23; fewer on day 7 and on the 23-hour day). */
+export function hoursOf(forecast: Forecast, date: string): HourRow[] {
+  return hoursOfDay(forecast.hours, date);
+}
+
+/** The hour shown for a day when no hour is chosen and no daylight hour is known (CONCEPT-DAYS §2). */
+export const MIDDLE_FALLBACK_HOUR = 14;
+
+/**
+ * The day's middle hour (CONCEPT-DAYS §2): the warmest hour between sunrise and sunset, the earlier one on a tie;
+ * without sunrise and sunset or without an hour in daylight, 14:00 (or the hour nearest to it on a short day 7).
+ * `undefined` when the day has no hourly values.
+ */
+export function middleHour(forecast: Forecast, date: string): HourRow | undefined {
+  const hours = hoursOf(forecast, date);
+  if (hours.length === 0) return undefined;
+  const day = forecast.days?.find((d) => d.date === date);
+  const rise = day?.sunrise?.slice(-5);
+  const set = day?.sunset?.slice(-5);
+  if (rise && set) {
+    let best: HourRow | undefined;
+    for (const h of hours) {
+      const clock = h.time.slice(11, 16);
+      if (clock < rise || clock >= set) continue;
+      if (!best || h.temp > best.temp) best = h;
+    }
+    if (best) return best;
+  }
+  let near = hours[0]!;
+  for (const h of hours)
+    if (
+      Math.abs(hourOf(h.time) - MIDDLE_FALLBACK_HOUR) <
+      Math.abs(hourOf(near.time) - MIDDLE_FALLBACK_HOUR)
+    )
+      near = h;
+  return near;
+}
+
+/**
+ * The row of the place's wall-clock hour `hour` on `date`: on the 25-hour day the first of the two equal hours, on
+ * the 23-hour day the missing hour falls to the next one; `undefined` when the day has no such or later hour.
+ */
+export function hourRowOf(forecast: Forecast, date: string, hour: number): HourRow | undefined {
+  return hoursOf(forecast, date).find((h) => hourOf(h.time) >= hour);
+}
+
+/**
+ * A day without hourly values (a cache from before round 2) as the one hour the head and the picture draw
+ * (CONCEPT-DAYS §4): the day's code, its high as the temperature, its strongest wind; 14:00, by day.
+ */
+export function dayAsHour(day: DayRow): HourRow {
+  return {
+    time: `${day.date}T${String(MIDDLE_FALLBACK_HOUR).padStart(2, '0')}:00`,
+    temp: day.max,
+    group: day.group,
+    ...(day.code != null ? { code: day.code } : {}),
+    rain: day.rain,
+    ...(day.feelsMax != null ? { feels: day.feelsMax } : {}),
+    ...(day.wind != null ? { wind: day.wind } : {}),
+    ...(day.gust != null ? { gust: day.gust } : {}),
+    ...(day.dir != null ? { dir: day.dir } : {}),
+    ...(day.uv != null ? { uv: day.uv } : {}),
+    night: false,
   };
 }

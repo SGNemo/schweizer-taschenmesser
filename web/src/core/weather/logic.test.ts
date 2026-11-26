@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import type { Forecast } from './api';
+import type { Forecast, HourRow } from './api';
 import {
   bestWindow,
   codeGroup,
+  dayAsHour,
   dayRows,
   hasPreview,
+  hourRowOf,
   hourRows,
+  hoursOf,
+  middleHour,
   placeNowIso,
   rainFrom,
   rainsNow,
@@ -180,5 +184,77 @@ describe('rating', () => {
     expect(bestWindow([])).toBeUndefined();
     // Night hours are not "the best time", however calm.
     expect(bestWindow(mk('ggggg').map((h) => ({ ...h, night: true })))).toBeUndefined();
+  });
+});
+
+describe('hoursOf, middleHour, hourRowOf, dayAsHour (round 2, CONCEPT-DAYS §2, §4)', () => {
+  const D = '2026-11-28';
+  const row = (time: string, temp: number): HourRow => ({ time, temp, group: 'cloudy', rain: 0 });
+  const full = (temps: number[], date = D) =>
+    temps.map((t, h) => row(`${date}T${String(h).padStart(2, '0')}:00`, t));
+  const f = (hours: HourRow[], sun = true): Forecast => ({
+    temp: 0,
+    group: 'cloudy',
+    hours,
+    days: [
+      {
+        date: D,
+        min: -3,
+        max: 4,
+        group: 'snow',
+        code: 73,
+        rain: 90,
+        ...(sun ? { sunrise: `${D}T07:44`, sunset: `${D}T16:20` } : {}),
+        wind: 28,
+        gust: 46,
+      },
+    ],
+  });
+  const temps = [
+    -2, -2, -3, -3, -3, -3, -2, -2, -1, 0, 1, 2, 3, 4, 4, 3, 2, 1, 1, 0, 0, -1, -1, -1,
+  ];
+
+  it('hoursOf: only the hours of that local day', () => {
+    const hours = [...full(temps), ...full(temps, '2026-11-29')];
+    expect(hoursOf(f(hours), D)).toHaveLength(24);
+    expect(hoursOf(f(hours), '2026-11-30')).toEqual([]);
+  });
+
+  it.each([
+    ['warmest daylight hour, the earlier on a tie', temps, true, `${D}T13:00`],
+    ['warmer at night does not count', [9, ...temps.slice(1)], true, `${D}T13:00`],
+    ['no sun times: 14:00', temps, false, `${D}T14:00`],
+    ['short day 7 (00–05): the hour nearest 14:00', temps.slice(0, 6), false, `${D}T05:00`],
+  ])('middleHour: %s', (_, t, sun, want) => {
+    expect(middleHour(f(full(t), sun), D)?.time).toBe(want);
+  });
+
+  it('middleHour: a day without hours has none', () => {
+    expect(middleHour(f([]), D)).toBeUndefined();
+  });
+
+  it.each([
+    ['the hour itself', [0, 1, 2, 3], 2, `${D}T02:00`],
+    ['23-hour day: the missing hour falls to the next', [0, 1, 3, 4], 2, `${D}T03:00`],
+    ['25-hour day: the first of the two equal hours', [0, 1, 2, 2, 3], 2, `${D}T02:00`],
+    ['past the last hour: none', [0, 1], 5, undefined],
+  ])('hourRowOf: %s', (_, hs, h, want) => {
+    const hours = hs.map((x, i) => row(`${D}T${String(x).padStart(2, '0')}:00`, i));
+    expect(hourRowOf(f(hours), D, h)?.time).toBe(want);
+    if (want && hs.filter((x) => x === h).length === 2)
+      expect(hourRowOf(f(hours), D, h)?.temp).toBe(2);
+  });
+
+  it('dayAsHour: the day as one hour at 14:00 with its code, high and strongest wind', () => {
+    expect(dayAsHour(f([]).days![0]!)).toEqual({
+      time: `${D}T14:00`,
+      temp: 4,
+      group: 'snow',
+      code: 73,
+      rain: 90,
+      wind: 28,
+      gust: 46,
+      night: false,
+    });
   });
 });

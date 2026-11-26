@@ -89,6 +89,12 @@ Open-Meteo documents `Access-Control-Allow-Origin: *` for browser use, so the PW
 - **Curve** (`chartSeries.ts`, `WeatherChart`): select "Anzeigen" with six series, choice in `localStorage` `tm-weather-chart` (device-local, not synced, not in diagnostics); the picture is `aria-hidden`, one sentence per series; without data the series says so.
 - **Mehr Werte** (`moreValues.ts`, `MoreValues`): a closed button + region, groups of COPY §6; computed values in `core/weather/derived.ts` (day length, pressure tendency – none before 03:00, the cache starts at midnight –, snowfall line, dew word, thunder tendency). "Mond & Himmel" starts with sun times, day length and civil twilight (`core/sky/twilight.ts`).
 
+## Days and hours (round 2, package C)
+
+- **View moment** (`modules/weather/useViewMoment.ts`, pure parts in `dayView.ts`): `?day=YYYY-MM-DD&hour=HH` in the address, never stored; a day outside the offered week or a broken value falls back to now (`replace`). Leaving now pushes one history entry, further steps replace it, "Heute" / "Jetzt" go back through it – Back returns to now with one press.
+- **Controls:** day stepper at the end of the place row (`DayStepper`; "Heute" only away from today), "7 Tage" and the hour cards as radio groups (hidden native radios, the row / card is the label; Home / End added), "Jetzt" / "Ganzer Tag" while an hour is chosen, swipe on the picture on the phone (`useStageSwipe`, 24 px edges, 56 px, 2 : 1).
+- **Everything follows the moment:** picture (`sceneOf({ hour })`, moon for that instant, 200 ms cross-fade in `WeatherScene` via `fadeKey`, no opening motion), head (`HeroView`: high / low or the hour, the day's chips and line), hints of that day, cards (00–23 of another day), curve with a marker, "Mehr Werte", "Mond & Himmel", air (the day's index and pollen; beyond five days one sentence). A day without cached hours: the daily values and one sentence instead of the cards. One polite live-region sentence per change.
+
 ## Parked
 
 Setup-assistant step "Stadt für das Wetter" (skippable): not built; the settings entry and the one-time hint cover it, and an extra step would add load to the first run.

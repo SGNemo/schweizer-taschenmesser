@@ -139,6 +139,16 @@ describe('official warnings (package 3b)', () => {
     expect(computed).toHaveTextContent('Heute: Frost bis -6°');
   });
 
+  it('another day (round 2, package C): an official warning of that day replaces its computed hint of the kind', async () => {
+    // Tomorrow has gusts of 90 km/h (computed wind); the official wind warning in force now lasts into tomorrow.
+    official({ expires: Date.parse('2026-11-26T18:00:00Z') });
+    renderPage('/weather?day=2026-11-26');
+    expect(await screen.findByTestId('weather-official', undefined, SLOW)).toHaveTextContent(
+      'Sturmböen',
+    );
+    expect(screen.queryByTestId('weather-warning')).toBeNull();
+  });
+
   it('at most two rows in the stage: three official warnings → two in the stage with "+ 1 weitere", one under the head', async () => {
     official(
       { event: 'Glätte', kind: 'ice', level: 2, expires: Date.parse('2026-11-25T20:00:00Z') },

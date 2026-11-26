@@ -222,14 +222,20 @@ test.describe('Weather module', () => {
     await expect(slot.getByTestId('weather-keys')).toContainText('Wind 14 km/h');
     await expect(slot.locator('span[data-signature]')).toHaveCount(0);
     const preview = page.getByTestId('weather-preview');
-    await expect(preview.getByTestId('weather-hours').locator('li')).toHaveCount(24);
-    await expect(preview.getByTestId('weather-days').locator('li')).toHaveCount(7);
+    await expect(preview.getByTestId('weather-hours').locator('label')).toHaveCount(24);
+    await expect(preview.getByTestId('weather-days').locator('label')).toHaveCount(7);
     // Round 2: the first card says "Jetzt"; the hour line under the cards names its hour for screen readers.
-    await expect(preview.getByTestId('weather-hours').locator('li').first()).toContainText('Jetzt');
-    await expect(preview.getByTestId('weather-hours').locator('li').nth(1)).toContainText('11:00');
+    await expect(preview.getByTestId('weather-hours').locator('label').first()).toContainText(
+      'Jetzt',
+    );
+    await expect(preview.getByTestId('weather-hours').locator('label').nth(1)).toContainText(
+      '11:00',
+    );
     await expect(preview.getByTestId('weather-hour-line')).toContainText('Werte um 10:00');
-    await expect(preview.getByTestId('weather-hours').locator('li').nth(5)).toContainText('80 %');
-    await expect(preview.getByTestId('weather-days').locator('li').nth(3)).toContainText(
+    await expect(preview.getByTestId('weather-hours').locator('label').nth(5)).toContainText(
+      '80 %',
+    );
+    await expect(preview.getByTestId('weather-days').locator('label').nth(3)).toContainText(
       'Gewitter',
     );
     await expect(page.getByTestId('weather-preview-credit')).toContainText('Open-Meteo.com');
@@ -240,7 +246,7 @@ test.describe('Weather module', () => {
       'Birke',
     );
     await expect(preview.getByTestId('weather-pollen').locator('li').first()).toContainText('hoch');
-    await expect(preview.getByTestId('weather-days').locator('li').nth(1)).toContainText(
+    await expect(preview.getByTestId('weather-days').locator('label').nth(1)).toContainText(
       'Pollen: Birke',
     );
     // Colour never stands alone: every day names its rating.
@@ -296,8 +302,8 @@ test.describe('Weather module', () => {
     // The last forecast stays on the page, marked with its time; the hours start at the place's current hour.
     await ready(page, '/weather');
     await expect(page.getByTestId('weather-now')).toContainText('Stand 10:00');
-    await expect(page.getByTestId('weather-hours').locator('li').first()).toContainText('Jetzt');
-    await expect(page.getByTestId('weather-hours').locator('li').nth(1)).toContainText('12:00');
+    await expect(page.getByTestId('weather-hours').locator('label').first()).toContainText('Jetzt');
+    await expect(page.getByTestId('weather-hours').locator('label').nth(1)).toContainText('12:00');
     await expect(page.getByTestId('weather-hour-line')).toContainText('Werte um 11:00');
   });
 

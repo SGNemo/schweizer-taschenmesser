@@ -16,6 +16,7 @@ export function HeroFigure({
   sensitive = false,
   tone,
   testId,
+  valueLabel,
 }: {
   label?: string;
   value: string;
@@ -26,6 +27,8 @@ export function HeroFigure({
   /** `danger`: the amount is below zero (red only for exceeded; the minus sign says it in text). */
   tone?: 'danger';
   testId?: string;
+  /** What a screen reader says instead of the value ("Höchstwert 4°, Tiefstwert −3°" for "4° / −3°"). */
+  valueLabel?: string;
 }) {
   return (
     <div className={styles.figure} data-type={type}>
@@ -36,6 +39,14 @@ export function HeroFigure({
             {value}
             {unit ? <small className={styles.unit}>{unit}</small> : null}
           </SensitiveValue>
+        ) : valueLabel ? (
+          <>
+            <span aria-hidden="true">
+              {value}
+              {unit ? <small className={styles.unit}>{unit}</small> : null}
+            </span>
+            <span className="sr-only">{valueLabel}</span>
+          </>
         ) : (
           <>
             {value}

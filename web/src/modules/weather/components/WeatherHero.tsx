@@ -3,7 +3,7 @@ import type { SkyEvents } from '@/core/sky/events';
 import type { OfficialWarning } from '@/core/weather/warningsOfficial';
 import type { MoonNow } from '@/core/sky/moonDay';
 import { dateTimeFormat, numberFormat } from '@/core/i18n/format';
-import type { DayRow } from '@/core/weather/api';
+import type { DayRow, HourRow } from '@/core/weather/api';
 import { compassIndex } from '@/core/weather/air';
 import { bestWindow, hourRows, placeNowIso, dayRows, rainsNow } from '@/core/weather/logic';
 import {
@@ -22,6 +22,7 @@ import { useKeepHeadRoom } from '@/core/shell/heroContext';
 import { tWeather } from '@/strings.weather';
 import { tWeatherPage } from '@/strings.weatherPage';
 import { rainSoon, soonChip } from '../rainSoon';
+import { dayChips, dayRest, hourChips } from '../dayView';
 import { Icon, PHONE_QUERY, useMediaQuery, type IconName } from '@/ui';
 import { HeroFigure, HeroSlot } from '@/ui/identity';
 import { EventGlyph, MoonGlyph, useSceneEnv, WeatherScene } from '@/ui/weather-scene';
@@ -74,8 +75,14 @@ export function WeatherHero({
   events,
   official = [],
   officialMore = 0,
+  view,
 }: {
   weather: WeatherView;
+  /**
+   * Another moment than now (round 2, CONCEPT-DAYS §2): the head, the chips, the line of values and the picture follow
+   * it; the picture changes with a cross-fade and never plays the opening motion.
+   */
+  view?: HeroView;
   /** The hints for the stage (`weatherWarnings`); empty when they came late and sit in the page instead. */
   warnings: WeatherWarning[];
   /** Latitude of the place (season and hemisphere of the scene). */
@@ -106,6 +113,7 @@ export function WeatherHero({
   const phone = useMediaQuery(PHONE_QUERY);
   // One state per minute and input: the scene is drawn again only when something it shows can have changed.
   const minute = Math.floor(now() / 60_000);
+  const sky = view ? view.moon : moon;
   const scene = useMemo(
     () =>
       sceneOf({
@@ -116,20 +124,22 @@ export function WeatherHero({
         theme: env.theme,
         calm: env.calm,
         level,
-        motion,
-        moon: moon
+        // The five seconds of motion belong to opening the page on "now" only (CONCEPT-DAYS §3).
+        motion: motion && !view,
+        moon: sky
           ? {
-              lit: moon.lit,
-              tilt: moon.tilt,
-              alt: moon.alt,
-              az: moon.az,
-              full: moon.name === 'full',
-              superMoon: moon.day.superMoon,
+              lit: sky.lit,
+              tilt: sky.tilt,
+              alt: sky.alt,
+              az: sky.az,
+              full: sky.name === 'full',
+              superMoon: sky.day.superMoon,
             }
           : undefined,
-        event: events?.scene,
+        event: view ? undefined : events?.scene,
+        ...(view ? { hour: view.row } : {}),
       }),
-    [forecast, at, minute, lat, env.theme, env.calm, level, motion, moon, events?.scene],
+    [forecast, at, minute, lat, env.theme, env.calm, level, motion, sky, events?.scene, view],
   );
 
   // UV only while the sun is up at the place (the day's maximum read at 02:50 said "UV 1,5" with a sun); otherwise the
@@ -252,6 +262,47 @@ export function WeatherHero({
     best ? tx.bestTime(best.from, best.to) : undefined,
   ].filter(Boolean);
 
+  // Another moment (CONCEPT-DAYS §2): its own figure, chips and line; the hints come from the page, already of that day.
+  const moonChip = (m: MoonNow | undefined): Key[] =>
+    m
+      ? [
+          {
+            icon: 'moon',
+            text: tp.keyMoon(
+              tx.moon[m.name],
+              numberFormat({ maximumFractionDigits: 0 }).format(Math.round(m.lit * 100)),
+            ),
+            glyph: <MoonGlyph illum={m.lit} size={16} mono waxing={m.waxing} south={lat < 0} />,
+          },
+        ]
+      : [];
+  const nowFigure = {
+    value: tx.temp(forecast.temp),
+    label: undefined as string | undefined,
+    detail: [
+      detail?.feels != null ? tp.feelsLike(detail.feels) : undefined,
+      tx.conditions[word],
+      addition ? additionWord[addition] : undefined,
+    ]
+      .filter(Boolean)
+      .join(' · '),
+  };
+  const figure = view ? viewFigure(tp, tx, view) : nowFigure;
+  let viewKeys: Key[] | undefined;
+  let viewRest: string[] | undefined;
+  if (view?.day) {
+    const own: Key[] = view.chosen
+      ? hourChips(tp, tx, view.row)
+      : dayChips(tp, tx, forecast, view.day);
+    viewKeys =
+      own.length < 3 && !own.some((k) => k.icon === 'sun') ? [...own, ...moonChip(view.moon)] : own;
+    viewRest = dayRest(tp, tx, forecast, view.day, view.chosen);
+  }
+  const shownKeys = viewKeys ? (phone ? viewKeys.slice(0, 2) : viewKeys) : stageKeys;
+  const shownRest = viewRest
+    ? [...(phone ? viewKeys!.slice(2).map((k) => k.text) : []), ...viewRest]
+    : rest;
+
   const pills =
     events?.safety || official.length > 0 || warnings.length > 0 ? (
       <div className={styles.pills}>
@@ -266,7 +317,7 @@ export function WeatherHero({
     ) : null;
   const chips = (
     <ul className={styles.keys} data-testid="weather-keys">
-      {stageKeys.map((k) => (
+      {shownKeys.map((k) => (
         <li key={k.text} className={styles.key} data-kind={k.kind}>
           {k.glyph ?? <Icon name={k.icon} size={16} />}
           {k.text}
@@ -278,19 +329,21 @@ export function WeatherHero({
   return (
     <>
       <HeroSlot area="backdrop">
-        <WeatherScene state={scene} phone={phone} />
+        <WeatherScene
+          state={scene}
+          phone={phone}
+          fadeKey={view ? view.row.time : 'now'}
+          // The fade is motion too: only while the picture may move ("Bild im Wetter-Kopf": Bewegt).
+          fade={motion}
+        />
       </HeroSlot>
       <HeroSlot area="figure">
         <div className={styles.heroBlock} data-testid="weather-now" data-scene-text="">
           <HeroFigure
             type="thin"
-            value={tx.temp(forecast.temp)}
-            detail={[
-              detail?.feels != null ? tp.feelsLike(detail.feels) : undefined,
-              tx.conditions[word],
-              addition ? additionWord[addition] : undefined,
-              stale ? tx.asOf(hourFmt.format(at)) : undefined,
-            ]
+            value={figure.value}
+            valueLabel={figure.label}
+            detail={[figure.detail, stale ? tx.asOf(hourFmt.format(at)) : undefined]
               .filter(Boolean)
               .join(' · ')}
             testId="weather-temp"
@@ -309,7 +362,9 @@ export function WeatherHero({
           <div className={styles.below} data-testid="weather-facts">
             {pills}
             {chips}
-            {rest.length > 0 ? <p className={styles.restBelow}>{rest.join(' · ')}</p> : null}
+            {shownRest.length > 0 ? (
+              <p className={styles.restBelow}>{shownRest.join(' · ')}</p>
+            ) : null}
           </div>
         </>
       ) : (
@@ -318,12 +373,58 @@ export function WeatherHero({
         <HeroSlot area="signature">
           <div className={styles.heroFacts} data-testid="weather-facts" data-scene-text="">
             {chips}
-            <p className={styles.rest}>{rest.join(' · ')}</p>
+            <p className={styles.rest}>{shownRest.join(' · ')}</p>
           </div>
         </HeroSlot>
       )}
     </>
   );
+}
+
+/** The moment of the head when it is not now (CONCEPT-DAYS §2). */
+export interface HeroView {
+  /** The hour the picture draws: the chosen one, else the day's middle hour (or the day as one hour). */
+  row: HourRow;
+  /** An hour is chosen: the big number is its temperature. */
+  chosen: boolean;
+  day: DayRow | undefined;
+  /** The moon at that instant; absent while "Mond und Himmelsereignisse" is off. */
+  moon?: MoonNow;
+}
+
+/** Big number and detail line of a day ("4° / −3°", "Freitag, 27. November · Regen") or of a chosen hour. */
+function viewFigure(
+  tp: ReturnType<typeof tWeatherPage.get>,
+  tx: ReturnType<typeof tWeather.get>,
+  view: HeroView,
+): { value: string; label?: string; detail: string } {
+  const { row, day } = view;
+  const date = row.time.slice(0, 10);
+  const noon = new Date(
+    Number(date.slice(0, 4)),
+    Number(date.slice(5, 7)) - 1,
+    Number(date.slice(8, 10)),
+    Number(row.time.slice(11, 13)),
+  );
+  if (view.chosen || !day) {
+    const word = tx.conditions[conditionId(row.code, row.group, row)];
+    const wd = dateTimeFormat({ weekday: 'short' }).format(noon);
+    const time = row.time.slice(11, 16);
+    return {
+      value: tx.temp(row.temp),
+      detail:
+        row.feels != null
+          ? tp.day.detailHour(wd, time, row.feels, word)
+          : tp.day.detailHourNoFeels(wd, time, word),
+    };
+  }
+  const word = tx.conditions[conditionId(day.code, day.group, { gust: day.gust })];
+  const long = dateTimeFormat({ weekday: 'long', day: 'numeric', month: 'long' }).format(noon);
+  return {
+    value: tp.day.big(day.max, day.min),
+    label: tp.day.bigAria(day.max, day.min),
+    detail: tp.day.detail(long, word),
+  };
 }
 
 /**

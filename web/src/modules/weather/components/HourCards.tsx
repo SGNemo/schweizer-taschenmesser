@@ -1,3 +1,5 @@
+import { useEffect, useId, useRef } from 'react';
+import { edgeKey } from './edgeKey';
 import { dateTimeFormat } from '@/core/i18n/format';
 import type { HourRow, NowDetail } from '@/core/weather/api';
 import { RAIN_SHOWN_PERCENT, rateHour } from '@/core/weather/logic';
@@ -27,58 +29,116 @@ export function cardRain(tp: ReturnType<typeof tWeatherPage.get>, h: HourRow): s
 }
 
 /**
- * The next hours as a row of cards you scroll sideways: time ("Jetzt" first), symbol, temperature and a rain bar (the
- * percentage and the amount as text under it, only when it matters). The row is a focusable, labelled region so the
- * keyboard can scroll it. Every card says its word too. Under the row, one line with the values of the first hour.
+ * The hours as a row of cards you scroll sideways (round 2: one radio group "Stunde wählen", CONCEPT-DAYS §1): time
+ * ("Jetzt" first on today), symbol, temperature and a rain bar (the percentage and the amount as text under it, only
+ * when it matters). Each card is the label of a visually hidden radio, so the group is one tab stop and the arrow keys
+ * move and choose. The checked card carries the picked look (tint, frame, check mark). Under the row, one line with the
+ * values of the checked hour (or of now).
  */
-export function HourCards({ hours, now }: { hours: readonly HourRow[]; now?: NowDetail }) {
+export function HourCards({
+  hours,
+  now,
+  firstIsNow,
+  checked,
+  lineHour,
+  onPick,
+}: {
+  hours: readonly HourRow[];
+  /** The current values: the hour line of "Jetzt" repeats nothing the head says. */
+  now?: NowDetail;
+  /** True on today: the first card is "Jetzt". */
+  firstIsNow: boolean;
+  /** Index of the checked card; -1 = none (another day before an hour is chosen). */
+  checked: number;
+  /** The hour the line under the cards names; `undefined` = no line. */
+  lineHour?: HourRow;
+  onPick: (h: HourRow, index: number) => void;
+}) {
   const tx = tWeather.use();
   const tp = tWeatherPage.use();
+  const name = useId();
   const fmt = dateTimeFormat({ hour: '2-digit', minute: '2-digit' });
-  const first = hours[0];
-  const line = first ? hourLineParts(tp, first, now) : [];
+  const timeOf = (h: HourRow) => fmt.format(localDate(h.time, Number(h.time.slice(11, 13))));
+  const line = lineHour ? hourLineParts(tp, lineHour, now) : [];
+  // The checked card stays in sight (a link to 14:00 opens on the row's start otherwise): the row scrolls sideways
+  // only, so the page itself never jumps.
+  const scroller = useRef<HTMLDivElement>(null);
+  const first = hours[0]?.time;
+  useEffect(() => {
+    const box = scroller.current;
+    const card = checked >= 0 ? box?.querySelectorAll<HTMLElement>('label')[checked] : undefined;
+    if (!box || !card) return;
+    const left =
+      card.getBoundingClientRect().left - box.getBoundingClientRect().left + box.scrollLeft;
+    if (left < box.scrollLeft || left + card.offsetWidth > box.scrollLeft + box.clientWidth)
+      box.scrollLeft = Math.max(0, left - (box.clientWidth - card.offsetWidth) / 2);
+  }, [checked, first]);
   return (
     <>
       <div
+        ref={scroller}
         className={styles.hourScroll}
         role="region"
         aria-label={tx.hourly}
-        tabIndex={0}
         data-testid="weather-hour-cards"
       >
-        <ul className={styles.hourCards} data-testid="weather-hours">
-          {hours.map((h, i) => (
-            <li
-              key={h.time}
-              className={styles.hourCard}
-              data-now={i === 0 ? 'true' : undefined}
-              aria-current={i === 0 ? 'time' : undefined}
-              data-rating={rateHour(h)}
-            >
-              <span className={styles.hourTime}>
-                {i === 0 ? tp.hourNow : fmt.format(localDate(h.time, Number(h.time.slice(11, 13))))}
-              </span>
-              <Icon name={weatherIcon(h.group, h.night)} size={22} />
-              <span className={styles.hourTemp} data-tone={tone(h.temp)}>
-                {tx.temp(h.temp)}
-              </span>
-              <span className={styles.hourWord}>
-                {tx.conditions[conditionId(h.code, h.group, h)]}
-              </span>
-              {h.wind != null ? (
-                <span className={styles.hourWind}>{tx.windSpeed(h.wind)}</span>
-              ) : null}
-              <span className={styles.rainBar} aria-hidden="true">
-                <i style={{ width: `${Math.min(100, h.rain)}%` }} />
-              </span>
-              <span className={styles.hourRain}>{cardRain(tp, h) || ' '}</span>
-            </li>
-          ))}
-        </ul>
+        <div
+          className={styles.hourCards}
+          role="radiogroup"
+          aria-label={tp.hourGroup}
+          data-testid="weather-hours"
+          onKeyDown={(e) => {
+            const to = edgeKey(e, hours);
+            if (to) onPick(to, hours.indexOf(to));
+          }}
+        >
+          {hours.map((h, i) => {
+            const on = i === checked;
+            return (
+              <label
+                key={h.time}
+                className={styles.hourCard}
+                data-checked={on ? 'true' : undefined}
+                data-rating={rateHour(h)}
+                data-time={h.time}
+              >
+                <input
+                  type="radio"
+                  className="sr-only"
+                  name={name}
+                  checked={on}
+                  onChange={() => onPick(h, i)}
+                />
+                {on ? (
+                  <span className={styles.tick} aria-hidden="true">
+                    <Icon name="check" size={12} />
+                  </span>
+                ) : null}
+                <span className={styles.hourTime}>
+                  {i === 0 && firstIsNow ? tp.hourNow : timeOf(h)}
+                </span>
+                <Icon name={weatherIcon(h.group, h.night)} size={22} />
+                <span className={styles.hourTemp} data-tone={tone(h.temp)}>
+                  {tx.temp(h.temp)}
+                </span>
+                <span className={styles.hourWord}>
+                  {tx.conditions[conditionId(h.code, h.group, h)]}
+                </span>
+                {h.wind != null ? (
+                  <span className={styles.hourWind}>{tx.windSpeed(h.wind)}</span>
+                ) : null}
+                <span className={styles.rainBar} aria-hidden="true">
+                  <i style={{ width: `${Math.min(100, h.rain)}%` }} />
+                </span>
+                <span className={styles.hourRain}>{cardRain(tp, h) || ' '}</span>
+              </label>
+            );
+          })}
+        </div>
       </div>
-      {first && line.length > 0 ? (
+      {lineHour && line.length > 0 ? (
         <p className={styles.hourLine} data-testid="weather-hour-line">
-          <span className="sr-only">{tp.hourLineLabel(first.time.slice(11, 16))}: </span>
+          <span className="sr-only">{tp.hourLineLabel(lineHour.time.slice(11, 16))}: </span>
           {line.join(' · ')}
         </p>
       ) : null}

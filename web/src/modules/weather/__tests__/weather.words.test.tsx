@@ -89,9 +89,9 @@ describe('weather words by WMO code (package 1a)', () => {
     const head = await screen.findByTestId('weather-now');
     await waitFor(() => expect(head).toHaveTextContent('überwiegend klar'));
     expect(head).not.toHaveTextContent('leicht bewölkt');
-    const hour = (await screen.findByTestId('weather-hours')).querySelector('li')!;
+    const hour = (await screen.findByTestId('weather-hours')).querySelector('label')!;
     expect(hour).toHaveTextContent('überwiegend klar');
-    const day = screen.getByTestId('weather-days').querySelector('li')!;
+    const day = screen.getByTestId('weather-days').querySelector('label')!;
     expect(day).toHaveTextContent('überwiegend klar');
     cleanup();
     render(
