@@ -1,0 +1,53 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wetter Runde 2 – kleine Zustände</title><link rel="stylesheet" href="mock.css"><link rel="stylesheet" href="page.css">
+<script src="palette.js"></script><script src="scene.js"></script><script src="page.js"></script></head>
+<body class="p4"><div class="wpage">
+<div class="intro4"><h1>Kleine Zustände</h1><p>Tageszeile und Stundenkarte (nicht gewählt, Hover, Fokus mit der Tastatur, gewählt), der Tag-Schalter, die fünf Sätze von „Regen in den nächsten zwei Stunden“, die offene Auswahl der Kurve, „Mehr Werte“ zu und offen und die Sätze der Ansage. Hover und Fokus sind hier fest gezeichnet.</p></div>
+<div class="board" id="board"></div></div>
+<script>
+var P = Page.parts, wk = Page.sample.week(-1), sat = wk.rows[2];
+wk.lo = -7; wk.hi = 6;
+function st(label, html) { return '<div class="st"><p class="label">' + label + '</p>' + html + '</div>'; }
+function rowCard(extra, checked) { var d = Object.assign({}, wk, { checked: checked ? 2 : -1 }); return '<div class="card" style="padding:12px"><div class="rows" role="radiogroup" aria-label="Tag wählen">' + P.dayRow(sat, 2, d, extra) + '</div></div>'; }
+var card = { t: '15:00', icon: 'rain', temp: 17, word: 'Regen', wind: 14, rain: 60, amt: '0,8 mm' };
+function hc(extra, checked) { return '<div class="hourCards">' + P.hourCard(card, 0, { checked: checked ? 0 : -1 }, extra) + '</div>'; }
+var R = [
+  ['Beginnt später, endet innerhalb', 'Regen ab 14:20, etwa 40 Minuten, zusammen etwa 1,2 mm', [0, 0.2, 0.5, 0.5, 0, 0, 0, 0]],
+  ['Beginnt später, hält an', 'Regen ab 15:10, hält länger an', [0, 0, 0, 0, 0.2, 0.4, 0.6, 0.7]],
+  ['Regnet, endet innerhalb', 'Regen noch bis etwa 14:50', [0.6, 0.5, 0.3, 0.1, 0, 0, 0, 0]],
+  ['Regnet, hält an', 'Regen, hält in den nächsten zwei Stunden an', [0.4, 0.5, 0.6, 0.6, 0.5, 0.5, 0.4, 0.4]],
+  ['Ein kurzer Schauer', 'Kurzer Schauer gegen 14:45', [0, 0, 0, 0.9, 0, 0, 0, 0]],
+];
+var satMore = [
+  { title: 'Gefühl', items: [['Gefühlt', '−1°'], ['Taupunkt', '−1°'], ['Luftfeuchte', '88 %']] },
+  { title: 'Niederschlag', items: [['Menge', '5,8 mm'], ['Stunden mit Regen', '6'], ['Neuschnee', '6 cm'], ['Schneehöhe', '5 cm'], ['Schneefallgrenze', 'etwa 400 m']] },
+  { title: 'Wind', items: [['Mittel', '18 km/h'], ['Böen', 'bis 46 km/h'], ['Richtung', 'aus Nordwest']] },
+  { title: 'Himmel', items: [['Bewölkung', '96 %'], ['tief', '88 %', 1], ['mittel', '72 %', 1], ['hoch', '40 %', 1], ['Sonnenschein', '0,4 h von 8,6 h'], ['Sichtweite', '2 km']] },
+  { title: 'Luftdruck', text: '1006 hPa, fällt' },
+  { title: 'Gewitterneigung', text: 'mäßig' },
+];
+document.getElementById('board').innerHTML =
+  '<section class="full"><h2>Tageszeile in „7 Tage“</h2><div class="stateGrid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,34rem),1fr))">' +
+    st('Nicht gewählt', rowCard('')) + st('Hover', rowCard('is-hover')) + st('Fokus (Tastatur)', rowCard('is-focus')) + st('Gewählt', rowCard('', true)) + '</div></section>' +
+  '<section><h2>Stundenkarte</h2><div class="stateGrid cards">' +
+    st('Nicht gewählt', hc('')) + st('Hover', hc('is-hover')) + st('Fokus', hc('is-focus')) + st('Gewählt', hc('', true)) + '</div></section>' +
+  '<section><h2>Tag-Schalter</h2><div class="stack">' +
+    st('Heute (zurück nicht möglich, kein „Heute“)', P.stepper({ label: 'Heute, Do. 26. Nov.', today: true, prevOff: true })) +
+    st('Ein anderer Tag (mit „Heute“)', P.stepper({ label: 'Samstag, 28. Nov.', today: false })) +
+    st('Der letzte Tag (weiter nicht möglich)', P.stepper({ label: 'Mittwoch, 2. Dez.', today: false, nextOff: true })) + '</div></section>' +
+  '<section class="full"><h2>Regen in den nächsten zwei Stunden – die fünf Sätze</h2><div class="stateGrid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,26rem),1fr))">' +
+    R.map(function (r, i) { return st(r[0], P.rainSoon({ id: i, sentence: r[1], bars: r[2] })); }).join('') +
+    st('Schnee statt Regen (gleiche Sätze)', P.rainSoon({ id: 9, snow: true, sentence: 'Schnee ab 14:20, etwa 40 Minuten, zusammen etwa 1,2 mm', bars: [0, 0.2, 0.5, 0.5, 0, 0, 0, 0] })) + '</div></section>' +
+  '<section><h2>Verlauf: Auswahl „Anzeigen“ offen</h2><div class="card" style="min-height:360px"><div class="secHead" style="align-items:flex-start;flex-wrap:wrap"><h2 class="secTitle">Verlauf der nächsten 24 Stunden</h2><div class="selWrap">' +
+    P.select('Temperatur und Regen', true) + '</div></div></div></section>' +
+  '<section><h2>Ansage (live region, polite) und Namen für Screenreader</h2><div class="card"><ul class="liveList">' +
+    '<li>Freitag, 27. November: leichter Regen, 5° / 1° <code>Tag gewählt</code></li>' +
+    '<li>Samstag, 28. November: Schneefall, 4° / −3° <code>Tag gewählt</code></li>' +
+    '<li>Donnerstag 15:00: Regen, 17° <code>Stunde gewählt</code></li>' +
+    '<li>Höchstwert 4°, Tiefstwert −3° <code>Name der großen Zahl eines Tages</code></li>' +
+    '<li>Werte um 15:00 <code>Name der Stundenzeile</code></li>' +
+    '<li>Stunde wählen · Tag wählen · Tag <code>Gruppennamen</code></li>' +
+    '<li>Einen Tag zurück · Einen Tag weiter <code>Namen von ‹ und ›</code></li>' +
+  '</ul></div></section>' +
+  '<section class="full"><h2>Mehr Werte</h2><div class="stack">' + st('Zu', P.more({ open: false, groups: satMore })) + st('Offen (Samstag, 28. November)', P.more({ open: true, groups: satMore })) + '</div></section>';
+</script></body></html>

@@ -1,0 +1,56 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wetter Runde 2 – Seite: heute, Regen kommt, 15:00 gewählt</title><link rel="stylesheet" href="mock.css"><link rel="stylesheet" href="page.css">
+<script src="palette.js"></script><script src="scene.js"></script><script src="page.js"></script></head>
+<body class="p4"><div class="wpage" id="page"></div>
+<script>
+/* Today in summer (Thursday 16 July 2026, same weekday as the November sample), 14:05, light rain starts 14:20.
+   The 15:00 card is checked: the head shows that hour, the hour line names its values, "Jetzt" leads back. */
+var C = Page.curve, from = 14, n = 24;
+var temp = [18, 17, 16, 16, 16, 15, 15, 14, 14, 13, 13, 13, 13, 13, 13, 14, 15, 16, 17, 18, 19, 20, 21, 21];
+var words = ['leichter Regen', 'Regen', 'leichter Regen', 'bedeckt', 'bewölkt', 'bewölkt', 'bewölkt', 'bewölkt', 'leicht bewölkt', 'leicht bewölkt', 'klar', 'klar', 'klar', 'klar', 'klar', 'leicht bewölkt', 'leicht bewölkt', 'leicht bewölkt', 'leicht bewölkt', 'leicht bewölkt', 'leicht bewölkt', 'leicht bewölkt', 'leicht bewölkt', 'leicht bewölkt'];
+var icons = words.map(function (w, i) { var h = (from + i) % 24, night = h >= 22 || h < 6; return /Regen/.test(w) ? 'rain' : w === 'klar' ? (night ? 'moonC' : 'sun') : w === 'leicht bewölkt' ? (night ? 'cloudMoon' : 'cloudSun') : 'cloud'; });
+var chance = [30, 60, 40, 20, 10, 10, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 5, 5, 10, 10, 10];
+var amount = [0.1, 0.8, 0.3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+var wind = [12, 14, 13, 11, 10, 9, 8, 7, 6, 6, 5, 5, 5, 5, 6, 7, 8, 9, 10, 11, 12, 12, 13, 13];
+var gust = [28, 31, 27, 22, 19, 17, 15, 13, 12, 11, 10, 10, 10, 10, 12, 14, 16, 18, 20, 22, 24, 25, 26, 26];
+var dir = C([[14, 225], [20, 240], [30, 255], [37, 270]], from, n);
+var cards = temp.map(function (t, i) {
+  var a = amount[i]; return { t: i === 0 ? 'Jetzt' : Page.hh(from + i) + ':00', icon: icons[i], temp: t, word: words[i], wind: wind[i], rain: chance[i], amt: a >= 0.1 ? String(a).replace('.', ',') + ' mm' : '' };
+});
+var S = 'Zunehmende Sichel';
+Page.render('#page', {
+  place: 'Lindenau',
+  scene: { phase: 'day', cond: 'rain', intensity: 2, season: 'summer', wind: 1 },
+  head: {
+    temp: '17°', detail: 'Do. 15:00 · fühlt sich an wie 16° · Regen', hints: [],
+    chips: [{ icon: 'rain', kind: 'rain', text: 'Regen ab 14:20' }, { icon: 'wind', text: 'Wind 14 km/h SW' }, { icon: 'sun', text: 'UV 2' }],
+    rest: ['13° / 21°', '4 Stunden mit Regen', 'Sonne 05:28–21:22'],
+  },
+  stepper: { label: 'Heute, Do. 16. Juli', today: true, prevOff: true },
+  rainSoon: { sentence: 'Regen ab 14:20, etwa 40 Minuten, zusammen etwa 1,2 mm', bars: [0, 0.2, 0.5, 0.5, 0, 0, 0, 0] },
+  hours: { title: 'Nächste Stunden', back: 'Jetzt', cards: cards, checked: 1, lineLabel: 'Werte um 15:00',
+    line: 'Böen 31 km/h aus Südwest · Luftfeuchte 86 % · Taupunkt 15° · Bewölkung 100 % · 1009 hPa · UV 2 · Sicht 8 km' },
+  chart: { title: 'Verlauf der nächsten 24 Stunden', option: 'Wind und Böen', labels: temp.map(function (_, i) { return Page.hh(from + i); }),
+    wind: wind, gust: gust, dir: dir, night: [[7.37, 15.47]], marker: 1, markerLabel: '15:00',
+    alt: 'Wind von 5 bis 14 km/h, Böen bis 31 km/h um 15 Uhr, aus Südwest, später West.' },
+  days: { checked: 0, rows: [
+    { name: 'Heute', icon: 'rain', word: 'leichter Regen', rating: 'fair', moon: { name: S, illum: 0.06, waxing: true }, min: 13, max: 21, meta: 'Regen 60 % · Wind 14 km/h SW · UV 5 · Sonne 05:28–21:22' },
+    { name: 'Fr., 17.7.', icon: 'cloudSun', word: 'leicht bewölkt', rating: 'good', moon: { name: S, illum: 0.12, waxing: true }, min: 13, max: 24, meta: 'Wind 9 km/h W · UV 7 · Sonne 05:29–21:21' },
+    { name: 'Sa., 18.7.', icon: 'sun', word: 'klar', rating: 'good', moon: { name: S, illum: 0.2, waxing: true }, min: 14, max: 27, meta: 'Wind 7 km/h O · UV 8 · Sonne 05:30–21:20' },
+    { name: 'So., 19.7.', icon: 'cloudSun', word: 'leicht bewölkt', rating: 'good', moon: { name: S, illum: 0.29, waxing: true }, min: 16, max: 29, meta: 'Wind 8 km/h SO · UV 8 · Sonne 05:32–21:19' },
+    { name: 'Mo., 20.7.', icon: 'thunder', word: 'Gewitter', rating: 'poor', moon: { name: S, illum: 0.39, waxing: true }, min: 18, max: 30, meta: 'Regen 70 % · Wind 18 km/h SW · UV 7 · Sonne 05:33–21:18' },
+    { name: 'Di., 21.7.', icon: 'rain', word: 'Schauer', rating: 'fair', moon: { name: 'Zunehmender Halbmond', illum: 0.49, waxing: true }, min: 16, max: 24, meta: 'Regen 50 % · Wind 15 km/h W · UV 5 · Sonne 05:34–21:17' },
+    { name: 'Mi., 22.7.', icon: 'cloudSun', word: 'leicht bewölkt', rating: 'good', moon: { name: 'Zunehmender Mond', illum: 0.59, waxing: true }, min: 14, max: 23, meta: 'Wind 10 km/h NW · UV 6 · Sonne 05:36–21:15' },
+  ] },
+  more: { open: false, groups: [
+    { title: 'Gefühl', items: [['Gefühlt', '16°'], ['Taupunkt', '15°'], ['Luftfeuchte', '86 %']] },
+    { title: 'Niederschlag', items: [['Menge', '1,2 mm'], ['Stunden mit Regen', '3']] },
+    { title: 'Wind', items: [['Mittel', '10 km/h'], ['Böen', 'bis 31 km/h'], ['Richtung', 'aus Südwest']] },
+  ] },
+  air: { rating: 'fair', aqi: 34, band: 'mäßig', pollutants: [['Feinstaub PM2,5', 9], ['Feinstaub PM10', 16], ['Ozon', 92]],
+    pollen: [['Gräser', 'mäßig', '38 Pollen/m³'], ['Beifuß', 'niedrig', '6 Pollen/m³'], ['Birke', 'keine']] },
+  moon: { sun: 'Sonne 05:28–21:22 · 15 h 54 min Tageslicht · Dämmerung 04:47–22:03', name: S, illum: 0.06, waxing: true,
+    times: 'Mondaufgang 06:58 · Monduntergang 22:31', next: 'Vollmond am Mi., 29. Juli · Neumond am Do., 13. Aug.' },
+  live: 'Donnerstag 15:00: Regen, 17°',
+});
+</script></body></html>

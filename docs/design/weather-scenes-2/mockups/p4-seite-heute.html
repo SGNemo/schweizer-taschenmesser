@@ -1,0 +1,40 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wetter Runde 2 – Seite: heute, jetzt</title><link rel="stylesheet" href="mock.css"><link rel="stylesheet" href="page.css">
+<script src="palette.js"></script><script src="scene.js"></script><script src="page.js"></script></head>
+<body class="p4"><div class="wpage" id="page"></div>
+<script>
+/* Today, now: Thursday 26 November 2026, 02:00, −1°, overcast, frost. Dry: no rain-soon block. "Mehr Werte" closed. */
+var C = Page.curve, from = 2, n = 24;
+var temp = C([[2, -1], [5, -2], [7, -3], [9, -2], [11, 0], [13, 2], [14, 2], [16, 1], [18, 0], [20, -1], [25, -1]], from, n);
+var felt = C([[2, -5], [7, -7], [11, -4], [14, -2], [18, -4], [25, -6]], from, n);
+var wind = [6, 6, 7, 7, 8, 9, 9, 10, 10, 9, 8, 8, 7, 7, 6, 6, 6, 7, 8, 9, 10, 11, 12, 12];
+var chance = [0, 0, 0, 0, 0, 0, 5, 5, 5, 5, 0, 0, 0, 0, 0, 0, 5, 5, 5, 10, 10, 15, 20, 25];
+var cards = temp.map(function (t, i) { return { t: i === 0 ? 'Jetzt' : Page.hh(from + i) + ':00', icon: 'cloud', temp: t, word: 'bedeckt', wind: wind[i], rain: chance[i] }; });
+Page.render('#page', {
+  place: 'Lindenau',
+  scene: Scene.presets.frost,
+  head: {
+    temp: '−1°', detail: 'fühlt sich an wie −5° · bedeckt · Frost',
+    hints: [{ icon: 'thermo', text: 'Heute: Frost bis −3°' }],
+    chips: [{ icon: 'umbrella', text: 'Kein Regen in Sicht' }, { icon: 'wind', text: 'Wind 6 km/h NO' }, { icon: 'moon', text: 'Abnehmender Mond · 95 %' }],
+    rest: ['−3° / 2°', 'Luftfeuchte 89 %', 'Bewölkung 100 %', '1024 hPa', 'Sonne 07:41–16:22'],
+  },
+  stepper: { label: 'Heute, Do. 26. Nov.', today: true, prevOff: true },
+  rainSoon: null,
+  hours: { title: 'Nächste Stunden', cards: cards, checked: 0, lineLabel: 'Werte um 02:00',
+    line: 'Böen 14 km/h aus Nordost · Luftfeuchte 89 % · Taupunkt −3° · Bewölkung 100 % · 1024 hPa · Sicht 7 km' },
+  chart: { title: 'Verlauf der nächsten 24 Stunden', option: 'Temperatur und Regen', labels: temp.map(function (_, i) { return Page.hh(from + i); }),
+    temp: temp, felt: felt, amount: chance.map(function () { return 0; }), chance: chance, night: [[-0.5, 5.68], [14.37, 23.5]],
+    alt: 'Temperatur von −3° bis 2°, am wärmsten um 14 Uhr; kein Regen.' },
+  days: Page.sample.week(0),
+  more: { open: false, groups: [
+    { title: 'Gefühl', items: [['Gefühlt', '−5°'], ['Taupunkt', '−3°'], ['Luftfeuchte', '89 %']] },
+    { title: 'Wind', items: [['Mittel', '7 km/h'], ['Böen', 'bis 18 km/h'], ['Richtung', 'aus Nordost']] },
+    { title: 'Himmel', items: [['Bewölkung', '100 %'], ['tief', '100 %', 1], ['mittel', '40 %', 1], ['hoch', '10 %', 1], ['Sonnenschein', '0 h von 8,7 h'], ['Sichtweite', '7 km']] },
+    { title: 'Luftdruck', text: '1024 hPa, gleichbleibend' },
+  ] },
+  air: { rating: 'good', aqi: 22, band: 'gut', pollutants: [['Feinstaub PM2,5', 6], ['Feinstaub PM10', 11], ['Ozon', 38]], pollen: Page.sample.pollenNone },
+  moon: { sun: 'Sonne 07:41–16:22 · 8 h 41 min Tageslicht · Dämmerung 07:06–16:57', name: 'Abnehmender Mond', illum: 0.95,
+    times: 'Monduntergang 10:31 · Mondaufgang 17:58', next: Page.sample.nextNov },
+});
+</script></body></html>
