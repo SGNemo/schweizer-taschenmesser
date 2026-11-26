@@ -26,7 +26,8 @@ UI-Audit 4.0 ist abgenommen: Identity 4.0 gilt seit 0b-8 (2026-11-14, [REPORT �
 ## Abgeschlossene Runden (je eine Zeile; alles auf `develop`)
 
 - Planer neu gedacht (Pakete 1–7, #1034–#1055): nichts wandert von selbst; „Tag kippt“ #1070–#1072; gemessen gegen `TARGET` ([decisions/plan-rethink.md](decisions/plan-rethink.md)).
-- Nur Entwurf: Planer-Zentrale 2 (#1084), Wetter (#1098, #1121).
+- Planer-Zentrale 2 „alles verknüpft, weniger Zeilen“ (Pakete 10a–11, #1097–#1129; Abschluss M #1132): alle Pfade auf `TARGET` ([ANALYSIS §6](design/planner-hub-2/ANALYSIS.md), [decisions/plan-hub-2.md](decisions/plan-hub-2.md)); geparkt 5b (Bündel), gestrichen 6, 7 – bereit in [`struck/`](design/planner-hub-2/struck/PROMPTS.md).
+- Nur Entwurf: Wetter (#1098, #1121).
 - Rechnungen „Tiefe“: Überblick mit Torte, Suche, mehrere bezahlen (#999, #1000).
 - Gerätestatus „Tiefe“ (#927–#929) und Dieser PC „Tiefe“ (#933–#968); offen: Handtests GS-10–14, PC-A, DO-A, DO3, PC-E.
 - Use case „Wochenende retten“ (`docs/design/usecases/wochenende/`, nachgemessen in #940): Samstagmorgen A–G 29 statt 56 Taps, ≈ 176 statt 240 s (ANALYSIS §5, TARGET §4); nicht gebaut W08, W15, W16, neue Reibung W23–W25; offen für Sven: Handtest FU-W1 ([MANUAL-TESTS](MANUAL-TESTS.md)).
