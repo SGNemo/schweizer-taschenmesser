@@ -1,4 +1,3 @@
-export { Sky, skyKind, type SkyKind } from './Sky';
 export { BankCard } from './BankCard';
 export { Ring, ringColor, type RingPart } from './Ring';
 export { CalendarLeaf } from './CalendarLeaf';

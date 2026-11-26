@@ -185,18 +185,16 @@ describe('weather scene drawing (handoff 01b tests 2)', () => {
 });
 
 describe('<WeatherScene>', () => {
-  it('is hidden from assistive tech and carries phase, condition, ink and the old sky kind', () => {
-    render(
-      <WeatherScene state={base({ phase: 'night', cond: 'snow', cloud: 95 })} legacyKind="night" />,
-    );
+  it('is hidden from assistive tech and carries phase, condition and ink (no old sky kind any more)', () => {
+    render(<WeatherScene state={base({ phase: 'night', cond: 'snow', cloud: 95 })} />);
     const svg = screen.getByTestId('weather-scene');
     expect(svg).toHaveAttribute('aria-hidden', 'true');
     expect(svg).toHaveAttribute('data-phase', 'night');
     expect(svg).toHaveAttribute('data-cond', 'snow');
     expect(svg).toHaveAttribute('data-ink', 'light');
     const wrap = screen.getByTestId('sky');
-    expect(wrap).toHaveAttribute('data-sky', 'night');
-    expect(wrap.querySelector('span')).not.toBeNull();
+    expect(wrap).not.toHaveAttribute('data-sky');
+    expect(wrap.querySelector('span')).toBeNull();
   });
 
   it('moves five seconds after opening, then rests; never with reduced motion, a still picture or "Ruhig"', () => {

@@ -542,8 +542,8 @@
   place-items: center;
   min-height: 16rem;
 }
-/* Overview widget: the figure on the left, the sky swatch at the right end of the same row (not laid over the card:
-   a long place or context line wraps beside it instead of running under it). */
+/* Overview widget, variant A ("Ruhig", "Modulfarben: Aus"): the figure on the left, the 64 px porthole at the right
+   end of the same row (not laid over the card: a long place or context line wraps beside it instead of under it). */
 .widget {
   display: flex;
   align-items: flex-start;
@@ -556,6 +556,77 @@
 .widgetSky {
   order: 1;
   flex: none;
+}
+/* Overview widget, variant B (handoff 04, the one named exception to "a widget is a tone step", MODULE-IDENTITY
+   "Widgets"): the scene fills the whole card behind the head and the text (the frame's `.widget` cell is the
+   positioned box), with the card's radius; never moving. The card's text takes the scene's ink (A11Y §1), the rain
+   hint is an opaque chip with the theme's ink. "Ruhig" / "Modulfarben: Aus" never get here (variant A). */
+.widgetScene {
+  min-width: 0;
+}
+.widgetBackdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  pointer-events: none;
+}
+/* The text as the `kennzahl` body draws it (ui/widgets/Widgets.module.css `.kpi`), in the scene's ink. */
+.widgetText {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.widgetText > p {
+  margin: 0;
+}
+.widgetPlace {
+  font-size: var(--text-sm);
+}
+.widgetTemp {
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: var(--font-num);
+  line-height: 1.1;
+}
+.widgetWord {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  font-size: var(--text-sm);
+}
+/* The card around the scene (the frame's section, which also holds the head): text in the scene's ink. */
+:has(> .widgetScene[data-ink='light']) {
+  --text: var(--ink-light);
+  --text-muted: var(--ink-light);
+  --text-3: var(--ink-light);
+  color: var(--text);
+}
+:has(> .widgetScene[data-ink='dark']) {
+  --text: var(--ink-dark);
+  --text-muted: var(--ink-dark);
+  --text-3: var(--ink-dark);
+  color: var(--text);
+}
+/* The frame's head lies on the scene too: above it. */
+:has(> .widgetScene) > :not(.widgetScene) {
+  position: relative;
+  z-index: 1;
+}
+.widgetRain {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  /* opaque, with the theme's own ink: readable on any scene (A11Y §1), like the head's chips */
+  --text: var(--ink-theme);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  color: var(--ink-theme);
+  font-weight: var(--weight-semibold);
 }
 .hourWind {
   color: var(--text-3);

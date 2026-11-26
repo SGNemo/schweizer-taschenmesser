@@ -12,11 +12,6 @@
   width: 100%;
   height: 100%;
 }
-/* The body's box, for the head-height check that looks for the sun (no paint). */
-.bodyBox {
-  position: absolute;
-  pointer-events: none;
-}
 /* "Ruhig" / "Modulfarben: Aus": the same shapes in greys, mixed toward the surface; ink by the theme. */
 .calm .svg {
   filter: grayscale(1);

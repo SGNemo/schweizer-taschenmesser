@@ -21,7 +21,7 @@ import { useKeepHeadRoom } from '@/core/shell/heroContext';
 import { tWeather } from '@/strings.weather';
 import { tWeatherPage } from '@/strings.weatherPage';
 import { Icon, PHONE_QUERY, useMediaQuery, type IconName } from '@/ui';
-import { HeroFigure, HeroSlot, skyKind } from '@/ui/identity';
+import { HeroFigure, HeroSlot } from '@/ui/identity';
 import { EventGlyph, MoonGlyph, useSceneEnv, WeatherScene } from '@/ui/weather-scene';
 import styles from '../routes/weather.module.css';
 import { dec } from './parts';
@@ -54,7 +54,7 @@ export function WeatherSceneDefault() {
   );
   return (
     <HeroSlot area="backdrop">
-      <WeatherScene state={state} phone={phone} legacyKind="clear" />
+      <WeatherScene state={state} phone={phone} />
     </HeroSlot>
   );
 }
@@ -249,7 +249,7 @@ export function WeatherHero({
   return (
     <>
       <HeroSlot area="backdrop">
-        <WeatherScene state={scene} phone={phone} legacyKind={skyKind(forecast.group, night)} />
+        <WeatherScene state={scene} phone={phone} />
       </HeroSlot>
       <HeroSlot area="figure">
         <div className={styles.heroBlock} data-testid="weather-now" data-scene-text="">

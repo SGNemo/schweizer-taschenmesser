@@ -1919,6 +1919,25 @@ function bodyPos(s: SceneState, crest: (x: number) => number, r: number): Pt {
   return [x, y];
 }
 
+/** Each colour expression is declared once on the <svg> and used by name: the markup stays small (A11Y §4). */
+function declare(markup: string): { vars: Record<string, string>; inner: string } {
+  const vars: Record<string, string> = {};
+  const names = new Map<string, string>();
+  const inner = markup.replace(
+    /(fill|stroke|stop-color)="((?:var|color-mix)\([^"]+)"/g,
+    (_, prop: string, val: string) => {
+      let name = names.get(val);
+      if (!name) {
+        name = `--c${names.size}`;
+        names.set(val, name);
+        vars[name] = val;
+      }
+      return `${prop}="var(${name})"`;
+    },
+  );
+  return { vars, inner };
+}
+
 export function sceneSvg(s: SceneState, opts: SceneOptions = {}): SceneSvg {
   const sky = skyOf(s);
   const stops = skyStops(s, sky.key);
@@ -2079,21 +2098,7 @@ export function sceneSvg(s: SceneState, opts: SceneOptions = {}): SceneSvg {
       ),
     );
   }
-  // Each colour expression is declared once on the <svg> and used by name: the markup stays small (A11Y §4).
-  const vars: Record<string, string> = {};
-  const names = new Map<string, string>();
-  const inner = `<defs>${X.defs.join('')}</defs>${L.join('')}`.replace(
-    /(fill|stroke|stop-color)="((?:var|color-mix)\([^"]+)"/g,
-    (_, prop: string, val: string) => {
-      let name = names.get(val);
-      if (!name) {
-        name = `--c${names.size}`;
-        names.set(val, name);
-        vars[name] = val;
-      }
-      return `${prop}="var(${name})"`;
-    },
-  );
+  const { vars, inner } = declare(`<defs>${X.defs.join('')}</defs>${L.join('')}`);
   return {
     viewBox: `0 ${-X.ext} ${G.W} ${G.H + X.ext}`,
     vars,
@@ -2101,4 +2106,208 @@ export function sceneSvg(s: SceneState, opts: SceneOptions = {}): SceneSvg {
     ink: inkOf(s),
     body: bp ? { x: bp[0], y: bp[1], r: br } : null,
   };
+}
+
+/* ============================== the porthole (mockup scene.js `porthole`, round crop 28–64 px) ============================== */
+export interface PortholeSvg {
+  viewBox: string;
+  vars: Record<string, string>;
+  inner: string;
+  ink: 'light' | 'dark';
+}
+
+/**
+ * The scene as a small round crop (CONCEPT §8): sky, glow, a few stars, the body with the true phase, one or two
+ * clouds, a few marks of rain or snow, the bolt, two ridges, fog bands – in its own 100 × 100 box, shape by shape as
+ * `porthole()` of the mockup. "Schlicht" keeps sky and body only. Never moves: no motion class on any shape.
+ */
+export function portholeSvg(s: SceneState, px: number, idPrefix = 'pt'): PortholeSvg {
+  const sky = skyOf(s);
+  const stops = skyStops(s, sky.key);
+  const X: Ctx = {
+    s,
+    defs: [],
+    id: idPrefix,
+    n: 0,
+    ext: 0,
+    quiet: null,
+    haloK: 1,
+    skyMid: skyAt(stops, 120),
+    skyFill: '',
+    bodyX: null,
+    bodyP: null,
+    br: 0,
+    clearBody: false,
+  };
+  const bottom = stops[stops.length - 1]![1];
+  const plain = s.level === 'plain';
+  const L: string[] = [];
+  let skyOut = el('rect', {
+    width: 100,
+    height: 100,
+    fill: grad(X, stops, { x1: 0, y1: 0, x2: 0, y2: 1 }),
+  });
+  if (sky.glow) {
+    const col = `glow-${s.phase}`;
+    skyOut += el('rect', {
+      width: 100,
+      height: 100,
+      fill: grad(
+        X,
+        [
+          [0, col, p2(0.8 * sky.glow.strength)],
+          [1, col, 0],
+        ],
+        { radial: true, cx: 0.55, cy: 0.85, r: 0.6 },
+      ),
+    });
+  }
+  L.push(layer('sky', skyOut));
+  const deckOn = s.cloud > 85 && s.cond !== 'fog';
+  const wet = PRECIP.has(s.cond);
+  if (!plain && s.phase === 'night' && s.cloud < 60)
+    L.push(
+      layer(
+        'stars',
+        el('path', {
+          d: circ(22, 24, 1.1) + circ(40, 14, 0.9) + circ(14, 46, 0.8) + circ(80, 60, 0.9),
+          fill: tok('star'),
+          opacity: 0.85,
+        }),
+      ),
+    );
+  let body = '';
+  if (s.body.kind !== 'none' && !(deckOn && wet)) {
+    if (s.body.kind === 'moon')
+      body = moonBody(X, 64, 36, 15 * Math.min(1.15, s.moon?.size ?? 1), {
+        glow: true,
+        darkFill: skyAt(stops, 120),
+        maria: px >= 48,
+      });
+    else if (s.cond === 'fog')
+      body = el('circle', { cx: 62, cy: 36, r: 14, fill: mix('sun-core', bottom, 0.35) });
+    else
+      body =
+        el('circle', {
+          cx: 62,
+          cy: 36,
+          r: 30,
+          fill: grad(
+            X,
+            [
+              [0, 'sun', 0.6],
+              [1, 'sun', 0],
+            ],
+            { radial: true },
+          ),
+          opacity: 0.6,
+        }) +
+        el('circle', {
+          cx: 62,
+          cy: 36,
+          r: 14,
+          fill: tok(s.phase === 'golden' ? 'sun-low' : 'sun'),
+        }) +
+        el('circle', { cx: 62, cy: 36, r: 8.6, fill: tok('sun-core') });
+  }
+  L.push(layer('body', body));
+  if (!plain) {
+    const tone = cloudTone(X);
+    const n = deckOn || wet ? 2 : s.cloud > 60 ? 2 : s.cloud > 10 ? 1 : 0;
+    let cd = '';
+    if (n) {
+      const fill = grad(
+        X,
+        [
+          [0, tone.b],
+          [G.shadeAt, tone.b],
+          [G.shadeAt, tone.sh],
+          [1, tone.sh],
+        ],
+        { x1: 0, y1: 0, x2: 0, y2: 1 },
+      );
+      const low = deckOn || wet;
+      cd += el('path', {
+        d: cloudPath('m'),
+        fill,
+        opacity: tone.op,
+        transform: `translate(${low ? 30 : 42} ${low ? 30 : 40}) scale(0.3)`,
+      });
+      if (n > 1)
+        cd += el('path', {
+          d: cloudPath('s'),
+          fill,
+          opacity: tone.op,
+          transform: `translate(4 ${low ? 22 : 30}) scale(0.36)`,
+        });
+    }
+    L.push(layer('clouds', cd));
+    const LC = landColours(X, stops);
+    let marks = '';
+    if (wet) {
+      const r = prng(s.seed * 41);
+      const snowy = isSnow(s.cond);
+      const cnt = 6 + Math.min(4, s.intensity + 1);
+      let d = '';
+      for (let i = 0; i < cnt; i++) {
+        const x = 30 + ((i + r() * 0.6) * 60) / cnt;
+        const y = 56 + ((i * 7) % 17) + r() * 4;
+        d += snowy ? circ(x, y, 1.6) : `M${f(x)},${f(y)}l1.4,6`;
+      }
+      const lightSky = inkOf(s) === 'dark';
+      marks = snowy
+        ? el('path', { d, fill: lightSky ? 'white' : tok('snow') })
+        : el('path', {
+            d,
+            stroke: lightSky ? mix('rain', 'cloud-rain-shade', 0.6) : tok('rain'),
+            'stroke-width': 2,
+            'stroke-linecap': 'round',
+          });
+    }
+    if (isThunder(s.cond))
+      marks += el('path', { d: 'M54,60h7l-4,9h6l-11,15 3-11h-5z', fill: tok('bolt') });
+    L.push(layer('precip', marks));
+    L.push(
+      layer(
+        'ridgeFar',
+        el('path', {
+          d: 'M0,74 C30,58 52,54 100,68 V100H0Z',
+          fill: LC.far,
+          opacity: s.cond === 'fog' ? 0.5 : 0.9,
+        }),
+      ),
+    );
+    L.push(
+      layer('ridgeNear', el('path', { d: 'M0,80 C24,74 52,70 100,76 V100 H0Z', fill: LC.near })),
+    );
+    if (s.cond === 'fog')
+      L.push(
+        layer(
+          'fog',
+          el('rect', {
+            x: -10,
+            y: 60,
+            width: 120,
+            height: 10,
+            rx: 5,
+            fill: tok('fog'),
+            opacity: 0.6,
+          }) +
+            el('rect', {
+              x: 20,
+              y: 74,
+              width: 90,
+              height: 8,
+              rx: 4,
+              fill: tok('fog'),
+              opacity: 0.5,
+            }),
+        ),
+      );
+  }
+  const cp = clip(X, el('circle', { cx: 50, cy: 50, r: 50 }));
+  const { vars, inner } = declare(
+    `<defs>${X.defs.join('')}</defs><g clip-path="${cp}">${L.join('')}</g>`,
+  );
+  return { viewBox: '0 0 100 100', vars, inner, ink: inkOf(s) };
 }

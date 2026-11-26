@@ -3,8 +3,26 @@ import { G, type SceneOptions } from './draw';
 
 /** Phone head (mockups/head.js `PHONE`): scene scale at most, body centre as a share of the width, text zone. */
 const PHONE = { k: 0.6, bodyX: 0.83, quietPx: 300, crest: 140 } as const;
+/** Card (overview widget): the body's centre as shares of the card's width from the right and of its height. */
+const CARD = { bodyX: 0.2, bodyY: 0.5 } as const;
 /** Width of the text column on a wide stage, rem. */
 const TEXT_REM = 36;
+
+/**
+ * The scene behind a card (the overview widget) with the frame's head above its text: the whole panorama at the card's
+ * width (`k = W / 1600`), more sky above (`extendTop`), so the text rows lie on the sky and the shelter haze like the
+ * desktop head's (A11Y §1) and never on the ridges and trees of a close crop. The quiet zone ends at `share` of the
+ * width; the body sits in its own box on the right (rule 3), at the card's mid height.
+ */
+export function cardFit(W: number, H: number, share: number): SceneOptions {
+  const k = W / G.W;
+  const ext = Math.max(0, H / k - G.H);
+  return {
+    extendTop: Math.round(ext),
+    quietX: Math.round(G.W * share),
+    bodyAt: [Math.round(G.W * (1 - CARD.bodyX)), Math.round((H * CARD.bodyY) / k - ext)],
+  };
+}
 
 export interface SceneFit {
   /** The box the scene fills, px (0 before the first measurement). */
@@ -30,6 +48,8 @@ export function useSceneFit(
   ref: RefObject<HTMLElement | null>,
   phone: boolean,
   bodyR: number,
+  /** The quiet zone ends at this share of the box's width (a card behind its text), not at the measured text. */
+  quietShare?: number,
 ): SceneFit {
   const [fit, setFit] = useState<SceneFit>({ w: 0, h: 0, opts: {} });
   // Before the first paint: the scene is drawn for its box from the start, it does not jump into place.
@@ -60,7 +80,9 @@ export function useSceneFit(
       } else {
         const scale = Math.max(W / G.W, H / G.H);
         const units = W / scale;
-        if (units < G.W) {
+        if (quietShare != null) {
+          Object.assign(opts, cardFit(W, H, quietShare));
+        } else if (units < G.W) {
           // The text column is at most 36 rem wide (the rest line's cap, A11Y §1 rule 1).
           const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
           let right = 0;
@@ -80,6 +102,6 @@ export function useSceneFit(
     ro.observe(el);
     ro.observe(stage);
     return () => ro.disconnect();
-  }, [ref, phone, bodyR]);
+  }, [ref, phone, bodyR, quietShare]);
   return fit;
 }
