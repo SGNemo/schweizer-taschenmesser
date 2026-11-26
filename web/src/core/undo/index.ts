@@ -5,6 +5,14 @@
  * `core/db/recorder.ts`): create → tombstone, update → previous field values, remove → restore,
  * restore → remove. `undoLast()` (Ctrl+Z) and the toast action replay them in reverse order.
  *
+ * When `fn` throws, the writes it made so far are taken back at once (newest first) and the error is
+ * rethrown: a failed action leaves nothing behind and no journal entry. A step of that rollback that
+ * fails is not swallowed: the error becomes an `UndoReplayError` (original as `cause`).
+ *
+ * The recorder is global: a write that runs concurrently with `fn` (a background run, a second action that
+ * starts meanwhile and so counts as nested) joins this action – its undo, and its rollback when `fn` throws.
+ * Keep background work that can fail outside `undoable`, or have it catch its own failure (finance bookings).
+ *
  * Limits, on purpose: writes that happen after `fn` has resolved are not part of the action
  * (e.g. the finance booking an event-bus handler makes when an invoice is paid); writes outside
  * `undoable` (imports, seeds, settings, sync) are never undoable; there is no redo.
@@ -21,6 +29,21 @@ export interface UndoEntry {
   scope?: string;
 }
 
+/**
+ * `fn` of an `undoable` threw and taking back its writes failed for at least one step: some of them stay
+ * stored. `cause` is the error of `fn`, `failures` the errors of the failed steps. The message carries
+ * no label or data (labels can hold titles; diagnostics must not see them).
+ */
+export class UndoReplayError extends Error {
+  constructor(
+    cause: unknown,
+    readonly failures: readonly unknown[],
+  ) {
+    super(`undo replay failed for ${failures.length} step(s)`, { cause });
+    this.name = 'UndoReplayError';
+  }
+}
+
 let journal: UndoEntry[] = [];
 let nextId = 0;
 let active: UndoStep[] | null = null;
@@ -30,7 +53,9 @@ let active: UndoStep[] | null = null;
  * result. `inverse`: an action whose recorded inverse would be too wide (a ToDo's checklist is one field – restoring it
  * would also undo a line a sync changed since) names its own narrower one; it replaces this action's recorded steps
  * once `fn` wrote anything, so it must undo everything `fn` writes. A nested call stays part of the outer action and
- * its recorded steps (its `inverse` is not used).
+ * its recorded steps (its `inverse` is not used); a nested throw the outer `fn` catches rolls nothing back, only the
+ * outermost call does. When `fn` throws, the recorded steps (never `inverse`: it covers a finished action) are
+ * replayed newest first, then the error is rethrown – or an `UndoReplayError` when a step failed.
  */
 export async function undoable<R>(
   label: string,
@@ -42,13 +67,22 @@ export async function undoable<R>(
   const steps: UndoStep[] = [];
   active = steps;
   setWriteRecorder((s) => steps.push(s));
+  const stop = () => {
+    setWriteRecorder(undefined);
+    active = null;
+  };
   let result: R;
   try {
     result = await fn();
-  } finally {
-    setWriteRecorder(undefined);
-    active = null;
+  } catch (error) {
+    // Stopped once, before the rollback (its own writes are not recorded); no second stop after it, which would
+    // end an action that started meanwhile.
+    stop();
+    const failures = await replay(steps);
+    if (failures.length > 0) throw new UndoReplayError(error, failures);
+    throw error;
   }
+  stop();
   if (steps.length === 0) return { result };
   const entry: UndoEntry = {
     id: ++nextId,
@@ -65,15 +99,20 @@ export async function undoEntry(id: number): Promise<boolean> {
   const entry = journal.find((e) => e.id === id);
   if (!entry) return false;
   journal = journal.filter((e) => e.id !== id);
-  let ok = true;
-  for (const step of [...entry.steps].reverse()) {
+  return (await replay(entry.steps)).length === 0;
+}
+
+/** Runs `steps` newest first; a failing step (e.g. the record was deleted meanwhile) does not stop the rest. Returns the failures. */
+async function replay(steps: readonly UndoStep[]): Promise<unknown[]> {
+  const failures: unknown[] = [];
+  for (const step of [...steps].reverse()) {
     try {
       await step();
-    } catch {
-      ok = false; // e.g. the record was deleted meanwhile; keep undoing the rest
+    } catch (e) {
+      failures.push(e);
     }
   }
-  return ok;
+  return failures;
 }
 
 /** Undoes the newest action; resolves to its label, or undefined when there is nothing to undo. */

@@ -12,7 +12,9 @@ import {
   undoEntry,
   undoLast,
   undoable,
+  UndoReplayError,
 } from './index';
+import { recordAs } from '@/core/db/recorder';
 
 const schema = z.object({
   title: z.string().min(1),
@@ -174,6 +176,117 @@ describe('an action with its own inverse (planner hub 2, package 4a)', () => {
     );
     await undoLast();
     expect((await repo.get(a.id))?.title).toBe('B');
+    expect(calls).toEqual(['inverse']);
+  });
+});
+
+describe('an action that throws takes its writes back', () => {
+  it('a throw after two writes leaves nothing, rethrows the error and keeps no entry', async () => {
+    const before = await repo.create({ title: 'before', done: false });
+    let made: string | undefined;
+    const boom = new Error('boom');
+    await expect(
+      undoable('Zwei', async () => {
+        made = (await repo.create({ title: 'neu', done: false })).id;
+        await repo.update(before.id, { done: true, note: 'x' });
+        throw boom;
+      }),
+    ).rejects.toBe(boom);
+    expect(await repo.get(made!)).toBeUndefined();
+    const back = await repo.get(before.id);
+    expect(back?.done).toBe(false);
+    expect(back?.note).toBeUndefined();
+    expect(undoDepth()).toBe(0);
+    // The rollback's own writes were not recorded: the next action starts clean.
+    const { entry } = await undoable('Danach', () => repo.create({ title: 'n', done: false }));
+    expect(entry?.steps).toHaveLength(1);
+  });
+
+  it('replays newest first', async () => {
+    const x = await repo.create({ title: 'x', done: false });
+    const order: number[] = [];
+    await expect(
+      undoable('Reihenfolge', async () => {
+        for (const n of [1, 2, 3])
+          await recordAs(
+            async () => void order.push(n),
+            () => repo.update(x.id, { title: `t${n}` }),
+          );
+        throw new Error('boom');
+      }),
+    ).rejects.toThrow('boom');
+    expect(order).toEqual([3, 2, 1]);
+  });
+
+  it('a nested throw rolls back the whole outer action; one the outer fn catches rolls nothing back', async () => {
+    let outerId: string | undefined;
+    let innerId: string | undefined;
+    await expect(
+      undoable('Außen', async () => {
+        outerId = (await repo.create({ title: 'o', done: false })).id;
+        await undoable('Innen', async () => {
+          innerId = (await repo.create({ title: 'i', done: false })).id;
+          throw new Error('inner');
+        });
+      }),
+    ).rejects.toThrow('inner');
+    expect(await repo.get(outerId!)).toBeUndefined();
+    expect(await repo.get(innerId!)).toBeUndefined();
+    expect(undoDepth()).toBe(0);
+
+    const { entry } = await undoable('Außen', async () => {
+      outerId = (await repo.create({ title: 'o', done: false })).id;
+      await undoable('Innen', async () => {
+        innerId = (await repo.create({ title: 'i', done: false })).id;
+        throw new Error('inner');
+      }).catch(() => undefined);
+    });
+    // Part of the outer action as before: both stay, and one undo takes both back.
+    expect(await repo.get(innerId!)).toBeDefined();
+    expect(entry?.steps).toHaveLength(2);
+    await undoLast();
+    expect(await repo.get(outerId!)).toBeUndefined();
+    expect(await repo.get(innerId!)).toBeUndefined();
+  });
+
+  it('a step of the rollback that fails is reported as UndoReplayError and the others still run', async () => {
+    const a = await repo.create({ title: 'a', done: false });
+    const b = await repo.create({ title: 'b', done: false });
+    const boom = new Error('boom');
+    const failed = new Error('step');
+    const err = await undoable('Zwei', async () => {
+      await repo.update(a.id, { done: true });
+      await recordAs(
+        async () => {
+          throw failed;
+        },
+        () => repo.update(b.id, { done: true }),
+      );
+      throw boom;
+    }).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(UndoReplayError);
+    expect((err as UndoReplayError).cause).toBe(boom);
+    expect((err as UndoReplayError).failures).toEqual([failed]);
+    expect((err as UndoReplayError).message).not.toContain('Zwei');
+    expect((await repo.get(a.id))?.done).toBe(false); // the other step still ran
+    expect((await repo.get(b.id))?.done).toBe(true); // the failed one stays
+    expect(undoDepth()).toBe(0);
+  });
+
+  it('recordAs records its inverse also when its fn throws after the write', async () => {
+    const a = await repo.create({ title: 'a', done: false });
+    const calls: string[] = [];
+    await expect(
+      undoable('Eigen', () =>
+        recordAs(
+          async () => void calls.push('inverse'),
+          async () => {
+            await repo.update(a.id, { done: true });
+            throw new Error('after');
+          },
+        ),
+      ),
+    ).rejects.toThrow('after');
     expect(calls).toEqual(['inverse']);
   });
 });
