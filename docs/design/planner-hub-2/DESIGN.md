@@ -1,6 +1,6 @@
 # Planner hub 2 – design: building blocks, the two decisions, critique
 
-Mockups: `mockups/*.html`, rendered by `mockups/render.mjs` (1920 and 412, light and dark; pictures in the PR text). Hand-offs: `handoff/`. Words: [COPY](COPY.md). Keyboard: [A11Y](A11Y.md).
+Mockups and hand-offs of the built packages were removed when the round closed (git history before package M; what was built: [decisions/plan-hub-2](../../decisions/plan-hub-2.md)); the parked and struck ones are in [`struck/`](struck/PROMPTS.md) (`struck/mockups/render.mjs`). Words: [COPY](COPY.md). Keyboard: [A11Y](A11Y.md).
 
 ## 1. Building blocks (Identity 4.0: nothing new in the system unless named here)
 
@@ -39,13 +39,13 @@ Identity: the planner keeps hue `indigo`, head `standard`, no filled action in t
 
 ## 3. The bundle – two directions, one decision (built as 5a; the bundle of things, 5b, is parked)
 
-**A · „Eine Zeile, ‚Los‘ auf der Fokus-Seite“** (`05-bundle-a.html`, `05-los.html`): closed, a bundle is one row with „1 von 5“ as text; expanded, its steps are tick lines; „Los“ opens the focus page with only the next step.
+**A · „Eine Zeile, ‚Los‘ auf der Fokus-Seite“** (`struck/mockups/05-bundle-a.html`; `05-los.html` removed when the round closed): closed, a bundle is one row with „1 von 5“ as text; expanded, its steps are tick lines; „Los“ opens the focus page with only the next step.
 
 - For: a round is one row whether it is typed or a routine (and bundled, should 5b be built: C2 2 → 1), and a round is worked through without a module switch (C1: 4 / 5 → 2 with 5a, 0 once it is typed in the field, package 3); „Los“ reuses the page that already hides everything else and survives a reload; nothing new on the sheet.
 - Against: the steps are invisible until he opens the row; „Los“ leaves the sheet (not the module); bundling an errand round with a shopping list costs 14 handles (phone 13) once and per thing 5 → 7, and the module switches stay 2 (the list is asked into the plan in Listen) – it buys one row less and 9 / 8 → 6 working handles.
 - Critique folded in: member lines have one lead column (tick or source glyph – the draft had both, ragged); „k von n“ counts done steps on the row and the position in „Los“, said in the hand-off; a member without a tick shows its panel as the step.
 
-**B · „Block mit sichtbaren Schritten, ‚Los‘ an Ort und Stelle“** (`05-bundle-b.html`): the bundle is a header row with its steps always visible beneath; „Los“ turns the header into a stage inside the sheet.
+**B · „Block mit sichtbaren Schritten, ‚Los‘ an Ort und Stelle“** (`05-bundle-b.html`, removed when the round closed): the bundle is a header row with its steps always visible beneath; „Los“ turns the header into a stage inside the sheet.
 
 - For: he sees all steps without a tap; he never leaves the sheet.
 - Against: it shows every step as a row (six rows where A shows one); the stage competes with every other row of the day while he should see one thing; the header row carries a fifth control.

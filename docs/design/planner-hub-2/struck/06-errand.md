@@ -1,6 +1,6 @@
 # Hand-off 06 – places and map of an errand round (struck by principle 1; build only on the maintainer's „ja“)
 
-What is built of the errand round – one row, the list ticked inside the bundle – is in [05-bundle](05-bundle-parked.md) (package 5b). This file keeps the struck part: stops with places and the jump to the map.
+What 5b would build of the errand round – one row, the list ticked inside the bundle – is in [05-bundle](05-bundle-parked.md) (package 5b). This file keeps the struck part: stops with places and the jump to the map.
 
 Concept: [CONCEPT-INTAKE, idea 6](../CONCEPT-INTAKE.md). Builds on [05-bundle](05-bundle-parked.md) (a bundle of kind `errand`). Mockup: `mockups/06-errand.html`.
 

@@ -1,8 +1,8 @@
 /**
  * Renders the planner-hub-2 mockups at 1920 and 412 px, light and dark, as jpg into
  * web/.screens/planner-hub-2/<name>-<width>-<scheme>.jpg (gitignored; images go into the PR text).
- * Run from web/ (playwright-core resolves there):  node ../docs/design/planner-hub-2/mockups/render.mjs
- * One file only: MOCKUPS=04-expand-a,05-los node ../docs/design/planner-hub-2/mockups/render.mjs
+ * Run from web/ (playwright-core resolves there):  node ../docs/design/planner-hub-2/struck/mockups/render.mjs
+ * One file only: MOCKUPS=05-bundle-a,07-wait node ../docs/design/planner-hub-2/struck/mockups/render.mjs
  */
 import { createRequire } from 'node:module';
 import { mkdirSync, readdirSync } from 'node:fs';

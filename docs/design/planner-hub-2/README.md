@@ -8,11 +8,11 @@ Brief (maintainer, 2026-11-23): everything goes from the head into one field, un
 | [FIGURES](FIGURES.md) | every `TARGET` of the script derived handle by handle, the figures after each package, the named prices |
 | [CONCEPT](CONCEPT.md) | seven sentences every package kept, new data, **the link contract** (idea 10) with the table per module |
 | [CONCEPT-ROWS](CONCEPT-ROWS.md) | expand (4), collective rows (2), steps and „Los“ (5a; bundles 5b parked), measured duration (8) |
-| [CONCEPT-INTAKE](CONCEPT-INTAKE.md) | share (1), kinds in the field (3), errands (6, struck), appointment (9), topic (11) |
+| [CONCEPT-INTAKE](CONCEPT-INTAKE.md) | share (1), kinds in the field (3), errands (6: parked with 5b, places and map struck), appointment (9), topic (11) |
 | [DESIGN](DESIGN.md) | building blocks, the two decisions (expanded row, bundle) with for and against, critique per surface, FOCUS checklist |
 | [COPY](COPY.md) | every new word, German and English, with ids and the rejected ones |
 | [A11Y](A11Y.md) | keyboard paths, names, focus order, target sizes, review findings |
 | [`struck/`](struck/PROMPTS.md) | what is parked or struck, ready should the maintainer say yes: the prompts 5b, 7, 6, the hand-offs and mockups they need, CONCEPT-STRUCK, copies of the shared block and `00-common` they cite |
 | [`planner-hub-2.spec.ts`](../../../web/e2e/usecases/planner-hub-2.spec.ts) | the measuring script: `IST` and `TARGET`, asserted on every run |
 
-What each package built and why: [decisions/plan-hub-2](../../decisions/plan-hub-2.md) (the round's working documents – package order, prompts, hand-offs, mockups – were removed when it closed). Sample data everywhere: Monday 2026-11-30, invented things. Never a source, target, label, pile, step or topic member: `accounts`.
+What each package built and why: [decisions/plan-hub-2](../../decisions/plan-hub-2.md) (the round's working documents – package order, prompts, hand-offs, mockups – were removed when it closed; code comments that cite „hand-off 02“ … „11“ mean those files, in git history before package M). Sample data everywhere: Monday 2026-11-30, invented things. Never a source, target, label, pile, step or topic member: `accounts`.

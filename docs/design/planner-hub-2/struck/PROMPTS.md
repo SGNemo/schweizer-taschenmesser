@@ -1,6 +1,6 @@
 # Planner hub 2 – parked and struck prompts
 
-Kept when the round closed (package M, 2026-11-26): 5b is parked (build only on the maintainer's explicit yes, not before 5a – 5a is built), 7 and 6 are struck by principle 1. Paths in the prompts are from the repository root; the shared block they cite is [common](common.md), the hand-off rules [00-common](00-common.md).
+Kept when the round closed (package M, 2026-11-26): 5b is parked (build only on the maintainer's explicit yes, not before 5a – 5a is built), 7 and 6 are struck by principle 1. Paths in the prompts that start with `docs/` or `web/` are from the repository root, the others are relative to `docs/design/planner-hub-2/`; the shared block they cite is [common](common.md), the hand-off rules [00-common](00-common.md).
 
 ## Prompt – package 5b (parked by the figures – only on the maintainer's explicit yes; not before 5a): bundling things (`feat/plan-bundles`)
 

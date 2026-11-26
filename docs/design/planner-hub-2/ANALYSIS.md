@@ -148,4 +148,4 @@ Every target is met; no figure was loosened. The prices stayed what the script's
 | `d1920--planner` | 56 → 66 | 19 → 19 | 75 → 75 | 69 → 79 | 6 → 6 |
 | `p412--planner` | 22 → 29 | 14 → 14 | 34 → 36 | 33 → 38 | 6 → 6 |
 
-The rises came in with the packages, each named as a ratchet hit in its PR and merged by the maintainer: mainly the expandable appointment rows (9), the ⋯ on appointment rows for „Thema …“ (11) and the rows' new disclosure buttons and panels (4a–4c, 2). The shared block's „unchanged“ held for no package that showed a new control on the page; each rise is a named, approved hit, not a drift.
+Only two packages moved the planner's budget, each named as a ratchet hit in its PR and merged by the maintainer: 9 (4d673542c – the expandable appointment rows: d1920 buttons 56 → 63, first-screen actions 69 → 76, height 1080 → 1093; p412 buttons 22 → 26, first-screen actions 33 → 35, height 2052 → 2088) and 11 (98188f434 – the ⋯ with „Thema …“ on appointment rows: → 66 / 79 and → 29 / 38, icons 33 → 36 on the phone). Every other package held the shared block's „unchanged“. Heights: d1920 1080 → 1093, p412 2052 → 2088.
