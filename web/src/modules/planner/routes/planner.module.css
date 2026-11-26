@@ -160,11 +160,16 @@ button.leadChip {
   cursor: pointer;
 }
 /* T4 (package 11): the topic in the figure's place, „Alles zeigen“ beside it (wraps on the phone). */
+/* T4 in the head's one-line title row (it never wraps: the row has one height). */
 .topicHead {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-1) var(--space-3);
+  gap: var(--space-3);
+  min-width: 0;
+}
+.topicHead > button {
+  flex: none;
+  white-space: nowrap;
 }
 /* „Themen“ in the planner's settings (package 11). */
 .topicSettings {

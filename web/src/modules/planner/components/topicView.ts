@@ -9,6 +9,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo } from 'react';
 import { getMeta } from '@/core/db/metaKv';
 import { refKey } from '@/core/entitylinks/types';
+import { plannedOf } from '../board';
 import type { BoardData } from '../useBoard';
 import { topicRepo } from '../repo';
 import { TOPIC_FILTER_KEY, TOPIC_LAST_KEY, shownMembers } from '../topic';
@@ -52,6 +53,20 @@ export function filterBoard(data: BoardData, members: ReadonlySet<string>): Boar
     },
     ...(data.view ? { view: days(data.view) } : {}),
   };
+}
+
+/**
+ * The week band's tiles while a topic is shown: each bar's fill is the topic's planned minutes (as the engine counts,
+ * a fixed row charged against the whole day's appointments); `free`, `over` and the rest stay the whole day's.
+ */
+export function topicBand(
+  shown: BoardData['board']['days'],
+  whole: BoardData['board']['days'],
+): BoardData['board']['days'] {
+  return shown.map((d) => ({
+    ...d,
+    planned: plannedOf(d.rows, whole.find((x) => x.date === d.date)?.blockers ?? []),
+  }));
 }
 
 export interface TopicView {

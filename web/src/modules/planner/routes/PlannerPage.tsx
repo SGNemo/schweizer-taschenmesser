@@ -66,7 +66,7 @@ import { beginPlanFocus, planFocusPath } from '../focus';
 import { useLater } from '../useLater';
 import { readKeepSentence } from '../keepSentence';
 import type { PlannableEntry } from '@/core/modules/contributions';
-import { plannedOf, type BoardBlocker, type BoardDay, type BoardRow, type OpenRow } from '../board';
+import { type BoardBlocker, type BoardDay, type BoardRow, type OpenRow } from '../board';
 import { Capture } from '../components/Capture';
 import { CaptureDialog } from '../components/CaptureDialog';
 import { useAbilities, useRowMenu } from '../components/rowMenu';
@@ -81,7 +81,7 @@ import { appointmentsOf, Context, nextDeadlinesOf } from '../components/Context'
 import { BlockRow, DayPage, DayPageLoading } from '../components/DayPage';
 import { LeadChip, TopicLeadChip } from '../components/LeadChip';
 import { TopicChooser } from '../components/TopicChooser';
-import { filterBoard, memberOf, useTopicView } from '../components/topicView';
+import { filterBoard, memberOf, topicBand, useTopicView } from '../components/topicView';
 import { setTopic, setTopicFilter, topicsOf, topicThing, type TopicChoice } from '../topic';
 import { TOPIC_ID } from '../schema';
 import { isLinkable } from '@/core/entitylinks';
@@ -1296,20 +1296,12 @@ export default function PlannerPage() {
   /** The days in view: the band's week, or the grid's four weeks (passed days included). */
   // With a topic shown the band's bars carry only its things (hand-off 11); the sheet's „frei“ counts the whole day.
   const bandList = data?.view ?? week;
-  const bandDays =
+  const bandDays = bandList;
+  // With a topic shown the band's bars carry only its things (hand-off 11); the face, hatch, name and drop preview keep
+  // the whole day („the day is as full as it is“), as the sheet's „frei“ does.
+  const bandTiles =
     topics.filter && bandList
-      ? bandList.map((d) => {
-          // The engine's count over the shown rows; a fixed one is charged as the whole day's appointments allow.
-          const whole = (read?.view ?? read?.board.days)?.find((x) => x.date === d.date) ?? d;
-          const planned = plannedOf(d.rows, whole.blockers);
-          // The tile's face, hatch and spoken label follow its bar: one answer per tile.
-          return {
-            ...d,
-            planned,
-            free: Math.max(0, d.usable - planned),
-            over: Math.max(0, planned - d.usable),
-          };
-        })
+      ? topicBand(bandList, read?.view ?? read?.board.days ?? [])
       : bandList;
   /** The week in view from today on („Zeiten dieser Woche“, the context column). */
   const viewWeek = bandDays?.filter((d) => d.date >= (data?.today ?? now)).slice(0, SPAN);
@@ -2276,12 +2268,12 @@ export default function PlannerPage() {
                   openBlock
                 ) : (
                   <>
-                    {bandDays && data ? (
+                    {bandTiles && data ? (
                       <>
                         {bandRow}
                         {grid ? (
                           <WeekGrid
-                            days={bandDays}
+                            days={bandTiles}
                             picked={shownDate}
                             today={data.today}
                             onPick={pick}
@@ -2289,7 +2281,7 @@ export default function PlannerPage() {
                           />
                         ) : (
                           <WeekBand
-                            days={bandDays}
+                            days={bandTiles}
                             picked={shownDate}
                             onPick={pick}
                             today={data.today}

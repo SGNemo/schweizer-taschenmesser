@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { filterBoard, matcher } from '../components/topicView';
+import { filterBoard, matcher, topicBand } from '../components/topicView';
 import type { BoardData } from '../useBoard';
 
 // Planner hub 2, package 11: the planner shrunk to one topic – pure, display only. Invented data.
@@ -88,5 +88,40 @@ describe('filterBoard', () => {
     const before = data();
     filterBoard(before, members);
     expect(before).toEqual(data());
+  });
+});
+
+describe('topicBand', () => {
+  it('the bar carries the topic’s minutes; a fixed row is charged against the whole day’s appointments; free stays', () => {
+    const fixed = {
+      itemKey: 'todos:a',
+      unitId: 'todos:a#0',
+      minutes: 60,
+      fixed: { from: '10:00', to: '11:00' },
+    };
+    const loose = { itemKey: 'todos:h', unitId: 'todos:h#0', minutes: 30 };
+    const shown = [
+      {
+        date: '2026-12-01',
+        planned: 300,
+        free: 0,
+        over: 45,
+        usable: 240,
+        rows: [fixed, loose],
+        blockers: [],
+      },
+    ];
+    // The whole day: a non-member appointment 10:30–11:00 covers half of the fixed row.
+    const whole = [
+      {
+        date: '2026-12-01',
+        rows: [],
+        blockers: [{ id: 'cal:x', from: '10:30', to: '11:00', min: 30 }],
+      },
+    ];
+    const [d] = topicBand(shown as never, whole as never);
+    expect(d!.planned).toBe(30 + 30);
+    expect(d!.free).toBe(0);
+    expect(d!.over).toBe(45);
   });
 });
