@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 import { render, screen } from '@testing-library/react';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { SIGNATURES } from '@/core/modules/types';
 import {
@@ -10,29 +12,12 @@ import {
   Signature,
   SIGNATURE_BLOCKS,
   SignatureMark,
-  Sky,
   Stopwatch,
-  skyKind,
 } from './index';
+import * as identity from './index';
 import { dominantColor, safeTint } from './coverTone';
 
 describe('identity building blocks', () => {
-  it('skyKind: night wins, rain-like groups are rain, partly/cloudy/fog are cloudy, the rest is clear', () => {
-    expect(skyKind('rain', true)).toBe('night');
-    for (const g of ['drizzle', 'rain', 'showers', 'snow', 'thunder'])
-      expect(skyKind(g, false)).toBe('rain');
-    for (const g of ['partly', 'cloudy', 'fog']) expect(skyKind(g, false)).toBe('cloudy');
-    expect(skyKind('clear', false)).toBe('clear');
-    expect(skyKind(undefined, false)).toBe('clear');
-  });
-
-  it('Sky is decoration: hidden from assistive tech, carries its kind', () => {
-    render(<Sky kind="rain" />);
-    const sky = screen.getByTestId('sky');
-    expect(sky).toHaveAttribute('aria-hidden', 'true');
-    expect(sky).toHaveAttribute('data-sky', 'rain');
-  });
-
   it('BankCard keeps the figures as real text', () => {
     render(
       <BankCard
@@ -196,5 +181,22 @@ describe('safeTint (cover tone vs. text contrast)', () => {
       container.querySelectorAll('circle[stroke-dasharray]')[1]!.getAttribute('stroke-dasharray'),
     ).toMatch(/^0 /);
     expect(container.querySelector('line')).not.toBeNull();
+  });
+
+  // Weather scenes 4: the old sky swatch is replaced by the scene (head, widget) and the porthole (overview line).
+  it('the old sky swatch is gone: no `Sky` / `skyKind` export, no import of it, no `--sky-*` token', () => {
+    expect(Object.keys(identity)).not.toContain('Sky');
+    expect(Object.keys(identity)).not.toContain('skyKind');
+    const src = resolve(__dirname, '../..');
+    const files = readdirSync(src, { recursive: true, encoding: 'utf8' }).filter(
+      (f) => /\.(tsx?|css)$/.test(f) && !f.endsWith('identity.test.tsx'),
+    );
+    const hits = files.filter((f) => {
+      const text = readFileSync(join(src, f), 'utf8');
+      return /ui\/identity\/Sky\b|\bskyKind\b|\{[^}]*\bSky\b[^}]*\}\s*from\s*'@\/ui\/identity'|--sky-[a-z]/.test(
+        text,
+      );
+    });
+    expect(hits).toEqual([]);
   });
 });

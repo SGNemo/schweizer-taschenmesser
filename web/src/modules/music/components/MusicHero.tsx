@@ -16,7 +16,7 @@ const token = (name: string): string =>
     ? ''
     : getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
-/** "Ruhig" or "Modulfarben: Aus": no cover tone at all, like BankCard and Sky (C03). */
+/** "Ruhig" or "Modulfarben: Aus": no cover tone at all, like BankCard and the grey weather scene (C03). */
 const calm = (): boolean => {
   if (typeof document === 'undefined') return false;
   const d = document.documentElement.dataset;
