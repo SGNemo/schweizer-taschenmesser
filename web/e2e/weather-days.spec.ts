@@ -256,6 +256,13 @@ test.describe('Weather days and hours (round 2, package C)', () => {
   }) => {
     await ready(page, '/weather?day=2026-11-29&hour=08');
     await expect(page.getByTestId('weather-now')).toContainText(/So\.? 08:00/);
+    // The checked card is in sight, not only the row's start.
+    await expect(
+      page
+        .getByRole('radiogroup', { name: 'Stunde wählen' })
+        .getByRole('radio', { checked: true })
+        .locator('..'),
+    ).toBeInViewport();
     await expect(
       page.getByRole('radiogroup', { name: 'Tag wählen' }).getByRole('radio', { checked: true }),
     ).toHaveAccessibleName(/^So/);

@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { edgeKey } from './edgeKey';
 import { dateTimeFormat } from '@/core/i18n/format';
 import type { HourRow, NowDetail } from '@/core/weather/api';
@@ -60,9 +60,23 @@ export function HourCards({
   const fmt = dateTimeFormat({ hour: '2-digit', minute: '2-digit' });
   const timeOf = (h: HourRow) => fmt.format(localDate(h.time, Number(h.time.slice(11, 13))));
   const line = lineHour ? hourLineParts(tp, lineHour, now) : [];
+  // The checked card stays in sight (a link to 14:00 opens on the row's start otherwise): the row scrolls sideways
+  // only, so the page itself never jumps.
+  const scroller = useRef<HTMLDivElement>(null);
+  const first = hours[0]?.time;
+  useEffect(() => {
+    const box = scroller.current;
+    const card = checked >= 0 ? box?.querySelectorAll<HTMLElement>('label')[checked] : undefined;
+    if (!box || !card) return;
+    const left =
+      card.getBoundingClientRect().left - box.getBoundingClientRect().left + box.scrollLeft;
+    if (left < box.scrollLeft || left + card.offsetWidth > box.scrollLeft + box.clientWidth)
+      box.scrollLeft = Math.max(0, left - (box.clientWidth - card.offsetWidth) / 2);
+  }, [checked, first]);
   return (
     <>
       <div
+        ref={scroller}
         className={styles.hourScroll}
         role="region"
         aria-label={tx.hourly}
