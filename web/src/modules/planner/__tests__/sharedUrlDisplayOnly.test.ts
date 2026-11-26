@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PlannableEntry } from '@/core/modules/contributions';
-import { webAddress } from '@/core/net/webAddress';
+import { trimTrailing, webAddress } from '@/core/net/webAddress';
 import { setNow } from '@/core/time/now';
 import { createTestDb } from '@/test-utils';
 import { copyInput } from '../copyPlan';
@@ -117,6 +117,12 @@ describe('webAddress – the one gate', () => {
       host: 'example.org',
     });
     expect(webAddress('HTTPS://Example.ORG')?.url).toBe('https://example.org/');
+    // The stored form counts: a non-ASCII path that grows past 2 048 once encoded is no address to keep.
+    expect(webAddress(`https://ex.com/${'ä'.repeat(1000)}`)).toBeUndefined();
+    expect(trimTrailing('https://en.example/wiki/Foo_(bar)')).toBe(
+      'https://en.example/wiki/Foo_(bar)',
+    );
+    expect(trimTrailing('https://example.org/a).')).toBe('https://example.org/a');
     // A non-ASCII host is shown as URL reads it (punycode), never as typed.
     expect(webAddress('https://bücher.example/')?.host).toBe('xn--bcher-kva.example');
   });

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { enableModule, useModuleStates } from '@/core/modules/activation';
 import { getManifest } from '@/core/modules/registry';
-import { webAddress } from '@/core/net/webAddress';
+import { ADDRESS_TOKENS, trimTrailing, webAddress } from '@/core/net/webAddress';
 import { secondStage } from '@/quickCapture/targets';
 import type { CaptureType } from '@/quickCapture/parser';
 import type { SavedCapture } from '@/quickCapture/targets/types';
@@ -61,6 +61,7 @@ function SavedCard({
                 undoing.current = true;
                 void saved.undo().catch(() => {
                   undoing.current = false;
+                  useUiStore.getState().toast(t.ui.undoFailed);
                 });
               }}
             >
@@ -90,7 +91,10 @@ export function sharedContent(params: URLSearchParams): {
   // An address found in the text loses trailing punctuation („…/a.“, „…/a)“), as the parser reads it.
   const url =
     params.get('url')?.trim() ||
-    text.match(/https?:\/\/\S+/)?.[0]?.replace(/[.,;:!?)]+$/, '') ||
+    (() => {
+      const found = text.match(/https?:\/\/\S+/i)?.[0];
+      return found ? trimTrailing(found) : '';
+    })() ||
     '';
   return { title: params.get('title')?.trim() ?? '', text, url };
 }
@@ -182,6 +186,19 @@ const TARGETS: Target[] = [
   },
 ];
 
+/**
+ * The line as the planner path may store it (package 1): every address-like token the gate rejects leaves it, with the
+ * punctuation that ended its sentence („Schau: https://a@b/x.“ → „Schau:“). An address it keeps stays (the parser takes
+ * it out of the title as built).
+ */
+export function screenLine(line: string): string {
+  return line
+    .replace(ADDRESS_TOKENS, (token) => (webAddress(trimTrailing(token)) ? token : ' '))
+    .replace(/(^|\s)[.,;:!?)]+(?=\s|$)/g, '$1')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 /** The note of a thing shared into the planner may hold this much (the address line included). */
 export const SHARE_NOTE_MAX = 4000;
 
@@ -201,7 +218,7 @@ export function shareNote(
   // A rest that starts with the same address does not store it twice.
   const restLines = ticked.split('\n');
   // Compared as URL reads both (a bare origin gains its „/“, trailing punctuation goes).
-  const first = webAddress(restLines[0]?.trim().replace(/[.,;:!?)]+$/, ''))?.url;
+  const first = webAddress(trimTrailing(restLines[0]?.trim() ?? ''))?.url;
   const own = address && first === address ? restLines.slice(1).join('\n').trim() : ticked;
   const room = SHARE_NOTE_MAX - (address ? address.length + 1 : 0);
   let kept = own.slice(0, Math.max(0, room));
@@ -228,12 +245,13 @@ export function ShareTarget() {
   // With the planner on, an address that will not be stored (not http/https, too long) never enters the line either:
   // the parser would keep `javascript:` or `intent:` in the title. The „Geteilt“ card still shows it.
   const address = webAddress(content.url);
-  const unsafe = states?.planner === true && !address && content.url !== '';
+  const plannerOnNow = states?.planner === true;
+  const unsafe = plannerOnNow && !address && content.url !== '';
   const shared = sharedLine(unsafe ? { ...content, url: '' } : content);
   // Also when the address came inside the text (Android hands over title and text only): it leaves the line, or the
   // parser would keep it as the title. A line that was only the address starts empty.
-  const line = unsafe
-    ? shared.line.split(content.url).join(' ').replace(/\s+/g, ' ').trim()
+  const line = plannerOnNow
+    ? screenLine(unsafe ? shared.line.split(content.url).join(' ') : shared.line)
     : shared.line;
   const rest = shared.rest;
   const [asNote, setAsNote] = useState(false);
@@ -323,8 +341,11 @@ export function ShareTarget() {
                     }
                     setSaved(s);
                     // The capture toast as built; the page remembers it, so its own „Rückgängig“ can close it.
-                    void announceSaved(s).then(() => {
-                      toastId.current = useUiStore.getState().toasts.at(-1)?.id;
+                    void announceSaved(s).then(async (id) => {
+                      // Undone on the page before the toast came: it goes at once (its undo would do nothing).
+                      if (id !== undefined && (await secondStage(s.type, s.id)) !== 'live')
+                        useUiStore.getState().dismissToast(id);
+                      else toastId.current = id;
                     });
                   }}
                 />

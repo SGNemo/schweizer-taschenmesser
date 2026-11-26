@@ -16,7 +16,7 @@ import { getManifest } from '@/core/modules/registry';
 import { setNow } from '@/core/time/now';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { SHARE_NOTE_MAX, ShareTarget, shareNote } from './ShareTarget';
+import { SHARE_NOTE_MAX, ShareTarget, screenLine, shareNote } from './ShareTarget';
 
 vi.setConfig({ testTimeout: 20_000 });
 
@@ -272,5 +272,27 @@ describe('council round 2', () => {
     await waitFor(() =>
       expect(lines()).toHaveTextContent(t.planner.share.linkSaved('other.example')),
     );
+  });
+});
+
+describe('council round 3', () => {
+  it('the line keeps no address the gate rejects: upper-case scheme, www., a second address, its punctuation', () => {
+    expect(screenLine('Schau: https://good@evil.example/x.')).toBe('Schau:');
+    expect(screenLine('HTTPS://good@evil.example/x')).toBe('');
+    expect(screenLine(`Seite www.${'a'.repeat(30)}.example`)).toBe('Seite');
+    expect(screenLine('Schau https://ok.example/a https://good@evil.example/x')).toBe(
+      'Schau https://ok.example/a',
+    );
+  });
+
+  it('an upper-case address in the text is named S19 and never stored', async () => {
+    const user = userEvent.setup();
+    open({ text: 'Merken HTTPS://good@evil.example/x' });
+    await waitFor(() => expect(lines()).toHaveTextContent(t.planner.share.linkNotSaved));
+    await user.click(screen.getByRole('button', { name: t.quickCapture.save }));
+    await waitFor(async () => expect(await tasks()).toHaveLength(1));
+    const [task] = await tasks();
+    expect(task!.title).toBe('Merken');
+    expect(task!.note ?? '').toBe('');
   });
 });
