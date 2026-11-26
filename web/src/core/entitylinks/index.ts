@@ -243,6 +243,27 @@ export async function linksFrom(
     });
 }
 
+/**
+ * The live links that lead to any of `refs` with one of `rels` (one indexed read), with their row id and when they were
+ * last written: a reader that must pick one of several (two devices gave a thing two topics offline) takes the later.
+ * Unresolved.
+ */
+export async function linksTo(
+  refs: readonly EntityRef[],
+  rels: readonly LinkRel[],
+  database: TaschenmesserDB = defaultDb,
+): Promise<{ id: string; link: EntityLink; updatedAt: number }[]> {
+  if (refs.length === 0) return [];
+  const want = new Set<string>(rels);
+  const rows = await linksRepo(database).table.where('toKey').anyOf(refs.map(refKey)).toArray();
+  return rows
+    .filter((r) => r.deletedAt === null && want.has(r.rel))
+    .flatMap((r) => {
+      const link = readLink(r);
+      return link ? [{ id: r.id, link, updatedAt: r.updatedAt }] : [];
+    });
+}
+
 /** The links of a thing in both directions, the other end resolved through its module. */
 export async function linksOf(
   ref: EntityRef,

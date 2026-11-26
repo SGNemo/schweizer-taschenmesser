@@ -159,6 +159,65 @@ button.leadChip {
   white-space: nowrap;
   cursor: pointer;
 }
+/* T4 (package 11): the topic in the figure's place, „Alles zeigen“ beside it (wraps on the phone). */
+.topicHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+}
+/* „Themen“ in the planner's settings (package 11). */
+.topicSettings {
+  margin-block-start: var(--space-4);
+}
+.topicSettingsHead {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-label);
+  font-weight: var(--weight-semibold);
+}
+/* The topic chooser (package 11): radio lines under the field, the list scrolls inside the dialog. */
+.topicHint {
+  margin: var(--space-2) 0 0;
+  color: var(--text-3);
+  font-size: var(--text-meta);
+}
+.topicList {
+  max-height: calc(8 * var(--touch));
+  overflow-y: auto;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.topicLine {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.topicActive {
+  background: var(--surface-raised);
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+.topicRadio {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full);
+  color: var(--text);
+}
+.topicName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 /* „Zum Beispiel“ and three chips under the field: they fill the field, they never submit. */
 .examples {
   display: flex;

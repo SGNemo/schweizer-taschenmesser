@@ -9,7 +9,7 @@ import {
 } from 'react';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Card, Icon, ItemList, ItemRow, SkeletonRows } from '@/ui';
+import { Card, Icon, ItemList, ItemRow, SkeletonRows, type RowMenuItem } from '@/ui';
 import type { BoardBlocker, BoardDay, BoardRow } from '../board';
 import { AppointmentLinks } from './appointmentLinks';
 import { capacityLabel, capacityState, capacityWhy, compact } from './capacity';
@@ -42,8 +42,11 @@ export function dayTitle(day: Pick<BoardDay, 'date' | 'isToday'>, tomorrow: bool
 export function BlockRow({
   blocker,
   open,
+  menu,
 }: {
   blocker: BoardBlocker;
+  /** The appointment's ⋯ (package 11: „Thema …“); none for other blocks. */
+  menu?: RowMenuItem[];
   /**
    * An appointment that opens (package 9): the title is the disclosure, the compartment (calendar's panel with the
    * planner's „Vorbereiten …“ / „Danach …“) under the row.
@@ -87,6 +90,7 @@ export function BlockRow({
         </span>
       }
       end={<span className={styles.duration}>{compact(blocker.min)}</span>}
+      {...(menu?.length ? { menu, menuLabel: t.planner.row.menu(blocker.label) } : {})}
       {...(open
         ? {
             onOpen: open.onToggle,

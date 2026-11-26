@@ -9540,6 +9540,51 @@ export const de = {
       tick: (step: string) => `„${step}“ abhaken`,
       more: (n: number) => `${n} weitere`,
     },
+    /** Topic as a bracket (package 11, COPY T1–T4, T6, T8–T12, K8, K9). */
+    topic: {
+      /** T1 */
+      menu: 'Thema …',
+      /** T12: the last used topic, directly. */
+      last: (title: string) => `Thema: ${title}`,
+      /** T2 */
+      chooserTitle: 'Thema wählen oder neu eintippen',
+      field: 'Thema',
+      none: 'Kein Thema',
+      hint: 'Ein Thema hält Dinge aus mehreren Modulen zusammen.',
+      /** A typed name that is no topic yet: Enter creates it. */
+      create: (title: string) => `Neu: „${title}“`,
+      /** T3 */
+      filterMenu: 'Nur ein Thema zeigen …',
+      /** T4 */
+      headTitle: (title: string) => `Thema: ${title}`,
+      headCount: (n: number) => (n === 1 ? '1 Ding' : `${n} Dinge`),
+      showAll: 'Alles zeigen',
+      /** T6 */
+      empty: 'In diesem Thema liegt gerade nichts im Plan.',
+      /** T8 */
+      given: (n: number, title: string) =>
+        n === 1 ? `1 Ding gehört jetzt zu „${title}“.` : `${n} Dinge gehören jetzt zu „${title}“.`,
+      removed: 'Ohne Thema.',
+      give: 'Thema geben',
+      /** T9 */
+      delete: 'Thema löschen …',
+      deleteSentence: 'Die Dinge bleiben, nur die Klammer geht.',
+      deleteConfirm: 'Löschen',
+      deleted: (title: string) => `Thema „${title}“ gelöscht.`,
+      rename: 'Umbenennen',
+      renamed: (title: string) => `Heißt jetzt „${title}“.`,
+      renameLabel: (title: string) => `Neuer Name für „${title}“`,
+      /** T10 */
+      manage: 'Themen verwalten …',
+      section: 'Themen',
+      noTopics: 'Noch kein Thema.',
+      /** T11: the lead chip while filtered. */
+      chip: (title: string) => `Thema: ${title}`,
+      /** K8: the field's toast for a ToDo with only T11. */
+      laidIn: (day: string, title: string) => `Liegt auf ${day}, in „${title}“.`,
+      /** K9: the end of a toast for a thing that does not take T11. */
+      notIn: (title: string) => `Nicht im Thema „${title}“`,
+    },
     /** Before and after an appointment (package 9, COPY A1–A4, A6, A7, K7, K7b). */
     appointment: {
       /** A1 */

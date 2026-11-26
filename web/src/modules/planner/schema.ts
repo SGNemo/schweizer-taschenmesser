@@ -147,3 +147,17 @@ export type PlanDayRow = z.output<typeof daySchema>;
 export type PlanItemRow = z.output<typeof itemSchema>;
 export type AssignmentRow = z.output<typeof assignmentSchema>;
 export type MeasureRow = z.output<typeof measureSchema>;
+
+/** A topic's title: one line, at most 60 characters (COPY: a name, not a sentence). */
+export const TOPIC_TITLE_MAX = 60;
+/** The record id of a topic: `t_<uuid>`, so its link ref is `planner:t_<uuid>` and the purge sweep finds it. */
+export const TOPIC_ID = /^t_[A-Za-z0-9-]{8,64}$/;
+
+/**
+ * A topic (planner hub 2, package 11; CONCEPT §0.1): only a title. Its members are `topic` links in the link store
+ * (`planner:t_<id>` → the thing); no module gets a field.
+ */
+export const topicSchema = z.object({
+  title: z.string().trim().min(1).max(TOPIC_TITLE_MAX),
+});
+export type TopicRow = z.output<typeof topicSchema>;

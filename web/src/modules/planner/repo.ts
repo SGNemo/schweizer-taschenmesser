@@ -1,7 +1,7 @@
 import { createRepo, type Repo } from '@/core/db/repo';
 import { tableName } from '@/core/db/schema';
 import { deepEqual } from '@/core/db/util';
-import { assignmentSchema, daySchema, itemSchema, measureSchema } from './schema';
+import { assignmentSchema, daySchema, itemSchema, measureSchema, topicSchema } from './schema';
 
 export const MODULE_ID = 'planner';
 
@@ -9,6 +9,7 @@ export const dayRepo = createRepo(tableName(MODULE_ID, 'day'), daySchema);
 export const itemRepo = createRepo(tableName(MODULE_ID, 'item'), itemSchema);
 export const assignmentRepo = createRepo(tableName(MODULE_ID, 'assignment'), assignmentSchema);
 export const measureRepo = createRepo(tableName(MODULE_ID, 'measure'), measureSchema);
+export const topicRepo = createRepo(tableName(MODULE_ID, 'topic'), topicSchema);
 
 /** A database other than the app's (tests run two devices side by side); the type comes from `createRepo`, never from `core/db/db`. */
 export type PlannerDb = NonNullable<Parameters<typeof createRepo>[2]>;
