@@ -9,6 +9,10 @@
  * rethrown: a failed action leaves nothing behind and no journal entry. A step of that rollback that
  * fails is not swallowed: the error becomes an `UndoReplayError` (original as `cause`).
  *
+ * The recorder is global: a write that runs concurrently with `fn` (a background run, a second action that
+ * starts meanwhile and so counts as nested) joins this action – its undo, and its rollback when `fn` throws.
+ * Keep background work that can fail outside `undoable`, or have it catch its own failure (finance bookings).
+ *
  * Limits, on purpose: writes that happen after `fn` has resolved are not part of the action
  * (e.g. the finance booking an event-bus handler makes when an invoice is paid); writes outside
  * `undoable` (imports, seeds, settings, sync) are never undoable; there is no redo.
@@ -71,13 +75,14 @@ export async function undoable<R>(
   try {
     result = await fn();
   } catch (error) {
-    stop(); // the rollback's own writes are not recorded
+    // Stopped once, before the rollback (its own writes are not recorded); no second stop after it, which would
+    // end an action that started meanwhile.
+    stop();
     const failures = await replay(steps);
     if (failures.length > 0) throw new UndoReplayError(error, failures);
     throw error;
-  } finally {
-    stop();
   }
+  stop();
   if (steps.length === 0) return { result };
   const entry: UndoEntry = {
     id: ++nextId,
