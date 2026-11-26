@@ -90,3 +90,10 @@
     flex-basis: 100%;
   }
 }
+/* „Ansehen“: a link that looks and sizes like the ghost buttons beside it (touch ≥ 44 px). */
+.viewLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  padding-inline: var(--space-3);
+}

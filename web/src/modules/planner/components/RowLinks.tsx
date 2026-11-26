@@ -151,11 +151,11 @@ function useOpen() {
   const navigate = useNavigate();
   return (v: LinkView) => {
     if (v.to) void navigate(v.to);
-    else if (v.key === SHARED_KEY) {
-      // The shared address is checked once more when it is opened.
+    else {
+      // Every address leaving the app passes the one gate once more when it is opened.
       const a = webAddress(v.url);
       if (a) void getPlatform().app.openUrl(a.url);
-    } else if (v.url) void getPlatform().app.openUrl(v.url);
+    }
   };
 }
 

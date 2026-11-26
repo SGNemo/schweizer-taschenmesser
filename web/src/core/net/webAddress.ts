@@ -19,5 +19,6 @@ export function webAddress(raw: string | undefined): { url: string; host: string
   }
   if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return undefined;
   if (parsed.username || parsed.password || !parsed.hostname) return undefined;
-  return { url: text, host: parsed.hostname };
+  // One form for storing, drawing and opening: the address as URL reads it, so what is shown is what opens.
+  return { url: parsed.href, host: parsed.hostname };
 }

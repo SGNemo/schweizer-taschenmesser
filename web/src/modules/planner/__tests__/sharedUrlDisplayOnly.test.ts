@@ -111,6 +111,12 @@ describe('webAddress – the one gate', () => {
       undefined,
     ])
       expect(webAddress(bad)).toBeUndefined();
+    // One canonical form: what is stored and opened is what URL reads (a backslash is a slash, the host as parsed).
+    expect(webAddress('https://example.org\\@evil.com/')).toEqual({
+      url: 'https://example.org/@evil.com/',
+      host: 'example.org',
+    });
+    expect(webAddress('HTTPS://Example.ORG')?.url).toBe('https://example.org/');
     // A non-ASCII host is shown as URL reads it (punycode), never as typed.
     expect(webAddress('https://bücher.example/')?.host).toBe('xn--bcher-kva.example');
   });

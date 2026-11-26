@@ -183,3 +183,44 @@ describe('ShareTarget with the planner off', () => {
     expect(lines()).toBeNull();
   });
 });
+
+describe('council round 1', () => {
+  it('an address that is not stored never reaches the title either (javascript:, intent:, file:)', async () => {
+    const user = userEvent.setup();
+    for (const bad of ['javascript:alert(1)', 'intent://scan#Intent;end', 'file:///etc/hosts']) {
+      const { unmount } = open({ title: 'Seite', url: bad });
+      await waitFor(() => expect(lines()).toHaveTextContent(t.planner.share.linkNotSaved));
+      expect(screen.getByTestId('shared-content')).toHaveTextContent(bad);
+      await user.click(screen.getByRole('button', { name: t.quickCapture.save }));
+      await waitFor(async () => expect(await tasks()).toHaveLength(1));
+      const [task] = await tasks();
+      expect(task!.title).toBe('Seite');
+      expect(task!.note ?? '').toBe('');
+      unmount();
+      await db.table('todos_task').clear();
+      await db.table('planner_item').clear();
+    }
+  });
+
+  it("focus: on „Fertig“ after „Speichern“, on the page head after this page's „Rückgängig“", async () => {
+    const user = userEvent.setup();
+    open({ title: 'Fahrradträger', text: URL_ });
+    await waitFor(() => expect(lines()).not.toBeNull());
+    await user.click(screen.getByRole('button', { name: t.quickCapture.save }));
+    const done = await screen.findByRole('button', { name: t.planner.share.done });
+    await waitFor(() => expect(done).toHaveFocus());
+    // One live region for the visit, filled after „Speichern“.
+    expect(screen.getByRole('status')).toHaveTextContent(t.planner.share.saved);
+    await user.click(screen.getByRole('button', { name: t.ui.undo }));
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveFocus());
+    expect(screen.getByRole('status')).toHaveTextContent(t.planner.share.undone);
+  });
+
+  it('shareNote: a rest that starts with the address stores it once; the cut never splits a character', () => {
+    expect(shareNote('plan', URL_, `${URL_}\nRest`, true).note).toBe(`${URL_}\nRest`);
+    const emoji = `${'x'.repeat(SHARE_NOTE_MAX - URL_.length - 2)}😀😀`;
+    const r = shareNote('plan', URL_, emoji, true);
+    expect(r.cut).toBe(true);
+    expect(/[\ud800-\udbff]$/.test(r.note!)).toBe(false);
+  });
+});

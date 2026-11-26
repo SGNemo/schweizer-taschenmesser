@@ -1,10 +1,11 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { enableModule, useModuleStates } from '@/core/modules/activation';
 import { getManifest } from '@/core/modules/registry';
-import { createCollectionRepo } from '@/core/db/repo';
 import { webAddress } from '@/core/net/webAddress';
+import { secondStage } from '@/quickCapture/targets';
+import type { CaptureType } from '@/quickCapture/parser';
 import type { SavedCapture } from '@/quickCapture/targets/types';
 import { CaptureForm } from '@/quickCapture/ui/CaptureForm';
 import { announceSaved } from '@/quickCapture/ui/announceSaved';
@@ -15,33 +16,60 @@ import styles from './Page.module.css';
 /**
  * After „Speichern“ as `plan` (package 1, COPY S8 / S9 / S14): „Abgelegt.“ with „Ansehen“, „Rückgängig“ and „Fertig“.
  * The page follows the saved ToDo live: once it is gone – this „Rückgängig“ or the capture toast's – it says S14 and
- * offers only „Fertig“. Nothing closes by itself.
+ * offers only „Fertig“. Nothing closes by itself. Focus lands on „Fertig“; after this card's own „Rückgängig“ on the page
+ * head. „Ansehen“ and „Fertig“ replace the share page in the history, so going back never offers the same share again.
  */
-function SavedCard({ saved }: { saved: SavedCapture }) {
+function SavedCard({
+  saved,
+  alive,
+  onUndone,
+}: {
+  saved: SavedCapture;
+  alive: boolean;
+  onUndone: () => void;
+}) {
   const navigate = useNavigate();
-  const alive = useLiveQuery(async () => {
-    const manifest = getManifest('todos');
-    if (!manifest) return false;
-    const row = (await createCollectionRepo(manifest, 'task').table.get(saved.id)) as
-      { deletedAt: number | null } | undefined;
-    return !!row && row.deletedAt === null;
-  }, [saved.id]);
+  const actions = useRef<HTMLDivElement>(null);
+  const undoing = useRef(false);
+  useEffect(() => {
+    actions.current?.querySelector<HTMLButtonElement>('[data-share-done]')?.focus();
+  }, []);
+  useEffect(() => {
+    if (!alive && undoing.current) {
+      undoing.current = false;
+      onUndone();
+    }
+  }, [alive, onUndone]);
   const s = t.planner.share;
   return (
     <Card>
-      <p role="status" data-testid="share-saved">
-        {alive === false ? s.undone : s.saved}
-      </p>
-      <div className={styles.savedActions}>
+      <p data-testid="share-saved">{alive ? s.saved : s.undone}</p>
+      <div ref={actions} className={styles.savedActions}>
         {alive ? (
           <>
-            <Link to={`/planner?item=${encodeURIComponent(`todos:${saved.id}`)}`}>{s.view}</Link>
-            <Button variant="ghost" onClick={() => void saved.undo()}>
+            <Link
+              replace
+              className={styles.viewLink}
+              to={`/planner?item=${encodeURIComponent(`todos:${saved.id}`)}`}
+            >
+              {s.view}
+            </Link>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                undoing.current = true;
+                void saved.undo();
+              }}
+            >
               {t.ui.undo}
             </Button>
           </>
         ) : null}
-        <Button variant="primary" onClick={() => void navigate('/planner')}>
+        <Button
+          variant="primary"
+          data-share-done
+          onClick={() => void navigate('/planner', { replace: true })}
+        >
           {s.done}
         </Button>
       </div>
@@ -56,7 +84,11 @@ export function sharedContent(params: URLSearchParams): {
   url: string;
 } {
   const text = params.get('text')?.trim() ?? '';
-  const url = params.get('url')?.trim() || text.match(/https?:\/\/\S+/)?.[0] || '';
+  // An address found in the text loses trailing punctuation („…/a.“, „…/a)“), as the parser reads it.
+  const url =
+    params.get('url')?.trim() ||
+    text.match(/https?:\/\/\S+/)?.[0]?.replace(/[.,;:!?)]+$/, '') ||
+    '';
   return { title: params.get('title')?.trim() ?? '', text, url };
 }
 
@@ -163,10 +195,16 @@ export function shareNote(
 ): { note?: string; cut: boolean } {
   const ticked = asNote && rest ? rest : '';
   if (kind !== 'plan') return ticked ? { note: ticked, cut: false } : { cut: false };
+  // A rest that starts with the same address does not store it twice.
+  const restLines = ticked.split('\n');
+  const own =
+    address && restLines[0]?.trim() === address ? restLines.slice(1).join('\n').trim() : ticked;
   const room = SHARE_NOTE_MAX - (address ? address.length + 1 : 0);
-  const kept = ticked.slice(0, Math.max(0, room));
+  let kept = own.slice(0, Math.max(0, room));
+  // Never half a character at the cut.
+  if (kept.length < own.length && /[\ud800-\udbff]$/.test(kept)) kept = kept.slice(0, -1);
   const note = [address, kept].filter(Boolean).join('\n');
-  return { ...(note ? { note } : {}), cut: kept.length < ticked.length };
+  return { ...(note ? { note } : {}), cut: kept.length < own.length };
 }
 
 /** `/share`: the neutral target of the PWA share sheet – you choose where the content goes. */
@@ -183,22 +221,42 @@ export function ShareTarget() {
       !all.some((o) => o && o !== v && o.includes(v) && v === content.url),
   );
   const has = content.title || content.text || content.url;
-  const { line, rest } = sharedLine(content);
+  // With the planner on, an address that will not be stored (not http/https, too long) never enters the line either:
+  // the parser would keep `javascript:` or `intent:` in the title. The „Geteilt“ card still shows it.
+  const address = webAddress(content.url);
+  const { line, rest } = sharedLine(
+    states?.planner === true && !address ? { ...content, url: '' } : content,
+  );
   const [asNote, setAsNote] = useState(false);
   // Package 1: with the planner on, the form starts with the kind `plan`; what it reads now decides S2 / S16 / S19.
   const plannerOn = states?.planner === true;
-  const [read, setRead] = useState<{ type: string; title: string }>();
-  const asPlan = read?.type === 'plan';
-  const address = webAddress(content.url);
-  const { note, cut } = shareNote(read?.type, address?.url, rest, asNote);
+  // What kind the form reads now; seeded with the kind it starts with, so the first frame already says S2.
+  const [read, setRead] = useState<CaptureType | undefined>(() =>
+    states?.planner === true ? 'plan' : undefined,
+  );
+  const asPlan = read === 'plan';
+  const { note, cut } = shareNote(read, address?.url, rest, asNote);
   // After „Speichern“ as `plan`: the page stays and follows the saved ToDo live (S8, then S14 once it is gone).
   const [saved, setSaved] = useState<SavedCapture>();
+  const savedId = saved?.id;
+  // The capture's own view of what it saved (its plan row, which every undo takes away with the ToDo).
+  const savedType = saved?.type;
+  const live = useLiveQuery(
+    async () =>
+      savedId && savedType ? (await secondStage(savedType, savedId)) === 'live' : undefined,
+    [savedId, savedType],
+  );
+  // Still loading counts as there (it was just written): the three actions stand from the first frame.
+  const alive = live !== false;
+  const head = useRef<HTMLHeadingElement>(null);
 
   return (
     <>
       <div className={styles.header}>
         <div>
-          <h1>{t.share.title}</h1>
+          <h1 ref={head} tabIndex={-1}>
+            {t.share.title}
+          </h1>
           <p className={styles.lead}>{t.share.intro}</p>
         </div>
       </div>
@@ -211,8 +269,12 @@ export function ShareTarget() {
               {parts.join('\n')}
             </p>
           </Card>
+          {/* One live region for the whole visit: empty until „Speichern“, so S8 and S14 are both announced. */}
+          <p className="sr-only" role="status">
+            {saved ? (alive ? t.planner.share.saved : t.planner.share.undone) : ''}
+          </p>
           {saved ? (
-            <SavedCard saved={saved} />
+            <SavedCard saved={saved} alive={alive} onUndone={() => head.current?.focus()} />
           ) : (
             <Card title={t.quickCapture.share.suggestion}>
               {rest ? (

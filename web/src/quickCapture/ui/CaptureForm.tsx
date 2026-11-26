@@ -92,10 +92,10 @@ export interface CaptureFormProps {
    */
   editFields?: boolean;
   /**
-   * The single entry's kind and title as the form reads them now (the share page shows what „Speichern“ would store
-   * next to it, package 1). Called when either changes; never with a batch.
+   * The single entry's kind as the form reads it now (the share page says what „Speichern“ would store next to it,
+   * package 1). Called when it changes; never with a batch.
    */
-  onRead?: (read: { type: CaptureType; title: string }) => void;
+  onRead?: (type: CaptureType) => void;
 }
 
 function errorText(e: unknown): string {
@@ -215,12 +215,11 @@ export function CaptureForm({
   const panel = editFields && !multi;
   const singleFields: CaptureFields = { ...resolved.fields, ...extra, ...(panel ? edits : {}) };
   const readType = resolved.type;
-  const readTitle = multi ? '' : (resolved.fields.title ?? '');
   useEffect(() => {
-    if (!multi && readType) onRead?.({ type: readType, title: readTitle });
-    // `onRead` is the page's callback; the read values are what changes.
+    if (!multi && readType) onRead?.(readType);
+    // `onRead` is the page's callback; the read kind is what changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readType, readTitle, multi]);
+  }, [readType, multi]);
   // The single sheet treats a payment reminder the same way as a line of a batch.
   // Lookups are keyed by the line and whether invoices are on (switching the module looks again).
   const lookupKey = (line: string) => `${states?.invoices ? 1 : 0}:${line}`;
