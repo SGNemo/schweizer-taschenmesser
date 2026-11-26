@@ -314,4 +314,21 @@ test.describe('Weather days and hours (round 2, package C)', () => {
     await swipe(10, 200);
     await expect(page).not.toHaveURL(/day=/);
   });
+  for (const scheme of ['light', 'dark'] as const)
+    for (const path of ['/weather?day=2026-11-28', '/weather?day=2026-11-28&hour=14'])
+      test(`axe on a chosen moment: ${path.split('?')[1]}, ${scheme}`, async ({ page }) => {
+        await page.emulateMedia({ colorScheme: scheme });
+        await ready(page, path);
+        await expect(page.getByTestId('weather-days')).toBeVisible();
+        const { default: AxeBuilder } = await import('@axe-core/playwright');
+        const results = await new AxeBuilder({ page })
+          .include('main')
+          .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+          .analyze();
+        expect(
+          results.violations.map(
+            (v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`,
+          ),
+        ).toEqual([]);
+      });
 });

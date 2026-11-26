@@ -518,6 +518,10 @@
   color: var(--text);
   font-weight: var(--weight-semibold);
 }
+/* the faintest ink falls under 4.5 : 1 on the tint (dark): one step stronger on the checked card */
+.hourCard[data-checked='true'] .hourWind {
+  color: var(--text-muted);
+}
 .row[data-checked='true'] .dayName {
   font-weight: var(--weight-bold);
 }
