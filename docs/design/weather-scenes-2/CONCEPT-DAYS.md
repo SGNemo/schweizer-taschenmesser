@@ -8,7 +8,7 @@ The page always shows one moment: **now** by default, or a chosen day, or a chos
 
 | Control | Where | What it is | Does |
 | --- | --- | --- | --- |
-| **Day stepper** | first row under the head, at the end of the place row (phone: its own row) | `‹` · label "Heute, Do. 26. Nov." · `›`; a third button "Heute" appears only while another day is shown | one day back / on; "Heute" returns to today and now |
+| **Day stepper** | first row under the head, at the end of the place row (phone: its own row) | `‹` · label "Heute, Do. 26. Nov." · `›` (inactive, not hidden, at the first and the last day – the row does not jump); a third button "Heute" appears only while another day is shown | one day back / on; "Heute" returns to today and now |
 | **Days** | the card "7 Tage" | the seven rows are one radio group "Tag wählen" (a row = a label with a visually hidden radio); the shown day is checked | shows that day |
 | **Hours** | the row of hour cards | one radio group "Stunde wählen"; first card "Jetzt" (today) is checked by default; on another day none is checked until one is chosen | shows that hour in the head |
 | **Jetzt** | in the hour section's head line, only while an hour is chosen | button | back to now (today) or to the day's own view (another day) |
@@ -23,8 +23,8 @@ Why radio groups and not 31 buttons: one tab stop per group, arrow keys come wit
 | Head: big number | temperature now | "4° / −3°" (high / low) | that hour's temperature |
 | Head: detail line | "fühlt sich an wie −5° · bedeckt · Frost" | "Freitag, 27. November · Regen" (the day's word from the daily code) | "Fr. 14:00 · fühlt sich an wie 1° · Regen" |
 | Hints | today's | that day's computed hints; an official warning only if its time span touches the day | as the day |
-| Chips | rain / dry · wind · UV or moon | "Regen 14–18 Uhr · 4,2 mm" or "Kein Regen" · "Wind bis 28 km/h, Böen 46" · "UV bis 2" or the moon of that night | rain in that hour · wind and gusts of that hour · UV of that hour or the moon |
-| Rest line | as today | high / low · rain hours · sunshine · cloud · sun times | that hour: humidity · dew point · cloud · pressure · visibility |
+| Chips (on the phone they may take two rows when a day's chips are long) | rain / dry · wind · UV or moon | "Regen 14–18 Uhr · 4,2 mm" or "Kein Regen" · "Wind bis 28 km/h, Böen 46" · "UV bis 2" or the moon of that night | rain in that hour · wind and gusts of that hour · UV of that hour or the moon |
+| Rest line | as today | hours with rain or snow · sunshine · cloud · sun times (not the high / low again – the big number says it) | the day it belongs to: high / low · hours with rain · sun times (the hour's own values stand in the hour line under the cards, once) |
 | Rain in the next two hours | only while rain is near | hidden | hidden |
 | Hour cards | the next 24 hours from now | 00:00–23:00 of that day | same list, the hour checked; an **hour line** under the cards names the rest of its values |
 | Curve | next 24 hours | 00–24 of that day; the chosen hour gets a thin marker | marker on that hour |
@@ -46,7 +46,7 @@ The head never stops saying which moment it shows: the detail line starts with t
 
 | Case | What shows |
 | --- | --- |
-| Cache from before this round (48 hours, no extra fields) | days 1–2 as far as hours exist; for a day without hours: head from the daily values, scene from the daily code (level 2, wind from the day's maximum), instead of cards the sentence "Stundenwerte für diesen Tag kommen mit der nächsten Aktualisierung." One refresh is asked (same TTL and offline rules) |
+| Cache from before this round (48 hours, no extra fields) | days 1–2 as far as hours exist; for a day without hours: head from the daily values, scene from the daily code (level 2, wind from the day's maximum), instead of cards the sentence "Stundenwerte für diesen Tag kommen mit der nächsten Aktualisierung.", no curve card. One refresh is asked (same TTL and offline rules) |
 | Offline, stale cache | as cached, with "Stand hh:mm"; days that slid out of the cache are not offered (their radios are absent, not disabled) |
 | A field the source does not deliver for that hour (visibility, snowfall line, 15-minute rain) | the line or the level is left out; the picture falls back as [CONCEPT §3](CONCEPT.md) says; never a dash in a list |
 | Air beyond five days | "Für diesen Tag liegt noch keine Luftvorhersage vor." |

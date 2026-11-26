@@ -31,13 +31,14 @@ Detail line additions (at most one, order as in round 1): Sturmböen · windig �
 | one short burst | Kurzer Schauer gegen {HH:mm} | A short shower around {HH:mm} |
 | snow instead of rain | Schnee ab {HH:mm} … (same sentences with "Schnee") | Snow from {HH:mm} … |
 | head chip 1 | Regen ab {HH:mm} · Regen bis etwa {HH:mm} · Schauer gegen {HH:mm} | Rain from {HH:mm} · Rain until about {HH:mm} · Shower around {HH:mm} |
-| under the bars | jetzt · +1 h · +2 h | now · +1 h · +2 h |
+| under the bars (three labels, not clock times) | jetzt · +1 h · +2 h | now · +1 h · +2 h |
 
 ## 3. Hours (`tp.hour…`)
 
 | Part | Deutsch | English |
 | --- | --- | --- |
 | group name | Stunde wählen | Choose an hour |
+| section title, today / another day | Nächste Stunden / Stunden | Next hours / Hours |
 | first card today | Jetzt | Now |
 | card, rain line | {p} % · {mm} mm | {p} % · {mm} mm |
 | card, snow | {p} % · {cm} cm | {p} % · {cm} cm |
@@ -65,6 +66,8 @@ Detail line additions (at most one, order as in round 1): Sturmböen · windig �
 | chip, no rain that day | Kein Regen | No rain |
 | chip, wind of a day | Wind bis {v} km/h, Böen {g} | Wind up to {v} km/h, gusts {g} |
 | chip, UV of a day | UV bis {n} | UV up to {n} |
+| rest line of a day | {n} Stunden mit Regen · {n} Stunden mit Schnee · Sonnenschein {h} h · Bewölkung {p} % · Sonne {a}–{b} | {n} hours with rain · {n} hours with snow · sunshine {h} h · cloud {p} % · sun {a}–{b} |
+| hint of another day (as the product words it today) | {Samstag}: Frost bis {t}° | {Saturday}: frost down to {t}° |
 | live region | {Freitag, 27. November}: {Wort}, {a}° / {b}° | {Friday, 27 November}: {word}, {a}° / {b}° |
 | live region, hour | {Freitag} {14:00}: {Wort}, {t}° | {Friday} {14:00}: {word}, {t}° |
 | air beyond five days | Für diesen Tag liegt noch keine Luftvorhersage vor. | There is no air forecast for this day yet. |

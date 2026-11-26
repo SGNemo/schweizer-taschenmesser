@@ -20,7 +20,7 @@ Order of the page (desktop: main column | aside; phone: one column in this order
 | Part | New | Shown when |
 | --- | --- | --- |
 | Head chip 1 | the rain sentence uses the 15-minute values: "Regen ab 14:20", "Regen bis etwa 15:10", "Schauer gegen 14:45" | rain within 2 h; otherwise the chip of today ("Regen ab 16 Uhr", "Kein Regen in Sicht") |
-| Rain in the next two hours | eight bars (one per 15 min) with the two clock times under them and one sentence above ("Regen ab 14:20, etwa 40 Minuten, zusammen etwa 1,2 mm"); the bars are `aria-hidden`, the sentence says it all | as above |
+| Rain in the next two hours | eight bars (one per 15 min) with "jetzt · +1 h · +2 h" under them and one sentence above ("Regen ab 14:20, etwa 40 Minuten, zusammen etwa 1,2 mm"); the bars are `aria-hidden`, the sentence says it all | as above |
 | Hour card | the rain line names the amount beside the chance: "60 % · 0,8 mm" (snow: "1 cm") | amount ≥ 0.1 mm |
 | Hour line | one line of text under the cards for the checked hour: felt temperature · gusts and direction · humidity · dew point · cloud · pressure · UV (by day) · visibility (under 10 km) | always (for "Jetzt" it repeats nothing the head says: it starts with gusts) |
 | Curve | select "Anzeigen": **Temperatur und Regen** (default; felt temperature as a second, dashed line; amount as bars, chance as a thin line) · **Wind und Böen** (two lines, a row of direction arrows every 3 h) · **Sonne und Wolken** (sunshine minutes as bars, total cloud as a line) · **Luftdruck** (line, with the word "steigt / fällt / gleichbleibend") · **UV** (bars, daylight hours) · **Luftqualität** (index line; 5 days ahead) | always; the choice is kept on the device (`localStorage`), not synced |

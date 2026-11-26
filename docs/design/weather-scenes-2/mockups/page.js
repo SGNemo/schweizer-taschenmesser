@@ -30,7 +30,8 @@
   function icon(n, size, cls, sw) {
     return '<svg class="ic' + (cls ? ' ' + cls : '') + '" viewBox="0 0 16 16" width="' + (size || 16) + '" height="' + (size || 16) + '" fill="none" stroke="currentColor" stroke-width="' + (sw || 1.5) + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + I[n] + '</svg>';
   }
-  function esc(s) { return String(s); }
+  /* keep a number and its unit together: no line break in "0,4 h", "89 %", "6 km/h" */
+  function nb(s) { return String(s).replace(/(\d) (?=(%|h|km\/h|km|mm|cm|hPa|min|m)(?![\w]))/g, '$1\u00a0'); }
   /* moon disc: lit part bounded by a semicircle and the terminator ellipse; waning = lit on the left (northern sky) */
   function moonGlyph(illum, waxing, size, mono) {
     var r = size / 2 - 1, c = size / 2, rx = Math.abs(2 * illum - 1) * r, big = illum > 0.5;
@@ -51,7 +52,7 @@
     var h = m.head, st = Object.assign({ theme: dark ? 'dark' : 'light' }, m.scene), ink = Scene.ink(st);
     var stageH = phone ? 256 : 320, o = phone ? Scene.phoneOpts(256, 412) : {};
     o.idp = phone ? 'p' : 'd';
-    var chips = phone ? h.chips.slice(0, 2) : h.chips, restLine = (phone && h.chips[2] ? [h.chips[2].text] : []).concat(h.rest).join(' · ');
+    var chips = phone ? h.chips.slice(0, 2) : h.chips, restLine = (phone && h.chips[2] ? [h.chips[2].text] : []).concat(h.rest).join(' · '); restLine = nb(restLine);
     var keys = '<ul class="keys">' + chips.map(chip).join('') + '</ul>';
     var temp = '<div class="temp"' + (h.tempAria ? ' data-day role="img" aria-label="' + h.tempAria + '"' : '') + '>' + h.temp + '</div>';
     var fig = '<div class="fig">' + temp + '<div class="detail">' + h.detail + '</div></div>';
@@ -100,7 +101,7 @@
     var body = h.missing ? '<p class="missing">' + h.missing + '</p>'
       : '<div class="hourScroll" role="region" aria-label="Stunde für Stunde" tabindex="0"><div class="hourCards" role="radiogroup" aria-label="Stunde wählen">' +
         h.cards.map(function (c, i) { return hourCard(c, i, h); }).join('') + '</div></div>' +
-        (h.line ? '<p class="hourLine"><span class="sr">' + h.lineLabel + ': </span>' + h.line + '</p>' : '');
+        (h.line ? '<p class="hourLine"><span class="sr">' + h.lineLabel + ': </span>' + nb(h.line) + '</p>' : '');
     return '<section class="hours" aria-labelledby="h-t"><div class="secHead"><h2 class="secTitle" id="h-t">' + h.title + '</h2>' +
       (h.back ? '<button class="btn small">' + h.back + '</button>' : '') + '</div>' + body + '</section>';
   }
@@ -177,7 +178,7 @@
       '<span class="rchip" data-rating="' + d.rating + '">' + icon(d.rating, 14) + RT[d.rating] + '</span>' +
       '<span class="dayMoon" role="img" aria-label="Mond: ' + d.moon.name + '">' + moonGlyph(d.moon.illum, d.moon.waxing, 18, true) + '<span aria-hidden="true">' + d.moon.name + '</span></span></p>' +
       '<div class="range"><span class="rangeLabel" data-tone="' + tone(d.min) + '">' + deg(d.min) + '</span><span class="track" aria-hidden="true"><span class="fill" style="' + fill + '"></span></span>' +
-      '<span class="rangeLabel" data-tone="' + tone(d.max) + '">' + deg(d.max) + '</span></div><p class="rowMeta">' + d.meta + '</p></div>' +
+      '<span class="rangeLabel" data-tone="' + tone(d.max) + '">' + deg(d.max) + '</span></div><p class="rowMeta">' + nb(d.meta) + '</p></div>' +
       '<span class="tickCol">' + (checked ? '<span class="tick">' + icon('check', 12, '', 2.2) + '</span>' : '') + '</span></label>';
   }
   function days(d) {
@@ -190,7 +191,7 @@
   function more(m) {
     return '<details class="more"' + (m.open ? ' open' : '') + '><summary>Mehr Werte' + icon('down', 18, 'chev') + '</summary><div class="groups">' +
       m.groups.map(function (g) {
-        var body = g.text ? '<p>' + g.text + '</p>' : '<dl>' + g.items.map(function (x) { return '<dt' + (x[2] ? ' class="sub"' : '') + '>' + x[0] + '</dt><dd>' + x[1] + '</dd>'; }).join('') + '</dl>';
+        var body = g.text ? '<p>' + g.text + '</p>' : '<dl>' + g.items.map(function (x) { return '<dt' + (x[2] ? ' class="ind"' : '') + '>' + x[0] + '</dt><dd>' + x[1] + '</dd>'; }).join('') + '</dl>';
         return '<div class="grp"><h3>' + g.title + '</h3>' + body + '</div>';
       }).join('') + '</div></details>';
   }
@@ -207,7 +208,7 @@
   function moonCard(m) {
     return '<section class="moon"><h2 class="cardTitle">Mond &amp; Himmel</h2><p class="line">' + m.sun + '</p>' +
       '<div class="now">' + moonGlyph(m.illum, m.waxing, 56) + '<p class="name"><span class="phase">' + m.name + '</span><span>' + Math.round(m.illum * 100) + ' % beleuchtet</span></p></div>' +
-      '<p class="line">' + m.times + '</p><p class="line">' + m.next + '</p></section>';
+      '<p class="line">' + m.times + '</p><p class="line">' + m.next.replace(/(\d+\.) (?=[A-ZÄÖÜ])/g, '$1\u00a0') + '</p></section>';
   }
   function foot() {
     return '<p class="foot">Gut, wenn nichts dagegen spricht. Ungemütlich bei Regen, Sturm, Frost oder Hitze.</p><p class="foot"><a href="#">Einstellungen</a></p>' +

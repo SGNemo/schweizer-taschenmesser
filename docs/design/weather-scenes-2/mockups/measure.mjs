@@ -6,7 +6,7 @@
  * insert) to the first paint after it (rAF → setTimeout), at 1650 × 320 and at 412 × 256 (phone crop), 4× CPU throttle,
  * median of RUNS.
  * Contrast: per sky key × theme, the scene is screenshotted at 1650 × 320 and 412 × 256 and the pixels where text stands
- * on it are sampled (desktop: x 24–700, y 60–300; phone: x 16–300, y 96–160). WCAG contrast of the ink (Scene.ink:
+ * on it are sampled (desktop: x 24–700, y 60–256; phone: x 16–290, y 96–156). WCAG contrast of the ink (Scene.ink:
  * light #eceff1, dark #171f24) against the worst pixel and against the 5th-percentile pixel; every case under 4.5:1 is
  * listed with the place of the worst pixel.
  */
@@ -82,7 +82,7 @@ await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
 console.log('');
 
 // ---- contrast ----
-const RECT = { wide: [24, 60, 700, 300], phone: [16, 96, 300, 160] };
+const RECT = { wide: [24, 60, 700, 256], phone: [16, 96, 290, 156] }; // the rows text really stands on
 const INK = { light: '#eceff1', dark: '#171f24' };
 function lum(r, g, b) { const c = [r, g, b].map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; }
 function hexLum(h) { return lum(parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)); }
@@ -124,7 +124,7 @@ md += '## Cost\n\n| State | Theme | Elements wide / phone | KB wide / phone | Pa
 for (const c of cost) md += `| ${c.name} | ${c.theme} | ${c.wide.els} / ${c.phone.els} | ${r1(c.wide.kb)} / ${r1(c.phone.kb)} | ${r1(c.wide.ms)} | ${r1(c.phone.ms)} |\n`;
 const max = (f) => Math.max(...cost.map(f));
 md += `\n**Max:** ${max((c) => c.wide.els)} elements, ${r1(max((c) => c.wide.kb))} KB, paint ${r1(max((c) => c.wide.ms))} ms wide / ${r1(max((c) => c.phone.ms))} ms phone.\n\n`;
-md += '## Contrast of the ink on the scene (text area)\n\nDesktop rect x 24–700, y 60–300 px of 1650 × 320; phone rect x 16–300, y 96–160 px of 412 × 256.\n\n';
+md += '## Contrast of the ink on the scene (text area)\n\nDesktop rect x 24–700, y 60–256 px of 1650 × 320; phone rect x 16–290, y 96–156 px of 412 × 256.\n\n';
 md += '| Sky | Theme | Ink | Desktop worst | Desktop 5 % | Phone worst | Phone 5 % |\n| --- | --- | --- | --- | --- | --- | --- |\n';
 for (const c of contrast) md += `| ${c.name} | ${c.theme} | ${c.ink} | ${r2(c.wide.worst)} | ${r2(c.wide.p5)} | ${r2(c.phone.worst)} | ${r2(c.phone.p5)} |\n`;
 md += '\n### Under 4.5 : 1\n\n';

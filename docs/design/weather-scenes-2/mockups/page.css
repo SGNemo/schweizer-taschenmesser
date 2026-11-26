@@ -38,6 +38,7 @@ body.p4 > .wpage { width: 1650px; max-width: 100%; margin: 0 auto; }
 .stepBtn { width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: var(--radius-md);
   background: var(--surface-raised); color: var(--text); font: inherit; padding: 0; }
 .stepBtn[aria-disabled='true'] { color: var(--text-3); background: transparent; }
+.stepBtn[aria-disabled='true'] .ic { opacity: .5; }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: 44px; padding: 0 var(--space-4);
   border: 1px solid var(--border-strong); border-radius: var(--radius-md); background: var(--surface-raised); color: var(--text); font: inherit; font-weight: 600; font-size: var(--text-sm); }
 .btn.small { min-height: 36px; padding: 0 var(--space-3); } /* 36 px visible, 44 px hit area via ::after */
@@ -155,7 +156,7 @@ body.p4 > .wpage { width: 1650px; max-width: 100%; margin: 0 auto; }
 .groups { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-5) var(--space-6); padding: 0 var(--card-pad) var(--card-pad); }
 .grp h3 { margin: 0 0 var(--space-2); color: var(--text-3); font-size: var(--text-meta); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
 .grp dl { display: grid; grid-template-columns: 1fr auto; gap: 4px var(--space-3); margin: 0; font-size: var(--text-sm); font-variant-numeric: tabular-nums; }
-.grp dt { color: var(--text-muted); } .grp dt.sub { padding-left: var(--space-3); }
+.grp dt { color: var(--text-muted); } .grp dt.ind { padding-left: var(--space-3); }
 .grp dd { margin: 0; text-align: right; }
 .grp p { margin: 0; font-size: var(--text-sm); }
 
@@ -186,7 +187,8 @@ body.p4 > .wpage { width: 1650px; max-width: 100%; margin: 0 auto; }
 .board > section { min-width: 0; }
 .board h2 { font-size: 16px; margin: 0 0 var(--space-3); }
 .stateGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); align-items: start; }
-.stateGrid.cards { grid-template-columns: repeat(4, 5.75rem); gap: var(--space-5); }
+.stateGrid.cards { grid-template-columns: repeat(4, 6.5rem); gap: var(--space-3); }
+.stateGrid.cards .label { white-space: nowrap; }
 .st .label { margin: 0 0 6px; }
 .stack { display: flex; flex-direction: column; gap: var(--space-3); }
 .stack .stepper { margin-left: 0; }
@@ -214,9 +216,11 @@ body.p4 > .wpage { width: 1650px; max-width: 100%; margin: 0 auto; }
   .foot { margin-left: 16px; margin-right: 16px; }
   .board { grid-template-columns: minmax(0, 1fr); padding: 0 16px; }
   .stateGrid { grid-template-columns: minmax(0, 1fr); }
-  .stateGrid.cards { grid-template-columns: repeat(2, 5.75rem); }
+  .stateGrid.cards { grid-template-columns: repeat(2, 6.5rem); gap: var(--space-4) var(--space-5); }
   .sel { margin-left: 0; width: 100%; } .sel .selBox { flex: 1; } .sel .selBox select, .sel .selBox .fake { width: 100%; }
   .intro4 { padding: 0 16px; }
 }
 .intro4 { padding: 0 32px; }
 .intro4 h1 { margin: 16px 0 4px; } .intro4 p { color: var(--text-muted); font-size: 14px; margin: 0 0 16px; max-width: 90ch; }
+.selWrap { margin-left: auto; }
+@media (max-width: 899px) { .selWrap { margin-left: 0; width: 100%; } }

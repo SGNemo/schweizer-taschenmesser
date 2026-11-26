@@ -102,15 +102,15 @@
     lakeBox: [1002, 1340, 262, 304],
     ground: [[-20, 292], [160, 286], [330, 291], [520, 289], [700, 287], [860, 293], [990, 297], [1080, 306], [1160, 307], [1310, 304], [1344, 293], [1372, 280], [1410, 269], [1458, 265], [1560, 263], [1620, 258]],
     way: 'M1424,267C1408,278 1436,288 1416,298C1402,306 1414,314 1408,320L1438,320C1442,312 1428,307 1440,297C1456,286 1424,279 1436,267Z',
-    arc: { x0: 1010, x1: 1550, yLow: 150, rise: 96 }, // the body's way: t 0..1 → x, y = yLow − rise·sin(πt)
+    arc: { x0: 1010, x1: 1550, yLow: 150, rise: 80 }, // the body's way: t 0..1 → x, y = yLow − rise·sin(πt)
     phoneBodyX: 1438,
-    cabin: [1404, 266, 1.15], shed: [1350, 280, 0.62], farHouses: [[1086, 256], [1110, 258], [1232, 254], [1250, 256]], flag: 1530, jetty: [1318, 289], boat: [1264, 288],
+    cabin: [1404, 266, 1.15], shed: [1350, 280, 0.62], farHouses: [[1086, 256], [1110, 258], [1232, 254], [1250, 256]], flag: [1340, 292], jetty: [1318, 289], boat: [1264, 288],
     // trees: [kind, x, base y, height or crown radius]; kinds: spruce, fir, pine, birch, leaf, bush
     behind: [['spruce', 1396, 264, 62], ['spruce', 1484, 260, 76], ['fir', 1502, 262, 40]], // behind the cabin
     trees: [['spruce', 1562, 268, 118], ['spruce', 1592, 262, 84], ['pine', 1512, 268, 70], ['birch', 1546, 272, 46], ['bush', 1578, 274, 7], ['leaf', 1324, 298, 15], ['birch', 1372, 284, 40],
       ['spruce', 958, 296, 64], ['fir', 930, 293, 44], ['pine', 984, 298, 50], ['leaf', 890, 291, 13], ['bush', 1004, 300, 6], ['bush', 906, 296, 5],
-      ['spruce', 842, 293, 40], ['leaf', 812, 294, 10], ['birch', 1014, 303, 34], ['spruce', 1446, 300, 30], ['fir', 1470, 304, 22], ['leaf', 1610, 296, 14],
-      ['fir', 640, 290, 30], ['fir', 300, 288, 26], ['leaf', 470, 291, 9], ['fir', 760, 291, 22], ['fir', 1182, 258, 14], ['fir', 1194, 259, 11], ['fir', 1150, 257, 12]],
+      ['spruce', 872, 294, 38], ['birch', 1014, 303, 34], ['spruce', 1446, 300, 30], ['fir', 1470, 304, 22], ['leaf', 1610, 296, 14],
+      ['fir', 1182, 258, 14], ['fir', 1194, 259, 11], ['fir', 1150, 257, 12]],
     // four bolts, each its own figure: the long strike, the crawler under the base, the forked one, the far one
     bolts: [
       { w: 4.4, op: 1, p: [[1218, 118], [1213, 131], [1220, 139], [1209, 152], [1214, 160], [1203, 171], [1207, 181], [1194, 196], [1198, 205], [1187, 219], [1190, 226], [1178, 240]],
@@ -127,7 +127,7 @@
       { l: [[-40, -10, 15], [-18, -20, 19], [8, -10, 14], [30, -22, 20], [52, -9, 13]], b: [-54, 64] },
       { l: [[-14, -5, 8], [2, -9, 10], [18, -5, 8]], b: [-22, 26] },
     ],
-    cumulus: [[1430, 78, 1.05, 1], [1090, 98, 0.8, 0], [1300, 52, 1.15, 2], [1180, 72, 0.9, 4], [1520, 46, 0.9, 3], [1010, 60, 1, 1], [1390, 30, 1.2, 3], [1240, 34, 1.1, 2], [1565, 96, 0.75, 0]], // cover 1 takes 2, 2 takes 4, 3 all
+    cumulus: [[1430, 84, 1.05, 1], [1090, 100, 0.8, 0], [1300, 76, 1.1, 2], [1180, 66, 0.9, 4], [1520, 58, 0.9, 3], [1010, 62, 1, 1], [1390, 46, 1.1, 3], [1240, 50, 1, 0], [1565, 100, 0.75, 4]], // cover 1 takes 2, 2 takes 4, 3 all
     // the cloud banks the body looks out between (overcast): at = offset from the body, l = lobes [x, y, r], base = flat underside [x, y, rx, ry]. Each its own shape
     banks: [
       { at: [-150, 26], l: [[-50, 2, 20], [-20, -12, 26], [12, -8, 22], [40, 4, 18], [-78, 8, 14]], base: [-18, 12, 76, 13] },
@@ -173,7 +173,7 @@
     var grey = s.cover === 4 || s.falling || s.fog;
     if (s.phase === 'night' || ((s.phase === 'dawn' || s.phase === 'dusk') && grey)) {
       return s.fog ? 'night-fog' : s.falling === 'snow' ? 'night-snow' : s.falling || s.thunder ? 'night-rain' : s.cover === 4 ? 'night-overcast'
-        : s.body && s.body.kind === 'moon' && s.moon.illum > 0.9 && s.cover <= 1 ? 'night-full' : 'night';
+        : s.body && s.body.kind === 'moon' && s.moon.illum > 0.9 ? 'night-full' : 'night';
     }
     if (s.phase === 'dawn' || s.phase === 'dusk') return s.phase;
     if (s.thunder >= 2) return 'storm';
@@ -223,7 +223,7 @@
     var t = s.body ? (s.body.t == null ? 0.42 : s.body.t) : 0.42;
     var body = o.bodyAt || [G.arc.x0 + (G.arc.x1 - G.arc.x0) * t, G.arc.yLow - G.arc.rise * Math.sin(Math.PI * t)];
     var mode = bodyMode(s), dir = s.windTo === 'left' ? -1 : 1, lean = G.lean[s.wind] * dir, plain = s.level === 'plain';
-    var cover2 = s.snowCover >= 2, frozen = s.frost >= 2 || (s.snowCover >= 2 && !s.wet), quietEnd = (o.quietX == null ? 1000 : o.quietX) + 200;
+    var cover2 = s.snowCover >= 2, frozen = s.frost >= 2 || (s.snowCover >= 2 && !s.wet), q0 = o.quietX == null ? 640 : o.quietX, q1 = q0 + 330; // the quiet side: full haze left of q0, none right of q1
     function id(p) { return idp + p + n++; }
     function add(tag, a, inner) { out += el(tag, a, inner); }
     function path(d, fill, extra) { var a = { d: d, fill: fill }; for (var k in extra || {}) a[k] = extra[k]; out += el('path', a); }
@@ -237,9 +237,9 @@
     }
     function radial(col, a0, a1, at) { return grad([[at || 0, col, a0], [1, col, a1]], { cx: 0.5, cy: 0.5, r: 0.5 }, true); }
     var lightRight = function (x) { return x < body[0]; }, hzc = {};
-    function hz(fill) { // the quiet side: far layers fade toward the sky under the text
-      if (quietEnd <= 200) return fill;
-      if (!hzc[fill]) { var m = mix(fill, C.haze, 0.6); hzc[fill] = grad([[0, m], [0.5, m], [0.8, fill]], { x1: 0, y1: 0, x2: quietEnd, y2: 0, gradientUnits: 'userSpaceOnUse' }); }
+    function hk(x) { return x <= q0 ? 0.85 : x >= q1 ? 0 : (0.85 * (q1 - x)) / (q1 - q0); } // how much haze at x
+    function hz(fill) { // far layers fade toward the sky under the text (one gradient per tone)
+      if (!hzc[fill]) { var m = mix(fill, C.haze, 0.85); hzc[fill] = grad([[0, m], [f(q0 / q1), m], [1, fill]], { x1: 0, y1: 0, x2: q1, y2: 0, gradientUnits: 'userSpaceOnUse' }); }
       return hzc[fill];
     }
     var hooks = window.Scene && window.Scene.hooks, X = { s: s, C: C, G: G, PAL: PAL, key: key, body: body, mode: mode, el: el, path: path, line: line, add: add, grad: grad, radial: radial, circ: circ, pts: pts, prng: prng, mix: mix, f: f, top: top, id: id, view: view };
@@ -277,7 +277,7 @@
         var k = s.moon.illum, rx = R * Math.abs(2 * k - 1), col = PAL.c.moon;
         g += el('circle', { r: R * 2.7, fill: radial(col, pale ? 0.5 : 0.34, 0) });
         if (mode === 'veil') g += el('circle', { r: R * 2.1, fill: 'none', stroke: col, 'stroke-width': 2.2, opacity: 0.3 }); // the halo ring of thin high cloud
-        g += el('circle', { r: R, fill: PAL.c['moon-dark'], opacity: pale ? 0.5 : 1 });
+        g += el('circle', { r: R, fill: PAL.c['moon-dark'], opacity: k <= 0.05 ? 0.4 : pale ? 0.5 : 1 });
         if (k > 0.02) g += el('g', { transform: 'rotate(' + s.moon.tilt + ')' + (s.moon.waxing ? '' : ' scale(-1,1)'), opacity: pale ? 0.72 : 1 },
           el('path', { d: k > 0.98 ? circ(0, 0, R) : 'M0,' + -R + 'A' + R + ',' + R + ' 0 0,1 0,' + R + 'A' + f(rx) + ',' + R + ' 0 0,' + (k > 0.5 ? 1 : 0) + ' 0,' + -R + 'Z', fill: col }) +
           (k > 0.3 ? el('path', { d: circ(R * 0.17, -R * 0.33, R * 0.23) + circ(k > 0.6 ? -R * 0.12 : R * 0.5, R * 0.21, R * 0.17) + circ(R * 0.38, R * 0.3, R * 0.12) + (k > 0.6 ? circ(-R * 0.33, -R * 0.17, R * 0.11) : ''), fill: PAL.c['moon-mare'] }) : ''));
@@ -300,7 +300,7 @@
       out += el('g', { transform: 'translate(' + f(body[0]) + ',' + f(body[1]) + ')', 'data-layer': 'body', 'data-mode': mode }, g);
     }
     if (mode === 'clear' || mode === 'veil') drawBody(false);
-    if (plain) { if (mode === 'schein') drawBody(true); return finish(); }
+    if (plain) { if (mode === 'schein' || mode === 'hole') drawBody(mode === 'schein'); return finish(); }
 
     /* ---- clouds ---- */
     function scallop(x0, x1, y, seed, depth, wMin, wMax, shear) { // lower edge of a sheet, right → left
@@ -330,7 +330,7 @@
       if (mode === 'hole') {
         // the deck breaks into single banks around the body: dark bodies, the edge toward the body lit, lighter billows on that side;
         // one bank stands a little in front of the disc, two shreds drift past. No outline of a hole anywhere.
-        var hs = s.dark ? PAL.sky.night[th] : PAL.sky.day[th], hsCol = mix(hs[0][1], hs[hs.length - 1][1], 0.45);
+        var hs = (PAL.sky[s.phase === 'night' ? 'night' : s.phase] || PAL.sky.day)[th], hsCol = mix(hs[0][1], hs[hs.length - 1][1], 0.45);
         add('ellipse', { cx: f(body[0] - 6), cy: f(body[1] - 4), rx: 196, ry: 92, fill: grad([[0, hsCol, 1], [0.5, hsCol, 0.96], [0.78, hsCol, 0.55], [1, hsCol, 0]], { cx: 0.5, cy: 0.5, r: 0.5 }, true), 'data-layer': 'sky', 'data-part': 'opening' }); // the open sky fades into the deck: no edge
         if (s.dark) { open('stars'); stars(12, true); close(); }
         add('circle', { cx: f(body[0]), cy: f(body[1]), r: 170, fill: radial(DT[4], 0.24, 0, 0.2), 'data-part': 'spill' });
@@ -355,7 +355,7 @@
       Sh.l.forEach(function (l) { d += circ(l[0], l[1], l[2]); if (l[1] > -22) inner += circ(l[0] + l[2] * 0.15, l[1] + l[2] * 0.4, l[2] * 0.55); });
       d += rrect(Sh.b[0], -12, Sh.b[1] - Sh.b[0], 14, 7);
       var light = s.dark ? PAL.c['cloud-night'] : s.falling ? PAL.c['cloud-grey'] : PAL.c.cloud, shade = s.dark ? PAL.c['cloud-night-shade'] : s.falling ? PAL.c['cloud-grey-shade'] : PAL.c['cloud-shade'];
-      if (th === 'dark' && !s.dark) { light = mix(light, '#0c1430', 0.35); shade = mix(shade, '#0c1430', 0.4); }
+      if (th === 'dark' && !s.dark) { light = mix(light, '#0c1430', 0.66); shade = mix(shade, '#0c1430', 0.72); }
       return el('g', { transform: 'translate(' + f(x) + ' ' + f(y) + ') scale(' + sc + ')' + (lean ? ' skewX(' + f(-lean * 55) + ')' : '') },
         el('path', { d: d, fill: shade, transform: 'translate(0 4)' }) + el('path', { d: d, fill: light }) + el('path', { d: inner, fill: shade, opacity: 0.45 }));
     }
@@ -382,9 +382,9 @@
           lobes += circ(cx3, cy, r1); rim += circ(cx3 - r1 * 0.16, cy - r1 * 0.2, r1 * 0.96);
         }
       }
-      if (wall) for (xx = 60; xx < 820; xx += 150) lobes += circ(xx + lq() * 40, 6 + lq() * 8, 70); // the flat anvil over the text side
+      if (wall) sheet(function (x) { return baseY(x) - 26; }, 54, 4, 90, 170, DT[1], sh * 0.5); // a second, lighter roll over the text side
+      else path('M1120,100Q1300,84 1480,100' + scallop(1120, 1480, 122, 53, 4, 40, 80, sh * 0.5) + 'Z', DT[0]); // the tower's dark underside, behind its billows
       path(rim, DT[4], { opacity: 0.75 }); path(lobes, DT[1]);
-      if (!wall) path('M1100,96' + 'L1500,96' + scallop(1100, 1500, 122, 53, 4, 40, 80, sh * 0.5) + 'Z', DT[0]); // the tower's flat dark base
       close();
       if (wall && s.body) { add('circle', { cx: f(body[0]), cy: f(Math.max(40, body[1] - 30)), r: 110, fill: radial(DT[4], 0.42, 0), 'data-part': 'schein' }); }
     }
@@ -402,7 +402,8 @@
     }
     var cold = s.snowCover || s.frost || s.season === 'winter' || s.falling === 'snow', capK = cover2 ? 36 : cold ? 24 : s.season === 'summer' ? 10 : 15;
     var fogFar = [1, 0.35, 0][s.fog], fogMid = [1, 0.65, 0.22][s.fog], snowHaze = s.falling === 'snow' && s.intensity >= 3 ? 0.55 : 1, farOp = Math.min(fogFar, snowHaze);
-    function fogBand(y, h, op, x0, w) { add('rect', { x: x0 == null ? -40 : x0, y: y, width: w || W + 80, height: h, rx: h / 2, fill: PAL.c.fog, opacity: op }); }
+    var fogC = mix(C.haze, '#ffffff', 0.55), fogG = null;
+    function fogBand(y, h, op, x0, w) { fogG = fogG || grad([[0, fogC, 0], [0.22, fogC, 1], [0.8, fogC, 1], [1, fogC, 0]], { x1: 0, y1: 0, x2: 1, y2: 0 }); add('rect', { x: x0 == null ? q0 - 80 : Math.max(x0, q0 - 80), y: y, width: w || W + 200 - q0, height: h, fill: fogG, opacity: op }); }
     if (farOp > 0) {
       open('ridgeAlp', farOp < 1 ? ' opacity="' + farOp + '"' : '');
       var bc = jag(G.back, 9, 2.5, 22), bcol = mix(cover2 ? mix(C.far, C.snow, 0.5) : C.far, C.haze, 0.45), bcaps = '';
@@ -412,7 +413,7 @@
       var glowC = PAL.glow[key], rockGlow = glowC && s.cover < 4 ? 0.34 : 0; // twilight: the lit faces and the snow take the colour of the low sun
       G.mountains.forEach(function (m, mi) {
         var sil = jag(m.sil, 40 + mi, 1.6, 15), S = m.sil[m.top], shadeLeft = lightRight(S[0]), it = sil.indexOf(S), sd = shadeLeft ? -1 : 1, q4 = prng(900 + mi);
-        var col = mix(mix(mix(C.far, C.haze, m.haze), C.snow, cover2 ? 0.55 : 0), glowC || '#000000', rockGlow), snowC = mix(mix(C.snow, C.haze, m.haze), glowC || '#000000', rockGlow * 1.1);
+        var hm = hk(S[0]), col = mix(mix(mix(mix(C.far, C.haze, m.haze), C.snow, cover2 ? 0.55 : 0), glowC || '#000000', rockGlow), C.haze, hm), snowC = mix(mix(mix(C.snow, C.haze, m.haze), glowC || '#000000', rockGlow * 1.1), C.haze, hm);
         out += '<g data-part="' + m.id + '">';
         path(pts(sil, true), col);
         // snow: the cap, the gullies under it, and fields lower down (more of them when it is cold)
@@ -427,9 +428,9 @@
           for (var k2 = 1; k2 <= n2; k2++) { var tt = k2 / n2; d += 'L' + f(a[0] + (rb[1] - a[0]) * tt + (k2 < n2 ? (k2 % 2 ? 1 : -1) * (2 + q4() * 3) : 0)) + ',' + f(a[1] + (218 - a[1]) * tt); }
           ribs += d + 'L' + f(rb[1] + sd * rb[2]) + ',218Z';
         });
-        if (ribs) path(ribs, cover2 ? C.snowShade : C.dark, { opacity: cover2 ? 0.45 : 0.2, 'data-part': 'ribs' });
+        if (ribs) path(ribs, cover2 ? C.snowShade : C.dark, { opacity: f((cover2 ? 0.45 : 0.2) * (1 - hm)), 'data-part': 'ribs' });
         var face = shadeLeft ? sil.slice(0, it + 1).concat(m.arete.slice(1)) : sil.slice(it).concat(m.arete.slice(1).reverse());
-        path(pts(face, true), cover2 ? C.snowShade : C.dark, { opacity: cover2 ? 0.7 : 0.36, 'data-part': 'shade' });
+        path(pts(face, true), cover2 ? C.snowShade : C.dark, { opacity: f((cover2 ? 0.7 : 0.36) * (1 - hm)), 'data-part': 'shade' });
         if (s.wind === 3 && cover2 && m.size >= 0.8) path('M' + S[0] + ',' + S[1] + 'q' + f(dir * 22) + ',-9 ' + f(dir * 52) + ',-4q' + f(-dir * 20) + ',1 ' + f(-dir * 44) + ',10Z', C.snow, { opacity: 0.6, 'data-part': 'spindrift' });
         out += '</g>';
       });
@@ -595,7 +596,7 @@
     var gfill = cover2 ? C.snow : s.snowCover ? mix(C.meadow, C.snow, 0.7) : C.meadow, gy = function (x) { return yAt(G.ground, x) + 2; };
     path(smooth(G.ground, H), gfill, { 'data-part': 'ground' });
     path('M-20,320L-20,307Q240,298 520,309T990,309Q1160,318 1340,311Q1470,292 1620,290L1620,320Z', cover2 ? C.snowShade : C.near, { opacity: cover2 ? 0.5 : 0.32, 'data-part': 'fold' });
-    if (s.sun >= 2 && !s.snowCover) path('M300,294Q560,284 860,294Q960,298 990,301Q700,292 300,300Z M1380,284Q1470,270 1600,270Q1500,276 1400,292Z', mix(C.meadow, '#fff7c0', 0.3), { opacity: 0.7, 'data-part': 'sunband' });
+    if (s.sun >= 2 && !s.snowCover) path('M880,296Q940,292 990,300Q940,298 880,301Z M1380,284Q1470,270 1600,270Q1500,276 1400,292Z', mix(C.meadow, '#fff7c0', 0.3), { opacity: 0.55, 'data-part': 'sunband' });
     if (s.frost && !s.snowCover) line(smooth(G.ground), C.rime, 2.6, { opacity: 0.45, 'data-part': 'hoar' });
     path(G.way, cover2 ? C.snowShade : mix(gfill, C.haze, 0.35), { opacity: cover2 ? 0.7 : 0.85, 'data-part': 'way' });
     if (s.sun >= 2 || (s.dark && mode === 'clear' && s.moon && s.moon.illum > 0.9 && cover2)) { // cast shadows: only under a clear body
@@ -660,7 +661,7 @@
     }
     if (s.heat) line('M1010,250q14,-4 28,0t28,0M1120,256q14,-4 28,0t28,0M1400,244q14,-4 28,0t28,0M930,262q12,-3 24,0t24,0', PAL.c['heat-haze'], 1.4, { opacity: 0.7, 'data-part': 'shimmer' });
     close();
-    if (s.fog >= 2) { open('fog'); add('rect', { x: 0, y: top, width: W, height: H - top, fill: PAL.c.fog, opacity: 0.22 }); fogBand(278, 22, 0.5, 860, 520); close(); }
+    if (s.fog >= 2) { open('fog'); add('rect', { x: q0 - 80, y: top, width: W + 200 - q0, height: H - top, fill: fogG || fogC, opacity: 0.24 }); fogBand(278, 22, 0.5, 860, 520); close(); }
 
     /* ---- bolts: more storm = more drawn bolts, each its own figure; they never flash. The glow at the cloud brightens once (class sc-glow) ---- */
     if (s.thunder) {
@@ -691,7 +692,7 @@
         (quiet ? el('path', { d: quiet, 'stroke-width': 1.2, opacity: 0.22 }) : '') + el('path', { d: back, 'stroke-width': drizzle ? 0.9 : 1.1, opacity: 0.4 }) +
         el('path', { d: front, 'stroke-width': drizzle ? 1.1 : [0, 1.3, 1.6, 1.9][lvl], opacity: [0, 0.55, 0.65, 0.7][lvl] }) + (spl ? el('path', { d: spl, 'stroke-width': 1.2, opacity: 0.75, 'data-part': 'splash' }) : '') + '</g>';
       if (/reezing/.test(s.cond)) line(pts(G.ground), C.iceHi, 2.2, { opacity: 0.8, 'data-part': 'glaze' });
-      if (s.cond === 'thunderHail') { var hd = '', hq = prng(105); for (i = 0; i < 40; i++) hd += circ(900 + hq() * 690, 130 + hq() * 180, 1.8 + hq() * 1.4); path(hd, PAL.c.hail, { stroke: PAL.c['hail-edge'], 'stroke-width': 0.6, 'data-layer': 'precip', 'data-part': 'hail' }); }
+      if (s.cond === 'thunderHail') { var hd = '', hl = '', hq = prng(105); for (i = 0; i < 40; i++) { var hx3 = 900 + hq() * 690, hy3 = 130 + hq() * 180; hd += circ(hx3, hy3, 1.2 + hq() * 0.8); hl += 'M' + f(hx3 - slant * 7) + ',' + f(hy3 - 7) + 'L' + f(hx3) + ',' + f(hy3); } line(hl, PAL.c.hail, 0.9, { opacity: 0.6, 'data-layer': 'precip' }); path(hd, PAL.c.hail, { stroke: PAL.c['hail-edge'], 'stroke-width': 0.5, 'data-layer': 'precip', 'data-part': 'hail' }); }
     }
     if (s.falling === 'snow') {
       var cs = Math.round(G.snow[s.intensity] * (showers ? 0.45 : 1)), nq = prng(103), a1 = '', a2 = '', a3 = '';
@@ -724,8 +725,8 @@
   function count(s) { return (s.match(/<(path|rect|circle|ellipse|g|stop|linearGradient|radialGradient|mask)\b/g) || []).length; }
   /* the phone crop: scale k, stage height in px; the body at G.phoneBodyX */
   function phoneOpts(stagePx, widthPx, bodyY) {
-    var k = 0.56;
-    return { view: [Math.round(W - widthPx / k), Math.round(H - stagePx / k), Math.round(widthPx / k), Math.round(stagePx / k)], bodyAt: [G.phoneBodyX, bodyY == null ? 98 : bodyY], quietX: 700 };
+    var k = 0.46; // at this scale the summits stay below the temperature and the detail line
+    return { view: [Math.round(W - widthPx / k), Math.round(H - stagePx / k), Math.round(widthPx / k), Math.round(stagePx / k)], bodyAt: [G.phoneBodyX, bodyY == null ? 46 : bodyY], quietX: 1000 };
   }
   var presets = { // the three scenes of the stop
     frost: { phase: 'night', cond: 'overcast', frost: 1, season: 'winter', moon: { illum: 0.95, waxing: false } },

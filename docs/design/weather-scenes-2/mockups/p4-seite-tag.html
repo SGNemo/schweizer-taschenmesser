@@ -1,0 +1,46 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wetter Runde 2 – Seite: Samstag gewählt</title><link rel="stylesheet" href="mock.css"><link rel="stylesheet" href="page.css">
+<script src="palette.js"></script><script src="scene.js"></script><script src="page.js"></script></head>
+<body class="p4"><div class="wpage" id="page"></div>
+<script>
+/* Another day chosen: Saturday 28 November 2026 (day 3), no hour chosen. Head = the day's middle hour (14:00, the warmest
+   between sunrise and sunset), big number high / low. Hour cards 00–23 of that day, none checked. "Mehr Werte" open. */
+var temp = [-2, -2, -3, -3, -3, -3, -2, -2, -1, 0, 1, 2, 3, 4, 4, 3, 2, 1, 1, 0, 0, -1, -1, -1];
+var felt = [-6, -6, -7, -7, -7, -7, -6, -7, -6, -6, -5, -4, -2, -1, -1, -2, -3, -4, -4, -5, -5, -5, -5, -5];
+var wind = [8, 8, 9, 9, 10, 11, 12, 14, 17, 20, 23, 26, 28, 28, 27, 24, 21, 19, 17, 15, 14, 13, 12, 12];
+var chance = [5, 5, 5, 10, 10, 10, 15, 20, 40, 80, 90, 90, 90, 80, 70, 40, 20, 10, 5, 5, 5, 5, 5, 5];
+var snowCm = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+var mm = [0, 0, 0, 0, 0, 0, 0, 0, 0.1, 0.8, 1.0, 1.1, 1.0, 0.9, 0.8, 0.1, 0, 0, 0, 0, 0, 0, 0, 0];
+var cards = temp.map(function (t, i) {
+  var s = snowCm[i] > 0, night = i < 8 || i >= 17;
+  return { t: Page.hh(i) + ':00', icon: s ? 'snow' : i === 8 || i === 15 ? 'cloud' : night ? 'cloud' : 'cloud', temp: t, word: s ? 'Schneefall' : 'bedeckt', wind: wind[i], rain: chance[i], amt: s ? snowCm[i] + ' cm' : mm[i] >= 0.1 ? String(mm[i]).replace('.', ',') + ' mm' : '' };
+});
+Page.render('#page', {
+  place: 'Lindenau',
+  scene: { phase: 'day', cond: 'snow', intensity: 2, snowCover: 2, season: 'winter', wind: 1 },
+  head: {
+    temp: '4° / −3°', tempAria: 'Höchstwert 4°, Tiefstwert −3°', detail: 'Samstag, 28. November · Schneefall',
+    hints: [{ icon: 'thermo', text: 'Samstag: Frost bis −3°' }],
+    chips: [{ icon: 'snow', kind: 'rain', text: 'Schnee 9–15 Uhr · 6 cm' }, { icon: 'wind', text: 'Wind bis 28 km/h, Böen 46' }, { icon: 'sun', text: 'UV bis 1' }],
+    rest: ['6 Stunden mit Schnee', 'Sonnenschein 0,4 h', 'Bewölkung 96 %', 'Sonne 07:44–16:20'],
+  },
+  stepper: { label: 'Samstag, 28. Nov.', today: false },
+  rainSoon: null,
+  hours: { title: 'Stunden', cards: cards, checked: -1 },
+  chart: { title: 'Verlauf am Samstag', option: 'Temperatur und Regen', labels: temp.map(function (_, i) { return Page.hh(i); }),
+    temp: temp, felt: felt, amount: mm, chance: chance, night: [[-0.5, 7.23], [15.83, 23.5]],
+    alt: 'Temperatur von −3° bis 4°, am wärmsten um 13 Uhr; Schnee von 9 bis 15 Uhr, zusammen 5,8 mm.' },
+  days: Page.sample.week(2),
+  more: { open: true, groups: [
+    { title: 'Gefühl', items: [['Gefühlt', '−1°'], ['Taupunkt', '−1°'], ['Luftfeuchte', '88 %']] },
+    { title: 'Niederschlag', items: [['Menge', '5,8 mm'], ['Stunden mit Regen', '6'], ['Neuschnee', '6 cm'], ['Schneehöhe', '5 cm'], ['Schneefallgrenze', 'etwa 400 m']] },
+    { title: 'Wind', items: [['Mittel', '18 km/h'], ['Böen', 'bis 46 km/h'], ['Richtung', 'aus Nordwest']] },
+    { title: 'Himmel', items: [['Bewölkung', '96 %'], ['tief', '88 %', 1], ['mittel', '72 %', 1], ['hoch', '40 %', 1], ['Sonnenschein', '0,4 h von 8,6 h'], ['Sichtweite', '2 km']] },
+    { title: 'Luftdruck', text: '1006 hPa, fällt' },
+  ] },
+  air: { rating: 'good', aqi: 18, band: 'gut', pollutants: [['Feinstaub PM2,5', 4], ['Feinstaub PM10', 8], ['Ozon', 44]], pollen: Page.sample.pollenNone },
+  moon: { sun: 'Sonne 07:44–16:20 · 8 h 36 min Tageslicht · Dämmerung 07:09–16:55', name: 'Abnehmender Mond', illum: 0.81,
+    times: 'Monduntergang 12:14 · Mondaufgang 20:27', next: Page.sample.nextNov },
+  live: 'Samstag, 28. November: Schneefall, 4° / −3°',
+});
+</script></body></html>
