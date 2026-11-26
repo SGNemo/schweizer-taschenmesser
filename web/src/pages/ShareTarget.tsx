@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { enableModule, useModuleStates } from '@/core/modules/activation';
 import { getManifest } from '@/core/modules/registry';
@@ -92,7 +92,7 @@ export function sharedContent(params: URLSearchParams): {
   const url =
     params.get('url')?.trim() ||
     (() => {
-      const found = text.match(/https?:\/\/\S+/i)?.[0];
+      const found = text.match(/https?:\/\/[^\s<>"']+/i)?.[0];
       return found ? trimTrailing(found) : '';
     })() ||
     '';
@@ -192,11 +192,12 @@ const TARGETS: Target[] = [
  * it out of the title as built).
  */
 export function screenLine(line: string): string {
+  // Word by word (linear on any input): a word that is only punctuation left by a removed address goes too.
   return line
     .replace(ADDRESS_TOKENS, (token) => (webAddress(trimTrailing(token)) ? token : ' '))
-    .replace(/(^|\s)[.,;:!?)]+(?=\s|$)/g, '$1')
-    .replace(/\s+/g, ' ')
-    .trim();
+    .split(/\s+/)
+    .filter((word) => word && !/^[.,;:!?)]+$/.test(word))
+    .join(' ');
 }
 
 /** The note of a thing shared into the planner may hold this much (the address line included). */
@@ -233,27 +234,31 @@ export function ShareTarget() {
   const [params] = useSearchParams();
   const states = useModuleStates();
   const navigate = useNavigate();
-  const content = sharedContent(params);
-  // The link is dropped when the text already contains it.
-  const parts = [content.title, content.text, content.url].filter(
-    (v, i, all) =>
-      v &&
-      all.indexOf(v) === i &&
-      !all.some((o) => o && o !== v && o.includes(v) && v === content.url),
-  );
-  const has = content.title || content.text || content.url;
-  // With the planner on, an address that will not be stored (not http/https, too long) never enters the line either:
-  // the parser would keep `javascript:` or `intent:` in the title. The „Geteilt“ card still shows it.
-  const address = webAddress(content.url);
   const plannerOnNow = states?.planner === true;
-  const unsafe = plannerOnNow && !address && content.url !== '';
-  const shared = sharedLine(unsafe ? { ...content, url: '' } : content);
-  // Also when the address came inside the text (Android hands over title and text only): it leaves the line, or the
-  // parser would keep it as the title. A line that was only the address starts empty.
-  const line = plannerOnNow
-    ? screenLine(unsafe ? shared.line.split(content.url).join(' ') : shared.line)
-    : shared.line;
-  const rest = shared.rest;
+  const query = params.toString();
+  // Read once per shared content (not on every render: the form re-renders the page while it reads the line).
+  const { content, parts, has, address, line, rest } = useMemo(() => {
+    const content = sharedContent(new URLSearchParams(query));
+    // The link is dropped when the text already contains it.
+    const parts = [content.title, content.text, content.url].filter(
+      (v, i, all) =>
+        v &&
+        all.indexOf(v) === i &&
+        !all.some((o) => o && o !== v && o.includes(v) && v === content.url),
+    );
+    const has = content.title || content.text || content.url;
+    // With the planner on, an address that will not be stored (not http/https, too long) never enters the line either:
+    // the parser would keep it as the title. The „Geteilt“ card still shows it.
+    const address = webAddress(content.url);
+    const unsafe = plannerOnNow && !address && content.url !== '';
+    const shared = sharedLine(unsafe ? { ...content, url: '' } : content);
+    // Also when the address came inside the text (Android hands over title and text only), and every other
+    // address-like token the gate rejects. A line that was only the address starts empty.
+    const line = plannerOnNow
+      ? screenLine(unsafe ? shared.line.split(content.url).join(' ') : shared.line)
+      : shared.line;
+    return { content, parts, has, address, line, rest: shared.rest };
+  }, [query, plannerOnNow]);
   const [asNote, setAsNote] = useState(false);
   // Package 1: with the planner on, the form starts with the kind `plan`; what it reads now decides S2 / S16 / S19.
   const plannerOn = states?.planner === true;
@@ -343,7 +348,7 @@ export function ShareTarget() {
                     // The capture toast as built; the page remembers it, so its own „Rückgängig“ can close it.
                     void announceSaved(s).then(async (id) => {
                       // Undone on the page before the toast came: it goes at once (its undo would do nothing).
-                      if (id !== undefined && (await secondStage(s.type, s.id)) !== 'live')
+                      if (id !== undefined && (await secondStage(s.type, s.id)) === 'deleted')
                         useUiStore.getState().dismissToast(id);
                       else toastId.current = id;
                     });

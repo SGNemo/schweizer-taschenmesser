@@ -16,6 +16,7 @@ import { getManifest } from '@/core/modules/registry';
 import { setNow } from '@/core/time/now';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
+import { trimTrailing } from '@/core/net/webAddress';
 import { SHARE_NOTE_MAX, ShareTarget, screenLine, shareNote } from './ShareTarget';
 
 vi.setConfig({ testTimeout: 20_000 });
@@ -294,5 +295,24 @@ describe('council round 3', () => {
     const [task] = await tasks();
     expect(task!.title).toBe('Merken');
     expect(task!.note ?? '').toBe('');
+  });
+});
+
+describe('council round 4', () => {
+  it('screens tokens exactly as the parser cuts them (at " \' < >)', () => {
+    expect(screenLine('Schau https://ok.com/"https://user@evil.com/x')).toBe(
+      'Schau https://ok.com/"',
+    );
+    expect(screenLine("Schau https://ok.com/'HTTPS://a@b.example/")).toBe("Schau https://ok.com/'");
+    expect(screenLine('Schau https://ok.com/<www.evil.com>')).not.toMatch(/evil/);
+  });
+
+  it('stays fast on a crafted 20 000-character share', () => {
+    const started = performance.now();
+    screenLine(`https://a.example/${')'.repeat(20_000)}`);
+    screenLine(`https://a.example/${').'.repeat(10_000)}`);
+    screenLine(`x ${'.'.repeat(20_000)}y`);
+    trimTrailing(`https://a.example/${')'.repeat(20_000)}`);
+    expect(performance.now() - started).toBeLessThan(500);
   });
 });
