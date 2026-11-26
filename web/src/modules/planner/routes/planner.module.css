@@ -38,6 +38,53 @@
   color: var(--danger);
   font-size: var(--text-meta);
 }
+/* Kinds in the field (package 3, hand-off 03): the preview line K1 in the examples' place (never both), 44 px while it
+   shows; the read parts in --text (never grey on grey), only „Wird:“ and the glyph quiet. K3 a quiet button. */
+.kindLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 var(--space-2);
+  min-height: var(--touch);
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-sm);
+  color: var(--text);
+}
+.kindText {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--space-1);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.kindGlyph {
+  display: inline-flex;
+  color: var(--text-3);
+}
+.kindLead {
+  color: var(--text-3);
+}
+.kindName {
+  font-weight: var(--weight-semibold);
+}
+.kindSep {
+  color: var(--text-3);
+}
+.kindAsTask {
+  margin-inline-start: auto;
+  min-height: var(--touch);
+}
+/* The phone's last row: the line drawn above the field, after it in the DOM (Tab order). */
+.lineAbove {
+  display: flex;
+  flex-direction: column;
+}
+.lineAbove > .kindLine {
+  order: -1;
+  margin: 0 0 var(--space-1);
+}
 /* „Zum Beispiel“ and three chips under the field: they fill the field, they never submit. */
 .examples {
   display: flex;

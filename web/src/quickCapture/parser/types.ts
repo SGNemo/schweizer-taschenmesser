@@ -81,6 +81,11 @@ export interface CaptureFields {
    * The ToDo target then writes the time as the deadline's hour (`dueTime`), not as a note line.
    */
   deadline?: true;
+  /**
+   * ToDos: tick-off lines inside the task („Haushalt: Wäsche, Bad, Küche“ in the planner's field, package 3); never set
+   * by the parser. The ToDo target writes them as the task's checklist.
+   */
+  checklist?: string[];
   /** Meal captures: rough kcal. */
   kcal?: number;
   /** Workout captures: the exercises of the line. */

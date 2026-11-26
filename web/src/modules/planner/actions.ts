@@ -25,10 +25,12 @@ import { spanMin, windowText, type TimeWindow } from '@/core/plan/windows';
 import { now, today } from '@/core/time/now';
 import { undoEntry } from '@/core/undo';
 import { NEVER_LINKED, type EntityRef } from '@/core/entitylinks/types';
+import { bus } from '@/core/events';
 import type { EventMap } from '@/core/events/events';
-import type { CaptureFields } from '@/quickCapture/parser';
+import type { CaptureFields, CaptureType } from '@/quickCapture/parser';
 import {
   breakOf,
+  captureLive,
   saveCapture,
   saveCaptures,
   targetFor,
@@ -50,6 +52,7 @@ import { PlannerOffError, runUser, type RunScope, type UserRun } from './service
 import { dayEndLabel, DEFAULT_PLANNER_SETTINGS, PLANNER_SCOPE } from './settings';
 import { runToast } from './toast';
 import { measureKey, proposedMinutes, recordMeasure } from './measure';
+import type { FieldKind } from './fieldKind';
 
 const toast = (message: string, run?: UserRun, lead?: { label: string; run: () => void }) =>
   useUiStore.getState().toast(
@@ -424,6 +427,8 @@ export async function addFromField(
   text: string,
   titles: Record<string, string>,
   shown?: string,
+  /** An Aufgabe mit Schritten (package 3): `text` is its name, these its tick-off lines. */
+  steps?: readonly string[],
 ): Promise<boolean> {
   // The phrase is German, like the quick-capture parser (CONCEPT §6c); elsewhere the ⋯ action sets a deadline.
   // „Duschen nachmittags“ (package 4b): the part word becomes the item's part (`readFieldWithPart`).
@@ -469,8 +474,11 @@ export async function addFromField(
   }
   // „p Zahnarzt Donnerstag“: the plan capture's pin – the day, „fest“ (the global capture's pin becomes the same).
   const pin = fields.pin && fields.pin >= day ? fields.pin : undefined;
-  const { pin: _pin, ...todoFields } = fields;
+  const { pin: _pin, ...plainFields } = fields;
   void _pin;
+  const todoFields: CaptureFields = steps?.length
+    ? { ...plainFields, checklist: [...steps] }
+    : plainFields;
   // A part word read from the line says so (as a deadline does), so „nachmittags“ is not taken for a title word.
   // The new thing lies on the day on the sheet, else today; a day in the text wins (a deadline is no day).
   const dated = !hardDue && fields.date && fields.date >= day ? fields.date : undefined;
@@ -482,7 +490,9 @@ export async function addFromField(
       ? t.planner.toast.laidLocked(short(fields.title ?? ''), dayName(target))
       : part && fields.title
         ? t.planner.toast.part(short(fields.title), partWord(part))
-        : t.planner.toast.laid(dayName(target));
+        : steps?.length
+          ? t.planner.kinds.toast.steps(steps.length, dayName(target))
+          : t.planner.toast.laid(dayName(target));
   return act(
     t.planner.toast.added,
     lead,
@@ -518,8 +528,123 @@ export async function addFromField(
     // A deadline or a part says its own fact; otherwise a full or kept-free day says so in the one line.
     hardDue || (part && !fixedOn)
       ? {}
-      : { leadAfter: (run) => dayNote(target, run, fixedOn ? lead : undefined) },
+      : { leadAfter: (run) => dayNote(target, run, fixedOn || steps?.length ? lead : undefined) },
   );
+}
+
+/**
+ * Enter on a line the field read as a sure kind (package 3, CONCEPT-INTAKE idea 3): one undoable action of the planner.
+ * Inside it the thing is stored through its capture target (`saveCapture`, the one way the planner creates a thing in
+ * another module – on his tap, inside its one undo entry); an invoice and a shopping-list entry get the planner's own
+ * item row **only when none exists** (never `excluded`, never a day row: the thing stands under „Noch ohne Tag“). An
+ * appointment, a note and a link get no plan row. An Aufgabe mit Schritten is the field's ToDo (`addFromField`). When
+ * the source does not list the thing afterwards (its switch is off, the list is put away), everything is taken back
+ * and the field says nothing was stored. Never `placeMany` or `requestIntoPlan`: the note's „In den Plan“ in the toast is
+ * a later tap of its own.
+ */
+export async function addKindFromField(
+  reading: FieldKind,
+  titles: Record<string, string>,
+  shown?: string,
+): Promise<boolean> {
+  if (reading.kind === 'steps') return addFromField(reading.title, titles, shown, reading.steps);
+  let key: string | undefined;
+  let noteRef: { id: string; title: string } | undefined;
+  // What the action wrote so far: `undoable` keeps no entry when its function throws, so a failure halfway (the
+  // second shopping entry, the item row, the run) takes these back itself – never a half entry while the field says
+  // nothing was stored.
+  const written: (() => Promise<void>)[] = [];
+  const save = async (type: CaptureType, fields: CaptureFields) => {
+    const saved = await saveCapture(type, fields);
+    written.push(saved.undo);
+    return saved;
+  };
+  const own = async (ref: { moduleId: string; id: string }) => {
+    const row = await ownRow(ref);
+    if (row.created) written.push(() => itemRepo.remove(itemKeyOf(ref.moduleId, ref.id)));
+    return row.key;
+  };
+  let run: UserRun;
+  try {
+    run = await runUser(t.planner.toast.added, async () => {
+      switch (reading.kind) {
+        case 'invoice': {
+          const saved = await save('invoice', reading.fields);
+          key = await own({ moduleId: saved.moduleId, id: saved.id });
+          return {};
+        }
+        case 'list': {
+          let ref: { moduleId: string; id: string } | undefined;
+          for (const name of reading.names) {
+            const saved = await save('list', { title: name });
+            ref ??= saved.planRef;
+          }
+          // Fails closed: a list entry that names no list would skip the check below.
+          if (!ref) throw new Error('shopping entry without a list');
+          key = await own(ref);
+          return {};
+        }
+        case 'event':
+          await save('event', reading.fields);
+          return {};
+        case 'note': {
+          const saved = await save('note', { title: reading.title });
+          noteRef = { id: saved.id, title: reading.title };
+          return {};
+        }
+        case 'bookmark':
+          await save('bookmark', { title: '', url: reading.url });
+          return {};
+      }
+    });
+  } catch (e) {
+    for (const undo of written.reverse()) await undo().catch(() => undefined);
+    if (e instanceof PlannerOffError) {
+      toast(t.planner.toast.off);
+      return false;
+    }
+    // The target refused (its module went off, an impossible date): nothing stays stored, the field says so.
+    console.error('[planner] kind entry failed', e instanceof Error ? e.name : 'error');
+    return false;
+  }
+  if (key !== undefined && run.outcome.inputs.titles[key] === undefined) {
+    // Not a thing of the plan (the source's switch is off, the list put away): the whole entry is taken back.
+    const back = run.entry ? await undoEntry(run.entry.id) : true;
+    if (!back) toast(t.ui.undoFailed);
+    return false;
+  }
+  const note = noteRef;
+  const offer = note
+    ? {
+        label: t.planner.kinds.toPlan,
+        // A later tap: only while the note is still there (not undone meanwhile).
+        run: () =>
+          void captureLive('note', note.id).then((live) =>
+            live
+              ? bus.emit('plan.requested', {
+                  title: note.title,
+                  link: { kind: 'note', id: note.id, label: note.title },
+                })
+              : undefined,
+          ),
+      }
+    : undefined;
+  toast(withOverload(t.planner.kinds.toast[reading.kind], await overloadNotice(run)), run, offer);
+  return true;
+}
+
+/**
+ * The planner's own item row for a thing of the field, only when it has none (a row kept as it is, `excluded` too).
+ * Returns the key to check against the run – none for a thing he put on „Nicht planen“: it stays off the plan.
+ */
+async function ownRow(ref: {
+  moduleId: string;
+  id: string;
+}): Promise<{ key: string | undefined; created: boolean }> {
+  const key = itemKeyOf(ref.moduleId, ref.id);
+  const row = await itemRepo.get(key);
+  if (!row) await itemPatch(ref, {});
+  return { key: row?.excluded ? undefined : key, created: !row };
 }
 
 /**

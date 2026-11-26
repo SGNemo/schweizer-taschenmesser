@@ -94,6 +94,12 @@ export const plannerSettingsSchema = z.object({
    * measured stays until „Gemessene Zeiten löschen“.
    */
   measurePropose: z.boolean(),
+  /**
+   * „Arten im Feld erkennen“ (package 3, COPY K5): a sure reading of the field's line (an invoice, a shopping entry, an
+   * appointment, a note, a link, a task with steps) shows the preview line K1 and Enter stores that kind. Off: every
+   * line is a ToDo, as before.
+   */
+  kindsInField: z.boolean(),
 });
 export type PlannerSettings = z.output<typeof plannerSettingsSchema>;
 
@@ -117,6 +123,7 @@ export const DEFAULT_PLANNER_SETTINGS: PlannerSettings = {
   dayEnd: '',
   expandRows: true,
   measurePropose: true,
+  kindsInField: true,
 };
 
 /** The day end of the settings as 'HH:mm'; `undefined` = none (empty or not readable). */
@@ -320,6 +327,16 @@ export const settings: ModuleSettings = {
       },
       get help() {
         return s().pileHelp;
+      },
+    },
+    {
+      key: 'kindsInField',
+      type: 'boolean',
+      get label() {
+        return s().kindsInField;
+      },
+      get help() {
+        return s().kindsInFieldHelp;
       },
     },
     {

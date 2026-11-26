@@ -53,6 +53,9 @@ export const planner: Strings['planner'] = {
       expandRows: 'Expand rows',
       expandRowsHelp:
         'A tap on the title shows the thing in the planner. Off: the title opens it in its module.',
+      kindsInField: 'Recognise kinds in the field',
+      kindsInFieldHelp:
+        'Shows what the line becomes before you enter it. Without that line it becomes a task. Only while the app is in German.',
       measurePropose: 'Propose from measured time',
       measureProposeHelp:
         'A new thing without minutes gets the time it took recently with “Start focus” or “Go”. Off: nothing more is measured; what was measured stays.',
@@ -74,6 +77,30 @@ export const planner: Strings['planner'] = {
     failed: 'That did not work. Nothing was changed.',
     tick: (step: string) => `Tick “${step}”`,
     more: (n: number) => `${n} more`,
+  },
+  kinds: {
+    becomes: 'Becomes:',
+    name: {
+      invoice: 'invoice',
+      list: 'shopping list',
+      event: 'appointment',
+      note: 'note',
+      bookmark: 'bookmark',
+      steps: 'task with steps',
+    },
+    deadline: (day: string) => `due ${day}`,
+    stepCount: (n: number) => (n === 1 ? '1 step' : `${n} steps`),
+    more: (n: number) => `+ ${n}`,
+    asTask: 'Enter as a task',
+    toast: {
+      invoice: 'Invoice created, under “No day yet”.',
+      list: 'On the shopping list.',
+      event: 'Appointment entered.',
+      note: 'Note created.',
+      bookmark: 'Bookmarked.',
+      steps: (n: number, day: string) => `Task with ${n} steps created, on ${day}.`,
+    },
+    toPlan: 'Add to plan',
   },
   share: {
     lands: 'Lands in the planner under “No day yet”.',

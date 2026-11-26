@@ -5,6 +5,8 @@ import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { getMeta, setMeta } from '@/core/db/metaKv';
 import { getLang } from '@/core/i18n/lang';
+import { useModuleStates } from '@/core/modules/activation';
+import { knownShoppingNames } from '@/quickCapture/targets/lookup';
 import { dayName, explainAssignment, explainWait } from '@/core/plan/explain';
 import {
   isRestSentence,
@@ -16,7 +18,7 @@ import {
 import { useNow } from '@/core/focus/useNow';
 import { useFocusSettings } from '@/core/settings/focus';
 import { addDaysStr, formatDay, isoWeekday } from '@/core/time/dates';
-import { today } from '@/core/time/now';
+import { now as nowMs, today } from '@/core/time/now';
 import { t } from '@/strings';
 import {
   Button,
@@ -41,6 +43,7 @@ import { usePageAction } from '@/core/shell/pageAction';
 import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
 import {
   addFromField,
+  addKindFromField,
   allToday,
   applyOps,
   exclude,
@@ -97,6 +100,7 @@ import { WeekCheck } from '../components/WeekCheck';
 import { BOARD_DAYS } from '../calendar';
 import { overloadText } from '../overload';
 import { readSentence, warmLocalStage, type Said } from '../localStage';
+import { fieldKind } from '../fieldKind';
 import { instructionItems, opLines, planLines, restIsEmpty } from '../say';
 import { PlannerOffError, previewUser, proposeUser } from '../services';
 import { useBoard } from '../useBoard';
@@ -195,6 +199,9 @@ export default function PlannerPage() {
   const inFrame = !!useHeroTargets();
   const [params, setParams] = useSearchParams();
   const [text, setText] = useState('');
+  // Kinds in the field (package 3): the sure reading of the line, derived – never stored. Off with K5, in English, and
+  // for the entry K3 made a plain ToDo.
+  const states = useModuleStates();
   const [sheetDate, setSheetDate] = useState<string | undefined>();
   // `?check=1` (the lists' „Woche prüfen im Planer“ link, a tap of the user) opens the week sheet.
   const [checking, setChecking] = useState(() => params.get('check') === '1');
@@ -280,6 +287,35 @@ export default function PlannerPage() {
 
   const titles = data?.titles ?? {};
   const board = data?.board;
+  const [plainFor, setPlainFor] = useState<string | undefined>();
+  const kindsOn = data?.settings.kindsInField !== false && getLang() === 'de';
+  // Read only while a line can show: the switch on and German lines.
+  const knownNames = useLiveQuery(
+    () => (kindsOn ? knownShoppingNames() : Promise.resolve(new Set<string>())),
+    [kindsOn],
+  );
+  const kindItems = useMemo(() => (board ? instructionItems(board) : undefined), [board]);
+  const kindReading = useMemo(() => {
+    const day = data?.today ?? today();
+    if (!kindsOn || !states || text === plainFor) return undefined;
+    return fieldKind(text, {
+      now: new Date(nowMs()),
+      today: day,
+      until: addDaysStr(day, Number(data?.settings.horizonDays ?? 14) - 1),
+      on: (id) => !!states[id],
+      ...(knownNames ? { known: knownNames } : {}),
+      ...(kindItems ? { items: kindItems } : {}),
+    });
+  }, [
+    text,
+    plainFor,
+    kindsOn,
+    states,
+    knownNames,
+    kindItems,
+    data?.today,
+    data?.settings.horizonDays,
+  ]);
   const todayDay = board?.days[0];
 
   // The local stage reads the shell's status once (the desktop app with AI on; nowhere else).
@@ -511,8 +547,8 @@ export default function PlannerPage() {
     return () => document.removeEventListener('keydown', onKey, true);
   }, [reading]);
 
-  async function add(e: FormEvent) {
-    e.preventDefault();
+  async function add(e: FormEvent | undefined, opts: { plain?: boolean } = {}) {
+    e?.preventDefault();
     const value = text.trim();
     if (!value || reading) return;
     setAddError(false);
@@ -532,6 +568,23 @@ export default function PlannerPage() {
         setSayLine(t.planner.keep.fromSentence);
         return;
       }
+    }
+    // A sure kind (package 3): the line under the field says what Enter stores. The planner's own readings were
+    // checked by `fieldKind` already; the local model never runs for a line with a kind.
+    if (kindReading && !opts.plain) {
+      setText('');
+      setPlainFor(undefined);
+      const ok = await addKindFromField(
+        kindReading,
+        titles,
+        tab === 'open' ? undefined : shownDate,
+      );
+      if (!ok) {
+        setText((cur) => cur || value);
+        setAddError(true);
+      }
+      addRef.current?.querySelector('input')?.focus({ preventScroll: true });
+      return;
     }
     // Instructions first – German only, like the quick-capture parser; elsewhere the ⋯ actions do the same.
     if (getLang() === 'de') {
@@ -611,6 +664,8 @@ export default function PlannerPage() {
     setText('');
     // On „Noch offen“ no day is on the sheet: the new thing lies on today (the toast names the day).
     const ok = await addFromField(value, titles, tab === 'open' ? undefined : shownDate);
+    // K3 held for this entry only: the next one is read afresh.
+    if (ok) setPlainFor(undefined);
     // Nothing happened (the planner was switched off meanwhile): the text comes back.
     if (!ok) {
       setText((cur) => cur || value);
@@ -1789,8 +1844,17 @@ export default function PlannerPage() {
         setText(value);
         setAddError(false);
       }}
-      onSubmit={add}
+      onSubmit={(e) => void add(e)}
       reading={reading}
+      preview={kindReading}
+      onAsTask={() => {
+        // K3: this entry is a plain ToDo; the line is gone for it.
+        setPlainFor(text);
+        // A plain ToDo: the local model never reads it as an instruction either.
+        declinedRef.current = text.trim();
+        void add(undefined, { plain: true });
+      }}
+      previewAbove={phone && !inDialog}
       error={addError}
       focusOnOpen={inDialog}
       // The phone's last row is the field alone, its label for screen readers (placeholder and „Eintragen“ say

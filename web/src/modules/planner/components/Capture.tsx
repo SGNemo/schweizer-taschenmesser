@@ -1,13 +1,16 @@
 import { type FormEvent, type Ref, useId } from 'react';
 import { t } from '@/strings';
 import { Button, Chip, TextField } from '@/ui';
+import type { FieldKind } from '../fieldKind';
 import styles from '../routes/planner.module.css';
+import { KindAnnouncer, KindPreview } from './KindPreview';
 
 /**
  * The planner's one field (planner hub R1): a thing to enter, or a sentence the planner reads („Donnerstag frei“).
  * Three example chips under it fill the field and focus it; they never submit. The page owns the text and what is
  * done with it. States: empty (the button waits), reading (the local model reads: the field is read-only), error
- * (nothing was stored: the text is still there and the field says so).
+ * (nothing was stored: the text is still there and the field says so). Package 3: a sure kind shows K1 in the
+ * examples' place.
  */
 export function Capture({
   value,
@@ -20,6 +23,9 @@ export function Capture({
   examples: withExamples = true,
   formRef,
   onPastePlan,
+  preview,
+  onAsTask,
+  previewAbove,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -40,11 +46,25 @@ export function Capture({
    * its preview with the text instead of squeezing it into one line. True when it took the text.
    */
   onPastePlan?: (text: string) => boolean;
+  /**
+   * Kinds in the field (package 3): the sure reading of the line – the preview line K1 replaces the examples (never
+   * both), Enter stores it; K3 / Alt+Enter = `onAsTask`.
+   */
+  preview?: FieldKind;
+  onAsTask?: () => void;
+  /** The phone's last row: the line stands above the field, never under the keyboard. */
+  previewAbove?: boolean;
 }) {
   const examples = Object.values(t.planner.add.examples);
   const errorId = useId();
+  const kindId = useId();
+  const line =
+    preview && onAsTask ? <KindPreview reading={preview} onAsTask={onAsTask} id={kindId} /> : null;
   return (
-    <div>
+    // The phone's last row draws the line above the field (CSS order) – in the DOM it stays after it, so Tab reaches
+    // „Als Aufgabe eintragen“ after the field (A11Y).
+    <div className={previewAbove ? styles.lineAbove : undefined}>
+      <KindAnnouncer reading={preview} />
       <form
         ref={formRef}
         onSubmit={onSubmit}
@@ -63,11 +83,20 @@ export function Capture({
               const pasted = e.clipboardData.getData('text');
               if (onPastePlan?.(pasted)) e.preventDefault();
             }}
+            onKeyDown={(e) => {
+              // K3 from the keyboard: the line becomes a plain ToDo.
+              if (e.key === 'Enter' && e.altKey && preview && onAsTask) {
+                e.preventDefault();
+                onAsTask();
+              }
+            }}
             readOnly={reading}
             // The message stands under the whole row (S09: „Eintragen“ lines up with the input, not with a line
             // under it), so the field points to it instead of using its own error line.
             aria-invalid={error || undefined}
-            aria-describedby={error ? errorId : undefined}
+            aria-describedby={
+              [error ? errorId : '', line ? kindId : ''].filter(Boolean).join(' ') || undefined
+            }
             enterKeyHint="done"
             data-autofocus={focusOnOpen || undefined}
           />
@@ -81,7 +110,8 @@ export function Capture({
           {t.planner.add.error}
         </p>
       ) : null}
-      {withExamples ? (
+      {line}
+      {withExamples && !line ? (
         <div className={styles.examples} role="group" aria-label={t.planner.add.examplesLead}>
           <span className={styles.examplesLead} aria-hidden="true">
             {t.planner.add.examplesLead}

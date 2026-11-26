@@ -138,11 +138,13 @@ export async function saveCapture(
     // Zod rejected the record (e.g. an impossible date); never echo user text into the error.
     throw new CaptureError('invalid');
   }
+  const planRef = target.planRef?.(data);
   return {
     id: saved.id,
     type,
     moduleId: target.moduleId,
     undo: () => repo.remove(saved.id),
+    ...(planRef ? { planRef } : {}),
   };
 }
 
@@ -383,4 +385,21 @@ export async function saveCaptures(
       for (const s of [...written].reverse()) await s.undo();
     },
   };
+}
+
+/**
+ * Whether a record a capture saved is still there (live): a later offer on it (the planner toast's „In den Plan“ for
+ * a note) checks this first, so an undone record is never asked into the plan. False while its module is off.
+ */
+export async function captureLive(
+  type: CaptureType,
+  id: string,
+  opts: SaveOptions = {},
+): Promise<boolean> {
+  const target = targetFor(type);
+  const manifest = getManifest(target.moduleId);
+  const states = opts.states ?? (await loadModuleStates(visibleManifests, opts.database));
+  if (!manifest || !states[target.moduleId]) return false;
+  const row = await createCollectionRepo(manifest, target.collection, opts.database).table.get(id);
+  return !!row && row.deletedAt === null;
 }

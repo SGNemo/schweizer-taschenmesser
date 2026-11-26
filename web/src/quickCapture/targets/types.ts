@@ -117,6 +117,12 @@ export interface CaptureTarget {
    * what it wrote.
    */
   save?(fields: CaptureFields, ctx: AmendContext): Promise<SavedCapture>;
+  /**
+   * The thing the planner lists for a saved record when it is not the record itself (a shopping-list entry: its
+   * list). Read from the written data; `SavedCapture.planRef` carries it – only on the plain create path (no `via`,
+   * `save` or fixed `id`).
+   */
+  planRef?(data: Record<string, unknown>): CaptureRef | undefined;
 }
 
 export type CaptureErrorCode =
@@ -158,4 +164,6 @@ export interface SavedCapture {
   existed?: true | 'tombstone';
   /** The entry noted something on an existing record (`amend`) instead of creating one. */
   amended?: boolean;
+  /** The thing the planner lists for it when that is not the record itself (`CaptureTarget.planRef`). */
+  planRef?: CaptureRef;
 }

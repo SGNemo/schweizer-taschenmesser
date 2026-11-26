@@ -61,9 +61,17 @@ const todos: CaptureTarget = {
       ...(dueHour ? { dueTime: dueHour } : {}),
       ...noteOf(f.time && !dueHour ? t.quickCapture.todoTimeNote(f.time) : undefined, f.note),
       ...(f.link ? { links: [f.link] } : {}),
+      ...checklistOf(f.checklist),
     };
   },
 };
+
+/** The capture's lines as the task's checklist: trimmed, empty ones dropped, each with its own id. */
+function checklistOf(lines: readonly string[] | undefined): { checklist?: object[] } {
+  const kept = (lines ?? []).map((l) => l.trim()).filter(Boolean);
+  if (kept.length === 0) return {};
+  return { checklist: kept.map((text) => ({ id: randomId(), text, done: false })) };
+}
 
 const calendar: CaptureTarget = {
   type: 'event',
@@ -178,6 +186,11 @@ const lists: CaptureTarget = {
   moduleId: 'lists',
   collection: 'item',
   build: (f) => ({ name: title(f), done: false }),
+  // The planner lists a shopping list as one thing, never one per entry.
+  planRef: (data) =>
+    typeof data.listId === 'string' && data.listId
+      ? { moduleId: 'lists', id: data.listId }
+      : undefined,
 };
 
 const finance: CaptureTarget = {
