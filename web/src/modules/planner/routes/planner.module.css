@@ -81,7 +81,7 @@
   display: flex;
   flex-direction: column;
 }
-.lineAbove > [data-testid='planner-kind'] {
+.lineAbove > .kindLine {
   order: -1;
   margin: 0 0 var(--space-1);
 }

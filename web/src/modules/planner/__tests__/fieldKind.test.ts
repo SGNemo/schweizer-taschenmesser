@@ -20,8 +20,12 @@ describe('fieldKind – the sure table', () => {
       fields: { title: 'Stadtwerke', amountMinor: 8000, date: '2026-12-04' },
       deadline: '2026-12-04',
     });
-    // No deadline said: the capture's usual 14 days, named on the line – here past the planned days, so no line.
-    expect(kind('Rechnung Zahnarzt 120,50 €')).toBeUndefined();
+    // No deadline said: the capture's usual 14 days, at most the last planned day, named on the line.
+    expect(fieldKind('Rechnung Zahnarzt 120,50 €', ctx())).toEqual({
+      kind: 'invoice',
+      fields: { title: 'Zahnarzt', amountMinor: 12050, date: '2026-12-13' },
+      deadline: '2026-12-13',
+    });
     expect(fieldKind('Rechnung Zahnarzt 120,50 €', ctx({ until: '2026-12-31' }))).toEqual({
       kind: 'invoice',
       fields: { title: 'Zahnarzt', amountMinor: 12050, date: '2026-12-14' },
@@ -148,6 +152,9 @@ describe('fieldKind – the order of readings', () => {
   it('an invoice due after the planned days and a past appointment get no line', () => {
     expect(kind('Rechnung Stadtwerke 80 € bis 20.12.')).toBeUndefined();
     expect(kind('Rechnung Stadtwerke 80 € bis 20.12.', { until: '2026-12-31' })).toBe('invoice');
+    // Today at an hour that has passed (09:00 now): already over.
+    expect(kind('heute 8:00 Zahnarzt')).toBeUndefined();
+    expect(kind('heute 17:00 Zahnarzt')).toBe('event');
     // A day already past rolls to next year: no sure day.
     expect(kind('23.11. 15:00 Friseur')).toBeUndefined();
   });

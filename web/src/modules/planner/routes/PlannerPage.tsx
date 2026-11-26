@@ -202,7 +202,6 @@ export default function PlannerPage() {
   // Kinds in the field (package 3): the sure reading of the line, derived – never stored. Off with K5, in English, and
   // for the entry K3 made a plain ToDo.
   const states = useModuleStates();
-
   const [sheetDate, setSheetDate] = useState<string | undefined>();
   // `?check=1` (the lists' „Woche prüfen im Planer“ link, a tap of the user) opens the week sheet.
   const [checking, setChecking] = useState(() => params.get('check') === '1');

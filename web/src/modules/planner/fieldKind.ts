@@ -19,7 +19,7 @@ import { extractLock, readFieldWithPart } from './dueWords';
 import { looksLikePlan } from './pastePlan';
 
 export type FieldKind =
-  /** An invoice: payee (`fields.title`), amount, its deadline (said, or the capture's usual 14 days); `host` of an address kept as its note. */
+  /** An invoice: payee, amount, its deadline (said, or 14 days at most to the last planned day); `host` of a kept address. */
   | { kind: 'invoice'; fields: CaptureFields; deadline: string; host?: string }
   /** Entries of the shopping list (one per comma). */
   | { kind: 'list'; names: string[] }
@@ -101,16 +101,20 @@ function invoiceOf(text: string, ctx: FieldKindContext): FieldKind | undefined {
   const f = r.fields;
   if (r.type !== 'invoice' || f.dunning || !f.amountMinor || f.amountMinor < 1) return undefined;
   if (!f.title.trim() || (f.currency && f.currency !== 'EUR') || !f.date) return undefined;
-  // The deadline the invoice gets – said, or the capture's usual 14 days – is on the line. One past the planned days
-  // is not a thing of the plan yet, a rolled or impossible one is unsure: no line, a ToDo as today.
-  if (f.date > ctx.until || r.notes.some((n) => n !== 'assumed-date')) return undefined;
+  // The deadline the invoice gets is on the line: a said one (past the planned days it is not a thing of the plan yet,
+  // a rolled or impossible one is unsure – no line), or the capture's usual 14 days, at most the last planned day so
+  // the plan lists it.
+  if (r.notes.some((n) => n !== 'assumed-date')) return undefined;
+  const assumed = r.notes.includes('assumed-date');
+  if (!assumed && f.date > ctx.until) return undefined;
+  const date = assumed && f.date > ctx.until ? ctx.until : f.date;
   const fields: CaptureFields = {
     title: f.title.trim(),
     amountMinor: f.amountMinor,
-    date: f.date,
+    date,
     ...(web ? { note: web.url } : {}),
   };
-  return { kind: 'invoice', fields, deadline: f.date, ...(web ? { host: web.host } : {}) };
+  return { kind: 'invoice', fields, deadline: date, ...(web ? { host: web.host } : {}) };
 }
 
 function eventOf(text: string, ctx: FieldKindContext): FieldKind | undefined {
@@ -119,7 +123,10 @@ function eventOf(text: string, ctx: FieldKindContext): FieldKind | undefined {
   if (r.type !== 'event' || !f.date || !f.time || f.recurrence || f.allDay) return undefined;
   // The day must be said: an assumed or rolled day is no sure reading.
   if (r.notes.some((n) => n !== 'approx-time')) return undefined;
-  if (f.date < ctx.today || !f.title.trim()) return undefined;
+  // Already over (an earlier day, or today at an hour that has passed): no sure appointment.
+  const nowTime = `${String(ctx.now.getHours()).padStart(2, '0')}:${String(ctx.now.getMinutes()).padStart(2, '0')}`;
+  if (f.date < ctx.today || (f.date === ctx.today && f.time < nowTime) || !f.title.trim())
+    return undefined;
   return {
     kind: 'event',
     fields: {

@@ -55,7 +55,7 @@ export const planner: Strings['planner'] = {
         'A tap on the title shows the thing in the planner. Off: the title opens it in its module.',
       kindsInField: 'Recognise kinds in the field',
       kindsInFieldHelp:
-        'Shows what the line becomes before you enter it. Without that line it becomes a task.',
+        'Shows what the line becomes before you enter it. Without that line it becomes a task. Only while the app is in German.',
       measurePropose: 'Propose from measured time',
       measureProposeHelp:
         'A new thing without minutes gets the time it took recently with “Start focus” or “Go”. Off: nothing more is measured; what was measured stays.',

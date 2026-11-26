@@ -560,10 +560,9 @@ export async function addKindFromField(
     return saved;
   };
   const own = async (ref: { moduleId: string; id: string }) => {
-    const had = await itemRepo.get(itemKeyOf(ref.moduleId, ref.id));
-    const k = await ownRow(ref);
-    if (!had) written.push(() => itemRepo.remove(itemKeyOf(ref.moduleId, ref.id)));
-    return k;
+    const row = await ownRow(ref);
+    if (row.created) written.push(() => itemRepo.remove(itemKeyOf(ref.moduleId, ref.id)));
+    return row.key;
   };
   let run: UserRun;
   try {
@@ -580,7 +579,9 @@ export async function addKindFromField(
             const saved = await save('list', { title: name });
             ref ??= saved.planRef;
           }
-          if (ref) key = await own(ref);
+          // Fails closed: a list entry that names no list would skip the check below.
+          if (!ref) throw new Error('shopping entry without a list');
+          key = await own(ref);
           return {};
         }
         case 'event':
@@ -636,11 +637,14 @@ export async function addKindFromField(
  * The planner's own item row for a thing of the field, only when it has none (a row kept as it is, `excluded` too).
  * Returns the key to check against the run – none for a thing he put on „Nicht planen“: it stays off the plan.
  */
-async function ownRow(ref: { moduleId: string; id: string }): Promise<string | undefined> {
+async function ownRow(ref: {
+  moduleId: string;
+  id: string;
+}): Promise<{ key: string | undefined; created: boolean }> {
   const key = itemKeyOf(ref.moduleId, ref.id);
   const row = await itemRepo.get(key);
   if (!row) await itemPatch(ref, {});
-  return row?.excluded ? undefined : key;
+  return { key: row?.excluded ? undefined : key, created: !row };
 }
 
 /**

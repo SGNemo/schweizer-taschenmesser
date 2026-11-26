@@ -5,6 +5,13 @@ import type { FieldKind } from '../fieldKind';
 import styles from '../routes/planner.module.css';
 import { KindAnnouncer, KindPreview } from './KindPreview';
 
+/**
+ * The planner's one field (planner hub R1): a thing to enter, or a sentence the planner reads („Donnerstag frei“).
+ * Three example chips under it fill the field and focus it; they never submit. The page owns the text and what is
+ * done with it. States: empty (the button waits), reading (the local model reads: the field is read-only), error
+ * (nothing was stored: the text is still there and the field says so). Package 3: a sure kind shows K1 in the
+ * examples' place.
+ */
 export function Capture({
   value,
   onChange,
