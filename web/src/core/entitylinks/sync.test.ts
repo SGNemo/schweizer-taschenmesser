@@ -365,10 +365,13 @@ describe('topics between two devices (planner hub 2, package 11)', () => {
         't_bbbbbbbb-steuer',
       ]);
     }
-    // The reader takes the later row: both devices see the same `updatedAt`s, so both pick the same topic.
+    // The reader takes the later row (a tie: the larger row id, as `topicOfLinks` does): both devices see the same
+    // `updatedAt`s and ids, so both pick the same topic.
     const latest = async (d: ReturnType<typeof device>) => {
       const rows = await linksTo([{ module: 'todos', id: 'task-umzug' }], ['topic'], d.db);
-      return rows.reduce((x, y) => (y.updatedAt > x.updatedAt ? y : x)).link.from.id;
+      return rows.reduce((x, y) =>
+        y.updatedAt > x.updatedAt || (y.updatedAt === x.updatedAt && y.id > x.id) ? y : x,
+      ).link.from.id;
     };
     expect(await latest(a)).toBe('t_bbbbbbbb-steuer');
     expect(await latest(b)).toBe('t_bbbbbbbb-steuer');

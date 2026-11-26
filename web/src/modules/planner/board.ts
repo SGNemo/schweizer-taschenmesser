@@ -126,6 +126,27 @@ export interface Board {
   todayCount: number;
 }
 
+/**
+ * A day's planned minutes, as the engine counts (`core/plan/engine.ts` rule 2b): a fixed block takes only what no timed
+ * blocker covers. The topic filter's band uses it for the shown rows (package 11).
+ */
+export function plannedOf(
+  rows: readonly BoardRow[],
+  blockers: Parameters<typeof fixedCharges>[1],
+): number {
+  const fixedRows = rows
+    .filter((r) => r.fixed)
+    .sort((a, b) => cmp(a.fixed!.from, b.fixed!.from) || cmp(a.unitId, b.unitId));
+  const charges = fixedCharges(
+    fixedRows.map((r) => ({ minutes: r.minutes, ...r.fixed })),
+    blockers,
+  );
+  return (
+    rows.filter((r) => !r.fixed).reduce((n, r) => n + r.minutes, 0) +
+    charges.reduce((n, c) => n + c, 0)
+  );
+}
+
 export interface BoardInput {
   today: string;
   /** How many days from `from`. */
@@ -323,17 +344,7 @@ export function buildBoard(input: BoardInput): Board {
       .sort(
         (a, b) => (a.entry.createdAt ?? 0) - (b.entry.createdAt ?? 0) || cmp(a.itemKey, b.itemKey),
       );
-    // As the engine counts (`core/plan/engine.ts` rule 2b): a fixed block takes only what no timed blocker covers.
-    const fixedRows = rows
-      .filter((r) => r.fixed)
-      .sort((a, b) => cmp(a.fixed!.from, b.fixed!.from) || cmp(a.unitId, b.unitId));
-    const charges = fixedCharges(
-      fixedRows.map((r) => ({ minutes: r.minutes, ...r.fixed })),
-      blockers,
-    );
-    const planned =
-      rows.filter((r) => !r.fixed).reduce((n, r) => n + r.minutes, 0) +
-      charges.reduce((n, c) => n + c, 0);
+    const planned = plannedOf(rows, blockers);
     return {
       date,
       isToday: date === input.today,

@@ -99,7 +99,7 @@ export const planner: Strings['planner'] = {
     deleteSentence: 'The things stay; only the bracket goes.',
     deleteConfirm: 'Delete',
     deleteTitle: (title: string) => `Delete “${title}”?`,
-    chosen: 'chosen',
+    chosen: 'current topic',
     deleted: (title: string) => `Topic “${title}” deleted.`,
     rename: 'Rename',
     renamed: (title: string) => `Now called “${title}”.`,

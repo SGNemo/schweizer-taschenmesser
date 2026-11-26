@@ -13,15 +13,21 @@ import type { BoardData } from '../useBoard';
 import { topicRepo } from '../repo';
 import { TOPIC_FILTER_KEY, TOPIC_LAST_KEY, shownMembers } from '../topic';
 
-/** A row's item key matches a member when it is that thing or one of its occurrences (CONCEPT §1.2 prefix rule). */
-export function matcher(members: ReadonlySet<string>): (itemKey: string) => boolean {
+/** The member a row's item key belongs to: that thing or one of its occurrences (CONCEPT §1.2 prefix rule). */
+export function memberOf(members: ReadonlySet<string>): (itemKey: string) => string | undefined {
   return (itemKey) => {
-    if (members.has(itemKey)) return true;
+    if (members.has(itemKey)) return itemKey;
     // `<module>:<id>:<occurrence>` → try each shorter prefix at a colon (an id may hold colons itself).
     for (let i = itemKey.lastIndexOf(':'); i > 0; i = itemKey.lastIndexOf(':', i - 1))
-      if (members.has(itemKey.slice(0, i))) return true;
-    return false;
+      if (members.has(itemKey.slice(0, i))) return itemKey.slice(0, i);
+    return undefined;
   };
+}
+
+/** Whether a row's item key matches a member. */
+export function matcher(members: ReadonlySet<string>): (itemKey: string) => boolean {
+  const of = memberOf(members);
+  return (itemKey) => of(itemKey) !== undefined;
 }
 
 /** The board as the filter shows it: only members (and member appointments' blockers). */

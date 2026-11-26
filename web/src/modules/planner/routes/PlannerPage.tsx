@@ -66,7 +66,7 @@ import { beginPlanFocus, planFocusPath } from '../focus';
 import { useLater } from '../useLater';
 import { readKeepSentence } from '../keepSentence';
 import type { PlannableEntry } from '@/core/modules/contributions';
-import type { BoardBlocker, BoardDay, BoardRow, OpenRow } from '../board';
+import { plannedOf, type BoardBlocker, type BoardDay, type BoardRow, type OpenRow } from '../board';
 import { Capture } from '../components/Capture';
 import { CaptureDialog } from '../components/CaptureDialog';
 import { useAbilities, useRowMenu } from '../components/rowMenu';
@@ -81,7 +81,7 @@ import { appointmentsOf, Context, nextDeadlinesOf } from '../components/Context'
 import { BlockRow, DayPage, DayPageLoading } from '../components/DayPage';
 import { LeadChip, TopicLeadChip } from '../components/LeadChip';
 import { TopicChooser } from '../components/TopicChooser';
-import { filterBoard, matcher, useTopicView } from '../components/topicView';
+import { filterBoard, memberOf, useTopicView } from '../components/topicView';
 import { setTopic, setTopicFilter, topicsOf, topicThing, type TopicChoice } from '../topic';
 import { TOPIC_ID } from '../schema';
 import { isLinkable } from '@/core/entitylinks';
@@ -734,12 +734,9 @@ export default function PlannerPage() {
           ...board.lateFolded.map((r) => r.itemKey),
         ])
       : undefined;
-  const topicCount = topicKeys
-    ? [...(topics.members ?? [])].filter((m) => {
-        const has = matcher(new Set([m]));
-        return [...topicKeys].some(has);
-      }).length
-    : 0;
+  const topicOf = topics.members ? memberOf(topics.members) : undefined;
+  const topicCount =
+    topicKeys && topicOf ? new Set([...topicKeys].flatMap((k) => topicOf(k) ?? [])).size : 0;
   const head = board
     ? plannerHead(board.days.slice(0, SPAN), {
         short: phone,
@@ -1301,7 +1298,18 @@ export default function PlannerPage() {
   const bandList = data?.view ?? week;
   const bandDays =
     topics.filter && bandList
-      ? bandList.map((d) => ({ ...d, planned: d.rows.reduce((n, r) => n + r.minutes, 0) }))
+      ? bandList.map((d) => {
+          // The engine's count over the shown rows; a fixed one is charged as the whole day's appointments allow.
+          const whole = (read?.view ?? read?.board.days)?.find((x) => x.date === d.date) ?? d;
+          const planned = plannedOf(d.rows, whole.blockers);
+          // The tile's face, hatch and spoken label follow its bar: one answer per tile.
+          return {
+            ...d,
+            planned,
+            free: Math.max(0, d.usable - planned),
+            over: Math.max(0, planned - d.usable),
+          };
+        })
       : bandList;
   /** The week in view from today on („Zeiten dieser Woche“, the context column). */
   const viewWeek = bandDays?.filter((d) => d.date >= (data?.today ?? now)).slice(0, SPAN);
@@ -2168,7 +2176,7 @@ export default function PlannerPage() {
           <HeroSlot area="figure">
             {topics.filter ? (
               // T4: the topic in place of the figure, how many of its things lie in the plan, „Alles zeigen“.
-              <div className={styles.topicHead} role="status" data-testid="planner-topic-head">
+              <div className={styles.topicHead} data-testid="planner-topic-head">
                 <HeroFigure
                   value={t.planner.topic.headTitle(topics.filter.title)}
                   detail={t.planner.topic.headCount(topicCount)}
@@ -2178,9 +2186,16 @@ export default function PlannerPage() {
                 <Button
                   variant="ghost"
                   onClick={() => {
-                    // The button goes with the head: the focus moves on to the field, never to the page's top.
+                    // The button goes with the head: on a desktop with a keyboard the focus moves on to the field,
+                    // elsewhere to the page (no keyboard sliding in), never to nowhere.
                     void setTopicFilter(null);
-                    addRef.current?.querySelector('input')?.focus({ preventScroll: true });
+                    const keyboard =
+                      window.matchMedia?.('(hover: hover) and (pointer: fine)').matches === true;
+                    const to =
+                      keyboard && !phone
+                        ? addRef.current?.querySelector('input')
+                        : document.getElementById('main');
+                    to?.focus({ preventScroll: true });
                   }}
                 >
                   {t.planner.topic.showAll}
@@ -2396,6 +2411,10 @@ export default function PlannerPage() {
               {answer}
             </CaptureDialog>
           ) : null}
+          {/* T4 said once when a topic is shown (always mounted, no button inside, no count that changes with every add). */}
+          <p role="status" className="sr-only">
+            {topics.filter ? t.planner.topic.headTitle(topics.filter.title) : ''}
+          </p>
           <TopicChooser
             open={!!chooser}
             mode={chooser?.mode ?? 'give'}
