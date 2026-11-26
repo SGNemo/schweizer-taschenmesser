@@ -17,10 +17,6 @@ import {
   type SceneState,
   type SkyKey,
 } from '@/core/weather/scene';
-import { litPath, MARIA, tiltRotation } from './drawV1';
-
-export { litPath, MARIA, tiltRotation };
-
 type Pt = readonly [number, number];
 type Tree = readonly [
   kind: 'spruce' | 'fir' | 'pine' | 'birch' | 'leaf' | 'bush',
@@ -942,6 +938,24 @@ function ribbon(p: readonly Pt[], w0: number, w1: number): string {
   return pts(L.concat(R), true);
 }
 
+/* ============================== the moon's shape (round 1, package 2) ============================== */
+/** The lit shape with its lit side to the right (+x), centre 0,0; null for a new moon. */
+export function litPath(r: number, illum: number): string | null {
+  if (illum < 0.02) return null;
+  if (illum > 0.98) return circ(0, 0, r);
+  const rx = r * Math.abs(1 - 2 * illum);
+  return `M0,${f(-r)}A${f(r)},${f(r)} 0 0 1 0,${f(r)}A${f(rx)},${f(r)} 0 0 ${illum < 0.5 ? 0 : 1} 0,${f(-r)}Z`;
+}
+/** The four flat maria: [cx, cy, rx, ry, rotation] as shares of the radius. */
+export const MARIA: readonly (readonly [number, number, number, number, number])[] = [
+  [-0.3, -0.3, 0.33, 0.25, -22],
+  [0.22, -0.1, 0.21, 0.17, 12],
+  [-0.1, 0.22, 0.2, 0.14, 0],
+  [0.36, 0.38, 0.15, 0.11, 30],
+];
+/** SVG rotation that turns the lit-right shape so its lit side points `tilt` degrees left of up. */
+export const tiltRotation = (tilt: number): number => -(tilt + 90) || 0;
+
 /* ============================== colours as CSS ============================== */
 /**
  * A colour: a palette key becomes its token; an expression (`var(…)`, a keyword) stays. Only ever called with literals
@@ -995,6 +1009,11 @@ export interface SceneOptions {
   phone?: boolean;
   /** Prefix of the ids in `<defs>` (unique per scene on a page). */
   idPrefix?: string;
+  /**
+   * The porthole of this size (px): sky, the body in its mode, the main summit with its shaded face, one bank or
+   * cloud and a few marks – nothing of the foreground, no sky event, never moving (`portholeSvg`).
+   */
+  porthole?: number;
 }
 
 export interface SceneSvg {
@@ -1041,7 +1060,14 @@ const WET_CONDS: ReadonlySet<string> = new Set([
   'thunderHail',
 ]);
 
-export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
+export function sceneSvg(state: SceneState, o: SceneOptions = {}): SceneSvg {
+  const pt = o.porthole ?? 0;
+  // The small versions show no sky event (CONCEPT §6, open) and never move.
+  const s: SceneState = pt ? { ...state, event: undefined, eventAmount: 0, motion: false } : state;
+  /** A porthole under 48 px: no stars, no maria (specks under a pixel). */
+  const tiny = pt > 0 && pt < 48;
+  /** The porthole's marks grow below 64 px, so they stay at least about 0.8 px wide. */
+  const markK = pt ? Math.max(1, 64 / pt) : 1;
   const B = new Book();
   const key = skyOf(s).key;
   const th = s.theme === 'dark' ? 'dark' : 'light';
@@ -1061,6 +1087,8 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
   const hasBody = s.body.kind !== 'none';
   const moonBody = s.body.kind === 'moon';
   const body: Pt = o.bodyAt ?? (o.phone ? phoneBody(s) : arcPoint(s));
+  /** The body (and the bank beside it) larger in the porthole, so it still reads at 28 px. */
+  const bodyK = pt ? PORTHOLE.bodyK : 1;
   const mode = s.mode;
   const dir = s.windTo === 'left' ? -1 : 1;
   const lean = G.lean[s.wind]! * dir;
@@ -1299,25 +1327,32 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
       const r = 0.6 + q() * 0.9;
       if (aroundBody) {
         const a = q() * 6.28;
+        // package A's ring; in the porthole the larger body hides the inner stars, on purpose
         const rr = 30 + q() * 60;
         x = body[0] + Math.cos(a) * rr * 1.5;
         y = body[1] - 4 + Math.sin(a) * rr * 0.6;
       } else {
-        x = q() * W;
+        x = pt ? view[0] + q() * view[2] : q() * W;
         y = top + q() * (200 - top);
-        if (Math.hypot(x - body[0], y - body[1]) < 44) continue;
+        if (Math.hypot(x - body[0], y - body[1]) < 44 * bodyK) continue;
       }
-      d[i % 3] += circ(x, y, r);
+      d[i % 3] += circ(x, y, pt ? r * 3 : r);
     }
     [0.5, 0.75, 1].forEach((op, j) => {
       if (d[j]) path(d[j]!, 'star', { opacity: op });
     });
   };
-  if (starry && s.cover < 4 && !falling) {
+  // "Schlicht" is sky and body only (CONCEPT §6): no stars either
+  // the porthole below 48 px: stars would be specks under a pixel
+  if (starry && s.cover < 4 && !falling && !plain && !tiny) {
     open('stars');
     const moonLight = moonBody ? moonIllum : 0;
     stars(
-      Math.round((s.phase === 'night' ? 64 : 22) * (1 - s.cover * 0.22) * (1 - moonLight * 0.5)),
+      Math.round(
+        (pt ? (s.phase === 'night' ? 12 : 5) : s.phase === 'night' ? 64 : 22) *
+          (1 - s.cover * 0.22) *
+          (1 - moonLight * 0.5),
+      ),
     );
     close();
   }
@@ -1329,7 +1364,7 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
   // The body is drawn in its own translated group: there the right edge is `W − body x`.
   const drawBody = (pale: boolean): void => {
     const prev = LIM;
-    LIM = W - body[0];
+    LIM = (W - body[0]) / bodyK;
     try {
       drawBodyAt(pale);
     } finally {
@@ -1376,7 +1411,7 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
             'data-part': 'moon',
           },
           el('path', { d: lp, fill: tok('moon') }) +
-            (k > 0.3
+            (k > 0.3 && !tiny
               ? el('path', {
                   d:
                     circ(R * 0.17, -R * 0.33, R * 0.23) +
@@ -1424,7 +1459,7 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
     out += el(
       'g',
       {
-        transform: `translate(${f(body[0])},${f(body[1])})`,
+        transform: `translate(${f(body[0])},${f(body[1])})${bodyK !== 1 ? ` scale(${bodyK})` : ''}`,
         'data-layer': 'body',
         'data-mode': mode,
       },
@@ -1475,8 +1510,16 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
       'data-part': 'deck',
     });
   const sh = lean * 60;
+  /** The porthole's one bank of a deck or a storm base: a sheet across its view. */
+  const portholeSheet = (y: number, fill: string): void => {
+    const x0 = view[0] - 10;
+    const x1 = view[0] + view[2] + 10;
+    path(`M${x0},${top}L${x1},${top}${scallop(x0, x1, y, 33, 8, 50, 100, sh)}Z`, fill, {
+      'data-part': 'deck',
+    });
+  };
   const drift = motion ? ` class="sc-drift" style="--lee:${16 * dir}px"` : '';
-  if (s.veil && s.cover < 4) {
+  if (s.veil && s.cover < 4 && !pt) {
     open('cloudsFar', drift);
     const vq = prng(35);
     let vd = '';
@@ -1492,10 +1535,13 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
   if (s.cover === 4 && s.thunder < 2) {
     const wetLow = falling ? 10 : 0;
     open('clouds');
-    sheet(140 + wetLow, 31, 7, 70, 150, DT[0]!, sh);
-    sheet(120 + wetLow, 32, 8, 60, 130, DT[1]!, sh);
-    sheet(96 + wetLow, 33, 8, 70, 140, DT[2]!, sh);
-    sheet(66 + wetLow, 34, 7, 80, 150, DT[3]!, sh);
+    if (pt) portholeSheet(PORTHOLE.deckY + wetLow, DT[1]!);
+    else {
+      sheet(140 + wetLow, 31, 7, 70, 150, DT[0]!, sh);
+      sheet(120 + wetLow, 32, 8, 60, 130, DT[1]!, sh);
+      sheet(96 + wetLow, 33, 8, 70, 140, DT[2]!, sh);
+      sheet(66 + wetLow, 34, 7, 80, 150, DT[3]!, sh);
+    }
     close();
     if (mode === 'hole') {
       // The deck breaks into single banks around the body (CONCEPT §2); no outline of a hole anywhere.
@@ -1517,7 +1563,7 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
       );
       if (dark) {
         open('stars');
-        stars(12, true);
+        if (!tiny) stars(12, true);
         close();
       }
       out += glow(
@@ -1533,15 +1579,18 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
       );
       drawBody(false);
       open('clouds', ` data-part="banks"${drift}`);
-      G.banks.forEach((b, bi) => {
-        const cx = body[0] + b.at[0];
-        const cy = body[1] + b.at[1];
+      // the porthole keeps the largest bank, below the body, at the body's size
+      (pt ? [G.banks[PORTHOLE.bank]!] : G.banks).forEach((b, bi) => {
+        const k = bodyK;
+        const cx = body[0] + b.at[0] * k;
+        const cy = body[1] + b.at[1] * k;
         const dd = Math.hypot(b.at[0], b.at[1]) || 1;
         const ux = -b.at[0] / dd;
         const uy = -b.at[1] / dd;
         let d = '';
         let inner = '';
-        b.l.forEach((l) => {
+        b.l.forEach((l0) => {
+          const l = [l0[0] * k, l0[1] * k, l0[2] * k] as const;
           d += circ(cx + l[0], cy + l[1], l[2]);
           inner += circ(
             cx + l[0] + ux * l[2] * 0.16,
@@ -1549,7 +1598,7 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
             l[2] * 0.8,
           );
         });
-        d += ell(cx + b.base[0], cy + b.base[1], b.base[2], b.base[3]);
+        d += ell(cx + b.base[0] * k, cy + b.base[1] * k, b.base[2] * k, b.base[3] * k);
         const tone = DT[1 + (bi % 3)]!;
         const near = Math.max(0.45, 1 - dd / 260);
         path(d, DT[4]!, {
@@ -1560,11 +1609,12 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
         path(d, tone, { 'data-bank': bi });
         path(inner, B.mix(tone, DT[4]!, 0.3 * near));
       });
-      path(
-        `M${f(body[0] - 96)},${f(body[1] - 44)}q30,-10 70,-5q16,2 26,-1q-12,9 -40,9q-30,1 -56,-3Z M${f(body[0] + 52)},${f(body[1] - 60)}q24,-7 52,-2q-22,7 -52,2Z`,
-        B.mix(DT[2]!, DT[4]!, 0.3),
-        { opacity: 0.8, 'data-part': 'shreds' },
-      );
+      if (!pt)
+        path(
+          `M${f(body[0] - 96)},${f(body[1] - 44)}q30,-10 70,-5q16,2 26,-1q-12,9 -40,9q-30,1 -56,-3Z M${f(body[0] + 52)},${f(body[1] - 60)}q24,-7 52,-2q-22,7 -52,2Z`,
+          B.mix(DT[2]!, DT[4]!, 0.3),
+          { opacity: 0.8, 'data-part': 'shreds' },
+        );
       close();
     }
     if (mode === 'schein') {
@@ -1617,7 +1667,12 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
         el('path', { d: inner, fill: tok(shade), opacity: 0.45 }),
     );
   };
-  if (s.cover >= 1 && s.cover <= 3) {
+  if (pt && ((s.cover >= 1 && s.cover <= 3 && s.thunder === 0) || s.thunder === 1)) {
+    // the porthole: one cloud, beside the body (thunder 1 too: its tower stands in open sky)
+    open('clouds');
+    out += cumulus(...PORTHOLE.cloud);
+    close();
+  } else if (s.cover >= 1 && s.cover <= 3 && !pt) {
     open('clouds', drift);
     G.cumulus.slice(0, [0, 2, 4, 9][s.cover]).forEach((c) => {
       let x = c[0] + sh * 0.5;
@@ -1632,7 +1687,11 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
       out += el('g', { opacity: 0.55 }, cumulus(300, 46, 1.3, 1) + cumulus(660, 64, 1.1, 3));
     close();
   }
-  if (s.thunder) {
+  if (s.thunder >= 2 && pt) {
+    open('clouds');
+    portholeSheet(PORTHOLE.stormY, DT[0]!);
+    close();
+  } else if (s.thunder && !pt) {
     const wall = s.thunder >= 2;
     const baseY = (x: number): number =>
       x < 760 ? 86 : x > 1040 ? 124 : 86 + (38 * (x - 760)) / 280;
@@ -1713,7 +1772,8 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
   const fogFar = [1, 0.35, 0][s.fog]!;
   const fogMid = [1, 0.65, 0.22][s.fog]!;
   const snowHaze = falling === 'snow' && s.intensity >= 3 ? 0.55 : 1;
-  const farOp = Math.min(fogFar, snowHaze);
+  // the porthole's summit is its land: only fog veils it, never the snow haze of the far range
+  const farOp = pt ? fogFar : Math.min(fogFar, snowHaze);
   const fogC = B.mix(C.haze, 'white', 0.55);
   let fogG: string | null = null;
   const fogBand = (y: number, h: number, op: number, x0?: number, w?: number): void => {
@@ -1737,8 +1797,9 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
     const bc = jag(G.back, 9, 2.5, 22);
     const bcol = B.mix(cover2 ? B.mix(C.far, C.snow, 0.5) : C.far, C.haze, 0.45);
     let bcaps = '';
-    path(pts([[0, H] as Pt].concat(bc, [[W, H]]), true), hz(bcol), { 'data-part': 'back' });
-    if (cold)
+    if (!pt)
+      path(pts([[0, H] as Pt].concat(bc, [[W, H]]), true), hz(bcol), { 'data-part': 'back' });
+    if (cold && !pt)
       G.backPeaks.forEach((pk) => {
         const d = pk[2] * capK * 0.8;
         if (d > 4) bcaps += capOf(bc, [pk[0], pk[1]], d);
@@ -1747,6 +1808,8 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
     const glowC = GLOW.has(key) ? `glow-${key}` : null;
     const rockGlow = glowC && s.cover < 4 ? 0.34 : 0;
     G.mountains.forEach((m, mi) => {
+      // the porthole: the main summit alone
+      if (pt && m.id !== 'main') return;
       const sil = jag(m.sil, 40 + mi, 1.6, 15);
       const S = m.sil[m.top]!;
       const shadeLeft = lightRight(S[0]);
@@ -1770,6 +1833,8 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
       );
       out += `<g data-part="${m.id}">`;
       path(pts(sil, true), col);
+      // the porthole has no hills in front: the mountain's foot reaches down to the rim
+      if (pt) add('rect', { x: view[0], y: 216, width: view[2], height: H - 216, fill: col });
       const depth = m.size * capK;
       let cap = capOf(sil, S, depth);
       m.gullies.slice(0, cold ? 9 : 2).forEach((g) => {
@@ -1814,9 +1879,10 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
   if (s.fog) {
     open('fog');
     fogBand(168, 30, 0.5);
-    fogBand(196, 22, 0.42, 300, 1100);
+    if (!pt) fogBand(196, 22, 0.42, 300, 1100);
     close();
   }
+  if (pt) return portholeRest();
 
   /* ---- round wooded hills ---- */
   open('ridgeFar', fogMid < 1 ? ` opacity="${fogMid}"` : '');
@@ -2458,7 +2524,9 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
   const px0 = showers ? 1060 : -120;
   const px1 = showers ? 1500 : W;
   const slant = G.slant[s.wind]! * dir;
-  // motion.js: a tile loop – a copy one tile up (and against the slant) moves by one tile n times in 5 s and ends on the still
+  // motion.js's tile loop as ONE iteration (perf, open item of round 1): the tile stacked n + 1 heights up (and against
+  // the slant) moves by n tiles in 5 s and ends on the still. n iterations of one tile restyled the page at every
+  // iteration boundary (docs/perf/WEATHER-SCENES-2026-11.md).
   const fall = (inner: string, splash: string, snow: boolean): string => {
     if (!motion) return inner + splash;
     const T = snow ? H - top : 190;
@@ -2475,9 +2543,20 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
       );
       clipAttr = ` clip-path="url(#${cid})"`;
     }
-    // the copy one tile up is a `<use>` of the tile: the markup is not doubled
-    const tile = id('t');
-    return `<g${clipAttr}><g class="sc-fall" style="--fx:${f(fx2)}px;--fy:${f(T)}px;--dur:${Math.round(dur * 1000) / 1000}s;--n:${n2}"><g id="${tile}">${inner}</g><use href="#${tile}" transform="translate(${f(-fx2)} ${f(-T)})"/></g>${splash}</g>`;
+    // The stack by doubling: each step repeats what is there one stack higher with a `<use>` (log2(n + 1) of them),
+    // so the markup is not multiplied. It ends on a power of two (rain: 16 for 11): the extra copies lie above the
+    // clip, and covering the exact rest would cost more `<use>` elements than it saves.
+    let tile = id('t');
+    let stack = `<g id="${tile}">${inner}</g>`;
+    for (let h = 1; h < n2 + 1; h *= 2) {
+      const up = `<use href="#${tile}" transform="translate(${f(-fx2 * h)} ${f(-T * h)})"/>`;
+      if (h * 2 >= n2 + 1) stack += up;
+      else {
+        tile = id('t');
+        stack = `<g id="${tile}">${stack}${up}</g>`;
+      }
+    }
+    return `<g${clipAttr}><g class="sc-fall" style="--fx:${f(fx2 * n2)}px;--fy:${f(T * n2)}px;--dur:5s;--n:1">${stack}</g>${splash}</g>`;
   };
   if (falling === 'rain') {
     const drizzle = /rizzle/.test(s.cond);
@@ -2590,6 +2669,51 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
     close();
   }
   return finish();
+
+  /** The porthole after its summit: the main bolt (wider, so it reads at 28 px) and a few marks of rain or snow. */
+  function portholeRest(): SceneSvg {
+    if (s.thunder) {
+      open('event', ' data-part="thunder"');
+      // the main bolt's figure, moved into the round crop (its own place lies on the crop's left rim)
+      const b = G.bolts[0]!;
+      path(ribbon(b.p, b.w * 2.4 * markK, 1.6), 'bolt', {
+        opacity: b.op,
+        transform: `translate(${PORTHOLE.boltDx} 0)`,
+        'data-part': 'bolt',
+      });
+      close();
+    }
+    if (falling) {
+      const q = prng(41);
+      const cnt = (tiny ? 5 : 7) + Math.min(3, s.intensity);
+      // marks of at least about 0.8 px: below 64 px they grow with the crop's scale
+      const m = markK;
+      const slant = G.slant[s.wind]! * dir;
+      const snowy = falling === 'snow';
+      let d = '';
+      for (let i = 0; i < cnt; i++) {
+        const x = view[0] + 40 + ((i + q() * 0.6) * (view[2] - 90)) / cnt;
+        const y = 116 + ((i * 37) % 64) + q() * 12;
+        d += snowy ? circ(x, y, 5.5 * m) : `M${f(x)},${f(y)}l${f(22 * m * slant)},${f(22 * m)}`;
+      }
+      open('precip', ` data-level="${s.intensity}"`);
+      if (snowy) path(d, C.snow, { 'data-part': 'flakes' });
+      else
+        line(d, 'rain', 4 * m, { 'stroke-linecap': 'round', opacity: 0.85, 'data-part': 'rain' });
+      if (s.cond === 'thunderHail') {
+        let hd2 = '';
+        for (let i = 0; i < 4; i++)
+          hd2 += circ(view[0] + 90 + i * 52, 150 + ((i * 29) % 50), 6 * m);
+        path(hd2, 'hail', {
+          stroke: tok('hail-edge'),
+          'stroke-width': 1.5 * m,
+          'data-part': 'hail',
+        });
+      }
+      close();
+    }
+    return finish();
+  }
 
   /* ============================== sky events (mockups/events.js) ============================== */
   function moreStars(count: number, seed: number): string {
@@ -2935,6 +3059,44 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
       body: hasBody ? { x: body[0], y: body[1], r: bodyR } : null,
     };
   }
+}
+
+/**
+ * The porthole's crop of the picture (CONCEPT §6): a square round the main summit, the body at a fixed spot right of
+ * it and 1.7 × its size, the largest bank (`G.banks[4]`) under it, one cloud (`G.cloudShapes[1]`) left of it, the main bolt moved inside.
+ */
+export const PORTHOLE = {
+  view: [1200, -90, 320, 320] as const,
+  body: [1440, 4] as Pt,
+  bodyK: 1.7,
+  bank: 4,
+  cloud: [1300, 44, 1, 1] as const,
+  boltDx: 70,
+  deckY: 52,
+  stormY: 96,
+};
+
+export interface PortholeSvg {
+  viewBox: string;
+  vars: Record<string, string>;
+  inner: string;
+  ink: 'light' | 'dark';
+}
+
+/**
+ * The scene as a small round crop (overview line 28 px, widget 64 px): the same drawing (`sceneSvg`) with only sky,
+ * the body in its mode, the main summit with its shaded face, one bank or cloud and a few marks of rain or snow.
+ * "Schlicht" keeps sky and body. Never moves; no sky event. The round edge is the component's (`ScenePorthole`).
+ */
+export function portholeSvg(s: SceneState, px: number, idPrefix = 'pt'): PortholeSvg {
+  const d = sceneSvg(s, {
+    porthole: px,
+    view: PORTHOLE.view,
+    bodyAt: PORTHOLE.body,
+    quietX: 0,
+    idPrefix,
+  });
+  return { viewBox: d.viewBox, vars: d.vars, inner: d.inner, ink: d.ink };
 }
 
 /** Elements of a scene's markup (A11Y §4 counts `svg.querySelectorAll('*')`; the `<svg>` itself is the component's). */

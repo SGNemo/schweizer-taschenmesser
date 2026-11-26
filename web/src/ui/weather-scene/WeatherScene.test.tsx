@@ -2,7 +2,8 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { defaultScene, type SceneState } from '@/core/weather/scene';
-import { litPath, sceneSvg, tiltRotation } from './drawV1';
+import { litPath, sceneSvg, tiltRotation } from './draw';
+import { CARD_QUIET_SHARE, cardFit } from './useSceneFit';
 import { WeatherScene } from './WeatherScene';
 
 afterEach(() => {
@@ -11,178 +12,16 @@ afterEach(() => {
   delete document.documentElement.dataset.motion;
 });
 
-const base = (o: Partial<SceneState> = {}): SceneState => ({ ...defaultScene('light', 7), ...o });
+const base = (o: Partial<SceneState> = {}): SceneState => ({
+  ...defaultScene('light', 7),
+  mode: 'clear',
+  ...o,
+});
 const parse = (s: SceneState): Document =>
   new DOMParser().parseFromString(
     `<svg xmlns="http://www.w3.org/2000/svg">${sceneSvg(s).inner}</svg>`,
     'image/svg+xml',
   );
-const size = (s: SceneState): number => {
-  const svg = sceneSvg(s);
-  return new TextEncoder().encode(svg.inner + JSON.stringify(svg.vars)).length;
-};
-const layers = (s: SceneState): string[] =>
-  [...parse(s).querySelectorAll('[data-layer]')].map((g) => g.getAttribute('data-layer')!);
-
-/** Every state the model can produce at full strength: condition × intensity × phase × wind × frost × theme. */
-const CONDS = [
-  'clear',
-  'mostlyClear',
-  'partly',
-  'overcast',
-  'fog',
-  'drizzle',
-  'freezingDrizzle',
-  'rain',
-  'freezingRain',
-  'snow',
-  'showers',
-  'snowShowers',
-  'thunder',
-  'thunderHail',
-] as const;
-const ALL: SceneState[] = CONDS.flatMap((cond) =>
-  ([1, 2, 3] as const).flatMap((intensity) =>
-    (['day', 'night', 'dusk', 'golden'] as const).flatMap((phase) =>
-      ([0, 3] as const).map((wind) =>
-        base({
-          cond,
-          intensity,
-          phase,
-          wind,
-          frost: wind === 3 ? 2 : 0,
-          snowGround: cond.includes('snow') || wind === 3,
-          season: wind === 3 ? 'winter' : 'autumn',
-          cloud: cond === 'partly' ? 50 : cond === 'mostlyClear' ? 25 : cond === 'clear' ? 5 : 95,
-          // by night a full moon (package 2): the heaviest body with halo ring, maria and ridge highlights
-          body: {
-            kind: phase === 'day' || phase === 'golden' ? 'sun' : 'moon',
-            t: phase === 'golden' ? 0.92 : 0.5,
-            alt: 40,
-          },
-          moon: { illum: 0.995, tilt: -119, size: 1.2, t: 0.7, alt: 30 },
-          dayMoon: phase === 'day',
-          motion: true,
-        }),
-      ),
-    ),
-  ),
-);
-
-/** The x of an element's own position (cloud groups carry `data-x`, circles `cx`, paths their first move). */
-function xOf(el: Element): number | undefined {
-  const dx = el.getAttribute('data-x');
-  if (dx) return Number(dx);
-  const tr = el.getAttribute('transform')?.match(/^translate\((-?[\d.]+)/);
-  if (tr) return Number(tr[1]);
-  const cx = el.getAttribute('cx');
-  if (cx) return Number(cx);
-  const d = el.getAttribute('d');
-  const m = d?.match(/^M(-?[\d.]+)/);
-  return m ? Number(m[1]) : undefined;
-}
-
-describe('weather scene drawing (handoff 01b tests 2)', () => {
-  it('a clear summer day: sky, sun, landscape, the shelter; nothing at night but stars', () => {
-    expect(layers(base({ body: { kind: 'sun', t: 0.5 } }))).toEqual([
-      'sky',
-      'body',
-      'ridgeAlp',
-      'ridgeFar',
-      'ridgeMid',
-      'lake',
-      'ridgeNear',
-      'shelter',
-    ]);
-    const night = layers(base({ phase: 'night', cond: 'mostlyClear', cloud: 15 }));
-    expect(night).toContain('stars');
-    expect(night).not.toContain('body');
-  });
-
-  it('weather draws its layers: deck and rain, fog bands, the bolt, the wind', () => {
-    expect(layers(base({ cond: 'rain', cloud: 95 }))).toEqual(
-      expect.arrayContaining(['clouds', 'precip']),
-    );
-    expect(
-      parse(base({ cond: 'rain', cloud: 95 })).querySelector('[data-part="deck"]'),
-    ).not.toBeNull();
-    expect(layers(base({ cond: 'fog', cloud: 0 })).filter((l) => l === 'fog')).toHaveLength(2);
-    expect(layers(base({ cond: 'thunder', cloud: 92 }))).toContain('event');
-    expect(layers(base({ wind: 2 }))).toContain('wind');
-    expect(layers(base({ wind: 1 }))).not.toContain('wind');
-  });
-
-  it('"Schlicht": sky and the sun by day, the sky alone at night', () => {
-    expect(
-      layers(base({ level: 'plain', body: { kind: 'sun', t: 0.5 }, cond: 'rain', cloud: 95 })),
-    ).toEqual(['sky']);
-    expect(layers(base({ level: 'plain', body: { kind: 'sun', t: 0.5 } }))).toEqual([
-      'sky',
-      'body',
-    ]);
-    expect(layers(base({ level: 'plain', phase: 'night' }))).toEqual(['sky']);
-  });
-
-  it('nothing with hard contrast left of x = 900 in body, clouds and bolt (the deck may cross)', () => {
-    for (const s of ALL) {
-      const doc = parse(s);
-      for (const name of ['body', 'clouds', 'cloudsFar', 'event']) {
-        const g = doc.querySelector(`[data-layer="${name}"]`);
-        if (!g) continue;
-        const marks =
-          name === 'body'
-            ? [
-                ...[...g.querySelectorAll('circle')].filter((c) => !c.closest('[data-part]')),
-                ...g.querySelectorAll('[data-part="moon"]'),
-              ]
-            : [...g.querySelectorAll('[data-x], path')];
-        for (const el of marks) {
-          if (
-            el.getAttribute('data-part') === 'deck' ||
-            (el.closest('[data-x]') !== el && el.tagName === 'path')
-          )
-            continue;
-          if (el.getAttribute('stroke')) continue; // wind streaks behind a cloud
-          const x = xOf(el);
-          if (x == null) continue;
-          expect(x, `${s.cond} ${s.phase} ${name}`).toBeGreaterThanOrEqual(900);
-        }
-      }
-    }
-  });
-
-  it('stays under the ceiling of A11Y §4: ≤ 220 elements, ≤ 48 KB, ≤ 9 animated groups', () => {
-    let heaviest = 0;
-    let largest = 0;
-    let animated = 0;
-    for (const s of ALL) {
-      const svg = sceneSvg(s);
-      heaviest = Math.max(heaviest, (svg.inner.match(/<[a-zA-Z]/g) ?? []).length);
-      largest = Math.max(largest, size(s));
-      animated = Math.max(animated, (svg.inner.match(/class="sc-/g) ?? []).length);
-    }
-    expect(heaviest).toBeLessThanOrEqual(220);
-    expect(largest).toBeLessThanOrEqual(48 * 1024);
-    expect(animated).toBeLessThanOrEqual(9);
-  });
-
-  it('is pure: the same state gives the same picture; colours are tokens, never literals', () => {
-    const s = base({ cond: 'snow', intensity: 3, cloud: 95, phase: 'dusk', snowGround: true });
-    expect(sceneSvg(s).inner).toBe(sceneSvg(s).inner);
-    expect(sceneSvg(s).inner).not.toMatch(/#[0-9a-fA-F]{3,6}\b(?!\))/);
-    expect(Object.values(sceneSvg(s).vars).join(' ')).not.toMatch(/#[0-9a-fA-F]{3,6}\b/);
-  });
-
-  it('a narrow crop keeps clouds and caps right of the text (quietX)', () => {
-    const s = base({ cond: 'partly', cloud: 70, season: 'winter', body: { kind: 'sun', t: 0.5 } });
-    const doc = new DOMParser().parseFromString(
-      `<svg xmlns="http://www.w3.org/2000/svg">${sceneSvg(s, { quietX: 1200 }).inner}</svg>`,
-      'image/svg+xml',
-    );
-    for (const g of doc.querySelectorAll('[data-layer^="clouds"] [data-x]'))
-      expect(Number(g.getAttribute('data-x'))).toBeGreaterThanOrEqual(1200 - 100);
-  });
-});
 
 describe('<WeatherScene>', () => {
   it('is hidden from assistive tech and carries phase, condition and ink (no old sky kind any more)', () => {
@@ -225,81 +64,72 @@ describe('<WeatherScene>', () => {
     render(<WeatherScene state={base({ calm: true, phase: 'night' })} />);
     expect(screen.getByTestId('weather-scene')).toHaveAttribute('data-ink', 'dark');
   });
+
+  it('as a card (the overview widget): the new panorama at the card width, reaching up into more sky', () => {
+    const fit = cardFit(379, 205, CARD_QUIET_SHARE);
+    expect(fit.view![2]).toBe(1600);
+    expect(fit.view![1]).toBeLessThan(0);
+    // the quiet zone ends right of the text (a fog band starts only after it), the body right of that
+    expect(fit.quietX).toBeGreaterThan(Math.round(1600 * CARD_QUIET_SHARE));
+    expect(fit.bodyAt![0]).toBeGreaterThan(fit.quietX!);
+    expect(fit.bodyAt![1]).toBeGreaterThan(fit.view![1]);
+    // jsdom measures nothing: the card's box is 379 × 205 for this render
+    const box = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+      x: 0,
+      y: 0,
+      left: 0,
+      top: 0,
+      right: 379,
+      bottom: 205,
+      width: 379,
+      height: 205,
+    } as DOMRect);
+    try {
+      render(
+        <WeatherScene state={base({ cond: 'partly', cover: 2 })} quietShare={CARD_QUIET_SHARE} />,
+      );
+      const svg = screen.getByTestId('weather-scene');
+      // the card's view (cardFit), not the head's
+      expect(svg.getAttribute('viewBox')).toBe(fit.view!.join(' '));
+      // round 2's massif (`G.mountains`), not round 1's ridges
+      expect(svg.querySelector('[data-part="main"]')).not.toBeNull();
+    } finally {
+      box.mockRestore();
+    }
+  });
 });
 
 describe('the moon (package 2)', () => {
-  const night = (illum: number, tilt: number, size = 1): SceneState =>
-    base({
-      phase: 'night',
-      cond: 'clear',
-      cloud: 5,
-      body: { kind: 'moon', t: 0.6, alt: 40 },
-      moon: { illum, tilt, size },
-    });
-
   it('eight phases: the lit shape by its parameters (not pixels)', () => {
     const shapes = [0.01, 0.15, 0.5, 0.8, 1, 0.8, 0.5, 0.15].map((k) => litPath(10, k));
-    expect(shapes).toMatchInlineSnapshot(`
-      [
-        null,
-        "M0,-10A10,10 0 0 1 0,10A7,10 0 0 0 0,-10Z",
-        "M0,-10A10,10 0 0 1 0,10A0,10 0 0 1 0,-10Z",
-        "M0,-10A10,10 0 0 1 0,10A6,10 0 0 1 0,-10Z",
-        "M-10,0a10,10 0 1,1 20,0a10,10 0 1,1 -20,0",
-        "M0,-10A10,10 0 0 1 0,10A6,10 0 0 1 0,-10Z",
-        "M0,-10A10,10 0 0 1 0,10A0,10 0 0 1 0,-10Z",
-        "M0,-10A10,10 0 0 1 0,10A7,10 0 0 0 0,-10Z",
-      ]
-    `);
+    expect(shapes).toEqual([
+      null,
+      'M0,-10A10,10 0 0 1 0,10A7,10 0 0 0 0,-10Z',
+      'M0,-10A10,10 0 0 1 0,10A0,10 0 0 1 0,-10Z',
+      'M0,-10A10,10 0 0 1 0,10A6,10 0 0 1 0,-10Z',
+      'M-10,0a10,10 0 1,1 20,0a10,10 0 1,1 -20,0Z',
+      'M0,-10A10,10 0 0 1 0,10A6,10 0 0 1 0,-10Z',
+      'M0,-10A10,10 0 0 1 0,10A0,10 0 0 1 0,-10Z',
+      'M0,-10A10,10 0 0 1 0,10A7,10 0 0 0 0,-10Z',
+    ]);
   });
 
-  it('turns the lit side to its tilt: + left of up, − right; north and south differ in sign', () => {
+  it('turns the lit side to its tilt: + left of up, − right; the drawing carries the turn', () => {
     expect(tiltRotation(-90)).toBe(0); // lit side to the right: the shape as drawn
     expect(tiltRotation(0)).toBe(-90); // lit side up
     expect(tiltRotation(90)).toBe(-180); // lit side to the left
-    const g = parse(night(0.3, -147.6)).querySelector('[data-part="moon"]')!;
-    expect(g.getAttribute('transform')).toContain(
-      `rotate(${Math.round(tiltRotation(-147.6) * 10) / 10})`,
-    );
-    expect(g.querySelector('[data-part="lit"]')).not.toBeNull();
-  });
-
-  it('a new moon is a thin ring; a crescent shows earthshine; a full moon its ring and its own sky', () => {
-    const newMoon = parse(night(0.01, 0)).querySelector('[data-part="moon"]')!;
-    expect(newMoon.querySelector('[data-part="lit"]')).toBeNull();
-    expect(newMoon.querySelectorAll('circle').length).toBeGreaterThan(0);
-    const full = parse(night(0.995, -119, 1.2));
-    expect(full.querySelector('[data-part="moon"] [stroke]')).not.toBeNull(); // the halo ring
-    expect(JSON.stringify(sceneSvg(night(0.995, -119, 1.2)).vars)).toContain(
-      '--scene-sky-night-full-0',
-    );
-  });
-
-  it('the moon thins the stars; below the horizon there is none', () => {
-    const count = (s: SceneState) =>
-      (sceneSvg(s).inner.match(/a[\d.]+,[\d.]+ 0 1,1/g) ?? []).length;
-    expect(count(night(1, 0))).toBeLessThan(
-      count(base({ phase: 'night', cond: 'clear', cloud: 5 })),
-    );
-    expect(layers(base({ phase: 'night', body: { kind: 'none', t: 0.5 } }))).not.toContain('body');
-  });
-
-  it('day moon: small and pale beside the sun, not in a phone crop', () => {
-    const day = base({
-      body: { kind: 'sun', t: 0.3 },
-      moon: { illum: 0.6, tilt: -40, size: 1, t: 0.8, alt: 30 },
-      dayMoon: true,
+    const night = base({
+      phase: 'night',
+      body: { kind: 'moon', t: 0.6, alt: 40 },
+      moon: { illum: 0.3, tilt: -147.6, size: 1 },
     });
-    expect(parse(day).querySelector('[data-part="dayMoon"]')).not.toBeNull();
-    const phone = new DOMParser().parseFromString(
-      `<svg xmlns="http://www.w3.org/2000/svg">${sceneSvg(day, { bodyAt: [1480, 90] }).inner}</svg>`,
-      'image/svg+xml',
-    );
-    expect(phone.querySelector('[data-part="dayMoon"]')).toBeNull();
+    const g = parse(night).querySelector('[data-part="moon"]')!;
+    const rot = Number(/rotate\((-?[\d.]+)/.exec(g.getAttribute('transform')!)![1]);
+    expect(rot).toBeCloseTo(tiltRotation(-147.6), 3);
   });
 });
 
-describe('sky events (package 3, handoff 03 "Scene")', () => {
+describe('sky events in the new picture (round 2, events.js)', () => {
   const sun = { kind: 'sun', t: 0.5 } as const;
   const moonBody = { kind: 'moon', t: 0.6, alt: 40 } as const;
   const fullMoon = { illum: 1, tilt: -119, size: 1.2, t: 0.6, alt: 40 };
@@ -307,11 +137,7 @@ describe('sky events (package 3, handoff 03 "Scene")', () => {
   const CASES: [string, SceneState, string[]][] = [
     ['solarPartial', base({ body: sun, event: 'solarPartial', eventAmount: 0.7 }), ['bite']],
     ['solarAnnular', base({ body: sun, event: 'solarAnnular', eventAmount: 0.9 }), ['annular']],
-    [
-      'solarTotal',
-      base({ body: sun, event: 'solarTotal', eventAmount: 1 }),
-      ['corona', 'disc', 'eclipseGlow'],
-    ],
+    ['solarTotal', base({ body: sun, event: 'solarTotal', eventAmount: 1 }), ['corona']],
     [
       'lunarPartial',
       base({
@@ -321,12 +147,12 @@ describe('sky events (package 3, handoff 03 "Scene")', () => {
         event: 'lunarPartial',
         eventAmount: 0.4,
       }),
-      ['moon', 'umbra'],
+      ['umbra'],
     ],
     [
       'lunarTotal',
       base({ phase: 'night', body: moonBody, moon: fullMoon, event: 'lunarTotal', eventAmount: 1 }),
-      ['moon', 'copper'],
+      ['copper'],
     ],
     [
       'meteors',
@@ -350,7 +176,7 @@ describe('sky events (package 3, handoff 03 "Scene")', () => {
     ...([0.4, 0.7, 1] as const).map((a): [string, SceneState, string[]] => [
       `aurora ${a}`,
       base({ phase: 'night', cloud: 40, cond: 'partly', event: 'aurora', eventAmount: a }),
-      ['aurora', 'auroraGlow', 'auroraEdge'],
+      ['aurora', 'auroraGlow'],
     ]),
   ];
   const moving = (s: SceneState): SceneState => ({ ...s, motion: true, wind: 3 });
@@ -366,131 +192,6 @@ describe('sky events (package 3, handoff 03 "Scene")', () => {
           expect(n.getAttribute('style') ?? '', part).not.toMatch(/animation|--dur/);
         }
       }
-    }
-  });
-
-  it('a total eclipse: dark sky, no clouds, stars by day; a deep partial one dims the sky', () => {
-    const total = base({ body: sun, event: 'solarTotal', eventAmount: 1, cloud: 30 });
-    const l = layers(total);
-    expect(l).toContain('stars');
-    expect(l).not.toContain('clouds');
-    expect(JSON.stringify(sceneSvg(total).vars)).toContain('--scene-sky-eclipse-sky-0');
-    expect(sceneSvg(total).ink).toBe('light');
-    const deep = base({ body: sun, event: 'solarPartial', eventAmount: 0.8 });
-    expect(JSON.stringify(sceneSvg(deep).vars)).toContain('--scene-dim-target');
-    const slight = base({ body: sun, event: 'solarPartial', eventAmount: 0.5 });
-    expect(JSON.stringify(sceneSvg(slight).vars)).not.toContain('--scene-dim-target');
-  });
-
-  it('dust: its own sky and a pale sun without halo; rainbow: no sun even with a sun body', () => {
-    const dust = base({ body: sun, event: 'dust', eventAmount: 1, cloud: 30 });
-    expect(JSON.stringify(sceneSvg(dust).vars)).toContain('--scene-sky-dust-0');
-    expect(parse(dust).querySelectorAll('[data-layer="body"] circle')).toHaveLength(1);
-    expect(layers(dust)).not.toContain('clouds');
-    const rainbow = base({ body: sun, cond: 'rain', cloud: 70, event: 'rainbow', eventAmount: 1 });
-    expect(layers(rainbow)).not.toContain('body');
-    expect(sceneSvg(rainbow).body).toBeNull();
-  });
-
-  it('the star night draws 150 stars where a plain night draws 60', () => {
-    const count = (s: SceneState) =>
-      (sceneSvg(s).inner.match(/a[\d.]+,[\d.]+ 0 1,1/g) ?? []).length;
-    const plainNight = base({ phase: 'night', cloud: 0 });
-    // every star and every grain of the band is two arcs
-    expect(count(base({ ...plainNight, event: 'starNight', eventAmount: 1 }))).toBeGreaterThan(
-      count(plainNight) * 2,
-    );
-  });
-
-  it('stays under the ceiling of A11Y §4 with the heaviest event scenes', () => {
-    const heavy = (o: Partial<SceneState>): SceneState =>
-      base({
-        cond: 'partly',
-        cloud: 50,
-        wind: 3,
-        frost: 2,
-        snowGround: true,
-        season: 'winter',
-        motion: true,
-        ...o,
-      });
-    for (const s of [
-      heavy({ phase: 'night', cloud: 0, event: 'starNight', eventAmount: 1 }),
-      heavy({ phase: 'night', cond: 'clear', cloud: 0, event: 'starNight', eventAmount: 1 }),
-      heavy({ body: sun, event: 'solarTotal', eventAmount: 1 }),
-      heavy({ body: sun, cond: 'snowShowers', cloud: 60, event: 'solarTotal', eventAmount: 1 }),
-      heavy({ cond: 'showers', cloud: 60, body: { kind: 'none', t: 0.3 }, event: 'rainbow' }),
-      heavy({ phase: 'night', cloud: 30, event: 'meteors', eventAmount: 1 }),
-      heavy({ phase: 'night', cloud: 60, event: 'aurora', eventAmount: 1 }),
-      heavy({
-        phase: 'night',
-        cond: 'clear',
-        cloud: 0,
-        body: { kind: 'moon', t: 0.6, alt: 40 },
-        moon: { illum: 1, tilt: -119, size: 1.2, t: 0.6, alt: 40 },
-        event: 'aurora',
-        eventAmount: 1,
-      }),
-    ]) {
-      const svg = sceneSvg(s);
-      const n = (svg.inner.match(/<[a-zA-Z]/g) ?? []).length;
-      expect(n, `${s.event} ${s.cond}`).toBeLessThanOrEqual(220);
-      expect(size(s)).toBeLessThanOrEqual(48 * 1024);
-      expect((svg.inner.match(/class="sc-/g) ?? []).length).toBeLessThanOrEqual(9);
-    }
-  });
-
-  it('aurora: layer order and shape as in the mockup, curtains right of the text (x ≥ 900 or quietX)', () => {
-    const at = (a: number, o: Partial<SceneState> = {}): SceneState =>
-      base({ phase: 'night', cloud: 40, cond: 'partly', event: 'aurora', eventAmount: a, ...o });
-    const l = layers(at(1));
-    // behind the far clouds and every ridge, in front of the body (mockup svg())
-    expect(l.slice(0, 3)).toEqual(['sky', 'stars', 'aurora']); // no body here
-    expect(l.indexOf('aurora')).toBeLessThan(l.indexOf('cloudsFar'));
-    expect(l.indexOf('aurora')).toBeLessThan(l.indexOf('ridgeAlp'));
-    const withMoon = layers(at(1, { body: { kind: 'moon', t: 0.6, alt: 40 } }));
-    expect(withMoon.indexOf('aurora')).toBe(withMoon.indexOf('body') + 1);
-    const curtains = (s: SceneState, quietX?: number): Element[] => [
-      ...new DOMParser()
-        .parseFromString(
-          `<svg xmlns="http://www.w3.org/2000/svg">${sceneSvg(s, { quietX }).inner}</svg>`,
-          'image/svg+xml',
-        )
-        .querySelectorAll('[data-part="aurora"] path'),
-    ];
-    // two bands (two paths each) below 0.6, all four from 0.6 up
-    expect(curtains(at(0.4))).toHaveLength(4);
-    expect(curtains(at(0.7))).toHaveLength(8);
-    expect(curtains(at(1))).toHaveLength(8);
-    for (const [s, q] of [
-      [at(0.4), undefined],
-      [at(1), undefined],
-      [at(1), 1100],
-    ] as const) {
-      const left = q ?? 900;
-      for (const p of curtains(s, q)) {
-        const xs = [...p.getAttribute('d')!.matchAll(/[ML](-?[\d.]+),/g)].map((m) => Number(m[1]));
-        const tr = p.getAttribute('transform');
-        // the narrower copy: x' = tx + 0.62 · (x − cx)
-        const m = tr?.match(
-          /^translate\(([\d.]+) [\d.]+\) scale\(0\.62 0\.8\) translate\((-[\d.]+) /,
-        );
-        const real = m ? xs.map((x) => Number(m[1]) + 0.62 * (x + Number(m[2]))) : xs;
-        expect(Math.min(...real), `curtain left edge, quietX ${q}`).toBeGreaterThanOrEqual(left);
-      }
-    }
-    // the glow is the only part reaching left of the shelter; its centre stays right of it
-    const glow = parse(at(1)).querySelector('[data-part="auroraGlow"]')!;
-    expect(Number(glow.getAttribute('cx'))).toBeGreaterThanOrEqual(1100);
-    // no aurora by day or in "Schlicht"
-    expect(layers(at(1, { level: 'plain' }))).not.toContain('aurora');
-    expect(layers(base({ event: 'aurora', eventAmount: 1 }))).toContain('aurora'); // the drawing trusts the model
-  });
-
-  it('colours stay tokens with every event', () => {
-    for (const [, s] of CASES) {
-      expect(sceneSvg(s).inner).not.toMatch(/#[0-9a-fA-F]{3,6}\b(?!\))/);
-      expect(Object.values(sceneSvg(s).vars).join(' ')).not.toMatch(/#[0-9a-fA-F]{3,6}\b/);
     }
   });
 });

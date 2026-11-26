@@ -8,12 +8,10 @@ import { now } from '@/core/time/now';
 import { tWeather } from '@/strings.weather';
 import { tWeatherPage } from '@/strings.weatherPage';
 import { KpiWidget } from '@/ui';
-import { ScenePorthole, useSmallScene, WeatherScene } from '@/ui/weather-scene';
+import { CARD_QUIET_SHARE, ScenePorthole, useSmallScene, WeatherScene } from '@/ui/weather-scene';
 import { useMoon } from '../useMoon';
 import styles from '../routes/weather.module.css';
 
-/** Where the quiet zone of the scene ends behind the card's text, as a share of the card's width (handoff 04). */
-const QUIET_SHARE = 0.55;
 /** Wider than one column (the checked card is ~380 px): the porthole instead of the scene. */
 const WIDE_PX = 520;
 
@@ -76,7 +74,7 @@ export default function WeatherWidget() {
         data-ink={inkOf(scene)}
       >
         <div className={styles.widgetBackdrop}>
-          <WeatherScene state={scene} quietShare={QUIET_SHARE} />
+          <WeatherScene state={scene} quietShare={CARD_QUIET_SHARE} />
         </div>
         {/* The `kennzahl` shape (place, figure, context line) in the scene's ink; the rain hint closes the context
             line as an opaque chip, so the card keeps the height of variant A. */}

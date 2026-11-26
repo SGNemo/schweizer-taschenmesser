@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { Forecast } from '@/core/weather/api';
 import { sceneOf, type SceneHour, type SceneState, type SkyKey } from '@/core/weather/scene';
 import { G, phoneView, sceneSvg, skyOffsets, type SceneSvg } from './draw';
+import { CARD_QUIET_SHARE, cardFit } from './useSceneFit';
 
 /**
  * Contrast of the text on the round-2 picture (docs/design/weather-scenes-2/A11Y.md §1): every sky key × theme, the
@@ -145,6 +146,9 @@ function tonesUnderText(
   s: SceneState,
   theme: 'light' | 'dark',
   phone: boolean,
+  quietX = 640,
+  /** The right edge of the text, scene units (the head: the quiet edge; the card: 80 before it). */
+  textX = quietX,
 ): { what: string; c: RGB }[] {
   const ev = evaluator(d.vars, theme);
   const out: { what: string; c: RGB }[] = [];
@@ -167,8 +171,9 @@ function tonesUnderText(
   // text column's right edge (the quiet edge) a band shows at that share of its opacity. The strongest band (0.6 in
   // fog 2) and, in fog 2, the veil (0.24, the same fade) over the sky's bottom.
   if (s.fog && !phone) {
-    const q0 = 640;
-    const fade = Math.min(1, 80 / (G.W + 200 - q0) / 0.22);
+    const q0 = quietX;
+    const bx = q0 - 80;
+    const fade = Math.max(0, Math.min(1, (textX - bx) / (G.W + 200 - q0) / 0.22));
     const fogC = ev(
       `color-mix(in srgb, var(--scene-sky-${key}-${skyOffsets(key, theme).length - 1}), white 55%)`,
     );
@@ -200,6 +205,50 @@ describe('round 2: text on the picture ≥ 4.5 : 1 (A11Y §1)', () => {
             ).toBeGreaterThanOrEqual(4.5);
         }
       });
+});
+
+// Package D: the overview widget carries the new panorama behind its text (`cardFit`): the whole width, more sky above,
+// the quiet zone to 55 % of the width. The text rows meet the sky, the deck and the hazed far layers only – the ground
+// and every tree left of the quiet edge lie below the lowest text row (the word line ends 24 px above the card's bottom).
+describe('round 2: the widget card at its three sizes (handoff D)', () => {
+  const SIZES = [
+    [379, 205],
+    [379, 282],
+    [380, 192],
+  ] as const;
+  it.each(SIZES)('%i × %i: the whole panorama, ground and trees below the text', (W, H) => {
+    const fit = cardFit(W, H, CARD_QUIET_SHARE);
+    const [, y0, vw, vh] = fit.view!;
+    expect(vw).toBe(G.W);
+    expect(W / vw).toBeCloseTo(H / vh, 2);
+    const k = W / vw;
+    const textBottom = y0 + (H - 24) / k;
+    let top = Infinity;
+    for (const [x, y] of G.ground) if (x <= G.W * CARD_QUIET_SHARE) top = Math.min(top, y);
+    for (const t of [...G.trees, ...G.behind])
+      if (t[1] - t[3] <= fit.quietX!)
+        top = Math.min(top, t[2] - (t[0] === 'bush' ? 2 * t[3] : t[3]));
+    expect(textBottom, `text to ${Math.round(textBottom)}, land from ${top}`).toBeLessThan(top);
+  });
+  for (const theme of ['light', 'dark'] as const)
+    for (const season of ['summer', 'winter'] as const)
+      it.each(CASES)(
+        `%s (${theme}, ${season}) at %s %o: the card's text ≥ 4.5 : 1`,
+        (key, time, h, over = {}) => {
+          const s = stateOf(time, h, over, theme, season);
+          for (const [W, H] of SIZES) {
+            const fit = cardFit(W, H, CARD_QUIET_SHARE);
+            const d = sceneSvg(s, fit);
+            expect(d.sky).toBe(key);
+            const ink = hexRgb(light[d.ink === 'light' ? '--ink-light' : '--ink-dark']!);
+            for (const t of tonesUnderText(d, s, theme, false, fit.quietX, G.W * CARD_QUIET_SHARE))
+              expect(
+                ratio(ink, t.c),
+                `${key} ${theme} ${season} ${W}×${H} ${t.what} rgb(${t.c.join(',')})`,
+              ).toBeGreaterThanOrEqual(4.5);
+          }
+        },
+      );
 });
 
 describe('round 2 tokens', () => {

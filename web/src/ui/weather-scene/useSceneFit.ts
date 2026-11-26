@@ -1,25 +1,30 @@
 import { useLayoutEffect, useState, type RefObject } from 'react';
 import { G, phoneView, type SceneOptions } from './draw';
-import { G as G1, type SceneOptions as CardOptions } from './drawV1';
 
+/** The overview widget's text ends at this share of the card's width (handoff 04). */
+export const CARD_QUIET_SHARE = 0.55;
 /** Card (overview widget): the body's centre as shares of the card's width from the right and of its height. */
 const CARD = { bodyX: 0.2, bodyY: 0.5 } as const;
 /** Width of the text column on a wide stage, rem. */
 const TEXT_REM = 36;
+/** Fog bands start this far left of the quiet edge and fade in (draw.ts `fogBand`): the card's text stays clear of them. */
+const FOG_LEAD = 80;
 
 /**
- * The scene behind a card (the overview widget, round 1's drawing until package D of round 2) with the frame's head
- * above its text: the whole panorama at the card's width (`k = W / 1600`), more sky above (`extendTop`), so the text
- * rows lie on the sky and the shelter haze and never on the ridges and trees of a close crop. The quiet zone ends at
- * `share` of the width; the body sits in its own box on the right, at the card's mid height.
+ * The scene behind a card (the overview widget) with the frame's head above its text: the whole panorama at the card's
+ * width (`k = W / 1600`), the view reaching up into more sky (`view[1] < 0`), so the text rows lie on the sky and the
+ * haze and never on the massif, the forest or the lake. The text ends at `share` of the width and the quiet zone one
+ * fog lead later (`FOG_LEAD`), so a fog band only begins where the text ends; the body sits in its own box on the
+ * right, at the card's mid height.
  */
-export function cardFit(W: number, H: number, share: number): CardOptions {
-  const k = W / G1.W;
-  const ext = Math.max(0, H / k - G1.H);
+export function cardFit(W: number, H: number, share: number): SceneOptions {
+  const k = W / G.W;
+  const h = Math.round(Math.max(G.H, H / k));
+  const y0 = G.H - h;
   return {
-    extendTop: Math.round(ext),
-    quietX: Math.round(G1.W * share),
-    bodyAt: [Math.round(G1.W * (1 - CARD.bodyX)), Math.round((H * CARD.bodyY) / k - ext)],
+    view: [0, y0, G.W, h],
+    quietX: Math.round(G.W * share) + FOG_LEAD,
+    bodyAt: [Math.round(G.W * (1 - CARD.bodyX)), Math.round(y0 + (H * CARD.bodyY) / k)],
   };
 }
 
@@ -29,8 +34,8 @@ export interface SceneFit {
   h: number;
   /** The head's drawing (round 2). */
   opts: SceneOptions;
-  /** The card's drawing (round 1), when `quietShare` is given. */
-  card?: CardOptions;
+  /** The card's fit, when `quietShare` is given. */
+  card?: SceneOptions;
 }
 
 const key = (f: SceneFit): string =>
@@ -40,7 +45,7 @@ const key = (f: SceneFit): string =>
  * Fits the scene to its stage (round 2, CONCEPT §5): on the phone the right `w / 0.46` units of the picture,
  * bottom-aligned, the quiet edge at 1000 and the body between the main summit and the third; on a wide stage the
  * quiet side ends at the right edge of the text (`[data-scene-text]`, at most 36 rem wide). A card takes
- * `cardFit` (round 1's drawing).
+ * `cardFit`.
  */
 export function useSceneFit(
   ref: RefObject<HTMLElement | null>,
