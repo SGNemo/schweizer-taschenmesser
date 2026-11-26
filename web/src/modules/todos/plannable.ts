@@ -4,7 +4,9 @@
  * current occurrence is listed). The write-back is the ownership rule of §2: `plannedFor` is the
  * planner's only while `planMark.date === plannedFor`; `prior` carries the user's own date it overwrote.
  */
+import { linkEntries } from '@/core/entitylinks';
 import { fromLegacy } from '@/core/entitylinks/types';
+import { webAddress } from '@/core/net/webAddress';
 import { type PlannableItem, type PlannableSource } from '@/core/modules/types';
 import { today } from '@/core/time/now';
 import { nextInstanceId } from './logic';
@@ -83,19 +85,33 @@ const itemOf = (t: Task & { id: string; createdAt: number }): PlannableItem => (
   createdAt: t.createdAt,
 });
 
+/**
+ * A shared link (planner hub 2, package 1): the task's own note starts with one bare http/https address (its whole first
+ * line) and the task has no links of its own – no legacy `links[]` entry, no `origin` link row – so the webmail address
+ * of a mail-made ToDo never becomes a chip. The planner never reads the note: only this address is handed over.
+ */
+async function withUrl(t: Task & { id: string }, item: PlannableItem): Promise<PlannableItem> {
+  if (!t.note || t.links?.length) return item;
+  const first = webAddress(t.note.split('\n', 1)[0]);
+  if (!first) return item;
+  const rows = await linkEntries({ module: 'todos', id: t.id });
+  if (rows.some((r) => r.link.rel === 'origin')) return item;
+  return { ...item, url: first.url };
+}
+
 const source: PlannableSource = {
   async list() {
     const tasks = (await taskRepo.active().toArray()).filter(
       (t) => !t.done && !t.someday && !t.parentId,
     );
-    return tasks.map(itemOf);
+    return Promise.all(tasks.map((t) => withUrl(t, itemOf(t))));
   },
   // „Nächste Wochen“ in the planner is „Irgendwann“ here: open, not crossed out, out of the plan's listing.
   async listLater() {
     const tasks = (await taskRepo.active().toArray()).filter(
       (t) => !t.done && t.someday && !t.parentId,
     );
-    return tasks.map(itemOf);
+    return Promise.all(tasks.map((t) => withUrl(t, itemOf(t))));
   },
   // „Kleiner machen …“: the task keeps its id, list, links and place in the plan under the first step's title; the rest
   // is a new top-level task of the old title with the same list, priority, estimate, deadline (and its reminder), tags,

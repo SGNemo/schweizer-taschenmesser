@@ -75,6 +75,17 @@ export const planner: Strings['planner'] = {
     tick: (step: string) => `Tick “${step}”`,
     more: (n: number) => `${n} more`,
   },
+  share: {
+    lands: 'Lands in the planner under “No day yet”.',
+    linkSaved: (host: string) => `The link is saved with it: ${host}`,
+    linkNotSaved: 'This link is not saved with it.',
+    cut: 'Shortened to 4,000 characters.',
+    chip: (host: string) => `Open in the browser · ${host}`,
+    saved: 'Saved.',
+    view: 'View',
+    done: 'Done',
+    undone: 'Taken back.',
+  },
   measure: {
     asLast: 'as last time',
     asLastFull: (min: string) => `${min} · as last time`,

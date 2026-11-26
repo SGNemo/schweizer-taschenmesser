@@ -200,9 +200,11 @@ describe('the proposal', () => {
     const bath = titleKey('Bad wischen')!;
     await record(bath, 20);
     await record(bath, 20);
+    const firstIds = new Set((await entries()).map((e) => e.id));
     expect(await addFromField('Bad wischen', {})).toBe(true);
     await runsSettled();
-    const fresh = (await entries()).filter((e) => e.title === 'Bad wischen').at(-1)!;
+    // The one just typed (the list follows ids, which are random).
+    const fresh = (await entries()).find((e) => e.title === 'Bad wischen' && !firstIds.has(e.id))!;
     expect(await itemRepo.get(`todos:${fresh.id}`)).toMatchObject({ measured: true });
     expect(await setEstimate(fresh, 30, {})).toBe(true);
     await runsSettled();

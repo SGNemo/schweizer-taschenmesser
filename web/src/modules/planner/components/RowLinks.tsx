@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router';
 import { fromLegacy, refKey, type EntityLink } from '@/core/entitylinks/types';
 import { type PlannableEntry, useResolvedLinks } from '@/core/modules/contributions';
 import type { ResolvedState } from '@/core/modules/types';
+import { webAddress } from '@/core/net/webAddress';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
 import { Icon, type IconName, PanelLine, PanelLines, type RowMenuItem } from '@/ui';
@@ -118,17 +119,31 @@ function viewOf(link: RowLink, state: ResolvedState | undefined): LinkView {
       : { ...base, name: w.stateName(word, label, w.gone), loading: false, note: w.gone };
   if (state.state === 'gone')
     return { ...base, name: w.stateName(word, label, w.gone), loading: false, note: w.gone };
-  const url = state.url;
+  // An address leaves the app only through the one gate: one it rejects is said, never a dead button.
+  const url = webAddress(state.url)?.url;
   return url
     ? { ...base, name: w.stateName(word, label, w.browser), loading: false, url }
     : { ...base, name: w.stateName(word, label, w.elsewhere), loading: false, note: w.elsewhere };
 }
 
-/** The links of a row and their live states (`undefined` while loading). */
-export function useRowLinks(entry: Pick<PlannableEntry, 'links' | 'link'> | undefined) {
+/**
+ * A shared web address (package 1, COPY S7): one chip „Im Browser öffnen · host“, checked again here (scheme, length,
+ * host) – opened only on a tap, never fetched.
+ */
+const SHARED_KEY = 'shared-url';
+function sharedView(url: string | undefined): LinkView | undefined {
+  const a = webAddress(url);
+  if (!a) return undefined;
+  const name = t.planner.share.chip(a.host);
+  return { key: SHARED_KEY, word: name, icon: 'external', name, loading: false, url: a.url };
+}
+
+/** The links of a row and their live states (`undefined` while loading); a shared address last. */
+export function useRowLinks(entry: Pick<PlannableEntry, 'links' | 'link' | 'url'> | undefined) {
   const links = linksOfEntry(entry);
   const states = useResolvedLinks(links.map((l) => l.to));
-  return links.map((l) => viewOf(l, states?.get(refKey(l.to))));
+  const shared = sharedView(entry?.url);
+  return [...links.map((l) => viewOf(l, states?.get(refKey(l.to)))), ...(shared ? [shared] : [])];
 }
 
 export type RowLinkViews = ReturnType<typeof useRowLinks>;
@@ -137,7 +152,11 @@ function useOpen() {
   const navigate = useNavigate();
   return (v: LinkView) => {
     if (v.to) void navigate(v.to);
-    else if (v.url) void getPlatform().app.openUrl(v.url);
+    else {
+      // Every address leaving the app passes the one gate once more when it is opened.
+      const a = webAddress(v.url);
+      if (a) void getPlatform().app.openUrl(a.url);
+    }
   };
 }
 

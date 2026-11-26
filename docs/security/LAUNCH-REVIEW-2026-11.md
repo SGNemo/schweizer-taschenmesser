@@ -150,7 +150,7 @@ No critical finding. One high finding (SC1). The Dev-Preview that friends alread
 | A5 | low | Still open: the model file is not re-hashed at load | `src/local_llm.rs:289-295` | M |
 | A9–A11 | info | Feeds `feed` collection is in the data API; download allow-list covers the first URL only (hash still pinned); "local only" for mail text is judged by host | `modules/feeds/manifest.ts:37-45`, `src/local_llm.rs:45-55`, `core/mail/localAi.ts:129-136` | – |
 
-**Planner sources, quick capture, import (B9).** Share target and launch arguments only pre-fill; mail never writes by itself; importers write only their own collections after a preview; CSV export neutralises formulas.
+**Planner sources, quick capture, import (B9).** Share target and launch arguments only pre-fill; mail never writes by itself; importers write only their own collections after a preview; CSV export neutralises formulas. the share page stores only on the capture card's own button (since U17). New: with the planner on the planner is the preselected kind, and a shared link's address is stored with the thing; both are shown on the page before the button.
 
 | ID | Sev | Finding | Evidence | Size |
 |---|---|---|---|---|

@@ -53,14 +53,14 @@ export async function announceSaved(
   saved: SavedCapture,
   notifications = getPlatform().notifications,
   navigate?: (to: string) => void,
-): Promise<void> {
+): Promise<number | undefined> {
   const { toast } = useUiStore.getState();
   const extra = await alertLine(saved, notifications);
   const say = (text: string) => (extra ? extra(text) : text);
   if (saved.count && saved.count > 1) {
     const text = saved.text ?? '';
     const place = navigate ? await batchPlace() : undefined;
-    toast(
+    return toast(
       say(t.quickCapture.multi.saved(saved.count)),
       {
         label: t.quickCapture.undo,
@@ -69,9 +69,8 @@ export async function announceSaved(
       undefined,
       place ? { label: t.quickCapture.multi.view, run: () => navigate!(place) } : undefined,
     );
-    return;
   }
-  toast(say(t.quickCapture.saved(t.quickCapture.target[saved.type])), {
+  return toast(say(t.quickCapture.saved(t.quickCapture.target[saved.type])), {
     label: t.quickCapture.undo,
     run: () => void saved.undo().then(() => toast(t.quickCapture.undone)),
   });

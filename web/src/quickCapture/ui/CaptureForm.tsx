@@ -91,6 +91,11 @@ export interface CaptureFormProps {
    * missing required one is named at its field after a save attempt (the mail dialog). Single entry only.
    */
   editFields?: boolean;
+  /**
+   * The single entry's kind as the form reads it now (the share page says what „Speichern“ would store next to it,
+   * package 1). Called when it changes; never with a batch.
+   */
+  onRead?: (type: CaptureType) => void;
 }
 
 function errorText(e: unknown): string {
@@ -134,6 +139,7 @@ export function CaptureForm({
   editFields,
   onSaved,
   onCancel,
+  onRead,
 }: CaptureFormProps) {
   const [settings] = useCaptureSettings();
   // One source for the module states and the types they allow (a second query could lag behind).
@@ -208,6 +214,12 @@ export function CaptureForm({
   const fallbackType = resolved.inbox ? resolved.type : undefined;
   const panel = editFields && !multi;
   const singleFields: CaptureFields = { ...resolved.fields, ...extra, ...(panel ? edits : {}) };
+  const readType = resolved.type;
+  useEffect(() => {
+    if (!multi && readType) onRead?.(readType);
+    // `onRead` is the page's callback; the read kind is what changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readType, multi]);
   // The single sheet treats a payment reminder the same way as a line of a batch.
   // Lookups are keyed by the line and whether invoices are on (switching the module looks again).
   const lookupKey = (line: string) => `${states?.invoices ? 1 : 0}:${line}`;

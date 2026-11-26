@@ -1028,7 +1028,6 @@ export const de = {
     content: 'Geteilt',
     where: 'Ziele',
     nothing: 'Es wurde nichts geteilt. Nutze „Teilen“ in einer anderen App und wähle Nemo.',
-    enable: 'Modul einschalten',
     toBookmarks: 'In die Merkliste',
     toNote: 'Als Notiz',
     toTodo: 'Als ToDo',
@@ -9532,6 +9531,26 @@ export const de = {
       failed: 'Das hat nicht geklappt. Es ist nichts verändert.',
       tick: (step: string) => `„${step}“ abhaken`,
       more: (n: number) => `${n} weitere`,
+    },
+    /** Shared into the planner (package 1, COPY S2, S5, S7–S9, S14, S16, S19). */
+    share: {
+      /** S2: under the share page's form while its kind is `plan`. */
+      lands: 'Landet im Planer unter „Noch ohne Tag“.',
+      /** S16: a shared http/https address that is stored with the thing. */
+      linkSaved: (host: string) => `Der Link wird mit abgelegt: ${host}`,
+      /** S19: an address that is not stored (no http/https, or too long). */
+      linkNotSaved: 'Dieser Link wird nicht mit abgelegt.',
+      /** S5: the note's rest was cut. */
+      cut: 'Gekürzt auf 4 000 Zeichen.',
+      /** S7: the row's chip. */
+      chip: (host: string) => `Im Browser öffnen · ${host}`,
+      /** S8: the page after „Speichern“. */
+      saved: 'Abgelegt.',
+      view: 'Ansehen',
+      /** S9. */
+      done: 'Fertig',
+      /** S14: the saved thing is gone again. */
+      undone: 'Zurückgenommen.',
     },
     /** Measured duration (package 8, COPY Z1–Z3). */
     measure: {

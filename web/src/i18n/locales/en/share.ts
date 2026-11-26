@@ -6,7 +6,6 @@ export const share: Strings['share'] = {
   content: 'Shared',
   where: 'Destinations',
   nothing: 'Nothing was shared. Use “Share” in another app and choose Nemo.',
-  enable: 'Turn on module',
   toBookmarks: 'To Saved',
   toNote: 'As a note',
   toTodo: 'As a to-do',

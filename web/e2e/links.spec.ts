@@ -62,7 +62,7 @@ test('a disabled share target can be switched on right there; an empty share say
   await expect(page.getByTestId('share-todos')).toBeVisible();
   await expect(page.getByTestId('share-bookmarks')).toHaveCount(0);
   await expect(page.getByTestId('share-bookmarks-off')).toBeVisible();
-  await page.getByRole('button', { name: 'Modul einschalten: In die Merkliste' }).click();
+  await page.getByRole('button', { name: 'Aktivieren: In die Merkliste' }).click();
   await expect(page.getByTestId('share-bookmarks')).toBeVisible();
   await page.goto('/share');
   await expect(page.getByText('Es wurde nichts geteilt', { exact: false })).toBeVisible();

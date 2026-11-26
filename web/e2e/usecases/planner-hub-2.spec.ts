@@ -43,7 +43,7 @@ import { dismissNotices } from '../helpers';
  *    that ends it): (ended with 2: B `taps` 27 → 28 / phone 14 → 16 and `perThing` 17 → 21 / phone 9 → 13 from 4b;
  *    ended with 5a:) C1 `workTaps` 7 → 8 and
  *    `taps` 19 → 20 from 4a until 5a (expand, „Ganz öffnen“, the routine's run as today).
- * Re-measured by the packages: 10b: D1 · 4a: D1, C1 · 4b/2: B · 4c: B `replySwitches` · 5a: C1 · 8: C1 `learned` · 1: D2 · 3: A1, C1 · 9: D3 · 11: D4.
+ * Re-measured by the packages: 10b: D1 · 4a: D1, C1 · 4b/2: B · 4c: B `replySwitches` · 5a: C1 · 8: C1 `learned` · 1: D2 (done) · 3: A1, C1 · 9: D3 · 11: D4.
  * `MEASURE=1` only measures. Facts (the click path, the module routes passed) land beside the table in
  * `test-results/usecase-planner-hub-2/`.
  *
@@ -91,8 +91,8 @@ const IST: Record<string, Figures> = {
   'C2 Besorgung · pixel-7': { rows: 2, createTaps: 0, workTaps: 8, perThing: 5, moduleSwitches: 2, oneRow: 'nein', mapShown: 'nicht möglich' },
   'D1 Steht es im Plan, und wann · desktop-chrome': { taps: 11, perThing: 5, moduleSwitches: 10, markVisible: 5, markAgrees: 5, tripsToPlanner: 0 },
   'D1 Steht es im Plan, und wann · pixel-7': { taps: 11, perThing: 5, moduleSwitches: 10, markVisible: 5, markAgrees: 5, tripsToPlanner: 0 },
-  'D2 Geteilter Link in den Planer · desktop-chrome': { taps: 5, moduleSwitches: 2, forms: 1, inPlanner: 'ja', wayBack: 'nein' },
-  'D2 Geteilter Link in den Planer · pixel-7': { taps: 5, moduleSwitches: 3, forms: 1, inPlanner: 'ja', wayBack: 'nein' },
+  'D2 Geteilter Link in den Planer · desktop-chrome': { taps: 2, moduleSwitches: 1, forms: 1, inPlanner: 'ja', wayBack: 'ja' },
+  'D2 Geteilter Link in den Planer · pixel-7': { taps: 2, moduleSwitches: 1, forms: 1, inPlanner: 'ja', wayBack: 'ja' },
   'D3 Vor einem Termin · desktop-chrome': { taps: 14, perThing: 0, moduleSwitches: 4, linked: 'ja', onWednesday: 'ja' },
   'D3 Vor einem Termin · pixel-7': { taps: 14, perThing: 0, moduleSwitches: 4, linked: 'ja', onWednesday: 'ja' },
   'D4 Ein Thema · desktop-chrome': { rows: 20, taps: 27, perThing: 20, moduleSwitches: 2, planFilter: 'nein' },
@@ -1531,34 +1531,51 @@ test('D1 Steht es im Plan, und wann', async ({ page, isMobile }, info) => {
 test('D2 Geteilter Link in den Planer', async ({ page, isMobile }, info) => {
   const name = 'D2 Geteilter Link in den Planer';
   await prepare(page, isMobile);
-  // The PWA's share target, opened directly: its form suggests the Merkliste – a plain link the planner never takes
-  // (`bookmarks/plannable.ts`). „ToDo“ makes a thing the planner shows under „Noch ohne Tag“.
+  // The PWA's share target, opened directly. With the planner on its form starts with the kind `plan` (package 1);
+  // before, it suggested the Merkliste and „ToDo“ made a thing under „Noch ohne Tag“.
   await page.goto(
     '/share?title=Fahrradtr%C3%A4ger&text=https%3A%2F%2Fexample.org%2Ffahrradtraeger',
   );
-  await expect(page.getByRole('radio', { name: 'ToDo' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Speichern', exact: true })).toBeVisible();
   const hand = new Hand(page, isMobile);
   hand.start();
   const forms = 1;
-  await hand.tap(page.getByRole('radio', { name: 'ToDo' }), 'Ziel ToDo');
+  // A build without the planner preselected (before package 1): „ToDo“ first, as the path was then.
+  const lands = page.getByText('Landet im Planer unter „Noch ohne Tag“.');
+  const preselected = await lands
+    .waitFor({ state: 'visible', timeout: 3000 })
+    .then(() => true)
+    .catch(() => false);
+  if (!preselected) await hand.tap(page.getByRole('radio', { name: 'ToDo' }), 'Ziel ToDo');
   await hand.tap(page.getByRole('button', { name: 'Speichern', exact: true }), 'Speichern');
   await expect.poll(async () => (await rows<Task>(page, 'todos_task')).length).toBe(1);
   const [saved] = await rows<Task & { note?: string }>(page, 'todos_task');
-  await expect(page).not.toHaveURL(/\/share/);
-  await go(hand, page, isMobile, 'planner');
-  await openNoDay(hand, page);
+  // „Ansehen“ on the page after „Speichern“ (package 1) leads to the row; else the way through the planner.
+  const view = page.getByRole('link', { name: 'Ansehen', exact: true });
+  const viewShown = await view
+    .waitFor({ state: 'visible', timeout: 3000 })
+    .then(() => true)
+    .catch(() => false);
+  if (viewShown) await hand.tap(view, 'Ansehen');
+  else {
+    await expect(page).not.toHaveURL(/\/share/);
+    await go(hand, page, isMobile, 'planner');
+    await openNoDay(hand, page);
+  }
+  await expect(page).toHaveURL(/\/planner/);
   const row = page.locator('main li').filter({ hasText: 'Fahrradträger' }).first();
   const inPlanner = (await appears(row)) ? 'ja' : 'nein';
-  // A way back to the address from the row: a link or a chip on it, or an entry of its ⋯ (read, not counted).
+  // A way back to the address from the row: a link to the shared host, or a control whose accessible name holds it
+  // (package 1; before, only `href` and the `aria-label` attribute were read), or an entry of its ⋯ (read, not counted).
   let wayBack = 'nein';
   let menu: string[] = [];
   if (inPlanner === 'ja') {
-    const onRow = await row
-      .locator('a[href^="https://example.org"], button')
-      .evaluateAll((els) =>
-        els.map((e) => `${e.getAttribute('href') ?? ''} ${e.getAttribute('aria-label') ?? ''}`),
-      );
-    if (onRow.some((x) => /example\.org|Browser/.test(x))) wayBack = 'ja';
+    const host = /example\.org/;
+    const named =
+      (await row.getByRole('link', { name: host }).count()) +
+      (await row.getByRole('button', { name: host }).count()) +
+      (await row.locator('a[href^="https://example.org"]').count());
+    if (named > 0) wayBack = 'ja';
     await row.getByRole('button', { name: /^Aktionen für / }).click();
     menu = await page.getByRole('menuitem').allInnerTexts();
     await page.keyboard.press('Escape');
