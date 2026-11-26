@@ -48,7 +48,12 @@ export function useSceneFit(
   /** The quiet zone ends at this share of the box's width (a card behind its text), not at the measured text. */
   quietShare?: number,
 ): SceneFit {
-  const [fit, setFit] = useState<SceneFit>({ w: 0, h: 0, opts: { phone } });
+  // Before the first measurement the phone is drawn for a nominal box (412 × 256), never the whole panorama.
+  const [fit, setFit] = useState<SceneFit>({
+    w: 0,
+    h: 0,
+    opts: phone ? { phone, view: phoneView(412, 256), quietX: G.phone.quietX } : {},
+  });
   // Before the first paint: the scene is drawn for its box from the start, it does not jump into place.
   useLayoutEffect(() => {
     const el = ref.current;

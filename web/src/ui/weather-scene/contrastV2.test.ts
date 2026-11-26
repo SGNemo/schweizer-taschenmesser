@@ -248,6 +248,16 @@ describe('round 2 tokens', () => {
       light['--scene-sky-night-rain-0'],
     ]).toEqual(['#4696dd', '#232b38', '#222a3d', '#1a2130']);
   });
+  it('every grey token is the greying of its colour (0.3 R + 0.59 G + 0.11 B, palette.js greyOf)', () => {
+    const greys = Object.keys(light).filter((k) => k.startsWith('--scene-grey-'));
+    expect(greys.length).toBeGreaterThan(40);
+    for (const g of greys) {
+      const src = light[`--scene-${g.slice('--scene-grey-'.length)}`]!;
+      const c = hexRgb(src);
+      const v = Math.round(0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2]);
+      expect(hexRgb(light[g]!), g).toEqual([v, v, v]);
+    }
+  });
   it('the sky keys walked here are all the drawing can produce', () => {
     const keys = new Set<SkyKey>(CASES.map((c) => c[0] as SkyKey));
     expect(keys.size).toBe(19);

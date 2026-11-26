@@ -391,6 +391,14 @@ describe('every sky key', () => {
     }
     expect(SKY_KEYS.length).toBeGreaterThan(10);
   });
+
+  it('every token name is a plain name: no expression is ever read as a token (a black layer)', () => {
+    for (const [, h, o] of [...SKY_STATES, ...HEAVY]) {
+      const { out } = draw(hourScene(h, o), { quietX: 640 });
+      const all = out.inner + Object.values(out.vars).join(' ');
+      for (const m of all.matchAll(/var\(--scene-([^)]*)\)/g)) expect(m[1], m[0]).toMatch(/^[a-z0-9-]+$/);
+    }
+  });
 });
 
 /* ---- the short paths keep their points ---- */
@@ -453,6 +461,17 @@ function absPoints(d: string): number[][] {
   }
   return out;
 }
+describe('phoneView', () => {
+  it.each([320, 360, 412, 600, 737, 899])(
+    'a %i px phone box never shows left of x 0 and ends at the right edge',
+    (w) => {
+      const v = phoneView(w, 256);
+      expect(v[0]).toBeGreaterThanOrEqual(0);
+      expect(v[0] + v[2]).toBe(G.W);
+    },
+  );
+});
+
 describe('compactPath', () => {
   it.each([
     'M1002,281C1004,270 1052,263 1110,262C1150,261 1168,266 1196,264Z',

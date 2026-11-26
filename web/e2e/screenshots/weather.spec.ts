@@ -412,9 +412,12 @@ for (const raw of SCENARIOS.filter((x) => !ONLY || ONLY.test(x.id)))
           // The head plus whatever went under it (late or extra hints).
           const fr = (await page.getByTestId('module-frame').boundingBox())!;
           const below = await page.getByTestId('weather-late-warning').boundingBox();
+          // round 2: on the phone the hint, the chips and the line of values stand under the picture
+          const facts = await page.getByTestId('weather-facts').boundingBox();
           const bottom = Math.max(
             fr.y + fr.height,
             below && below.height > 0 ? below.y + below.height : 0,
+            facts && facts.height > 0 ? facts.y + facts.height : 0,
           );
           await page.screenshot({
             path: name('head'),

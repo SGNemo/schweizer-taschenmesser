@@ -363,9 +363,11 @@
   .stage[data-signature='sky'] {
     min-height: 16rem;
   }
+  /* the picture's room under the temperature and the detail line: a line that wraps grows the stage instead of
+     sliding onto the summits (the picture is bottom-aligned, CONCEPT §5) */
   .stage[data-signature='sky'] .stageBody {
     gap: var(--space-1);
-    padding-bottom: 10px;
+    padding-bottom: 6.5rem;
   }
   /* the stage's bare mark: icon size, so the stage with data keeps room under its 320 px (K3) */
   .stage .signature[data-default='true'] {

@@ -62,7 +62,7 @@ Open-Meteo documents `Access-Control-Allow-Origin: *` for browser use, so the PW
 - All of it hangs on "Mond und Himmelsereignisse"; no reminder, no notification.
 
 ## Words, chips and hints (weather scenes 1a)
-- **The word follows the WMO code** (`conditionId(code, group, data)` in `core/weather/scene.ts`, 22 words in `tx.conditions`): head, hour cards, day rows, widget, overview line and trip weather say the same word (code 1 = "überwiegend klar", no longer "leicht bewölkt"). `codeGroup` (nine groups) still drives the rating, icons and the cache; a value cached without a code gets its group's nearest word.
+- **The word follows the WMO code** (`conditionId(code, group, data)` in `core/weather/scene.ts`, 28 words in `tx.conditions`): head, hour cards, day rows, widget, overview line and trip weather say the same word (code 1 = "überwiegend klar", no longer "leicht bewölkt"). `codeGroup` (nine groups) still drives the rating, icons and the cache; a value cached without a code gets its group's nearest word.
 - **Data kept beside the group** (all optional, also in the cache): raw `code` (now, hour, day), `tz` (the place's IANA zone from the response), `now.snowDepth` (m; `snow_depth`, the only added variable of the forecast request).
 - **Head detail line:** after the word at most one extra word: Sturmböen, windig, Schnee liegt, Frost, Hitze (`sceneAddition`, limits of the picture only).
 - **Chips:** "Kein Regen in Sicht" with an umbrella; UV only between sunrise and sunset, otherwise "Sonnenaufgang hh:mm" (today's or tomorrow's).

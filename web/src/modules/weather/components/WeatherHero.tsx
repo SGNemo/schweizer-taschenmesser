@@ -249,7 +249,7 @@ export function WeatherHero({
 
   const pills =
     events?.safety || official.length > 0 || warnings.length > 0 ? (
-      <div className={styles.pills} data-scene-avoid="">
+      <div className={styles.pills}>
         {events?.safety ? <SafetyNotice inStage /> : null}
         {official.length > 0 ? (
           <OfficialNotice warnings={official} tz={forecast.tz} inStage more={officialMore} />
@@ -260,7 +260,7 @@ export function WeatherHero({
       </div>
     ) : null;
   const chips = (
-    <ul className={styles.keys} data-testid="weather-keys" data-scene-avoid="">
+    <ul className={styles.keys} data-testid="weather-keys">
       {stageKeys.map((k) => (
         <li key={k.text} className={styles.key} data-kind={k.kind}>
           {k.glyph ?? <Icon name={k.icon} size={16} />}

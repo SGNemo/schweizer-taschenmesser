@@ -740,7 +740,7 @@ export const isThunder = (c: Cond): boolean => c === 'thunder' || c === 'thunder
 export const isDrizzle = (c: Cond): boolean => c === 'drizzle' || c === 'freezingDrizzle';
 
 /** Skies with their own twilight glow (palette `glow`). */
-const GLOW_KEYS: ReadonlySet<SkyKey> = new Set<SkyKey>(['dawn', 'dusk', 'golden', 'eclipse-sky']);
+const GLOW_KEYS: ReadonlySet<SkyKey> = new Set<SkyKey>(['dawn', 'dusk', 'golden']);
 
 /**
  * Which sky (round 2 mockup `skyKey`, CONCEPT §4): grey weather at dawn and dusk takes the night family; thunder level 1
@@ -771,9 +771,7 @@ export function skyOf(s: SceneState): { key: SkyKey; glow?: { phase: Phase; stre
     if (p === 'golden') return 'golden';
     return s.heat ? 'heat' : 'day';
   })();
-  return GLOW_KEYS.has(key) && key !== 'eclipse-sky'
-    ? { key, glow: { phase: s.phase, strength: 1 } }
-    : { key };
+  return GLOW_KEYS.has(key) ? { key, glow: { phase: s.phase, strength: 1 } } : { key };
 }
 
 export const skyKey = (s: SceneState): SkyKey => skyOf(s).key;

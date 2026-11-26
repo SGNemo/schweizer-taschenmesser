@@ -47,7 +47,8 @@
   animation: sc-smoke 5s ease-out 1 both;
 }
 .svg[data-motion] :global(.sc-flag) {
-  animation: sc-flag 1.6667s ease-in-out 3 both;
+  /* one 5 s iteration holding the three waves (iteration boundaries restyle the page, see sc-sway) */
+  animation: sc-flag 5s ease-in-out 1 both;
   transform-box: fill-box;
   transform-origin: 0% 0%;
 }
@@ -125,13 +126,19 @@
 }
 @keyframes sc-flag {
   0%,
+  33.33%,
+  66.67%,
   100% {
     transform: none;
   }
-  35% {
+  11.67%,
+  45%,
+  78.33% {
     transform: scaleX(0.9) skewY(3deg);
   }
-  70% {
+  23.33%,
+  56.67%,
+  90% {
     transform: scaleX(0.96) skewY(-2deg);
   }
 }

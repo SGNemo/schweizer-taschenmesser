@@ -6,7 +6,7 @@
  *
  * Colours are never literal: every colour is a `--scene-*` token (`ui/tokens.css`, the mockup's `palette.js`). The
  * mockup mixes hex values in JS; here each mix is a CSS `color-mix(in srgb, …)` (the same arithmetic) and each greying
- * a relative colour (`rgb(from …)`, the same weights), declared once as a custom property on the `<svg>` (`--c0` …)
+ * a precomputed `--scene-grey-*` token (the same weights), declared once as a custom property on the `<svg>` (`--c0` …)
  * and used by name – so the themes live in CSS and the markup stays small (A11Y §4). "Ruhig" is drawn by the component.
  */
 import {
@@ -732,7 +732,7 @@ function el(tag: string, o: Record<string, Attr>, inner?: string): string {
   for (const k of Object.keys(o)) {
     const v = o[k];
     if (v == null || v === '') continue;
-    // Values come from numbers, tables and token names only; escaped all the same, the markup goes to innerHTML.
+    // Values are numbers, closed enums of the state and token names only – nothing a person typed; escaped all the same.
     const val =
       k === 'd' && typeof v === 'string'
         ? compactPath(v)
@@ -891,9 +891,7 @@ function ribbon(p: readonly Pt[], w0: number, w1: number): string {
 /* ============================== colours as CSS ============================== */
 /** A colour: a palette key becomes its token; an expression (`var(…)`, a keyword) stays. */
 export function tok(h: string): string {
-  return /^(var\(|color-mix\(|rgb\(|url\(|white$|black$|none$|currentColor$)/.test(h)
-    ? h
-    : `var(--scene-${h})`;
+  return /^(var\(|color-mix\(|url\(|white$|black$|none$|currentColor$)/.test(h) ? h : `var(--scene-${h})`;
 }
 /** The colour expressions of one scene, each declared once (`--c0` …) on the `<svg>`. */
 class Book {
@@ -915,10 +913,14 @@ class Book {
     if (t >= 1) return tok(b);
     return this.ref(`color-mix(in srgb, ${tok(a)}, ${tok(b)} ${f(t * 100)}%)`);
   }
-  /** The mockup's `greyOf`: 0.3 R + 0.59 G + 0.11 B on every channel. */
+  /**
+   * The mockup's `greyOf` (0.3 R + 0.59 G + 0.11 B): a precomputed `--scene-grey-<token>` – no relative colour
+   * syntax, which older Safari and WebViews lack. Only palette tokens are greyed (`lit` is affine, so a mix is lit
+   * part by part).
+   */
   grey(c: string): string {
-    const g = 'calc(0.3 * r + 0.59 * g + 0.11 * b)';
-    return this.ref(`rgb(from ${tok(c)} ${g} ${g} ${g})`);
+    if (!/^[a-z0-9-]+$/.test(c)) throw new Error(`grey of a token only: ${c}`);
+    return tok(`grey-${c}`);
   }
 }
 
@@ -964,7 +966,8 @@ export const phoneBody = (s: SceneState): Pt => [G.phoneBodyX, 46 + 0.6 * (arcPo
 
 /** The phone's crop for a box of `w` × `h` px: the right `w / k` units, bottom-aligned (`Scene.phoneOpts`). */
 export function phoneView(w: number, h: number): [number, number, number, number] {
-  const k = G.phone.k;
+  // a wide phone-layout box (up to 899 px) never zooms out past the whole width: no blank strip left of x 0
+  const k = Math.max(G.phone.k, w / W);
   return [Math.round(W - w / k), Math.round(H - h / k), Math.round(w / k), Math.round(h / k)];
 }
 
@@ -1040,7 +1043,8 @@ export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
     f2: air(L('f2'), 0.08),
     near: lit(L('near')),
     dark: lit(L('dark')),
-    meadow: lit(s.heat ? B.mix(L('meadow'), 'dry-meadow', 0.6) : L('meadow')),
+    // lit is affine: the dry meadow is lit part by part (only tokens are greyed)
+    meadow: s.heat ? B.mix(lit(L('meadow')), lit('dry-meadow'), 0.6) : lit(L('meadow')),
     snow: lit('snow', 0.6),
     snowShade: lit('snow-shade', 0.6),
     rime: lit('rime', 0.45),
