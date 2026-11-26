@@ -213,4 +213,25 @@ describe('addKindFromField', () => {
     expect(await live('invoices_invoice')).toHaveLength(0);
     expect(await live('planner_item')).toHaveLength(0);
   });
+
+  // Taken back by `undoable` itself (it replays the action's writes), not by the action.
+  it('a shopping list made on the way is taken back too when the action fails after it', async () => {
+    await db.table('lists_list').clear();
+    const depth = undoDepth();
+    const spy = vi.spyOn(itemRepo, 'get').mockRejectedValueOnce(new Error('disk'));
+    expect(await addKindFromField({ kind: 'list', names: ['Milch'] }, {})).toBe(false);
+    spy.mockRestore();
+    expect(await live('lists_list')).toHaveLength(0);
+    expect(await live('lists_item')).toHaveLength(0);
+    expect(undoDepth()).toBe(depth);
+  });
+
+  it('a run that throws leaves nothing behind: the invoice and its item row are taken back', async () => {
+    const depth = undoDepth();
+    setManifestsForTests(() => Promise.reject(new Error('run')));
+    expect(await addKindFromField(invoice, {})).toBe(false);
+    expect(await live('invoices_invoice')).toHaveLength(0);
+    expect(await live('planner_item')).toHaveLength(0);
+    expect(undoDepth()).toBe(depth);
+  });
 });

@@ -1,267 +1,693 @@
 /**
- * The weather scene as SVG markup: a port of `docs/design/weather-scenes/mockups/scene.js` (shape by shape, the
- * geometry block `G` unchanged). Pure: the same state and options give the same string; all randomness comes from the
- * seeded generator. Colours are never literal: every colour is a `--scene-*` token (`ui/tokens.css`) or a
- * `color-mix()` of tokens, so the themes live in CSS. "Ruhig" is drawn by the component (greys over the same shapes).
- * The sky events (packages 3 and 3b, aurora included) are drawn as in the mockup and never move; the village
- * landscape and the porthole (4) are not here.
+ * The weather scene v2 (docs/design/weather-scenes-2, direction B "Facetten") as SVG markup: a port of
+ * `mockups/scene.js` + `events.js` + `motion.js`, shape by shape – the geometry block `G` keeps the mockup's names,
+ * points and counts, the layers come in the mockup's order. Pure: the same state and options give the same string; all
+ * randomness comes from the seeded generator.
+ *
+ * Colours are never literal: every colour is a `--scene-*` token (`ui/tokens.css`, the mockup's `palette.js`). The
+ * mockup mixes hex values in JS; here each mix is a CSS `color-mix(in srgb, …)` (the same arithmetic) and each greying
+ * a precomputed `--scene-grey-*` token (the same weights), declared once as a custom property on the `<svg>` (`--c0` …)
+ * and used by name – so the themes live in CSS and the markup stays small (A11Y §4). "Ruhig" is drawn by the component.
  */
 import {
-  FALLING,
+  inkForSky,
   inkOf,
-  isDrizzle,
   isSnow,
-  isThunder,
   skyOf,
   type SceneState,
   type SkyKey,
 } from '@/core/weather/scene';
+import { litPath, MARIA, tiltRotation } from './drawV1';
+
+export { litPath, MARIA, tiltRotation };
+
+type Pt = readonly [number, number];
+type Tree = readonly [
+  kind: 'spruce' | 'fir' | 'pine' | 'birch' | 'leaf' | 'bush',
+  x: number,
+  y: number,
+  h: number,
+];
+interface Mountain {
+  id: string;
+  size: number;
+  top: number;
+  haze: number;
+  sil: Pt[];
+  arete: Pt[];
+  ribs: (readonly [number, number, number])[];
+  gullies: (readonly [number, number, number])[];
+  fields: string[];
+}
 
 /* ============================== GEOMETRY (scene units, viewBox 0 0 1600 320) ============================== */
-type Pt = readonly [number, number];
+const W = 1600;
+const H = 320;
 export const G = {
-  W: 1600,
-  H: 320,
-  shelterX: 900,
-  titleY: 60,
-  arc: { x0: 1180, dx: 320, y0: 236, dy: 132 },
-  sun: { r: 46, rHeat: 52, core: 0.62, halo: 2.6, haloOp: 0.35, low: 0.12 },
-  moon: { r: 42, halo: 2.4, haloOp: 0.25, ring: 1.9, ringOp: 0.18, earthshine: 0.35, darkOp: 0.5 },
-  dayMoon: { x: 1240, y: 120, r: 22, op: 0.55 },
-  peek: 0.35,
-  ridges: {
-    alp: [
-      [0, 248],
-      [480, 240],
-      [640, 226],
-      [712, 204],
-      [760, 190],
-      [800, 200],
-      [860, 198],
-      [915, 178],
-      [960, 165],
-      [995, 176],
-      [1035, 158],
-      [1062, 136],
-      [1085, 128],
-      [1110, 140],
-      [1160, 170],
-      [1230, 186],
-      [1310, 190],
-      [1380, 182],
-      [1440, 160],
-      [1468, 145],
-      [1490, 140],
-      [1512, 146],
-      [1530, 142],
-      [1552, 114],
-      [1575, 100],
-      [1592, 104],
-      [1600, 108],
-    ] as Pt[],
-    far: [
-      [0, 262],
-      [300, 255],
-      [600, 246],
-      [800, 238],
-      [960, 232],
-      [1080, 224],
-      [1150, 208],
-      [1205, 178],
-      [1240, 158],
-      [1270, 150],
-      [1300, 157],
-      [1340, 180],
-      [1390, 204],
-      [1425, 200],
-      [1455, 180],
-      [1480, 170],
-      [1505, 177],
-      [1550, 198],
-      [1600, 210],
-    ] as Pt[],
-    mid: [
-      [0, 282],
-      [220, 277],
-      [440, 275],
-      [640, 268],
-      [860, 262],
-      [1040, 251],
-      [1180, 244],
-      [1300, 236],
-      [1420, 241],
-      [1520, 231],
-      [1600, 228],
-    ] as Pt[],
-    near: [
-      [0, 304],
-      [500, 301],
-      [900, 296],
-      [1050, 290],
-      [1200, 277],
-      [1320, 266],
-      [1420, 262],
-      [1510, 268],
-      [1600, 276],
-    ] as Pt[],
-  },
-  alpPeaks: [
-    [760, 190],
-    [960, 165],
-    [1085, 128],
-    [1490, 140],
-    [1575, 100],
+  W,
+  H,
+  // the pale range far behind (whole width; under the text it is the only range)
+  back: [
+    [0, 206],
+    [110, 194],
+    [200, 201],
+    [320, 182],
+    [420, 195],
+    [550, 174],
+    [660, 191],
+    [780, 166],
+    [870, 183],
+    [950, 168],
+    [1040, 186],
+    [1140, 170],
+    [1240, 190],
+    [1330, 174],
+    [1440, 188],
+    [1540, 170],
+    [1600, 182],
   ] as Pt[],
-  farPeaks: [
-    [1270, 150],
-    [1480, 170],
-  ] as Pt[],
-  alpFade: [560, 820],
-  flank: { max: 260, lean: 10, depth: 0.9, dark: 0.06 },
-  capDepth: { high: 22, low: 15, far: 20, highY: 130 },
-  lake: { x0: 930, x1: 1260, y0: 268, y1: 284, sky: 0.85 },
-  bushes: [
-    [1062, 7],
-    [1236, 6],
-    [1298, 8],
-    [1452, 6],
-    [1578, 9],
-  ] as Pt[],
-  crestBand: { h: 11, lift: 0.1 },
-  conifers: {
-    n: 34,
-    from: 620,
-    hMin: 14,
-    hMax: 26,
-    left: 6,
-    leftFrom: 150,
-    leftH: [8, 11],
-    topMin: 250,
-    w: 0.62,
-  },
-  crowns: [
-    [1120, 14],
-    [1176, 18],
-    [1530, 24],
-  ] as Pt[],
-  grass: { n: 9, from: 1110, to: 1590 },
-  stars: {
-    n: 60,
-    many: 150,
-    yMin: 8,
-    yMax: 200,
-    rMin: 0.8,
-    rMax: 1.8,
-    sparkles: 6,
-    sparkR: 4,
-    few: 0.35,
-  },
-  milky: { cx: 1180, cy: 112, rx: 560, ry: 46, rot: -14, op: 0.12, n: 60 },
-  tpl: {
-    s: {
-      w: 120,
-      h: 40,
-      pill: [12, 24, 102, 16],
-      c: [
-        [24, 28, 12],
-        [52, 20, 20],
-        [86, 24, 15],
-        [104, 30, 10],
+  backPeaks: [
+    [320, 182, 0.3],
+    [550, 174, 0.4],
+    [780, 166, 0.45],
+    [1140, 170, 0.35],
+    [1330, 174, 0.3],
+  ] as (readonly [number, number, number])[],
+  // the massif: six mountains, each its own shape, drawn back to front
+  mountains: [
+    {
+      id: 'outlier',
+      size: 0.5,
+      top: 4,
+      haze: 0.3,
+      sil: [
+        [836, 218],
+        [872, 190],
+        [900, 178],
+        [924, 160],
+        [948, 148],
+        [962, 158],
+        [984, 166],
+        [1010, 192],
+        [1030, 218],
+      ],
+      arete: [
+        [948, 148],
+        [944, 164],
+        [951, 180],
+        [942, 198],
+        [947, 218],
+      ],
+      ribs: [
+        [2, 884, 22],
+        [6, 996, 20],
+      ],
+      gullies: [],
+      fields: [],
+    },
+    {
+      id: 'main',
+      size: 1.25,
+      top: 6,
+      haze: 0.14,
+      sil: [
+        [1206, 218],
+        [1240, 180],
+        [1262, 162],
+        [1286, 152],
+        [1310, 114],
+        [1330, 104],
+        [1352, 76],
+        [1366, 89],
+        [1384, 93],
+        [1404, 87],
+        [1422, 112],
+        [1452, 134],
+        [1482, 170],
+        [1516, 218],
+      ],
+      arete: [
+        [1352, 76],
+        [1347, 98],
+        [1356, 116],
+        [1344, 138],
+        [1354, 160],
+        [1340, 186],
+        [1348, 218],
+      ],
+      ribs: [
+        [2, 1250, 26],
+        [4, 1292, 34],
+        [8, 1392, 30],
+        [10, 1440, 36],
+      ],
+      gullies: [
+        [1338, 100, 16],
+        [1370, 96, 20],
+        [1408, 96, 14],
+        [1322, 118, 18],
+      ],
+      fields: [
+        'M1322,130l14,-6l10,8l-6,12l-14,4Z',
+        'M1372,114l12,-4l8,10l-10,10Z',
+        'M1300,152l12,-4l6,8l-12,8Z',
+        'M1418,128l10,-2l6,10l-10,6Z',
       ],
     },
-    m: {
-      w: 190,
-      h: 62,
-      pill: [14, 36, 166, 26],
-      c: [
-        [34, 42, 20],
-        [78, 30, 28],
-        [124, 26, 26],
-        [160, 42, 20],
+    {
+      id: 'edge',
+      size: 0.6,
+      top: 2,
+      haze: 0,
+      sil: [
+        [1516, 218],
+        [1546, 160],
+        [1574, 131],
+        [1600, 146],
+        [1600, 218],
+      ],
+      arete: [
+        [1574, 131],
+        [1570, 152],
+        [1578, 172],
+        [1568, 196],
+        [1574, 218],
+      ],
+      ribs: [[1, 1548, 20]],
+      gullies: [[1570, 144, 10]],
+      fields: [],
+    },
+    {
+      id: 'shoulder',
+      size: 0.6,
+      top: 4,
+      haze: 0,
+      sil: [
+        [956, 218],
+        [998, 178],
+        [1022, 171],
+        [1046, 142],
+        [1074, 128],
+        [1090, 139],
+        [1114, 152],
+        [1150, 192],
+        [1176, 218],
+      ],
+      arete: [
+        [1074, 128],
+        [1070, 148],
+        [1078, 166],
+        [1068, 188],
+        [1074, 218],
+      ],
+      ribs: [
+        [2, 1012, 24],
+        [6, 1122, 24],
+      ],
+      gullies: [
+        [1066, 140, 10],
+        [1084, 142, 9],
+      ],
+      fields: ['M1056,150l8,-4l6,8l-8,6Z'],
+    },
+    {
+      id: 'west',
+      size: 0.95,
+      top: 4,
+      haze: 0,
+      sil: [
+        [1038, 218],
+        [1082, 162],
+        [1104, 147],
+        [1128, 113],
+        [1150, 98],
+        [1162, 109],
+        [1178, 105],
+        [1196, 127],
+        [1224, 152],
+        [1262, 192],
+        [1292, 218],
+      ],
+      arete: [
+        [1150, 98],
+        [1146, 118],
+        [1154, 134],
+        [1143, 156],
+        [1151, 176],
+        [1140, 198],
+        [1146, 218],
+      ],
+      ribs: [
+        [2, 1088, 28],
+        [6, 1188, 26],
+        [8, 1238, 30],
+      ],
+      gullies: [
+        [1136, 116, 14],
+        [1168, 114, 12],
+        [1122, 130, 12],
+      ],
+      fields: [
+        'M1128,134l10,-6l8,10l-12,8Z',
+        'M1170,130l8,-2l6,10l-10,4Z',
+        'M1206,150l10,-3l5,8l-11,5Z',
       ],
     },
-    l: {
-      w: 280,
-      h: 84,
-      pill: [18, 50, 250, 34],
-      c: [
-        [44, 58, 26],
-        [100, 42, 36],
-        [164, 34, 34],
-        [222, 52, 30],
-        [250, 66, 18],
+    {
+      id: 'east',
+      size: 0.8,
+      top: 3,
+      haze: 0,
+      sil: [
+        [1398, 218],
+        [1440, 162],
+        [1462, 147],
+        [1490, 112],
+        [1506, 123],
+        [1524, 141],
+        [1548, 151],
+        [1580, 192],
+        [1600, 208],
+        [1600, 218],
       ],
+      arete: [
+        [1490, 112],
+        [1486, 132],
+        [1494, 150],
+        [1484, 172],
+        [1491, 194],
+        [1485, 218],
+      ],
+      ribs: [
+        [1, 1434, 24],
+        [5, 1532, 28],
+        [6, 1564, 24],
+      ],
+      gullies: [
+        [1480, 128, 12],
+        [1500, 128, 10],
+      ],
+      fields: ['M1472,138l8,-4l6,8l-8,8Z', 'M1508,144l10,-2l4,10l-10,4Z'],
     },
-  } as Record<'s' | 'm' | 'l', { w: number; h: number; pill: number[]; c: number[][] }>,
-  shadeAt: 0.66,
-  deck: { y: 104, arcs: [90, 150], depth: [9, 17] },
-  stretch: 1.25,
-  precip: {
-    top: 60,
-    mask: [900, 1050],
-    leftOp: 0.2,
-    rain: [45, 80, 120],
-    snow: [60, 100, 150],
-    drizzle: 50,
-    hail: 40,
-    slant: [10, 10, 28, 42],
-    showers: [1150, 1500],
-    curtain: [1400, 1600, 34],
-    len: 18,
-    width: 2,
-    op: 0.75,
-    hailFrom: 1000,
-    mass: [1130, 74, 1.35],
-  },
-  fog: [
-    [1040, 560, 192, 18, 'far'],
-    [640, 700, 226, 22, 'far'],
-    [240, 620, 262, 24, 'near'],
-    [940, 660, 252, 26, 'near'],
-    [1260, 380, 234, 16, 'near'],
-  ] as const,
-  rainbow: { cx: 1180, cy: 330, r: 196, w: 5, op: 0.7, fade: [214, 274] },
-  bolt: [
-    [1296, 190],
-    [1316, 190],
-    [1305, 222],
-    [1321, 222],
-    [1288, 280],
-    [1298, 236],
-    [1283, 236],
+  ] as Mountain[],
+  // round wooded hills in front of the massif, and the clearings on them
+  hills: [
+    [-20, 236],
+    [130, 222],
+    [250, 232],
+    [390, 214],
+    [520, 228],
+    [650, 212],
+    [790, 224],
+    [900, 206],
+    [990, 218],
+    [1060, 196],
+    [1120, 206],
+    [1190, 188],
+    [1262, 208],
+    [1330, 198],
+    [1400, 212],
+    [1466, 184],
+    [1530, 198],
+    [1620, 180],
   ] as Pt[],
-  skew: [0, 6, 12, 20],
-  shelter: { x1: 1300, op: 0.75, y0: 196, y1: 252 },
-  /** Head x, y, tail length (up and to the right). */
+  clearings: [
+    'M1040,212q16,-10 34,-6q-8,10 -34,6Z',
+    'M1176,202q18,-9 40,-3q-14,9 -40,3Z',
+    'M1450,200q20,-12 44,-8q-12,12 -44,8Z',
+  ],
+  f1: [
+    [0, 244],
+    [400, 238],
+    [800, 241],
+    [1100, 235],
+    [1400, 231],
+    [1600, 227],
+  ] as Pt[],
+  f2: [
+    [0, 264],
+    [400, 259],
+    [800, 263],
+    [985, 258],
+  ] as Pt[],
+  backShore: 'M930,270C1000,252 1100,249 1200,251C1290,252 1352,256 1410,264L1410,300L930,300Z',
+  lake: 'M1002,281C1004,270 1052,263 1110,262C1150,261 1168,266 1196,264C1250,260 1318,264 1336,274C1348,282 1330,292 1290,297C1240,303 1180,300 1130,303C1070,306 1000,298 1002,281Z',
+  lakeBox: [1002, 1340, 262, 304],
+  ground: [
+    [-20, 292],
+    [160, 286],
+    [330, 291],
+    [520, 289],
+    [700, 287],
+    [860, 293],
+    [990, 297],
+    [1080, 306],
+    [1160, 307],
+    [1310, 304],
+    [1344, 293],
+    [1372, 280],
+    [1410, 269],
+    [1458, 265],
+    [1560, 263],
+    [1620, 258],
+  ] as Pt[],
+  way: 'M1424,267C1408,278 1436,288 1416,298C1402,306 1414,314 1408,320L1438,320C1442,312 1428,307 1440,297C1456,286 1424,279 1436,267Z',
+  arc: { x0: 1010, x1: 1550, yLow: 150, rise: 80 },
+  phoneBodyX: 1438,
+  /** The phone's crop (CONCEPT §5): scale, the quiet edge. */
+  phone: { k: 0.46, quietX: 1000 },
+  cabin: [1404, 266, 1.15] as const,
+  shed: [1350, 280, 0.62] as const,
+  farHouses: [
+    [1086, 256],
+    [1110, 258],
+    [1232, 254],
+    [1250, 256],
+  ] as Pt[],
+  flag: [1340, 292] as Pt,
+  jetty: [1318, 289] as Pt,
+  boat: [1264, 288] as Pt,
+  behind: [
+    ['spruce', 1396, 264, 62],
+    ['spruce', 1484, 260, 76],
+    ['fir', 1502, 262, 40],
+  ] as Tree[],
+  trees: [
+    ['spruce', 1562, 268, 118],
+    ['spruce', 1592, 262, 84],
+    ['pine', 1512, 268, 70],
+    ['birch', 1546, 272, 46],
+    ['bush', 1578, 274, 7],
+    ['leaf', 1324, 298, 15],
+    ['birch', 1372, 284, 40],
+    ['spruce', 958, 296, 64],
+    ['fir', 930, 293, 44],
+    ['pine', 984, 298, 50],
+    ['leaf', 890, 291, 13],
+    ['bush', 1004, 300, 6],
+    ['bush', 906, 296, 5],
+    ['spruce', 872, 294, 38],
+    ['birch', 1014, 303, 34],
+    ['spruce', 1446, 300, 30],
+    ['fir', 1470, 304, 22],
+    ['leaf', 1610, 296, 14],
+    ['fir', 1182, 258, 14],
+    ['fir', 1194, 259, 11],
+    ['fir', 1150, 257, 12],
+  ] as Tree[],
+  // four bolts, each its own figure, in the order the levels take them
+  bolts: [
+    {
+      w: 4.4,
+      op: 1,
+      p: [
+        [1218, 118],
+        [1213, 131],
+        [1220, 139],
+        [1209, 152],
+        [1214, 160],
+        [1203, 171],
+        [1207, 181],
+        [1194, 196],
+        [1198, 205],
+        [1187, 219],
+        [1190, 226],
+        [1178, 240],
+      ],
+      forks: [
+        [
+          [1209, 152],
+          [1222, 160],
+          [1228, 172],
+          [1240, 178],
+          [1244, 190],
+        ],
+        [
+          [1194, 196],
+          [1182, 202],
+          [1176, 212],
+          [1166, 216],
+        ],
+      ],
+    },
+    {
+      w: 3.2,
+      op: 0.95,
+      p: [
+        [1470, 120],
+        [1466, 134],
+        [1473, 142],
+        [1465, 156],
+        [1469, 166],
+        [1458, 176],
+        [1460, 186],
+        [1450, 198],
+        [1452, 208],
+      ],
+      forks: [
+        [
+          [1469, 166],
+          [1480, 174],
+          [1478, 184],
+          [1488, 192],
+        ],
+      ],
+    },
+    {
+      w: 2.6,
+      op: 0.9,
+      p: [
+        [1300, 122],
+        [1318, 116],
+        [1332, 124],
+        [1352, 118],
+        [1368, 127],
+        [1390, 121],
+        [1404, 131],
+        [1426, 126],
+      ],
+      forks: [
+        [
+          [1368, 127],
+          [1372, 140],
+          [1366, 148],
+          [1371, 160],
+        ],
+        [
+          [1332, 124],
+          [1328, 134],
+          [1334, 141],
+        ],
+      ],
+    },
+    {
+      w: 1.9,
+      op: 0.55,
+      p: [
+        [1042, 116],
+        [1038, 128],
+        [1044, 136],
+        [1035, 150],
+        [1039, 158],
+        [1030, 172],
+        [1033, 180],
+        [1026, 196],
+      ],
+      forks: [
+        [
+          [1035, 150],
+          [1028, 156],
+          [1026, 164],
+        ],
+      ],
+    },
+  ] as { w: number; op: number; p: Pt[]; forks: Pt[][] }[],
+  /** The glow where the main bolt leaves the cloud (CONCEPT §7). */
+  glow: [1216, 122, 52] as const,
+  cloudShapes: [
+    {
+      l: [
+        [-18, -8, 13],
+        [0, -16, 17],
+        [20, -9, 13],
+      ],
+      b: [-30, 32],
+    },
+    {
+      l: [
+        [-52, -7, 12],
+        [-30, -15, 17],
+        [-4, -21, 22],
+        [24, -14, 18],
+        [48, -8, 13],
+      ],
+      b: [-64, 60],
+    },
+    {
+      l: [
+        [-26, -9, 15],
+        [-6, -24, 20],
+        [10, -40, 16],
+        [26, -20, 19],
+        [44, -8, 12],
+      ],
+      b: [-40, 56],
+    },
+    {
+      l: [
+        [-40, -10, 15],
+        [-18, -20, 19],
+        [8, -10, 14],
+        [30, -22, 20],
+        [52, -9, 13],
+      ],
+      b: [-54, 64],
+    },
+    {
+      l: [
+        [-14, -5, 8],
+        [2, -9, 10],
+        [18, -5, 8],
+      ],
+      b: [-22, 26],
+    },
+  ] as { l: (readonly [number, number, number])[]; b: readonly [number, number] }[],
+  cumulus: [
+    [1430, 84, 1.05, 1],
+    [1090, 100, 0.8, 0],
+    [1300, 76, 1.1, 2],
+    [1180, 66, 0.9, 4],
+    [1520, 58, 0.9, 3],
+    [1010, 62, 1, 1],
+    [1390, 46, 1.1, 3],
+    [1240, 50, 1, 0],
+    [1565, 100, 0.75, 4],
+  ] as (readonly [number, number, number, number])[],
+  banks: [
+    {
+      at: [-150, 26],
+      l: [
+        [-50, 2, 20],
+        [-20, -12, 26],
+        [12, -8, 22],
+        [40, 4, 18],
+        [-78, 8, 14],
+      ],
+      base: [-18, 12, 76, 13],
+    },
+    {
+      at: [-120, -30],
+      l: [
+        [-50, 0, 14],
+        [-24, -8, 18],
+        [4, -10, 20],
+        [32, -4, 16],
+        [56, 2, 12],
+      ],
+      base: [2, 6, 64, 9],
+    },
+    {
+      at: [128, 20],
+      l: [
+        [-34, 0, 16],
+        [-8, -10, 22],
+        [20, -4, 18],
+        [44, 6, 14],
+      ],
+      base: [6, 9, 56, 10],
+    },
+    {
+      at: [108, -34],
+      l: [
+        [-40, 2, 14],
+        [-14, -8, 20],
+        [14, -6, 18],
+        [40, 2, 14],
+      ],
+      base: [0, 7, 52, 9],
+    },
+    {
+      at: [-62, 40],
+      l: [
+        [-70, 6, 20],
+        [-44, -8, 26],
+        [-14, -14, 24],
+        [14, -4, 20],
+        [40, 6, 16],
+        [-96, 12, 14],
+      ],
+      base: [-30, 16, 86, 14],
+    },
+    {
+      at: [38, 48],
+      l: [
+        [-36, -2, 18],
+        [-10, -16, 24],
+        [18, -10, 22],
+        [44, 2, 18],
+        [70, 8, 14],
+      ],
+      base: [16, 12, 70, 13],
+    },
+  ] as {
+    at: Pt;
+    l: (readonly [number, number, number])[];
+    base: readonly [number, number, number, number];
+  }[],
+  lean: [0, 0.05, 0.24, 0.42],
+  slant: [0, 0.14, 0.42, 0.8],
+  rain: [0, 46, 96, 170],
+  snow: [0, 60, 110, 170],
+};
+
+/** Sky events in the new picture (mockups/events.js `E`). */
+export const E = {
   meteors: [
-    [1214, 76, 108],
-    [1430, 116, 72],
-    [1010, 66, 62],
-  ] as const,
-  /**
-   * Aurora curtains: x0, x1, base y, height share, wave phase; top = base − h(amount); only the first `few` below an
-   * amount of 0.6. `op` = base + share × amount; `glow` = cx, cy, rx, ry of the faint glow behind them.
-   */
+    [1258, 60, 104],
+    [1478, 44, 70],
+    [1064, 70, 62],
+  ] as (readonly [number, number, number])[],
+  milky: { cx: 1260, cy: 92, rx: 420, ry: 42, rot: -14, op: 0.13, n: 70 },
+  rainbow: { cx: 1290, cy: 300, r: 190, w: 5, op: 0.72, fade: [196, 258] },
   aurora: {
     bands: [
-      [985, 1290, 198, 1, 0],
-      [1100, 1490, 190, 0.85, 1.7],
-      [1310, 1630, 200, 0.7, 3.1],
-      [1020, 1210, 206, 0.5, 4.4],
-    ] as const,
+      [985, 1290, 162, 1, 0],
+      [1100, 1490, 146, 0.85, 1.7],
+      [1310, 1630, 156, 0.7, 3.1],
+      [1020, 1210, 170, 0.5, 4.4],
+    ] as (readonly [number, number, number, number, number])[],
     few: 2,
     h: 128,
-    top: 70,
-    op: [0.2, 0.3] as const,
-    glow: [1260, 206, 520, 90] as const,
+    top: 24,
+    op: [0.2, 0.3],
+    glow: [1260, 160, 520, 90],
+    left: 960,
   },
-  motion: { rain: 2.4, rainHeavy: 1.6, snow: [10, 15], total: 12 },
-  windStrokes: [
-    [1150, 156, 190],
-    [1238, 188, 210],
-    [1330, 132, 170],
-  ],
+  left: 900,
 };
+
+/** How a sky lights the land (palette.js `light`): mix toward `--scene-light-<sky>` by k after greying by `grey`. */
+const LIGHT: Record<string, readonly [k: number, grey: number]> = {
+  day: [0, 0],
+  heat: [0.12, 0],
+  golden: [0.16, 0],
+  overcast: [0.2, 0.3],
+  drizzle: [0.26, 0.32],
+  rain: [0.4, 0.35],
+  storm: [0.42, 0.25],
+  snow: [0.22, 0.35],
+  fog: [0.34, 0.45],
+  dust: [0.3, 0.2],
+  dawn: [0.56, 0.1],
+  dusk: [0.56, 0.1],
+  night: [0.76, 0.2],
+  'night-full': [0.64, 0.15],
+  'eclipse-sky': [0.6, 0.2],
+};
+/** Day skies in the dark theme: one more step toward night (`--scene-light-dark-theme`). */
+const DARK_THEME_K = 0.42;
+/** Skies with a twilight glow (palette.js `glow`). */
+const GLOW: ReadonlySet<SkyKey> = new Set<SkyKey>(['dawn', 'dusk', 'golden', 'eclipse-sky']);
 
 /** Offsets of each sky's gradient stops (the colours are `--scene-sky-<key>-<i>`); golden differs by theme. */
 const SKY_OFFSETS: Record<SkyKey, readonly number[]> = {
@@ -288,7 +714,7 @@ const SKY_OFFSETS: Record<SkyKey, readonly number[]> = {
 export const skyOffsets = (key: SkyKey, theme: 'light' | 'dark'): readonly number[] =>
   key === 'golden' && theme === 'dark' ? [0, 0.6, 1] : SKY_OFFSETS[key];
 
-/* ============================== utilities ============================== */
+/* ============================== utilities (mockup scene.js) ============================== */
 function prng(seed: number): () => number {
   let a = seed >>> 0;
   return () => {
@@ -299,1469 +725,274 @@ function prng(seed: number): () => number {
   };
 }
 const f = (n: number): number => Math.round(n * 10) / 10;
-/** Two decimals as a string, as the mockup writes faint opacities (a number attribute is rounded to one). */
-const p2 = (n: number): string => String(Math.round(n * 100) / 100);
+type Attr = string | number | null | undefined;
+const ESC: Record<string, string> = { '&': '&amp;', '<': '&lt;', '"': '&quot;' };
+function el(tag: string, o: Record<string, Attr>, inner?: string): string {
+  let s = `<${tag}`;
+  for (const k of Object.keys(o)) {
+    const v = o[k];
+    if (v == null || v === '') continue;
+    // Values are numbers, closed enums of the state and token names only – nothing a person typed; escaped all the same.
+    const val =
+      k === 'd' && typeof v === 'string'
+        ? compactPath(v)
+        : typeof v === 'number'
+          ? String(Math.round(v * 100) / 100).replace(/^(-?)0\./, '$1.')
+          : String(v).replace(/[&<"]/g, (c) => ESC[c]!);
+    s += ` ${k}="${val}"`;
+  }
+  return s + (inner == null ? '/>' : `>${inner}</${tag}>`);
+}
+/** One decimal, without a leading zero (`.5`, `-.5`). */
+const num = (v: number): string => {
+  const r = Math.round(v * 10) / 10;
+  const t = String(Object.is(r, -0) ? 0 : r);
+  return t.replace(/^(-?)0\./, '$1.');
+};
+/**
+ * The right edge every shape is cut at (scene units). The picture's right edge is x 1600 – nothing right of it is ever
+ * seen, but a shape that reaches past it still counts as wider than the window (`e2e/seed/layout-overflow`). Inside the
+ * body's translated group it is `W − body x` (see `drawBody`).
+ */
+let LIM = 1600;
+const ARGS: Record<string, number> = { m: 2, l: 2, h: 1, v: 1, q: 4, t: 2, c: 6, s: 4, a: 7, z: 0 };
+/**
+ * The same path, written short (A11Y §4 markup ceiling): every command relative, one decimal, no leading zeros. The
+ * relative steps are taken between the rounded absolute points, so the shape does not drift.
+ */
+export function compactPath(d: string): string {
+  const tokens = d.match(/[a-zA-Z]|-?(?:\d+\.?\d*|\.\d+)(?:e-?\d+)?/g) ?? [];
+  let out = '';
+  // `ux, uy`: where the pen is in the drawing; `x, y`: where the written path is (cut at the right edge `LIM`).
+  let ux = 0;
+  let uy = 0;
+  let x = 0;
+  let y = 0;
+  let usx = 0;
+  let usy = 0;
+  let sx = 0;
+  let sy = 0;
+  let i = 0;
+  let cmd = '';
+  let last = '';
+  const put = (c: string, vals: number[]): void => {
+    let body = '';
+    for (const v of vals) {
+      const t = num(v);
+      body +=
+        body && !t.startsWith('-') && !(t.startsWith('.') && /\.\d*$/.test(body)) ? ` ${t}` : t;
+    }
+    // the same command repeats implicitly (an `m` continues as `l`)
+    if (c === last && c !== 'm') out += body.startsWith('-') ? body : ` ${body}`;
+    else out += c + body;
+    last = c === 'm' ? 'l' : c;
+  };
+  const r = (v: number): number => Math.round(v * 10) / 10;
+  const cx = (v: number): number => Math.min(LIM, v);
+  /** A straight piece to the drawing's (tx, ty): where it crosses the edge, the crossing comes first. */
+  const lineTo = (tx: number, ty: number): void => {
+    if (ux <= LIM !== tx <= LIM && tx !== ux) {
+      const yi = r(uy + ((ty - uy) * (LIM - ux)) / (tx - ux));
+      put('l', [r(LIM - x), r(yi - y)]);
+      x = LIM;
+      y = yi;
+    }
+    const nx = cx(tx);
+    const dx = r(nx - x);
+    const dy = r(ty - y);
+    if (dy === 0) put('h', [dx]);
+    else if (dx === 0) put('v', [dy]);
+    else put('l', [dx, dy]);
+    x = nx;
+    y = ty;
+    ux = tx;
+    uy = ty;
+  };
+  while (i < tokens.length) {
+    const tk = tokens[i]!;
+    if (/[a-zA-Z]/.test(tk)) {
+      cmd = tk;
+      i++;
+      if (cmd === 'z' || cmd === 'Z') {
+        // the closing piece may cross the edge too
+        if (ux <= LIM !== usx <= LIM && usx !== ux) {
+          const yi = r(uy + ((usy - uy) * (LIM - ux)) / (usx - ux));
+          put('l', [r(LIM - x), r(yi - y)]);
+        }
+        out += 'z';
+        last = 'z';
+        ux = usx;
+        uy = usy;
+        x = sx;
+        y = sy;
+        continue;
+      }
+    }
+    const lower = cmd.toLowerCase();
+    const n = ARGS[lower]!;
+    const a = tokens.slice(i, i + n).map(Number);
+    i += n;
+    const rel = cmd === lower;
+    const px = (k: number): number => r(rel ? ux + a[k]! : a[k]!);
+    const py = (k: number): number => r(rel ? uy + a[k]! : a[k]!);
+    if (lower === 'h') lineTo(px(0), uy);
+    else if (lower === 'v') lineTo(ux, r(rel ? uy + a[0]! : a[0]!));
+    else if (lower === 'l') lineTo(px(0), py(1));
+    else if (lower === 'm') {
+      const tx = px(0);
+      const ty = py(1);
+      put('m', [r(cx(tx) - x), r(ty - y)]);
+      ux = usx = tx;
+      uy = usy = ty;
+      x = sx = cx(tx);
+      y = sy = ty;
+      cmd = rel ? 'l' : 'L';
+    } else if (lower === 'a') {
+      const tx = px(5);
+      const ty = py(6);
+      const nx = cx(tx);
+      // the two flags need no separator (SVG path grammar): `a5 5 0 1110 0`
+      put('a', [a[0]!, a[1]!, a[2]!]);
+      const dy = num(ty - y);
+      out += ` ${a[3] ? 1 : 0}${a[4] ? 1 : 0}${num(nx - x)}${dy.startsWith('-') ? '' : ' '}${dy}`;
+      last = 'a+';
+      x = nx;
+      y = ty;
+      ux = tx;
+      uy = ty;
+    } else {
+      // curves: control and end points held at the edge (only ever the last units of a crown or a billow)
+      const vals: number[] = [];
+      for (let k = 0; k < n; k += 2) vals.push(r(cx(px(k)) - x), r(py(k + 1) - y));
+      put(lower, vals);
+      const tx = px(n - 2);
+      const ty = py(n - 1);
+      x = cx(tx);
+      y = ty;
+      ux = tx;
+      uy = ty;
+    }
+  }
+  return out;
+}
+const pts = (a: readonly Pt[], close?: boolean): string =>
+  `M${a.map((p) => `${f(p[0])},${f(p[1])}`).join('L')}${close ? 'Z' : ''}`;
+function yAt(line: readonly Pt[], x: number): number {
+  for (let i = 1; i < line.length; i++)
+    if (x <= line[i]![0]) {
+      const a = line[i - 1]!;
+      const b = line[i]!;
+      return a[1] + ((b[1] - a[1]) * (x - a[0])) / (b[0] - a[0] || 1);
+    }
+  return line[line.length - 1]![1];
+}
+function jag(line: readonly Pt[], seed: number, amp: number, step: number): Pt[] {
+  const r = prng(seed);
+  const out: Pt[] = [line[0]!];
+  for (let i = 1; i < line.length; i++) {
+    const a = line[i - 1]!;
+    const b = line[i]!;
+    const d = b[0] - a[0];
+    const n = Math.max(1, Math.round(d / step));
+    for (let j = 1; j < n; j++) {
+      const t = j / n + ((r() - 0.5) * 0.3) / n;
+      out.push([a[0] + d * t, a[1] + (b[1] - a[1]) * t + (r() - 0.5) * 2 * amp]);
+    }
+    out.push(b);
+  }
+  return out;
+}
+/** An ellipse, cut at `lim` (the right edge): the part left of it, closed along the edge. */
+function ellCut(cx: number, cy: number, rx: number, ry: number, lim: number): string {
+  if (cx + rx <= lim)
+    return `M${f(cx - rx)},${f(cy)}a${f(rx)},${f(ry)} 0 1,1 ${f(2 * rx)},0a${f(rx)},${f(ry)} 0 1,1 ${f(-2 * rx)},0Z`;
+  if (cx - rx >= lim) return '';
+  const dy = ry * Math.sqrt(1 - ((lim - cx) / rx) ** 2);
+  // From the lower cut point round the left side to the upper one: clockwise on screen, the same winding as a whole
+  // circle (`a … 0 1,1`), so cut and whole lobes in one path never cancel each other out (non-zero fill).
+  return `M${f(lim)},${f(cy + dy)}A${f(rx)},${f(ry)} 0 ${cx < lim ? 1 : 0},1 ${f(lim)},${f(cy - dy)}Z`;
+}
+const circ = (x: number, y: number, r: number, lim = LIM): string => ellCut(x, y, r, r, lim);
+const rrect = (x: number, y: number, w: number, h: number, r: number): string =>
+  `M${f(x + r)},${f(y)}h${f(w - 2 * r)}a${f(r)},${f(r)} 0 0,1 0,${f(h)}h${f(-(w - 2 * r))}a${f(r)},${f(r)} 0 0,1 0,${f(-h)}Z`;
+const ell = (cx: number, cy: number, rx: number, ry: number, lim = LIM): string =>
+  ellCut(cx, cy, rx, ry, lim);
+function smooth(p: readonly Pt[], closeTo?: number): string {
+  let d = `M${f(p[0]![0])},${f(p[0]![1])}`;
+  for (let i = 1; i < p.length - 1; i++)
+    d += `Q${f(p[i]![0])},${f(p[i]![1])} ${f((p[i]![0] + p[i + 1]![0]) / 2)},${f((p[i]![1] + p[i + 1]![1]) / 2)}`;
+  const l = p[p.length - 1]!;
+  d += `L${f(l[0])},${f(l[1])}`;
+  return closeTo == null ? d : `${d}L${f(l[0])},${closeTo}L${f(p[0]![0])},${closeTo}Z`;
+}
+function ribbon(p: readonly Pt[], w0: number, w1: number): string {
+  const L: Pt[] = [];
+  const R: Pt[] = [];
+  const n = p.length - 1;
+  for (let i = 0; i <= n; i++) {
+    const a = p[Math.max(0, i - 1)]!;
+    const b = p[Math.min(n, i + 1)]!;
+    const dx = b[0] - a[0];
+    const dy = b[1] - a[1];
+    const l = Math.hypot(dx, dy) || 1;
+    const w = (w0 + ((w1 - w0) * i) / n) / 2;
+    L.push([p[i]![0] - (dy / l) * w, p[i]![1] + (dx / l) * w]);
+    R.unshift([p[i]![0] + (dy / l) * w, p[i]![1] - (dx / l) * w]);
+  }
+  return pts(L.concat(R), true);
+}
 
-/** A colour: a palette key becomes its token; an expression (`var(…)`, `color-mix(…)`, a keyword) stays. */
+/* ============================== colours as CSS ============================== */
+/**
+ * A colour: a palette key becomes its token; an expression (`var(…)`, a keyword) stays. Only ever called with literals
+ * and expressions built in this file, never with outside data.
+ */
 export function tok(h: string): string {
   return /^(var\(|color-mix\(|url\(|white$|black$|none$|currentColor$)/.test(h)
     ? h
     : `var(--scene-${h})`;
 }
-/** `a` blended toward `b` by `t` (0 = a, 1 = b), as CSS. */
-export function mix(a: string, b: string, t: number): string {
-  if (t <= 0) return tok(a);
-  if (t >= 1) return tok(b);
-  return `color-mix(in srgb, ${tok(a)}, ${tok(b)} ${f(t * 100)}%)`;
-}
-
-type Attr = string | number | boolean | null | undefined;
-const ESC: Record<string, string> = { '&': '&amp;', '<': '&lt;', '"': '&quot;' };
-function attrs(o: Record<string, Attr>): string {
-  let s = '';
-  for (const k of Object.keys(o)) {
-    const v = o[k];
-    if (v == null || v === false) continue;
-    // Values come from numbers, tables and token names only; escaped all the same, the markup goes to innerHTML.
-    const val = typeof v === 'number' ? String(f(v)) : String(v).replace(/[&<"]/g, (c) => ESC[c]!);
-    s += ` ${k}="${val}"`;
-  }
-  return s;
-}
-function el(tag: string, o: Record<string, Attr>, inner?: string): string {
-  return `<${tag}${attrs(o)}${inner == null ? '/>' : `>${inner}</${tag}>`}`;
-}
-const circ = (x: number, y: number, r: number): string =>
-  `M${f(x - r)},${f(y)}a${f(r)},${f(r)} 0 1,1 ${f(2 * r)},0a${f(r)},${f(r)} 0 1,1 ${f(-2 * r)},0`;
-function rrect(x: number, y: number, w: number, h: number, r: number): string {
-  return (
-    `M${f(x + r)},${f(y)}h${f(w - 2 * r)}a${f(r)},${f(r)} 0 0 1 ${f(r)},${f(r)}v${f(h - 2 * r)}` +
-    `a${f(r)},${f(r)} 0 0 1 ${f(-r)},${f(r)}h${f(2 * r - w)}a${f(r)},${f(r)} 0 0 1 ${f(-r)},${f(-r)}` +
-    `v${f(2 * r - h)}a${f(r)},${f(r)} 0 0 1 ${f(r)},${f(-r)}z`
-  );
-}
-
-interface Ridge {
-  y: (x: number) => number;
-  crest: string;
-  fill: string;
-}
-/** Smooth ridge through key points: cubic Hermite with Catmull-Rom tangents, written as exact Bézier segments. */
-function spline(keys: readonly Pt[]): Ridge {
-  const n = keys.length;
-  const m: number[] = [];
-  for (let i = 0; i < n; i++) {
-    const a = keys[Math.max(0, i - 1)]!;
-    const b = keys[Math.min(n - 1, i + 1)]!;
-    m.push((b[1] - a[1]) / (b[0] - a[0]));
-  }
-  const y = (x: number): number => {
-    for (let i = 0; i < n - 1; i++)
-      if (x <= keys[i + 1]![0] || i === n - 2) {
-        const k0 = keys[i]!;
-        const k1 = keys[i + 1]!;
-        const h = k1[0] - k0[0];
-        const t = Math.max(0, Math.min(1, (x - k0[0]) / h));
-        const t2 = t * t;
-        const t3 = t2 * t;
-        return (
-          (2 * t3 - 3 * t2 + 1) * k0[1] +
-          (t3 - 2 * t2 + t) * h * m[i]! +
-          (-2 * t3 + 3 * t2) * k1[1] +
-          (t3 - t2) * h * m[i + 1]!
-        );
-      }
-    return keys[n - 1]![1];
-  };
-  let d = `M${keys[0]![0]},${keys[0]![1]}`;
-  for (let j = 0; j < n - 1; j++) {
-    const k0 = keys[j]!;
-    const k1 = keys[j + 1]!;
-    const h = k1[0] - k0[0];
-    d += `C${f(k0[0] + h / 3)},${f(k0[1] + (m[j]! * h) / 3)} ${f(k1[0] - h / 3)},${f(k1[1] - (m[j + 1]! * h) / 3)} ${k1[0]},${k1[1]}`;
-  }
-  return { y, crest: d, fill: `${d}V${G.H}H0Z` };
-}
-
-/** The skyline (alpine and far crest, whichever is higher) at x: what lies behind it is hidden by the ridges. */
-export function crestAt(x: number): number {
-  return Math.min(spline(G.ridges.alp).y(x), spline(G.ridges.far).y(x));
-}
-
-/* ============================== context ============================== */
-type Stop = readonly [number, string, (number | string)?];
-interface Ctx {
-  s: SceneState;
-  defs: string[];
-  id: string;
-  n: number;
-  ext: number;
-  quiet: number | null;
-  haloK: number;
-  skyMid: string;
-  skyFill: string;
-  bodyX: number | null;
-  bodyP: Pt | null;
-  br: number;
-  clearBody: boolean;
-  rm?: string;
-}
-const uid = (X: Ctx, p: string): string => `${X.id}${p}${X.n++}`;
-function grad(
-  X: Ctx,
-  stops: readonly Stop[],
-  o: Record<string, Attr> & { radial?: boolean },
-): string {
-  const id = uid(X, 'g');
-  const { radial, ...rest } = o;
-  X.defs.push(
-    el(
-      radial ? 'radialGradient' : 'linearGradient',
-      { ...rest, id },
-      stops
-        .map((st) =>
-          el('stop', { offset: st[0], 'stop-color': tok(st[1]), 'stop-opacity': st[2] ?? null }),
-        )
-        .join(''),
-    ),
-  );
-  return `url(#${id})`;
-}
-function clip(X: Ctx, inner: string): string {
-  const id = uid(X, 'c');
-  X.defs.push(el('clipPath', { id }, inner));
-  return `url(#${id})`;
-}
-function mask(X: Ctx, inner: string): string {
-  const id = uid(X, 'm');
-  X.defs.push(
-    el(
-      'mask',
-      { id, maskUnits: 'userSpaceOnUse', x: 0, y: -300, width: G.W, height: G.H + 300 },
-      inner,
-    ),
-  );
-  return `url(#${id})`;
-}
-
-const PRECIP = FALLING;
-const nightish = (s: SceneState): boolean =>
-  s.phase === 'night' || s.phase === 'dawn' || s.phase === 'dusk';
-/** Night, twilight or the darkness of a total solar eclipse: clouds take their night tone. */
-const darkSky = (s: SceneState): boolean => nightish(s) || s.event === 'solarTotal';
-/** … and the star night: the land takes its night colours. */
-const nightLand = (s: SceneState): boolean => darkSky(s) || s.event === 'starNight';
-
-function skyStops(s: SceneState, key: SkyKey): Stop[] {
-  // a partial solar eclipse beyond 60 %: the sky one step dimmer
-  const dim = s.event === 'solarPartial' && s.eventAmount > 0.6 ? 0.3 : 0;
-  return skyOffsets(key, s.theme).map((o, i) => {
-    const c = `var(--scene-sky-${key}-${i})`;
-    return [o, dim ? mix(c, 'dim-target', dim) : c] as const;
-  });
-}
-/** The sky gradient's colour at a height (for atmospheric perspective). */
-function skyAt(stops: readonly Stop[], y: number): string {
-  const t = y / G.H;
-  for (let i = 0; i < stops.length - 1; i++)
-    if (t <= stops[i + 1]![0])
-      return mix(
-        stops[i]![1],
-        stops[i + 1]![1],
-        (t - stops[i]![0]) / (stops[i + 1]![0] - stops[i]![0]),
-      );
-  return stops[stops.length - 1]![1];
-}
-
-/* ============================== layers ============================== */
-const layer = (name: string, inner: string, extra: Record<string, Attr> = {}): string =>
-  inner ? `<g data-layer="${name}"${attrs(extra)}>${inner}</g>` : '';
-
-function skyLayer(
-  X: Ctx,
-  sky: ReturnType<typeof skyOf>,
-  stops: readonly Stop[],
-  bp: Pt | null,
-): string {
-  const t0 = -X.ext;
-  X.skyFill = grad(X, stops, { x1: 0, y1: t0, x2: 0, y2: G.H, gradientUnits: 'userSpaceOnUse' });
-  let out = el('rect', { y: t0, width: G.W, height: G.H - t0, fill: X.skyFill });
-  if (sky.glow) {
-    const p = X.s.phase;
-    const gx = p === 'dawn' ? 1210 : p === 'dusk' ? 1480 : bp ? bp[0] : 1300;
-    const col = `glow-${p}`;
-    const g = sky.glow.strength;
-    const gl = grad(
-      X,
-      [
-        [0, col, 0.75 * g],
-        [0.5, col, 0.28 * g],
-        [1, col, 0],
-      ],
-      {
-        radial: true,
-        cx: gx,
-        cy: 250,
-        r: 560,
-        gradientUnits: 'userSpaceOnUse',
-        gradientTransform: `translate(${gx} 250) scale(1 0.34) translate(${-gx} -250)`,
-      },
-    );
-    out += el('rect', { width: G.W, height: G.H, fill: gl });
-  }
-  if (X.s.event === 'solarTotal')
-    out += el('rect', {
-      y: 170,
-      width: G.W,
-      height: 100,
-      fill: grad(
-        X,
-        [
-          [0, 'glow-eclipse-sky', 0],
-          [0.6, 'glow-eclipse-sky', 0.35],
-          [1, 'glow-eclipse-sky', 0],
-        ],
-        { x1: 0, y1: 0, x2: 0, y2: 1 },
-      ),
-      'data-part': 'eclipseGlow',
-    });
-  return out;
-}
-
-function starsLayer(X: Ctx): string {
-  const s = X.s;
-  const S = G.stars;
-  const p = s.phase;
-  const ev = s.event;
-  if (!nightish(s) && ev !== 'solarTotal' && ev !== 'starNight') return '';
-  const many = ev === 'starNight' || ev === 'lunarTotal';
-  const total = many ? S.many : S.n;
-  let k = (1 - s.cloud / 100) * (p === 'dawn' || p === 'dusk' ? S.few : 1);
-  if (s.body.kind === 'moon' && !many && ev !== 'lunarPartial') k *= 1 - 0.6 * (s.moon?.illum ?? 0);
-  if (s.cond === 'fog') k *= 0.3;
-  const n = Math.round(total * k);
-  const r = prng(s.seed * 13 + 1);
-  const dots = ['', '', ''];
-  let sp = '';
-  for (let i = 0; i < total; i++) {
-    const x = r() * G.W;
-    const y = S.yMin + r() * (S.yMax - S.yMin);
-    const rr = S.rMin + r() * (S.rMax - S.rMin);
-    let b = r();
-    if (i >= n) continue;
-    if (
-      s.body.kind === 'moon' &&
-      X.bodyP &&
-      Math.hypot(x - X.bodyP[0], y - X.bodyP[1]) < X.br * 1.15
-    )
-      continue;
-    const qx = X.quiet || 760;
-    if (x < qx && y > (X.quiet ? -X.ext : 64) && (b < 0.85 || x < qx - 200)) continue; // hardly any stars behind the text
-    if (x < qx) b = 0;
-    if (i < S.sparkles && x > 700) {
-      const q = S.sparkR;
-      const w = q * 0.22;
-      sp +=
-        `M${f(x)},${f(y - q)}Q${f(x + w)},${f(y - w)} ${f(x + q)},${f(y)}Q${f(x + w)},${f(y + w)} ${f(x)},${f(y + q)}` +
-        `Q${f(x - w)},${f(y + w)} ${f(x - q)},${f(y)}Q${f(x - w)},${f(y - w)} ${f(x)},${f(y - q)}Z`;
-    } else dots[b < 0.4 ? 0 : b < 0.8 ? 1 : 2] += circ(x, y, rr);
-  }
-  const star = tok('star');
-  let out = '';
-  [0.45, 0.7, 0.95].forEach((o, i) => {
-    if (dots[i]) out += el('path', { d: dots[i], fill: star, opacity: o });
-  });
-  if (sp) out += el('path', { d: sp, fill: star, opacity: 0.9 });
-  if (ev === 'starNight') {
-    // the faint band of the Milky Way: a soft ellipse and a dust of tiny stars along it
-    const M = G.milky;
-    const mw = grad(
-      X,
-      [
-        [0, 'white', 1],
-        [1, 'white', 0],
-      ],
-      { radial: true },
-    );
-    let band = el('ellipse', {
-      cx: M.cx,
-      cy: M.cy,
-      rx: M.rx,
-      ry: M.ry,
-      fill: mw,
-      opacity: M.op,
-      transform: `rotate(${M.rot} ${M.cx} ${M.cy})`,
-    });
-    let md = '';
-    const rot = (M.rot * Math.PI) / 180;
-    for (let j = 0; j < M.n; j++) {
-      const u = (r() * 2 - 1) * M.rx * 0.9;
-      const v = (r() + r() - 1) * M.ry * 0.7;
-      md += circ(
-        M.cx + u * Math.cos(rot) - v * Math.sin(rot),
-        M.cy + u * Math.sin(rot) + v * Math.cos(rot),
-        0.4 + r() * 0.5,
-      );
+/** The colour expressions of one scene, each declared once (`--c0` …) on the `<svg>`. */
+class Book {
+  vars: Record<string, string> = {};
+  private memo = new Map<string, string>();
+  ref(expr: string): string {
+    let v = this.memo.get(expr);
+    if (!v) {
+      const name = `--c${this.memo.size}`;
+      this.vars[name] = expr;
+      v = `var(${name})`;
+      this.memo.set(expr, v);
     }
-    band += el('path', { d: md, fill: star, opacity: 0.8 });
-    out += el('g', { 'data-part': 'milky' }, band);
+    return v;
   }
-  return out;
-}
-
-function sunBody(X: Ctx, x: number, y: number, r: number, bottom: string): string {
-  const s = X.s;
-  const ev = s.event;
-  const low = s.body.t < G.sun.low || s.body.t > 1 - G.sun.low;
-  if (ev === 'dust')
-    return el('circle', {
-      cx: x,
-      cy: y,
-      r,
-      fill: tok('dust-sun'),
-      opacity: 0.78,
-      'data-part': 'dustSun',
-    });
-  if (s.cond === 'fog')
-    return el('circle', { cx: x, cy: y, r, fill: mix('sun-core', bottom, 0.35), opacity: 0.78 });
-  if (ev === 'solarTotal') {
-    // dark disc, a soft corona and six rounded petals
-    const cg = grad(
-      X,
-      [
-        [0, 'white', 0.85],
-        [0.36, 'white', 0.45],
-        [1, 'white', 0],
-      ],
-      { radial: true },
-    );
-    let petals = '';
-    for (let i = 0; i < 6; i++) {
-      const a = i * 60 + 18 + (i % 2) * 9;
-      const L = r * (i % 2 ? 1.55 : 1.85);
-      const w = r * 0.55;
-      petals += el('path', {
-        d:
-          `M0,${f(-w)}C${f(L * 0.6)},${f(-w)} ${f(L)},${f(-w * 0.25)} ${f(L)},0` +
-          `C${f(L)},${f(w * 0.25)} ${f(L * 0.6)},${f(w)} 0,${f(w)}Z`,
-        transform: `rotate(${a})`,
-        fill: 'white',
-        opacity: 0.42,
-      });
-    }
-    return el(
-      'g',
-      { transform: `translate(${f(x)} ${f(y)})`, 'data-part': 'corona' },
-      el('circle', { r: r * 2.8 * X.haloK, fill: cg }) +
-        petals +
-        el('circle', { r, fill: tok('eclipse-disc'), 'data-part': 'disc' }),
-    );
+  /** `a` blended toward `b` by `t` (0 = a, 1 = b): the mockup's `mix`. */
+  mix(a: string, b: string, t: number): string {
+    if (t <= 0) return tok(a);
+    if (t >= 1) return tok(b);
+    return this.ref(`color-mix(in srgb, ${tok(a)}, ${tok(b)} ${f(t * 100)}%)`);
   }
-  const amt = ev === 'solarPartial' ? s.eventAmount : ev === 'solarAnnular' ? 0.85 : 0;
-  const ring = tok(low ? 'sun-low' : 'sun');
-  const core = low ? mix('sun-core', 'sun-low', 0.3) : tok('sun-core');
-  const key = low ? 'sun-low' : 'sun';
-  const hg = grad(
-    X,
-    [
-      [0, key, 0.9],
-      [0.4, key, 0.45],
-      [1, key, 0],
-    ],
-    { radial: true },
-  );
-  let out = el('circle', {
-    cx: x,
-    cy: y,
-    r: r * G.sun.halo * X.haloK,
-    fill: hg,
-    opacity: f(G.sun.haloOp * (1 - amt * 0.7) * 100) / 100,
-  });
-  out += el('circle', { cx: x, cy: y, r, fill: ring });
-  if (ev !== 'solarAnnular') out += el('circle', { cx: x, cy: y, r: r * G.sun.core, fill: core });
-  if (ev === 'solarPartial') {
-    // the moon's bite from the upper right: a disc of the sky itself
-    const d = 2 * r * (1 - s.eventAmount);
-    const k = Math.SQRT1_2;
-    out += el('circle', {
-      cx: x + d * k,
-      cy: y - d * k,
-      r: r + 0.5,
-      fill: X.skyFill,
-      'data-part': 'bite',
-    });
+  /**
+   * The mockup's `greyOf` (0.3 R + 0.59 G + 0.11 B): a precomputed `--scene-grey-<token>` – no relative colour
+   * syntax, which older Safari and WebViews lack. Only palette tokens are greyed (`lit` is affine, so a mix is lit
+   * part by part).
+   */
+  grey(c: string): string {
+    if (!/^[a-z0-9-]+$/.test(c)) throw new Error(`grey of a token only: ${c}`);
+    return tok(`grey-${c}`);
   }
-  if (ev === 'solarAnnular')
-    out += el('circle', {
-      cx: x,
-      cy: y,
-      r: r * 0.93,
-      fill: tok('eclipse-disc'),
-      'data-part': 'annular',
-    });
-  return out;
-}
-
-/* --- clouds --- */
-function cloudPath(t: 's' | 'm' | 'l'): string {
-  const T = G.tpl[t];
-  const p = T.pill;
-  let d = rrect(p[0]!, p[1]!, p[2]!, p[3]!, p[3]! / 2);
-  for (const c of T.c) d += circ(c[0]!, c[1]!, c[2]!);
-  return d;
-}
-interface Tone {
-  b: string;
-  sh: string;
-  op: number;
-  /** A lit upper edge under a bright moon. */
-  rim?: string;
-}
-function cloudTone(X: Ctx): Tone {
-  const s = X.s;
-  const c = s.cond;
-  const dark = s.theme === 'dark';
-  const p = s.phase;
-  const i = s.intensity;
-  const night = darkSky(s);
-  let b: string;
-  let sh: string;
-  if (night) {
-    b = tok('cloud-night');
-    sh = tok('cloud-night-shade');
-    if (PRECIP.has(c) && !isSnow(c)) {
-      b = mix(b, 'cloud-storm', 0.35);
-      sh = mix(sh, 'cloud-storm-shade', 0.4);
-    }
-    if (p === 'dawn' || p === 'dusk') b = mix(b, `glow-${p}`, 0.18);
-  } else if (isThunder(c)) {
-    b = tok('cloud-storm');
-    sh = tok('cloud-storm-shade');
-  } else if (c === 'rain' || c === 'freezingRain') {
-    const k = i === 3 ? 0.55 : i === 1 ? -0.3 : 0;
-    b = k >= 0 ? mix('cloud-rain', 'cloud-storm', k) : mix('cloud-rain', 'cloud', -k);
-    sh =
-      k >= 0
-        ? mix('cloud-rain-shade', 'cloud-storm-shade', k)
-        : mix('cloud-rain-shade', 'cloud-shade', -k);
-  } else if (isDrizzle(c) || c === 'showers') {
-    b = mix('cloud-rain', 'cloud', 0.35);
-    sh = mix('cloud-rain-shade', 'cloud-shade', 0.3);
-  } else if (isSnow(c)) {
-    b = mix('cloud-rain', 'cloud', 0.55);
-    sh = mix('cloud-rain-shade', 'cloud-shade', 0.5);
-  } else if (c === 'overcast') {
-    b = mix('cloud-shade', 'cloud-rain', 0.25);
-    sh = mix('cloud-shade', 'cloud-rain', 0.5);
-  } else {
-    b = tok('cloud');
-    sh = tok('cloud-shade');
-  }
-  if (p === 'golden' && !PRECIP.has(c)) {
-    b = mix(b, 'glow-golden', 0.22);
-    sh = mix(sh, 'cloud-golden-shade', 0.3);
-  }
-  // clouds are opaque (a sun behind one must not show through): a pre-mix with the sky instead of transparency
-  const sk = X.skyMid;
-  if (dark && !night) {
-    b = mix(b, sk, 0.5);
-    sh = mix(sh, sk, 0.5);
-  } else if (!night) {
-    b = mix(b, sk, 0.08);
-    sh = mix(sh, sk, 0.08);
-  }
-  const rim =
-    night && s.body.kind === 'moon' && (s.moon?.illum ?? 0) > 0.3
-      ? mix(b, 'moon', 0.32)
-      : undefined;
-  return { b, sh, op: 1, rim };
-}
-function cloud(
-  X: Ctx,
-  tone: Tone,
-  t: 's' | 'm' | 'l',
-  x0: number,
-  y0: number,
-  sc0: number,
-  cls = 'sc-drift',
-): string {
-  const s = X.s;
-  const T = G.tpl[t];
-  const d = cloudPath(t);
-  let x = x0;
-  let y = y0;
-  let sc = sc0;
-  if (X.quiet && x < X.quiet) {
-    // small crops: clouds out of the text
-    x = X.quiet + (x - G.shelterX) * 0.25;
-    sc *= 0.7;
-    y += 8;
-  }
-  const sx = sc * (s.wind >= 2 ? G.stretch : 1);
-  if (X.clearBody && X.bodyP) {
-    // little cover: no cloud touches the body's disc + 0.4·r (right of it, else below, else left)
-    const B = X.bodyP;
-    const rr = X.br * 1.4 + 4;
-    const w = T.w * sx;
-    const h = T.h * sc;
-    const hit = (cx: number, cy: number): boolean => {
-      const nx = Math.max(cx, Math.min(B[0], cx + w));
-      const ny = Math.max(cy, Math.min(B[1], cy + h));
-      return Math.hypot(nx - B[0], ny - B[1]) < rr;
-    };
-    if (hit(x, y)) {
-      if (B[0] + rr + w <= G.W + 30 && !hit(B[0] + rr, y)) x = B[0] + rr;
-      else if (!hit(x, B[1] + rr) && B[1] + rr + h < 200) y = B[1] + rr;
-      else x = B[0] - rr - w;
-    }
-  }
-  const fill = grad(
-    X,
-    [
-      [0, tone.b],
-      [G.shadeAt, tone.b],
-      [G.shadeAt, tone.sh],
-      [1, tone.sh],
-    ],
-    { x1: 0, y1: 0, x2: 0, y2: 1 },
-  );
-  let g = el(
-    'g',
-    {
-      transform: `translate(${f(x)} ${f(y)}) scale(${f(sx * 100) / 100} ${sc})`,
-      opacity: tone.op,
-      'data-x': f(x),
-    },
-    (tone.rim ? el('path', { d, fill: tone.rim, transform: `translate(0 ${f(-2 / sc)})` }) : '') +
-      el('path', { d, fill }),
-  );
-  if (s.wind >= 2) {
-    const by = y + T.h * sc;
-    g += el('path', {
-      d: `M${f(x - 14)},${f(by - 8 * sc)}h${f(-70 * sc)}M${f(x - 34)},${f(by - 22 * sc)}h${f(-46 * sc)}`,
-      stroke: tone.b,
-      'stroke-width': 2,
-      'stroke-linecap': 'round',
-      opacity: f(tone.op * 55) / 100,
-    });
-  }
-  return s.motion ? el('g', { class: cls }, g) : g;
-}
-function deck(X: Ctx, tone: Tone, top: string): string {
-  const s = X.s;
-  const r = prng(s.seed * 7 + 3);
-  const D = G.deck;
-  let x = G.W;
-  let d = `M0,${-X.ext}H${G.W}V${D.y}`;
-  while (x > 0) {
-    const w = D.arcs[0]! + r() * (D.arcs[1]! - D.arcs[0]!);
-    const dep = D.depth[0]! + r() * (D.depth[1]! - D.depth[0]!);
-    const nx = Math.max(0, x - w);
-    const yy = D.y + (r() - 0.5) * 8;
-    d += `Q${f((x + nx) / 2)},${f(yy + dep * 2)} ${f(nx)},${f(yy)}`;
-    x = nx;
-  }
-  d += 'Z';
-  const g = grad(
-    X,
-    [
-      [0, mix(tone.b, top, 0.45)],
-      [0.7, tone.b],
-      [1, tone.sh],
-    ],
-    { x1: 0, y1: 0, x2: 0, y2: 1 },
-  );
-  // dark theme by day: a quieter deck (contrast)
-  return el('path', {
-    d,
-    fill: g,
-    opacity: s.theme === 'dark' && !nightish(s) ? 0.5 : 1,
-    'data-part': 'deck',
-  });
-}
-function cloudLayers(X: Ctx, bp: Pt | null, top: string): { far: string; main: string } {
-  const s = X.s;
-  const c = s.cond;
-  const cov = s.cloud;
-  const tone = cloudTone(X);
-  let far = '';
-  let main = '';
-  if (c === 'fog' || s.event === 'solarTotal' || s.event === 'dust') return { far: '', main: '' };
-  const bx = bp ? bp[0] : 1340;
-  const by = bp ? bp[1] : 124;
-  const lowSun = s.body.t < G.sun.low || s.body.t > 1 - G.sun.low;
-  X.clearBody = cov <= 35 || (cov <= 60 && lowSun);
-  const isDeck = cov > 85;
-  if (isDeck) main += deck(X, tone, top);
-  if (isThunder(c)) {
-    main += cloud(X, tone, 'l', 1080, 64, 1.5);
-    main += el('ellipse', {
-      cx: 1306,
-      cy: 186,
-      rx: 64,
-      ry: 16,
-      fill: grad(
-        X,
-        [
-          [0, 'bolt', 0.55],
-          [1, 'bolt', 0],
-        ],
-        { radial: true },
-      ),
-    });
-  } else if (c === 'showers' || c === 'snowShowers') {
-    main += cloud(X, tone, 'l', G.precip.showers[0]!, 82, 1.25);
-    far += cloud(X, { ...tone, op: tone.op * 0.8 }, 's', 960, 92, 0.9);
-  } else if (PRECIP.has(c)) {
-    const M = G.precip.mass;
-    main += cloud(X, tone, 'l', M[0]!, isDeck ? M[1]! + 8 : M[1]!, M[2]!);
-  } else if (!isDeck) {
-    if (cov > 60) {
-      far += cloud(X, tone, 'm', 1040, 66, 0.9);
-      main += cloud(X, tone, 'l', 930, 118, 1) + cloud(X, tone, 'l', bx - 124, by - 4, 1);
-    } else if (cov > 35) {
-      far += cloud(X, tone, 's', 1450, 66, 1);
-      const low = !!bp && lowSun;
-      const lx = low && bx < 1300 ? Math.min(bx + 70, 1310) : 960;
-      main += cloud(X, tone, 'l', lx, low ? 70 : 92, low ? 0.8 : 1);
-    } else if (cov > 10) {
-      far +=
-        cloud(X, tone, 's', 980, 74, 1) + cloud(X, tone, 's', bx > 1380 ? 1210 : 1450, 92, 0.95);
-    }
-  }
-  return { far, main };
-}
-
-/* --- landscape --- */
-interface Land {
-  night: boolean;
-  bottom: string;
-  base: string;
-  wet: boolean;
-  near: string;
-  mid: string;
-  far: string;
-  alp: string;
-  crowns: string[];
-  snowTone: string;
-  snowShade: string;
-  trees: string;
-}
-function landColours(X: Ctx, stops: readonly Stop[]): Land {
-  const s = X.s;
-  const night = nightLand(s);
-  const season = s.season;
-  let base = night ? tok('land-night') : tok(`land-${season}`);
-  if (!night && s.theme === 'dark') base = mix(base, 'land-night', 0.45);
-  if (s.phase === 'dusk' || s.phase === 'dawn') base = mix(base, 'land-dusk', 0.25);
-  const bottom = stops[stops.length - 1]![1];
-  const wet = PRECIP.has(s.cond) && !isSnow(s.cond);
-  let near = base;
-  if (s.heat && !night) near = mix('dry-meadow', base, s.theme === 'dark' ? 0.45 : 0.1);
-  if (wet) near = mix(near, 'black', 0.12);
-  if (s.frost === 2) near = mix(near, 'rime', night ? 0.12 : 0.25);
-  if (s.event === 'rainbow') near = mix(near, 'glow-golden', 0.12);
-  const snow = s.snowGround;
-  const snowTone = night
-    ? mix('snow', bottom, 0.6)
-    : s.theme === 'dark'
-      ? mix('snow', bottom, 0.62)
-      : tok('snow');
-  const crowns = [1, 2, 3].map((i) => tok(`land-${season}-${i}`));
-  const o: Land = {
-    night,
-    bottom,
-    base,
-    wet,
-    near: snow ? snowTone : near,
-    mid: mix(snow ? snowTone : base, bottom, 0.3),
-    far: night
-      ? mix(mix(base, bottom, 0.62), 'haze-night', 0.2)
-      : mix(base, bottom, s.event === 'dust' ? 0.82 : 0.62),
-    alp: night
-      ? mix(mix(base, bottom, 0.78), 'haze-night', 0.22)
-      : mix(base, bottom, s.event === 'dust' ? 0.9 : 0.78),
-    crowns: night
-      ? [mix(base, 'black', 0.15), mix(base, 'black', 0.2), mix(base, 'black', 0.1)]
-      : crowns.map((c) => (s.theme === 'dark' ? mix(c, 'land-night', 0.4) : c)),
-    snowTone,
-    snowShade: night
-      ? mix('snow-shade', bottom, 0.55)
-      : s.theme === 'dark'
-        ? mix('snow-shade', bottom, 0.45)
-        : tok('snow-shade'),
-    trees: '',
-  };
-  if (s.event === 'rainbow') {
-    // warm light on the ridges
-    o.mid = mix(o.mid, 'glow-golden', 0.12);
-    o.far = mix(o.far, 'glow-golden', 0.15);
-  }
-  o.trees = mix(snow ? mix(base, bottom, 0.3) : o.mid, 'black', night ? 0.25 : 0.22);
-  return o;
-}
-/** Hard-contrast details fade out toward the text zone (x 700 → 1000). */
-function rightMask(X: Ctx): string {
-  if (!X.rm)
-    X.rm = mask(
-      X,
-      el('rect', {
-        width: G.W,
-        height: G.H,
-        fill: grad(
-          X,
-          [
-            [0, 'white', 0],
-            [1, 'white', 1],
-          ],
-          { x1: 700, x2: 1000, y1: 0, y2: 0, gradientUnits: 'userSpaceOnUse' },
-        ),
-      }),
-    );
-  return X.rm;
-}
-const edges = (
-  X: Ctx,
-  crest: string,
-  col: string,
-  w: number,
-  op: number | string,
-  part?: string,
-): string =>
-  el('path', {
-    d: crest,
-    fill: 'none',
-    stroke: tok(col),
-    'stroke-width': w,
-    'stroke-linejoin': 'round',
-    opacity: op,
-    mask: rightMask(X),
-    'data-part': part,
-  });
-/** Rime and ice glaze on one crest. */
-function ridgeTrims(X: Ctx, R: Ridge, LC: Land, which: 'far' | 'mid' | 'near'): string {
-  const s = X.s;
-  const w = which === 'far' ? 1.2 : 2;
-  let out = '';
-  if (s.frost > 0 && which !== 'far')
-    out += edges(X, R.crest, 'rime', w * 0.75, LC.night ? 0.45 : 0.7);
-  if ((s.cond === 'freezingDrizzle' || s.cond === 'freezingRain') && which !== 'far')
-    out += edges(X, R.crest, 'ice', 1.6, 0.75);
-  if (which !== 'near' && fullMoonUp(s) && LC.night && !s.event)
-    out += edges(X, R.crest, mix(LC[which], 'moon', 0.35), 1.5, 0.9);
-  return out;
-}
-/** Clean scalloped caps: the cap line meets the crest exactly on both sides. */
-function capPath(X: Ctx, R: Ridge, peaks: readonly Pt[], depth: (p: Pt) => number): string {
-  let reg = '';
-  const r = prng(X.s.seed * 5 + 11);
-  for (const p of peaks) {
-    const d = depth(p);
-    if (!d || (X.quiet && p[0] < X.quiet)) continue; // no bright cap behind the text of a narrow crop
-    let px = p[0];
-    for (let q = p[0] - 15; q <= p[0] + 15; q++) if (R.y(q) < R.y(px)) px = q; // the spline's real summit
-    const line = R.y(px) + d;
-    let xl = px;
-    let xr = px;
-    while (R.y(xl - 1) < line && R.y(xl - 1) >= R.y(xl) - 0.01 && xl > p[0] - 220) xl--;
-    while (R.y(xr + 1) < line && R.y(xr + 1) >= R.y(xr) - 0.01 && xr < p[0] + 220 && xr < G.W) xr++;
-    if (R.y(xl - 1) < line || (xr < G.W && R.y(xr + 1) < line)) continue; // runs into the next summit: no cap
-    if (xr - xl < 6) continue;
-    const n = Math.max(2, Math.round((xr - xl) / 15));
-    const w = (xr - xl) / n;
-    reg += `M${xl},${f(line)}V-300H${xr}V${f(line)}`;
-    for (let i = 0; i < n; i++)
-      reg += `Q${f(xr - i * w - w / 2)},${f(line + (i % 2 ? 3 : 6 + r() * 4))} ${f(xr - (i + 1) * w)},${f(line)}`;
-    reg += 'Z';
-  }
-  return reg;
-}
-/** Fill, one shaded flank per summit (away from the body), caps, trims. */
-function mountain(
-  X: Ctx,
-  R: Ridge,
-  LC: Land,
-  peaks: readonly Pt[],
-  col: string,
-  which: 'alp' | 'far',
-): string {
-  const s = X.s;
-  const op = s.cond === 'fog' ? 0.4 : 1;
-  let out = el('path', { d: R.fill, fill: tok(col) });
-  let fac = '';
-  for (const p of peaks) {
-    const side = X.bodyX != null && X.bodyX > p[0] ? -1 : 1;
-    let xv = p[0];
-    let d = `M${p[0]},${p[1]}`;
-    while (
-      Math.abs(xv - p[0]) < G.flank.max &&
-      R.y(xv + side * 2) >= R.y(xv) - 0.01 &&
-      xv > 0 &&
-      xv < G.W
-    )
-      xv += side * 2;
-    xv = Math.min(G.W, Math.max(0, xv)); // a step of 2 from an odd summit ends one unit past the edge
-    const D = (R.y(xv) - p[1]) * G.flank.depth + 12;
-    let back = '';
-    for (let i = 1; i <= 14; i++) {
-      const x = p[0] + ((xv - p[0]) * i) / 14;
-      d += `L${f(x)},${f(R.y(x))}`;
-    }
-    for (let j = 14; j >= 0; j--) {
-      const u = j / 14;
-      const x2 = p[0] + (xv - p[0]) * u - side * G.flank.lean * (1 - u);
-      back += `L${f(x2)},${f(R.y(p[0] + (xv - p[0]) * u) + D * Math.pow(1 - u, 0.8))}`;
-    }
-    fac += `${d}${back}Z`;
-  }
-  if (fac)
-    out += el('path', {
-      d: fac,
-      fill: mix(col, 'black', G.flank.dark),
-      'clip-path': clip(X, el('path', { d: R.fill })),
-    });
-  const C = G.capDepth;
-  const cold = s.season === 'winter' || s.frost > 0 || s.snowGround || isSnow(s.cond);
-  const reg = !cold
-    ? ''
-    : capPath(X, R, peaks, (p) =>
-        which === 'far' ? C.far * (p[1] < 160 ? 1 : 0.7) : p[1] <= C.highY ? C.high : C.low,
-      );
-  if (reg)
-    out += el('path', {
-      d: R.fill,
-      fill: mix(
-        LC.snowTone,
-        LC.bottom,
-        which === 'alp' ? 0.45 : LC.night ? 0.3 : s.theme === 'dark' ? 0.45 : 0.25,
-      ),
-      'clip-path': clip(X, el('path', { d: reg })),
-    });
-  out = el('g', { opacity: op }, out) + (which === 'far' ? ridgeTrims(X, R, LC, 'far') : '');
-  if (which === 'alp')
-    out = el(
-      'g',
-      {
-        mask: mask(
-          X,
-          el('rect', {
-            y: -300,
-            width: G.W,
-            height: 700,
-            fill: grad(
-              X,
-              [
-                [0, 'white', 0],
-                [1, 'white', 1],
-              ],
-              { x1: G.alpFade[0], x2: G.alpFade[1], y1: 0, y2: 0, gradientUnits: 'userSpaceOnUse' },
-            ),
-          }),
-        ),
-      },
-      out,
-    );
-  return out;
-}
-function lake(X: Ctx, LC: Land, bp: Pt | null): string {
-  const s = X.s;
-  const K = G.lake;
-  const cx = (K.x0 + K.x1) / 2;
-  const cy = (K.y0 + K.y1) / 2;
-  const rx = (K.x1 - K.x0) / 2;
-  const d =
-    `M${K.x0},${cy}C${K.x0},${K.y0 - 1} ${f(cx - rx * 0.4)},${K.y0} ${cx},${K.y0}S${K.x1},${K.y0 + 2} ${K.x1},${cy}` +
-    `S${f(cx + rx * 0.5)},${K.y1} ${cx},${K.y1}S${K.x0},${K.y1 - 2} ${K.x0},${cy}Z`;
-  const frozen = s.frost === 2 || (s.season === 'winter' && s.frost > 0);
-  let col = frozen
-    ? mix('rime', LC.bottom, LC.night ? 0.6 : 0.35)
-    : mix(LC.bottom, LC.mid, 1 - K.sky);
-  if (s.heat && !frozen) col = mix(X.skyMid, LC.mid, 0.3); // heat: still water, not sand
-  if (s.event === 'aurora') col = mix(col, 'aurora-1', 0.3 * s.eventAmount); // a faint green in the lake
-  if (LC.wet) col = mix(col, 'black', 0.1);
-  let out =
-    el('path', { d, fill: mix(LC.mid, 'black', 0.12), transform: 'translate(0 2)' }) +
-    el('path', { d, fill: col });
-  if (frozen)
-    out += el('path', { d, fill: 'none', stroke: tok('rime'), 'stroke-width': 1.5, opacity: 0.8 });
-  const lowSun = s.body.kind === 'sun' && (s.body.t < 0.15 || s.body.t > 0.85);
-  const moonUp = s.body.kind === 'moon';
-  if (bp && !frozen && (lowSun || moonUp) && bp[0] < 1330 && !(s.cloud > 85)) {
-    // soft vertical light path
-    const x = Math.min(bp[0], K.x1 - 30);
-    let lp = '';
-    for (const q of [
-      [0, 26],
-      [4, 20],
-      [8, 15],
-      [12, 9],
-    ])
-      lp += rrect(x - q[1]! / 2, K.y0 + 1.5 + q[0]!, q[1]!, 2.4, 1.2);
-    out += el('path', {
-      d: lp,
-      fill: tok(moonUp ? 'moon' : 'sun-low'),
-      opacity: 0.55,
-      'clip-path': clip(X, el('path', { d })),
-    });
-  }
-  return out;
-}
-function conifers(X: Ctx, R: Ridge, LC: Land): string {
-  const s = X.s;
-  const C = G.conifers;
-  const r = prng(s.seed * 3 + 5);
-  const k = Math.tan((G.skew[s.wind]! * Math.PI) / 180);
-  let body = '';
-  let caps = '';
-  let trunks = '';
-  const list: [number, number][] = [];
-  for (let i = 0; i < C.left; i++)
-    list.push([
-      C.leftFrom + ((C.from - 60 - C.leftFrom) * (i + r() * 0.7)) / C.left,
-      C.leftH[0]! + r() * (C.leftH[1]! - C.leftH[0]!),
-    ]);
-  for (let j = 0; j < C.n; j++) {
-    const u = (j + 0.2 + r() * 0.6) / C.n;
-    const x = C.from + (G.W - C.from + 10) * Math.pow(u, 0.62);
-    list.push([x, C.hMin + (C.hMax - C.hMin) * (0.35 * u + 0.65 * r())]);
-  }
-  for (const t of list) {
-    const x = t[0];
-    const yb = R.y(x) + 2.5;
-    let h = t[1];
-    if (x < G.shelterX) h = Math.min(h, yb - C.topMin);
-    if (h < 5) continue;
-    const w = h * C.w;
-    // Nothing beyond the picture's right edge (the mockup's half tree there was cut off anyway; its box stuck out of
-    // the window at 1280 px, e2e/seed/layout-overflow).
-    if (x + w / 2 + k * h > G.W) continue;
-    const P = (dx: number, dy: number): string => `${f(x + dx + k * dy)},${f(yb - dy)}`;
-    const tier = (b: number, top: number, ww: number): string =>
-      `M${P(-ww / 2, b)}L${P(-1.3, top - 1.6)}Q${P(0, top + 0.6)} ${P(1.3, top - 1.6)}L${P(ww / 2, b)}Q${P(0, b - 1.2)} ${P(-ww / 2, b)}Z`;
-    body += tier(2, h * 0.66, w) + tier(h * 0.4, h, w * 0.74);
-    trunks += `M${P(-1, -1)}L${P(-1, 3)}L${P(1, 3)}L${P(1, -1)}Z`;
-    if (s.snowGround || s.frost > 0) {
-      const ch = s.snowGround ? 0.34 : 0.16;
-      const cw = w * 0.74 * ch;
-      caps += `M${P(-cw / 2, h * (1 - ch))}L${P(-1.2, h - 1.6)}Q${P(0, h + 0.6)} ${P(1.2, h - 1.6)}L${P(cw / 2, h * (1 - ch))}Q${P(0, h * (1 - ch) + 1.5)} ${P(-cw / 2, h * (1 - ch))}Z`;
-    }
-  }
-  let out =
-    el('path', { d: trunks, fill: mix(LC.trees, 'black', 0.2) }) +
-    el('path', { d: body, fill: LC.trees });
-  if (caps)
-    out += el('path', {
-      d: caps,
-      fill: s.snowGround ? LC.snowTone : tok('rime'),
-      opacity: s.snowGround ? 0.95 : 0.8,
-    });
-  return s.motion && s.wind >= 2 ? el('g', { class: 'sc-sway' }, out) : out;
-}
-function crownTree(X: Ctx, LC: Land, R: Ridge, x: number, cr: number, idx: number): string {
-  const s = X.s;
-  const k = Math.tan((G.skew[s.wind]! * Math.PI) / 180);
-  const yb = R.y(x) + 3;
-  const th = cr * 0.95;
-  const tw = Math.max(2.4, cr * 0.2);
-  const bare = s.season === 'winter' || s.snowGround;
-  const cy = yb - th - cr * 0.72;
-  const cx = x + k * (th + cr * 0.72);
-  const trunk = LC.night
-    ? mix(LC.base, 'black', 0.35)
-    : mix('trunk', LC.bottom, s.theme === 'dark' ? 0.35 : 0.1);
-  let out = el('path', {
-    d: `M${f(x - tw / 2)},${f(yb)}L${f(x - tw * 0.32 + k * th)},${f(yb - th - 2)}L${f(x + tw * 0.32 + k * th)},${f(yb - th - 2)}L${f(x + tw / 2)},${f(yb)}Z`,
-    fill: trunk,
-  });
-  const col = LC.crowns[idx % 3]!;
-  if (bare) {
-    let br = '';
-    const tx = x + k * th;
-    const ty = yb - th;
-    for (const b of [
-      [-0.75, -0.9],
-      [0.1, -1.25],
-      [0.8, -0.85],
-      [-0.35, -1.15],
-    ])
-      br += `M${f(tx)},${f(ty)}Q${f(tx + b[0]! * cr * 0.3 + k * cr * 0.5)},${f(ty - cr * 0.6)} ${f(tx + b[0]! * cr + k * cr)},${f(ty + b[1]! * cr)}`;
-    out += el('circle', {
-      cx,
-      cy,
-      r: cr * 0.86,
-      fill: tok('land-winter-1'),
-      opacity: LC.night ? 0.35 : 0.42,
-    });
-    out += el('path', {
-      d: br,
-      fill: 'none',
-      stroke: trunk,
-      'stroke-width': Math.max(1.4, cr * 0.09),
-      'stroke-linecap': 'round',
-    });
-  } else {
-    const d =
-      circ(cx, cy, cr * 0.9) +
-      circ(cx - cr * 0.42, cy + cr * 0.22, cr * 0.66) +
-      circ(cx + cr * 0.44, cy + cr * 0.18, cr * 0.68) +
-      circ(cx + cr * 0.04, cy - cr * 0.42, cr * 0.66);
-    const dk = mix(col, 'black', 0.15);
-    const fill = grad(
-      X,
-      [
-        [0, col],
-        [0.58, col],
-        [0.58, dk],
-        [1, dk],
-      ],
-      { x1: 0.15, y1: 0, x2: 0.85, y2: 1 },
-    );
-    out += el('path', { d, fill });
-  }
-  return s.motion && s.wind >= 2 ? el('g', { class: 'sc-sway' }, out) : out;
-}
-function nearRidge(X: Ctx, R: Ridge, LC: Land): string {
-  const s = X.s;
-  const fill = s.snowGround
-    ? grad(
-        X,
-        [
-          [0, LC.snowTone],
-          [0.45, LC.snowTone],
-          [1, LC.snowShade],
-        ],
-        { x1: 0, y1: 255, x2: 0, y2: 320, gradientUnits: 'userSpaceOnUse' },
-      )
-    : LC.near;
-  let out = el('path', { d: R.fill, fill });
-  const B = G.crestBand;
-  let band = `M900,${f(R.y(900))}`;
-  for (let bx = 920; bx <= G.W; bx += 20) band += `L${bx},${f(R.y(bx))}`;
-  for (let bx2 = G.W; bx2 >= 900; bx2 -= 20)
-    band += `L${bx2},${f(R.y(bx2) + B.h * (0.6 + 0.4 * Math.sin(bx2 / 37)))}`;
-  out += el('path', {
-    d: `${band}Z`,
-    fill: mix(s.snowGround ? LC.snowTone : LC.near, LC.night ? 'crest-night' : 'white', B.lift),
-    mask: rightMask(X),
-  });
-  out += ridgeTrims(X, R, LC, 'near');
-  if (LC.wet) {
-    let gl = '';
-    for (const g of [
-      [1240, 0.6],
-      [1350, 0.9],
-      [1470, 0.7],
-    ]) {
-      const y = R.y(g[0]!) + 14 + g[1]! * 8;
-      gl += `M${g[0]},${f(y)}q${f(22 * g[1]!)},${f(-3 * g[1]!)} ${f(46 * g[1]!)},${f(-1)}`;
-    }
-    out += el('path', {
-      d: gl,
-      fill: 'none',
-      stroke: mix(LC.near, 'white', 0.3),
-      'stroke-width': 1.6,
-      'stroke-linecap': 'round',
-      opacity: 0.45,
-    });
-  }
-  if (!s.snowGround) {
-    const r = prng(s.seed * 17 + 2);
-    const Gs = G.grass;
-    let gt = '';
-    for (let i = 0; i < Gs.n; i++) {
-      const x = Gs.from + ((Gs.to - Gs.from) * (i + r())) / Gs.n;
-      const y = R.y(x) + 1.5;
-      const h = 4 + r() * 4;
-      gt += `M${f(x)},${f(y)}l${f(-1.5)},${f(-h)}M${f(x + 3)},${f(y)}l${f(1)},${f(-h * 0.8)}`;
-    }
-    out += el('path', {
-      d: gt,
-      fill: 'none',
-      stroke: mix(LC.near, s.heat ? 'grass-heat' : 'black', s.heat ? 0.4 : 0.22),
-      'stroke-width': 1.4,
-      'stroke-linecap': 'round',
-    });
-  }
-  let bu = '';
-  for (const b of G.bushes) {
-    const y = R.y(b[0]) + 2;
-    bu += circ(b[0], y - b[1] * 0.55, b[1]) + circ(b[0] + b[1] * 0.85, y - b[1] * 0.3, b[1] * 0.7);
-  }
-  out += el('path', {
-    d: bu,
-    fill: s.snowGround ? mix(LC.trees, LC.snowTone, 0.3) : mix(LC.crowns[1]!, LC.near, 0.45),
-  });
-  G.crowns.forEach((c, i) => {
-    out += crownTree(X, LC, R, c[0], s.season === 'winter' ? c[1] * 0.85 : c[1], i);
-  });
-  if (s.frost === 2) {
-    const rs = prng(s.seed * 19 + 4);
-    let sp = '';
-    for (let j = 0; j < 8; j++) {
-      const sx = 1080 + rs() * 500;
-      const sy = R.y(sx) + 6 + rs() * 22;
-      const q = 2.6;
-      sp += `M${f(sx)},${f(sy - q)}L${f(sx + 0.6)},${f(sy - 0.6)}L${f(sx + q)},${f(sy)}L${f(sx + 0.6)},${f(sy + 0.6)}L${f(sx)},${f(sy + q)}L${f(sx - 0.6)},${f(sy + 0.6)}L${f(sx - q)},${f(sy)}L${f(sx - 0.6)},${f(sy - 0.6)}Z`;
-    }
-    out += el('path', { d: sp, fill: tok('rime'), opacity: 0.95 });
-  }
-  // full-moon highlight: one continuous line over the crest, drawn after trees and bushes
-  if (fullMoonUp(s) && LC.night && !s.event)
-    out += edges(X, R.crest, mix(LC.near, 'moon', 0.35), 1.5, 0.9);
-  return out;
-}
-function fogBands(X: Ctx, which: 'far' | 'near'): string {
-  if (X.s.cond !== 'fog') return '';
-  const op = X.s.phase === 'night' ? 0.28 : X.s.theme === 'dark' ? 0.22 : 0.55;
-  const g = grad(
-    X,
-    [
-      [0, 'fog', 0],
-      [0.25, 'fog', 1],
-      [0.75, 'fog', 1],
-      [1, 'fog', 0],
-    ],
-    { x1: 0, y1: 0, x2: 1, y2: 0 },
-  );
-  let out = '';
-  for (const b of G.fog)
-    if (b[4] === which)
-      out += el('rect', {
-        x: b[0],
-        y: b[2],
-        width: b[1],
-        height: b[3],
-        rx: b[3] / 2,
-        fill: g,
-        opacity: op,
-      });
-  return X.s.motion && out ? el('g', { class: 'sc-fog' }, out) : out;
-}
-
-/* --- precipitation --- */
-function precip(X: Ctx, bottom: string): string {
-  const s = X.s;
-  const c = s.cond;
-  const P = G.precip;
-  const i = s.intensity;
-  const rainy =
-    isDrizzle(c) || c === 'rain' || c === 'freezingRain' || c === 'showers' || isThunder(c);
-  const snowy = isSnow(c);
-  const hail = c === 'thunderHail';
-  // rainbow weather: the rain falls as a light curtain on the right only
-  const curtain = s.event === 'rainbow';
-  if (!rainy && !snowy && !curtain) return '';
-  const slant = P.slant[s.wind]!;
-  const k = Math.tan((slant * Math.PI) / 180);
-  const top = P.top;
-  const Ht = G.H - top;
-  const r = prng(s.seed * 29 + 7);
-  const light = inkOf(s) === 'dark';
-  const rainCol = mix(X.skyMid, 'white', light ? 0.45 : 0.55); // slightly lighter than the sky
-  const region = (n: number, len: number, x0: number, x1: number): string => {
-    let d = '';
-    for (let j = 0; j < n; j++) {
-      const x = x0 - k * Ht + r() * (x1 - x0 + k * Ht);
-      const y = top + r() * Ht;
-      const l = len * (0.75 + r() * 0.5);
-      const seg = `l${f(k * l)},${f(l)}`;
-      d += `M${f(x)},${f(y)}${seg}`;
-    }
-    return d;
-  };
-  const dots = (n: number, rMin: number, rMax: number, x0: number, x1: number): string => {
-    let d = '';
-    for (let j = 0; j < n; j++) {
-      const x = x0 - k * Ht + r() * (x1 - x0 + k * Ht);
-      const y = top + r() * Ht;
-      const rr = rMin + r() * (rMax - rMin);
-      d += circ(x, y, rr);
-    }
-    return d;
-  };
-  // Every motion ends after 5 s (a fractional loop: both tiles are drawn, so any stop is a whole picture). The tile
-  // above is the same marks one tile higher (a `use` of them, not a second copy in the markup).
-  const fall = (inner: string, dur: number): string => {
-    if (!s.motion) return inner;
-    const id = uid(X, 'p');
-    return el(
-      'g',
-      {
-        class: 'sc-fall',
-        style: `--fx:${f(k * Ht)}px;--fy:${Ht}px;--dur:${dur}s;--n:${(5 / dur).toFixed(2)}`,
-      },
-      inner.replace('<path', `<path id="${id}"`) +
-        el('use', { href: `#${id}`, transform: `translate(${f(-k * Ht)} ${-Ht})` }),
-    );
-  };
-  const showers = c === 'showers' || c === 'snowShowers';
-  const x0 = curtain ? P.curtain[0]! : showers ? P.showers[0]! : 0;
-  const x1 = curtain ? P.curtain[1]! : showers ? P.showers[1]! : G.W;
-  const rdur = i === 3 ? G.motion.rainHeavy : G.motion.rain;
-  let out = '';
-  if (curtain && !rainy) {
-    out += fall(
-      el('path', {
-        d: region(P.curtain[2]!, 14, x0, x1),
-        stroke: rainCol,
-        'stroke-width': 1.4,
-        'stroke-linecap': 'round',
-        opacity: 0.4,
-      }),
-      rdur,
-    );
-  } else if (rainy) {
-    const drizzle = isDrizzle(c);
-    let n = drizzle ? P.drizzle : P.rain[i - 1]!;
-    if (showers) n = Math.round(n * 0.8);
-    if (hail) n = Math.round(n * 0.5);
-    out += fall(
-      el('path', {
-        d: region(n, drizzle ? 6 : P.len, x0, x1),
-        stroke: rainCol,
-        'stroke-width': drizzle ? 1.2 : i >= 2 ? P.width : 1.6,
-        'stroke-linecap': 'round',
-        opacity: P.op,
-      }),
-      drizzle ? rdur * 1.5 : rdur,
-    );
-  }
-  if (snowy) {
-    let sn = P.snow[i - 1]!;
-    if (showers) sn = Math.round(sn * 0.6);
-    const farCol = light ? mix('snow-shade', 'cloud-rain', 0.3) : mix('snow', bottom, 0.25);
-    out += fall(
-      el('path', { d: dots(Math.round(sn * 0.55), 1.6, 2.2, x0, x1), fill: farCol, opacity: 0.8 }),
-      G.motion.snow[1]!,
-    );
-    out += fall(
-      el('path', {
-        d: dots(Math.round(sn * 0.45), 2.2, 3, x0, x1),
-        fill: 'white',
-        opacity: s.theme === 'dark' || !light ? 0.75 : 0.95,
-      }),
-      G.motion.snow[0]!,
-    );
-  }
-  if (hail) {
-    let hd = '';
-    let he = '';
-    for (let j = 0; j < P.hail; j++) {
-      const hx = P.hailFrom + r() * (G.W - P.hailFrom);
-      const hy = top + 10 + r() * (Ht - 10);
-      const hr = 3.2;
-      hd += circ(hx, hy, hr);
-      he += `M${f(hx - hr)},${f(hy)}a${hr},${hr} 0 0 0 ${f(2 * hr)},0z`;
-    }
-    out += el('path', { d: hd, fill: 'white' }) + el('path', { d: he, fill: tok('hail-edge') });
-  }
-  // left of the shelter at 20 %, clipped below the title row (and under the shower cloud)
-  const mk = mask(
-    X,
-    el('rect', {
-      y: -X.ext,
-      width: G.W,
-      height: G.H + X.ext,
-      fill: grad(
-        X,
-        [
-          [0, 'white', snowy && !light ? P.leftOp * 0.4 : P.leftOp],
-          [1, 'white', 1],
-        ],
-        {
-          x1: X.quiet ? X.quiet - 150 : P.mask[0],
-          x2: X.quiet || P.mask[1],
-          y1: 0,
-          y2: 0,
-          gradientUnits: 'userSpaceOnUse',
-        },
-      ),
-    }),
-  );
-  const cy = showers ? 178 : curtain ? 96 : top;
-  const clipD =
-    showers || curtain
-      ? `M${x0},${cy}H${x1}L${f(x1 + k * (G.H - cy))},${G.H}H${f(x0 + k * (G.H - cy))}Z`
-      : `M0,${top}H${G.W}V${G.H}H0Z`;
-  return el('g', { mask: mk }, el('g', { 'clip-path': clip(X, el('path', { d: clipD })) }, out));
-}
-
-/* --- bolt, sky events and wind --- */
-/** The bolt, the rainbow and the meteors: all still (no motion class, never animated). */
-function eventLayer(X: Ctx): string {
-  const s = X.s;
-  let out = '';
-  if (isThunder(s.cond))
-    out += el('path', {
-      d: `M${G.bolt.map((p) => p.join(',')).join('L')}Z`,
-      fill: tok('bolt'),
-      'stroke-linejoin': 'round',
-    });
-  if (s.event === 'rainbow') {
-    const R = G.rainbow;
-    let arcs = '';
-    for (let i = 0; i < 5; i++) {
-      const rr = R.r - R.w / 2 - i * R.w;
-      arcs += el('path', {
-        d: `M${f(R.cx - rr)},${R.cy}A${f(rr)},${f(rr)} 0 0 1 ${f(R.cx + rr)},${R.cy}`,
-        fill: 'none',
-        stroke: tok(`rb-${i + 1}`),
-        'stroke-width': R.w + 0.4,
-      });
-    }
-    // the feet fade into the land
-    const mk = mask(
-      X,
-      el('rect', {
-        width: G.W,
-        height: G.H,
-        fill: grad(
-          X,
-          [
-            [0, 'white', 1],
-            [1, 'white', 0],
-          ],
-          { x1: 0, x2: 0, y1: R.fade[0], y2: R.fade[1], gradientUnits: 'userSpaceOnUse' },
-        ),
-      }),
-    );
-    out += el('g', { mask: mk, opacity: R.op, 'data-part': 'rainbow' }, arcs);
-  }
-  if (s.event === 'meteors') {
-    let streaks = '';
-    const a = (32 * Math.PI) / 180;
-    for (const [hx, hy, len] of G.meteors) {
-      const tx = hx + Math.cos(a) * len;
-      const ty = hy - Math.sin(a) * len;
-      const g = grad(
-        X,
-        [
-          [0, 'white', 0.95],
-          [1, 'white', 0],
-        ],
-        { x1: hx, y1: hy, x2: f(tx), y2: f(ty), gradientUnits: 'userSpaceOnUse' },
-      );
-      streaks +=
-        el('path', {
-          d: `M${hx},${hy}L${f(tx)},${f(ty)}`,
-          stroke: g,
-          'stroke-width': 1.6,
-          'stroke-linecap': 'round',
-        }) + el('circle', { cx: hx, cy: hy, r: 1.6, fill: tok('star') });
-    }
-    out += el('g', { 'data-part': 'meteors' }, streaks);
-  }
-  return out;
-}
-/**
- * The aurora (package 3b): a faint glow and soft curtains low over the mountains, never animated; nothing of it left
- * of the shelter / quiet zone except the faint glow.
- */
-function auroraLayer(X: Ctx): string {
-  const s = X.s;
-  const A = G.aurora;
-  const amt = Math.max(0, Math.min(1, s.eventAmount));
-  const left = Math.max(G.shelterX, X.quiet || 0);
-  const op = A.op[0] + A.op[1] * amt;
-  const gl = A.glow;
-  const glow = el('ellipse', {
-    cx: Math.max(gl[0], left + 200),
-    cy: gl[1],
-    rx: gl[2] * (0.6 + 0.4 * amt),
-    ry: gl[3] * (0.5 + 0.5 * amt),
-    fill: grad(
-      X,
-      [
-        [0, 'aurora-1', p2(0.3 * amt + 0.08)],
-        [1, 'aurora-1', 0],
-      ],
-      { radial: true },
-    ),
-    'data-part': 'auroraGlow',
-  });
-  const fill = grad(
-    X,
-    [
-      [0, 'aurora-3', 0],
-      [0.35, 'aurora-3', 0.45],
-      [0.7, 'aurora-2', 0.85],
-      [1, 'aurora-1', 1],
-    ],
-    { x1: 0, y1: 0, x2: 0, y2: 1 },
-  );
-  let curtains = '';
-  for (const b of A.bands.slice(0, amt < 0.6 ? A.few : A.bands.length)) {
-    const x0 = Math.max(b[0], left);
-    const x1 = b[1];
-    if (x1 - x0 < 90) continue;
-    const h = Math.min(A.h * Math.pow(amt, 1.15) * b[3] + 14, b[2] - A.top);
-    const n = 16;
-    let top = '';
-    let base = '';
-    for (let i = 0; i <= n; i++) {
-      const u = i / n;
-      const x = x0 + (x1 - x0) * u;
-      const env = Math.pow(Math.sin(Math.PI * u), 0.55);
-      const yb = b[2] + 7 * Math.sin(u * 7 + b[4]);
-      const yt = yb - h * env * (0.82 + 0.18 * Math.sin(u * 11 + b[4] * 2));
-      top += `${i ? 'L' : 'M'}${f(x)},${f(yt)}`;
-      base = `L${f(x)},${f(yb)}${base}`;
-    }
-    const d = `${top + base}Z`;
-    // two overlapping translucent copies (the second narrower and shifted) give the curtain its soft fold
-    curtains += el('path', { d, fill, opacity: p2(op) });
-    curtains += el('path', {
-      d,
-      fill,
-      opacity: p2(op * 0.6),
-      transform: `translate(${f(x0 + (x1 - x0) * 0.5)} ${b[2]}) scale(0.62 0.8) translate(${f(-(x0 + (x1 - x0) * 0.42))} ${-b[2]})`,
-    });
-  }
-  return el('g', { 'data-part': 'aurora' }, glow + curtains);
-}
-function windLayer(X: Ctx, LC: Land): string {
-  const s = X.s;
-  if (s.wind < 2) return '';
-  const op = LC.night ? 0.32 : inkOf(s) === 'dark' ? 0.75 : 0.45;
-  let d = '';
-  for (const w of G.windStrokes) {
-    const [x, y, L] = w as [number, number, number];
-    d += `M${x},${y}c${f(L * 0.3)},-10 ${f(L * 0.6)},8 ${f(L * 0.86)},0c${f(L * 0.09)},-3 ${f(L * 0.12)},-15 ${f(L * 0.04)},-17c-7,-2 -12,5 -7,10`;
-  }
-  let out = el('path', {
-    d,
-    fill: 'none',
-    stroke: 'white',
-    'stroke-width': 2.2,
-    'stroke-linecap': 'round',
-    'stroke-linejoin': 'round',
-    opacity: op,
-  });
-  if (s.wind === 3)
-    for (const l of [
-      [1250, 176, -30, 0],
-      [1410, 212, 20, 1],
-      [1520, 150, 60, 2],
-    ] as const)
-      out += el('ellipse', {
-        cx: l[0],
-        cy: l[1],
-        rx: 5,
-        ry: 2.4,
-        fill: LC.crowns[l[3]]!,
-        transform: `rotate(${l[2]} ${l[0]} ${l[1]})`,
-      });
-  return out;
 }
 
 /* ============================== the scene ============================== */
 export interface SceneOptions {
-  /** End of the text zone in scene units (every crop narrower than 1600 units). */
+  /** The right edge of the text column in scene units (desktop: measured; phone: `G.phone.quietX`). */
   quietX?: number;
-  /** Extra sky above y 0 (short or tall boxes). */
-  extendTop?: number;
-  /** The body at a fixed spot with a 0.75× halo (the phone head). */
+  /** The part of the 1600 × 320 picture that is shown (`[x, y, w, h]`; the phone's crop reaches above y 0). */
+  view?: readonly [number, number, number, number];
+  /** The body at a fixed spot (the phone: `G.phoneBodyX`, its height from the arc). */
   bodyAt?: Pt;
+  /** The phone's head: the body between the main summit and the third (`phoneBody`) unless `bodyAt` is given. */
+  phone?: boolean;
   /** Prefix of the ids in `<defs>` (unique per scene on a page). */
   idPrefix?: string;
 }
@@ -1773,541 +1004,1938 @@ export interface SceneSvg {
   /** `<defs>` and the layers, to be placed inside the component's own `<svg>`. */
   inner: string;
   ink: 'light' | 'dark';
+  sky: SkyKey;
   /** Where the body's centre and radius are (scene units), or none. */
   body: { x: number; y: number; r: number } | null;
 }
 
-/* --- moon (CONCEPT-MOON §4; mockup scene.js `litPath`, `moonBody`) --- */
-const fullMoonUp = (s: SceneState): boolean => s.body.kind === 'moon' && (s.moon?.size ?? 1) >= 1.2;
-
-/** The lit shape with its lit side to the right (+x), centre 0,0; null for a new moon. */
-export function litPath(r: number, illum: number): string | null {
-  if (illum < 0.02) return null;
-  if (illum > 0.98) return circ(0, 0, r);
-  const rx = r * Math.abs(1 - 2 * illum);
-  return `M0,${f(-r)}A${f(r)},${f(r)} 0 0 1 0,${f(r)}A${f(rx)},${f(r)} 0 0 ${illum < 0.5 ? 0 : 1} 0,${f(-r)}Z`;
-}
-/** The four flat maria: [cx, cy, rx, ry, rotation] as shares of the radius. */
-export const MARIA: readonly (readonly [number, number, number, number, number])[] = [
-  [-0.3, -0.3, 0.33, 0.25, -22],
-  [0.22, -0.1, 0.21, 0.17, 12],
-  [-0.1, 0.22, 0.2, 0.14, 0],
-  [0.36, 0.38, 0.15, 0.11, 30],
-];
-/** SVG rotation that turns the lit-right shape so its lit side points `tilt` degrees left of up. */
-export const tiltRotation = (tilt: number): number => -(tilt + 90) || 0;
-
-function moonBody(
-  X: Ctx,
-  cx: number,
-  cy: number,
-  r: number,
-  o: { glow: boolean; darkFill: string; maria?: boolean; eclipse?: 'lunarPartial' | 'lunarTotal' },
-): string {
-  const m = X.s.moon ?? { illum: 0.5, tilt: -90, size: 1 };
-  const ev = o.eclipse;
-  // an eclipsed moon is full (a lunar eclipse happens only at full moon)
-  const illum = ev ? 1 : m.illum;
-  const lit = litPath(r, illum);
-  let out = '';
-  if (ev === 'lunarTotal') {
-    // the copper moon: no glow, no maria
-    const cu = grad(
-      X,
-      [
-        [0, 'eclipse-red'],
-        [0.7, 'eclipse-red'],
-        [1, 'eclipse-red-dark'],
-      ],
-      { radial: true },
-    );
-    out = el('circle', { r, fill: cu, 'data-part': 'copper' });
-    return `<g data-part="moon" data-tilt="${f(m.tilt)}" transform="translate(${f(cx)} ${f(cy)})">${out}</g>`;
-  }
-  // dark side: earthshine when thin, else the sky's own colour (it hides the stars behind the moon)
-  if (!ev && lit && illum < G.moon.earthshine)
-    out += el('circle', { r, fill: mix('moon-dark', o.darkFill, 0.15), opacity: 0.85 });
-  if (!lit)
-    out += el('circle', {
-      r: r - 0.75,
-      fill: 'none',
-      stroke: tok('moon-dark'),
-      'stroke-width': 1.5,
-      opacity: 0.9,
-    });
-  if (o.glow && lit) {
-    const gop = G.moon.haloOp * illum * (m.size >= 1.2 ? 1.25 : 1);
-    // the glow sits a little toward the lit side, so the unlit part shows no ring of its own
-    const gg = grad(
-      X,
-      [
-        [0, 'moon', 0.8],
-        [0.4, 'moon', 0.9],
-        [1, 'moon', 0],
-      ],
-      { radial: true },
-    );
-    out += el('circle', {
-      cx: r * (1 - illum) * 0.9,
-      r: r * G.moon.halo * X.haloK,
-      fill: gg,
-      opacity: f(gop * 100) / 100,
-    });
-    if (m.size >= 1.2)
-      out += el('circle', {
-        r: r * G.moon.ring,
-        fill: 'none',
-        stroke: tok('moon'),
-        'stroke-width': 1.2,
-        opacity: G.moon.ringOp,
-      });
-  }
-  if (lit) {
-    out += el('path', { d: lit, fill: tok('moon'), 'data-part': 'lit' });
-    if (o.maria !== false && r >= 8) {
-      const cp = clip(X, el('path', { d: lit }));
-      const md = MARIA.map((q) =>
-        el('ellipse', {
-          cx: q[0] * r,
-          cy: q[1] * r,
-          rx: q[2] * r,
-          ry: q[3] * r,
-          transform: `rotate(${q[4]} ${f(q[0] * r)} ${f(q[1] * r)})`,
-        }),
-      ).join('');
-      out += el(
-        'g',
-        { 'clip-path': cp, fill: tok('moon-mare'), opacity: m.size >= 1.2 ? 0.95 : 0.75 },
-        md,
-      );
-    }
-  }
-  const rot = f(tiltRotation(m.tilt));
-  if (ev === 'lunarPartial') {
-    // the umbra's bite from the lower left (on the screen, not turned with the tilt)
-    const ru = r * 2.6;
-    const d = ru + r - X.s.eventAmount * 2 * r;
-    const k = Math.SQRT1_2;
-    out += el(
-      'g',
-      { transform: `rotate(${-rot || 0})`, 'data-part': 'umbra' },
-      el('circle', {
-        cx: f(-d * k),
-        cy: f(d * k),
-        r: ru,
-        fill: tok('eclipse-umbra'),
-        opacity: 0.85,
-        'clip-path': clip(X, el('circle', { r })),
-      }),
-    );
-  }
-  return `<g data-part="moon" data-tilt="${f(m.tilt)}" transform="translate(${f(cx)} ${f(cy)}) rotate(${rot})">${out}</g>`;
-}
-
-/** Where the body sits: the sun on its arc ("partly behind the far ridge", never fully hidden); the moon by its
- * altitude (0° at the ridge line, ≥ 60° at the top of the arc). */
-function bodyPos(s: SceneState, crest: (x: number) => number, r: number): Pt {
+/** The body on its arc (`t` 0 … 1); the moon by its altitude (0° at the low end, ≥ 60° at the top). */
+export function arcPoint(s: SceneState): Pt {
   const A = G.arc;
   const t = s.body.t;
-  const x = A.x0 + A.dx * t;
-  const top = A.y0 - A.dy;
-  const arcY =
-    s.body.kind === 'moon'
-      ? crest(x) - (Math.min(Math.max(s.body.alt ?? 0, 0), 60) / 60) * (crest(x) - top)
-      : A.y0 - A.dy * Math.sin(Math.PI * t);
-  const y = Math.min(arcY, crest(x) - G.peek * r);
-  return [x, y];
+  const x = A.x0 + (A.x1 - A.x0) * t;
+  // One arc for sun and moon (mockup `G.arc`); a moon close to the horizon (< 12°) sinks toward the saddles, any
+  // higher moon stays on the arc above the massif (CONCEPT §0 sentence 9: seen whenever it is above the horizon).
+  const low =
+    s.body.kind === 'moon' && s.body.alt != null ? Math.min(1, Math.max(0, s.body.alt / 12)) : 1;
+  const up = Math.sin(Math.PI * t) * low;
+  return [x, A.yLow - A.rise * up];
+}
+/** The phone's body: between the main summit and the third, y = 46 + 0.6 × (arc y − 70) (CONCEPT §5). */
+export const phoneBody = (s: SceneState): Pt => [G.phoneBodyX, 46 + 0.6 * (arcPoint(s)[1] - 70)];
+
+/** The phone's crop for a box of `w` × `h` px: the right `w / k` units, bottom-aligned (`Scene.phoneOpts`). */
+export function phoneView(w: number, h: number): [number, number, number, number] {
+  // a wide phone-layout box (up to 899 px) never zooms out past the whole width: no blank strip left of x 0
+  const k = Math.max(G.phone.k, w / W);
+  return [Math.round(W - w / k), Math.round(H - h / k), Math.round(w / k), Math.round(h / k)];
 }
 
-/** Each colour expression is declared once on the <svg> and used by name: the markup stays small (A11Y §4). */
-function declare(markup: string): { vars: Record<string, string>; inner: string } {
-  const vars: Record<string, string> = {};
-  const names = new Map<string, string>();
-  const inner = markup.replace(
-    /(fill|stroke|stop-color)="((?:var|color-mix)\([^"]+)"/g,
-    (_, prop: string, val: string) => {
-      let name = names.get(val);
-      if (!name) {
-        name = `--c${names.size}`;
-        names.set(val, name);
-        vars[name] = val;
-      }
-      return `${prop}="var(${name})"`;
-    },
-  );
-  return { vars, inner };
-}
+const WET_CONDS: ReadonlySet<string> = new Set([
+  'drizzle',
+  'freezingDrizzle',
+  'rain',
+  'freezingRain',
+  'showers',
+  'thunder',
+  'thunderHail',
+]);
 
-export function sceneSvg(s: SceneState, opts: SceneOptions = {}): SceneSvg {
-  const sky = skyOf(s);
-  const stops = skyStops(s, sky.key);
-  const X: Ctx = {
-    s,
-    defs: [],
-    id: opts.idPrefix ?? 'sc',
-    n: 0,
-    ext: opts.extendTop ?? 0,
-    quiet: opts.quietX ?? null,
-    haloK: opts.bodyAt ? 0.75 : 1,
-    skyMid: skyAt(stops, 120),
-    skyFill: '',
-    bodyX: null,
-    bodyP: null,
-    br: 0,
-    clearBody: false,
-  };
-  const top = stops[0]![1];
-  const bottom = stops[stops.length - 1]![1];
-  const far = spline(G.ridges.far);
-  const mid = spline(G.ridges.mid);
-  const near = spline(G.ridges.near);
-  const alp = spline(G.ridges.alp);
-  const crest = (x: number): number => Math.min(alp.y(x), far.y(x));
+export function sceneSvg(s: SceneState, o: SceneOptions = {}): SceneSvg {
+  const B = new Book();
+  const key = skyOf(s).key;
+  const th = s.theme === 'dark' ? 'dark' : 'light';
+  const offs = skyOffsets(key, th);
+  const stops: [number, string][] = offs.map((off, i) => [off, `sky-${key}-${i}`]);
+  // a partial solar eclipse beyond 60 %: the sky one step dimmer (events.js, as an overlay rect)
+  const idp = `${o.idPrefix ?? 'sc'}-`;
+  let n = 0;
+  const view = o.view ?? ([0, 0, W, H] as const);
+  const top = Math.min(0, view[1]) - 4;
+  const falling: '' | 'rain' | 'snow' = WET_CONDS.has(s.cond)
+    ? 'rain'
+    : isSnow(s.cond)
+      ? 'snow'
+      : '';
+  const dark = !(s.phase === 'day' || s.phase === 'golden');
+  const hasBody = s.body.kind !== 'none';
+  const moonBody = s.body.kind === 'moon';
+  const body: Pt = o.bodyAt ?? (o.phone ? phoneBody(s) : arcPoint(s));
+  const mode = s.mode;
+  const dir = s.windTo === 'left' ? -1 : 1;
+  const lean = G.lean[s.wind]! * dir;
   const plain = s.level === 'plain';
-  const deckOn = s.cloud > 85 && s.cond !== 'fog';
-  const moonUp = s.body.kind === 'moon';
-  const br = moonUp ? G.moon.r * (s.moon?.size ?? 1) : s.heat ? G.sun.rHeat : G.sun.r;
-  const bp: Pt | null =
-    s.body.kind === 'none' || s.event === 'rainbow' ? null : (opts.bodyAt ?? bodyPos(s, crest, br));
-  X.bodyX = bp ? bp[0] : null;
-  X.bodyP = bp;
-  X.br = br;
-  const L: string[] = [];
-  L.push(layer('sky', skyLayer(X, sky, stops, bp)));
-  L.push(layer('stars', plain ? '' : starsLayer(X)));
-  let body = '';
-  if (bp && !(deckOn && PRECIP.has(s.cond))) {
-    if (deckOn)
-      body = el('circle', {
-        cx: bp[0],
-        cy: Math.min(bp[1], 70),
-        r: 90,
-        fill: grad(
-          X,
-          [
-            [0, 'white', 0.32],
-            [1, 'white', 0],
-          ],
-          { radial: true },
-        ),
-      });
-    else if (moonUp)
-      body = moonBody(X, bp[0], bp[1], br, {
-        glow: true,
-        darkFill: skyAt(stops, bp[1]),
-        eclipse: s.event === 'lunarPartial' || s.event === 'lunarTotal' ? s.event : undefined,
-      });
-    else body = sunBody(X, bp[0], bp[1], br, bottom);
-  }
-  // No day moon in a narrow crop (phone): the body has its own box there and the text needs the rest.
-  if (s.dayMoon && !plain && !opts.bodyAt) {
-    // At its own place in the sky (the mockup's fixed spot could sit on the sun).
-    const D = G.dayMoon;
-    const at: Pt =
-      s.moon?.t == null
-        ? [D.x, D.y]
-        : bodyPos({ ...s, body: { kind: 'moon', t: s.moon.t, alt: s.moon.alt } }, crest, D.r);
-    body += el(
+  const cover2 = s.snowCover >= 2;
+  const frozen = s.frost >= 2 || (s.snowCover >= 2 && !s.wet);
+  const q0 = o.quietX ?? 640;
+  const q1 = q0 + 330;
+  const motion = s.motion && !plain && !s.calm;
+  const moonIllum = s.moon?.illum ?? 0;
+  const moonSize = s.moon?.size ?? 1;
+  const darkInk = inkForSky(key, 'light') === 'dark';
+
+  /* ---- colours (mockup `colours`) ---- */
+  const top0 = tok(stops[0]![1]);
+  const bottom = tok(stops[stops.length - 1]![1]);
+  const lightKey = /^night/.test(key)
+    ? key === 'night-full'
+      ? 'night-full'
+      : 'night'
+    : LIGHT[key]
+      ? key
+      : 'day';
+  const [lk, lg] = LIGHT[lightKey]!;
+  const dt = s.theme === 'dark' && darkInk;
+  const lit = (c: string, k = 1): string => {
+    const g = B.mix(B.mix(c, lg ? B.grey(c) : c, lg), `light-${lightKey}`, lk * k);
+    return dt ? B.mix(g, 'light-dark-theme', DARK_THEME_K) : g;
+  };
+  const air = (c: string, a: number): string => B.mix(lit(c), bottom, a);
+  const L = (n2: string): string => `land-${s.season}-${n2}`;
+  const crowns = s.season === 'winter' ? [] : [1, 2, 3].map((i) => lit(L(`crown-${i}`)));
+  const water = B.mix(B.mix(top0, bottom, 0.5), lit('water-deep'), 0.45);
+  const wetSky = /storm|rain/.test(key);
+  const C = {
+    haze: bottom,
+    far: air(L('rock'), 0.5),
+    mid: air(L('mid'), 0.36),
+    f1: air(L('f1'), 0.2),
+    f2: air(L('f2'), 0.08),
+    near: lit(L('near')),
+    dark: lit(L('dark')),
+    // lit is affine: the dry meadow is lit part by part (only tokens are greyed)
+    meadow: s.heat ? B.mix(lit(L('meadow')), lit('dry-meadow'), 0.6) : lit(L('meadow')),
+    snow: lit('snow', 0.6),
+    snowShade: lit('snow-shade', 0.6),
+    rime: lit('rime', 0.45),
+    water,
+    waterHi: B.mix(water, dark ? 'moon' : 'white', 0.55),
+    ice: lit('ice', 0.6),
+    iceHi: lit('ice-hi', 0.6),
+    wall: lit('wall', 0.8),
+    roof: lit('roof', 0.8),
+    wood: lit('wood', 0.7),
+    smoke: dark || wetSky ? B.mix('smoke-dark', bottom, 0.3) : lit('smoke', 0.5),
+    flag: lit('flag', 0.6),
+    crowns,
+    lightsOn: dark || wetSky,
+  };
+  const deckName = /^night/.test(key)
+    ? falling || s.fog
+      ? 'night-wet'
+      : 'night'
+    : key === 'dawn' || key === 'dusk'
+      ? 'twilight'
+      : key === 'storm'
+        ? 'storm'
+        : key === 'snow'
+          ? 'snow'
+          : key === 'rain'
+            ? 'wet'
+            : 'day';
+  const DT = [0, 1, 2, 3, 4].map((i) => tok(`deck-${deckName}-${i}`));
+
+  /* ---- writers ---- */
+  let out = '';
+  let defs = '';
+  const id = (p: string): string => `${idp}${p}${n++}`;
+  const add = (tag: string, a: Record<string, Attr>, inner?: string): void => {
+    out += el(tag, a, inner);
+  };
+  const path = (d: string, fill: string, extra: Record<string, Attr> = {}): void => {
+    out += el('path', { d, fill: tok(fill), ...extra });
+  };
+  const line = (d: string, stroke: string, w: number, extra: Record<string, Attr> = {}): void => {
+    out += el('path', {
+      d,
+      fill: 'none',
+      stroke: tok(stroke),
+      'stroke-width': w,
+      ...extra,
+    });
+  };
+  const open = (layer: string, extra = ''): void => {
+    out += `<g data-layer="${layer}"${extra}>`;
+  };
+  const close = (): void => {
+    out += '</g>';
+  };
+  const grad = (
+    st: readonly (readonly [number, string, number?])[],
+    a: Record<string, Attr>,
+    radialG?: boolean,
+  ): string => {
+    const g = id('g');
+    defs += el(
+      radialG ? 'radialGradient' : 'linearGradient',
+      { ...a, id: g },
+      st
+        .map((p) => el('stop', { offset: p[0], 'stop-color': tok(p[1]), 'stop-opacity': p[2] }))
+        .join(''),
+    );
+    return `url(#${g})`;
+  };
+  const radial = (col: string, a0: number, a1: number, at?: number): string =>
+    grad(
+      [
+        [at ?? 0, col, a0],
+        [1, col, a1],
+      ],
+      { cx: 0.5, cy: 0.5, r: 0.5 },
+      true,
+    );
+  type GlowStop = readonly [number, string, number];
+  /**
+   * A radial glow (circle or ellipse, optionally turned): a rect cut at the right edge (`LIM`), filled with the same
+   * radial gradient in user space – the same pixels inside the picture, nothing reaching past its edge.
+   */
+  const glow = (
+    cx: number,
+    cy: number,
+    rx: number,
+    ry: number,
+    stops: readonly GlowStop[],
+    extra: Record<string, Attr> = {},
+    rot = 0,
+  ): string => {
+    const a = (rot * Math.PI) / 180;
+    const hw = rot ? Math.hypot(rx * Math.cos(a), ry * Math.sin(a)) : rx;
+    const hh = rot ? Math.hypot(rx * Math.sin(a), ry * Math.cos(a)) : ry;
+    const x0 = cx - hw;
+    const x1 = Math.min(cx + hw, LIM);
+    if (x1 <= x0) return '';
+    const shape =
+      ry !== rx || rot
+        ? `${rot ? `rotate(${rot} ${f(cx)} ${f(cy)}) ` : ''}translate(${f(cx)} ${f(cy)}) scale(1 ${Math.round((ry / rx) * 1000) / 1000}) translate(${f(-cx)} ${f(-cy)})`
+        : null;
+    const fill = grad(
+      stops,
+      { gradientUnits: 'userSpaceOnUse', cx: f(cx), cy: f(cy), r: f(rx), gradientTransform: shape },
+      true,
+    );
+    return el('rect', {
+      x: f(x0),
+      y: f(cy - hh),
+      width: f(x1 - x0),
+      height: f(2 * hh),
+      fill,
+      ...extra,
+    });
+  };
+  const lightRight = (x: number): boolean => x < body[0];
+  const hk = (x: number): number => (x <= q0 ? 0.85 : x >= q1 ? 0 : (0.85 * (q1 - x)) / (q1 - q0));
+  const hzc = new Map<string, string>();
+  const hz = (fill: string): string => {
+    let g = hzc.get(fill);
+    if (!g) {
+      const m = B.mix(fill, C.haze, 0.85);
+      g = grad(
+        [
+          [0, m],
+          [f(q0 / q1), m],
+          [1, fill],
+        ],
+        { x1: 0, y1: 0, x2: q1, y2: 0, gradientUnits: 'userSpaceOnUse' },
+      );
+      hzc.set(fill, g);
+    }
+    return g;
+  };
+  const amount = (d: number): number =>
+    s.event ? Math.max(0, Math.min(1, s.eventAmount ?? d)) : d;
+  const wrapBody = (inner: string): string =>
+    el(
       'g',
-      { opacity: D.op, 'data-part': 'dayMoon' },
-      moonBody(X, at[0], at[1], D.r, { glow: false, darkFill: skyAt(stops, at[1]) }),
+      {
+        transform: `translate(${f(body[0])},${f(body[1])})`,
+        'data-layer': 'body',
+        'data-mode': mode,
+        'data-event': s.event ?? null,
+      },
+      inner,
+    );
+
+  /* ---- sky ---- */
+  open('sky');
+  add('rect', {
+    x: 0,
+    y: top,
+    width: W,
+    height: H - top,
+    fill: grad(
+      stops.map((p) => [p[0], p[1]] as const),
+      { x1: 0, y1: 0, x2: 0, y2: 250, gradientUnits: 'userSpaceOnUse' },
+    ),
+  });
+  if (GLOW.has(key))
+    out += glow(body[0], 236, 520, 120, [
+      [0, `glow-${key}`, 0.55],
+      [1, `glow-${key}`, 0],
+    ]);
+  if (s.heat && !plain)
+    add('rect', {
+      x: 0,
+      y: 150,
+      width: W,
+      height: 110,
+      fill: grad(
+        [
+          [0, 'heat-haze', 0],
+          [1, 'heat-haze', 0.5],
+        ],
+        { x1: 0, y1: 0, x2: 0, y2: 1 },
+      ),
+    });
+  close();
+
+  /* ---- stars ---- */
+  const starry = dark && key !== 'night-fog';
+  const stars = (count: number, aroundBody?: boolean): void => {
+    const q = prng(21);
+    const d = ['', '', ''];
+    for (let i = 0; i < count; i++) {
+      let x: number;
+      let y: number;
+      const r = 0.6 + q() * 0.9;
+      if (aroundBody) {
+        const a = q() * 6.28;
+        const rr = 30 + q() * 60;
+        x = body[0] + Math.cos(a) * rr * 1.5;
+        y = body[1] - 4 + Math.sin(a) * rr * 0.6;
+      } else {
+        x = q() * W;
+        y = top + q() * (200 - top);
+        if (Math.hypot(x - body[0], y - body[1]) < 44) continue;
+      }
+      d[i % 3] += circ(x, y, r);
+    }
+    [0.5, 0.75, 1].forEach((op, j) => {
+      if (d[j]) path(d[j]!, 'star', { opacity: op });
+    });
+  };
+  if (starry && s.cover < 4 && !falling) {
+    open('stars');
+    const moonLight = moonBody ? moonIllum : 0;
+    stars(
+      Math.round((s.phase === 'night' ? 64 : 22) * (1 - s.cover * 0.22) * (1 - moonLight * 0.5)),
+    );
+    close();
+  }
+  if (!plain) out += eventSky();
+
+  /* ---- body ---- */
+  let bodyR = 0;
+  let bodyDrawn = false;
+  // The body is drawn in its own translated group: there the right edge is `W − body x`.
+  const drawBody = (pale: boolean): void => {
+    const prev = LIM;
+    LIM = W - body[0];
+    try {
+      drawBodyAt(pale);
+    } finally {
+      LIM = prev;
+    }
+  };
+  const drawBodyAt = (pale: boolean): void => {
+    if (!hasBody || bodyDrawn) return;
+    bodyDrawn = true;
+    const ev = eventBody(pale);
+    if (ev != null) {
+      out += ev;
+      return;
+    }
+    let g = '';
+    if (moonBody) {
+      const R = 24 * moonSize;
+      bodyR = R;
+      const k = moonIllum;
+      g += glow(0, 0, R * 2.7, R * 2.7, [
+        [0, 'moon', pale ? 0.5 : 0.34],
+        [1, 'moon', 0],
+      ]);
+      if (mode === 'veil')
+        g += el('path', {
+          d: circ(0, 0, R * 2.1),
+          fill: 'none',
+          stroke: tok('moon'),
+          'stroke-width': 2.2,
+          opacity: 0.3,
+        });
+      g += el('circle', {
+        r: f(R),
+        fill: tok('moon-dark'),
+        opacity: k <= 0.05 ? 0.4 : pale ? 0.5 : 1,
+      });
+      const lp = litPath(R, k);
+      if (lp)
+        g += el(
+          'g',
+          {
+            transform: `rotate(${tiltRotation(s.moon?.tilt ?? 0)})`,
+            opacity: pale ? 0.72 : 1,
+            'data-part': 'moon',
+          },
+          el('path', { d: lp, fill: tok('moon') }) +
+            (k > 0.3
+              ? el('path', {
+                  d:
+                    circ(R * 0.17, -R * 0.33, R * 0.23) +
+                    circ(k > 0.6 ? -R * 0.12 : R * 0.5, R * 0.21, R * 0.17) +
+                    circ(R * 0.38, R * 0.3, R * 0.12) +
+                    (k > 0.6 ? circ(-R * 0.33, -R * 0.17, R * 0.11) : ''),
+                  fill: tok('moon-mare'),
+                })
+              : ''),
+        );
+    } else {
+      const low = s.phase === 'golden';
+      const R = s.heat ? 30 : low ? 28 : 25;
+      bodyR = R;
+      const col = pale ? 'sun-pale' : low ? 'sun-low' : 'sun';
+      const rays = pale ? 0 : s.heat ? 16 : s.sun >= 3 ? 12 : s.sun === 2 ? 8 : 0;
+      g += glow(0, 0, R * 3.4, R * 3.4, [
+        [0, 'sun-core', pale ? 0.5 : 0.6],
+        [0.45, 'sun-core', 0.22],
+        [1, 'sun-core', 0],
+      ]);
+      if (mode === 'veil')
+        g += el('path', {
+          d: circ(0, 0, R * 2.2),
+          fill: 'none',
+          stroke: 'white',
+          'stroke-width': 2.4,
+          opacity: 0.45,
+        });
+      if (rays) {
+        let rd = '';
+        for (let j = 0; j < rays; j++) {
+          const an = (j / rays) * 6.283;
+          const r0 = R + 7;
+          const r1 = R + (s.sun === 2 && !s.heat ? 14 : j % 2 ? 17 : s.heat ? 30 : 24);
+          const w = 0.085;
+          rd += `M${f(Math.cos(an - w) * r0)},${f(Math.sin(an - w) * r0)}L${f(Math.cos(an) * r1)},${f(Math.sin(an) * r1)}L${f(Math.cos(an + w) * r0)},${f(Math.sin(an + w) * r0)}Z`;
+        }
+        g += el('path', { d: rd, fill: tok(col), opacity: 0.9, 'data-part': 'rays' });
+      }
+      g +=
+        el('circle', { r: R, fill: tok(col), opacity: pale ? 0.8 : 1 }) +
+        (pale ? '' : el('circle', { r: f(R * 0.62), fill: tok('sun-core') }));
+    }
+    out += el(
+      'g',
+      {
+        transform: `translate(${f(body[0])},${f(body[1])})`,
+        'data-layer': 'body',
+        'data-mode': mode,
+      },
+      g,
+    );
+  };
+  if (mode === 'clear' || mode === 'veil') drawBody(false);
+  if (plain) {
+    if (mode === 'schein' || mode === 'hole') drawBody(mode === 'schein');
+    return finish();
+  }
+
+  /* ---- clouds ---- */
+  const scallop = (
+    x0: number,
+    x1: number,
+    y: number | ((x: number) => number),
+    seed: number,
+    depth: number,
+    wMin: number,
+    wMax: number,
+    shear = 0,
+  ): string => {
+    const Y = typeof y === 'function' ? y : () => y;
+    const q = prng(seed);
+    let d = `L${x1},${f(Y(x1))}`;
+    let x = x1;
+    while (x > x0) {
+      const w = wMin + q() * (wMax - wMin);
+      const nx = Math.max(x0, x - w);
+      const dp = depth * (0.5 + q());
+      const mx = (x + nx) / 2;
+      d += `Q${f(mx + shear)},${f(Y(mx) + dp * 2)} ${f(nx)},${f(Y(nx) + (q() - 0.5) * depth * 0.5)}`;
+      x = nx;
+    }
+    return d;
+  };
+  const sheet = (
+    y: number | ((x: number) => number),
+    seed: number,
+    depth: number,
+    wMin: number,
+    wMax: number,
+    fill: string,
+    shear?: number,
+  ): void =>
+    path(`M0,${top}L${W},${top}${scallop(0, W, y, seed, depth, wMin, wMax, shear)}Z`, fill, {
+      'data-part': 'deck',
+    });
+  const sh = lean * 60;
+  const drift = motion ? ` class="sc-drift" style="--lee:${16 * dir}px"` : '';
+  if (s.veil && s.cover < 4) {
+    open('cloudsFar', drift);
+    const vq = prng(35);
+    let vd = '';
+    for (let vi = 0; vi < 7; vi++) {
+      const vx = 860 + vq() * 640;
+      const vy = 22 + vq() * 70;
+      const vw = 120 + vq() * 160;
+      vd += `M${f(vx)},${f(vy)}q${f(vw * 0.5)},${f(-8 - vq() * 6)} ${f(vw)},-2q${f(-vw * 0.5)},3 ${f(-vw)},2Z`;
+    }
+    path(vd, dark ? 'cloud-night' : 'white', { opacity: dark ? 0.5 : 0.6, 'data-part': 'veil' });
+    close();
+  }
+  if (s.cover === 4 && s.thunder < 2) {
+    const wetLow = falling ? 10 : 0;
+    open('clouds');
+    sheet(140 + wetLow, 31, 7, 70, 150, DT[0]!, sh);
+    sheet(120 + wetLow, 32, 8, 60, 130, DT[1]!, sh);
+    sheet(96 + wetLow, 33, 8, 70, 140, DT[2]!, sh);
+    sheet(66 + wetLow, 34, 7, 80, 150, DT[3]!, sh);
+    close();
+    if (mode === 'hole') {
+      // The deck breaks into single banks around the body (CONCEPT §2); no outline of a hole anywhere.
+      const hk2 = s.phase === 'night' ? 'night' : s.phase;
+      const ho = skyOffsets(hk2, th);
+      const hsCol = B.mix(`sky-${hk2}-0`, `sky-${hk2}-${ho.length - 1}`, 0.45);
+      out += glow(
+        body[0] - 6,
+        body[1] - 4,
+        196,
+        92,
+        [
+          [0, hsCol, 1],
+          [0.5, hsCol, 0.96],
+          [0.78, hsCol, 0.55],
+          [1, hsCol, 0],
+        ],
+        { 'data-layer': 'sky', 'data-part': 'opening' },
+      );
+      if (dark) {
+        open('stars');
+        stars(12, true);
+        close();
+      }
+      out += glow(
+        body[0],
+        body[1],
+        170,
+        170,
+        [
+          [0.2, DT[4]!, 0.24],
+          [1, DT[4]!, 0],
+        ],
+        { 'data-part': 'spill' },
+      );
+      drawBody(false);
+      open('clouds', ` data-part="banks"${drift}`);
+      G.banks.forEach((b, bi) => {
+        const cx = body[0] + b.at[0];
+        const cy = body[1] + b.at[1];
+        const dd = Math.hypot(b.at[0], b.at[1]) || 1;
+        const ux = -b.at[0] / dd;
+        const uy = -b.at[1] / dd;
+        let d = '';
+        let inner = '';
+        b.l.forEach((l) => {
+          d += circ(cx + l[0], cy + l[1], l[2]);
+          inner += circ(
+            cx + l[0] + ux * l[2] * 0.16,
+            cy + l[1] + uy * l[2] * 0.16 - l[2] * 0.08,
+            l[2] * 0.8,
+          );
+        });
+        d += ell(cx + b.base[0], cy + b.base[1], b.base[2], b.base[3]);
+        const tone = DT[1 + (bi % 3)]!;
+        const near = Math.max(0.45, 1 - dd / 260);
+        path(d, DT[4]!, {
+          transform: `translate(${f(ux * 3.4)} ${f(uy * 3.4)})`,
+          opacity: f(near),
+          'data-part': 'rim',
+        });
+        path(d, tone, { 'data-bank': bi });
+        path(inner, B.mix(tone, DT[4]!, 0.3 * near));
+      });
+      path(
+        `M${f(body[0] - 96)},${f(body[1] - 44)}q30,-10 70,-5q16,2 26,-1q-12,9 -40,9q-30,1 -56,-3Z M${f(body[0] + 52)},${f(body[1] - 60)}q24,-7 52,-2q-22,7 -52,2Z`,
+        B.mix(DT[2]!, DT[4]!, 0.3),
+        { opacity: 0.8, 'data-part': 'shreds' },
+      );
+      close();
+    }
+    if (mode === 'schein') {
+      out += glow(
+        body[0],
+        body[1],
+        120,
+        120,
+        [
+          [0, DT[4]!, 0.5],
+          [1, DT[4]!, 0],
+        ],
+        { 'data-part': 'schein' },
+      );
+      drawBody(true);
+    }
+  }
+  const cumulus = (x: number, y: number, sc: number, shape: number): string => {
+    // drawn in its own translated, scaled (and sheared) group: the right edge in its units, less the shear's reach
+    const prev = LIM;
+    LIM = (W - x) / sc - (lean ? Math.abs(Math.tan((lean * 55 * Math.PI) / 180)) * 60 : 0);
+    try {
+      return cumulusAt(x, y, sc, shape);
+    } finally {
+      LIM = prev;
+    }
+  };
+  const cumulusAt = (x: number, y: number, sc: number, shape: number): string => {
+    const Sh = G.cloudShapes[shape]!;
+    let d = '';
+    let inner = '';
+    Sh.l.forEach((l) => {
+      d += circ(l[0], l[1], l[2]);
+      if (l[1] > -22) inner += circ(l[0] + l[2] * 0.15, l[1] + l[2] * 0.4, l[2] * 0.55);
+    });
+    d += rrect(Sh.b[0], -12, Sh.b[1] - Sh.b[0], 14, 7);
+    let lightC = dark ? 'cloud-night' : falling ? 'cloud-grey' : 'cloud';
+    let shade = dark ? 'cloud-night-shade' : falling ? 'cloud-grey-shade' : 'cloud-shade';
+    if (th === 'dark' && !dark) {
+      lightC = B.mix(lightC, 'land-night', 0.66);
+      shade = B.mix(shade, 'land-night', 0.72);
+    }
+    return el(
+      'g',
+      {
+        transform: `translate(${f(x)} ${f(y)}) scale(${sc})${lean ? ` skewX(${f(-lean * 55)})` : ''}`,
+      },
+      el('path', { d, fill: tok(shade), transform: 'translate(0 4)' }) +
+        el('path', { d, fill: tok(lightC) }) +
+        el('path', { d: inner, fill: tok(shade), opacity: 0.45 }),
+    );
+  };
+  if (s.cover >= 1 && s.cover <= 3) {
+    open('clouds', drift);
+    G.cumulus.slice(0, [0, 2, 4, 9][s.cover]).forEach((c) => {
+      let x = c[0] + sh * 0.5;
+      const y = c[1];
+      const half = 62 * c[2];
+      const gap = s.cover === 3 ? 34 : 58;
+      if (hasBody && Math.abs(x - body[0]) < half + gap && Math.abs(y - 14 - body[1]) < 52)
+        x = body[0] + (x < body[0] ? -1 : 1) * (half + gap);
+      out += cumulus(x, y, c[2], c[3]);
+    });
+    if (s.cover === 3)
+      out += el('g', { opacity: 0.55 }, cumulus(300, 46, 1.3, 1) + cumulus(660, 64, 1.1, 3));
+    close();
+  }
+  if (s.thunder) {
+    const wall = s.thunder >= 2;
+    const baseY = (x: number): number =>
+      x < 760 ? 86 : x > 1040 ? 124 : 86 + (38 * (x - 760)) / 280;
+    open('clouds', wall ? '' : drift);
+    if (wall) sheet(baseY, 53, 5, 44, 96, DT[0]!, sh * 0.5);
+    let rim = '';
+    let lobes = '';
+    const lq = prng(52);
+    const x0 = wall ? [820, 900, 1010, 1120] : [1130, 1150, 1180, 1200];
+    const x1 = wall ? 1660 : 1470;
+    for (let row = 0; row < 4; row++) {
+      const y0 = [84, 44, -8, -70][row]!;
+      for (let xx = x0[row]!; xx < x1 - (wall ? 0 : row * 16); xx += 58 + row * 14) {
+        const r1 = (30 + lq() * 16) * (1 + row * 0.28);
+        const cy = y0 + (lq() - 0.5) * 16;
+        const cx3 = xx + sh * (0.3 + row * 0.25);
+        lobes += circ(cx3, cy, r1);
+        if (xx > x0[row]!) rim += circ(cx3 - r1 * 0.16, cy - r1 * 0.2, r1 * 0.96);
+      }
+    }
+    if (wall) sheet((x) => baseY(x) - 26, 54, 4, 90, 170, DT[1]!, sh * 0.5);
+    else
+      path(
+        `M1120,100Q1300,84 1480,100${scallop(1120, 1480, 122, 53, 4, 40, 80, sh * 0.5)}Z`,
+        DT[0]!,
+        { 'data-part': 'tower' },
+      );
+    path(rim, DT[4]!, { opacity: 0.75 });
+    path(lobes, DT[1]!, { 'data-part': wall ? 'billows' : 'tower' });
+    close();
+  }
+  // The body stays seen in every sky (CONCEPT §0 sentence 9): pale in a soft light on the cloud when the deck,
+  // the storm base or dense fog hides its disc (the mockup drew only the light there – closed the smallest way).
+  if (mode === 'schein' && !bodyDrawn) {
+    const sr = s.thunder >= 2 ? 110 : 120;
+    out += glow(
+      body[0],
+      s.thunder >= 2 ? Math.max(40, body[1] - 30) : body[1],
+      sr,
+      sr,
+      [
+        [0, DT[4]!, s.thunder >= 2 ? 0.42 : 0.5],
+        [1, DT[4]!, 0],
+      ],
+      { 'data-part': 'schein' },
+    );
+    drawBody(true);
+  }
+
+  /* ---- the pale range far behind, then the massif: six mountains, each its own body ---- */
+  const capOf = (crest: readonly Pt[], pk: Pt, depth: number): string => {
+    const lim = pk[1] + depth;
+    const Lx: number[] = [];
+    const Rx: number[] = [];
+    for (let x = pk[0]; x > pk[0] - 140; x -= 3) {
+      if (yAt(crest, x) > lim) break;
+      Lx.push(x);
+    }
+    for (let x = pk[0]; x < pk[0] + 140; x += 3) {
+      if (yAt(crest, x) > lim) break;
+      Rx.push(x);
+    }
+    const xl = Lx[Lx.length - 1]!;
+    const xr = Rx[Rx.length - 1]!;
+    const up = crest.filter((p) => p[0] > xl && p[0] < xr);
+    let d = `M${f(xl)},${f(yAt(crest, xl))}${up.map((p) => `L${f(p[0])},${f(p[1])}`).join('')}L${f(xr)},${f(yAt(crest, xr))}`;
+    const nz = Math.max(3, Math.round((xr - xl) / 11));
+    const q2 = prng(Math.round(pk[0]));
+    for (let i = 1; i < nz; i++) {
+      const tt = i / nz;
+      const zx = xr + (xl - xr) * tt;
+      d += `L${f(zx)},${f(lim + (i % 2 ? depth * (0.25 + q2() * 0.45) : -depth * (0.2 + q2() * 0.3)))}`;
+    }
+    return `${d}Z`;
+  };
+  const cold = !!(s.snowCover || s.frost || s.season === 'winter' || falling === 'snow');
+  const capK = cover2 ? 36 : cold ? 24 : s.season === 'summer' ? 10 : 15;
+  const fogFar = [1, 0.35, 0][s.fog]!;
+  const fogMid = [1, 0.65, 0.22][s.fog]!;
+  const snowHaze = falling === 'snow' && s.intensity >= 3 ? 0.55 : 1;
+  const farOp = Math.min(fogFar, snowHaze);
+  const fogC = B.mix(C.haze, 'white', 0.55);
+  let fogG: string | null = null;
+  const fogBand = (y: number, h: number, op: number, x0?: number, w?: number): void => {
+    // the band's gradient spans its whole length in user space; the rect stops at the picture's right edge
+    const bx = x0 == null ? q0 - 80 : Math.max(x0, q0 - 80);
+    const bw = w ?? W + 200 - q0;
+    const g = grad(
+      [
+        [0, fogC, 0],
+        [0.22, fogC, 1],
+        [0.8, fogC, 1],
+        [1, fogC, 0],
+      ],
+      { x1: f(bx), y1: 0, x2: f(bx + bw), y2: 0, gradientUnits: 'userSpaceOnUse' },
+    );
+    fogG ??= g;
+    add('rect', { x: f(bx), y, width: f(Math.min(bw, W - bx)), height: h, fill: g, opacity: op });
+  };
+  if (farOp > 0) {
+    open('ridgeAlp', farOp < 1 ? ` opacity="${farOp}"` : '');
+    const bc = jag(G.back, 9, 2.5, 22);
+    const bcol = B.mix(cover2 ? B.mix(C.far, C.snow, 0.5) : C.far, C.haze, 0.45);
+    let bcaps = '';
+    path(pts([[0, H] as Pt].concat(bc, [[W, H]]), true), hz(bcol), { 'data-part': 'back' });
+    if (cold)
+      G.backPeaks.forEach((pk) => {
+        const d = pk[2] * capK * 0.8;
+        if (d > 4) bcaps += capOf(bc, [pk[0], pk[1]], d);
+      });
+    if (bcaps) path(bcaps, B.mix(C.snow, C.haze, 0.55));
+    const glowC = GLOW.has(key) ? `glow-${key}` : null;
+    const rockGlow = glowC && s.cover < 4 ? 0.34 : 0;
+    G.mountains.forEach((m, mi) => {
+      const sil = jag(m.sil, 40 + mi, 1.6, 15);
+      const S = m.sil[m.top]!;
+      const shadeLeft = lightRight(S[0]);
+      const it = sil.indexOf(S);
+      const sd = shadeLeft ? -1 : 1;
+      const q4 = prng(900 + mi);
+      const hm = hk(S[0]);
+      const col = B.mix(
+        B.mix(
+          B.mix(B.mix(C.far, C.haze, m.haze), C.snow, cover2 ? 0.55 : 0),
+          glowC ?? 'black',
+          rockGlow,
+        ),
+        C.haze,
+        hm,
+      );
+      const snowC = B.mix(
+        B.mix(B.mix(C.snow, C.haze, m.haze), glowC ?? 'black', rockGlow * 1.1),
+        C.haze,
+        hm,
+      );
+      out += `<g data-part="${m.id}">`;
+      path(pts(sil, true), col);
+      const depth = m.size * capK;
+      let cap = capOf(sil, S, depth);
+      m.gullies.slice(0, cold ? 9 : 2).forEach((g) => {
+        cap += `M${g[0]},${g[1]}l2.6,${g[2]}l-5.4,${f(-g[2] * 0.25)}Z`;
+      });
+      cap += m.fields.slice(0, cover2 ? 9 : cold ? 3 : 0).join('');
+      path(cap, snowC, { 'data-part': 'caps' });
+      let ribs = '';
+      m.ribs.forEach((rb) => {
+        const a = m.sil[rb[0]]!;
+        const n2 = 4;
+        let d = `M${a[0]},${a[1]}`;
+        for (let k2 = 1; k2 <= n2; k2++) {
+          const tt = k2 / n2;
+          d += `L${f(a[0] + (rb[1] - a[0]) * tt + (k2 < n2 ? (k2 % 2 ? 1 : -1) * (2 + q4() * 3) : 0))},${f(a[1] + (218 - a[1]) * tt)}`;
+        }
+        ribs += `${d}L${f(rb[1] + sd * rb[2])},218Z`;
+      });
+      if (ribs)
+        path(ribs, cover2 ? C.snowShade : C.dark, {
+          opacity: f((cover2 ? 0.45 : 0.2) * (1 - hm)),
+          'data-part': 'ribs',
+        });
+      const face = shadeLeft
+        ? sil.slice(0, it + 1).concat(m.arete.slice(1))
+        : sil.slice(it).concat(m.arete.slice(1).reverse());
+      path(pts(face, true), cover2 ? C.snowShade : C.dark, {
+        opacity: f((cover2 ? 0.7 : 0.36) * (1 - hm)),
+        'data-part': 'shade',
+      });
+      if (s.wind === 3 && cover2 && m.size >= 0.8)
+        path(
+          `M${S[0]},${S[1]}q${f(dir * 22)},-9 ${f(dir * 52)},-4q${f(-dir * 20)},1 ${f(-dir * 44)},10Z`,
+          C.snow,
+          { opacity: 0.6, 'data-part': 'spindrift' },
+        );
+      out += '</g>';
+    });
+    close();
+  }
+  out += eventBehindLand();
+  if (s.fog) {
+    open('fog');
+    fogBand(168, 30, 0.5);
+    fogBand(196, 22, 0.42, 300, 1100);
+    close();
+  }
+
+  /* ---- round wooded hills ---- */
+  open('ridgeFar', fogMid < 1 ? ` opacity="${fogMid}"` : '');
+  const hillCol = cover2 ? B.mix(C.mid, C.snow, 0.45) : C.mid;
+  const hq = prng(14);
+  let hd = '';
+  path(smooth(G.hills, H), hz(hillCol));
+  if (!cover2 && !s.fog)
+    path(G.clearings.join(''), B.mix(C.meadow, C.haze, 0.4), {
+      opacity: 0.8,
+      'data-part': 'clearings',
+    });
+  for (let hx2 = 20; hx2 < W; hx2 += 9 + hq() * 16) {
+    const hy = yAt(G.hills, hx2) + 6 + hq() * 10;
+    const hh = 5 + hq() * 5;
+    hd += `M${f(hx2 - hh * 0.38)},${f(hy)}L${f(hx2 + lean * hh)},${f(hy - hh)}L${f(hx2 + hh * 0.38)},${f(hy)}Z`;
+  }
+  path(hd, hz(B.mix(C.f1, hillCol, 0.35)), { 'data-part': 'wood' });
+  close();
+
+  /* ---- forest in staffels ---- */
+  const skyline = (
+    lineKeys: readonly Pt[],
+    seed: number,
+    sMin: number,
+    sMax: number,
+    hMin: number,
+    hMax: number,
+    fill: string,
+    fogOp: number,
+  ): void => {
+    const q = prng(seed);
+    let x = -10;
+    let d = `M-10,${H}`;
+    let tips = '';
+    const end = lineKeys[lineKeys.length - 1]![0];
+    while (x < end + 10) {
+      const sp = sMin + q() * (sMax - sMin);
+      const kind = q();
+      const h = hMin + q() * (hMax - hMin) * (kind > 0.88 ? 1.5 : 1);
+      const yb = yAt(lineKeys, Math.max(0, Math.min(end, x + sp / 2)));
+      const tx = x + sp / 2 + lean * h * 1.1;
+      if (kind > 0.7 && kind <= 0.88)
+        d += `L${f(x)},${f(yb)}Q${f(tx - sp * 0.7)},${f(yb - h * 0.95)} ${f(tx)},${f(yb - h * 0.82)}Q${f(tx + sp * 0.7)},${f(yb - h * 0.95)} ${f(x + sp)},${f(yb)}`;
+      else {
+        d += `L${f(x)},${f(yb)}L${f(tx - sp * 0.16)},${f(yb - h * 0.52)}L${f(tx - sp * 0.3)},${f(yb - h * 0.5)}L${f(tx)},${f(yb - h)}L${f(tx + sp * 0.3)},${f(yb - h * 0.5)}L${f(tx + sp * 0.16)},${f(yb - h * 0.52)}`;
+        tips += `M${f(tx - sp * 0.26)},${f(yb - h * 0.56)}L${f(tx)},${f(yb - h)}L${f(tx + sp * 0.26)},${f(yb - h * 0.56)}L${f(tx)},${f(yb - h * 0.7)}Z`;
+      }
+      x += sp;
+    }
+    d += `L${end + 10},${H}Z`;
+    open('ridgeMid', `${fogOp < 1 ? ` opacity="${fogOp}"` : ''} data-part="skyline"`);
+    path(d, hz(fill));
+    if (s.snowCover) path(tips, C.snow, { opacity: cover2 ? 0.85 : 0.5, 'data-part': 'caps' });
+    else if (s.frost) path(tips, C.rime, { opacity: 0.22, 'data-part': 'caps' });
+    close();
+  };
+  interface Acc {
+    full: string;
+    shade: string;
+    snow: string;
+    trunk: string;
+    crown: [string, string, string];
+    crownShade: string;
+    bare: string;
+    birch: string;
+    marks: string;
+  }
+  const newAcc = (): Acc => ({
+    full: '',
+    shade: '',
+    snow: '',
+    trunk: '',
+    crown: ['', '', ''],
+    crownShade: '',
+    bare: '',
+    birch: '',
+    marks: '',
+  });
+  const shear =
+    (_x: number, yb: number, h: number) =>
+    (px: number, py: number): string => {
+      const dy = yb - py;
+      return `${f(px + lean * dy * (0.45 + (0.9 * dy) / h))},${f(py)}`;
+    };
+  const spruce = (
+    x: number,
+    yb: number,
+    h: number,
+    acc: Acc,
+    seed: number,
+    wide?: boolean,
+  ): void => {
+    const q = prng(seed);
+    const tn = wide ? 3 : Math.max(3, Math.round(h / 21));
+    const w = h * (wide ? 0.46 : 0.36);
+    const P = shear(x, yb, h);
+    const side = lightRight(x) ? -1 : 1;
+    acc.trunk += `M${P(x - h * 0.03, yb)}L${P(x - h * 0.03, yb - h * 0.2)}L${P(x + h * 0.03, yb - h * 0.2)}L${P(x + h * 0.03, yb)}Z`;
+    for (let i = 0; i < tn; i++) {
+      const b = yb - h * (0.1 + (0.76 * i) / tn);
+      const a = i === tn - 1 ? yb - h : b - h * (1.3 / tn);
+      const k = 1 - (0.68 * i) / tn;
+      const wl = w * k * (0.88 + q() * 0.24);
+      const wr = w * k * (0.88 + q() * 0.24);
+      const dr = h * 0.022;
+      acc.full += `M${P(x - wl, b + dr)}L${P(x, a)}L${P(x + wr, b + dr)}L${P(x + wr * 0.62, b - dr * 0.7)}L${P(x + wr * 0.33, b + dr * 0.8)}L${P(x, b - dr * 0.5)}L${P(x - wl * 0.33, b + dr * 0.8)}L${P(x - wl * 0.62, b - dr * 0.7)}Z`;
+      const ws = side > 0 ? wr : wl;
+      acc.shade += `M${P(x, a)}L${P(x + side * ws, b + dr)}L${P(x + side * ws * 0.62, b - dr * 0.7)}L${P(x + side * ws * 0.33, b + dr * 0.8)}L${P(x, b - dr * 0.5)}Z`;
+      acc.snow += `M${P(x - wl * 0.6, b - (b - a) * 0.36)}L${P(x, a)}L${P(x + wr * 0.6, b - (b - a) * 0.36)}L${P(x + wr * 0.2, b - (b - a) * 0.5)}L${P(x - wl * 0.25, b - (b - a) * 0.3)}Z`;
+    }
+  };
+  const pine = (x: number, yb: number, h: number, acc: Acc): void => {
+    const P = shear(x, yb, h);
+    const k = lean * h;
+    const side = lightRight(x) ? -1 : 1;
+    acc.trunk +=
+      `M${P(x - h * 0.028, yb)}L${P(x - h * 0.012, yb - h * 0.9)}L${P(x + h * 0.016, yb - h * 0.9)}L${P(x + h * 0.028, yb)}Z` +
+      `M${P(x, yb - h * 0.52)}L${P(x + h * 0.17, yb - h * 0.62)}L${P(x + h * 0.17, yb - h * 0.6)}L${P(x, yb - h * 0.48)}Z`;
+    [
+      [-0.1, 0.8, 0.2, 0.08],
+      [0.1, 0.9, 0.22, 0.085],
+      [-0.02, 1.0, 0.15, 0.07],
+      [0.18, 0.64, 0.11, 0.045],
+    ].forEach((c) => {
+      const cx = x + c[0]! * h + k * c[1]! * 1.1;
+      const cy = yb - c[1]! * h;
+      acc.full += ell(cx, cy, c[2]! * h, c[3]! * h);
+      acc.shade += ell(
+        cx + side * c[2]! * h * 0.3,
+        cy + c[3]! * h * 0.42,
+        c[2]! * h * 0.66,
+        c[3]! * h * 0.5,
+      );
+      acc.snow += ell(cx, cy - c[3]! * h * 0.5, c[2]! * h * 0.8, c[3]! * h * 0.42);
+    });
+  };
+  const bareD = (x0: number, y0: number, r2: number): string =>
+    `M${x0},${y0}v${f(-r2 * 1.5)}M${x0},${f(y0 - r2 * 0.9)}l${f(-r2 * 0.8)},${f(-r2 * 1.1)}M${x0},${f(y0 - r2 * 1.1)}l${f(r2 * 0.85)},${f(-r2)}` +
+    `M${x0},${f(y0 - r2 * 1.5)}l${f(-r2 * 0.35)},${f(-r2 * 0.9)}M${x0},${f(y0 - r2 * 1.5)}l${f(r2 * 0.4)},${f(-r2 * 0.8)}` +
+    `M${f(x0 - r2 * 0.5)},${f(y0 - r2 * 1.6)}l${f(-r2 * 0.5)},${f(-r2 * 0.25)}M${f(x0 + r2 * 0.55)},${f(y0 - r2 * 1.75)}l${f(r2 * 0.5)},${f(-r2 * 0.15)}`;
+  const leafless = s.season === 'winter' || cover2;
+  const leafTree = (x: number, yb: number, r: number, acc: Acc, ci: number): void => {
+    if (leafless) {
+      acc.bare += bareD(x, yb, r);
+      return;
+    }
+    const cx = x + lean * r * 2.8;
+    const cy = yb - r * 2.2;
+    const side = lightRight(x) ? -1 : 1;
+    acc.trunk += `M${f(x - r * 0.13)},${yb}L${f(cx - r * 0.08)},${f(cy + r * 0.3)}L${f(cx + r * 0.08)},${f(cy + r * 0.3)}L${f(x + r * 0.13)},${yb}Z`;
+    [
+      [-0.55, 0.1, 0.6],
+      [0.05, -0.55, 0.72],
+      [0.7, -0.1, 0.62],
+      [0.2, 0.35, 0.6],
+      [-0.25, -0.25, 0.6],
+      [0.5, -0.5, 0.5],
+    ].forEach((l) => {
+      acc.crown[ci % 3] += circ(cx + l[0]! * r, cy + l[1]! * r, l[2]! * r);
+    });
+    acc.crownShade +=
+      circ(cx + side * 0.35 * r, cy + 0.36 * r, 0.48 * r) +
+      circ(cx + side * 0.62 * r, cy - 0.02 * r, 0.36 * r);
+  };
+  const birch = (x: number, yb: number, h: number, acc: Acc, ci: number): void => {
+    const k = lean * h * 0.7;
+    const tx = x + k;
+    const ty = yb - h * 0.8;
+    acc.birch += `M${f(x - h * 0.03)},${yb}L${f(tx - h * 0.012)},${f(ty)}L${f(tx + h * 0.012)},${f(ty)}L${f(x + h * 0.03)},${yb}Z`;
+    acc.marks += `M${f(x - h * 0.02)},${f(yb - h * 0.16)}h${f(h * 0.035)}M${f(x - h * 0.01 + k * 0.4)},${f(yb - h * 0.36)}h${f(h * 0.03)}M${f(x - h * 0.012 + k * 0.7)},${f(yb - h * 0.55)}h${f(h * 0.028)}`;
+    if (leafless) {
+      acc.bare += `M${f(tx)},${f(ty)}l${f(-h * 0.16)},${f(-h * 0.2)}M${f(tx)},${f(ty)}l${f(h * 0.14)},${f(-h * 0.22)}M${f(tx)},${f(ty)}v${f(-h * 0.2)}M${f(x + k * 0.6)},${f(yb - h * 0.55)}l${f(-h * 0.2)},${f(-h * 0.14)}M${f(x + k * 0.7)},${f(yb - h * 0.62)}l${f(h * 0.2)},${f(-h * 0.12)}`;
+      return;
+    }
+    [
+      [-0.15, -0.62, 0.13],
+      [0.12, -0.7, 0.14],
+      [0, -0.86, 0.13],
+      [-0.2, -0.8, 0.1],
+      [0.2, -0.88, 0.1],
+      [0.04, -1.0, 0.1],
+      [0.24, -0.58, 0.09],
+    ].forEach((l) => {
+      acc.crown[ci % 3] += circ(x + k * -l[1]! + l[0]! * h, yb + l[1]! * h, l[2]! * h);
+    });
+  };
+  const bush = (x: number, yb: number, r: number, acc: Acc): void => {
+    acc.full +=
+      circ(x - r, yb - r * 0.6, r * 0.8) + circ(x, yb - r, r) + circ(x + r, yb - r * 0.6, r * 0.8);
+  };
+  const plant = (list: readonly Tree[], acc: Acc): void => {
+    list.forEach((tr, i) => {
+      const kd = tr[0];
+      if (kd === 'spruce') spruce(tr[1], tr[2], tr[3], acc, 500 + i * 7 + tr[1]);
+      else if (kd === 'fir') spruce(tr[1], tr[2], tr[3], acc, 500 + i * 7 + tr[1], true);
+      else if (kd === 'pine') pine(tr[1], tr[2], tr[3], acc);
+      else if (kd === 'birch') birch(tr[1], tr[2], tr[3], acc, i);
+      else if (kd === 'leaf') leafTree(tr[1], tr[2], tr[3], acc, i);
+      else bush(tr[1], tr[2], tr[3], acc);
+    });
+  };
+  const paint = (acc: Acc, part: string, far?: boolean, cls = ''): void => {
+    out += `<g data-part="${part}"${cls}>`;
+    if (acc.trunk) path(acc.trunk, C.wood);
+    if (acc.full) path(acc.full, far ? C.f2 : cover2 ? C.near : B.mix(C.near, C.dark, 0.45));
+    if (acc.shade) path(acc.shade, C.dark, { opacity: far ? 0.3 : 0.45 });
+    if (s.snowCover && acc.snow)
+      path(acc.snow, C.snow, { opacity: cover2 ? 1 : 0.6, 'data-part': 'caps' });
+    else if (s.frost && acc.snow) path(acc.snow, C.rime, { opacity: far ? 0.2 : 0.4 });
+    if (acc.birch) {
+      path(acc.birch, lit('birch'));
+      line(acc.marks, C.dark, 0.9, { opacity: 0.7 });
+    }
+    acc.crown.forEach((d, ci) => {
+      if (d) path(d, C.crowns[ci % C.crowns.length]!);
+    });
+    if (acc.crownShade) path(acc.crownShade, C.dark, { opacity: 0.28 });
+    if (acc.bare) {
+      line(acc.bare, cover2 ? C.wood : C.dark, 1.8);
+      if (s.frost || s.snowCover)
+        line(acc.bare, s.snowCover ? C.snow : C.rime, 0.9, {
+          opacity: s.snowCover ? 0.9 : 0.55,
+          transform: 'translate(-0.6 -0.9)',
+        });
+    }
+    out += '</g>';
+  };
+  const leafy = (
+    lineKeys: readonly Pt[],
+    seed: number,
+    n3: number,
+    r0: number,
+    r1: number,
+    col: string,
+    op: number,
+  ): void => {
+    if (leafless) return;
+    const q = prng(seed);
+    let d = '';
+    const end = lineKeys[lineKeys.length - 1]![0];
+    for (let i3 = 0; i3 < n3; i3++) {
+      const x = q() * end;
+      const r = r0 + q() * (r1 - r0);
+      d +=
+        circ(x + lean * r, yAt(lineKeys, x) + r * 0.2 + q() * r, r) +
+        circ(x + r * 0.9 + lean * r, yAt(lineKeys, x) + r * 0.7 + q() * r * 0.5, r * 0.75);
+    }
+    path(d, hz(col), { opacity: op, 'data-layer': 'ridgeMid', 'data-part': 'leafy' });
+  };
+  skyline(G.f1, 61, 8, 13, 9, 15, C.f1, [1, 0.8, 0.45][s.fog]!);
+  leafy(G.f1, 64, 46, 3, 5, B.mix(C.crowns[0] ?? C.f1, C.haze, 0.3), [0.9, 0.7, 0.35][s.fog]!);
+  if (s.fog) {
+    open('fog');
+    fogBand(222, 20, 0.5);
+    if (s.fog >= 2) fogBand(240, 26, 0.6);
+    close();
+  }
+
+  /* ---- the lake: round, whole, in a meadow; far houses, jetty and boat ---- */
+  open('water');
+  const shoreCol = cover2
+    ? B.mix(C.snow, C.snowShade, 0.3)
+    : s.snowCover
+      ? B.mix(C.meadow, C.snow, 0.6)
+      : B.mix(C.meadow, C.f1, 0.3);
+  const wq = prng(71);
+  path(G.backShore, shoreCol, { 'data-part': 'shore' });
+  let hw = '';
+  let hr = '';
+  let hwin = '';
+  G.farHouses.forEach((h0, hi) => {
+    const w = hi % 2 ? 8 : 10;
+    hw += `M${h0[0]},${h0[1]}v-5h${w}v5Z`;
+    hr += `M${h0[0] - 1.5},${h0[1] - 5}l${w / 2 + 1.5},-4.5l${w / 2 + 1.5},4.5Z`;
+    hwin += `M${h0[0] + w - 4},${f(h0[1] - 3.8)}h2v2h-2Z`;
+  });
+  path(hw, B.mix(C.wall, C.haze, 0.25), { 'data-part': 'farHouses' });
+  path(hr, s.snowCover ? C.snow : B.mix(C.roof, C.haze, 0.2));
+  if (C.lightsOn) path(hwin, 'window', { 'data-part': 'window' });
+  line(G.lake, B.mix(shoreCol, cover2 ? C.snowShade : C.haze, 0.5), 3.4, { 'data-part': 'rim' });
+  path(G.lake, frozen ? C.ice : C.water, { 'data-part': 'lake' });
+  const lc = id('c');
+  defs += el('clipPath', { id: lc }, el('path', { d: G.lake }));
+  out += `<g clip-path="url(#${lc})">`;
+  if (!frozen && !s.fog && s.wind <= 1) {
+    let rf = 'M1002,262';
+    for (let x = 1002; x <= 1342; x += 10) {
+      let top2 = 218;
+      G.mountains.forEach((m) => {
+        if (x >= m.sil[0]![0] && x <= m.sil[m.sil.length - 1]![0])
+          top2 = Math.min(top2, yAt(m.sil, x));
+      });
+      rf += `L${x},${f(263 + (218 - top2) * 0.3)}`;
+    }
+    path(`${rf}L1342,262Z`, C.far, { opacity: s.wind ? 0.28 : 0.5, 'data-part': 'mirror' });
+  }
+  if (frozen) {
+    path(
+      'M1010,276l60,-5l44,6l-52,5ZM1150,286l70,-5l56,6l-60,6ZM1236,270l50,-2l30,4l-44,3Z',
+      cover2 ? C.snow : C.iceHi,
+      { opacity: 0.85, 'data-part': 'ice' },
+    );
+    line('M1020,290l80,-6M1110,272l60,3M1200,294l90,-3M1060,282l30,2', C.iceHi, 1.6);
+  } else {
+    let wd = '';
+    if (hasBody && mode !== 'schein' && Math.abs(body[0] - 1170) < 160 && s.wind <= 2) {
+      for (let i = 0; i < 5; i++) {
+        const ww2 = 6 + i * 5 + wq() * 14;
+        wd += `M${f(body[0] - ww2 / 2 + (wq() - 0.5) * 16)},${f(271 + i * 5.6 + wq() * 2)}h${f(ww2)}`;
+      }
+      line(wd, C.waterHi, 1.7, { opacity: 0.6, 'data-part': 'glitter' });
+    }
+    const nRip = [0, 7, 16, 26][s.wind]! + (falling === 'rain' ? 6 * s.intensity : 0);
+    let rd2 = '';
+    let caps2 = '';
+    for (let i = 0; i < nRip; i++) {
+      const cx2 = 1010 + wq() * 316;
+      const cy2 = 268 + wq() * 30;
+      rd2 += `M${f(cx2)},${f(cy2)}l7,-2.5l7,2.5`;
+      if (s.wind === 3 && i % 3 === 0) caps2 += `M${f(cx2)},${f(cy2)}l7,-3.4l7,3.4l-7,-1Z`;
+    }
+    if (rd2) line(rd2, C.waterHi, 1.5, { opacity: 0.7, 'data-part': 'ripples' });
+    if (caps2) path(caps2, 'white', { opacity: 0.75, 'data-part': 'whitecaps' });
+  }
+  out += '</g>';
+  if (s.frost === 1 && !frozen) line(G.lake, C.rime, 2, { opacity: 0.5, 'data-part': 'iceRim' });
+  path(`M${G.jetty[0] + 6},${G.jetty[1]}l-36,-3.6v2.6l36,3.8Z`, C.wood, { 'data-part': 'jetty' });
+  line(`M${G.jetty[0] - 26},${G.jetty[1] - 2}v5M${G.jetty[0] - 10},${G.jetty[1]}v5`, C.wood, 1.6);
+  out += el(
+    'g',
+    {
+      transform: `translate(${G.boat[0]} ${G.boat[1]}) rotate(${frozen ? 0 : s.wind * 2.5 * dir})`,
+      'data-part': 'boat',
+    },
+    el('path', { d: 'M-12,-3.4h24l-3,5.2q-9,2.4 -18,0Z', fill: C.wall }) +
+      el('path', { d: 'M-12,-3.4h24l-1,1.6h-22Z', fill: B.mix(C.wall, C.dark, 0.5) }),
+  );
+  close();
+  skyline(G.f2, 62, 12, 19, 16, 26, C.f2, [1, 0.9, 0.7][s.fog]!);
+  leafy(G.f2, 65, 30, 5, 8, B.mix(C.crowns[1] ?? C.f2, C.haze, 0.12), [0.95, 0.8, 0.5][s.fog]!);
+  open('ridgeMid', s.fog >= 2 ? ' opacity="0.7"' : '');
+  {
+    const acc = newAcc();
+    const q = prng(63);
+    let x = 1356;
+    let i2 = 0;
+    while (x < 1610) {
+      spruce(x, 268 - (x - 1356) * 0.035 + q() * 4, 24 + q() * 24, acc, 700 + i2++, q() > 0.6);
+      x += 9 + q() * 12;
+    }
+    paint(acc, 'staffel', true);
+  }
+  close();
+  if (s.fog >= 2) {
+    open('fog');
+    fogBand(252, 30, 0.6);
+    close();
+  }
+
+  /* ---- foreground: round ground, way, buildings, smoke, fence, flag, trees ---- */
+  open('ridgeNear');
+  const gfill = cover2 ? C.snow : s.snowCover ? B.mix(C.meadow, C.snow, 0.7) : C.meadow;
+  const gy = (x: number): number => yAt(G.ground, x) + 2;
+  path(smooth(G.ground, H), gfill, { 'data-part': 'ground' });
+  path(
+    'M-20,320L-20,307Q240,298 520,309T990,309Q1160,318 1340,311Q1461.3,293.3 1600,290.3L1600,320Z',
+    cover2 ? C.snowShade : C.near,
+    { opacity: cover2 ? 0.5 : 0.32, 'data-part': 'fold' },
+  );
+  if (s.sun >= 2 && !s.snowCover)
+    path(
+      'M880,296Q940,292 990,300Q940,298 880,301Z M1380,284Q1470,270 1600,270Q1500,276 1400,292Z',
+      B.mix(C.meadow, 'sunband', 0.3),
+      { opacity: 0.55, 'data-part': 'sunband' },
+    );
+  if (s.frost && !s.snowCover)
+    line(smooth(G.ground), C.rime, 2.6, { opacity: 0.45, 'data-part': 'hoar' });
+  path(G.way, cover2 ? C.snowShade : B.mix(gfill, C.haze, 0.35), {
+    opacity: cover2 ? 0.7 : 0.85,
+    'data-part': 'way',
+  });
+  if (s.sun >= 2 || (dark && mode === 'clear' && moonBody && moonIllum > 0.9 && cover2)) {
+    let shd = '';
+    G.trees.forEach((tr) => {
+      if (tr[0] === 'bush' || tr[2] < 262) return;
+      const h = tr[0] === 'leaf' ? tr[3] * 3 : tr[3];
+      const dx = (tr[1] - body[0]) * 0.5;
+      const l = h * 0.5;
+      shd += `M${f(tr[1] - 5)},${tr[2]}L${f(tr[1] + 5)},${tr[2]}L${f(tr[1] + dx * 0.35 + 9)},${f(tr[2] + l)}L${f(tr[1] + dx * 0.35 - 12)},${f(tr[2] + l)}Z`;
+    });
+    shd += 'M1404,266L1490,263L1530,284L1424,290Z';
+    path(shd, cover2 ? C.snowShade : C.dark, {
+      opacity: (cover2 ? 0.8 : 0.26) * (s.sun === 2 ? 0.6 : 1),
+      'data-part': 'shadows',
+    });
+  }
+  const sway = motion && s.wind >= 2 ? ` class="sc-sway" style="--dir:${dir}"` : '';
+  const accB = newAcc();
+  plant(G.behind, accB);
+  paint(accB, 'treesBehind', false, sway);
+  const building = (at: readonly [number, number, number], cabin: boolean): void => {
+    let b = '';
+    const wallS = B.mix(C.wall, C.dark, 0.42);
+    const roofC = s.snowCover ? C.snow : C.roof;
+    const win = C.lightsOn ? tok('window') : B.mix(C.wall, C.dark, 0.72);
+    if (cabin)
+      b +=
+        el('path', { d: 'M48,-56h8v14h-8Z', fill: B.mix(C.roof, C.haze, 0.25) }) +
+        el('path', { d: 'M46.5,-57.5h11v3h-11Z', fill: s.snowCover ? C.snow : C.roof });
+    b +=
+      el('path', { d: 'M34,0v-20l40,-3v20Z', fill: wallS }) +
+      el('path', { d: 'M0,0v-20l17,-17l17,17v20Z', fill: C.wall });
+    if (cabin)
+      b += el('path', {
+        d: 'M0,-5h34M0,-10h34M0,-15h34M34,-6l40,-3M34,-11.5l40,-3',
+        fill: 'none',
+        stroke: C.dark,
+        'stroke-width': 0.7,
+        opacity: 0.28,
+      });
+    b +=
+      el('path', {
+        d: 'M15,-39.4l44,-3.3l19,21.6l-44,3.3Z',
+        fill: roofC,
+        'data-part': s.snowCover ? 'caps' : null,
+      }) +
+      el('path', {
+        d: 'M-4.5,-16.5l19.5,-23l3,2.6l-19.5,22.6Z',
+        fill: s.snowCover ? C.snowShade : B.mix(C.roof, C.dark, 0.35),
+      });
+    if (s.snowCover >= 2 && cabin)
+      b += el('path', {
+        d: 'M15,-42.4l44,-3.3l2,2.4l-44,3.3Z',
+        fill: C.snow,
+        'data-part': 'roofLoad',
+      });
+    b += el('path', {
+      d: cabin ? 'M12,0v-12h8v12Z' : 'M9,0v-13h14v13Z',
+      fill: B.mix(C.wall, C.dark, 0.62),
+    });
+    if (cabin)
+      b +=
+        el('path', {
+          d: 'M14,-27h6v5.5h-6ZM42,-15l8,-0.6v7l-8,0.6ZM58,-16.2l8,-0.6v7l-8,0.6Z',
+          fill: win,
+          'data-part': 'window',
+        }) +
+        el('path', { d: 'M76,0v-6q7,-2.4 14,0v6Z', fill: C.wood }) +
+        el('path', {
+          d: 'M79,-3h.1M83,-4h.1M87,-3h.1M81,-1h.1M85,-1h.1',
+          stroke: B.mix(C.wood, C.haze, 0.5),
+          'stroke-width': 1.6,
+          'stroke-linecap': 'round',
+        });
+    out += el(
+      'g',
+      {
+        transform: `translate(${at[0]} ${at[1]}) scale(${at[2]})`,
+        'data-part': cabin ? 'cabin' : 'shed',
+      },
+      b,
+    );
+  };
+  building(G.shed, false);
+  building(G.cabin, true);
+  if (C.lightsOn)
+    out += glow(G.cabin[0] + 62, G.cabin[1] - 14, 30, 30, [
+      [0, 'window', 0.3],
+      [1, 'window', 0],
+    ]);
+  let fd = '';
+  [
+    [1384, 1406],
+    [1452, 1612],
+  ].forEach((seg) => {
+    let r1 = '';
+    let r2 = '';
+    for (let x = seg[0]!; x <= seg[1]!; x += 16) {
+      const y = gy(x) + 12;
+      fd += `M${x},${f(y + 1)}v-12`;
+      r1 += `${r1 ? 'L' : 'M'}${x},${f(y - 8)}`;
+      r2 += `${r2 ? 'L' : 'M'}${x},${f(y - 3.5)}`;
+    }
+    fd += r1 + r2;
+  });
+  line(fd, cover2 ? C.wood : C.dark, 1.9, { opacity: cover2 ? 0.75 : 1, 'data-part': 'fence' });
+  // smoke shows the wind: 0 a column that spreads · 1 it leans · 2 a flat streak · 3 torn off the chimney
+  const sx0 = G.cabin[0] + 52 * G.cabin[2];
+  const sy0 = G.cabin[1] - 57.5 * G.cabin[2];
+  let sm = '';
+  const sq = prng(81);
+  if (s.wind <= 1)
+    for (let i = 0; i < 6; i++)
+      sm += circ(
+        sx0 + (sq() - 0.5) * (3 + i * 2) + i * (s.wind ? 7 * dir : 0.8),
+        sy0 - 5 - i * (s.wind ? 8 : 10),
+        3.2 + i * 1.7,
+      );
+  else if (s.wind === 2)
+    sm = `M${f(sx0)},${f(sy0)}q${6 * dir},-7 ${26 * dir},-9q${34 * dir},-3 ${66 * dir},-1q${-30 * dir},6 ${-58 * dir},8q${-22 * dir},2 ${-30 * dir},6Z`;
+  else
+    sm = `M${f(sx0)},${f(sy0)}q${5 * dir},-4 ${20 * dir},-4q${14 * dir},1 ${26 * dir},3q${-16 * dir},1 ${-28 * dir},2Z M${f(sx0 + 58 * dir)},${f(sy0 - 3)}q${12 * dir},-3 ${30 * dir},0q${-14 * dir},2 ${-30 * dir},0Z`;
+  path(sm, C.smoke, { opacity: 0.85, 'data-part': 'smoke', class: motion ? 'sc-smoke' : null });
+  // flag at the lake: 0 hangs · 1 half out · 2 straight out · 3 straight, frayed, the pole bends
+  const fx = G.flag[0];
+  const fy = G.flag[1];
+  const bend = s.wind === 3 ? 4 * dir : 0;
+  const tx0 = fx + bend;
+  const ty0 = fy - 59;
+  line(`M${fx},${fy}Q${fx},${fy - 30} ${tx0},${fy - 60}`, cover2 ? C.wood : C.dark, 2.2, {
+    'data-part': 'pole',
+  });
+  const cloth =
+    s.wind === 0
+      ? `M${tx0},${ty0}l${8 * dir},3l${-2 * dir},22l${-6 * dir},-4Z`
+      : s.wind === 1
+        ? `M${tx0},${ty0}q${12 * dir},1 ${22 * dir},9l${-3 * dir},14q${-9 * dir},-7 ${-19 * dir},-8Z`
+        : `M${tx0},${ty0}q${10 * dir},-5 ${19 * dir},-1t${19 * dir},-1${s.wind === 3 ? `l${-5 * dir},4l${6 * dir},3l${-6 * dir},4l${4 * dir},4` : `l${-1 * dir},15`}q${-9 * dir},4 ${-18 * dir},1t${-19 * dir},2Z`;
+  path(cloth, C.flag, {
+    'data-part': 'flag',
+    class: motion && s.wind >= 1 ? `sc-flag${dir < 0 ? ' sc-left' : ''}` : null,
+  });
+  const accT = newAcc();
+  plant(G.trees, accT);
+  paint(accT, 'trees', false, sway);
+  if (!cover2) {
+    let tf = '';
+    const tq = prng(91);
+    let dots = '';
+    for (let i = 0; i < 30; i++) {
+      const tx2 = 860 + tq() * 740;
+      const ty = gy(tx2) + 6 + tq() * 20;
+      const k3 = lean * 22;
+      if (tx2 > 1000 && tx2 < 1345 && ty < 306) continue;
+      tf += `M${f(tx2)},${f(ty)}l${f(-2 + k3)},-7M${f(tx2 + 3)},${f(ty)}l${f(1 + k3)},-9M${f(tx2 + 6)},${f(ty)}l${f(3 + k3)},-6`;
+      if (i % 2) dots += circ(tx2 + 11, ty - 1, 1.5);
+    }
+    line(tf, s.frost || s.snowCover ? C.rime : B.mix(C.near, C.meadow, 0.4), 1.3, {
+      opacity: s.frost ? 0.4 : 0.9,
+      'data-part': 'grass',
+    });
+    if (s.season === 'spring' && !s.snowCover)
+      path(dots, lit('flower'), { 'data-part': 'flowers' });
+    if (s.season === 'autumn' && !s.snowCover) path(dots, lit('leaf'), { 'data-part': 'fallen' });
+  }
+  path(
+    'M996,300q2,-8 9,-9q8,0 10,9Z M1334,296q2,-6 8,-6q6,1 7,6Z M1150,309q1,-4 6,-4q5,0 6,4Z M1060,307q1,-5 7,-5q6,1 7,5Z M1226,308q2,-6 8,-6q7,1 8,6Z M1244,309q1,-3 4,-3q4,0 5,3Z',
+    cover2 ? B.mix(C.mid, C.snow, 0.4) : B.mix(C.far, C.dark, 0.25),
+    { 'data-part': 'rocks' },
+  );
+  if (cover2 && (s.sun >= 2 || s.frost >= 2)) {
+    let sp2 = '';
+    const pq2 = prng(95);
+    for (let i = 0; i < 8; i++) {
+      const px = 900 + pq2() * 680;
+      const py = 296 + pq2() * 20;
+      sp2 += `M${f(px)},${f(py - 4)}l1,3l3,1l-3,1l-1,3l-1,-3l-3,-1l3,-1Z`;
+    }
+    path(sp2, 'white', { 'data-part': 'sparkle' });
+  }
+  if (s.wet && !cover2) {
+    const pn = Math.max(1, s.thunder >= 3 ? 3 : s.intensity);
+    path(
+      [
+        'M1462,304a26,4.5 0 1,0 52,0a26,4.5 0 1,0 -52,0Z',
+        'M1540,312a20,3.6 0 1,0 40,0a20,3.6 0 1,0 -40,0Z',
+        'M905,310a22,4 0 1,0 44,0a22,4 0 1,0 -44,0Z',
+      ]
+        .slice(0, pn)
+        .join(''),
+      C.water,
+      { opacity: 0.9, 'data-part': 'puddles' },
+    );
+    line(
+      ['M1478,304a10,2 0 1,0 20,0', 'M1554,312a7,1.6 0 1,0 14,0', 'M918,310a8,1.8 0 1,0 16,0']
+        .slice(0, pn)
+        .join(''),
+      C.waterHi,
+      1.2,
+      { opacity: 0.8 },
     );
   }
-  L.push(layer('body', body));
-  if (s.event === 'aurora' && !plain) L.push(layer('aurora', auroraLayer(X)));
-  if (!plain) {
-    const LC = landColours(X, stops);
-    const cl = cloudLayers(X, bp, top);
-    L.push(layer('cloudsFar', cl.far));
-    // aurora: the alpine crest takes a faint green edge (fading out toward the text like every edge)
-    const auroraEdge =
-      s.event === 'aurora'
-        ? edges(X, alp.crest, 'aurora-1', 1.6, p2(0.45 * s.eventAmount), 'auroraEdge')
-        : '';
-    L.push(layer('ridgeAlp', mountain(X, alp, LC, G.alpPeaks, LC.alp, 'alp') + auroraEdge));
-    L.push(layer('ridgeFar', mountain(X, far, LC, G.farPeaks, LC.far, 'far')));
-    L.push(layer('fog', fogBands(X, 'far')));
-    let midOut =
+  if (s.heat)
+    line(
+      'M1010,250q14,-4 28,0t28,0M1120,256q14,-4 28,0t28,0M1400,244q14,-4 28,0t28,0M930,262q12,-3 24,0t24,0',
+      'heat-haze',
+      1.4,
+      { opacity: 0.7, 'data-part': 'shimmer' },
+    );
+  close();
+  if (s.fog >= 2) {
+    open('fog');
+    add('rect', {
+      x: q0 - 80,
+      y: top,
+      width: W - (q0 - 80),
+      height: H - top,
+      fill: fogG ?? fogC,
+      opacity: 0.24,
+      'data-part': 'veil',
+    });
+    fogBand(278, 22, 0.5, 860, 520);
+    close();
+  }
+
+  /* ---- bolts: they never flash; the glow at the cloud brightens once (CONCEPT §7) ---- */
+  if (s.thunder) {
+    open('event', ' data-part="thunder"');
+    const glowA = {
+      cx: G.glow[0],
+      cy: G.glow[1],
+      r: G.glow[2],
+      fill: radial('bolt', 0.34, 0),
+      'data-part': 'glow',
+    };
+    add('circle', glowA);
+    // the hidden copy that brightens once, 1.2 s up and 1.2 s down from second 1: at rest the picture is the still
+    if (motion) add('circle', { ...glowA, class: 'sc-glow-up', 'data-part': 'glowUp' });
+    G.bolts.slice(0, [0, 1, 2, 4][s.thunder]).forEach((b) => {
+      let d = ribbon(b.p, b.w, 0.7);
+      const core = pts(b.p);
+      b.forks.forEach((fk) => {
+        d += ribbon(fk, b.w * 0.45, 0.4);
+      });
+      path(d, 'bolt', {
+        opacity: b.op,
+        stroke: tok('bolt'),
+        'stroke-width': 0.6,
+        'data-part': 'bolt',
+      });
+      line(core, 'bolt-core', Math.max(0.7, b.w * 0.3), { opacity: b.op });
+    });
+    close();
+  }
+
+  /* ---- precipitation ---- */
+  const showers = /howers/.test(s.cond) || s.thunder === 1;
+  const px0 = showers ? 1060 : -120;
+  const px1 = showers ? 1500 : W;
+  const slant = G.slant[s.wind]! * dir;
+  // motion.js: a tile loop – a copy one tile up (and against the slant) moves by one tile n times in 5 s and ends on the still
+  const fall = (inner: string, splash: string, snow: boolean): string => {
+    if (!motion) return inner + splash;
+    const T = snow ? H - top : 190;
+    const fx2 = slant * T * (snow ? 0.5 : 1);
+    const dur = snow ? 5 : /rizzle/.test(s.cond) ? 5 / 6 : 0.5;
+    const n2 = Math.round(5 / dur);
+    let clipAttr = '';
+    if (!snow) {
+      const cid = id('p');
+      defs += el(
+        'clipPath',
+        { id: cid },
+        el('rect', { x: -400, y: showers ? 104 : 124, width: 2400, height: H + 40 }),
+      );
+      clipAttr = ` clip-path="url(#${cid})"`;
+    }
+    // the copy one tile up is a `<use>` of the tile: the markup is not doubled
+    const tile = id('t');
+    return `<g${clipAttr}><g class="sc-fall" style="--fx:${f(fx2)}px;--fy:${f(T)}px;--dur:${Math.round(dur * 1000) / 1000}s;--n:${n2}"><g id="${tile}">${inner}</g><use href="#${tile}" transform="translate(${f(-fx2)} ${f(-T)})"/></g>${splash}</g>`;
+  };
+  if (falling === 'rain') {
+    const drizzle = /rizzle/.test(s.cond);
+    const lvl = s.thunder >= 3 ? 3 : s.intensity;
+    const cnt = Math.round((drizzle ? 60 : G.rain[lvl]!) * (showers ? 0.45 : 1));
+    const rq = prng(101);
+    let back = '';
+    let front = '';
+    let quiet = '';
+    let spl = '';
+    const l0 = drizzle ? 6 : [0, 9, 13, 15][lvl]!;
+    const l1 = drizzle ? 4 : [0, 5, 8, 13][lvl]!;
+    for (let i = 0; i < cnt; i++) {
+      const rx2 = px0 + rq() * (px1 - px0);
+      const ry = (showers ? 104 : 124) + rq() * 190;
+      const len = l0 + rq() * l1;
+      const seg = `M${f(rx2)},${f(ry)}l${f(len * slant)},${f(len)}`;
+      if (rx2 < 880) {
+        if (i % 2) quiet += seg;
+      } else if (i % 3) front += seg;
+      else back += seg;
+    }
+    const nSpl = drizzle ? 0 : [0, 0, 10, 26][lvl]!;
+    for (let i = 0; i < nSpl; i++) {
+      const px2 = 900 + rq() * 690;
+      const py2 = px2 > 985 && px2 < 1345 ? 266 + rq() * 30 : yAt(G.ground, px2) + 2 + rq() * 20;
+      spl += `M${f(px2 - 3.5)},${f(py2 - 3)}l3.5,3l4,-3.6`;
+    }
+    const inner =
+      (quiet ? el('path', { d: quiet, 'stroke-width': 1.2, opacity: 0.22 }) : '') +
+      el('path', { d: back, 'stroke-width': drizzle ? 0.9 : 1.1, opacity: 0.4 }) +
       el('path', {
-        d: mid.fill,
-        fill: s.snowGround
-          ? grad(
-              X,
-              [
-                [0, LC.mid],
-                [1, mix(LC.snowShade, bottom, 0.3)],
-              ],
-              { x1: 0, y1: 220, x2: 0, y2: 300, gradientUnits: 'userSpaceOnUse' },
-            )
-          : LC.mid,
-      }) + ridgeTrims(X, mid, LC, 'mid');
-    if (s.heat && !LC.night)
-      midOut += el('rect', {
-        y: 200,
-        width: G.W,
-        height: 50,
-        fill: grad(
-          X,
+        d: front,
+        'stroke-width': drizzle ? 1.1 : [0, 1.3, 1.6, 1.9][lvl]!,
+        opacity: [0, 0.55, 0.65, 0.7][lvl]!,
+        'data-part': 'rain',
+      });
+    const splash = spl
+      ? el('path', { d: spl, 'stroke-width': 1.2, opacity: 0.75, 'data-part': 'splash' })
+      : '';
+    out += `<g data-layer="precip" fill="none" stroke="${tok('rain')}" stroke-linecap="round" data-level="${drizzle ? 'drizzle' : lvl}">${fall(inner, splash, false)}</g>`;
+    if (/reezing/.test(s.cond))
+      line(pts(G.ground), C.iceHi, 2.2, { opacity: 0.8, 'data-part': 'glaze' });
+    if (s.cond === 'thunderHail') {
+      let hd2 = '';
+      let hl = '';
+      const hq2 = prng(105);
+      for (let i = 0; i < 40; i++) {
+        const hx3 = 900 + hq2() * 690;
+        const hy3 = 130 + hq2() * 180;
+        hd2 += circ(hx3, hy3, 1.2 + hq2() * 0.8);
+        hl += `M${f(hx3 - slant * 7)},${f(hy3 - 7)}L${f(hx3)},${f(hy3)}`;
+      }
+      out += `<g data-layer="precip" data-part="hail">${el('path', { d: hl, fill: 'none', stroke: tok('hail'), 'stroke-width': 0.9, 'stroke-linecap': 'round', opacity: 0.6 })}${el('path', { d: hd2, fill: tok('hail'), stroke: tok('hail-edge'), 'stroke-width': 0.5 })}</g>`;
+    }
+  }
+  if (falling === 'snow') {
+    const cs = Math.round(G.snow[s.intensity]! * (showers ? 0.45 : 1));
+    const nq = prng(103);
+    let a1 = '';
+    let a2 = '';
+    let a3 = '';
+    for (let i = 0; i < cs; i++) {
+      const nx = px0 + nq() * (px1 - px0) + slant * 30;
+      const ny = top + nq() * (H - top);
+      const r3 = 1 + nq() * (s.intensity >= 3 ? 2.2 : 1.4);
+      const c1 = circ(nx, ny, r3);
+      if (nx < 880) {
+        if (i % 2) a3 += circ(nx, ny, r3 * 0.8);
+      } else if (i % 3) a1 += c1;
+      else a2 += circ(nx, ny, r3 * 0.7);
+    }
+    const inner =
+      (a3 ? el('path', { d: a3, opacity: 0.35 }) : '') +
+      el('path', { d: a2, opacity: 0.6 }) +
+      el('path', { d: a1, opacity: 0.95, 'data-part': 'flakes' });
+    out += `<g data-layer="precip" fill="${C.snow}" data-level="${s.intensity}">${fall(inner, '', true)}</g>`;
+  }
+
+  /* ---- wind: things in the air ---- */
+  if (s.wind >= 2) {
+    let lf = '';
+    const lq2 = prng(111);
+    const cntL = s.wind === 3 ? 16 : 8;
+    open('wind');
+    if (cover2) {
+      let dd = '';
+      for (let i = 0; i < cntL / 2; i++) {
+        const dx2 = 960 + lq2() * 560;
+        const dy2 = 240 + lq2() * 60;
+        dd += `M${f(dx2)},${f(dy2)}q${f(dir * 30)},-7 ${f(dir * 64)},-2q${f(-dir * 30)},0 ${f(-dir * 64)},2Z`;
+      }
+      path(dd, C.snow, { opacity: 0.7, 'data-part': 'dust' });
+    } else {
+      // one leaf in <defs>, placed with <use> (A11Y §4 markup ceiling); it takes the group's fill
+      const leaf = id('l');
+      defs += el('path', { id: leaf, d: 'M-4,0q4,-3.5 8,0q-4,3.5 -8,0Z' });
+      for (let i = 0; i < cntL; i++)
+        lf += `<use href="#${leaf}" transform="translate(${f(980 + lq2() * 560)} ${f(150 + lq2() * 110)}) rotate(${f(lq2() * 60 - 30)})"/>`;
+      out += `<g fill="${lit(s.season === 'autumn' ? 'leaf' : 'leaf-green')}" opacity="0.9" data-part="leaves" data-count="${cntL}">${lf}</g>`;
+    }
+    line(
+      dir > 0
+        ? 'M1040,214q40,-9 84,-2M1270,232q34,-8 70,-1M1108,246q26,-6 52,-1'
+        : 'M1124,214q-40,-9 -84,-2M1340,232q-34,-8 -70,-1M1160,246q-26,-6 -52,-1',
+      'rain',
+      1.3,
+      { opacity: 0.35, 'data-part': 'streaks' },
+    );
+    close();
+  }
+  return finish();
+
+  /* ============================== sky events (mockups/events.js) ============================== */
+  function moreStars(count: number, seed: number): string {
+    const q = prng(seed);
+    const d = ['', '', ''];
+    for (let i = 0; i < count; i++) {
+      const x = E.left + q() * (W - E.left);
+      const y = top + q() * (150 - top);
+      const r = 0.5 + q() * 0.9;
+      if (Math.hypot(x - body[0], y - body[1]) < 46) continue;
+      d[i % 3] += circ(x, y, r);
+    }
+    return [0.45, 0.7, 0.95]
+      .map((op, j) => (d[j] ? el('path', { d: d[j], fill: tok('star'), opacity: op }) : ''))
+      .join('');
+  }
+  /** Slot `sky`: after the sky and the stars, before the body. */
+  function eventSky(): string {
+    const ev = s.event;
+    if (!ev) return '';
+    if (ev === 'meteors') {
+      let o2 = '';
+      E.meteors.forEach((m) => {
+        const a = (32 * Math.PI) / 180;
+        const tx = m[0] + Math.cos(a) * m[2];
+        const ty = m[1] - Math.sin(a) * m[2];
+        const g = grad(
           [
-            [0, 'heat-haze', 0],
-            [0.5, 'heat-haze', 1],
-            [1, 'heat-haze', 0],
+            [0, 'white', 0.95],
+            [1, 'white', 0],
+          ],
+          { x1: m[0], y1: m[1], x2: f(tx), y2: f(ty), gradientUnits: 'userSpaceOnUse' },
+        );
+        o2 +=
+          el('path', {
+            d: `M${m[0]},${m[1]}L${f(tx)},${f(ty)}`,
+            stroke: g,
+            'stroke-width': 1.6,
+            'stroke-linecap': 'round',
+          }) + el('circle', { cx: m[0], cy: m[1], r: 1.6, fill: tok('star') });
+      });
+      return `<g data-layer="event" data-part="meteors">${o2}</g>`;
+    }
+    if (ev === 'starNight') {
+      const M = E.milky;
+      const q = prng(131);
+      let md = '';
+      const rot = (M.rot * Math.PI) / 180;
+      const o2 = glow(
+        M.cx,
+        M.cy,
+        M.rx,
+        M.ry,
+        [
+          [0, 'white', 1],
+          [1, 'white', 0],
+        ],
+        { opacity: M.op },
+        M.rot,
+      );
+      for (let j = 0; j < M.n; j++) {
+        const u = (q() * 2 - 1) * M.rx * 0.9;
+        const v = (q() + q() - 1) * M.ry * 0.7;
+        const x = M.cx + u * Math.cos(rot) - v * Math.sin(rot);
+        if (x < E.left) continue;
+        md += circ(x, M.cy + u * Math.sin(rot) + v * Math.cos(rot), 0.4 + q() * 0.5);
+      }
+      return `<g data-layer="stars" data-part="milky">${o2}${el('path', { d: md, fill: tok('star'), opacity: 0.8 })}${moreStars(86, 133)}</g>`;
+    }
+    if (ev === 'solarPartial')
+      return amount(0.5) > 0.6
+        ? el('rect', {
+            x: 0,
+            y: top,
+            width: W,
+            height: H - top,
+            fill: tok('dim-target'),
+            opacity: 0.3,
+            'data-part': 'dim',
+          })
+        : '';
+    if (ev === 'solarTotal')
+      return `<g data-layer="stars">${moreStars(40, 141)}</g>${el('rect', {
+        x: 0,
+        y: 150,
+        width: W,
+        height: 100,
+        fill: grad(
+          [
+            [0, 'glow-eclipse-sky', 0],
+            [0.6, 'glow-eclipse-sky', 0.35],
+            [1, 'glow-eclipse-sky', 0],
           ],
           { x1: 0, y1: 0, x2: 0, y2: 1 },
         ),
-        opacity: s.theme === 'dark' ? 0.16 : 0.5,
-      });
-    midOut += conifers(X, mid, LC);
-    L.push(layer('ridgeMid', midOut));
-    L.push(layer('fog', fogBands(X, 'near'), { 'data-part': 'front' }));
-    L.push(layer('clouds', cl.main));
-    L.push(layer('event', eventLayer(X)));
-    L.push(layer('precip', precip(X, bottom)));
-    L.push(layer('lake', lake(X, LC, bp)));
-    L.push(layer('ridgeNear', nearRidge(X, near, LC)));
-    L.push(layer('wind', windLayer(X, LC)));
-    const S = G.shelter;
-    const wash = grad(
-      X,
+      })}`;
+    if (ev === 'lunarTotal')
+      return s.cover < 4 && !falling ? `<g data-layer="stars">${moreStars(60, 151)}</g>` : '';
+    if (ev === 'aurora') return auroraLayer();
+    return '';
+  }
+  function auroraLayer(): string {
+    const A = E.aurora;
+    const amt = amount(0.5);
+    let o2 = '';
+    const op = A.op[0]! + A.op[1]! * amt;
+    const gl = A.glow;
+    o2 += glow(
+      Math.max(gl[0]!, A.left + 200),
+      gl[1]!,
+      f(gl[2]! * (0.6 + 0.4 * amt)),
+      f(gl[3]! * (0.5 + 0.5 * amt)),
       [
-        [0, bottom, S.op],
-        [0.72, bottom, S.op * 0.6],
-        [1, bottom, 0],
+        [0, 'aurora-1', 0.3 * amt + 0.08],
+        [1, 'aurora-1', 0],
       ],
-      { x1: 0, x2: S.x1, y1: 0, y2: 0, gradientUnits: 'userSpaceOnUse' },
+      { 'data-part': 'auroraGlow' },
     );
-    const vm = mask(
-      X,
-      el('rect', {
-        width: G.W,
-        height: G.H,
-        fill: grad(
-          X,
-          [
-            [0, 'white', 0],
-            [1, 'white', 1],
-          ],
-          { x1: 0, x2: 0, y1: S.y0, y2: S.y1, gradientUnits: 'userSpaceOnUse' },
-        ),
-      }),
+    const fill = grad(
+      [
+        [0, 'aurora-3', 0],
+        [0.35, 'aurora-3', 0.45],
+        [0.7, 'aurora-2', 0.85],
+        [1, 'aurora-1', 1],
+      ],
+      { x1: 0, y1: 0, x2: 0, y2: 1 },
     );
-    L.push(
-      layer(
-        'shelter',
-        el('rect', { y: S.y0, width: S.x1, height: G.H - S.y0, fill: wash, mask: vm }),
-      ),
-    );
-  }
-  const { vars, inner } = declare(`<defs>${X.defs.join('')}</defs>${L.join('')}`);
-  return {
-    viewBox: `0 ${-X.ext} ${G.W} ${G.H + X.ext}`,
-    vars,
-    inner,
-    ink: inkOf(s),
-    body: bp ? { x: bp[0], y: bp[1], r: br } : null,
-  };
-}
-
-/* ============================== the porthole (mockup scene.js `porthole`, round crop 28–64 px) ============================== */
-export interface PortholeSvg {
-  viewBox: string;
-  vars: Record<string, string>;
-  inner: string;
-  ink: 'light' | 'dark';
-}
-
-/**
- * The scene as a small round crop (CONCEPT §8): sky, glow, a few stars, the body with the true phase, one or two
- * clouds, a few marks of rain or snow, the bolt, two ridges, fog bands – in its own 100 × 100 box, shape by shape as
- * `porthole()` of the mockup. "Schlicht" keeps sky and body only. Never moves: no motion class on any shape.
- */
-export function portholeSvg(s: SceneState, px: number, idPrefix = 'pt'): PortholeSvg {
-  const sky = skyOf(s);
-  const stops = skyStops(s, sky.key);
-  const X: Ctx = {
-    s,
-    defs: [],
-    id: idPrefix,
-    n: 0,
-    ext: 0,
-    quiet: null,
-    haloK: 1,
-    skyMid: skyAt(stops, 120),
-    skyFill: '',
-    bodyX: null,
-    bodyP: null,
-    br: 0,
-    clearBody: false,
-  };
-  const bottom = stops[stops.length - 1]![1];
-  const plain = s.level === 'plain';
-  const L: string[] = [];
-  let skyOut = el('rect', {
-    width: 100,
-    height: 100,
-    fill: grad(X, stops, { x1: 0, y1: 0, x2: 0, y2: 1 }),
-  });
-  if (sky.glow) {
-    const col = `glow-${s.phase}`;
-    skyOut += el('rect', {
-      width: 100,
-      height: 100,
-      fill: grad(
-        X,
-        [
-          [0, col, p2(0.8 * sky.glow.strength)],
-          [1, col, 0],
-        ],
-        { radial: true, cx: 0.55, cy: 0.85, r: 0.6 },
-      ),
-    });
-  }
-  L.push(layer('sky', skyOut));
-  const deckOn = s.cloud > 85 && s.cond !== 'fog';
-  const wet = PRECIP.has(s.cond);
-  if (!plain && s.phase === 'night' && s.cloud < 60)
-    L.push(
-      layer(
-        'stars',
-        el('path', {
-          d: circ(22, 24, 1.1) + circ(40, 14, 0.9) + circ(14, 46, 0.8) + circ(80, 60, 0.9),
-          fill: tok('star'),
-          opacity: 0.85,
-        }),
-      ),
-    );
-  let body = '';
-  if (s.body.kind !== 'none' && !(deckOn && wet)) {
-    if (s.body.kind === 'moon')
-      body = moonBody(X, 64, 36, 15 * Math.min(1.15, s.moon?.size ?? 1), {
-        glow: true,
-        darkFill: skyAt(stops, 120),
-        maria: px >= 48,
-      });
-    else if (s.cond === 'fog')
-      body = el('circle', { cx: 62, cy: 36, r: 14, fill: mix('sun-core', bottom, 0.35) });
-    else
-      body =
-        el('circle', {
-          cx: 62,
-          cy: 36,
-          r: 30,
-          fill: grad(
-            X,
-            [
-              [0, 'sun', 0.6],
-              [1, 'sun', 0],
-            ],
-            { radial: true },
-          ),
-          opacity: 0.6,
-        }) +
-        el('circle', {
-          cx: 62,
-          cy: 36,
-          r: 14,
-          fill: tok(s.phase === 'golden' ? 'sun-low' : 'sun'),
-        }) +
-        el('circle', { cx: 62, cy: 36, r: 8.6, fill: tok('sun-core') });
-  }
-  L.push(layer('body', body));
-  if (!plain) {
-    const tone = cloudTone(X);
-    const n = deckOn || wet ? 2 : s.cloud > 60 ? 2 : s.cloud > 10 ? 1 : 0;
-    let cd = '';
-    if (n) {
-      const fill = grad(
-        X,
-        [
-          [0, tone.b],
-          [G.shadeAt, tone.b],
-          [G.shadeAt, tone.sh],
-          [1, tone.sh],
-        ],
-        { x1: 0, y1: 0, x2: 0, y2: 1 },
-      );
-      const low = deckOn || wet;
-      cd += el('path', {
-        d: cloudPath('m'),
-        fill,
-        opacity: tone.op,
-        transform: `translate(${low ? 30 : 42} ${low ? 30 : 40}) scale(0.3)`,
-      });
-      if (n > 1)
-        cd += el('path', {
-          d: cloudPath('s'),
-          fill,
-          opacity: tone.op,
-          transform: `translate(4 ${low ? 22 : 30}) scale(0.36)`,
-        });
-    }
-    L.push(layer('clouds', cd));
-    const LC = landColours(X, stops);
-    let marks = '';
-    if (wet) {
-      const r = prng(s.seed * 41);
-      const snowy = isSnow(s.cond);
-      const cnt = 6 + Math.min(4, s.intensity + 1);
-      let d = '';
-      for (let i = 0; i < cnt; i++) {
-        const x = 30 + ((i + r() * 0.6) * 60) / cnt;
-        const y = 56 + ((i * 7) % 17) + r() * 4;
-        d += snowy ? circ(x, y, 1.6) : `M${f(x)},${f(y)}l1.4,6`;
+    A.bands.slice(0, amt < 0.6 ? A.few : A.bands.length).forEach((b) => {
+      const x0 = Math.max(b[0], A.left);
+      const x1 = b[1];
+      if (x1 - x0 < 90) return;
+      const h = Math.min(A.h * Math.pow(amt, 1.15) * b[3] + 14, b[2] - A.top);
+      const nn = 16;
+      let tp = '';
+      let base = '';
+      for (let i = 0; i <= nn; i++) {
+        const u = i / nn;
+        const x = x0 + (x1 - x0) * u;
+        const env = Math.pow(Math.sin(Math.PI * u), 0.55);
+        const yb = b[2] + 7 * Math.sin(u * 7 + b[4]);
+        const yt = yb - h * env * (0.82 + 0.18 * Math.sin(u * 11 + b[4] * 2));
+        tp += `${i ? 'L' : 'M'}${f(x)},${f(yt)}`;
+        base = `L${f(x)},${f(yb)}${base}`;
       }
-      const lightSky = inkOf(s) === 'dark';
-      marks = snowy
-        ? el('path', { d, fill: lightSky ? 'white' : tok('snow') })
-        : el('path', {
-            d,
-            stroke: lightSky ? mix('rain', 'cloud-rain-shade', 0.6) : tok('rain'),
-            'stroke-width': 2,
-            'stroke-linecap': 'round',
-          });
-    }
-    if (isThunder(s.cond))
-      marks += el('path', { d: 'M54,60h7l-4,9h6l-11,15 3-11h-5z', fill: tok('bolt') });
-    L.push(layer('precip', marks));
-    L.push(
-      layer(
-        'ridgeFar',
-        el('path', {
-          d: 'M0,74 C30,58 52,54 100,68 V100H0Z',
-          fill: LC.far,
-          opacity: s.cond === 'fog' ? 0.5 : 0.9,
-        }),
-      ),
-    );
-    L.push(
-      layer('ridgeNear', el('path', { d: 'M0,80 C24,74 52,70 100,76 V100 H0Z', fill: LC.near })),
-    );
-    if (s.cond === 'fog')
-      L.push(
-        layer(
-          'fog',
-          el('rect', {
-            x: -10,
-            y: 60,
-            width: 120,
-            height: 10,
-            rx: 5,
-            fill: tok('fog'),
-            opacity: 0.6,
-          }) +
-            el('rect', {
-              x: 20,
-              y: 74,
-              width: 90,
-              height: 8,
-              rx: 4,
-              fill: tok('fog'),
-              opacity: 0.5,
-            }),
-        ),
-      );
+      o2 += el('path', { d: `${tp}${base}Z`, fill, opacity: f(op * 100) / 100 });
+      o2 += el('path', {
+        d: `${tp}${base}Z`,
+        fill,
+        opacity: f(op * 60) / 100,
+        transform: `translate(${f(x0 + (x1 - x0) * 0.5)} ${b[2]}) scale(0.62 0.8) translate(${f(-(x0 + (x1 - x0) * 0.42))} ${-b[2]})`,
+      });
+    });
+    return `<g data-layer="aurora" data-part="aurora">${o2}</g>`;
   }
-  const cp = clip(X, el('circle', { cx: 50, cy: 50, r: 50 }));
-  const { vars, inner } = declare(
-    `<defs>${X.defs.join('')}</defs><g clip-path="${cp}">${L.join('')}</g>`,
-  );
-  return { viewBox: '0 0 100 100', vars, inner, ink: inkOf(s) };
+  /** Slot `body`: an event that draws the body itself; `null` = the plain body. */
+  function eventBody(pale: boolean): string | null {
+    const ev = s.event;
+    const R = 25;
+    if (
+      (ev === 'solarPartial' || ev === 'solarAnnular' || ev === 'solarTotal') &&
+      s.body.kind === 'sun'
+    ) {
+      bodyR = R;
+      let o2 = '';
+      if (ev === 'solarTotal') {
+        let petals = '';
+        for (let i = 0; i < 6; i++) {
+          const a = i * 60 + 18 + (i % 2) * 9;
+          const Lp = R * (i % 2 ? 1.55 : 1.85);
+          const w = R * 0.55;
+          petals += el('path', {
+            d: `M0,${f(-w)}C${f(Lp * 0.6)},${f(-w)} ${f(Lp)},${f(-w * 0.25)} ${f(Lp)},0C${f(Lp)},${f(w * 0.25)} ${f(Lp * 0.6)},${f(w)} 0,${f(w)}Z`,
+            transform: `rotate(${a})`,
+          });
+        }
+        o2 += glow(0, 0, R * 2.8, R * 2.8, [
+          [0, 'white', 0.85],
+          [0.36, 'white', 0.45],
+          [1, 'white', 0],
+        ]);
+        o2 +=
+          el('g', { fill: 'white', opacity: 0.42, 'data-part': 'corona' }, petals) +
+          el('circle', { r: R, fill: tok('eclipse-disc') });
+        return wrapBody(o2);
+      }
+      const amt = ev === 'solarPartial' ? amount(0.5) : 0.85;
+      o2 += glow(0, 0, R * 3.4, R * 3.4, [
+        [0, 'sun-core', 0.6 * (1 - amt * 0.7)],
+        [0.45, 'sun-core', 0.22 * (1 - amt * 0.7)],
+        [1, 'sun-core', 0],
+      ]);
+      let disc =
+        el('circle', { r: R, fill: tok('sun') }) +
+        (ev === 'solarAnnular'
+          ? el('circle', { r: R * 0.86, fill: tok('eclipse-disc'), 'data-part': 'annular' })
+          : el('circle', { r: R * 0.62, fill: tok('sun-core') }));
+      if (ev === 'solarPartial') {
+        const m = id('m');
+        const d = 2 * R * (1 - amt);
+        const k = Math.SQRT1_2;
+        const b = R * 1.2;
+        defs += el(
+          'mask',
+          { id: m, maskUnits: 'userSpaceOnUse', x: -b, y: -b, width: 2 * b, height: 2 * b },
+          el('rect', { x: -b, y: -b, width: 2 * b, height: 2 * b, fill: 'white' }) +
+            el('circle', { cx: f(d * k), cy: f(-d * k), r: R + 0.5, fill: 'black' }),
+        );
+        disc = el('g', { mask: `url(#${m})`, 'data-part': 'bite' }, disc);
+      }
+      return wrapBody(o2 + disc);
+    }
+    if ((ev === 'lunarPartial' || ev === 'lunarTotal') && s.body.kind === 'moon') {
+      const Rm = 24 * moonSize;
+      bodyR = Rm;
+      let o2 = '';
+      if (ev === 'lunarTotal') {
+        o2 += el('circle', {
+          r: Rm,
+          fill: grad(
+            [
+              [0, 'eclipse-red', 1],
+              [0.7, 'eclipse-red', 1],
+              [1, 'eclipse-red-dark', 1],
+            ],
+            { cx: 0.5, cy: 0.5, r: 0.5 },
+            true,
+          ),
+          'data-part': 'copper',
+        });
+        o2 += el('path', {
+          d:
+            circ(Rm * 0.17, -Rm * 0.33, Rm * 0.23) +
+            circ(-Rm * 0.12, Rm * 0.21, Rm * 0.17) +
+            circ(Rm * 0.38, Rm * 0.3, Rm * 0.12),
+          fill: tok('eclipse-red-dark'),
+          opacity: 0.45,
+        });
+        return wrapBody(o2);
+      }
+      o2 += glow(0, 0, Rm * 2.7, Rm * 2.7, [
+        [0, 'moon', pale ? 0.5 : 0.34],
+        [1, 'moon', 0],
+      ]);
+      o2 += el('circle', { r: Rm, fill: tok('moon') });
+      o2 += el('path', {
+        d:
+          circ(Rm * 0.17, -Rm * 0.33, Rm * 0.23) +
+          circ(-Rm * 0.12, Rm * 0.21, Rm * 0.17) +
+          circ(Rm * 0.38, Rm * 0.3, Rm * 0.12) +
+          circ(-Rm * 0.33, -Rm * 0.17, Rm * 0.11),
+        fill: tok('moon-mare'),
+      });
+      const cl = id('c');
+      const ru = Rm * 2.6;
+      const d = ru + Rm - amount(0.5) * 2 * Rm;
+      const k = Math.SQRT1_2;
+      defs += el('clipPath', { id: cl }, el('circle', { r: Rm }));
+      o2 += el('circle', {
+        cx: f(-d * k),
+        cy: f(d * k),
+        r: f(ru),
+        fill: tok('eclipse-umbra'),
+        opacity: 0.85,
+        'clip-path': `url(#${cl})`,
+        'data-part': 'umbra',
+      });
+      return wrapBody(o2);
+    }
+    if (ev === 'dust' && s.body.kind === 'sun') {
+      bodyR = R;
+      return wrapBody(
+        el('circle', { r: R, fill: tok('dust-sun'), opacity: 0.78, 'data-part': 'dustSun' }),
+      );
+    }
+    return null;
+  }
+  /** Slot `behindLand`: after the massif, before the hills. */
+  function eventBehindLand(): string {
+    if (s.event === 'rainbow') {
+      const R = E.rainbow;
+      let arcs = '';
+      const q = prng(121);
+      let cur = '';
+      for (let i = 0; i < 40; i++) {
+        const x = R.cx - R.r + 20 + q() * (2 * R.r - 40);
+        const y = 120 + q() * 110;
+        cur += `M${f(x)},${f(y)}l0.8,${f(9 + q() * 8)}`;
+      }
+      for (let i = 0; i < 5; i++) {
+        const rr = R.r - R.w / 2 - i * R.w;
+        arcs += el('path', {
+          d: `M${R.cx - rr},${R.cy}A${rr},${rr} 0 0 1 ${R.cx + rr},${R.cy}`,
+          fill: 'none',
+          stroke: tok(`rb-${i + 1}`),
+          'stroke-width': R.w + 0.4,
+        });
+      }
+      const m = id('m');
+      defs += el(
+        'mask',
+        { id: m, maskUnits: 'userSpaceOnUse', x: 0, y: 0, width: W, height: H },
+        el('rect', {
+          width: W,
+          height: H,
+          fill: grad(
+            [
+              [0, 'white', 1],
+              [1, 'white', 0],
+            ],
+            { x1: 0, x2: 0, y1: R.fade[0], y2: R.fade[1], gradientUnits: 'userSpaceOnUse' },
+          ),
+        }),
+      );
+      return `<g data-layer="event" data-part="rainbow">${el('path', { d: cur, fill: 'none', stroke: tok('rain'), 'stroke-width': 1, 'stroke-linecap': 'round', opacity: 0.22 })}${el('g', { mask: `url(#${m})`, opacity: R.op }, arcs)}</g>`;
+    }
+    if (s.event === 'dust')
+      return el('rect', {
+        x: 0,
+        y: 40,
+        width: W,
+        height: 200,
+        'data-part': 'dustHaze',
+        fill: grad(
+          [
+            [0, C.haze, 0],
+            [0.45, C.haze, 0.3],
+            [1, C.haze, 0.55],
+          ],
+          { x1: 0, y1: 0, x2: 0, y2: 1 },
+        ),
+      });
+    return '';
+  }
+
+  function finish(): SceneSvg {
+    return {
+      viewBox: view.map((v) => Math.round(v)).join(' '),
+      vars: B.vars,
+      // line caps and joins are round everywhere: set once, inherited
+      inner: `<defs>${defs}</defs><g stroke-linecap="round" stroke-linejoin="round">${out}</g>`,
+      ink: inkOf(s),
+      sky: key,
+      body: hasBody ? { x: body[0], y: body[1], r: bodyR } : null,
+    };
+  }
 }
+
+/** Elements of a scene's markup (A11Y §4 counts `svg.querySelectorAll('*')`; the `<svg>` itself is the component's). */
+export const countElements = (inner: string): number => (inner.match(/<[a-zA-Z]/g) ?? []).length;

@@ -7,7 +7,7 @@ import { isWeatherActive, officialOn, skyOn, useWeatherSettings } from '@/core/w
 import { withoutReplaced } from '@/core/weather/warningsOfficial';
 import { tWeather } from '@/strings.weather';
 import { tWeatherPage } from '@/strings.weatherPage';
-import { Button, Card, EmptyState, PageTitle, PHONE_QUERY, useMediaQuery } from '@/ui';
+import { Button, Card, EmptyState, PageTitle } from '@/ui';
 import { DaySpans } from '../components/DaySpans';
 import { HourCards } from '../components/HourCards';
 import { MoreValues } from '../components/MoreValues';
@@ -67,7 +67,6 @@ export default function WeatherPage() {
     !!weather?.stale,
     aurora,
   );
-  const phone = useMediaQuery(PHONE_QUERY);
   const sunLine = useSunLine(weather?.forecast, weather?.at, lat, lon, !!moon);
 
   if (!settings) return null;
@@ -103,9 +102,9 @@ export default function WeatherPage() {
     ? withoutReplaced(weatherWarnings(days), official, nowIso.slice(0, 10))
     : [];
   const officialAll = official ?? [];
-  // At most two hint rows in the stage, in this order: the eclipse safety sentence, official warnings, computed hints;
-  // the rest under the head. On the phone the safety sentence alone takes two lines: nothing else beside it there.
-  const budget = late ? 0 : events?.safety ? (phone ? 0 : 1) : 2;
+  // At most two hint rows with the head, in this order: the eclipse safety sentence, official warnings, computed hints;
+  // the rest under the head. On the phone they stand directly under the picture (round 2, CONCEPT §5).
+  const budget = late ? 0 : events?.safety ? 1 : 2;
   const officialStage = officialAll.slice(0, budget);
   const stageWarnings = warnings.slice(0, budget - officialStage.length);
   const officialBelow = officialAll.slice(officialStage.length);

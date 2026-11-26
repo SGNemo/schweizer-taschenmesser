@@ -645,7 +645,7 @@
       "height": 2063,
       "buttons": 21,
       "links": 22,
-      "icons": 94,
+      "icons": 84,
       "firstScreenActions": 40,
       "borders": 0,
       "shadows": 0,
@@ -1206,7 +1206,7 @@
       "signatureBlocks": 34
     },
     "p412--weather": {
-      "height": 3455,
+      "height": 3400,
       "buttons": 6,
       "links": 17,
       "icons": 64,

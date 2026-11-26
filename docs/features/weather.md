@@ -37,13 +37,14 @@ Open-Meteo documents `Access-Control-Allow-Origin: *` for browser use, so the PW
 
 `core/weather/{api,air,cache,logic,scene,settings,useWeather}.ts`; page and widget in `modules/weather/` (`components/WeatherHero.tsx`, `HourCards.tsx`, `DaySpans.tsx`, `WeatherChart.tsx`, `WarningNotice.tsx`, `weatherIcon.ts`; `widgets/WeatherWidget.tsx`; hints `warnings.ts`, `attention.ts`, `notifications.ts`); overview line `home/WeatherGlance.tsx`; trip weather in lists `modules/lists/components/TripWeather.tsx`; settings `pages/settings/WeatherSection.tsx`; texts `strings.weather.ts` (`tx`) and `strings.weatherPage.ts` (`tp`), German and English. Parsers (Zod) are tested against fixtures in `core/weather/fixtures/` (shaped after the documented responses, no network in tests).
 
-## The scene in the head (weather scenes 1b)
+## The scene in the head (weather scenes 1b, redrawn in round 2 package A)
 
-- One SVG behind the stage (`ui/weather-scene/WeatherScene.tsx`, drawing `draw.ts`, model `core/weather/scene.ts` `sceneOf`): sky by condition and phase (night, dawn, golden hour, day, dusk from today's sunrise / sunset at the place), sun on its arc, clouds by cover, rain / drizzle / snow / hail by WMO code and intensity, fog bands, a still bolt, wind lean and strokes, frost rime, snow caps and snow on the ground, season of the place (hemisphere), mountains, lake and trees. No moon yet (package 2): nights show stars only.
-- Text on it takes the scene's ink (`data-ink` → `--ink-light` / `--ink-dark`); chips, the hint pill, the phone's module row and the gear are opaque with the theme ink (`--ink-theme`). Contrast per sky and theme: `ui/weather-scene/contrast.test.ts`.
-- The hint of the day is a pill under the detail line ("… · berechnet, keine amtliche Warnung"); a hint that comes late sits under the head as before. Stage 280 px (desktop) / 272 px (phone), ≤ 290 / ≤ 300 with two hints. On the phone two chips stay in the stage; the third chip's fact opens the line under it.
-- Motion: five seconds after opening (clouds drift, rain and snow fall, fog and trees sway), then still; paused while hidden or out of view; none with reduced motion, "Standbild", "Schlicht", "Ruhig", "Modulfarben: Aus". Setting "Bild im Wetter-Kopf": Mit Bewegung · Standbild · Schlicht (nur Himmel), in the synced `weather` scope (`scene`).
-- Widget and overview line still use `Sky` until package 4.
+- One SVG behind the stage (`ui/weather-scene/WeatherScene.tsx`, drawing `draw.ts`, model `core/weather/scene.ts` `sceneOf`). Round 2 ([design/weather-scenes-2](../design/weather-scenes-2/README.md)): an angular massif of six mountains, wooded hills, forest in staffels, a round lake with its mirror, jetty and boat, cabin, shed, fence, flag and six kinds of trees. The picture shows **how strong** the weather is: cloud 0–4 (none · 2 · 4 · 9 clouds · a deck of four rolls), how sunny (12 / 8 / no rays), rain and snow by level, thunder 1–3 (1, 2 or 4 bolts, hail with 96 / 99), fog 1–2, wind 0–3 on smoke, flag, trees, water and leaves (direction from the wind's origin and the hemisphere), frost, heat, snow cover 1–3, puddles. The levels are pure functions (`coverOf`, `veilOf`, `sunLevel`, `thunderLevel`, `fogLevel`, `snowCoverOf`, `windTo`, `wetOf`, `bodyMode`); `sceneOf` takes an hour row (`hour`) or reads now's values over the hour row of now.
+- The body is seen whenever it is above the horizon (`mode`): clear, through a veil, between six cloud banks under a dry deck, or pale through wet cloud, fog or the storm base.
+- Text on it takes the scene's ink (`data-ink` → `--ink-light` / `--ink-dark`); chips, the hint pill, the phone's module row and the gear are opaque with the theme ink (`--ink-theme`). Left of the text's edge every far layer fades toward the sky. Contrast per sky, theme, season, wide and phone: `contrastV2.test.ts` (round 1's drawing: `contrast.test.ts`).
+- Stage 320 px on the desktop (two hint rows fit inside). Phone: the stage is the picture (256 px) with only the temperature and the detail line on it; the hint pill, two chips and the line of further values are the page's first block, directly under it.
+- The thunder and fog words say the level ("leichtes Gewitter", "starkes Gewitter (mit Hagel)", "dichter Nebel (mit Reif)") and thin high cloud says "Schleierwolken" – the same `conditionId(code, group, data)` in head, hour cards, day rows, widget, overview line and trip weather.
+- Motion: five seconds after opening (clouds and banks drift to the lee, rain and snow fall, smoke rises, the flag waves, trees sway; in a thunderstorm the glow at the cloud brightens once, slowly), then still; bolts never move; paused while hidden or out of view; none with reduced motion, "Standbild", "Schlicht", "Ruhig", "Modulfarben: Aus". Setting "Bild im Wetter-Kopf": Mit Bewegung · Standbild · Schlicht (nur Himmel), in the synced `weather` scope (`scene`).
 
 ## The moon (weather scenes 2)
 
@@ -54,7 +55,7 @@ Open-Meteo documents `Access-Control-Allow-Origin: *` for browser use, so the PW
 
 ## Small versions (weather scenes 4)
 
-- **Overview line:** a 28 px round porthole of the same scene (`ui/weather-scene/ScenePorthole.tsx`, `portholeSvg` in `draw.ts`), never moving; it follows "Bild im Wetter-Kopf" ("Schlicht": sky and body only) and "Mond und Himmelsereignisse".
+- **Overview line:** a 28 px round porthole of the same scene (`ui/weather-scene/ScenePorthole.tsx`, `portholeSvg` in `drawV1.ts`, round 1's drawing until round 2 package D), never moving; it follows "Bild im Wetter-Kopf" ("Schlicht": sky and body only) and "Mond und Himmelsereignisse".
 - **Widget:** the scene is the card's background (the one named exception in MODULE-IDENTITY "Widgets"): the full panorama scaled to the card's width with sky above (`cardFit`), text on the sky in the scene's ink, the rain hint as an opaque chip; no motion. In "Ruhig" and "Modulfarben: Aus" the plain card with a 64 px porthole (`data-variant="porthole"`).
 - `Sky`, `skyKind` and the `--sky-*` tokens are gone; the head, the line and the widget all draw from `ui/weather-scene`. Performance: [perf/WEATHER-SCENES-2026-11.md](../perf/WEATHER-SCENES-2026-11.md). Pictures for PRs: [howto/pr-screenshots.md](../howto/pr-screenshots.md).
 
@@ -73,7 +74,7 @@ Open-Meteo documents `Access-Control-Allow-Origin: *` for browser use, so the PW
 
 ## Words, chips and hints (weather scenes 1a)
 
-- **The word follows the WMO code** (`conditionId(code, group)` in `core/weather/scene.ts`, 22 words in `tx.conditions`): head, hour cards, day rows, widget, overview line and trip weather say the same word (code 1 = "überwiegend klar", no longer "leicht bewölkt"). `codeGroup` (nine groups) still drives the rating, icons and the cache; a value cached without a code gets its group's nearest word.
+- **The word follows the WMO code** (`conditionId(code, group, data)` in `core/weather/scene.ts`, 28 words in `tx.conditions`): head, hour cards, day rows, widget, overview line and trip weather say the same word (code 1 = "überwiegend klar", no longer "leicht bewölkt"). `codeGroup` (nine groups) still drives the rating, icons and the cache; a value cached without a code gets its group's nearest word.
 - **Data kept beside the group** (all optional, also in the cache): raw `code` (now, hour, day), `tz` (the place's IANA zone from the response), `now.snowDepth` (m; `snow_depth`, the only added variable of the forecast request).
 - **Head detail line:** after the word at most one extra word: Sturmböen, windig, Schnee liegt, Frost, Hitze (`sceneAddition`, limits of the picture only).
 - **Chips:** "Kein Regen in Sicht" with an umbrella; UV only between sunrise and sunset, otherwise "Sonnenaufgang hh:mm" (today's or tomorrow's).

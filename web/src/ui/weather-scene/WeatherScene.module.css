@@ -32,7 +32,8 @@
   }
 }
 
-/* Motion: only while the page asked for it (`data-motion`), finite, comes to rest on the still picture. */
+/* Motion (round 2, CONCEPT §7, mockups/scene-motion.css): only while the page asked for it (`data-motion`), finite,
+   comes to rest on the still picture; only transform and opacity; the bolts never move. */
 .svg[data-motion] :global(.sc-drift) {
   animation: sc-drift 5s cubic-bezier(0.2, 0.7, 0.3, 1) 1 both;
 }
@@ -42,15 +43,38 @@
 .svg[data-motion] :global(.sc-fog) {
   animation: sc-fog 5s ease-in-out 1 both;
 }
+.svg[data-motion] :global(.sc-smoke) {
+  animation: sc-smoke 5s ease-out 1 both;
+}
+.svg[data-motion] :global(.sc-flag) {
+  /* one 5 s iteration holding the three waves (iteration boundaries restyle the page, see sc-sway) */
+  animation: sc-flag 5s ease-in-out 1 both;
+  transform-box: fill-box;
+  transform-origin: 0% 0%;
+}
+.svg[data-motion] :global(.sc-flag.sc-left) {
+  transform-origin: 100% 0%;
+}
 .svg[data-motion] :global(.sc-sway) {
-  /* One 5 s iteration holding the three sways: iteration boundaries made the browser restyle and repaint the
-     whole page three times (docs/perf/WEATHER-SCENES-2026-11.md). */
+  /* One 5 s iteration: iteration boundaries made the browser restyle and repaint the whole page
+     (docs/perf/WEATHER-SCENES-2026-11.md). */
   animation: sc-sway 5s ease-in-out 1 both;
   transform-box: fill-box;
   transform-origin: 50% 100%;
 }
+/* The glow at the storm cloud: a hidden copy brightens once, 1.2 s up and 1.2 s down from second 1 (decided by the
+   maintainer, CONCEPT §7). At rest (and under every off switch) it stays hidden: the still picture is unchanged. */
+.svg :global(.sc-glow-up) {
+  opacity: 0;
+}
+.svg[data-motion='run'] :global(.sc-glow-up) {
+  animation: sc-glow 2.4s ease-in-out 1s 1 none;
+}
 .svg[data-motion='run'] :global([class^='sc-']) {
   will-change: transform;
+}
+.svg[data-motion='run'] :global(.sc-glow-up) {
+  will-change: opacity;
 }
 /* At rest the end frame holds: a redraw after the five seconds (resize, theme, a new forecast) shows the still picture
    at once instead of playing the motion again. */
@@ -63,7 +87,7 @@
 }
 @keyframes sc-drift {
   from {
-    transform: translateX(-16px);
+    transform: translateX(calc(-1 * var(--lee, 16px)));
   }
   to {
     transform: none;
@@ -89,22 +113,54 @@
     transform: translateX(-20px);
   }
 }
-@keyframes sc-sway {
+@keyframes sc-smoke {
+  0% {
+    transform: translate(-2px, 6px);
+  }
+  45% {
+    transform: translate(2px, 2px);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes sc-flag {
   0%,
   33.33%,
   66.67%,
   100% {
     transform: none;
   }
-  8.33%,
-  41.67%,
-  75% {
-    transform: rotate(2deg);
+  11.67%,
+  45%,
+  78.33% {
+    transform: scaleX(0.9) skewY(3deg);
   }
-  25%,
-  58.33%,
-  91.67% {
-    transform: rotate(-2deg);
+  23.33%,
+  56.67%,
+  90% {
+    transform: scaleX(0.96) skewY(-2deg);
+  }
+}
+@keyframes sc-sway {
+  0%,
+  100% {
+    transform: none;
+  }
+  30% {
+    transform: skewX(calc(-1.6deg * var(--dir, 1)));
+  }
+  70% {
+    transform: skewX(calc(0.8deg * var(--dir, 1)));
+  }
+}
+@keyframes sc-glow {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
   }
 }
 @media (prefers-reduced-motion: reduce) {

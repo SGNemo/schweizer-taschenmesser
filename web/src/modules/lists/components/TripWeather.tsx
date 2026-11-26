@@ -68,7 +68,7 @@ export function TripWeather({ place, tripDate }: { place: string; tripDate: stri
       {state.kind === 'day' ? (
         <p role="status">
           {[
-            w.conditions[conditionId(state.day.code, state.day.group)],
+            w.conditions[conditionId(state.day.code, state.day.group, { gust: state.day.gust })],
             w.range(Math.round(state.day.min), Math.round(state.day.max)),
             w.rainChance(Math.round(state.day.rain)),
             packingHint(state.day),

@@ -3,7 +3,8 @@ import { Link } from 'react-router';
 import { moonNow } from '@/core/sky/moonDay';
 import { now } from '@/core/time/now';
 import { useWeather } from '@/core/weather/useWeather';
-import { conditionId } from '@/core/weather/scene';
+import { conditionId, sceneHourOf } from '@/core/weather/scene';
+import { placeNowIso } from '@/core/weather/logic';
 import { skyOn, useWeatherSettings } from '@/core/weather/settings';
 import { tOverview } from '@/strings.overview';
 import { tWeather } from '@/strings.weather';
@@ -36,7 +37,7 @@ export default function WeatherGlance() {
   const f = weather.forecast;
   const text = [
     tx.temp(f.temp),
-    tx.conditions[conditionId(f.code, f.group)],
+    tx.conditions[conditionId(f.code, f.group, sceneHourOf(f, placeNowIso(f, weather.at, now())))],
     f.rainFrom && !weather.stale ? tx.rainFrom(f.rainFrom) : undefined,
   ]
     .filter(Boolean)

@@ -136,3 +136,23 @@ describe('cache with all hours', () => {
     expect(readCache()).toBeUndefined();
   });
 });
+
+describe('the new hour fields reach the picture (package A lands first, B wires through)', () => {
+  it('sceneHourOf carries the three cloud heights, sunshine, visibility and cape of the hour of now', async () => {
+    const { sceneHourOf, coverOf, sunLevel } = await import('./scene');
+    const forecast = await fetchForecast(46.95, 7.45, f);
+    const h = sceneHourOf(forecast, '2026-11-26T12:20');
+    const row = forecast.hours!.find((r) => r.time === '2026-11-26T12:00')!;
+    expect(h).toMatchObject({
+      cloudLow: row.cloudLow,
+      cloudMid: row.cloudMid,
+      cloudHigh: row.cloudHigh,
+      sunMin: row.sunMin,
+      vis: row.vis,
+      cape: row.cape,
+    });
+    // With the heights known, the cover follows low and middle cloud, not the total.
+    expect(coverOf(h)).toBe(coverOf({ cloud: Math.max(row.cloudLow!, row.cloudMid!) }));
+    expect(sunLevel(h, coverOf(h))).toBeGreaterThanOrEqual(0);
+  });
+});

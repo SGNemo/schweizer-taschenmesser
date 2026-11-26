@@ -260,10 +260,10 @@
   --text: var(--ink-theme);
   --text-muted: var(--ink-theme-muted);
 }
-/* The weather's stage (signature `sky`): 280 px for the scene (title row 56, body 224), one column of text; the title
-   row starts at the top edge (the scene's sky is above it), so two hints still fit in 290 px. */
+/* The weather's stage (signature `sky`, round 2 CONCEPT §5): 320 px for the scene, one column of text; the title row
+   starts at the top edge (the scene's sky is above it), and two hint rows still fit inside the 320 px. */
 .stage[data-signature='sky'] {
-  min-height: 17.5rem;
+  min-height: 20rem;
 }
 .stage[data-signature='sky'] .inner {
   padding-top: 0;
@@ -358,13 +358,16 @@
   .signature[data-default='true'] {
     zoom: 0.7;
   }
-  /* the weather's stage on the phone: 272 px, so the landscape stays below the text (≤ 300 with two hints) */
+  /* the weather's stage on the phone is the picture: 256 px (title row 44 + module row 44 + 168); hints, chips and the
+     line of further values stand under it, in the page (round 2, CONCEPT §5) */
   .stage[data-signature='sky'] {
-    min-height: 17rem;
+    min-height: 16rem;
   }
+  /* the picture's room under the temperature and the detail line: a line that wraps grows the stage instead of
+     sliding onto the summits (the picture is bottom-aligned, CONCEPT §5) */
   .stage[data-signature='sky'] .stageBody {
     gap: var(--space-1);
-    padding-bottom: 10px;
+    padding-bottom: 6.5rem;
   }
   /* the stage's bare mark: icon size, so the stage with data keeps room under its 320 px (K3) */
   .stage .signature[data-default='true'] {

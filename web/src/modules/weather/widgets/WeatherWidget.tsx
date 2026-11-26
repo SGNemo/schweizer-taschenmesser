@@ -2,8 +2,9 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import { dateTimeFormat } from '@/core/i18n/format';
 import { useWeatherSettings } from '@/core/weather/settings';
 import { useWeather } from '@/core/weather/useWeather';
-import { rainsNow } from '@/core/weather/logic';
-import { conditionId, inkOf } from '@/core/weather/scene';
+import { placeNowIso, rainsNow } from '@/core/weather/logic';
+import { conditionId, inkOf, sceneHourOf } from '@/core/weather/scene';
+import { now } from '@/core/time/now';
 import { tWeather } from '@/strings.weather';
 import { tWeatherPage } from '@/strings.weatherPage';
 import { KpiWidget } from '@/ui';
@@ -50,7 +51,13 @@ export default function WeatherWidget() {
     ? tx.asOf(dateTimeFormat({ hour: '2-digit', minute: '2-digit' }).format(weather.at))
     : undefined;
   const word = weather
-    ? tx.conditions[conditionId(weather.forecast.code, weather.forecast.group)]
+    ? tx.conditions[
+        conditionId(
+          weather.forecast.code,
+          weather.forecast.group,
+          sceneHourOf(weather.forecast, placeNowIso(weather.forecast, weather.at, now())),
+        )
+      ]
     : undefined;
   // While it rains the word already says so: no rain hint (never "no rain in sight").
   const rain =

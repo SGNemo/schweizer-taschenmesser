@@ -62,7 +62,9 @@ export function HourCards({ hours, now }: { hours: readonly HourRow[]; now?: Now
               <span className={styles.hourTemp} data-tone={tone(h.temp)}>
                 {tx.temp(h.temp)}
               </span>
-              <span className={styles.hourWord}>{tx.conditions[conditionId(h.code, h.group)]}</span>
+              <span className={styles.hourWord}>
+                {tx.conditions[conditionId(h.code, h.group, h)]}
+              </span>
               {h.wind != null ? (
                 <span className={styles.hourWind}>{tx.windSpeed(h.wind)}</span>
               ) : null}
