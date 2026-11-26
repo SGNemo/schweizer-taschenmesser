@@ -492,6 +492,11 @@ export interface CalendarItem {
   personId?: string;
   /** True for events copied from an outside service (read-only). */
   external?: boolean;
+  /**
+   * The thing behind this item when `id` is an occurrence (an event of a series: `<eventId>:<date>`): what links point
+   * to (`linkTarget` resolves it). Absent for items that are no link target of their source (external events).
+   */
+  entityId?: string;
 }
 
 export type CalendarSource = (range: DateRange) => Promise<CalendarItem[]>;

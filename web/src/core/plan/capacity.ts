@@ -17,11 +17,22 @@ const toTime = (min: number): string =>
  * block; all-day items block nothing unless `allDayBlocks`. Pure; the result is a blocker per item,
  * a timed one with its `from`/`to` (the minutes stay end − start, also when `to` is cut at midnight).
  */
+/** The calendar thing behind a blocker: the entity a link points to and the item (occurrence) its panel opens. */
+export interface BlockerRef {
+  module: string;
+  /** The entity (`CalendarItem.entityId`). */
+  id: string;
+  /** The item itself (`CalendarItem.id`, an occurrence key). */
+  item: string;
+  /** The item's route in its module (`CalendarItem.to`): „Ganz öffnen“. */
+  to?: string;
+}
+
 export function calendarBlockers(
   items: readonly CalendarItem[],
   opts: { allDayBlocks?: boolean } = {},
-): (PlanBlocker & { date: string })[] {
-  const out: (PlanBlocker & { date: string })[] = [];
+): (PlanBlocker & { date: string; ref?: BlockerRef })[] {
+  const out: (PlanBlocker & { date: string; ref?: BlockerRef })[] = [];
   for (const i of items) {
     if (i.done) continue;
     if (i.kind !== 'event' && i.kind !== 'external') continue;
@@ -47,6 +58,10 @@ export function calendarBlockers(
       date: i.date,
       from: i.time,
       ...(to > start ? { to: toTime(to) } : {}),
+      // A timed appointment that is a link target (package 9): its row opens, „Vorbereiten …“ links to it.
+      ...(i.entityId && i.kind === 'event'
+        ? { ref: { module: i.source, id: i.entityId, item: i.id, ...(i.to ? { to: i.to } : {}) } }
+        : {}),
     });
   }
   return out;

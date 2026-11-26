@@ -44,6 +44,7 @@ import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
 import {
   addFromField,
   addKindFromField,
+  type FieldLead,
   allToday,
   applyOps,
   exclude,
@@ -65,19 +66,21 @@ import { beginPlanFocus, planFocusPath } from '../focus';
 import { useLater } from '../useLater';
 import { readKeepSentence } from '../keepSentence';
 import type { PlannableEntry } from '@/core/modules/contributions';
-import type { BoardDay, BoardRow, OpenRow } from '../board';
+import type { BoardBlocker, BoardDay, BoardRow, OpenRow } from '../board';
 import { Capture } from '../components/Capture';
 import { CaptureDialog } from '../components/CaptureDialog';
 import { useAbilities, useRowMenu } from '../components/rowMenu';
 import { type RowExpand, ThingRow, TodoHintRow, WaitRow } from '../components/ThingRow';
-import { compartmentId, useOpenRow } from '../components/RowCompartment';
-import { PlanPageFoot } from '@/core/modules/PlanPanelHost';
+import { compartmentId, RowCompartment, useOpenRow } from '../components/RowCompartment';
+import { PlanPageFoot, PlanPanelHost } from '@/core/modules/PlanPanelHost';
 import { MeasureShown } from '../components/measureShown';
 import { PileContext } from '../components/pileContext';
 import { PileOffer } from '../components/PileOffer';
 import { hasOpenSteps, STEPS_FRESH, stepsPath } from '../components/steps';
 import { appointmentsOf, Context, nextDeadlinesOf } from '../components/Context';
-import { DayPage, DayPageLoading } from '../components/DayPage';
+import { BlockRow, DayPage, DayPageLoading } from '../components/DayPage';
+import { LeadChip } from '../components/LeadChip';
+import { AppointmentLinks, useAppointmentLinks } from '../components/appointmentLinks';
 import { LateGroup, LateRow } from '../components/LateGroup';
 import { PassedTrainings } from '../components/PassedTrainings';
 import { tileName, WeekBand } from '../components/WeekBand';
@@ -288,6 +291,10 @@ export default function PlannerPage() {
   const titles = data?.titles ?? {};
   const board = data?.board;
   const [plainFor, setPlainFor] = useState<string | undefined>();
+  // „Vorbereiten …“ / „Danach …“ (package 9): the lead chip A2 before the field's input; page state only.
+  const [lead, setLead] = useState<FieldLead | undefined>();
+  // A4 and the place beside the blocker (package 9): the rows' appointment links, read once for the page.
+  const appointmentLinks = useAppointmentLinks(data?.entries);
   const kindsOn = data?.settings.kindsInField !== false && getLang() === 'de';
   // Read only while a line can show: the switch on and German lines.
   const knownNames = useLiveQuery(
@@ -578,7 +585,10 @@ export default function PlannerPage() {
         kindReading,
         titles,
         tab === 'open' ? undefined : shownDate,
+        lead,
       );
+      // Only a task with steps took the chip; any other kind left it standing.
+      if (ok && kindReading.kind === 'steps') setLead(undefined);
       if (!ok) {
         setText((cur) => cur || value);
         setAddError(true);
@@ -663,9 +673,18 @@ export default function PlannerPage() {
     }
     setText('');
     // On „Noch offen“ no day is on the sheet: the new thing lies on today (the toast names the day).
-    const ok = await addFromField(value, titles, tab === 'open' ? undefined : shownDate);
-    // K3 held for this entry only: the next one is read afresh.
-    if (ok) setPlainFor(undefined);
+    const ok = await addFromField(
+      value,
+      titles,
+      tab === 'open' ? undefined : shownDate,
+      undefined,
+      lead,
+    );
+    // K3 held for this entry only: the next one is read afresh; the chip was used.
+    if (ok) {
+      setPlainFor(undefined);
+      setLead(undefined);
+    }
     // Nothing happened (the planner was switched off meanwhile): the text comes back.
     if (!ok) {
       setText((cur) => cur || value);
@@ -836,6 +855,56 @@ export default function PlannerPage() {
           onTakeOut: () => void exclude(entry, titles),
         }
       : undefined;
+
+  // An appointment's blocker row opens (package 9): calendar's panel, with the planner's own „Vorbereiten …“ /
+  // „Danach …“ first in its foot. A tap puts the lead chip before the field's input and the focus into the field.
+  const startLead = (b: BoardBlocker, day: BoardDay, rel: 'before' | 'after') => {
+    if (!b.ref) return;
+    setLead({
+      ref: { module: b.ref.module, id: b.ref.id },
+      title: b.label,
+      date: day.date,
+      rel,
+      shift: false,
+    });
+    addRef.current?.querySelector('input')?.focus({ preventScroll: true });
+  };
+  const renderBlocker = (b: BoardBlocker, day: BoardDay) => {
+    const ref = b.ref;
+    if (!expandOn || !ref) return <BlockRow blocker={b} />;
+    const unit = `block:${b.id}`;
+    const isOpen = openRow.open === unit;
+    const controls = compartmentId(unit);
+    return (
+      <BlockRow
+        blocker={b}
+        open={{
+          open: isOpen,
+          controls,
+          onToggle: () => openRow.toggle(unit),
+          compartment: isOpen ? (
+            <RowCompartment id={controls} label={b.label} onClose={openRow.close}>
+              <PlanPanelHost
+                moduleId={ref.module}
+                id={ref.item}
+                to={ref.to ?? '/calendar'}
+                actions={
+                  <>
+                    <Button variant="ghost" onClick={() => startLead(b, day, 'before')}>
+                      {t.planner.appointment.prepare}
+                    </Button>
+                    <Button variant="ghost" onClick={() => startLead(b, day, 'after')}>
+                      {t.planner.appointment.afterwards}
+                    </Button>
+                  </>
+                }
+              />
+            </RowCompartment>
+          ) : undefined,
+        }}
+      />
+    );
+  };
 
   const renderRow = (row: BoardRow, day: BoardDay, next: boolean) => {
     const reason = explainAssignment(
@@ -1855,6 +1924,25 @@ export default function PlannerPage() {
         void add(undefined, { plain: true });
       }}
       previewAbove={phone && !inDialog}
+      {...(lead
+        ? {
+            lead: {
+              chip: (struckFor?: string) => (
+                <LeadChip
+                  lead={lead}
+                  today={data?.today ?? today()}
+                  onChange={setLead}
+                  onRemove={() => {
+                    setLead(undefined);
+                    addRef.current?.querySelector('input')?.focus({ preventScroll: true });
+                  }}
+                  {...(struckFor ? { struckFor } : {})}
+                />
+              ),
+              onRemove: () => setLead(undefined),
+            },
+          }
+        : {})}
       error={addError}
       focusOnOpen={inDialog}
       // The phone's last row is the field alone, its label for screen readers (placeholder and „Eintragen“ say
@@ -1925,252 +2013,264 @@ export default function PlannerPage() {
 
   return (
     <PileContext.Provider value={pileData}>
-      <MeasureShown.Provider value={data?.settings.measurePropose !== false}>
-        <PageHeader title={t.planner.title}>{phone ? null : pageMenuButton}</PageHeader>
-        {/* U01: the figure has no caps label, the frame's placeholder for a `kennzahl` head has one. Until the board is
+      <AppointmentLinks.Provider value={appointmentLinks}>
+        <MeasureShown.Provider value={data?.settings.measurePropose !== false}>
+          <PageHeader title={t.planner.title}>{phone ? null : pageMenuButton}</PageHeader>
+          {/* U01: the figure has no caps label, the frame's placeholder for a `kennzahl` head has one. Until the board is
           read – and while no day holds a thing – the page holds the row itself, in the figure's own shape, unseen, so
           the head keeps its height. */}
-        <HeroSlot area="figure">
-          {head ? (
-            <HeroFigure value={head.value} detail={head.detail} type="sans" testId="planner-head" />
-          ) : (
-            <div
-              className={styles.headPending}
-              aria-hidden="true"
-              data-testid="planner-head-pending"
+          <HeroSlot area="figure">
+            {head ? (
+              <HeroFigure
+                value={head.value}
+                detail={head.detail}
+                type="sans"
+                testId="planner-head"
+              />
+            ) : (
+              <div
+                className={styles.headPending}
+                aria-hidden="true"
+                data-testid="planner-head-pending"
+              >
+                <HeroFigure value={' '} detail={' '} type="sans" />
+              </div>
+            )}
+          </HeroSlot>
+          {/* Outside the app frame (tests, a dialog) there is no notice slot: the sentence then stands in the page. */}
+          {dayEndNotice ? (
+            inFrame ? (
+              <HeroSlot area="notice">{dayEndNotice}</HeroSlot>
+            ) : (
+              dayEndNotice
+            )
+          ) : null}
+
+          {/* Day and plan changes for screen readers: the picked day with its capacity, a ticked thing. */}
+          <DragGhost />
+          <p className="sr-only" role="status" data-testid="planner-status">
+            <span key={status.n}>{status.text}</span>
+          </p>
+
+          {/* Package 5: rows of the sheet, the tab and „Noch ohne Tag“ (beside, when wide) drag onto the band's days. */}
+          <div ref={dragHost} className={styles.dragHost}>
+            <SplitView
+              enabled={wide && hasContext}
+              asideLabel={t.planner.ctx.label}
+              aside={context}
             >
-              <HeroFigure value={' '} detail={' '} type="sans" />
-            </div>
-          )}
-        </HeroSlot>
-        {/* Outside the app frame (tests, a dialog) there is no notice slot: the sentence then stands in the page. */}
-        {dayEndNotice ? (
-          inFrame ? (
-            <HeroSlot area="notice">{dayEndNotice}</HeroSlot>
-          ) : (
-            dayEndNotice
-          )
-        ) : null}
-
-        {/* Day and plan changes for screen readers: the picked day with its capacity, a ticked thing. */}
-        <DragGhost />
-        <p className="sr-only" role="status" data-testid="planner-status">
-          <span key={status.n}>{status.text}</span>
-        </p>
-
-        {/* Package 5: rows of the sheet, the tab and „Noch ohne Tag“ (beside, when wide) drag onto the band's days. */}
-        <div ref={dragHost} className={styles.dragHost}>
-          <SplitView enabled={wide && hasContext} asideLabel={t.planner.ctx.label} aside={context}>
-            {/* Wide and nothing beside it (no appointment, nothing waits): the main column keeps the width it has
+              {/* Wide and nothing beside it (no appointment, nothing waits): the main column keeps the width it has
             beside the context column, left-aligned with the head's title – rows do not stretch over the page. */}
-            <div
-              className={wide && !hasContext ? `${styles.main} ${styles.mainAlone}` : styles.main}
-            >
-              {/* Reading order = DOM order: field → band → sheet → context. The field is there from the first paint
+              <div
+                className={wide && !hasContext ? `${styles.main} ${styles.mainAlone}` : styles.main}
+              >
+                {/* Reading order = DOM order: field → band → sheet → context. The field is there from the first paint
               and never moves under the typing hand (U01). */}
-              {phone ? null : capture(false)}
-              {phone ? null : answer}
+                {phone ? null : capture(false)}
+                {phone ? null : answer}
 
-              {/* The tabs are there while something is open from earlier (or that tab is shown): an empty „Noch
+                {/* The tabs are there while something is open from earlier (or that tab is shown): an empty „Noch
               offen“ is no control worth a row – on the phone it would push the field under the bottom bar. */}
-              {openRows.length > 0 || tab === 'open' ? tabs : null}
+                {openRows.length > 0 || tab === 'open' ? tabs : null}
 
-              {showWeekLink && tab !== 'open' ? (
-                <p className={styles.weekLink} data-testid="week-check-link">
-                  <button
-                    type="button"
-                    className={styles.textLink}
-                    onClick={() => setChecking(true)}
-                  >
-                    {t.planner.weekLink.label}
-                  </button>
-                  <IconButton
-                    label={t.planner.weekLink.dismiss}
-                    onClick={() => void setMeta(WEEK_CHECK_KEY, monday)}
-                  >
-                    <Icon name="close" size={16} />
-                  </IconButton>
-                </p>
-              ) : null}
+                {showWeekLink && tab !== 'open' ? (
+                  <p className={styles.weekLink} data-testid="week-check-link">
+                    <button
+                      type="button"
+                      className={styles.textLink}
+                      onClick={() => setChecking(true)}
+                    >
+                      {t.planner.weekLink.label}
+                    </button>
+                    <IconButton
+                      label={t.planner.weekLink.dismiss}
+                      onClick={() => void setMeta(WEEK_CHECK_KEY, monday)}
+                    >
+                      <Icon name="close" size={16} />
+                    </IconButton>
+                  </p>
+                ) : null}
 
-              {tab === 'open' ? (
-                openBlock
-              ) : (
-                <>
-                  {bandDays && data ? (
-                    <>
-                      {bandRow}
-                      {grid ? (
-                        <WeekGrid
-                          days={bandDays}
-                          picked={shownDate}
-                          today={data.today}
-                          onPick={pick}
-                          drop
-                        />
-                      ) : (
-                        <WeekBand
-                          days={bandDays}
-                          picked={shownDate}
-                          onPick={pick}
-                          today={data.today}
-                          drop
-                          {...(phone
-                            ? {}
-                            : {
-                                onNext: () => page(1),
-                                ...(canPrev ? { onPrev: () => page(-1) } : {}),
-                              })}
-                        />
-                      )}
-                    </>
-                  ) : (
-                    <div className={styles.bandPending} aria-hidden="true" />
-                  )}
+                {tab === 'open' ? (
+                  openBlock
+                ) : (
+                  <>
+                    {bandDays && data ? (
+                      <>
+                        {bandRow}
+                        {grid ? (
+                          <WeekGrid
+                            days={bandDays}
+                            picked={shownDate}
+                            today={data.today}
+                            onPick={pick}
+                            drop
+                          />
+                        ) : (
+                          <WeekBand
+                            days={bandDays}
+                            picked={shownDate}
+                            onPick={pick}
+                            today={data.today}
+                            drop
+                            {...(phone
+                              ? {}
+                              : {
+                                  onNext: () => page(1),
+                                  ...(canPrev ? { onPrev: () => page(-1) } : {}),
+                                })}
+                          />
+                        )}
+                      </>
+                    ) : (
+                      <div className={styles.bandPending} aria-hidden="true" />
+                    )}
 
-                  {!wide ? <LateRow rows={late} renderRow={renderLate} /> : null}
+                    {!wide ? <LateRow rows={late} renderRow={renderLate} /> : null}
 
-                  {shownDay && dayPicking === shownDay.date ? daySelection(shownDay) : null}
-                  {shownDay && days ? (
-                    <DayPage
-                      key={shownDay.date}
-                      top={
-                        <>
-                          {goalLine(shownDay)}
-                          {startLine(shownDay)}
-                          {openLineNode}
-                        </>
-                      }
-                      foot={waitingBlock}
-                      day={shownDay}
-                      tomorrow={days[1]?.date === shownDay.date}
-                      renderRow={(row, next) => renderRow(row, shownDay, next)}
-                      onEditDay={() => setSheetDate(shownDay.date)}
-                      // While choosing („Auswählen“, „Nur das hier …“) every row of the day is in reach.
-                      thenOpen={
-                        thenOpen ||
-                        dayPicking === shownDay.date ||
-                        (!!revealThen && shownDay.rows.some((r) => r.itemKey === revealThen))
-                      }
-                      choosing={dayPicking === shownDay.date}
-                      onThenToggle={(open) => {
-                        setRevealThen(undefined);
-                        void setMeta(phone ? THEN_NARROW_KEY : THEN_WIDE_KEY, open);
-                      }}
-                      empty={emptySheet}
-                      // „Rest verteilen“ only where something can go (a day of dated turns and locks alone has nothing).
-                      onRest={
-                        shownDay.isToday && shownDay.rows.some(movable)
-                          ? () => void showRest()
-                          : undefined
-                      }
-                      // Only where something can go: a day over its time by fixed blocks, turns or locks alone has no link.
-                      onSpread={
-                        shownDay.rows.some(movable) ? () => void showSpread(shownDay) : undefined
-                      }
-                      hints={
-                        shownDay.hints?.length ? (
-                          <ItemList label={t.planner.chips.todoList}>
-                            {shownDay.hints.map((h) => (
-                              <TodoHintRow
-                                key={h.itemKey}
-                                title={h.title}
-                                date={h.date}
-                                onPlace={() => void layHere(h.entry, h.date, titles)}
-                              />
-                            ))}
-                          </ItemList>
-                        ) : undefined
-                      }
-                      // On the phone the page's ⋯ stands in the sheet's head and holds „Tage einteilen“: said once.
-                      onSetup={phone ? undefined : () => setSettingUp(true)}
-                      headEnd={phone ? pageMenuButton : undefined}
-                      dayEnd={
-                        data && dayEndOf(data.settings)
-                          ? dayEndLabel(dayEndOf(data.settings)!)
-                          : undefined
-                      }
-                      onSwipe={
-                        phone
-                          ? (dir) => {
-                              const at = days.findIndex((d) => d.date === shownDay.date);
-                              const to = days[at + dir];
-                              if (to) pick(to.date);
-                            }
-                          : undefined
-                      }
-                    />
-                  ) : (
-                    <DayPageLoading />
-                  )}
+                    {shownDay && dayPicking === shownDay.date ? daySelection(shownDay) : null}
+                    {shownDay && days ? (
+                      <DayPage
+                        key={shownDay.date}
+                        top={
+                          <>
+                            {goalLine(shownDay)}
+                            {startLine(shownDay)}
+                            {openLineNode}
+                          </>
+                        }
+                        foot={waitingBlock}
+                        day={shownDay}
+                        tomorrow={days[1]?.date === shownDay.date}
+                        renderRow={(row, next) => renderRow(row, shownDay, next)}
+                        renderBlocker={(b) => renderBlocker(b, shownDay)}
+                        onEditDay={() => setSheetDate(shownDay.date)}
+                        // While choosing („Auswählen“, „Nur das hier …“) every row of the day is in reach.
+                        thenOpen={
+                          thenOpen ||
+                          dayPicking === shownDay.date ||
+                          (!!revealThen && shownDay.rows.some((r) => r.itemKey === revealThen))
+                        }
+                        choosing={dayPicking === shownDay.date}
+                        onThenToggle={(open) => {
+                          setRevealThen(undefined);
+                          void setMeta(phone ? THEN_NARROW_KEY : THEN_WIDE_KEY, open);
+                        }}
+                        empty={emptySheet}
+                        // „Rest verteilen“ only where something can go (a day of dated turns and locks alone has nothing).
+                        onRest={
+                          shownDay.isToday && shownDay.rows.some(movable)
+                            ? () => void showRest()
+                            : undefined
+                        }
+                        // Only where something can go: a day over its time by fixed blocks, turns or locks alone has no link.
+                        onSpread={
+                          shownDay.rows.some(movable) ? () => void showSpread(shownDay) : undefined
+                        }
+                        hints={
+                          shownDay.hints?.length ? (
+                            <ItemList label={t.planner.chips.todoList}>
+                              {shownDay.hints.map((h) => (
+                                <TodoHintRow
+                                  key={h.itemKey}
+                                  title={h.title}
+                                  date={h.date}
+                                  onPlace={() => void layHere(h.entry, h.date, titles)}
+                                />
+                              ))}
+                            </ItemList>
+                          ) : undefined
+                        }
+                        // On the phone the page's ⋯ stands in the sheet's head and holds „Tage einteilen“: said once.
+                        onSetup={phone ? undefined : () => setSettingUp(true)}
+                        headEnd={phone ? pageMenuButton : undefined}
+                        dayEnd={
+                          data && dayEndOf(data.settings)
+                            ? dayEndLabel(dayEndOf(data.settings)!)
+                            : undefined
+                        }
+                        onSwipe={
+                          phone
+                            ? (dir) => {
+                                const at = days.findIndex((d) => d.date === shownDay.date);
+                                const to = days[at + dir];
+                                if (to) pick(to.date);
+                              }
+                            : undefined
+                        }
+                      />
+                    ) : (
+                      <DayPageLoading />
+                    )}
 
-                  {/* A training whose day passed unlogged: asked once, quietly, under today's sheet only. */}
-                  {shownDay?.isToday && data ? (
-                    <PassedTrainings today={data.today} titles={titles} />
-                  ) : null}
-                </>
-              )}
+                    {/* A training whose day passed unlogged: asked once, quietly, under today's sheet only. */}
+                    {shownDay?.isToday && data ? (
+                      <PassedTrainings today={data.today} titles={titles} />
+                    ) : null}
+                  </>
+                )}
 
-              {/* Not wide: the context follows the sheet in the one column. */}
-              {!wide && hasContext && tab !== 'open' ? (
-                <aside aria-label={t.planner.ctx.label}>{context}</aside>
-              ) : null}
+                {/* Not wide: the context follows the sheet in the one column. */}
+                {!wide && hasContext && tab !== 'open' ? (
+                  <aside aria-label={t.planner.ctx.label}>{context}</aside>
+                ) : null}
 
-              {/* Phone: the first screen is band and sheet; the plus of the bottom bar opens the field as a sheet.
+                {/* Phone: the first screen is band and sheet; the plus of the bottom bar opens the field as a sheet.
               The field also stays where it was before R1, as the page's last row: without it every entry on
               the phone costs one tap and one sheet more than before (e2e/usecases, paths B and E). */}
-              {phone && !capturing ? capture(false) : null}
-              {phone && !capturing ? answer : null}
-            </div>
-          </SplitView>
-        </div>
+                {phone && !capturing ? capture(false) : null}
+                {phone && !capturing ? answer : null}
+              </div>
+            </SplitView>
+          </div>
 
-        {phone ? (
-          <CaptureDialog open={capturing} onClose={() => setCapturing(false)}>
-            {capture(true)}
-            {answer}
-          </CaptureDialog>
-        ) : null}
-        {pasting !== undefined ? (
-          <PasteDialog
-            initial={pasting}
-            goals={Object.fromEntries(
-              (board?.days ?? []).flatMap((d) => (d.row?.note ? [[d.date, d.row.note]] : [])),
-            )}
+          {phone ? (
+            <CaptureDialog open={capturing} onClose={() => setCapturing(false)}>
+              {capture(true)}
+              {answer}
+            </CaptureDialog>
+          ) : null}
+          {pasting !== undefined ? (
+            <PasteDialog
+              initial={pasting}
+              goals={Object.fromEntries(
+                (board?.days ?? []).flatMap((d) => (d.row?.note ? [[d.date, d.row.note]] : [])),
+              )}
+              titles={titles}
+              onClose={() => setPasting(undefined)}
+            />
+          ) : null}
+          <RowChoice
+            choice={choice}
+            days={days?.map((d) => d.date) ?? []}
             titles={titles}
-            onClose={() => setPasting(undefined)}
+            onClose={() => setChoice(undefined)}
           />
-        ) : null}
-        <RowChoice
-          choice={choice}
-          days={days?.map((d) => d.date) ?? []}
-          titles={titles}
-          onClose={() => setChoice(undefined)}
-        />
-        <DaySheet
-          day={board?.days.find((d) => d.date === sheetDate)}
-          titles={titles}
-          onClose={() => setSheetDate(undefined)}
-        />
-        {settingUp && board ? (
-          <DaySetup
-            days={board.days.slice(0, SETUP_DAYS)}
+          <DaySheet
+            day={board?.days.find((d) => d.date === sheetDate)}
             titles={titles}
-            dayEnd={data?.settings.dayEnd}
-            onClose={() => setSettingUp(false)}
+            onClose={() => setSheetDate(undefined)}
           />
-        ) : null}
-        {checking && board ? (
-          <WeekCheck
-            days={viewWeek ?? board.days.slice(0, SPAN)}
-            biggest={biggest}
-            titles={titles}
-            onClose={() => setChecking(false)}
-          />
-        ) : null}
-        {/* A module's quiet strip at the page's foot (`contributions.planPageFoot`, first user: mail in package 4c). */}
-        <PlanPageFoot />
-      </MeasureShown.Provider>
+          {settingUp && board ? (
+            <DaySetup
+              days={board.days.slice(0, SETUP_DAYS)}
+              titles={titles}
+              dayEnd={data?.settings.dayEnd}
+              onClose={() => setSettingUp(false)}
+            />
+          ) : null}
+          {checking && board ? (
+            <WeekCheck
+              days={viewWeek ?? board.days.slice(0, SPAN)}
+              biggest={biggest}
+              titles={titles}
+              onClose={() => setChecking(false)}
+            />
+          ) : null}
+          {/* A module's quiet strip at the page's foot (`contributions.planPageFoot`, first user: mail in package 4c). */}
+          <PlanPageFoot />
+        </MeasureShown.Provider>
+      </AppointmentLinks.Provider>
     </PileContext.Provider>
   );
 }

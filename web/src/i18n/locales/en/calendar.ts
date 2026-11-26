@@ -35,6 +35,8 @@ export const calendar: Strings['calendar'] = {
     label: 'Preparation',
     open: (title: string) => `Open preparation: ${title}`,
     done: 'done',
+    after: 'Afterwards',
+    tick: (title: string) => `Tick off “${title}”`,
   },
   skipOccurrence: (date: string) => `Remove only the one on ${date}`,
   movedToast: 'Event moved.',

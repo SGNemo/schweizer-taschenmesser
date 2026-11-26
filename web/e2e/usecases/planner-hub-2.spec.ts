@@ -43,7 +43,7 @@ import { dismissNotices } from '../helpers';
  *    that ends it): (ended with 2: B `taps` 27 → 28 / phone 14 → 16 and `perThing` 17 → 21 / phone 9 → 13 from 4b;
  *    ended with 5a:) C1 `workTaps` 7 → 8 and
  *    `taps` 19 → 20 from 4a until 5a (expand, „Ganz öffnen“, the routine's run as today).
- * Re-measured by the packages: 10b: D1 · 4a: D1, C1 · 4b/2: B · 4c: B `replySwitches` · 5a: C1 · 8: C1 `learned` · 1: D2 (done) · 3: A1, C1 (done) · 9: D3 · 11: D4.
+ * Re-measured by the packages: 10b: D1 · 4a: D1, C1 · 4b/2: B · 4c: B `replySwitches` · 5a: C1 · 8: C1 `learned` · 1: D2 (done) · 3: A1, C1 (done) · 9: D3 (done) · 11: D4.
  * `MEASURE=1` only measures. Facts (the click path, the module routes passed) land beside the table in
  * `test-results/usecase-planner-hub-2/`.
  *
@@ -73,6 +73,8 @@ const HIGHER = ['rightKind', 'linkedToPlan', 'doneInPlanner', 'markVisible', 'ma
  * (create 10 – „Ganz öffnen“ opens its editor at once, so no „Bearbeiten“ – switches 2); worked off with „Los“: the
  * next step only, the last „Fertig“ ticks the ToDo (work 7, taps 17, `nextStepOnly` ja). `perThing` keeps its IST 6
  * (measured 7: the lasting price of 4a). The C1 prices end here.
+ * D3 after 9 (2026-11-26): Wednesday's tile, the appointment's blocker row opens, „Vorbereiten …“, the typed line –
+ * taps 4, switches 0. `linked` now reads the link store (`before` from the ToDo to `calendar:ev1`, `todo.links[]` empty).
  * A1 and C1 after 3 (2026-11-26): the field reads sure kinds (K1) – the two invoices and the list wait under „Noch ohne
  * Tag“, the appointment is in the calendar, note and link get no row (rows 7, rightKind 12, linkedToPlan 10); A1 now
  * waits for any stored thing, not a ToDo. C1's round is typed as one line „Haushalt: a, b, c, d, e“ (create 1, taps 8,
@@ -97,8 +99,8 @@ const IST: Record<string, Figures> = {
   'D1 Steht es im Plan, und wann · pixel-7': { taps: 11, perThing: 5, moduleSwitches: 10, markVisible: 5, markAgrees: 5, tripsToPlanner: 0 },
   'D2 Geteilter Link in den Planer · desktop-chrome': { taps: 2, moduleSwitches: 1, forms: 1, inPlanner: 'ja', wayBack: 'ja' },
   'D2 Geteilter Link in den Planer · pixel-7': { taps: 2, moduleSwitches: 1, forms: 1, inPlanner: 'ja', wayBack: 'ja' },
-  'D3 Vor einem Termin · desktop-chrome': { taps: 14, perThing: 0, moduleSwitches: 4, linked: 'ja', onWednesday: 'ja' },
-  'D3 Vor einem Termin · pixel-7': { taps: 14, perThing: 0, moduleSwitches: 4, linked: 'ja', onWednesday: 'ja' },
+  'D3 Vor einem Termin · desktop-chrome': { taps: 4, perThing: 0, moduleSwitches: 0, linked: 'ja', onWednesday: 'ja' },
+  'D3 Vor einem Termin · pixel-7': { taps: 4, perThing: 0, moduleSwitches: 0, linked: 'ja', onWednesday: 'ja' },
   'D4 Ein Thema · desktop-chrome': { rows: 20, taps: 27, perThing: 20, moduleSwitches: 2, planFilter: 'nein' },
   'D4 Ein Thema · pixel-7': { rows: 20, taps: 22, perThing: 15, moduleSwitches: 2, planFilter: 'nein' },
   'D5 Warte auf Antwort · desktop-chrome': { taps: 7, perThing: 3, moduleSwitches: 0, rowsOffSheet: 3, comesBackByItself: 'ja' },
@@ -1599,67 +1601,39 @@ test('D3 Vor einem Termin', async ({ page, isMobile }, info) => {
   await planner(page);
   const hand = new Hand(page, isMobile);
   hand.start();
-  // The planner's field makes a ToDo without a link; the one link to an appointment is its editor's „Als ToDo
-  // merken“ (a ToDo titled like the appointment, due that day). Renamed in its own editor, laid on Wednesday in the
-  // planner.
-  await go(hand, page, isMobile, 'calendar');
-  const entry = page
-    .getByRole('button', { name: /Friseur/ })
-    .and(page.locator('xpath=//*[not(ancestor::aside)]'))
-    .first();
-  // The phone's month shows the day, not the entry: the day first.
-  const shown = await entry
-    .waitFor({ state: 'visible', timeout: 3000 })
-    .then(() => true)
-    .catch(() => false);
-  if (!shown)
-    await hand.tap(
-      page.getByRole('button', { name: /^Mittwoch, 2\. Dezember/ }).first(),
-      'Tag Mi 2.',
-    );
-  await hand.tap(entry, 'Termin Friseur');
-  const editor = page.getByRole('dialog').filter({ hasText: 'Als ToDo merken' });
-  await expect(editor).toBeVisible();
-  await hand.tap(editor.getByRole('button', { name: 'Als ToDo merken' }), 'Als ToDo merken');
-  await expect.poll(async () => (await rows<Task>(page, 'todos_task')).length).toBe(1);
-  await hand.tap(editor.getByRole('button', { name: 'Abbrechen' }), 'Schließen');
-  await expect(editor).toHaveCount(0);
-  await go(hand, page, isMobile, 'todos');
-  const todoRow = page
-    .locator('main')
-    .getByRole('button', { name: /^Friseur/ })
-    .first();
-  await hand.tap(todoRow, 'ToDo Friseur');
-  const todoEditor = page.getByRole('dialog', { name: 'Aufgabe bearbeiten' });
-  if (!(await appears(todoEditor)))
-    await hand.tap(
-      page.locator('main').getByRole('button', { name: 'Bearbeiten' }).first(),
-      'Bearbeiten',
-    );
-  await expect(todoEditor).toBeVisible();
-  await hand.fill(todoEditor.getByRole('textbox', { name: 'Titel' }), 'Bargeld holen', 'Titel');
-  await hand.tap(todoEditor.getByRole('button', { name: 'Speichern', exact: true }), 'Speichern');
-  await expect(todoEditor).toHaveCount(0);
-  await go(hand, page, isMobile, 'planner');
-  await openNoDay(hand, page);
+  // Package 9: Wednesday's tile, the appointment's blocker row opens, „Vorbereiten …“ puts the lead chip „vor Friseur,
+  // Mi“ before the field, the typed line becomes a ToDo on Wednesday linked `before` to the appointment.
+  await showDay(hand, page, WEDNESDAY);
+  const sheet = page.getByTestId(`day-${WEDNESDAY}`);
+  await hand.tap(sheet.getByRole('button', { name: /^Friseur/ }).first(), 'Aufklappen: Friseur');
   await hand.tap(
-    page.getByRole('button', { name: 'Aktionen für Bargeld holen', exact: true }).first(),
-    '⋯ Bargeld holen',
+    sheet.getByTestId('row-compartment').getByRole('button', { name: 'Vorbereiten …' }),
+    'Vorbereiten …',
   );
-  await hand.tap(page.getByRole('menuitem', { name: 'Verschieben …' }), 'Verschieben …');
-  const move = page.getByRole('dialog', { name: 'Verschieben: Bargeld holen' });
-  await hand.tap(move.getByRole('button', { name: 'Mi 2.', exact: true }), 'Mi 2.');
-  await expect(move).toHaveCount(0);
+  await expect(page.getByTestId('planner-lead')).toBeVisible();
+  const field = page.getByRole('textbox', { name: 'Eintragen oder sagen' });
+  await hand.fill(field, 'Bargeld holen', 'Bargeld holen');
+  await field.press('Enter');
+  await expect.poll(async () => (await rows<Task>(page, 'todos_task')).length).toBe(1);
+  await expect
+    .poll(async () => (await rows<{ date: string }>(page, 'planner_assignment')).length)
+    .toBeGreaterThan(0);
   const placed = await rows<{ itemKey: string; date: string }>(page, 'planner_assignment');
-  // Linked: the appointment's editor names it under „Vorbereitung“ (read, not counted).
-  await page.goto(`/calendar?open=ev1`);
-  const back = page.getByRole('dialog').filter({ hasText: 'Als ToDo merken' });
-  await expect(back).toBeVisible();
-  const shows = await expect(back.getByText('Bargeld holen').first())
-    .toBeVisible({ timeout: 5000 })
-    .then(() => true)
-    .catch(() => false);
   const [todo] = await rows<Task & { dueDate?: string; plannedFor?: string }>(page, 'todos_task');
+  // Linked (package 9 reads the link store): `before` from the ToDo to the appointment; `todo.links[]` stays empty.
+  const links = await rows<{
+    from: { module: string; id: string };
+    to: { module: string; id: string };
+    rel: string;
+  }>(page, '_links');
+  const linkedBefore = links.some(
+    (l) =>
+      l.rel === 'before' &&
+      l.from.module === 'todos' &&
+      l.from.id === todo?.id &&
+      l.to.module === 'calendar' &&
+      l.to.id === 'ev1',
+  );
   record(
     info,
     name,
@@ -1667,10 +1641,10 @@ test('D3 Vor einem Termin', async ({ page, isMobile }, info) => {
       taps: hand.taps,
       perThing: hand.perThing,
       moduleSwitches: hand.moduleSwitches,
-      linked: shows && todo?.links?.some((l) => l.kind === 'event') ? 'ja' : 'nein',
+      linked: linkedBefore && !todo?.links?.length ? 'ja' : 'nein',
       onWednesday: placed.some((a) => a.date === WEDNESDAY) ? 'ja' : 'nein',
     },
-    { todo, placed, places: hand.places, path: hand.path },
+    { todo, placed, links, places: hand.places, path: hand.path },
   );
 });
 

@@ -1844,6 +1844,10 @@ export const de = {
       label: 'Vorbereitung',
       open: (title: string) => `Vorbereitung öffnen: ${title}`,
       done: 'erledigt',
+      /** A5 (planner hub 2, package 9): the panel's second head. */
+      after: 'Danach',
+      /** A tick line's name in the planner's panel. */
+      tick: (title: string) => `„${title}“ abhaken`,
     },
     skipOccurrence: (date: string) => `Nur den Termin am ${date} entfernen`,
     movedToast: 'Termin verschoben.',
@@ -9535,6 +9539,29 @@ export const de = {
       failed: 'Das hat nicht geklappt. Es ist nichts verändert.',
       tick: (step: string) => `„${step}“ abhaken`,
       more: (n: number) => `${n} weitere`,
+    },
+    /** Before and after an appointment (package 9, COPY A1–A4, A6, A7, K7, K7b). */
+    appointment: {
+      /** A1 */
+      prepare: 'Vorbereiten …',
+      afterwards: 'Danach …',
+      /** A2: the lead chip in the field. */
+      chipBefore: (title: string, day: string) => `vor ${title}, ${day}`,
+      chipAfter: (title: string, day: string) => `nach ${title}, ${day}`,
+      /** A3: the chip's second choice. */
+      dayBefore: 'am Tag davor',
+      dayAfter: 'am Tag danach',
+      /** A4: the row's chip. */
+      rowBefore: (title: string) => `vor ${title}`,
+      rowAfter: (title: string) => `nach ${title}`,
+      /** A6: the chip's menu button and its ✕. */
+      change: (chip: string) => `${chip}. Ändern`,
+      remove: 'Entfernen',
+      /** A7: a struck chip's description. */
+      notFor: (chip: string, kind: string) => `${chip} – gilt nicht für ${kind}`,
+      /** K7 / K7b: the field's toast. */
+      laidBefore: (day: string, title: string) => `Liegt auf ${day}, vor ${title}.`,
+      laidAfter: (day: string, title: string) => `Liegt auf ${day}, nach ${title}.`,
     },
     /** Kinds in the field (package 3, COPY K1–K4, K6). */
     kinds: {

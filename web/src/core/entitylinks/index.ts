@@ -29,7 +29,14 @@ import {
   type LinkRow,
   type StoredLink,
 } from './store';
-import { refKey, refOfKind, type EntityLink, type EntityRef, type LegacyLink } from './types';
+import {
+  refKey,
+  refOfKind,
+  type EntityLink,
+  type EntityRef,
+  type LegacyLink,
+  type LinkRel,
+} from './types';
 
 export { linkId } from './store';
 export type { EntityLink, EntityRef, LinkRel } from './types';
@@ -214,6 +221,26 @@ export async function linkEntries(
     table.where('toKey').equals(key).toArray(),
   ]);
   return entries([...from, ...to], key);
+}
+
+/**
+ * The live links that leave any of `refs` with one of `rels` (one indexed read): a page that shows many things reads
+ * their links at once (the planner's appointment chips, package 9). Unresolved.
+ */
+export async function linksFrom(
+  refs: readonly EntityRef[],
+  rels: readonly LinkRel[],
+  database: TaschenmesserDB = defaultDb,
+): Promise<EntityLink[]> {
+  if (refs.length === 0) return [];
+  const want = new Set<string>(rels);
+  const rows = await linksRepo(database).table.where('fromKey').anyOf(refs.map(refKey)).toArray();
+  return rows
+    .filter((r) => r.deletedAt === null && want.has(r.rel))
+    .flatMap((r) => {
+      const link = readLink(r);
+      return link ? [link] : [];
+    });
 }
 
 /** The links of a thing in both directions, the other end resolved through its module. */

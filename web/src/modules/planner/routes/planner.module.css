@@ -85,6 +85,80 @@
   order: -1;
   margin: 0 0 var(--space-1);
 }
+/* A4 on a row (package 9): the appointment it is for, as quiet text – no link, no colour. */
+.chipAppointment {
+  display: inline-flex;
+  align-items: center;
+  margin-inline-end: var(--space-2);
+  color: var(--text-3);
+  font-size: var(--text-meta);
+}
+/* The lead chip A2 before the input (package 9): the chip a small menu button, ✕ beside it, A3 in a small menu. */
+.leadWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-end;
+  gap: var(--space-1);
+  min-height: var(--touch);
+}
+.leadChip {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full);
+  background: var(--surface-raised);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+button.leadChip {
+  cursor: pointer;
+}
+.leadStruck {
+  color: var(--text-3);
+  text-decoration: line-through;
+}
+.leadRemove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--touch);
+  min-height: var(--touch);
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+}
+.leadMenu {
+  position: absolute;
+  inset-block-start: 100%;
+  inset-inline-start: 0;
+  z-index: 5;
+  margin: var(--space-1) 0 0;
+  padding: var(--space-1);
+  list-style: none;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+}
+.leadItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  padding: 0 var(--space-3);
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
 /* „Zum Beispiel“ and three chips under the field: they fill the field, they never submit. */
 .examples {
   display: flex;

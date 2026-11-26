@@ -112,6 +112,8 @@ export function expandEvent(
       const timed = !e.allDay && first && Boolean(e.startTime);
       items.push({
         id: `${id}:${date}`,
+        // The event itself: what a link points to (planner hub 2, package 9).
+        entityId: id,
         source: 'calendar',
         kind: e.kind === 'reminder' ? 'reminder' : 'event',
         title: e.title,

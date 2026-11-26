@@ -1,8 +1,17 @@
-import { Fragment, type ReactNode, type TouchEvent, useId, useRef, useState } from 'react';
+import {
+  Fragment,
+  type ReactNode,
+  type TouchEvent,
+  useContext,
+  useId,
+  useRef,
+  useState,
+} from 'react';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Card, Icon, ItemList, ItemRow, SkeletonRows } from '@/ui';
 import type { BoardBlocker, BoardDay, BoardRow } from '../board';
+import { AppointmentLinks } from './appointmentLinks';
 import { capacityLabel, capacityState, capacityWhy, compact } from './capacity';
 import { sourceOf } from './ThingRow';
 import styles from '../routes/planner.module.css';
@@ -30,7 +39,17 @@ export function dayTitle(day: Pick<BoardDay, 'date' | 'isToday'>, tomorrow: bool
  * A block of the day (an appointment from the calendar, a blocker of the day, time a habit keeps free – S4): recessed,
  * a clock in the lead, no tick, no menu. A habit's block says only its typed name, its module and its minutes.
  */
-export function BlockRow({ blocker }: { blocker: BoardBlocker }) {
+export function BlockRow({
+  blocker,
+  open,
+}: {
+  blocker: BoardBlocker;
+  /**
+   * An appointment that opens (package 9): the title is the disclosure, the compartment (calendar's panel with the
+   * planner's „Vorbereiten …“ / „Danach …“) under the row.
+   */
+  open?: { open: boolean; controls: string; onToggle: () => void; compartment?: ReactNode };
+}) {
   const time = blocker.from && blocker.to ? `${blocker.from}–${blocker.to}` : undefined;
   const source = blocker.module
     ? sourceOf({
@@ -68,7 +87,19 @@ export function BlockRow({ blocker }: { blocker: BoardBlocker }) {
         </span>
       }
       end={<span className={styles.duration}>{compact(blocker.min)}</span>}
-    />
+      {...(open
+        ? {
+            onOpen: open.onToggle,
+            disclosure: {
+              open: open.open,
+              controls: open.controls,
+              hint: open.open ? t.planner.panel.collapseHint : t.planner.panel.expandHint,
+            },
+          }
+        : {})}
+    >
+      {open?.compartment}
+    </ItemRow>
   );
 }
 
@@ -91,6 +122,7 @@ export function DayPage({
   day,
   tomorrow,
   renderRow,
+  renderBlocker,
   onEditDay,
   thenOpen,
   choosing = false,
@@ -110,6 +142,8 @@ export function DayPage({
   /** The day after today: its title says „Morgen“. */
   tomorrow: boolean;
   renderRow: (row: BoardRow, next: boolean) => ReactNode;
+  /** A blocker drawn by the page (an appointment that opens, package 9); without it the plain `BlockRow`. */
+  renderBlocker?: (blocker: BoardBlocker) => ReactNode;
   onEditDay: () => void;
   thenOpen: boolean;
   /** A selection is open („Auswählen“, „Nur das hier …“): every row of the day is in reach, nothing folded. */
@@ -143,18 +177,51 @@ export function DayPage({
   const thenRef = useRef<HTMLDivElement>(null);
   const start = useRef<{ x: number; y: number } | undefined>(undefined);
   // Fixed blocks (S4, a training at 18:00) lie with the day's blocks, in time order; „Zuerst“ / „Danach“ hold the rest.
-  const things = day.rows.filter((r) => !r.fixed);
+  // A thing made „vor“ / „nach“ an appointment of this day stands right before / after its blocker (package 9) – a
+  // place on the sheet only: its stored order and its day are untouched.
+  const links = useContext(AppointmentLinks);
+  const beside = new Map<string, { blocker: BoardBlocker; rank: number }>();
+  for (const r of day.rows) {
+    if (r.fixed) continue;
+    const l = links.get(r.itemKey);
+    const b = l
+      ? day.blockers.find((x) => x.ref?.module === l.to.module && x.ref.id === l.to.id)
+      : undefined;
+    if (l && b) beside.set(r.unitId, { blocker: b, rank: l.rel === 'before' ? 0 : 2 });
+  }
+  const things = day.rows.filter((r) => !r.fixed && !beside.has(r.unitId));
   const blocks = [
+    ...day.rows
+      .filter((r) => beside.has(r.unitId))
+      .map((r) => {
+        const { blocker, rank } = beside.get(r.unitId)!;
+        return { at: blocker.from, rank, key: r.unitId, node: renderRow(r, false) };
+      }),
     ...day.blockers.map((b) => ({
       at: b.from,
+      rank: 1,
       key: b.id,
-      node: <BlockRow key={b.id} blocker={b} />,
+      node: renderBlocker ? (
+        <Fragment key={b.id}>{renderBlocker(b)}</Fragment>
+      ) : (
+        <BlockRow key={b.id} blocker={b} />
+      ),
     })),
     ...day.rows
       .filter((r) => r.fixed)
-      .map((r) => ({ at: r.fixed!.from, key: r.unitId, node: renderRow(r, false) })),
+      .map((r) => ({ at: r.fixed!.from, rank: 1, key: r.unitId, node: renderRow(r, false) })),
   ].sort((a, b) =>
-    a.at && b.at ? (a.at < b.at ? -1 : a.at > b.at ? 1 : 0) : a.at ? -1 : b.at ? 1 : 0,
+    a.at && b.at
+      ? a.at < b.at
+        ? -1
+        : a.at > b.at
+          ? 1
+          : a.rank - b.rank
+      : a.at
+        ? -1
+        : b.at
+          ? 1
+          : a.rank - b.rank,
   );
   const first = things.slice(0, FIRST_ROWS);
   const then = things.slice(FIRST_ROWS);
@@ -162,6 +229,8 @@ export function DayPage({
   const shown = folded ? then.slice(0, THEN_ROWS) : then;
   const state = capacityState(day);
   const hasRows = things.length > 0;
+  // The day's steps („Rest verteilen“, „Tage einteilen“) count the things beside a blocker too.
+  const anyThing = hasRows || beside.size > 0;
   const editName = t.planner.board.editDay(formatDay(day.date, 'EEEE'));
 
   const onTouchStart = (e: TouchEvent) => {
@@ -337,17 +406,17 @@ export function DayPage({
 
         {hints}
 
-        {hasRows && (onRest || onSetup) ? (
+        {anyThing && (onRest || onSetup) ? (
           <div className={styles.sheetFoot}>
             {/* An overbooked day offers „Rest verteilen“ once: on its line above (that day's things that are not fest). */}
-            {hasRows && onRest && !(state === 'over' && onSpread) ? (
+            {anyThing && onRest && !(state === 'over' && onSpread) ? (
               <span data-testid="rest-link">
                 <button type="button" className={styles.textLink} onClick={onRest}>
                   {t.planner.rest.link}
                 </button>
               </span>
             ) : null}
-            {hasRows && onSetup ? (
+            {anyThing && onSetup ? (
               <button type="button" className={styles.textLink} onClick={onSetup}>
                 {t.planner.daySetup.open}
               </button>

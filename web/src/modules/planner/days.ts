@@ -6,7 +6,7 @@
  */
 import type { PlanBlockEntry, PlannableEntry } from '@/core/modules/contributions';
 import type { CalendarItem } from '@/core/modules/types';
-import { calendarBlockers } from '@/core/plan/capacity';
+import { calendarBlockers, type BlockerRef } from '@/core/plan/capacity';
 import { addDays } from '@/core/plan/dates';
 import { validWindow } from '@/core/plan/windows';
 import type { PlanBlocker, PlanDay, PlanItem } from '@/core/plan/types';
@@ -19,6 +19,8 @@ export type DayBlocker = PlanBlocker & {
   calendar: boolean;
   /** A module keeps this time free (a habit, S4): the module that asked; no time, no remove, no tick. */
   module?: string;
+  /** A calendar appointment that is a link target (package 9): its row opens, things link `before` / `after` it. */
+  ref?: BlockerRef;
 };
 export type BuiltDay = PlanDay & {
   row?: PlanDayRow;
@@ -56,7 +58,14 @@ export function planDays(input: {
       })),
       ...cal
         .filter((b) => b.date === date)
-        .map((b) => ({ id: b.id!, label: b.label, min: b.min, ...times(b), calendar: true })),
+        .map((b) => ({
+          id: b.id!,
+          label: b.label,
+          min: b.min,
+          ...times(b),
+          calendar: true,
+          ...(b.ref ? { ref: b.ref } : {}),
+        })),
       // A module's block takes time like an appointment, without a time of its own (habits do not say when).
       ...(input.blocks ?? [])
         .filter((b) => b.date === date)
