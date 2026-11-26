@@ -20,7 +20,7 @@ Read after [PACKAGES #common](../PACKAGES.md#common). Sources of truth, in this 
 | `fog` | `0 \| 1 \| 2` | `fogLevel(code, vis)` |
 | `snowCover` | `0 \| 1 \| 2 \| 3` | `snowCoverOf(depthM, snowLevel)` (replaces the boolean of round 1) |
 | `wind` | `0 \| 1 \| 2 \| 3` | `windLevel` (exists) |
-| `windTo` | `'left' \| 'right'` | `windTo(dirDeg)` |
+| `windTo` | `'left' \| 'right'` | `windTo(dirDeg, lat)` (hemisphere, CONCEPT §3) |
 | `wet` | `boolean` | `wetOf(h, previousHour)` |
 | `mode` | `'clear' \| 'veil' \| 'hole' \| 'schein' \| ''` | `bodyMode(state)` |
 
@@ -36,12 +36,12 @@ Optional fields added to `HourRow` (`core/weather/api.ts`) and the cache schema:
 
 ## Tokens
 
-Every hex of `palette.js` becomes a `--scene-*` token in `ui/tokens.css` (dark skies in both dark blocks, as round 1 did): `--scene-sky-<key>-<i>` (changed: `night-overcast`, `night-rain`, `night-snow`, `day`, `rain`, `storm`), new `--scene-deck-<sky>-<0..4>`, `--scene-light-<sky>` with its two numbers as constants in `draw.ts`, `--scene-land-<season>-<rock|mid|f1|f2|near|meadow|dark>` and `-crown-<1..3>`, and the `c` block (`--scene-<name>`). `ui/tokens.css` and `ui/tokens.test.ts` are ratchet-protected: append, list the hit in the PR, wait for the label.
+Every hex of `palette.js` becomes a `--scene-*` token in `ui/tokens.css` (dark skies in both dark blocks, as round 1 did): `--scene-sky-<key>-<i>` (changed against the built tokens: `night-overcast`, `night-rain`, `day`, `storm`; all others as built), new `--scene-deck-<sky>-<0..4>`, `--scene-light-<sky>` with its two numbers as constants in `draw.ts`, `--scene-land-<season>-<rock|mid|f1|f2|near|meadow|dark>` and `-crown-<1..3>`, and the `c` block (`--scene-<name>`). `ui/tokens.css` and `ui/tokens.test.ts` are ratchet-protected: append, list the hit in the PR, wait for the label.
 
 ## Sizes
 
-Desktop stage 320 px (`layout/AreaFrame.module.css`, `.stage[data-signature='sky']`); the head-height seed spec's limit for weather moves with it (ratchet hit). Phone: picture 256 px; hints, two chips and rest line move out of the stage into the page, directly under it. `useSceneFit`: phone scale 0.56, body x at `G.phoneBodyX`, `quietX` 700; desktop `quietX` at the text column's right edge as today.
+Desktop stage 320 px, fixed (`layout/AreaFrame.module.css`, `.stage[data-signature='sky']`); two hint rows fit inside it, so the head-height seed spec's `STAGE = 320` stays untouched and green. Phone: the stage is the picture, 256 px; hints, two chips and the rest line leave the stage (and `module-frame`'s head) and become the first block of the page, directly under it. `useSceneFit`: phone scale 0.46 (896 units), body x at `G.phoneBodyX`, body y = 46 + 0.6 × (arc y − 70), `quietX` 1000; desktop `quietX` at the text column's right edge as today (the mockup's 640 is that edge at 1650 px).
 
 ## Ceilings and guards
 
-[A11Y §4](../A11Y.md) holds the numbers (elements, markup, animated groups, paint). `check:stimulus`: the head's height changes (named hit); the counts of buttons change only in package C ([CONCEPT-INFO §5](../CONCEPT-INFO.md)). Privacy tests, the connection log tests and the `weather` destination stay as they are; package B changes the list of values in the DATA-FLOWS row and says so.
+[A11Y §4](../A11Y.md) holds the numbers (elements, markup, animated groups, paint). `check:stimulus`: the page grows by the head's 40 px in package A (inside the height tolerance; named if not); the counts of buttons change only in package C ([CONCEPT-INFO §5](../CONCEPT-INFO.md)). Privacy tests, the connection log tests and the `weather` destination stay as they are; package B changes the list of values in the DATA-FLOWS row and says so.

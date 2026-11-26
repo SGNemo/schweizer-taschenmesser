@@ -11,11 +11,12 @@ The 22 words of round 1 stay. New: the word says the level the picture shows.
 | thunder level 1 | leichtes Gewitter | light thunderstorm |
 | thunder level 2 | Gewitter | thunderstorm |
 | thunder level 3 | starkes Gewitter | severe thunderstorm |
-| thunder with hail, level 2 | Gewitter mit Hagel | thunderstorm with hail |
+| thunder with hail (WMO 96), level 2 | Gewitter mit Hagel | thunderstorm with hail |
 | thunder with hail, level 3 | starkes Gewitter mit Hagel | severe thunderstorm with hail |
 | fog level 1 | Nebel | fog |
 | fog level 2 | dichter Nebel | dense fog |
-| thin high cloud over an otherwise clear sky (cover ≤ 2, veil) | Schleierwolken | thin high cloud |
+| fog level 2 with rime (WMO 48) | dichter Nebel mit Reif | dense fog with rime |
+| a veil (CONCEPT §2) – replaces the words of WMO 1, 2 and 3; WMO 0 stays "klar" | Schleierwolken | thin high cloud |
 
 Detail line additions (at most one, order as in round 1): Sturmböen · windig · Schnee liegt · Frost · Hitze – unchanged.
 

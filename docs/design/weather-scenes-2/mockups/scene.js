@@ -74,7 +74,7 @@
     // the pale range far behind (whole width; under the text it is the only range)
     back: [[0, 206], [110, 194], [200, 201], [320, 182], [420, 195], [550, 174], [660, 191], [780, 166], [870, 183], [950, 168], [1040, 186], [1140, 170], [1240, 190], [1330, 174], [1440, 188], [1540, 170], [1600, 182]],
     backPeaks: [[320, 182, 0.3], [550, 174, 0.4], [780, 166, 0.45], [1140, 170, 0.35], [1330, 174, 0.3]],
-    // the massif: five mountains, each its own shape, drawn back to front. sil: left foot → right foot; top: index of the summit;
+    // the massif: six mountains, each its own shape, drawn back to front. sil: left foot → right foot; top: index of the summit;
     // arete: the zig-zag edge from the summit to the foot that parts the lit face from the shaded one; spurs: buttresses [sil index, foot x]
     mountains: [
       { id: 'outlier', size: 0.5, top: 4, haze: 0.3, sil: [[836, 218], [872, 190], [900, 178], [924, 160], [948, 148], [962, 158], [984, 166], [1010, 192], [1030, 218]],
@@ -94,7 +94,7 @@
     ],
     // round wooded hills in front of the massif, and the clearings on them
     hills: [[-20, 236], [130, 222], [250, 232], [390, 214], [520, 228], [650, 212], [790, 224], [900, 206], [990, 218], [1060, 196], [1120, 206], [1190, 188], [1262, 208], [1330, 198], [1400, 212], [1466, 184], [1530, 198], [1620, 180]],
-    clearings: ['M1040,212q16,-10 34,-6q-8,10 -34,6Z', 'M1176,202q18,-9 40,-3q-14,9 -40,3Z', 'M1450,200q20,-12 44,-8q-12,12 -44,8Z', 'M640,222q16,-8 34,-4q-10,8 -34,4Z'],
+    clearings: ['M1040,212q16,-10 34,-6q-8,10 -34,6Z', 'M1176,202q18,-9 40,-3q-14,9 -40,3Z', 'M1450,200q20,-12 44,-8q-12,12 -44,8Z'],
     f1: [[0, 244], [400, 238], [800, 241], [1100, 235], [1400, 231], [1600, 227]],
     f2: [[0, 264], [400, 259], [800, 263], [985, 258]],
     backShore: 'M930,270C1000,252 1100,249 1200,251C1290,252 1352,256 1410,264L1410,300L930,300Z', // the meadow behind the lake
@@ -111,7 +111,7 @@
       ['spruce', 958, 296, 64], ['fir', 930, 293, 44], ['pine', 984, 298, 50], ['leaf', 890, 291, 13], ['bush', 1004, 300, 6], ['bush', 906, 296, 5],
       ['spruce', 872, 294, 38], ['birch', 1014, 303, 34], ['spruce', 1446, 300, 30], ['fir', 1470, 304, 22], ['leaf', 1610, 296, 14],
       ['fir', 1182, 258, 14], ['fir', 1194, 259, 11], ['fir', 1150, 257, 12]],
-    // four bolts, each its own figure: the long strike, the crawler under the base, the forked one, the far one
+    // four bolts, each its own figure, in the order the levels take them: the long strike, the forked one, the crawler under the base, the far one
     bolts: [
       { w: 4.4, op: 1, p: [[1218, 118], [1213, 131], [1220, 139], [1209, 152], [1214, 160], [1203, 171], [1207, 181], [1194, 196], [1198, 205], [1187, 219], [1190, 226], [1178, 240]],
         forks: [[[1209, 152], [1222, 160], [1228, 172], [1240, 178], [1244, 190]], [[1194, 196], [1182, 202], [1176, 212], [1166, 216]]] },
@@ -379,7 +379,7 @@
         var y0 = [84, 44, -8, -70][row];
         for (xx = x0[row]; xx < x1 - (wall ? 0 : row * 16); xx += 58 + row * 14) {
           var r1 = (30 + lq() * 16) * (1 + row * 0.28), cy = y0 + (lq() - 0.5) * 16, cx3 = xx + sh * (0.3 + row * 0.25);
-          lobes += circ(cx3, cy, r1); rim += circ(cx3 - r1 * 0.16, cy - r1 * 0.2, r1 * 0.96);
+          lobes += circ(cx3, cy, r1); if (xx > x0[row]) rim += circ(cx3 - r1 * 0.16, cy - r1 * 0.2, r1 * 0.96); // no lit rim on a row's first billow: it would stand free as an arc
         }
       }
       if (wall) sheet(function (x) { return baseY(x) - 26; }, 54, 4, 90, 170, DT[1], sh * 0.5); // a second, lighter roll over the text side
@@ -725,7 +725,7 @@
   function count(s) { return (s.match(/<(path|rect|circle|ellipse|g|stop|linearGradient|radialGradient|mask)\b/g) || []).length; }
   /* the phone crop: scale k, stage height in px; the body at G.phoneBodyX */
   function phoneOpts(stagePx, widthPx, bodyY) {
-    var k = 0.46; // at this scale the summits stay below the temperature and the detail line
+    var k = 0.46; // at this scale the summits stay below the temperature and the detail line. Product: body y = 46 + 0.6 × (arc y − 70)
     return { view: [Math.round(W - widthPx / k), Math.round(H - stagePx / k), Math.round(widthPx / k), Math.round(stagePx / k)], bodyAt: [G.phoneBodyX, bodyY == null ? 46 : bodyY], quietX: 1000 };
   }
   var presets = { // the three scenes of the stop

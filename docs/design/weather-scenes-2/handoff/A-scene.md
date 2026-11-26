@@ -16,13 +16,13 @@ Concept: [CONCEPT](../CONCEPT.md) (all of it), [A11Y](../A11Y.md). Drawing: `moc
 6. **Events** from `events.js` into the same slots round 1 used.
 7. **Motion** from `scene-motion.css`; the glow: one animation, `animation-iteration-count: 1`, started 1 s after `data-motion="run"`, absent under every off switch (CONCEPT §7).
 8. **Head:** stage 320; phone: hints, chips and rest line under the picture (COPY unchanged), picture 256.
-9. **Words:** thunder and fog words by level in head, hour cards, day rows, widget, overview line, trip weather – same function everywhere.
+9. **Words:** thunder and fog words by level, and "Schleierwolken" for a veil (COPY §1), in head, hour cards, day rows, widget, overview line, trip weather – same function everywhere. The veil needs the three cloud heights: the function is built and tested here and starts to show once package B delivers the fields.
 
 ## Edge cases
 
 - No `hour` and a cache without the new fields: cover from `cloud`, sun from cover, thunder 2, fog 1, snow cover from `now.snowDepth` – nothing crashes, nothing invented.
 - Polar day / night; southern hemisphere seasons; a moon below the horizon (no body, no banks' lit rims: the banks are drawn unlit and the opening is left out).
-- `windTo: 'left'`: smoke, flag, lean, rain, leaves, cloud shear mirror; the flag must not cross the shed.
+- `windTo: 'left'`: smoke, flag, lean, rain, leaves, cloud shear mirror; the flag must not cross the shed. The mockup's default (`'right'`) is an easterly in the northern hemisphere – the gallery labels say nothing else.
 - "Schlicht" under a deck: body in `schein`. "Ruhig": no glow animation.
 - Thunder at night: sky `night-rain`, banks none, the bolts as by day.
 
@@ -32,4 +32,4 @@ New request variables, cache, any value on the page (B). Choosing days or hours 
 
 ## Acceptance
 
-Level tables green · the body visible in every sky (test of step 5) · `contrast.test.ts` extended to the new skies, deck tones and the phone crop, ≥ 4.5 : 1 · ceilings of A11Y §4 asserted · no animation with reduced motion / "Standbild" / "Ruhig" / hidden page; the glow runs once · `check:stimulus`: only the named head-height hit · privacy and connection-log tests untouched · pictures: the three scenes of the stop and six more at 1920 and 412, light and dark, beside their mockups.
+Level tables green · the body visible in every sky (test of step 5) · `contrast.test.ts` extended to the new skies, deck tones and the phone crop, ≥ 4.5 : 1 · ceilings of A11Y §4 asserted · no animation with reduced motion / "Standbild" / "Ruhig" / hidden page; the glow runs once · the head-height seed spec untouched and green; `check:stimulus` inside its tolerances · privacy and connection-log tests untouched · pictures: the three scenes of the stop and six more at 1920 and 412, light and dark, beside their mockups.

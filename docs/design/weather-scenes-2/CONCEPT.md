@@ -34,10 +34,10 @@ Light: the side of every mountain, tree and crown that faces the body is lit; th
 | Mode | When | Picture |
 | --- | --- | --- |
 | `clear` | cover 0–3 | the disc; clouds step aside (cover 3: they close in to a gap) |
-| `veil` | high cloud ≥ 50 % with low and middle cloud ≤ 30 % | long pale streaks; the disc with a ring around it |
+| `veil` | high cloud ≥ 50 % with low and middle cloud ≤ 30 % (cover is then 0 or 1 by the rule in §3; without the three heights there is no veil) | long pale streaks; the disc with a ring around it |
 | `hole` | cover 4, nothing falling, no fog | the deck (four rolls, darkest lowest) opens softly around the body; **six cloud banks** stand in the opening, each its own shape, dark with the edge toward the body lit; one reaches a little over the disc's lower edge; two shreds drift past; stars in the opening at night. No outline of a hole anywhere |
 | `schein` | cover 4 with rain, snow or fog; thunder from level 2; fog level 2 | the disc pale (moon 72 %, sun without its core) in a soft light on the deck – the phase stays readable |
-| – | the body is below the horizon | nothing (and no chip claims a moon) |
+| – | the body is below the horizon | nothing in the picture; the moon chip stays as built (it names tonight's phase) |
 
 Same rule for the sun by day. A body low on its arc stands behind the massif and rises out of the saddles.
 
@@ -47,12 +47,12 @@ Same rule for the sun by day. A body low on its arc stands behind the massif and
 
 | What | Level | Rule | Picture (amounts in `scene.js` `G`) |
 | --- | --- | --- | --- |
-| **Cloud** | 0 | `cloud_cover` ≤ 10 | no cloud |
-| | 1 | ≤ 35 | two small clouds |
+| **Cloud** | 0 | `c` ≤ 10, where `c` = the larger of low and middle cloud when the three heights are known, else `cloud_cover` (so thin high cloud alone is never a deck) | no cloud |
+| | 1 | `c` ≤ 35 | two small clouds |
 | | 2 | ≤ 60 | four clouds |
 | | 3 | ≤ 85 | nine clouds, two faint ones over the quiet side; the body in a gap |
 | | 4 | > 85 | the deck (§2) |
-| **How sunny** (day) | 3 | `sunshine_duration` ≥ 45 min in the hour (without the field: cover ≤ 1) | sun with twelve rays, cast shadows, a sunlit band on the meadow, sparkle on snow |
+| **How sunny** (day) | 3 | `sunshine_duration` ≥ 45 min in the hour – the field wins where it exists; without it: cover ≤ 1. Under a deck (cover 4) no rays are drawn whatever the field says: §2 decides | sun with twelve rays, cast shadows, a sunlit band on the meadow, sparkle on snow |
 | | 2 | 20–44 min (cover 2) | eight short rays, lighter shadows |
 | | 1 | 5–19 min (cover 3) | the disc without rays |
 | | 0 | < 5 min (cover 4) | per §2 |
@@ -61,16 +61,16 @@ Same rule for the sun by day. A body low on its arc stands behind the massif and
 | freezing | – | WMO 56, 57, 66, 67 | plus a glaze line on the ground |
 | **Snow** | 1 · 2 · 3 | WMO 71, 77, 85 · 73 · 75, 86 | 60 · 110 · 170 flakes in two depths; level 3: larger flakes, the massif half gone |
 | **Snow cover** | 1 · 2 · 3 | `snow_depth` ≥ 1 · ≥ 5 · ≥ 20 cm (or it snows at level ≥ 2: at least 1) | 1 dusted: the meadow pale, tips white · 2 closed: ground, roofs, hills, massif white, trees capped, the lake frozen, blue shadows · 3 deep: plus a thick roof load |
-| **Thunder** | 1 | WMO 95 with amount < 2.5 mm and gusts < 50 km/h and `cape` < 800 J/kg (unknown counts as low) | one tower with sky around it, one bolt, light rain under it |
-| | 2 | every other case | a dark base across the sky with billows above, two bolts (the long strike, the forked one) |
-| | 3 | WMO 96 / 99, or amount ≥ 10 mm, or gusts ≥ 70 km/h, or `cape` ≥ 2000 | four bolts (plus the crawler under the base and the far one), rain at level 3; with 96 / 99 forty hailstones |
+| **Thunder** | 1 | WMO 95 with amount < 2.5 mm and gusts < 50 km/h and `cape` < 800 J/kg (unknown counts as low) | one tower with sky around it, one bolt, rain at level 1 under the tower only |
+| | 2 | every other case; WMO 96 is at least level 2 | a dark base across the sky with billows above, two bolts (the long strike, the forked one), rain at level 2; with 96 forty hailstones |
+| | 3 | WMO 99, or amount ≥ 10 mm, or gusts ≥ 70 km/h, or `cape` ≥ 2000 | four bolts (plus the crawler under the base and the far one), rain at level 3; with 96 / 99 forty hailstones |
 | **Fog** | 1 | WMO 45 / 48 | the massif at 35 %, the hills at 65 %, three bands between the layers |
-| | 2 | and `visibility` < 300 m | the massif gone, hills 22 %, forest half, five bands, a veil over everything but the nearest trees |
+| | 2 | and `visibility` < 300 m (without the field: level 1; no other fallback) | the massif gone, hills 22 %, forest half, five bands, a veil over everything but the nearest trees |
 | **Wind** | 0 still | wind < 20 and gusts < 35 km/h | smoke stands and spreads, the flag hangs, the lake mirrors the massif |
 | | 1 Brise | wind ≥ 20 or gusts ≥ 35 | smoke leans, flag half out, grass leans, a few ripples, the mirror pales |
 | | 2 kräftig | wind ≥ 35 or gusts ≥ 50 | trees lean, crowns shift, smoke a flat streak, flag straight, eight leaves (snow dust over a snow cover), ripples, rain slanted, clouds sheared, three streaks in the air |
 | | 3 Sturm | wind ≥ 50 or gusts ≥ 70 | trees bent, flag frayed and the pole bent, smoke torn, sixteen leaves, whitecaps, rain at 39°, the boat tilts, spindrift off snowy summits |
-| direction | – | wind from 180°–360° blows to the right, else to the left (the picture looks north) | lee side of smoke, flag, lean, rain, leaves |
+| direction | – | the picture looks toward the sun's arc: south in the northern hemisphere (east is left, west is right), north in the southern. Northern: wind from 180°–360° (a westerly) blows **to the left**, from 0°–180° to the right; southern: mirrored | lee side of smoke, flag, lean, rain, leaves |
 | **Frost** | 1 | temperature ≤ 0°, nothing falling | hoar on the grass, rime on the tips, an ice rim on the lake |
 | | 2 | ≤ −5° | the lake frozen, sparkle |
 | **Heat** | – | ≥ 30° by day | a larger sun with sixteen rays, a warm haze over the land, dry meadow, shimmer lines |
@@ -82,7 +82,7 @@ The word beside the picture names the same level ([COPY §1](COPY.md)): the thun
 
 ## 4. Sky and time of day
 
-Phases as in round 1 (`night`, `dawn`, `golden`, `day`, `dusk` from sunrise and sunset); sky keys as in round 1 plus the rule that an overcast night uses the lighter sky under the deck (`palette.js`). How a sky lights the land is one table (`palette.js` `light`): every land tone is greyed and mixed toward the sky's light; far layers are mixed toward the sky's lower colour (haze).
+Phases as in round 1 (`night`, `dawn`, `golden`, `day`, `dusk` from sunrise and sunset). Sky keys as built in round 1 (`skyOf`), with these changes, all so that the level is seen in the sky too: thunder level 1 takes the `rain` sky (the tower needs sky around it; `storm` from level 2) · rain level 1 takes the pale `drizzle` sky, levels 2 and 3 `rain`; showers likewise by level · drizzle at night takes `night-rain` · `night-full` keeps the product's rule (the full-moon flag), the mockup's "lit more than 90 %" is only its stand-in · an overcast night uses the lighter sky under the deck (`palette.js`). How a sky lights the land is one table (`palette.js` `light`): every land tone is greyed and mixed toward the sky's light; far layers are mixed toward the sky's lower colour (haze).
 
 ## 5. Size and place
 
@@ -91,10 +91,11 @@ Phases as in round 1 (`night`, `dawn`, `golden`, `day`, `dusk` from sunrise and 
 | Stage | **320 px** (was 280; the guard's limit) | the picture **256 px** (title row 44 + module row 44 + 168 of picture) |
 | On the picture | title row, temperature, detail line, hints, three chips, rest line – left of the picture's busy part | title row, module row, temperature and detail line only |
 | Under the picture | – | hints (as a pill), two chips, then the rest line – in this order, directly under the stage |
-| Crop | all 1600 units | the right 736 units at scale 0.56 (`Scene.phoneOpts`); the body stands between the main summit and the third (`G.phoneBodyX`), its height from the arc |
-| Head height in all | 320 | about 310 without a hint, about 350 with one (was 272) |
+| Crop | all 1600 units | the right 896 units at scale 0.46 (`Scene.phoneOpts`; at this scale the summits stay below the temperature and the detail line); `quietX` 1000; the body stands between the main summit and the third (`G.phoneBodyX` = 1438) at y = 46 + 0.6 × (arc y − 70), so a high body is at 46 and a low one sinks behind the ridge |
+| Head height in all | 320, fixed – also with two hint rows (title 56 + temperature and detail 76 + two pills 68 + chips 44 + rest line 28 + padding fit) | the head (`module-frame` stage) is the picture: **256 px**; the block under it (hints, chips, rest line) belongs to the page, not to the head – about 54 px without a hint, about 94 px with one |
+| Guard | the head-height seed spec's limit of 320 stays as it is and holds | same |
 
-The quiet side: left of `quietX` every far layer fades 60 % toward the sky (one gradient per layer, no extra element); nothing but sky, the pale range, hills and forest stand under text. Contrast per sky: [A11Y §1](A11Y.md).
+The quiet side: left of `quietX` every far layer fades 85 % toward the sky, running out over the next 330 units (one gradient per layer, no extra element); nothing but sky, the pale range, hills and forest stand under text. Contrast per sky: [A11Y §1](A11Y.md).
 
 ## 6. Small versions, "Schlicht", "Ruhig"
 

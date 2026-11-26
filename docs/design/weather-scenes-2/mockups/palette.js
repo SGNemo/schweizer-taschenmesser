@@ -1,5 +1,5 @@
 /* Weather scene palette v2 (mockup). The only file with hex values; in the product these are --scene-* tokens.
-   Skies are round 1's (contrast-tested there); new in v2: `deck` (cloud sheets per sky), `light` (how a sky lights the
+   Skies are round 1's except night-overcast, night-rain, day and storm; new in v2: `deck` (cloud sheets per sky), `light` (how a sky lights the
    land), `land` with one tone per depth layer, and the things of the foreground.
    sky.<key>: { light: [stops], dark: [stops] }, a stop = [offset 0..1, hex]. */
 (function () {

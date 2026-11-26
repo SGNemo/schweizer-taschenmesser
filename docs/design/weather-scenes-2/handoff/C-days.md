@@ -19,7 +19,7 @@ A view moment for the weather page (`modules/weather/useViewMoment.ts`: address 
 
 ## Edge cases
 
-Midnight passes while the page is open on "today" · a link to a day that has slid out · the place changes while another day is shown (the day is kept if it exists there, else now) · daylight saving day (23 or 25 hours) · day 7 with fewer hours · screen reader: group name, checked state, the hour line's label · keyboard only: every control reachable, nothing trapped.
+`hour=HH` is the place's wall-clock hour; on the 25-hour day the first of the two equal hours is meant, on the 23-hour day the missing hour falls back to the next · midnight passes while the page is open on "today" · a link to a day that has slid out · the place changes while another day is shown (the day is kept if it exists there, else now) · daylight saving day (23 or 25 hours) · day 7 with fewer hours · screen reader: group name, checked state, the hour line's label · keyboard only: every control reachable, nothing trapped.
 
 ## Not in this package
 

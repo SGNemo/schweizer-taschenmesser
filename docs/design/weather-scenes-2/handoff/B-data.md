@@ -13,7 +13,7 @@ Concept: [CONCEPT-INFO](../CONCEPT-INFO.md), [ANALYSIS §2](../ANALYSIS.md). Wor
 3. `rainSoon(forecast, now)` → `{ kind, from, until, minutes, mm } | null` as a pure function with a table test for the five sentences of COPY §2; head chip 1 uses it; the block with eight bars appears only when it returns a value.
 4. Hour cards: amount beside the chance; the hour line under the cards (for now: "Jetzt").
 5. Curve: the select and its six series; the choice in `localStorage` (`tm-weather-chart`), not synced, not in diagnostics; every series has its one-sentence text alternative.
-6. "Mehr Werte": `<details>`-like disclosure with the groups of COPY §6; lines without a value are left out; a group without lines is left out.
+6. "Mehr Werte": a `<button aria-expanded>` with a region under it (not `<details>`: the stimulus counter and the app's other disclosures use buttons), the groups of COPY §6; lines without a value are left out; a group without lines is left out.
 7. Computed values: day length, civil twilight, pressure tendency, snowfall line – pure functions with tests.
 8. DATA-FLOWS: the `weather` row's list of values; no new row.
 

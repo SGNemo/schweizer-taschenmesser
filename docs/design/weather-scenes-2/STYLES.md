@@ -13,7 +13,7 @@ What all three share, because the brief sets it: an angular massif with a saddle
 | Markup, unoptimised | 37–53 KB | 49–61 KB | 40–48 KB |
 | First paint, 1650 px and 412 px at 4× CPU throttle | one frame | one frame | one frame |
 
-Cost note: all three stay far under the element ceiling of round 1 and paint within one frame. The markup of A and B is over round 1's 48 KB in the mockup because the forest skylines are long literal paths; package A draws a skyline once and repeats it with `<use>` (as round 1 does for the rain tile) – the ceiling of 48 KB stays.
+Cost note: all three stay far under the element ceiling of round 1 and paint within one frame. The markup of A and B is over round 1's 48 KB in the mockup because the forest skylines are long literal paths; package A draws a skyline once and repeats it with `<use>` (as round 1 does for the rain tile) – the ceiling was 48 KB at this stop; the finished drawing's ceilings are in [A11Y §4](A11Y.md).
 
 **Recommendation: B.** It is the only one that answers every word of the brief without giving up the calm: A is the same idea with the inside left out (and B falls back to exactly A in "Ruhig"), C trades the calm for charm.
 
