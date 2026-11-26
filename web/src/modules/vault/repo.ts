@@ -90,9 +90,10 @@ export async function createCategory(data: DocumentCategory): Promise<string> {
 
 /**
  * Removes a category without losing a document: the category is marked removed, then every document in it moves to
- * `moveTo` ("Ohne Kategorie" unless another live category is chosen). Should a move fail halfway, the rest still
- * show under "Ohne Kategorie" (`categoryOfDoc`): nothing is hidden. Run it inside `deleteWithUndo`: one
- * "Rückgängig" brings the category and every document's place back.
+ * `moveTo` ("Ohne Kategorie" unless another live category is chosen). Run it inside `deleteWithUndo`: one
+ * "Rückgängig" brings the category and every document's place back, and a move that fails halfway takes the whole
+ * removal back (`undoable` replays its writes). Outside it, the rest still show under "Ohne Kategorie"
+ * (`categoryOfDoc`): nothing is hidden.
  */
 export async function removeCategory(
   cat: Pick<ResolvedCategory, 'id' | 'tone' | 'icon' | 'order' | 'fixed'> & { name?: string },

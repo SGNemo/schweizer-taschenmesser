@@ -105,10 +105,11 @@ export async function bookDueRepeats(): Promise<number> {
   for (const p of create) if (!(await transactionRepo.table.get(p.id))) fresh.push(p);
   if (fresh.length === 0 && clear.length === 0) return 0;
   const message = t.finance.repeatBooked(fresh.length);
-  const apply = async () => {
-    for (const id of clear) await transactionRepo.update(id, { repeat: undefined });
-    for (const p of fresh) await transactionRepo.create(p.data, { id: p.id });
-  };
+  const apply = () =>
+    keepBooked(async () => {
+      for (const id of clear) await transactionRepo.update(id, { repeat: undefined });
+      for (const p of fresh) await transactionRepo.create(p.data, { id: p.id });
+    });
   if (fresh.length > 0) await undoableWithToast(message, message, apply);
   else await apply();
   return fresh.length;
@@ -156,22 +157,37 @@ export async function bookDueSubscriptionCharges(): Promise<number> {
     ? SUBSCRIPTIONS_CATEGORY_ID
     : undefined;
   const message = t.finance.ext.subBooked(fresh.length);
-  await undoableWithToast(message, message, async () => {
-    for (const c of fresh)
-      await transactionRepo.create(
-        {
-          accountId: await primaryAccountId(c.currency),
-          categoryId: category,
-          kind: 'expense',
-          amountMinor: c.amountMinor,
-          date: c.date,
-          payee: c.name,
-          sourceRef: `subscription:${c.subscriptionId}`,
-        },
-        { id: c.id },
-      );
-  });
+  await undoableWithToast(message, message, () =>
+    keepBooked(async () => {
+      for (const c of fresh)
+        await transactionRepo.create(
+          {
+            accountId: await primaryAccountId(c.currency),
+            categoryId: category,
+            kind: 'expense',
+            amountMinor: c.amountMinor,
+            date: c.date,
+            payee: c.name,
+            sourceRef: `subscription:${c.subscriptionId}`,
+          },
+          { id: c.id },
+        );
+    }),
+  );
   return fresh.length;
+}
+
+/**
+ * A booking run that fails halfway keeps what it booked and does not throw: the ids are fixed, and a rolled-back
+ * booking (`undoable` takes a failed action back) would stay a tombstone that the next start skips like a booking
+ * the user deleted. The rest books on the next start.
+ */
+async function keepBooked(book: () => Promise<void>): Promise<void> {
+  try {
+    await book();
+  } catch (e) {
+    console.error('[finance] booking stopped', e instanceof Error ? e.name : 'error');
+  }
 }
 
 /** Runs while the finance module is enabled: reacts to invoice events from the bus. */

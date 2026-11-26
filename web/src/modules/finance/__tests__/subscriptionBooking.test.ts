@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
 import { setSettings } from '@/core/settings/settings';
 import { setNow } from '@/core/time/now';
@@ -102,5 +102,21 @@ describe('booking the charges of subscriptions (setting "Abo-Abbuchungen buchen"
     expect(await bookDueSubscriptionCharges()).toBe(0);
     const rows = await transactionRepo.active().toArray();
     expect(rows).toHaveLength(0);
+  });
+
+  it('a booking that fails halfway keeps the ones booked; the rest books on the next start (no tombstone)', async () => {
+    await setSettings('module.finance', { bookSubscriptions: true });
+    await putSubscription('s1');
+    await putSubscription('s2', { name: 'Cloud Speicher', amountMinor: 299 });
+    const create = transactionRepo.create.bind(transactionRepo);
+    const spy = vi
+      .spyOn(transactionRepo, 'create')
+      .mockImplementationOnce(create)
+      .mockRejectedValueOnce(new Error('disk'));
+    await bookDueSubscriptionCharges();
+    spy.mockRestore();
+    expect(await transactionRepo.active().count()).toBe(1);
+    expect(await bookDueSubscriptionCharges()).toBe(1);
+    expect(await transactionRepo.active().count()).toBe(2);
   });
 });

@@ -230,7 +230,8 @@ export function RemindersTab({
             variant="ghost"
             onClick={() =>
               void deleteWithUndo(
-                () => Promise.all(finished.map((r) => eventRepo.remove(r.id))),
+                // One transaction: all of them go, or (a failure) none.
+                () => eventRepo.removeMany(finished.map((r) => r.id)),
                 t.calendar.reminders.clearedToast(finished.length),
               )
             }
