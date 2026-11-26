@@ -9,7 +9,7 @@ import { crescentTilt, sky } from './topo';
 
 /**
  * The moon module against `__fixtures__/vectors.json` (astronomy-engine 2.1.19, copied from
- * docs/design/weather-scenes@ca90c392f/reference/vectors.json) with the tolerances of CONCEPT-MOON §7.
+ * docs/design/weather-scenes/reference/vectors.json) with the tolerances of CONCEPT-MOON §7.
  */
 const LINDENAU = { lat: 49.6, lon: 11.0, tz: 'Europe/Berlin' };
 const MIN = 60000;

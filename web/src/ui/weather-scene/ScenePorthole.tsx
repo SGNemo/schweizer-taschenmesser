@@ -11,7 +11,7 @@ export interface ScenePortholeProps {
 }
 
 /**
- * The weather scene as a round crop (docs/design/weather-scenes@ca90c392f CONCEPT §8, mockup `porthole()`): decoration only
+ * The weather scene as a round crop (docs/design/weather-scenes CONCEPT §8, mockup `porthole()`): decoration only
  * (`aria-hidden`, every thing it shows is a word beside it), no motion, "Schlicht" shows sky and body only, and
  * "Ruhig" / "Modulfarben: Aus" draw it in greys like the head.
  */

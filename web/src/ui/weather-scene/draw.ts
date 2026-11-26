@@ -1,5 +1,5 @@
 /**
- * The weather scene as SVG markup: a port of `docs/design/weather-scenes@ca90c392f/mockups/scene.js` (shape by shape, the
+ * The weather scene as SVG markup: a port of `docs/design/weather-scenes/mockups/scene.js` (shape by shape, the
  * geometry block `G` unchanged). Pure: the same state and options give the same string; all randomness comes from the
  * seeded generator. Colours are never literal: every colour is a `--scene-*` token (`ui/tokens.css`) or a
  * `color-mix()` of tokens, so the themes live in CSS. "Ruhig" is drawn by the component (greys over the same shapes).

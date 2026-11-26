@@ -1,6 +1,6 @@
 /**
  * Moonrise and moonset in a [start, end) window (normally one local day), ported from
- * docs/design/weather-scenes@ca90c392f/reference/astro/riseset.js: the moon's upper limb on the apparent horizon (34' refraction
+ * docs/design/weather-scenes/reference/astro/riseset.js: the moon's upper limb on the apparent horizon (34' refraction
  * + semi-diameter); sampled every 10 minutes (1 h misses grazing events in the far north), refined to about a second.
  */
 import { DEG } from './core';

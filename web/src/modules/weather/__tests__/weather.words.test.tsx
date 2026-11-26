@@ -10,7 +10,7 @@ import WeatherPage from '../routes/WeatherPage';
 import WeatherWidget from '../widgets/WeatherWidget';
 
 /**
- * The night of docs/design/weather-scenes@ca90c392f/ANALYSIS.md (invented place "Lindenau"): 2026-11-24 02:50, −4° (felt −9°),
+ * The night of docs/design/weather-scenes/ANALYSIS.md (invented place "Lindenau"): 2026-11-24 02:50, −4° (felt −9°),
  * WMO code 1, cloud cover 0 %, wind 9 km/h NE, day −6° / 2°, UV 1.5, sun 07:38–16:24.
  */
 const dates = ['2026-11-24', '2026-11-25', '2026-11-26'];

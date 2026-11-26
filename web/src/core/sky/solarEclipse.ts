@@ -1,5 +1,5 @@
 /**
- * Local solar eclipses by numerical search, ported from docs/design/weather-scenes@ca90c392f/reference/astro/solarEclipse.js
+ * Local solar eclipses by numerical search, ported from docs/design/weather-scenes/reference/astro/solarEclipse.js
  * (CONCEPT-EVENTS §1): candidates are the new moons with |moon latitude| < 1.6°, contacts where the topocentric
  * separation equals the sum of the semi-diameters. No table, no network.
  */

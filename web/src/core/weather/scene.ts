@@ -1,5 +1,5 @@
 /**
- * The weather scene's pure model (docs/design/weather-scenes@ca90c392f, CONCEPT §2–§3, handoff 00/01a/01b): the word by WMO
+ * The weather scene's pure model (docs/design/weather-scenes, CONCEPT §2–§3, handoff 00/01a/01b): the word by WMO
  * code (package 1a) and the state the picture is drawn from (package 1b) – phase of the day, condition and its
  * intensity, wind, frost, heat, snow on the ground, season, the sun on its arc, the sky family and the ink. Field
  * names follow the mockup's `state` (`mockups/scene.js`), so the drawing in `ui/weather-scene` is a straight port.
