@@ -93,7 +93,7 @@ describe('weather widget: scene as the background (variant B) or the porthole (v
     await waitFor(() => expect(scene.querySelector('[data-part="moon"]')).not.toBeNull());
   });
 
-  it('a wide card (sizes m and l) keeps the porthole: the panorama is checked for the one-column card only', async () => {
+  it('a wide card (sizes m and l) carries the picture too, not the porthole', async () => {
     await cached();
     const RO = class {
       constructor(private cb: () => void) {}
@@ -109,8 +109,8 @@ describe('weather widget: scene as the background (variant B) or the porthole (v
     try {
       renderWidget();
       const w = await screen.findByTestId('weather-widget');
-      await waitFor(() => expect(w).toHaveAttribute('data-variant', 'porthole'));
-      // The one checked column keeps the scene.
+      await waitFor(() => expect(w).toHaveAttribute('data-variant', 'scene'));
+      // The one column too.
       cleanup();
       rect.mockReturnValue({ width: 380, height: 205 } as DOMRect);
       renderWidget();

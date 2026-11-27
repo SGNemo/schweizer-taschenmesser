@@ -207,28 +207,50 @@ describe('round 2: text on the picture ≥ 4.5 : 1 (A11Y §1)', () => {
       });
 });
 
-// Package D: the overview widget carries the new panorama behind its text (`cardFit`): the whole width, more sky above,
-// the quiet zone to 55 % of the width. The text rows meet the sky, the deck and the hazed far layers only – the ground
-// and every tree left of the quiet edge lie below the lowest text row (the word line ends 24 px above the card's bottom).
-describe('round 2: the widget card at its three sizes (handoff D)', () => {
+// Package D, grown after it (the picture was a thin strip on a tall card, none on the wide ones): the card draws the
+// picture as large as its text allows (`cardFit`, at most the phone head's 0.46), right-aligned. The text rows meet the
+// sky, the deck and the hazed far layers only – the ground and every tree left of the quiet edge lie below the lowest
+// text row. Sizes: the low cards of package D (no measured text: it ends 24 px above the bottom) and the tall and wide
+// cards of the overview with the text as measured (right edge of the rain chip, bottom of the word line).
+describe('round 2: the widget card at its sizes', () => {
+  const TEXT = { right: 240, bottom: 185 };
   const SIZES = [
-    [379, 205],
-    [379, 282],
-    [380, 192],
+    [379, 205, undefined],
+    [379, 282, undefined],
+    [380, 192, undefined],
+    [380, 400, TEXT],
+    [780, 400, TEXT],
+    [1180, 400, TEXT],
+    [780, 205, { right: 240, bottom: 181 }],
+    [780, 282, { right: 240, bottom: 258 }],
+    [1180, 205, { right: 240, bottom: 181 }],
+    [1180, 282, { right: 240, bottom: 258 }],
   ] as const;
-  it.each(SIZES)('%i × %i: the whole panorama, ground and trees below the text', (W, H) => {
-    const fit = cardFit(W, H, CARD_QUIET_SHARE);
-    const [, y0, vw, vh] = fit.view!;
-    expect(vw).toBe(G.W);
-    expect(W / vw).toBeCloseTo(H / vh, 2);
-    const k = W / vw;
-    const textBottom = y0 + (H - 24) / k;
-    let top = Infinity;
-    for (const [x, y] of G.ground) if (x <= G.W * CARD_QUIET_SHARE) top = Math.min(top, y);
-    for (const t of [...G.trees, ...G.behind])
-      if (t[1] - t[3] <= fit.quietX!)
-        top = Math.min(top, t[2] - (t[0] === 'bush' ? 2 * t[3] : t[3]));
-    expect(textBottom, `text to ${Math.round(textBottom)}, land from ${top}`).toBeLessThan(top);
+  it.each(SIZES)(
+    '%i × %i: as large as the text allows, ground and trees below the text',
+    (W, H, text) => {
+      const fit = cardFit(W, H, CARD_QUIET_SHARE, text);
+      const [x0, y0, vw, vh] = fit.view!;
+      expect(x0 + vw).toBe(G.W);
+      expect(vw).toBeLessThanOrEqual(G.W);
+      expect(W / vw).toBeCloseTo(H / vh, 2);
+      const k = W / vw;
+      expect(k).toBeLessThanOrEqual(Math.max(G.phone.k, W / G.W) + 0.005);
+      const textBottom = y0 + (text?.bottom ?? H - 24) / k;
+      let top = Infinity;
+      for (const [x, y] of G.ground) if (x >= x0 && x <= fit.quietX!) top = Math.min(top, y);
+      for (const t of [...G.trees, ...G.behind])
+        if (t[1] + t[3] >= x0 && t[1] - t[3] <= fit.quietX!)
+          top = Math.min(top, t[2] - (t[0] === 'bush' ? 2 * t[3] : t[3]));
+      expect(textBottom, `text to ${Math.round(textBottom)}, land from ${top}`).toBeLessThan(top);
+    },
+  );
+  it('a tall card shows the land as large as the phone head, a low one more of the panorama, a wide one all of it', () => {
+    expect(cardFit(380, 400, CARD_QUIET_SHARE, TEXT).view![2]).toBe(Math.round(380 / G.phone.k));
+    expect(cardFit(380, 192, CARD_QUIET_SHARE).view![2]).toBeGreaterThan(
+      Math.round(380 / G.phone.k),
+    );
+    expect(cardFit(1180, 400, CARD_QUIET_SHARE, TEXT).view![2]).toBe(G.W);
   });
   for (const theme of ['light', 'dark'] as const)
     for (const season of ['summer', 'winter'] as const)
@@ -236,12 +258,14 @@ describe('round 2: the widget card at its three sizes (handoff D)', () => {
         `%s (${theme}, ${season}) at %s %o: the card's text ≥ 4.5 : 1`,
         (key, time, h, over = {}) => {
           const s = stateOf(time, h, over, theme, season);
-          for (const [W, H] of SIZES) {
-            const fit = cardFit(W, H, CARD_QUIET_SHARE);
+          for (const [W, H, text] of SIZES) {
+            const fit = cardFit(W, H, CARD_QUIET_SHARE, text);
             const d = sceneSvg(s, fit);
             expect(d.sky).toBe(key);
             const ink = hexRgb(light[d.ink === 'light' ? '--ink-light' : '--ink-dark']!);
-            for (const t of tonesUnderText(d, s, theme, false, fit.quietX, G.W * CARD_QUIET_SHARE))
+            const [x0, , vw] = fit.view!;
+            const textX = x0 + ((text?.right ?? W * CARD_QUIET_SHARE) * vw) / W;
+            for (const t of tonesUnderText(d, s, theme, false, fit.quietX, textX))
               expect(
                 ratio(ink, t.c),
                 `${key} ${theme} ${season} ${W}×${H} ${t.what} rgb(${t.c.join(',')})`,
