@@ -15,7 +15,7 @@ Mockup: `mockups/p2-clock.html`; drawing: `Living.tile` (the weather's level "Sc
 
 ## Card on the overview ("Uhrzeit anderswo")
 
-Each tile's background is its sky; time, name and the line ("Tag · +9 h") stand on it in the scene ink for that sky (`inkForSky`), all three lines in the full ink (no grey on a sky). Same on the phone (two tiles per row). Nothing else changes: 2 / 4 / 6 places by size, the minute turns once. "Bilder: Aus": today's plain tiles.
+Each tile's background is its sky; time, name and the line ("Tag · +9 h") stand on it in the scene ink for that sky (`inkForSky`), all three lines in the full ink (no grey on a sky). **The text's box is plain sky:** no star, no body and no glow under it ([A11Y §2](../A11Y.md)); on a tile too narrow for that the body shrinks to 60 % or is left out. Same on the phone (two tiles per row). Nothing else changes: 2 / 4 / 6 places by size, the minute turns once. "Bilder: Aus": today's plain tiles.
 
 ## Module page
 

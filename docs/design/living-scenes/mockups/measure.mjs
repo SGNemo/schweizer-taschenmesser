@@ -133,15 +133,16 @@ for (const scheme of ['light', 'dark']) {
     const img = new Image(); img.src = 'data:image/png;base64,${png}'; await img.decode();
     const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(img, 0, 0);
     const INK = { dark: [23, 31, 36], light: [236, 239, 241] };
-    return ${JSON.stringify(tiles)}.map((t) => { const d = x.getImageData(t.x, t.y, t.cw, t.ch).data; let lo = [255, 255, 255], hi = [0, 0, 0], min = 99;
-      for (let i = 0; i < d.length; i += 4) { const p = [d[i], d[i + 1], d[i + 2]], v = cr(INK[t.ink], p); if (v < min) min = v; if (lum(p) < lum(lo)) lo = p; if (lum(p) > lum(hi)) hi = p; }
-      return { ...t, min: +min.toFixed(2), darkest: hex(lo), lightest: hex(hi) }; });
+    return ${JSON.stringify(tiles)}.map((t) => { const d = x.getImageData(t.x, t.y, t.cw, t.ch).data; let lo = [255, 255, 255], hi = [0, 0, 0], min = 99; const all = [];
+      for (let i = 0; i < d.length; i += 4) { const p = [d[i], d[i + 1], d[i + 2]], v = cr(INK[t.ink], p); all.push(v); if (v < min) min = v; if (lum(p) < lum(lo)) lo = p; if (lum(p) > lum(hi)) hi = p; }
+      all.sort((a, b) => a - b);
+      return { ...t, min: +min.toFixed(2), p5: +all[Math.floor(all.length * 0.05)].toFixed(2), darkest: hex(lo), lightest: hex(hi) }; });
   })()`);
   const band = (h) => (h >= 21 || h < 6 ? 'night' : h < 8 ? 'morning' : h < 18 ? 'day' : 'evening');
   for (const b of ['night', 'morning', 'day', 'evening']) for (const [kind, f] of [['wide (≥ 300 px)', (t) => t.w >= 300], ['narrow (< 300 px)', (t) => t.w < 300]]) {
     const ts = cl.filter((t) => band(t.hour) === b && f(t)); if (!ts.length) continue;
     const worst = ts.reduce((a, c) => (c.min < a.min ? c : a));
-    result.clock.push({ scheme, band: b, kind, tiles: ts.length, ink: [...new Set(ts.map((t) => t.ink))].join('/'), min: worst.min, at: String(worst.hour).padStart(2, '0') + ':00', darkest: worst.darkest, lightest: worst.lightest });
+    result.clock.push({ scheme, band: b, kind, tiles: ts.length, ink: [...new Set(ts.map((t) => t.ink))].join('/'), min: worst.min, p5: Math.min(...ts.map((t) => t.p5)), at: String(worst.hour).padStart(2, '0') + ':00', darkest: worst.darkest, lightest: worst.lightest });
   }
   // signs: the one drawn colour of each sign on the card, per sky tone; the worst tone is reported
   await page.goto(url('p2-overview.html', '?bilder=ruhig'));
@@ -187,8 +188,8 @@ md += '\n### Tone step search (worst sky tone per step; rule: --text and --text-
 for (const s of result.darkSteps) md += `| ${s.scheme} | ${s.step} % | ${f2(s.text)} | ${f2(s.muted)} (${s.mutedAt}) | ${flag(s.metaBase, 4.5)} (${s.metaAt}) | ${s.text >= 4.5 && s.muted >= 4.5 ? 'yes' : 'no'} |\n`;
 md += '\n### The meta ink on a toned card\n\n| Scheme | Step | --text-3 today | --text-3-on-tone (mock.css) | Computed here (percent towards --text, worst contrast) |\n| --- | --- | --- | --- | --- |\n';
 for (const k of ['light', 'dark']) { const m = result.meta[k]; md += `| ${k} | ${m.step} | ${m.base} | ${m.css} | ${m.computed.value} (${m.computed.percent} %, ${f2(m.computed.worst)}:1) |\n`; }
-md += '\n### Clock: the text on the sky (pixels under the text block, text hidden; lowest contrast of the scene ink; bold = under 4.5:1)\n\n| Scheme | Band | Tiles | Ink | Lowest | At | Darkest / lightest pixel there |\n| --- | --- | --- | --- | --- | --- | --- |\n';
-for (const c of result.clock) md += `| ${c.scheme} | ${c.band} · ${c.kind} | ${c.tiles} | ${c.ink} | ${flag(c.min, 4.5)} | ${c.at} | ${c.darkest} / ${c.lightest} |\n`;
+md += '\n### Clock: the text on the sky (pixels under the text block, text hidden; lowest contrast of the scene ink; bold = under 4.5:1)\n\n| Scheme | Band | Tiles | Ink | Worst pixel | 5 % of pixels under | At | Darkest / lightest pixel there |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n';
+for (const c of result.clock) md += `| ${c.scheme} | ${c.band} · ${c.kind} | ${c.tiles} | ${c.ink} | ${flag(c.min, 4.5)} | ${flag(c.p5, 4.5)} | ${c.at} | ${c.darkest} / ${c.lightest} |\n`;
 md += '\n### Signs: the drawn colour on the toned card, worst sky tone (≥ 3:1; bold = under)\n\n| Scheme | Sign | Hue | Lowest | On tone |\n| --- | --- | --- | --- | --- |\n';
 for (const s of result.signs) md += `| ${s.scheme} | ${s.sign} | ${s.hue} | ${flag(s.min, 3)} | ${s.at} |\n`;
 md += '\n## 4. Stimulus (first viewport of the overview, light; the app\'s measurePage as is, Δ against `aus`)\n\n| Viewport | Variant | svg roots | svg elements | coloured text | coloured surfaces | coloured above fold | Δ | pictures: share of first viewport | of the whole page |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n';

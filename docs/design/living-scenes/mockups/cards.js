@@ -78,11 +78,13 @@
   function draw(p, w, h) {
     if (p.kind === 'garden' || p.kind === 'lake') return window.Living.scene(p.kind, p.sky, p.data, { box: [w, h] });
     if (p.kind === 'tile') {
-      if (!p.zone) return window.Living.tile(p.sky, { box: [w, h] });
-      // the sky is the whole tile, the body stands in its right share (zone 0.4): the tile is drawn for that share and its
-      // view is widened to the left by the rest (world.js offers no body zone yet)
-      return window.Living.tile(p.sky, { box: [w * p.zone, h] }).replace(/viewBox="([-\d.]+) ([-\d.]+) ([-\d.]+) ([-\d.]+)"/, function (m, x, y, vw, vh) {
-        return 'viewBox="' + (+x - vw * (1 / p.zone - 1)) + ' ' + y + ' ' + vw / p.zone + ' ' + vh + '"'; });
+      // the sky is the whole tile, the body stands in its right share (zone 0.4, on a low wide tile less: the body's own box is
+      // at most 2.2 × the height wide, so it stays whole): the tile is drawn for that share and its view is widened to the
+      // left by the rest (world.js offers no body zone yet)
+      var z = Math.min(p.zone || 1, 2.2 * h / w);
+      if (z >= 1) return window.Living.tile(p.sky, { box: [w, h] });
+      return window.Living.tile(p.sky, { box: [w * z, h] }).replace(/viewBox="([-\d.]+) ([-\d.]+) ([-\d.]+) ([-\d.]+)"/, function (m, x, y, vw, vh) {
+        return 'viewBox="' + (+x - vw * (1 / z - 1)) + ' ' + y + ' ' + vw / z + ' ' + vh + '"'; });
     }
     if (p.kind === 'weather') return window.Scene.svg(p.sky, cardFit(w, h, p.text));
     return '';

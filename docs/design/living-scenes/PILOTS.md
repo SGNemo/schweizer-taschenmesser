@@ -1,4 +1,6 @@
-# Living scenes – the overview and three pilots (phase 2, stop)
+# Living scenes – the overview and three pilots (phase 2, the record of the stop)
+
+> What was shown on 2026-11-27 and what the maintainer answered (§8). Where §8 differs, the concept files hold: [CONCEPT-HOME](CONCEPT-HOME.md), [modules/](modules/clock.md), [A11Y](A11Y.md).
 
 Pictures: PR text. Rebuild: `PR=1 node docs/design/living-scenes/mockups/render.mjs`, numbers: `node docs/design/living-scenes/mockups/measure.mjs` (both write to `web/.screens/living-scenes/`). The numbers below are from the mockups on 2026-11-27; the stimulus rows use the app's own `measurePage` (`web/scripts/lib/stimulusBudget.ts`) on the mock page.
 
@@ -96,3 +98,11 @@ So the design as drawn stays inside today's budget on the overview (bands: icons
 - "viel": the widget lists as many rings as fit, the bed shows every scheduled goal; the summary line names the total.
 - The word beside 06:00 and 20:00 is "Tag" (the app's two words); the sky has four looks. COPY decides whether the word follows.
 - The weather card's own drawing is 69 KB in the mockup's form and does not get cheaper by a box test (its paths span the width).
+
+## 8. Decided by the maintainer (2026-11-27, after this stop)
+
+1. **Direction: yes, and more of it.** The clock's sky and the garden are liked *because* they follow the weather and the hour – more playfulness of that kind. The clock gets more sky: the sky is the whole tile. An idea given along: constellations for ticked things – it became the ToDos' lake ([modules/todos](modules/todos.md)). The static tone per area was not understood – "if at all, with more change by the time of day": the tone now follows the shared sky ([CONCEPT-HOME §2](CONCEPT-HOME.md)); area tints are dropped.
+2. **The stimulus budget may rise: tone 12 %.** The meta ink is darkened on toned cards so AA holds ([A11Y §1](A11Y.md)).
+3. **Order: habits and clock first**, then as recommended ([PACKAGES](PACKAGES.md)).
+
+Changed by these answers against §1–§4: tone by day instead of by area, at 12 %; clock tiles are full skies with the text on them; ToDos moved from a sign to a scene; the scene cap is 4.
