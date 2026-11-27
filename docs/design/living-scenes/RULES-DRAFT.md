@@ -24,7 +24,7 @@ Not in force. The last package moves this text into [MODULE-IDENTITY](../MODULE-
 
 **Loudness.** Overview: at most 4 scene cards, the weather included (cockpit 2); on the phone no two in a row; the rest show their sign. The home view "Ruhig" shows none.
 
-**Off switches.** "Bilder: Aus · Ruhig · Verspielt" (device), "Bild zeigen" per module; colour mode "Ruhig" and "Modulfarben: Aus" turn pictures grey and the tone off; reduced motion removes the appearing fade.
+**Off switches.** "Bilder: Aus · Dezent · Verspielt" (device), "Bild zeigen" per module; colour mode "Ruhig" and "Modulfarben: Aus" turn pictures grey and the tone off; reduced motion removes the appearing fade.
 
 **Motion.** Nothing moves by itself. A thing that appears because of a tick fades in once (300 ms, opacity).
 

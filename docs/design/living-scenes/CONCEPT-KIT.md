@@ -66,7 +66,7 @@ interface WidgetDef {
 
 | Setting | Values | Stored | Effect |
 | --- | --- | --- | --- |
-| "Bilder" (Einstellungen → Darstellung, linked from "Fokus & Aufmerksamkeit") | Aus · Ruhig · Verspielt (default Verspielt) | device-local `tm-pictures` → `<html data-pictures>` like `tm-color` | Aus: the app as today – no tone, grey marks, no sky tiles, no scenes. Ruhig: tone, signs, sky tiles; scenes show their sign. Verspielt: everything |
+| "Bilder" (Einstellungen → Darstellung, linked from "Fokus & Aufmerksamkeit") | Aus · Dezent · Verspielt (default Verspielt) | device-local `tm-pictures` → `<html data-pictures>` like `tm-color` | Aus: the app as today – no tone, grey marks, no sky tiles, no scenes. Dezent: tone, signs, sky tiles; scenes show their sign. Verspielt: everything |
 | per module: "Bild zeigen" (the module's settings page) | on · off | device-local `tm-pictures-off` (module ids) | off: that module's cards behave as under "Aus"; the tone stays |
 | existing: colour mode "Ruhig", "Modulfarben: Aus" | – | – | pictures in greys, tone off (as the weather today) |
 | existing: motion (`data-motion`, `prefers-reduced-motion`) | – | – | the appearing fade (§6) is off |

@@ -21,7 +21,7 @@ Mockup: `mockups/p2-habits.html`; drawing: `mockups/world.js` `garden` (spot `ga
 
 ## Card on the overview ("Heute geschafft")
 
-All of today's content stays (summary, rings with names and details, the one-tap button). The picture: right 44 % on a card of two columns or more, a strip of 112 px on a one-column card and the phone. Fallback sign (scene cap reached, "Bilder: Ruhig"): a ring whose arc is done / scheduled. A tick in the card makes the bloom open with the 300 ms fade.
+All of today's content stays (summary, rings with names and details, the one-tap button). The picture: right 44 % on a card of two columns or more, a strip of 112 px on a one-column card and the phone. Fallback sign (scene cap reached, "Bilder: Dezent"): a ring whose arc is done / scheduled. A tick in the card makes the bloom open with the 300 ms fade.
 
 ## Module page
 
