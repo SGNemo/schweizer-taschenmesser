@@ -1,0 +1,33 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lebende Bilder – Offene ToDos</title><link rel="stylesheet" href="mock.css">
+<script src="../../weather-scenes-2/mockups/palette.js"></script><script src="../../weather-scenes-2/mockups/scene.js"></script><script src="world.js"></script>
+<script src="icons.js"></script><script src="signs.js"></script><script src="cards.js"></script></head>
+<body><div class="gal" id="gal"></div>
+<script>
+/* Gallery of the ToDos card ("Offene ToDos", step 2): the lake – one sailing boat per thing ticked today (at most 7), lanterns
+   by night and, under a clear night sky, as many stars joined to a figure. Nothing is drawn for what is open. */
+var C = Cards;
+function cell(label, html, cls, small) { return '<div class="cell ' + (cls || '') + '"><p class="label">' + label + (small ? '<small>' + small + '</small>' : '') + '</p>' + html + '</div>'; }
+function pair(label, small, sky, done) {
+  var v = { bilder: 'verspielt', sky: sky }, w = function (h) { return '<div data-sky="' + C.toneOf(sky) + '">' + h + '</div>'; };
+  return '<div class="cells" style="margin-top:20px">' + cell(label + ' · breit', w(C.todos(v, { done: done, form: 'wide' })), 'w780', small) + cell(label + ' · Streifen', w(C.todos(v, { done: done, form: 'strip', size: 's' })), 'w380') + '</div>';
+}
+var DAY = C.sky('day'), NIGHT = C.sky('night');
+var o = '<h1>Offene ToDos – der See (Stufe 2, „Verspielt“)</h1><p class="intro">Für jedes heute Abgehakte fährt ein Segelboot auf dem See (höchstens 7; die Zahl steht im Text). Nachts tragen die Boote Laternen, und unter klarem Nachthimmel stehen ebenso viele Sterne über dem See, zu einer Figur verbunden. Für Offenes wird nichts gezeichnet. Die Karte behält ihren Inhalt; die Zusammenfassung bekommt den dritten Teil „· 2 heute erledigt“ (bei 0 fehlt er einfach). Breit (Karte ≥ 2 Spalten, hier 780 px): Bild rechts 44 %, bündig. Streifen (1-spaltige Karte, hier 380 px, und Telefon): 112 px unter dem Inhalt.</p><h2>Zustände</h2>';
+o += pair('leer', '0 heute abgehakt: der stille See, die Zeile hat keinen dritten Teil', DAY, 0);
+o += pair('wenig', '1 heute abgehakt', DAY, 1);
+o += pair('normal', '2 heute abgehakt (Beispieldaten)', DAY, 2);
+o += pair('viel', '12 heute abgehakt – das Bild zeigt höchstens 7 Boote', DAY, 12);
+o += pair('besonders', 'klare Nacht, 7: die vollständige Sternfigur', NIGHT, 7);
+var SK = [['Tag', DAY], ['Goldene Stunde', C.sky('golden')], ['Dämmerung', C.sky('dusk')], ['Nacht, klar', NIGHT], ['Nacht, bedeckt', C.sky('night', { cond: 'overcast' })], ['Regen', C.sky('rain')]];
+function sk(k, form, size, w) { return cell(k[0] + (form === 'wide' ? ' · breit' : ' · Streifen'), '<div data-sky="' + C.toneOf(k[1]) + '">' + C.todos({ bilder: 'verspielt', sky: k[1] }, { done: 4, form: form, size: size }) + '</div>', w); }
+o += '<h2>Gleiche Daten (4 abgehakt), anderer Himmel</h2><p class="intro">Die Kartenfläche nimmt den Tageston dieses Himmels (12 %).</p><div class="cells">' + SK.map(function (k) { return sk(k, 'wide', 'm', 'w780'); }).join('') +
+  '</div><div class="cells" style="margin-top:24px">' + SK.map(function (k) { return sk(k, 'strip', 's', 'w380'); }).join('') + '</div>';
+o += '<h2>Ausweichen</h2><p class="intro">„Bilder: Aus“ = die Karte von heute (kein Ton, graues Zeichen, zwei Teile in der Zeile). „Bilder: Ruhig“ = Tageston + Zeichen (Karte mit bis zu 3 Haken) statt Bild. Farbmodus „Ruhig“: Bild in Graustufen, Ton 0. Weniger Bewegung: identisch, es bewegt sich nichts.</p><div class="cells">' +
+  cell('Bilder: Aus', '<div class="tone0">' + C.todos({ bilder: 'aus', sky: DAY }) + '</div>', 'w780') +
+  cell('Bilder: Ruhig', C.todos({ bilder: 'ruhig', sky: DAY }), 'w780') +
+  cell('Farbmodus „Ruhig“', '<div class="tone0 calm">' + C.todos({ bilder: 'verspielt', sky: DAY }) + '</div>', 'w780') +
+  cell('Weniger Bewegung', C.todos({ bilder: 'verspielt', sky: DAY }), 'w780', 'identisch: nichts bewegt sich') + '</div>';
+document.getElementById('gal').innerHTML = o;
+Cards.paint();
+</script></body></html>

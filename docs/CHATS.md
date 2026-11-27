@@ -32,7 +32,6 @@ Not stored in this file: `npm run chats:sync` prints the list from GitHub (`chat
 9. Planer-Zentrale ([planner-hub](design/planner-hub/README.md) „Waits on the maintainer“): D2/D3, Reiz-Budget R1. (so lassen)
 10. Austausch Handy ↔ PC ([CONCEPT §11](design/device-exchange/CONCEPT.md)): Handy holt erst beim Öffnen? (ja, v1) · nur Heimnetz? (ja) · Name „Austausch“? (ja) · Regelzeile (Paket R) mergen.
 11. „Werte ausblenden“ (DESIGN-CHECK K2): nur Kopfzahl + Zeile darunter (so gebaut, #752) oder alle Beträge der Geld-Seiten und Karten? (alle Geld-Karten, Wunsch aus Budgets; eigener kleiner PR)
-12. Wetter Runde 2: A, B und D gemergt, C (letztes Paket) als PR offen ([PACKAGES](design/weather-scenes-2/PACKAGES.md)).
 
 **Handgriffe:**
 
@@ -42,7 +41,7 @@ Not stored in this file: `npm run chats:sync` prints the list from GitHub (`chat
 - Agenten v3.1: `ant apply` der sieben, `--prune` der 16 alten, dann `claude-lock.json` committen ([SETUP](meta/agents-v3/SETUP.md) §2a).
 - Fernsteuerung: Handtests FB1–FB19 ohne FB13 ([MANUAL-TESTS.md](MANUAL-TESTS.md), echtes Handy und Windows-PC); danach Modul und Einstellungs-Abschnitt auf `stable` stellen lassen.
 - `qa/round-5/<x>/MESSAGE.md` an A–D mit Dev-Preview-Link schicken.
-- Chats starten: `fix/ui6-head-heights` (U41); nach 0b-8 alle Bildschirmfotos (README, Social-Preview) neu.
+- Chats starten: Lebendige Bilder: Paket 1 (Opus) starten ([Prompts](design/living-scenes/PACKAGES-PROMPTS.md)); `fix/ui6-head-heights` (U41); nach 0b-8 alle Bildschirmfotos (README, Social-Preview) neu.
 - Website – Bilder, sobald die App steht: Chat nach [design/site/SLOTS.md](design/site/SLOTS.md) starten (sechs Slots).
 - HN-L9 b: Zeit bis zum Einfrieren in `design/sync-lan/CONCEPT.md` §9 nachtragen.
 

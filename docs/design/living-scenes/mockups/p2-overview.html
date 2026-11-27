@@ -1,0 +1,20 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lebende Bilder – Übersicht</title><link rel="stylesheet" href="mock.css">
+<script src="../../weather-scenes-2/mockups/palette.js"></script><script src="../../weather-scenes-2/mockups/scene.js"></script><script src="world.js"></script>
+<script src="icons.js"></script><script src="signs.js"></script><script src="cards.js"></script><script src="shell.js"></script></head>
+<body>
+<!-- The overview with the seeded cards of the app. Parameters: ?sky=day|golden|dusk(=evening)|night|overcast|rain (the shared
+     sky: weather card, garden, lake and the Tageston of every card), ?tone=sky|area|0 (default sky = Tageston 12 %; area = the
+     earlier area tone, for the record), ?bilder=aus|ruhig|verspielt (default verspielt; aus = the app today).
+     Dark theme: prefers-color-scheme. -->
+<script>
+var P = Shell.params(), SKY = Cards.sky(P.sky);
+document.body.setAttribute('data-sky', Cards.toneOf(SKY));
+document.body.setAttribute('data-tone', P.tone);
+if (P.tone === '0') document.documentElement.style.setProperty('--tone', '0%');
+var late = P.greet !== 'Guten Morgen';
+var note = late ? '<p class="caption" style="margin-top:32px">Nur für den Eindruck: Gruß und Uhrzeit passen zum ' + (P.sky === 'night' ? 'Nachthimmel' : 'Abendhimmel') + '; die Daten der Beispiel-Seed (10:00) bleiben.</p>' : '';
+document.body.innerHTML = Shell.page(Shell.head(P.greet) + '<div class="grid">' + Cards.overview({ bilder: P.bilder, sky: SKY }) + '</div>' + note, P.time);
+document.body.setAttribute('data-bilder', P.bilder);
+Cards.paint();
+</script></body></html>

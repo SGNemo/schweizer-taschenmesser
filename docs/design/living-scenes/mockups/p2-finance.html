@@ -1,0 +1,18 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lebende Bilder – Geld-Karten</title><link rel="stylesheet" href="mock.css">
+<script src="icons.js"></script><script src="signs.js"></script><script src="cards.js"></script></head>
+<body><div class="gal" id="gal"></div>
+<script>
+/* Kontostand and Diesen Monat: like every card they take only the Tageston (the colour of the page's shared sky, 12 %) –
+   states × day / golden / night; light and dark by the scheme. */
+var C = Cards, V = { bilder: 'verspielt' };
+var STATES = [['leer', 'kein Konto'], ['wenig', '1 Konto, kleine Beträge'], ['normal', 'Beispieldaten'], ['viel', 'lange Zahlen, 11 Konten, ein Minus'], ['besonders', '„Werte ausblenden“ an: Beträge maskiert']];
+var TONES = [['0', 'Ohne Ton (die App heute)'], ['day', 'Tag'], ['golden', 'Goldene Stunde'], ['night', 'Nacht']];
+var o = '<h1>Kontostand und Diesen Monat – nur der Tageston</h1><p class="intro">Wie jede Karte nehmen sie die Farbe des gemeinsamen Himmels der Seite an (12 % in der Kartenfläche), eine Farbe für alle Karten, sie wechselt mit der Tageszeit und dem Wetter. Sonst ändert sich nichts: kein Zeichen, kein Bild, gleiche Texte, gleiches graues Zeichen am Kopfende, keine Rahmen, keine Schatten. Der Platzhalter von „Werte ausblenden“ trägt die gedämpfte Tinte, damit er auf der getönten Fläche nicht verschwindet.</p>';
+STATES.forEach(function (s) {
+  o += '<h2>' + s[0] + ' <small class="caption">· ' + s[1] + '</small></h2><div class="cells">' + TONES.map(function (t) {
+    return '<div class="cell w380' + (t[0] === '0' ? ' tone0' : '') + '"' + (t[0] === '0' ? '' : ' data-sky="' + t[0] + '"') + '><p class="label">' + t[1] + '</p>' + C.balance(V, s[0]) + C.month(V, s[0]) + '</div>';
+  }).join('') + '</div>';
+});
+document.getElementById('gal').innerHTML = o;
+</script></body></html>
