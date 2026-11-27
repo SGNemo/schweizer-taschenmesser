@@ -140,6 +140,11 @@ export function TopicChooser({
           </li>
         ))}
       </ul>
+      {mode === 'filter' && name && lines.length === 0 ? (
+        <p className={styles.topicHint} role="status">
+          {p.noMatch}
+        </p>
+      ) : null}
     </Dialog>
   );
 }

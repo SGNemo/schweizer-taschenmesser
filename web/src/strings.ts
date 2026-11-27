@@ -9581,6 +9581,12 @@ export const de = {
       manage: 'Themen verwalten …',
       section: 'Themen',
       noTopics: 'Noch kein Thema.',
+      /** The filter chooser: a typed name no topic has. */
+      noMatch: 'Kein Thema heißt so.',
+      /** Said once when the filter ends (screen readers). */
+      allShown: 'Alles sichtbar.',
+      /** „Thema …“ / T12 on a topic deleted meanwhile (another device). */
+      gone: 'Dieses Thema gibt es nicht mehr.',
       /** T11: the lead chip while filtered. */
       chip: (title: string) => `Thema: ${title}`,
       /** K8: the field's toast for a ToDo with only T11. */
