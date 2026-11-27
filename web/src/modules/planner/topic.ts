@@ -11,12 +11,13 @@
  *
  * Device state in `_meta` (never synced): the filter (`TOPIC_FILTER_KEY`) and the last used topic (`TOPIC_LAST_KEY`).
  */
-import { getMeta, setMeta } from '@/core/db/metaKv';
+import { setMeta } from '@/core/db/metaKv';
 import { randomId } from '@/core/db/util';
 import { addLink, isLinkable, linksFrom, linksTo, removeLink } from '@/core/entitylinks';
 import { entityRefOf, refKey, type EntityRef } from '@/core/entitylinks/types';
 import type { PlannableEntry } from '@/core/modules/contributions';
 import { undoableWithToast } from '@/core/undo/withToast';
+import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { MODULE_ID, topicRepo } from './repo';
 import { TOPIC_TITLE_MAX } from './schema';
@@ -121,7 +122,11 @@ export async function setTopic(
   let title = '';
   if (choice && 'id' in choice) {
     const topic = await topicRepo.get(choice.id);
-    if (!topic) return undefined;
+    // Deleted meanwhile (another device, or a stale T12): say so instead of doing nothing.
+    if (!topic) {
+      useUiStore.getState().toast(t.planner.topic.gone);
+      return undefined;
+    }
     topicId = choice.id;
     title = topic.title;
   } else if (choice) {
@@ -147,7 +152,7 @@ export async function setTopic(
   return topicId;
 }
 
-/** T9: deletes a topic and its links as one undoable action; no thing is touched. The filter on it ends. */
+/** T9: deletes a topic and its links as one undoable action; no thing is touched. A filter on it ends with it. */
 export async function deleteTopic(id: string): Promise<void> {
   const topic = await topicRepo.get(id);
   if (!topic) return;
@@ -160,8 +165,8 @@ export async function deleteTopic(id: string): Promise<void> {
       await topicRepo.remove(id);
     },
   );
-  if ((await getMeta<string>(TOPIC_FILTER_KEY)) === id) await setMeta(TOPIC_FILTER_KEY, null);
-  if ((await getMeta<string>(TOPIC_LAST_KEY)) === id) await setMeta(TOPIC_LAST_KEY, null);
+  // The filter and the last used topic stay as they are: the view reads a gone topic as none (no filter, no T12),
+  // and „Rückgängig“ brings the topic back with the page as it was.
 }
 
 /** Renames a topic (one undo). Stored link labels are a snapshot and stay. */

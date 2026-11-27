@@ -148,7 +148,7 @@ describe('„Thema …“', () => {
 });
 
 describe('managing topics', () => {
-  it('T9: deleting removes the topic and its links in one undo – no thing is touched; the filter on it ends', async () => {
+  it('T9: deleting removes the topic and its links in one undo – no thing is touched; the filter on it ends and comes back with „Rückgängig“', async () => {
     const id = (await setTopic([todo('a'), todo('b')], { title: 'Umzug' }))!;
     await setTopicFilter(id);
     const tasksBefore = await live('todos_task');
@@ -156,10 +156,21 @@ describe('managing topics', () => {
     expect(await live('_links')).toHaveLength(0);
     expect(await live('planner_topic')).toHaveLength(0);
     expect(await live('todos_task')).toEqual(tasksBefore);
-    expect(await getMeta(TOPIC_FILTER_KEY)).toBeNull();
+    // The device state is left alone: a filter on a gone topic reads as none (useTopicView reads the topic first).
+    expect(await getMeta(TOPIC_FILTER_KEY)).toBe(id);
+    expect(await topicRepo.get(id)).toBeUndefined();
     await undoLast();
     expect(await live('_links')).toHaveLength(2);
     expect((await topicRepo.get(id))?.title).toBe('Umzug');
+    // The page is as it was: the same topic shown, its members as before.
+    expect(await getMeta(TOPIC_FILTER_KEY)).toBe(id);
+    expect([...(await shownMembers(id))].sort()).toEqual(['todos:a', 'todos:b']);
+  });
+
+  it('„Thema …“ on a topic deleted meanwhile says so and changes nothing', async () => {
+    expect(await setTopic([todo('a')], { id: 't_00000000-weg' })).toBeUndefined();
+    expect(useUiStore.getState().toasts.at(-1)?.message).toBe('Dieses Thema gibt es nicht mehr.');
+    expect(await live('_links')).toHaveLength(0);
   });
 
   it('rename keeps the links', async () => {

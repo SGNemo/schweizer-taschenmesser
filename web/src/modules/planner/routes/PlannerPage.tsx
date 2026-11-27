@@ -192,6 +192,14 @@ export default function PlannerPage() {
   const topics = useTopicView();
   // T11 removed with ✕ for this topic: new things stay out of it until the filter changes.
   const [topicChipOff, setTopicChipOff] = useState<string | undefined>();
+  // „Alles sichtbar.“ is said once when a shown topic ends (head, K9 or elsewhere); a new topic replaces it.
+  const [topicEnded, setTopicEnded] = useState(false);
+  const [shownTopic, setShownTopic] = useState<string | undefined>(topics.filter?.id);
+  if (shownTopic !== topics.filter?.id) {
+    // The shown topic changed (React's „previous value“ pattern, no effect): ended when one was shown and none is now.
+    setShownTopic(topics.filter?.id);
+    setTopicEnded(!!shownTopic && !topics.filter);
+  }
   const topicChip = topics.filter && topicChipOff !== topics.filter.id ? topics.filter : undefined;
   const fieldTopic = {
     ...(topicChip ? { topic: topicChip } : {}),
@@ -2425,7 +2433,11 @@ export default function PlannerPage() {
           ) : null}
           {/* T4 said once when a topic is shown (always mounted, no button inside, no count that changes with every add). */}
           <p role="status" className="sr-only">
-            {topics.filter ? t.planner.topic.headTitle(topics.filter.title) : ''}
+            {topics.filter
+              ? t.planner.topic.headTitle(topics.filter.title)
+              : topicEnded
+                ? t.planner.topic.allShown
+                : ''}
           </p>
           <TopicChooser
             open={!!chooser}
