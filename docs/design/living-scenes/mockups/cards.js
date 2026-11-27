@@ -53,6 +53,22 @@
     else { var nw2 = vh * ar; x = x + vw - nw2; vw = nw2; }
     return [Math.round(x), Math.round(y), Math.round(vw), Math.round(vh)];
   }
+  /* the overview weather card's crop: a port of web/src/ui/weather-scene/useSceneFit.ts cardFit (share 0.55, k ≤ 0.46) */
+  function landTop(x0, x) {
+    var G = window.Scene.G, top = 320;
+    G.ground.forEach(function (g) { if (g[0] >= x0 && g[0] <= x) top = Math.min(top, g[1]); });
+    G.trees.concat(G.behind).forEach(function (t) { if (t[1] + t[3] >= x0 && t[1] - t[3] <= x) top = Math.min(top, t[2] - (t[0] === 'bush' ? 2 * t[3] : t[3])); });
+    return top;
+  }
+  function cardFit(W, H, text) {
+    var right = text ? text.right : W * 0.55, bottom = text ? text.bottom : H - 24, kMin = W / 1600, f = null;
+    function fit(k) { var vw = W / k, x0 = 1600 - vw, h = H / k; return { k: k, x0: x0, y0: 320 - h, h: h, quietX: Math.round(x0 + right / k) + 80 }; }
+    function fits(c) { return (landTop(c.x0, c.quietX) - c.y0) * c.k >= bottom; }
+    for (var i = 0; 0.46 - i / 100 > kMin && !f; i++) { var c = fit(0.46 - i / 100); if (fits(c)) f = c; }
+    if (!f) { f = fit(kMin); if (!fits(f)) { f.y0 = landTop(f.x0, f.quietX) - bottom / f.k - 1; f.h = H / f.k; } }
+    return { view: [Math.round(f.x0), Math.round(f.y0), Math.round(W / f.k), Math.round(f.h)], quietX: f.quietX,
+      bodyAt: [Math.round(f.x0 + (W * 0.8) / f.k), Math.round(Math.max(f.y0 + 30, Math.min(f.y0 + (H * 0.5) / f.k, 110)))] };
+  }
   var NOFIT = /[?&]fit=0/.test(location.search);
   function draw(p, w, h) {
     if (p.kind === 'garden') {
@@ -61,17 +77,17 @@
       return window.Living.scene('garden', p.sky, p.data, o);
     }
     if (p.kind === 'tile') return window.Living.tile(p.sky, { view: [1150, 30, Math.round(128 * w / h), 128] });
-    if (p.kind === 'weather') { // the overview card's crop (product: cardFit, k = 0.46, right/bottom aligned)
-      var k = 0.46, vw = w / k, vh = h / k, x0 = 1600 - vw, y0 = 320 - vh;
-      return window.Scene.svg(p.sky, { view: [Math.round(x0), Math.round(y0), Math.round(vw), Math.round(vh)], quietX: Math.round(x0 + 0.55 * vw + 80),
-        bodyAt: [Math.round(x0 + 0.8 * vw), Math.round(Math.max(y0 + 30, Math.min(y0 + 0.5 * vh, 110)))], idp: 'w' + Math.random().toString(36).slice(2, 6) });
-    }
+    if (p.kind === 'weather') return window.Scene.svg(p.sky, cardFit(w, h, p.text));
     return '';
   }
   function paint(root) {
     (root || document).querySelectorAll('[data-pic]').forEach(function (el) {
       var p = PICS[+el.getAttribute('data-pic')], w = el.clientWidth, h = el.clientHeight;
       if (!w || !h) return;
+      if (p.kind === 'weather') { // the text as measured in the card (product: CardText)
+        var c = el.getBoundingClientRect(), b = el.parentNode.querySelector('.body').getBoundingClientRect();
+        p.text = { right: b.right - c.left, bottom: b.bottom - c.top };
+      }
       var svg = draw(p, w, h);
       el.innerHTML = svg;
       el.setAttribute('data-els', window.Scene.count(svg));
@@ -139,9 +155,9 @@
   }
   /* finance: state = 'leer' | 'wenig' | 'normal' | 'viel' | 'besonders' (masked) */
   var FIN = {
-    wenig: { bal: '842,10 €', balSub: 'Vermögen, davon 842,10 € verfügbar · 1 Konto', free: '318,40 €', monthSub: 'Noch fällig 0,00 € · Ausgegeben 523,70 €', n: 1 },
-    normal: { bal: '12.616,33 €', balSub: 'Vermögen, davon 11.598,49 € verfügbar · 3 Konten', free: '12.446,43 €', monthSub: 'Noch fällig 169,90 € · Ausgegeben 1.618,76 €', n: 3 },
-    viel: { bal: '1.284.906,57 €', balSub: 'Vermögen, davon 1.103.250,08 € verfügbar · 11 Konten', free: '−12.446,43 €', monthSub: 'Noch fällig 24.169,90 € · Ausgegeben 31.618,76 €', n: 11 },
+    wenig: { bal: '842,10 €', balSub: 'Vermögen, davon 842,10 € verfügbar · 1 Konto', free: '318,40 €', monthSub: 'Noch fällig 0,00 € · Ausgegeben 523,70 €', n: 1 },
+    normal: { bal: '12.616,33 €', balSub: 'Vermögen, davon 11.598,49 € verfügbar · 3 Konten', free: '12.446,43 €', monthSub: 'Noch fällig 169,90 € · Ausgegeben 1.618,76 €', n: 3 },
+    viel: { bal: '1.284.906,57 €', balSub: 'Vermögen, davon 1.103.250,08 € verfügbar · 11 Konten', free: '−12.446,43 €', monthSub: 'Noch fällig 24.169,90 € · Ausgegeben 31.618,76 €', n: 11 },
   };
   function mask(note) { return '<span class="mask">' + I.icon('eyeOff', 16) + '<span>••••</span><small>Zum Einblenden tippen</small></span>' + (note ? '<p class="sub" style="margin-top:4px">' + note + '</p>' : ''); }
   function balance(v, state) {
@@ -187,16 +203,16 @@
       rows.map(function (r) { return '<li class="row"><span class="rowTitle">' + r[0] + '</span><span class="rowAmount">' + r[1] + '</span></li>'; }).join('') + '</ul>' });
   }
   function invoices() {
-    var rows = [['Stadtwerke Musterstadt', '87,40 €', 'war am 17. Sep. fällig', 'overdue'], ['Zahnarztpraxis Dr. Beispiel', '82,50 €', 'war am Sa. fällig', 'overdue'],
-      ['Internet & Telefon Küstennetz', '39,99 €', 'in 2 Tagen', 'soon'], ['Stadtwerke Musterstadt', '85,95 €', 'in 2 Tagen', 'soon'], ['Kfz-Versicherung Nordstern', '418,00 €', 'Mo., 5. Okt.', 'later']];
-    return frame('invoices', { size: 'm', body: '<p class="summary">1.017,84 € offen · 2 überfällig</p>' + rows.map(function (r) {
+    var rows = [['Stadtwerke Musterstadt', '87,40 €', 'war am 17. Sep. fällig', 'overdue'], ['Zahnarztpraxis Dr. Beispiel', '82,50 €', 'war am Sa. fällig', 'overdue'],
+      ['Internet & Telefon Küstennetz', '39,99 €', 'in 2 Tagen', 'soon'], ['Stadtwerke Musterstadt', '85,95 €', 'in 2 Tagen', 'soon'], ['Kfz-Versicherung Nordstern', '418,00 €', 'Mo., 5. Okt.', 'later']];
+    return frame('invoices', { size: 'm', body: '<p class="summary">1.017,84 € offen · 2 überfällig</p>' + rows.map(function (r) {
       return '<div class="due" data-tone="' + r[3] + '"><span class="rowTitle">' + r[0] + '</span><span class="rowAmount">' + r[1] + '</span><span class="state' + (r[3] === 'overdue' ? ' overdue' : '') + '">' +
         (r[3] === 'overdue' ? I.icon('alert', 14) : '') + r[2] + '</span><span class="okBtn">' + I.icon('check', 16) + '</span></div>';
     }).join('') + '<p class="sub">+ 2 weitere</p>' });
   }
   function subs() {
-    var rows = [['Streaming Plus', '12,99 €', 'Sa., 3. Okt.'], ['Musik Flat', '10,99 €', 'Mi., 14. Okt.'], ['Handyvertrag Küstenmobil', '19,90 €', 'Sa., 17. Okt.'], ['Cloud-Speicher 200 GB', '2,99 €', 'Mi., 21. Okt.'], ['Fitnessstudio Aktiv', '29,90 €', 'Mo., 26. Okt.']];
-    return frame('subs', { size: 'm', body: '<p class="summary">100,82 € pro Monat · nächste: Streaming Plus, 3. Okt.</p><ul class="rows" style="gap:12px">' + rows.map(function (r) {
+    var rows = [['Streaming Plus', '12,99 €', 'Sa., 3. Okt.'], ['Musik Flat', '10,99 €', 'Mi., 14. Okt.'], ['Handyvertrag Küstenmobil', '19,90 €', 'Sa., 17. Okt.'], ['Cloud-Speicher 200 GB', '2,99 €', 'Mi., 21. Okt.'], ['Fitnessstudio Aktiv', '29,90 €', 'Mo., 26. Okt.']];
+    return frame('subs', { size: 'm', body: '<p class="summary">100,82 € pro Monat · nächste: Streaming Plus, 3. Okt.</p><ul class="rows" style="gap:12px">' + rows.map(function (r) {
       return '<li class="row"><span class="rowTitle muted">' + r[0] + '</span><span class="rowAmount">' + r[1] + '&nbsp; ' + r[2] + '</span></li>'; }).join('') + '</ul><p class="sub" style="margin-top:4px">+ 3 weitere</p>' });
   }
   function lists(v) {
@@ -219,7 +235,7 @@
   function budgets(v) {
     var r = function (n, pct, end, red) { return '<div class="prog"><div class="ph"><span class="rowTitle">' + n + '</span>' + end + '</div><div class="bar' + (red ? ' red' : '') + '"><i style="width:' + pct + '%"></i></div></div>'; };
     return frame('budgets', { size: 'm', sign: signs(v) ? S.budgets(0.82) : null, body: '<p class="summary">1 Budget überschritten</p>' +
-      r('Freizeit', 100, '<span class="over">' + I.icon('alert', 14) + '35,11 € drüber</span>', true) + r('Wohnen', 96, '<span class="rowAmount">96 %</span>') +
+      r('Freizeit', 100, '<span class="over">' + I.icon('alert', 14) + '35,11 € drüber</span>', true) + r('Wohnen', 96, '<span class="rowAmount">96 %</span>') +
       r('Urlaub Italien', 63, '<span class="rowAmount">63 %</span>') + r('Neues Fahrrad', 78, '<span class="rowAmount">78 %</span>') +
       '<div class="spark"><svg width="96" height="28" viewBox="0 0 96 28" aria-hidden="true"><path d="M2,26H20L38,4L56,8H76L94,6" fill="none" stroke="var(--module-color)" stroke-width="1.6"/></svg>Ausgaben mit Limit, letzte 6 Monate</div><p><span class="btn small">Ausgabe +</span></p>' });
   }

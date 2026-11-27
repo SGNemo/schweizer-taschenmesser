@@ -4,7 +4,7 @@
    its own things through the scene's `front` hook; their colours pass through the scene's light (X.C.lit), so a bed of
    flowers is dark at night and warm at dusk without a rule of its own.
    window.Living = { scene(spot, sky, data, opts), tile(sky, opts), SPOTS, count(svg), growth(n), FLOWERS }
-     spot  'garden' (habits) – more spots arrive with their module pages; opts.form 'wide' (beside the text) | 'strip' (under it)
+     spot  'garden' (habits) – more spots arrive with their module pages; opts.box [w, h] = the picture's size in px
      sky   a weather scene state (phase, cond, season, moon, theme …) – the shared environment, never module data
      data  the module's variables, see each spot
    Colours: palette.js plus the block P below (the only new hex values; product: --scene-* tokens).
@@ -18,7 +18,7 @@
   var FLOWERS = ['#e8807a', '#f2b56b', '#b79be8', '#f3e9a8', '#7fb2e6', '#f29ac0'];
   var SPOTS = {
     /* the meadow in front of the fence, the cabin behind it. Bed: baseline y, first x, step */
-    garden: { views: { wide: [1448, 204, 152, 116], strip: [1306, 236, 294, 84] }, bedY: 313, x0: 1486, x1: 1580, rowDy: -9, k: 1.7, max: 12 },
+    garden: { span: [1470, 1596], bedY: 313, x0: 1486, x1: 1580, rowDy: -9, k: 1.7, max: 12 },
   };
   /* growth step from the number of days a goal was ever done: it only rises, a pause changes nothing */
   function growth(doneDays) { return doneDays >= 30 ? 3 : doneDays >= 10 ? 2 : doneDays >= 3 ? 1 : 0; }
@@ -71,7 +71,7 @@
       var step = list.length > 1 ? (xb - xa) / (list.length - 1) : 0, x = list.length > 1 ? xa : (xa + xb) / 2;
       list.forEach(function (g, i) { o += plant(X, x + step * i, y, growth(g.doneDays || 0), g.state, FLOWERS[g.i % FLOWERS.length], k); });
     }
-    goals.forEach(function (g, i) { g.i = i; });
+    goals = goals.map(function (g, i) { return { state: g.state, doneDays: g.doneDays, i: i }; });
     if (two) row(goals.slice(front), S.bedY + S.rowDy, S.k * 0.8, S.x0 + 10, S.x1 - 10);
     row(goals.slice(0, front), S.bedY, S.k, n < 4 ? S.x0 + 24 : S.x0, n < 4 ? S.x1 - 24 : S.x1);
     // everything scheduled for today is done: the lantern on the fence post is lit (night, dawn, dusk) or two butterflies sit over the bed (day)
@@ -85,21 +85,31 @@
   }
   var DRAW = { garden: garden };
 
+  /* the crop of a spot for a picture box [w, h] in px: the width is fixed by the module's things (the bed fills the picture's
+     width), the height follows the box, the foot of the picture is the foot of the landscape. A tall box shows more forest,
+     summit and sky above the same bed; a low strip shows the bed and the fence. One rule for both forms. */
+  function viewFor(spot, box) {
+    var S = SPOTS[spot], w = S.span[1] - S.span[0], h = Math.min(320, w * (box ? box[1] / box[0] : 0.9));
+    return [S.span[0], Math.round(320 - h), w, Math.round(h)];
+  }
   function scene(spot, sky, data, opts) {
-    var s = {}, k; for (k in sky) s[k] = sky[k];
-    s.event = 'living';
-    window.Scene.hooks.living = { front: function (X) { return '<g data-layer="module" data-spot="' + spot + '">' + DRAW[spot](X, data || {}) + '</g>'; } };
-    var o = { view: SPOTS[spot].views[(opts && opts.form) || 'wide'], quietX: -2000 }; for (k in opts || {}) o[k] = opts[k];
+    var s = {}, k, H = window.Scene.hooks, ev = sky.event && H[sky.event];
+    for (k in sky) s[k] = sky[k];
+    // the shared sky keeps its event (rainbow, meteors …): the module's layer is added to that event's hooks, not put in its place
+    var mine = {}; for (k in ev || {}) mine[k] = ev[k];
+    mine.front = function (X) { return (ev && ev.front ? ev.front(X) || '' : '') + '<g data-layer="module" data-spot="' + spot + '">' + DRAW[spot](X, data || {}) + '</g>'; };
+    H.living = mine; s.event = 'living';
+    var o = { view: viewFor(spot, opts && opts.box), quietX: -2000 }; for (k in opts || {}) if (k !== 'box') o[k] = opts[k];
     return crop(window.Scene.svg(s, o), o.view, 'xMaxYMax slice');
   }
-  /* a sky tile (clock): sky and body only – the weather's own "Schlicht" level – cropped to the body's arc.
-     sky.body.t 0..1 is where the body stands on its way; opts.view overrides the crop */
+  /* a sky tile (clock): sky and body only – the weather's own "Schlicht" level. sky.body.t 0..1 is where the body stands on its
+     way; it always stands whole inside the tile (opts.box [w, h] in px shapes the crop) */
   function tile(sky, opts) {
     var s = { level: 'plain', cond: 'clear' }, k; for (k in sky) s[k] = sky[k];
-    var v = (opts && opts.view) || [1100, 30, 300, 128], t = s.body && s.body.t != null ? s.body.t : 0.5;
-    var at = [v[0] + v[2] * (0.14 + 0.72 * t), v[1] + v[3] * (0.78 - 0.5 * Math.sin(Math.PI * t))]; // the body on a flat arc inside the tile
+    var box = (opts && opts.box) || [72, 80], w = 150, h = w * box[1] / box[0], v = [1200, 40, w, h], t = s.body && s.body.t != null ? s.body.t : 0.5, r = 30;
+    var at = [v[0] + r + (w - 2 * r) * t, v[1] + h - r - (h - 2 * r) * Math.sin(Math.PI * t)];
     return crop(window.Scene.svg(s, { view: v, quietX: -2000, bodyAt: at }), v, 'xMidYMid slice');
   }
   function crop(svg, v, par) { return svg.replace(/viewBox="[^"]*"/, 'viewBox="' + v.join(' ') + '"').replace(/preserveAspectRatio="[^"]*"/, 'preserveAspectRatio="' + par + '"'); }
-  window.Living = { scene: scene, tile: tile, SPOTS: SPOTS, FLOWERS: FLOWERS, growth: growth, count: function (s) { return window.Scene.count(s); }, P: P };
+  window.Living = { scene: scene, tile: tile, viewFor: viewFor, SPOTS: SPOTS, FLOWERS: FLOWERS, growth: growth, count: function (s) { return window.Scene.count(s); }, P: P };
 })();

@@ -1,0 +1,17 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lebende Bilder – Geld-Karten</title><link rel="stylesheet" href="mock.css">
+<script src="icons.js"></script><script src="signs.js"></script><script src="cards.js"></script></head>
+<body><div class="gal" id="gal"></div>
+<script>
+/* Kontostand and Diesen Monat: only the tone (step 0) reaches them – states × T0 / T6 / T12; light and dark by the scheme. */
+var C = Cards, V = { bilder: 'verspielt' };
+var STATES = [['leer', 'kein Konto'], ['wenig', '1 Konto, kleine Beträge'], ['normal', 'Beispieldaten'], ['viel', 'lange Zahlen, 11 Konten, ein Minus'], ['besonders', '„Werte ausblenden“ an: Beträge maskiert']];
+var o = '<h1>Kontostand und Diesen Monat – nur der Ton</h1><p class="intro">Bereich Geld: ein Hauch der Bereichsfarbe in der Kartenfläche (T6 = 6 %, T12 = 12 %, T0 = die App heute). Sonst ändert sich nichts: kein Zeichen, kein Bild, gleiche Texte, gleiches graues Zeichen am Kopfende, keine Rahmen, keine Schatten.</p>';
+STATES.forEach(function (s) {
+  o += '<h2>' + s[0] + ' <small class="caption">· ' + s[1] + '</small></h2><div class="cells">' + ['0', '6', '12'].map(function (t) {
+    return '<div class="cell w380 tone' + t + '"><p class="label">T' + t + '</p>' + C.balance(V, s[0]) + C.month(V, s[0]) + '</div>';
+  }).join('') + '</div>';
+});
+o += '<p class="caption" style="margin-top:32px">Nichts anderes ändert sich an diesen Karten: Texte, Zahlen, Größen, Zeichen und Reihenfolge bleiben wie heute.</p>';
+document.getElementById('gal').innerHTML = o;
+</script></body></html>

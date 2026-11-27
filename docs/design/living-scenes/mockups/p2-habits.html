@@ -1,0 +1,54 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lebende Bilder – Gewohnheiten</title><link rel="stylesheet" href="mock.css">
+<script src="../../weather-scenes-2/mockups/palette.js"></script><script src="../../weather-scenes-2/mockups/scene.js"></script><script src="world.js"></script>
+<script src="icons.js"></script><script src="signs.js"></script><script src="cards.js"></script></head>
+<body><div class="gal" id="gal"></div>
+<script>
+/* Gallery of the habits card ("Heute geschafft", the pilot of step 2): states × forms, other skies, fallbacks, module page. */
+var C = Cards, V = { bilder: 'verspielt', sky: C.sky('day') };
+function g(name, pct, state, doneDays, detail, count) { return { name: name, pct: pct, state: state, doneDays: doneDays, detail: detail || (state === 'done' ? 'Geschafft' : ''), count: count }; }
+var STATES = [
+  ['leer', 'keine Gewohnheit', []],
+  ['wenig', '1 Ziel, offen, noch nie geschafft', [g('Lesen', 0, 'open', 0)]],
+  ['normal', 'die 4 Ziele der Beispieldaten', C.SEED_GOALS],
+  ['viel', '10 Ziele, gemischt (die Karte zeigt 4 Ringe, das Beet alle 10)', [g('Wasser trinken', 38, 'part', 24, '3 von 8 Gläser', 1), g('Spazieren gehen', 100, 'done', 41), g('Dehnen', 0, 'open', 6), g('Medikament nehmen', 0, 'open', 2),
+    g('Lesen', 100, 'done', 12), g('Gitarre üben', 0, 'open', 0), g('Vitamine', 100, 'done', 33), g('Früh ins Bett', 0, 'rest', 15), g('Atemübung', 50, 'part', 4, '1 von 2 Runden', 1), g('Tagebuch', 100, 'done', 1)]],
+  ['besonders', '5 Ziele, alle geschafft (allDone)', [g('Spazieren gehen', 100, 'done', 45), g('Wasser trinken', 100, 'done', 31, '8 von 8 Gläser'), g('Lesen', 100, 'done', 12), g('Dehnen', 100, 'done', 8), g('Medikament nehmen', 100, 'done', 3)]],
+  ['Pausentag', '3 Ziele: geschafft, Pause, offen', [g('Spazieren gehen', 100, 'done', 41), g('Dehnen', 0, 'rest', 6), g('Medikament nehmen', 0, 'open', 2)]],
+];
+function cell(label, html, cls, small) { return '<div class="cell ' + (cls || '') + '"><p class="label">' + label + (small ? '<small>' + small + '</small>' : '') + '</p>' + html + '</div>'; }
+var o = '<h1>Heute geschafft – lebendes Bild (Stufe 2, „Verspielt“)</h1><p class="intro">Die Karte behält ihren ganzen Inhalt; das Bild trägt keinen Text. Breit (Karte ≥ 2 Spalten, hier 780 px): Bild rechts 44 %, bündig oben, rechts, unten. Streifen (1-spaltige Karte, hier 380 px, und Telefon): 104 px unter dem Inhalt. Himmel: der gemeinsame Himmel der Wetterkarte (Tag, leicht bewölkt, Herbst).</p>';
+o += '<h2>Zustände</h2>';
+STATES.forEach(function (s) {
+  o += '<div class="cells" style="margin-top:20px">' + cell(s[0] + ' · breit', C.habits(V, { goals: s[2], form: 'wide' }), 'w780', s[1]) + cell(s[0] + ' · Streifen', C.habits(V, { goals: s[2], form: 'strip', size: 's' }), 'w380') + '</div>';
+});
+var SK = [['Tag', C.sky('day')], ['Goldene Stunde', C.sky('day', { phase: 'golden' })], ['Dämmerung', C.sky('evening', { cond: 'partly' })], ['Nacht', C.sky('night', { cond: 'partly' })],
+  ['Regen', C.sky('rain')], ['Schnee (Winter)', C.sky('day', { cond: 'snow', intensity: 2, snowCover: 2, season: 'winter' })]];
+o += '<h2>Gleiche Daten, anderer Himmel</h2><p class="intro">Die 4 Ziele der Beispieldaten unter dem Himmel der Wetterkarte.</p><div class="cells">' +
+  SK.map(function (k) { return cell(k[0] + ' · breit', C.habits({ bilder: 'verspielt', sky: k[1] }, { form: 'wide' }), 'w780'); }).join('') + '</div><div class="cells" style="margin-top:24px">' +
+  SK.map(function (k) { return cell(k[0] + ' · Streifen', C.habits({ bilder: 'verspielt', sky: k[1] }, { form: 'strip', size: 's' }), 'w380'); }).join('') + '</div>';
+o += '<h2>Ausweichen</h2><p class="intro">„Bilder: Aus“ = die Karte von heute (Ton 0, graues Zeichen). „Bilder: Ruhig“ = Ton + Zeichen (Ring k von n) statt Bild. Farbmodus „Ruhig“: Bild in Graustufen, Ton 0. Weniger Bewegung: identisch, es bewegt sich nichts.</p><div class="cells">' +
+  cell('Bilder: Aus', '<div class="tone0">' + C.habits({ bilder: 'aus', sky: V.sky }) + '</div>', 'w780') +
+  cell('Bilder: Ruhig', C.habits({ bilder: 'ruhig', sky: V.sky }), 'w780') +
+  cell('Farbmodus „Ruhig“', '<div class="tone0 calm">' + C.habits(V, { form: 'wide' }) + '</div>', 'w780') +
+  cell('Weniger Bewegung', C.habits(V, { form: 'wide' }), 'w780', 'identisch: nichts bewegt sich') + '</div>';
+/* the module page: the app's standard head and the first block "Heute" */
+function ringsList() {
+  return '<ul class="rings">' + C.SEED_GOALS.map(function (x) { return '<li class="ringItem">' + C.ring(x.pct) + '<span class="ringName">' + x.name + '</span><span class="sub">' + x.detail + '</span></li>'; }).join('') + '</ul>';
+}
+var data = { goals: C.SEED_GOALS.map(function (x) { return { state: x.state, doneDays: x.doneDays }; }), allDone: false };
+function modHead() {
+  return '<div class="modHead"><span class="plate">' + Icons.icon('target', 18) + '</span><div><p class="eyebrow">Planen</p><h2>Gewohnheiten</h2></div><div class="fig"><b>1 von 4</b><span>heute</span></div></div>' +
+    '<div class="tabs"><span class="on">Heute</span><span>Verlauf</span><span>Archiv</span></div>';
+}
+var rows = C.SEED_GOALS.map(function (x) { return '<div class="listRow">' + C.ring(x.pct) + '<div class="t"><b>' + x.name + '</b><small>' + (x.detail || '0 von 1') + '</small></div><span class="btn small" style="margin-left:auto">' + (x.count ? '+1' : x.state === 'done' ? 'Zurücknehmen' : 'Erledigt') + '</span></div>'; }).join('');
+o += '<h2>Modulseite: Kopf und erster Block „Heute“</h2><div class="cells">' +
+  cell('1920', '<div class="mod" data-hue="violet" data-area="plan">' + modHead() + '<div class="modBody"><div class="block" data-area="plan"><div><h3>Heute</h3><p class="sub" style="margin-bottom:12px">Dienstag, 29. September</p>' + ringsList() + '</div>' +
+    C.slot('panel', { kind: 'garden', form: 'wide', sky: V.sky, data: data }) + '</div></div></div>', 'modDesk', '') +
+  cell('412', '<div class="mod modPhone412" data-hue="violet" data-area="plan">' + modHead() + '<div class="modBody" style="padding:16px">' +
+    C.slot('panel', { kind: 'garden', form: 'strip', sky: V.sky, data: data }).replace('class="panel"', 'class="panel" style="width:100%;height:120px;margin:0 0 16px"') +
+    '<div class="listBox">' + rows + '</div></div></div>') + '</div>';
+document.getElementById('gal').innerHTML = o;
+document.querySelector('.modDesk .mod') && (document.querySelector('.modDesk').style.width = '100%');
+Cards.paint();
+</script></body></html>

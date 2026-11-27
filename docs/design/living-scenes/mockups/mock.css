@@ -107,7 +107,7 @@ a { color: inherit; }
 .agCol h3 { margin: 0 0 6px; font-size: var(--text-sm); font-weight: 700; }
 .agCol h3 small { font-weight: 400; color: var(--text-muted); margin-left: 6px; font-size: var(--text-meta); }
 .agRow { display: flex; align-items: center; gap: 12px; height: 44px; }
-.agRow time { width: 62px; font-size: var(--text-sm); color: var(--text-muted); }
+.agRow time { min-width: 62px; white-space: nowrap; font-size: var(--text-sm); color: var(--text-muted); }
 .agRow i { width: 10px; height: 10px; border-radius: 50%; background: var(--cat-1); flex: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--cat-1) 25%, transparent); margin-right: -4px; }
 .agRow i.g { background: var(--cat-2); }
 .allLink { display: inline-block; margin: 12px 0 34px; font-weight: 500; text-underline-offset: 4px; }
@@ -125,11 +125,11 @@ a { color: inherit; }
 .head { position: relative; display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-3); }
 .plate { display: inline-grid; place-items: center; flex: none; width: 1.75rem; height: 1.75rem; border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--module-color) 14%, var(--surface-raised)); color: var(--module-color); }
-.title { flex: 1; display: inline-flex; align-items: center; gap: 4px; min-height: var(--touch); font-weight: 600; min-width: 0; }
+.title { flex: 1; display: inline-flex; text-decoration: none; color: inherit; align-items: center; gap: 4px; min-height: var(--touch); font-weight: 600; min-width: 0; }
 .title .ic { color: var(--text-muted); }
 .mark { display: inline-flex; justify-content: center; flex: none; width: var(--space-5); color: var(--text-muted); }
 /* (B) the sign: 32 px in the module hue, reads data; replaces the grey mark */
-.sign { display: inline-flex; flex: none; width: 32px; height: 32px; margin: -4px -4px -4px 0; color: var(--module-color); --sign-2: color-mix(in oklab, var(--module-color) 38%, var(--card-bg, var(--surface-raised))); }
+.sign { display: inline-flex; flex: none; width: 32px; height: 32px; margin: -4px -4px -4px 0; color: var(--module-color); --sign-2: color-mix(in oklab, var(--module-color) 58%, var(--card-bg, var(--surface-raised))); }
 .sign svg { display: block; overflow: visible; }
 .sign .s1 { fill: currentColor; } .sign .s2 { fill: var(--sign-2); } .sign .s0 { fill: var(--card-bg, var(--surface-raised)); } .sign .sw { fill: var(--sign-warm); }
 .sign .l1 { fill: none; stroke: currentColor; } .sign .l2 { fill: none; stroke: var(--sign-2); } .sign .l0 { fill: none; stroke: var(--card-bg, var(--surface-raised)); }
@@ -195,6 +195,7 @@ a { color: inherit; }
 /* weather card (as built): the scene fills the card, text in the scene's ink */
 .card.weather > .pic { inset: 0; }
 .card.weather > :not(.pic) { position: relative; }
+.card.weather > .body { width: fit-content; flex: none; }
 .card.weather[data-ink='light'] { --text: var(--ink-light); --text-muted: var(--ink-light); color: var(--ink-light); }
 .card.weather[data-ink='dark'] { --text: var(--ink-dark); --text-muted: var(--ink-dark); color: var(--ink-dark); }
 .card.weather .plate { background: color-mix(in srgb, var(--surface) 92%, transparent); }
@@ -233,6 +234,7 @@ a { color: inherit; }
   .bottomBar .on { color: var(--text); font-weight: 600; }
   .bottomBar .new { color: var(--text); font-weight: 600; }
   .bottomBar .new i { width: 40px; height: 40px; border-radius: 12px; background: var(--accent); color: var(--accent-contrast); display: grid; place-items: center; margin-top: -18px; }
+  .todayAct .btn.filled { background: var(--surface); border-color: var(--border-strong); color: var(--text); }
   .card.wide { padding-right: var(--card-pad); }
   .card.wide > .pic { position: relative; top: auto; right: auto; bottom: auto; width: auto; height: 104px; margin: var(--space-4) calc(-1 * var(--card-pad)) calc(-1 * var(--card-pad)); }
 }
@@ -271,7 +273,7 @@ a { color: inherit; }
 .listRow { display: flex; align-items: center; gap: 14px; padding: 10px 16px; border-bottom: 1px solid var(--border); background: var(--surface-raised); }
 .listRow:last-child { border-bottom: 0; }
 .listRow .grip { width: 40px; height: 40px; display: grid; place-items: center; border-radius: var(--radius-sm); background: var(--surface-2); flex: none; }
-.listRow .t b { display: block; font-weight: 600; } .listRow .t small { display: block; font-size: var(--text-meta); color: var(--text-muted); }
+.listRow .t { min-width: 0; } .listRow .t b { display: block; font-weight: 600; } .listRow .t small { display: block; font-size: var(--text-meta); color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .listRow .time { margin-left: auto; font-size: 32px; font-variant-numeric: tabular-nums; }
 .listRow .skyRow { position: relative; width: 120px; height: 56px; border-radius: var(--radius-md); overflow: hidden; flex: none; }
 .listRow .skyRow > svg { position: absolute; inset: 0; display: block; }
