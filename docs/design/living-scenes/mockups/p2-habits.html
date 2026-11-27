@@ -25,9 +25,9 @@ STATES.forEach(function (s) {
 });
 var SK = [['Tag', C.sky('day')], ['Goldene Stunde', C.sky('day', { phase: 'golden' })], ['Dämmerung', C.sky('evening', { cond: 'partly' })], ['Nacht', C.sky('night', { cond: 'partly' })],
   ['Regen', C.sky('rain')], ['Schnee (Winter)', C.sky('day', { cond: 'snow', intensity: 2, snowCover: 2, season: 'winter' })]];
-o += '<h2>Gleiche Daten, anderer Himmel</h2><p class="intro">Die 4 Ziele der Beispieldaten unter dem Himmel der Wetterkarte.</p><div class="cells">' +
-  SK.map(function (k) { return cell(k[0] + ' · breit', C.habits({ bilder: 'verspielt', sky: k[1] }, { form: 'wide' }), 'w780'); }).join('') + '</div><div class="cells" style="margin-top:24px">' +
-  SK.map(function (k) { return cell(k[0] + ' · Streifen', C.habits({ bilder: 'verspielt', sky: k[1] }, { form: 'strip', size: 's' }), 'w380'); }).join('') + '</div>';
+o += '<h2>Gleiche Daten, anderer Himmel</h2><p class="intro">Die 4 Ziele der Beispieldaten unter dem Himmel der Wetterkarte; die Kartenfläche nimmt den Tageston dieses Himmels (12 %).</p><div class="cells">' +
+  SK.map(function (k) { return cell(k[0] + ' · breit', '<div data-sky="' + C.toneOf(k[1]) + '">' + C.habits({ bilder: 'verspielt', sky: k[1] }, { form: 'wide' }) + '</div>', 'w780'); }).join('') + '</div><div class="cells" style="margin-top:24px">' +
+  SK.map(function (k) { return cell(k[0] + ' · Streifen', '<div data-sky="' + C.toneOf(k[1]) + '">' + C.habits({ bilder: 'verspielt', sky: k[1] }, { form: 'strip', size: 's' }) + '</div>', 'w380'); }).join('') + '</div>';
 o += '<h2>Ausweichen</h2><p class="intro">„Bilder: Aus“ = die Karte von heute (Ton 0, graues Zeichen). „Bilder: Ruhig“ = Ton + Zeichen (Ring k von n) statt Bild. Farbmodus „Ruhig“: Bild in Graustufen, Ton 0. Weniger Bewegung: identisch, es bewegt sich nichts.</p><div class="cells">' +
   cell('Bilder: Aus', '<div class="tone0">' + C.habits({ bilder: 'aus', sky: V.sky }) + '</div>', 'w780') +
   cell('Bilder: Ruhig', C.habits({ bilder: 'ruhig', sky: V.sky }), 'w780') +

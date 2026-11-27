@@ -31,4 +31,4 @@ Real sunrise and sunset, twilight, the weather there, where the moon stands: the
 
 ## Copy
 
-The line's first word follows the four bands ("Nacht · Morgen · Tag · Abend") – [COPY §3](../COPY.md).
+The line's first word follows the four bands ("Nacht · Früh · Tag · Abend") – [COPY §3](../COPY.md).

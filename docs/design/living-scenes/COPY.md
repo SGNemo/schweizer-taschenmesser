@@ -31,14 +31,14 @@ No new empty-state text: the empty bed and the still lake stand beside the texts
 
 ## 3. Clock – the day part follows the sky's four bands (package clock)
 
-| Hour | de | en |
-| --- | --- | --- |
-| 21–6 | Nacht | Night |
-| 6–8 | Morgen | Morning |
-| 8–18 | Tag | Day |
-| 18–21 | Abend | Evening |
+| Hour | de | en | Key |
+| --- | --- | --- | --- |
+| 21–6 | Nacht | Night | `clock.night` (exists) |
+| 6–8 | Früh | Morning | `clock.morning` (new) |
+| 8–18 | Tag | Day | `clock.day` (exists) |
+| 18–21 | Abend | Evening | `clock.evening` (new) |
 
-Used where "Tag" / "Nacht" stand today (`t.clock.day`, `t.clock.night`; new `t.clock.morning`, `t.clock.evening`): "Abend · +9 h". "Morgen" as a day part stands before the dot, "morgen" as tomorrow after it ("Morgen · morgen · +8 h" cannot occur: 6–8 o'clock tomorrow reads "Morgen · morgen · +8 h" only in German) – therefore the German day part is **"Früh"** (en "Morning"): "Früh · morgen · +8 h".
+Used where "Tag" / "Nacht" stand today: "Abend · +9 h", "Früh · morgen · +8 h". German says "Früh", not "Morgen": the line also carries "morgen" for tomorrow.
 
 ## 4. What is never written
 

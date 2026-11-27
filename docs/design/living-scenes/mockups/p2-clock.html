@@ -17,22 +17,22 @@ var STATES = [
     places: [p('23:00', 'Kapstadt', 'Nacht · +1 h', 23), p('07:00', 'Tante Ines', 'Tag · −4 h', 7), p('19:00', 'Büro Tokio', 'Tag · +9 h', 19), p('03:00', 'Honolulu', 'Nacht · −10 h', 3)] }],
 ];
 function cell(label, html, cls, small) { return '<div class="cell ' + (cls || '') + '"><p class="label">' + label + (small ? '<small>' + small + '</small>' : '') + '</p>' + html + '</div>'; }
-var o = '<h1>Uhrzeit anderswo – Himmelskacheln (Stufe 1)</h1><p class="intro">Jede Kachel behält ihren Text links auf der Kachelfläche; rechts sitzt ein Himmel (72 px breit, volle Höhe, bündig, Kachelradius) für die Ortszeit. Kacheln schmaler als 220 px (Telefon, 1-spaltige Karte): statt des Streifens ein rundes Himmelsfenster (36 px) oben rechts, der Text behält die volle Breite. Himmel in den zwei Wörtern der App: 21–6 Nacht (Mond, Sterne), 6–8 Morgenlicht (Sonne tief links), 8–18 Tag, 18–21 Abendlicht (Sonne tief rechts). Keine Dämmerungshimmel. Mondphase in allen Kacheln gleich. Kein Text auf dem Himmel.</p><h2>Zustände</h2>';
+var o = '<h1>Uhrzeit anderswo – der Himmel ist die Kachel (Stufe 1)</h1><p class="intro">Der ganze Hintergrund jeder Ortskachel ist ihr Himmel zur Ortszeit, die Sonne oder der Mond steht im rechten Teil. Zeit, Name und „Tag · +9 h“ stehen links auf dem Himmel in der Tinte der Szene (dunkel oder hell), alle drei Zeilen in voller Tinte. Gleich auf dem Telefon. Himmel in den zwei Wörtern der App: 21–6 Nacht (Mond, Sterne), 6–8 Morgen (Sonne tief links), 8–18 Tag, 18–21 Abendlicht (Sonne tief rechts).</p><h2>Zustände</h2>';
 STATES.forEach(function (s) {
   var a = Object.assign({}, s[2]), b = Object.assign({}, s[2], { cls: '' });
   o += '<div class="cells" style="margin-top:20px">' + cell(s[0] + ' · 2 Spalten', C.clock(V, a), 'w780', s[1]) + cell(s[0] + ' · Telefon', C.clock(V, b), 'w380') +
     (s[0] === 'viel' ? cell('viel · Größe l', C.clock(V, Object.assign({}, s[2], { size: 'l' })), 'w780', 'zeigt 6') : '') + '</div>';
 });
-var PH = function (h) { return h >= 21 || h < 6 ? 'Nacht' : 'Tag'; }, HL = function (h) { return h >= 21 || h < 6 ? 'Nacht' : h < 8 ? 'Morgenlicht' : h < 18 ? 'Tag' : 'Abendlicht'; };
+var PH = function (h) { return h >= 21 || h < 6 ? 'Nacht' : 'Tag'; }, HL = function (h) { return h >= 21 || h < 6 ? 'Nacht' : h < 8 ? 'Morgen' : h < 18 ? 'Tag' : 'Abendlicht'; };
 function hh(h) { return (h < 10 ? '0' : '') + h + ':00'; }
 function one(h, w) { return cell(hh(h) + ' · ' + HL(h), '<div class="card" data-hue="lime" data-area="plan" style="padding:8px"><ul class="kacheln" style="grid-template-columns:1fr">' +
-  '<li class="kachel sky"><span class="kVal">' + hh(h) + '</span><span class="kLab">Beispielort</span><span class="kSt">' + PH(h) + ' · +2 h</span>' + C.slot('skyPanel', { kind: 'tile', sky: C.hourSky(h) }) + '</li></ul></div>', '', '').replace('class="cell "', 'class="cell" style="width:' + w + 'px"'); }
-o += '<h2>Die Variable: eine Kachel durch 24 Stunden</h2><p class="intro">Alle 2 Stunden, Mond 62 % zunehmend. Oben breite Kacheln (Streifen), unten schmale (Himmelsfenster).</p><div class="cells">';
-for (var h = 0; h < 24; h += 2) o += one(h, 236);
+  C.tileHtml({ time: hh(h), name: 'Beispielort', line: PH(h) + ' · +2 h', h: h }, V) + '</ul></div>', '', '').replace('class="cell "', 'class="cell" style="width:' + w + 'px"'); }
+o += '<h2>Die Variable: eine Kachel durch 24 Stunden</h2><p class="intro">Alle 2 Stunden, Mond 62 % zunehmend. Oben breite Kacheln (wie in der 2-spaltigen Karte), unten schmale (Telefon).</p><div class="cells">';
+for (var h = 0; h < 24; h += 2) o += one(h, 386);
 o += '</div><div class="cells" style="margin-top:20px">';
 for (h = 0; h < 24; h += 2) o += one(h, 186);
 o += '</div>';
-o += '<h2>Ausweichen</h2><p class="intro">„Bilder: Aus“ = die Kacheln von heute (Ton 0, graues Zeichen). Farbmodus „Ruhig“: Himmel in Graustufen, Ton 0. Weniger Bewegung: identisch, es bewegt sich nichts.</p><div class="cells">' +
+o += '<h2>Ausweichen</h2><p class="intro">„Bilder: Aus“ = die Kacheln von heute (Ton 0, graues Zeichen). Farbmodus „Ruhig“: Himmel in Graustufen, Ton 0, die Tinte bleibt. Weniger Bewegung: identisch, es bewegt sich nichts.</p><div class="cells">' +
   cell('Bilder: Aus', '<div class="tone0">' + C.clock({ bilder: 'aus', sky: V.sky }) + '</div>', 'w780') +
   cell('Farbmodus „Ruhig“', '<div class="tone0 calm">' + C.clock(V) + '</div>', 'w780') +
   cell('Weniger Bewegung', C.clock(V), 'w780', 'identisch') + '</div>';
@@ -42,11 +42,11 @@ function page(phone) {
   return '<div class="mod' + (phone ? ' modPhone412' : '') + '" data-hue="lime" data-area="plan"><div class="modHead"><span class="plate">' + Icons.icon('globe', 18) + '</span><div><p class="eyebrow">Planen</p><h2>Uhr</h2></div>' +
     '<div class="fig"><b>10:00</b><span>Deine Zeit · UTC</span></div>' + (phone ? '' : '<span class="btn filled">' + Icons.icon('plus', 16) + 'Ort eintragen</span>') + '</div>' +
     '<div class="modBody" style="' + (phone ? 'padding:16px' : '') + '"><div class="listBox">' + C.SEED_PLACES.map(function (x) {
-      return '<div class="listRow"' + (phone ? ' style="gap:8px;padding:10px 12px"' : '') + '>' + (phone ? '' : '<span class="grip">' + Icons.icon('grip', 16) + '</span>') + '<div class="t" style="min-width:0"><b>' + x.name + '</b><small>' + ZONES[x.name] + '</small><small>' + x.line + '</small></div>' +
-        '<span class="time"' + (phone ? ' style="font-size:24px"' : '') + '>' + x.time + '</span>' + C.slot('skyRow', { kind: 'tile', sky: C.hourSky(x.h) }) + '<span class="btn square">' + Icons.icon('more', 16) + '</span></div>';
+      return '<div class="listRow skyed"' + (phone ? ' style="gap:8px;padding-left:12px"' : '') + '>' + (phone ? '' : '<span class="grip">' + Icons.icon('grip', 16) + '</span>') + '<div class="t" style="min-width:0"><b>' + x.name + '</b><small>' + ZONES[x.name] + '</small><small>' + x.line + '</small></div>' +
+        '<span class="time"' + (phone ? ' style="font-size:24px"' : '') + '>' + x.time + '</span>' + (phone ? '' : '<span class="btn square">' + Icons.icon('more', 16) + '</span>') + C.slot('skyRow', { kind: 'tile', sky: C.hourSky(x.h) }) + '</div>';
     }).join('') + '</div></div></div>';
 }
-o += '<h2>Modulseite: Liste mit größerem Himmel (120 × 56)</h2><div class="cells">' + cell('1920', page(false), 'modDesk', '').replace('class="cell modDesk"', 'class="cell modDesk" style="width:100%"') + cell('412', page(true)) + '</div>';
+o += '<h2>Modulseite: der Himmel als bündige Fläche im rechten Teil der Zeile (40 %)</h2><div class="cells">' + cell('1920', page(false), 'modDesk', '').replace('class="cell modDesk"', 'class="cell modDesk" style="width:100%"') + cell('412', page(true)) + '</div>';
 document.getElementById('gal').innerHTML = o;
 Cards.paint();
 </script></body></html>

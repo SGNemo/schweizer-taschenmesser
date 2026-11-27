@@ -4,11 +4,13 @@
 (function () {
   var I = window.Icons;
   function params() {
-    var q = new URLSearchParams(location.search), bilder = q.get('bilder') || 'verspielt';
-    var tone = bilder === 'aus' ? '0' : q.get('tone') || '6', sky = q.get('sky') || 'day';
+    var q = new URLSearchParams(location.search), bilder = q.get('bilder') || 'verspielt', sky = q.get('sky') || 'day';
+    if (sky === 'evening') sky = 'dusk';
+    // tone: 'sky' = the Tageston (default), 'area' = the earlier area tone (for the record), '0' = none (also "Bilder: Aus")
+    var tone = bilder === 'aus' ? '0' : q.get('tone') || 'sky';
     // only for the look: greeting and clock follow the evening/night sky; the seed's data (10:00) stays
-    var when = sky === 'evening' ? ['Guten Abend', '19:40'] : sky === 'night' ? ['Guten Abend', '22:30'] : ['Guten Morgen', '10:00'];
-    return { tone: tone, sky: sky, bilder: bilder, dark: q.get('dark'), greet: when[0], time: when[1] };
+    var when = sky === 'golden' ? ['Guten Abend', '18:20'] : sky === 'dusk' ? ['Guten Abend', '19:40'] : sky === 'night' ? ['Guten Abend', '22:30'] : ['Guten Morgen', '10:00'];
+    return { tone: tone, sky: sky, bilder: bilder, greet: when[0], time: when[1] };
   }
   function side(time) {
     var g = function (n) { return '<div class="navGroup"><span class="eyebrow">' + n + '</span>' + I.icon('chevronRight', 16) + '</div>'; };

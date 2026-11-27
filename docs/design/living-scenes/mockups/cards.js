@@ -26,15 +26,23 @@
   /* ---- the shared sky (the weather card's state): an invented Bern-like place, late September ---- */
   var SKIES = {
     day: { phase: 'day', cond: 'partly', temp: '14°', word: 'leicht bewölkt', rain: 'ab 15 Uhr Regen' },
-    evening: { phase: 'dusk', cond: 'clear', temp: '11°', word: 'klar', rain: 'Kein Regen in Sicht' },
+    golden: { phase: 'golden', cond: 'partly', temp: '13°', word: 'leicht bewölkt', rain: 'Kein Regen in Sicht' },
+    dusk: { phase: 'dusk', cond: 'clear', temp: '11°', word: 'klar', rain: 'Kein Regen in Sicht' },
+    overcast: { phase: 'day', cond: 'overcast', temp: '12°', word: 'bedeckt', rain: 'Kein Regen in Sicht' },
     night: { phase: 'night', cond: 'clear', temp: '8°', word: 'klar', rain: 'Kein Regen in Sicht' },
     rain: { phase: 'day', cond: 'rain', intensity: 2, temp: '12°', word: 'Regen', rain: '' },
   };
   function sky(key, extra) {
+    if (key === 'evening') key = 'dusk';
     var b = SKIES[key] || SKIES.day, s = { theme: theme, season: 'autumn', moon: { illum: 0.62, waxing: true } }, k;
     for (k in b) s[k] = b[k];
     for (k in extra || {}) s[k] = extra[k];
     return s;
+  }
+  /* the Tageston key of a sky (mock.css [data-sky]): the colour every card surface takes from the page's shared sky */
+  function toneOf(s) {
+    return s.phase === 'night' ? 'night' : s.phase === 'dusk' || s.phase === 'dawn' ? 'dusk' : s.phase === 'golden' ? 'golden'
+      : s.cond === 'snow' ? 'snow' : s.cond === 'rain' ? 'rain' : s.cond === 'overcast' ? 'overcast' : 'day';
   }
   /* the sky of a clock tile for a local hour, in the app's two words (Nacht 21–6, Tag 6–21): 21–6 night (moon and stars),
      6–8 morning (the day's clear sky, sun low at the left, t 0.08–0.2), 8–18 day (t 0.2–0.8), 18–21 evening light (golden, sun low at
@@ -68,14 +76,18 @@
       bodyAt: [Math.round(f.x0 + (W * 0.8) / f.k), Math.round(Math.max(f.y0 + 30, Math.min(f.y0 + (H * 0.5) / f.k, 110)))] };
   }
   function draw(p, w, h) {
-    if (p.kind === 'garden') return window.Living.scene('garden', p.sky, p.data, { box: [w, h] });
-    if (p.kind === 'tile') return window.Living.tile(p.sky, { box: [w, h] });
+    if (p.kind === 'garden' || p.kind === 'lake') return window.Living.scene(p.kind, p.sky, p.data, { box: [w, h] });
+    if (p.kind === 'tile') {
+      if (!p.zone) return window.Living.tile(p.sky, { box: [w, h] });
+      // the sky is the whole tile, the body stands in its right share (zone 0.4): the tile is drawn for that share and its
+      // view is widened to the left by the rest (world.js offers no body zone yet)
+      return window.Living.tile(p.sky, { box: [w * p.zone, h] }).replace(/viewBox="([-\d.]+) ([-\d.]+) ([-\d.]+) ([-\d.]+)"/, function (m, x, y, vw, vh) {
+        return 'viewBox="' + (+x - vw * (1 / p.zone - 1)) + ' ' + y + ' ' + vw / p.zone + ' ' + vh + '"'; });
+    }
     if (p.kind === 'weather') return window.Scene.svg(p.sky, cardFit(w, h, p.text));
     return '';
   }
   function paint(root) {
-    // a sky tile narrower than 220 px gets the 36 px porthole at its top-right corner instead of the 72 px panel
-    (root || document).querySelectorAll('.kachel.sky').forEach(function (k) { k.classList.toggle('narrow', k.clientWidth < 220); });
     (root || document).querySelectorAll('[data-pic]').forEach(function (el) {
       var p = PICS[+el.getAttribute('data-pic')], w = el.clientWidth, h = el.clientHeight;
       if (!w || !h) return;
@@ -121,10 +133,14 @@
     return frame('planner', { size: 'm', sign: signs(v) ? S.planner(LOAD, 1) : null, body: '<p class="summary">Bis Fr: 4 h 40 geplant · 0 Min frei</p>' +
       rows.map(function (r) { return '<div class="prog"><div class="ph"><span class="rowTitle">' + r[0] + '</span><span class="rowAmount">' + r[1] + '</span></div><div class="bar"><i style="width:100%"></i></div></div>'; }).join('') });
   }
-  function todos(v) {
+  /* todos: v.todosDone = things ticked today (seed 2); the lake carries one boat each (step 2), "Ruhig" keeps the ticks sign */
+  function todos(v, o) {
+    o = o || {};
     var rows = [['Recherche 16', 'Mo., 21. Sep.'], ['Bücher aussortieren 18', 'Mo., 21. Sep.'], ['Formular ausfüllen 8', 'Mo., 21. Sep.'], ['Termin vereinbaren 9', 'Mi., 23. Sep.'], ['Vorräte prüfen 2', 'Do., 24. Sep.']];
-    return frame('todos', { size: 'm', sign: signs(v) ? S.todos(v.todosDone == null ? 2 : v.todosDone) : null,
-      body: '<p class="summary">43 offen · 8 warten</p>' + rows.map(function (r) { return check(r[0], r[1]); }).join('') });
+    var done = o.done == null ? (v.todosDone == null ? 2 : v.todosDone) : o.done, verspielt = v.bilder === 'verspielt', size = o.size || 'm';
+    return frame('todos', { size: size, cls: o.cls, noMark: verspielt, sign: v.bilder === 'ruhig' ? S.todos(done) : null,
+      pic: verspielt ? { kind: 'lake', form: o.form || 'wide', sky: v.sky, data: { done: done } } : null,
+      body: '<p class="summary">43 offen · 8 warten' + (verspielt && done ? ' · ' + done + ' heute erledigt' : '') + '</p>' + rows.slice(0, size === 's' ? 3 : 5).map(function (r) { return check(r[0], r[1]); }).join('') });
   }
   /* habits: goals = [{ name, pct, detail, state, doneDays, count }]; form 'wide' | 'strip'; v.bilder */
   var SEED_GOALS = [
@@ -177,13 +193,14 @@
     return frame('weather', { size: 's', cls: 'weather', picFirst: true, attrs: ' data-ink="' + ink + '"', pic: { kind: 'weather', sky: s },
       body: '<p class="wPlace">Bern</p><p class="kpiValue">' + s.temp + '</p><p class="wWord"><span>' + s.word + '</span>' + (s.rain ? '<span class="wRain">' + s.rain + '</span>' : '') + '</p>' });
   }
-  /* clock: places = [{ time, name, line, h }]; tiles with a sky panel from "Ruhig" on */
+  /* clock: places = [{ time, name, line, h }]; from "Ruhig" on the sky is the tile: text in the scene's ink on it */
   var SEED_PLACES = [{ time: '19:00', name: 'Büro Tokio', line: 'Tag · +9 h', h: 19 }, { time: '06:00', name: 'Tante Ines', line: 'Tag · −4 h', h: 6 },
     { time: '20:00', name: 'Sydney', line: 'Tag · +10 h', h: 20 }, { time: '11:00', name: 'Lissabon', line: 'Tag · +1 h', h: 11 }];
   function tile(p, v, moon) {
-    var skyOn = signs(v);
-    return '<li class="kachel' + (skyOn ? ' sky' : '') + '"><span class="kVal">' + p.time + '</span><span class="kLab">' + p.name + '</span><span class="kSt">' + p.line + '</span>' +
-      (skyOn ? slot('skyPanel', { kind: 'tile', sky: hourSky(p.h, moon) }) : '') + '</li>';
+    if (!signs(v)) return '<li class="kachel"><span class="kVal">' + p.time + '</span><span class="kLab">' + p.name + '</span><span class="kSt">' + p.line + '</span></li>';
+    var sk = hourSky(p.h, moon), ink = window.Scene.ink(Object.assign({ level: 'plain', cond: 'clear' }, sk));
+    return '<li class="kachel sky" data-ink="' + ink + '" data-hour="' + p.h + '">' + slot('skyBg', { kind: 'tile', sky: sk, zone: 0.4 }) +
+      '<span class="kVal">' + p.time + '</span><span class="kLab">' + p.name + '</span><span class="kSt">' + p.line + '</span></li>';
   }
   function clock(v, o) {
     o = o || {};
@@ -241,7 +258,7 @@
     return [todayCard(v), planner(v), todos(v), habits(v), balance(v), month(v), timetrack(v), weather(v), clock(v), bookmarks(v), invoices(v), subs(v),
       lists(v), packing(v), routines(v), pantry(v), budgets(v), vault(v), music(v)].join('');
   }
-  window.Cards = { MODS: MODS, sky: sky, hourSky: hourSky, frame: frame, ring: ring, paint: paint, slot: slot, theme: theme, SEED_GOALS: SEED_GOALS, SEED_PLACES: SEED_PLACES,
+  window.Cards = { MODS: MODS, sky: sky, toneOf: toneOf, tileHtml: tile, hourSky: hourSky, frame: frame, ring: ring, paint: paint, slot: slot, theme: theme, SEED_GOALS: SEED_GOALS, SEED_PLACES: SEED_PLACES,
     todayCard: todayCard, planner: planner, todos: todos, habits: habits, balance: balance, month: month, timetrack: timetrack, weather: weather, clock: clock,
     bookmarks: bookmarks, invoices: invoices, subs: subs, lists: lists, packing: packing, routines: routines, pantry: pantry, budgets: budgets, vault: vault, music: music, overview: overview };
 })();
