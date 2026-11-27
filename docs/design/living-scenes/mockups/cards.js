@@ -36,23 +36,21 @@
     for (k in extra || {}) s[k] = extra[k];
     return s;
   }
-  /* the sky of a clock tile for a local hour: 21–6 night, 6–7 dawn, 7–18 day, 18–20 golden, 20–21 dusk */
+  /* the sky of a clock tile for a local hour, in the app's two words (Nacht 21–6, Tag 6–21): 21–6 night (moon and stars),
+     6–8 morning (the day's clear sky, sun low at the left, t 0.08–0.2), 8–18 day (t 0.2–0.8), 18–21 evening light (golden, sun low at
+     the right, t 0.8–0.92). No dawn or dusk skies. */
   function hourSky(h, moon) {
-    var phase = h >= 21 || h < 6 ? 'night' : h < 7 ? 'dawn' : h < 18 ? 'day' : h < 20 ? 'golden' : 'dusk';
-    var body = phase === 'night' ? { kind: 'moon', t: (((h - 21) % 24) + 24) % 24 / 9 } : { kind: 'sun', t: (h - 6) / 15 };
-    return { theme: theme, phase: phase, body: body, moon: moon || { illum: 0.62, waxing: true } };
+    var s = { theme: theme, moon: moon || { illum: 0.62, waxing: true } };
+    if (h >= 21 || h < 6) { s.phase = 'night'; s.body = { kind: 'moon', t: ((((h - 21) % 24) + 24) % 24) / 9 }; }
+    else if (h < 8) { s.phase = 'day'; s.body = { kind: 'sun', t: 0.08 + 0.12 * (h - 6) / 2 }; }
+    else if (h < 18) { s.phase = 'day'; s.body = { kind: 'sun', t: 0.2 + 0.6 * (h - 8) / 10 }; }
+    else { s.phase = 'golden'; s.body = { kind: 'sun', t: 0.8 + 0.12 * (h - 18) / 3 }; }
+    return s;
   }
 
   /* ---- picture slots: filled by paint() at their measured size ---- */
   var PICS = [];
   function slot(cls, pic) { PICS.push(pic); return '<div class="' + cls + '" data-pic="' + (PICS.length - 1) + '" aria-hidden="true"></div>'; }
-  /* a spot's view widened to the slot's aspect: the right/bottom edge stays, more sky above or more land to the left */
-  function fitView(v, w, h) {
-    var ar = w / h, x = v[0], y = v[1], vw = v[2], vh = v[3];
-    if (ar < vw / vh) { var nh = vw / ar; y = y + vh - nh; vh = nh; if (y < 0) { vh += y; y = 0; var nw = vh * ar; x = x + vw - nw; vw = nw; } }
-    else { var nw2 = vh * ar; x = x + vw - nw2; vw = nw2; }
-    return [Math.round(x), Math.round(y), Math.round(vw), Math.round(vh)];
-  }
   /* the overview weather card's crop: a port of web/src/ui/weather-scene/useSceneFit.ts cardFit (share 0.55, k ≤ 0.46) */
   function landTop(x0, x) {
     var G = window.Scene.G, top = 320;
@@ -69,18 +67,15 @@
     return { view: [Math.round(f.x0), Math.round(f.y0), Math.round(W / f.k), Math.round(f.h)], quietX: f.quietX,
       bodyAt: [Math.round(f.x0 + (W * 0.8) / f.k), Math.round(Math.max(f.y0 + 30, Math.min(f.y0 + (H * 0.5) / f.k, 110)))] };
   }
-  var NOFIT = /[?&]fit=0/.test(location.search);
   function draw(p, w, h) {
-    if (p.kind === 'garden') {
-      var o = { form: p.form };
-      if (!NOFIT) o.view = fitView(window.Living.SPOTS.garden.views[p.form], w, h);
-      return window.Living.scene('garden', p.sky, p.data, o);
-    }
-    if (p.kind === 'tile') return window.Living.tile(p.sky, { view: [1150, 30, Math.round(128 * w / h), 128] });
+    if (p.kind === 'garden') return window.Living.scene('garden', p.sky, p.data, { box: [w, h] });
+    if (p.kind === 'tile') return window.Living.tile(p.sky, { box: [w, h] });
     if (p.kind === 'weather') return window.Scene.svg(p.sky, cardFit(w, h, p.text));
     return '';
   }
   function paint(root) {
+    // a sky tile narrower than 220 px gets the 36 px porthole at its top-right corner instead of the 72 px panel
+    (root || document).querySelectorAll('.kachel.sky').forEach(function (k) { k.classList.toggle('narrow', k.clientWidth < 220); });
     (root || document).querySelectorAll('[data-pic]').forEach(function (el) {
       var p = PICS[+el.getAttribute('data-pic')], w = el.clientWidth, h = el.clientHeight;
       if (!w || !h) return;
@@ -246,7 +241,7 @@
     return [todayCard(v), planner(v), todos(v), habits(v), balance(v), month(v), timetrack(v), weather(v), clock(v), bookmarks(v), invoices(v), subs(v),
       lists(v), packing(v), routines(v), pantry(v), budgets(v), vault(v), music(v)].join('');
   }
-  window.Cards = { MODS: MODS, sky: sky, hourSky: hourSky, frame: frame, ring: ring, fitView: fitView, paint: paint, slot: slot, theme: theme, SEED_GOALS: SEED_GOALS, SEED_PLACES: SEED_PLACES,
+  window.Cards = { MODS: MODS, sky: sky, hourSky: hourSky, frame: frame, ring: ring, paint: paint, slot: slot, theme: theme, SEED_GOALS: SEED_GOALS, SEED_PLACES: SEED_PLACES,
     todayCard: todayCard, planner: planner, todos: todos, habits: habits, balance: balance, month: month, timetrack: timetrack, weather: weather, clock: clock,
     bookmarks: bookmarks, invoices: invoices, subs: subs, lists: lists, packing: packing, routines: routines, pantry: pantry, budgets: budgets, vault: vault, music: music, overview: overview };
 })();

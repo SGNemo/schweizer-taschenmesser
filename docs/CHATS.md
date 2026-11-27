@@ -33,6 +33,7 @@ Not stored in this file: `npm run chats:sync` prints the list from GitHub (`chat
 10. Austausch Handy ↔ PC ([CONCEPT §11](design/device-exchange/CONCEPT.md)): Handy holt erst beim Öffnen? (ja, v1) · nur Heimnetz? (ja) · Name „Austausch“? (ja) · Regelzeile (Paket R) mergen.
 11. „Werte ausblenden“ (DESIGN-CHECK K2): nur Kopfzahl + Zeile darunter (so gebaut, #752) oder alle Beträge der Geld-Seiten und Karten? (alle Geld-Karten, Wunsch aus Budgets; eigener kleiner PR)
 12. Wetter Runde 2: A, B und D gemergt, C (letztes Paket) als PR offen ([PACKAGES](design/weather-scenes-2/PACKAGES.md)).
+13. Lebendige Bilder – Piloten ansehen: drei Fragen in [PILOTS §6](design/living-scenes/PILOTS.md) (Richtung ja · Reizbudget bleibt · Gewohnheiten und Uhr zuerst).
 
 **Handgriffe:**
 

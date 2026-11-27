@@ -11,16 +11,17 @@ var STATES = [
   ['leer', 'keine Gewohnheit', []],
   ['wenig', '1 Ziel, offen, noch nie geschafft', [g('Lesen', 0, 'open', 0)]],
   ['normal', 'die 4 Ziele der Beispieldaten', C.SEED_GOALS],
-  ['viel', '10 Ziele, gemischt (die Karte zeigt 4 Ringe, das Beet alle 10)', [g('Wasser trinken', 38, 'part', 24, '3 von 8 Gläser', 1), g('Spazieren gehen', 100, 'done', 41), g('Dehnen', 0, 'open', 6), g('Medikament nehmen', 0, 'open', 2),
+  ['viel', '10 Ziele, gemischt', [g('Wasser trinken', 38, 'part', 24, '3 von 8 Gläser', 1), g('Spazieren gehen', 100, 'done', 41), g('Dehnen', 0, 'open', 6), g('Medikament nehmen', 0, 'open', 2),
     g('Lesen', 100, 'done', 12), g('Gitarre üben', 0, 'open', 0), g('Vitamine', 100, 'done', 33), g('Früh ins Bett', 0, 'rest', 15), g('Atemübung', 50, 'part', 4, '1 von 2 Runden', 1), g('Tagebuch', 100, 'done', 1)]],
   ['besonders', '5 Ziele, alle geschafft (allDone)', [g('Spazieren gehen', 100, 'done', 45), g('Wasser trinken', 100, 'done', 31, '8 von 8 Gläser'), g('Lesen', 100, 'done', 12), g('Dehnen', 100, 'done', 8), g('Medikament nehmen', 100, 'done', 3)]],
   ['Pausentag', '3 Ziele: geschafft, Pause, offen', [g('Spazieren gehen', 100, 'done', 41), g('Dehnen', 0, 'rest', 6), g('Medikament nehmen', 0, 'open', 2)]],
 ];
 function cell(label, html, cls, small) { return '<div class="cell ' + (cls || '') + '"><p class="label">' + label + (small ? '<small>' + small + '</small>' : '') + '</p>' + html + '</div>'; }
-var o = '<h1>Heute geschafft – lebendes Bild (Stufe 2, „Verspielt“)</h1><p class="intro">Die Karte behält ihren ganzen Inhalt; das Bild trägt keinen Text. Breit (Karte ≥ 2 Spalten, hier 780 px): Bild rechts 44 %, bündig oben, rechts, unten. Streifen (1-spaltige Karte, hier 380 px, und Telefon): 104 px unter dem Inhalt. Himmel: der gemeinsame Himmel der Wetterkarte (Tag, leicht bewölkt, Herbst).</p>';
+var o = '<h1>Heute geschafft – lebendes Bild (Stufe 2, „Verspielt“)</h1><p class="intro">Die Karte behält ihren ganzen Inhalt; das Bild trägt keinen Text. Breit (Karte ≥ 2 Spalten, hier 780 px): Bild rechts 44 %, bündig oben, rechts, unten. Streifen (1-spaltige Karte, hier 380 px, und Telefon): 112 px unter dem Inhalt. Das Beet füllt immer die Bildbreite; ein hohes Bild zeigt mehr Wald und Himmel über demselben Beet. Die Pflanzen sind genau die heute geplanten Ziele (höchstens 12). Himmel: der gemeinsame Himmel der Wetterkarte (Tag, leicht bewölkt, Herbst).</p>';
 o += '<h2>Zustände</h2>';
 STATES.forEach(function (s) {
-  o += '<div class="cells" style="margin-top:20px">' + cell(s[0] + ' · breit', C.habits(V, { goals: s[2], form: 'wide' }), 'w780', s[1]) + cell(s[0] + ' · Streifen', C.habits(V, { goals: s[2], form: 'strip', size: 's' }), 'w380') + '</div>';
+  var cap = s[0] === 'viel' ? '<p class="caption">Zusammenfassung nennt alle: ' + s[2].filter(function (x) { return x.state === 'done'; }).length + ' von ' + s[2].length + '</p>' : '';
+  o += '<div class="cells" style="margin-top:20px">' + cell(s[0] + ' · breit', C.habits(V, { goals: s[2], form: 'wide' }) + cap, 'w780', s[1]) + cell(s[0] + ' · Streifen', C.habits(V, { goals: s[2], form: 'strip', size: 's' }) + cap, 'w380') + '</div>';
 });
 var SK = [['Tag', C.sky('day')], ['Goldene Stunde', C.sky('day', { phase: 'golden' })], ['Dämmerung', C.sky('evening', { cond: 'partly' })], ['Nacht', C.sky('night', { cond: 'partly' })],
   ['Regen', C.sky('rain')], ['Schnee (Winter)', C.sky('day', { cond: 'snow', intensity: 2, snowCover: 2, season: 'winter' })]];

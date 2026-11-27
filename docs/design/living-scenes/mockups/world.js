@@ -8,6 +8,7 @@
      sky   a weather scene state (phase, cond, season, moon, theme …) – the shared environment, never module data
      data  the module's variables, see each spot
    Colours: palette.js plus the block P below (the only new hex values; product: --scene-* tokens).
+   Blooms take only a third of the sky's darkening, so today's state stays readable at night (a bloom is the datum).
    Nothing here moves. Randomness: none – the same data is the same picture. */
 (function () {
   var P = {
@@ -26,13 +27,13 @@
   function plant(X, x, y, g, state, col, k) {
     var f = X.f, L = X.C.lit, o = '', h = [5, 9, 13, 16][g] * k, w = [2.2, 3, 3.6, 4.2][g] * k;
     function p(d, fill, part) { o += X.el('path', { d: d, fill: fill, 'data-part': part }); }
-    function leaf(cx, cy, dir, s, lit) { p('M' + f(cx) + ',' + f(cy) + 'q' + f(dir * s * 0.9) + ',' + f(-s * 0.9) + ' ' + f(dir * s * 1.5) + ',' + f(-s * 0.2) + 'q' + f(-dir * s * 0.6) + ',' + f(s * 0.7) + ' ' + f(-dir * s * 1.5) + ',' + f(s * 0.2) + 'Z', L(lit ? P.leafLit : P.leaf), 'leaf'); }
+    function leaf(cx, cy, dir, s, lit) { p('M' + f(cx) + ',' + f(cy) + 'q' + f(dir * s * 0.9) + ',' + f(-s * 0.9) + ' ' + f(dir * s * 1.5) + ',' + f(-s * 0.2) + 'q' + f(-dir * s * 0.6) + ',' + f(s * 0.7) + ' ' + f(-dir * s * 1.5) + ',' + f(s * 0.2) + 'Z', L(lit ? P.leafLit : P.leaf, 0.8), 'leaf'); }
     function head(cx, cy, r) {
       if (state === 'done') { // open: five petals and a core
         var d = ''; for (var i = 0; i < 5; i++) { var a = -1.57 + i * 1.2566; d += X.circ(cx + Math.cos(a) * r * 0.62, cy + Math.sin(a) * r * 0.62, r * 0.52); }
-        p(d, L(col, 0.55), 'bloom'); p(X.circ(cx, cy, r * 0.36), L(P.core, 0.5), 'core');
+        p(d, L(col, 0.34), 'bloom'); p(X.circ(cx, cy, r * 0.36), L(P.core, 0.3), 'core');
       } else if (state === 'part') { // half open: three petals above the cup
-        p(X.circ(cx - r * 0.42, cy - r * 0.2, r * 0.42) + X.circ(cx + r * 0.42, cy - r * 0.2, r * 0.42) + X.circ(cx, cy - r * 0.5, r * 0.44), L(col, 0.55), 'bloom');
+        p(X.circ(cx - r * 0.42, cy - r * 0.2, r * 0.42) + X.circ(cx + r * 0.42, cy - r * 0.2, r * 0.42) + X.circ(cx, cy - r * 0.5, r * 0.44), L(col, 0.34), 'bloom');
         p('M' + f(cx - r * 0.7) + ',' + f(cy) + 'q' + f(r * 0.7) + ',' + f(r * 1.1) + ' ' + f(r * 1.4) + ',0Z', L(P.bud), 'cup');
       } else { // closed bud (not yet today, or a rest day): green with a tip of its colour
         p('M' + f(cx) + ',' + f(cy - r * 1.1) + 'q' + f(r * 0.8) + ',' + f(r * 0.9) + ' 0,' + f(r * 1.7) + 'q' + f(-r * 0.8) + ',' + f(-r * 0.8) + ' 0,' + f(-r * 1.7) + 'Z', L(P.bud), 'bud');
@@ -43,7 +44,7 @@
     leaf(x, y - h * 0.22, -1, w, false); leaf(x, y - h * 0.3, 1, w, true);
     if (g >= 1) { leaf(x, y - h * 0.52, 1, w * 0.8, false); leaf(x, y - h * 0.6, -1, w * 0.8, true); }
     if (g >= 2) { leaf(x, y - h * 0.8, -1, w * 0.6, false); }
-    if (g === 0) { if (state === 'done') p(X.circ(x, y - h - 0.6 * k, 1.5 * k), L(col, 0.55), 'bloom'); return o; } // a sprout shows its day as one dot of colour
+    if (g === 0) { if (state === 'done') p(X.circ(x, y - h - 0.6 * k, 1.5 * k), L(col, 0.34), 'bloom'); return o; } // a sprout shows its day as one dot of colour
     if (g === 3) { // a bush: two side heads on short stems
       o += X.el('path', { d: 'M' + f(x) + ',' + f(y - h * 0.5) + 'q' + f(-w * 1.1) + ',' + f(-h * 0.1) + ' ' + f(-w * 1.3) + ',' + f(-h * 0.34) + 'M' + f(x) + ',' + f(y - h * 0.42) + 'q' + f(w * 1.1) + ',' + f(-h * 0.1) + ' ' + f(w * 1.4) + ',' + f(-h * 0.28), fill: 'none', stroke: L(P.stem), 'stroke-width': f(0.8 * k), 'stroke-linecap': 'round' });
       head(x - w * 1.3, y - h * 0.86, 2.3 * k); head(x + w * 1.4, y - h * 0.72, 2.1 * k);

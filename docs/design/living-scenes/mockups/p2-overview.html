@@ -3,12 +3,15 @@
 <script src="../../weather-scenes-2/mockups/palette.js"></script><script src="../../weather-scenes-2/mockups/scene.js"></script><script src="world.js"></script>
 <script src="icons.js"></script><script src="signs.js"></script><script src="cards.js"></script><script src="shell.js"></script></head>
 <body>
-<!-- The overview with the seeded cards of the app. Parameters: ?tone=6|12|0 (default 6), ?sky=day|evening|night|rain,
-     ?bilder=aus|ruhig|verspielt (default verspielt; aus = the app today). Dark theme: prefers-color-scheme. -->
+<!-- The overview with the seeded cards of the app. Parameters: ?tone=6|12|0 (default 6 = light 6 %, dark the measured step),
+     ?sky=day|evening|night|rain, ?bilder=aus|ruhig|verspielt (default verspielt; aus = the app today), ?dark=<step> tries
+     another dark step. Dark theme: prefers-color-scheme. -->
 <script>
 var P = Shell.params();
-document.documentElement.style.setProperty('--tone', P.tone + '%');
-document.body.innerHTML = Shell.page(Shell.head() + '<div class="grid">' + Cards.overview({ bilder: P.bilder, sky: Cards.sky(P.sky) }) + '</div>');
+if (P.tone !== '6') document.documentElement.style.setProperty('--tone', P.tone + '%'); // 6 = the default step (light 6 %, dark per mock.css)
+if (P.dark) document.documentElement.style.setProperty('--tone-6', P.dark + '%'); // ?dark=4|6|8 … tries another dark step
+var note = P.sky === 'evening' || P.sky === 'night' ? '<p class="caption" style="margin-top:32px">Nur für den Eindruck: Gruß und Uhrzeit passen zum ' + (P.sky === 'night' ? 'Nachthimmel' : 'Abendhimmel') + '; die Daten der Beispiel-Seed (10:00) bleiben.</p>' : '';
+document.body.innerHTML = Shell.page(Shell.head(P.greet) + '<div class="grid">' + Cards.overview({ bilder: P.bilder, sky: Cards.sky(P.sky) }) + '</div>' + note, P.time);
 document.body.setAttribute('data-bilder', P.bilder);
 Cards.paint();
 </script></body></html>

@@ -8,7 +8,7 @@ Brief (maintainer, 2026-11-27): "Wetter gefällt mir mittlerweile sehr gut … I
 | --- | --- |
 | [ANALYSIS](ANALYSIS.md) | critique of the overview, every module with its changing data, its step and why, what became of the brief's ideas, what the budgets allow |
 | [PILOTS](PILOTS.md) | the stop: the overview and three pilots (habits – scene, clock – sign, finance – tone), variables, states, contrast, cost, the three questions |
-| `mockups/` | `world.js` (the drawing: spots of the weather landscape plus a module's things), `signs.js`, `cards.js`, `mock.css`, pages `p2-*`, `render.mjs`, `measure.mjs` (pictures and numbers go to `web/.screens/living-scenes/`, never into the repo) |
+| `mockups/` | `world.js` (the drawing: spots of the weather landscape plus a module's things), `signs.js`, `cards.js`, `shell.js`, `icons.js`, `mock.css`, pages `p2-*`, `render.mjs`, `measure.mjs` (pictures and numbers go to `web/.screens/living-scenes/`, never into the repo) |
 
 The mockups load the weather round's drawing (`../weather-scenes-2/mockups/scene.js`, `palette.js`) – one world means one drawing. Those two files must stay until this round closes.
 

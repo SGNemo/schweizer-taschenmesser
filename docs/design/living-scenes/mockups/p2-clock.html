@@ -13,20 +13,24 @@ var STATES = [
   ['wenig', '1 Ort', { places: [C.SEED_PLACES[0]] }],
   ['normal', 'die 4 Orte der Beispieldaten', {}],
   ['viel', '6 Orte (Größe m zeigt 4, wie heute)', { places: SIX }],
-  ['besonders', 'Vollmondnacht, eine Kachel genau in der Morgendämmerung, eine in der goldenen Stunde', { moon: { illum: 1 },
-    places: [p('23:00', 'Kapstadt', 'Nacht · +1 h', 23), p('06:00', 'Tante Ines', 'Morgen · −4 h', 6), p('18:00', 'Büro Tokio', 'Abend · +9 h', 18), p('03:00', 'Honolulu', 'Nacht · −10 h', 3)] }],
+  ['besonders', 'Vollmondnacht, eine Kachel im Morgenlicht, eine im Abendlicht', { moon: { illum: 1 },
+    places: [p('23:00', 'Kapstadt', 'Nacht · +1 h', 23), p('07:00', 'Tante Ines', 'Tag · −4 h', 7), p('19:00', 'Büro Tokio', 'Tag · +9 h', 19), p('03:00', 'Honolulu', 'Nacht · −10 h', 3)] }],
 ];
 function cell(label, html, cls, small) { return '<div class="cell ' + (cls || '') + '"><p class="label">' + label + (small ? '<small>' + small + '</small>' : '') + '</p>' + html + '</div>'; }
-var o = '<h1>Uhrzeit anderswo – Himmelskacheln (Stufe 1)</h1><p class="intro">Jede Kachel behält ihren Text links auf der Kachelfläche; rechts sitzt ein Himmel (72 px breit, volle Höhe, bündig, Kachelradius) für die Ortszeit: 21–6 Nacht, 6–7 Morgendämmerung, 7–18 Tag, 18–20 goldene Stunde, 20–21 Abenddämmerung. Mondphase in allen Kacheln gleich. Kein Text auf dem Himmel.</p><h2>Zustände</h2>';
+var o = '<h1>Uhrzeit anderswo – Himmelskacheln (Stufe 1)</h1><p class="intro">Jede Kachel behält ihren Text links auf der Kachelfläche; rechts sitzt ein Himmel (72 px breit, volle Höhe, bündig, Kachelradius) für die Ortszeit. Kacheln schmaler als 220 px (Telefon, 1-spaltige Karte): statt des Streifens ein rundes Himmelsfenster (36 px) oben rechts, der Text behält die volle Breite. Himmel in den zwei Wörtern der App: 21–6 Nacht (Mond, Sterne), 6–8 Morgenlicht (Sonne tief links), 8–18 Tag, 18–21 Abendlicht (Sonne tief rechts). Keine Dämmerungshimmel. Mondphase in allen Kacheln gleich. Kein Text auf dem Himmel.</p><h2>Zustände</h2>';
 STATES.forEach(function (s) {
   var a = Object.assign({}, s[2]), b = Object.assign({}, s[2], { cls: '' });
   o += '<div class="cells" style="margin-top:20px">' + cell(s[0] + ' · 2 Spalten', C.clock(V, a), 'w780', s[1]) + cell(s[0] + ' · Telefon', C.clock(V, b), 'w380') +
     (s[0] === 'viel' ? cell('viel · Größe l', C.clock(V, Object.assign({}, s[2], { size: 'l' })), 'w780', 'zeigt 6') : '') + '</div>';
 });
-var PH = function (h) { return h >= 21 || h < 6 ? 'Nacht' : h < 7 ? 'Morgendämmerung' : h < 18 ? 'Tag' : h < 20 ? 'goldene Stunde' : 'Abenddämmerung'; };
-o += '<h2>Die Variable: eine Kachel durch 24 Stunden</h2><p class="intro">Alle 2 Stunden, Mond 62 % zunehmend.</p><div class="cells">';
-for (var h = 0; h < 24; h += 2) o += cell((h < 10 ? '0' : '') + h + ':00', '<div class="card" data-hue="lime" data-area="plan" style="padding:8px"><ul class="kacheln" style="grid-template-columns:1fr">' +
-  '<li class="kachel sky"><span class="kVal">' + (h < 10 ? '0' : '') + h + ':00</span><span class="kLab">Beispielort</span><span class="kSt">' + PH(h) + '</span>' + C.slot('skyPanel', { kind: 'tile', sky: C.hourSky(h) }) + '</li></ul></div>', '', '').replace('class="cell "', 'class="cell" style="width:236px"');
+var PH = function (h) { return h >= 21 || h < 6 ? 'Nacht' : 'Tag'; }, HL = function (h) { return h >= 21 || h < 6 ? 'Nacht' : h < 8 ? 'Morgenlicht' : h < 18 ? 'Tag' : 'Abendlicht'; };
+function hh(h) { return (h < 10 ? '0' : '') + h + ':00'; }
+function one(h, w) { return cell(hh(h) + ' · ' + HL(h), '<div class="card" data-hue="lime" data-area="plan" style="padding:8px"><ul class="kacheln" style="grid-template-columns:1fr">' +
+  '<li class="kachel sky"><span class="kVal">' + hh(h) + '</span><span class="kLab">Beispielort</span><span class="kSt">' + PH(h) + ' · +2 h</span>' + C.slot('skyPanel', { kind: 'tile', sky: C.hourSky(h) }) + '</li></ul></div>', '', '').replace('class="cell "', 'class="cell" style="width:' + w + 'px"'); }
+o += '<h2>Die Variable: eine Kachel durch 24 Stunden</h2><p class="intro">Alle 2 Stunden, Mond 62 % zunehmend. Oben breite Kacheln (Streifen), unten schmale (Himmelsfenster).</p><div class="cells">';
+for (var h = 0; h < 24; h += 2) o += one(h, 236);
+o += '</div><div class="cells" style="margin-top:20px">';
+for (h = 0; h < 24; h += 2) o += one(h, 186);
 o += '</div>';
 o += '<h2>Ausweichen</h2><p class="intro">„Bilder: Aus“ = die Kacheln von heute (Ton 0, graues Zeichen). Farbmodus „Ruhig“: Himmel in Graustufen, Ton 0. Weniger Bewegung: identisch, es bewegt sich nichts.</p><div class="cells">' +
   cell('Bilder: Aus', '<div class="tone0">' + C.clock({ bilder: 'aus', sky: V.sky }) + '</div>', 'w780') +
