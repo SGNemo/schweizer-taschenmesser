@@ -642,6 +642,17 @@ export async function addKindFromField(
 ): Promise<boolean> {
   if (reading.kind === 'steps')
     return addFromField(reading.title, titles, shown, reading.steps, appointment, field);
+  // A list by its name (V1): exactly „In den Plan“ in Listen – its row, „Nicht planen“ lifted, a list without a day
+  // laid on today, one undo, the toast says where it lies. It takes no topic: K9 then follows as its own line.
+  if (reading.kind === 'listRow') {
+    const ok = await placeRequested(
+      { module: 'lists', id: reading.listId },
+      { title: reading.name },
+    );
+    const shownTopic = field.filtered ?? field.topic;
+    if (ok && shownTopic) toast(t.planner.topic.notIn(shownTopic.title));
+    return ok;
+  }
   const shownTopic = field.filtered ?? field.topic;
   let key: string | undefined;
   let noteRef: { id: string; title: string } | undefined;
@@ -665,15 +676,6 @@ export async function addKindFromField(
           }
           // Fails closed: a list entry that names no list would skip the check below.
           if (!ref) throw new Error('shopping entry without a list');
-          key = await ownRow(ref);
-          return {};
-        }
-        case 'listRow': {
-          // Typed by its exact name: asked into the plan as „In den Plan“ in Listen would (its one row, under „Noch
-          // ohne Tag“); a list he put on „Nicht planen“ is asked in again – he typed it.
-          const ref = { moduleId: 'lists', id: reading.listId };
-          const row = await itemRepo.get(itemKeyOf(ref.moduleId, ref.id));
-          if (row?.excluded) await itemPatch(ref, { excluded: undefined });
           key = await ownRow(ref);
           return {};
         }

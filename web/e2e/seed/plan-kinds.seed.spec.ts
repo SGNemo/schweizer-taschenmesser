@@ -149,7 +149,7 @@ for (const scheme of ['light', 'dark'] as const)
     expect(violations).toEqual([]);
   });
 
-test('a list by its name (V1): „Liste in den Plan“, Enter puts its row under „Noch ohne Tag“, no entry added', async ({
+test('a list by its name (V1): „Liste im Plan“, Enter lays its row on today as Listen’s „In den Plan“, no entry added', async ({
   page,
 }) => {
   test.setTimeout(120_000);
@@ -164,12 +164,13 @@ test('a list by its name (V1): „Liste in den Plan“, Enter puts its row under
   });
   await page.reload();
   await field(page).fill('Drogerie');
-  await expect(page.getByTestId('planner-kind')).toContainText('Liste in den Plan');
+  await expect(page.getByTestId('planner-kind')).toContainText('Liste im Plan');
   await expect(page.getByTestId('planner-kind')).toContainText('Drogerie');
   await field(page).press('Enter');
-  await expect(page.getByText('Liste steht im Plan, unter „Noch ohne Tag“.')).toBeVisible();
-  await page.getByRole('button', { name: 'Noch ohne Tag ausklappen' }).click();
-  await expect(page.getByRole('button', { name: /^Einkaufen · 2 Dinge/ }).first()).toBeVisible();
+  await expect(page.getByText('Im Plan: Einkaufen · 2 Dinge · Mo')).toBeVisible();
+  await expect(
+    page.getByTestId(`day-${TODAY}`).getByRole('button', { name: /^Einkaufen · 2 Dinge/ }),
+  ).toBeVisible();
   expect(await count(page, 'lists_item')).toBe(2);
   expect(await count(page, 'todos_task')).toBe(0);
 });

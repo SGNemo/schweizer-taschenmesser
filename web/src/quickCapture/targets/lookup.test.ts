@@ -4,6 +4,7 @@ import { db } from '@/core/db/db';
 import { createCollectionRepo } from '@/core/db/repo';
 import { getManifest, visibleManifests } from '@/core/modules/registry';
 import { setNow } from '@/core/time/now';
+import { setSettings } from '@/core/settings/settings';
 import { saveCapture } from './index';
 import { knownLists, knownShoppingNames, nameKey } from './lookup';
 
@@ -122,5 +123,20 @@ describe('knownLists (V1, after planner hub 2)', () => {
     expect([...lists.values()].map((l) => l.id).sort()).toEqual(['drog', 'pack']);
     expect(lists.get(nameKey('DROGERIE'))?.id).toBe('drog');
     expect((await knownLists({ states: { ...ON, lists: false } })).size).toBe(0);
+  });
+  it('a packing list with a trip ahead is in the plan by its date: no request; Listen’s „Im Plan zeigen“ off: none', async () => {
+    await repo('lists', 'list').createMany([
+      { id: 'trip', data: { name: 'Urlaub', kind: 'packing', tripDate: '2026-12-05' } },
+      { id: 'drog', data: { name: 'Drogerie', kind: 'shopping' } },
+    ]);
+    await repo('lists', 'item').createMany([
+      { id: 'i1', data: { listId: 'trip', name: 'Sonnencreme' } },
+      { id: 'i2', data: { listId: 'drog', name: 'Zahnpasta' } },
+    ]);
+    const lists = await knownLists({ states: ON, today: '2026-11-30' });
+    expect([...lists.values()].map((l) => l.id)).toEqual(['drog']);
+    await setSettings('module.lists', { showInPlan: false });
+    expect((await knownLists({ states: ON, today: '2026-11-30' })).size).toBe(0);
+    await setSettings('module.lists', { showInPlan: true });
   });
 });

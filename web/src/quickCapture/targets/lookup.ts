@@ -2,7 +2,10 @@ import { createCollectionRepo } from '@/core/db/repo';
 import type { TaschenmesserDB } from '@/core/db/db';
 import { loadModuleStates, type ModuleStates } from '@/core/modules/activation';
 import { getManifest, visibleManifests } from '@/core/modules/registry';
+import { z } from 'zod';
+import { getSettings } from '@/core/settings/settings';
 import { addDaysStr } from '@/core/time/dates';
+import { today as todayStr } from '@/core/time/now';
 import type { CaptureFields } from '../parser';
 import { openRest } from './adapters';
 import type { OpenInvoice } from './types';
@@ -184,19 +187,27 @@ export async function knownShoppingNames(
   return out;
 }
 
+/** Listen's switch „Im Plan zeigen“, read as its own setting row (no import of the module). */
+const SHOW_IN_PLAN = z.object({ showInPlan: z.boolean() }).passthrough();
+
 /**
- * The lists the planner can be asked to show, by name (`nameKey`): shopping and packing lists that are not put away and
- * still hold an open entry – the lists source lists exactly those once asked in. Typing such a name into the planner's
+ * The lists the planner can be asked to show, by name (`nameKey`): shopping lists and undated packing lists that are
+ * not put away and still hold an open entry, while Listen's „Im Plan zeigen“ is on – the lists source lists exactly
+ * those once asked in. Typing such a name into the planner's
  * field puts the list's one row into the plan (V1 of the bundle question, after planner hub 2). Empty while Listen is
  * off; two lists of the same name are no sure reading (left out).
  */
 export async function knownLists(
-  opts: { database?: TaschenmesserDB; states?: ModuleStates } = {},
+  opts: { database?: TaschenmesserDB; states?: ModuleStates; today?: string } = {},
 ): Promise<Map<string, { id: string; name: string }>> {
   const states = opts.states ?? (await loadModuleStates(visibleManifests, opts.database));
   const out = new Map<string, { id: string; name: string }>();
   const lists = getManifest('lists');
   if (!lists || !states.lists) return out;
+  // Listen's own switch „Im Plan zeigen“: off, the source lists no list – the field promises none.
+  const prefs = await getSettings('module.lists', SHOW_IN_PLAN, { showInPlan: true });
+  if (!prefs.showInPlan) return out;
+  const today = opts.today ?? todayStr();
   const all = (await createCollectionRepo(lists, 'list', opts.database)
     .active()
     .toArray()) as Record<string, unknown>[];
@@ -213,6 +224,8 @@ export async function knownLists(
   const twice = new Set<string>();
   for (const l of all) {
     if ((l.kind !== 'shopping' && l.kind !== 'packing') || l.archived) continue;
+    // A packing list with a trip ahead is in the plan by its date already („Packen: …“): no request for it.
+    if (l.kind === 'packing' && typeof l.tripDate === 'string' && l.tripDate >= today) continue;
     if (typeof l.name !== 'string' || !l.name.trim() || !open.has(String(l.id))) continue;
     const key = nameKey(l.name);
     if (out.has(key)) twice.add(key);

@@ -179,4 +179,13 @@ describe('fieldKind – a list by its name (V1, after planner hub 2)', () => {
   it('Listen off: a ToDo', () => {
     expect(kind('Drogerie', { lists, on: (id) => id !== 'lists' })).toBeUndefined();
   });
+  it('a list name that is also a known shopping name plans the list; „Einkauf: …“ still adds an entry', () => {
+    const both = new Map([
+      [nameKey('Milch'), { id: 'milk', name: 'Milch' }],
+      [nameKey('Einkauf'), { id: 'shopping-default', name: 'Einkauf' }],
+    ]);
+    expect(kind('Milch', { lists: both })).toBe('listRow');
+    expect(kind('Einkauf', { lists: both })).toBe('listRow');
+    expect(kind('Einkauf: Drogerie', { lists: both })).toBe('list');
+  });
 });
