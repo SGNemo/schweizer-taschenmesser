@@ -638,6 +638,8 @@
   flex-direction: column;
   gap: var(--space-1);
   min-width: 0;
+  /* as wide as its text, never wider than the card (fit-content): the picture measures where the text ends (cardFit) */
+  width: fit-content;
 }
 .widgetText > p {
   margin: 0;
