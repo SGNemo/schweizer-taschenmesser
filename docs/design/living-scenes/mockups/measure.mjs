@@ -105,8 +105,9 @@ result.meta = {}; result.clock = [];
 for (const scheme of ['light', 'dark']) {
   const page = await browser.newPage({ colorScheme: scheme, viewport: { width: 1920, height: 1080 } });
   await page.goto(url('p2-finance.html'));
+  await page.evaluate((v) => { window.__TONES = v; }, TONES); // data goes in as an argument, never into the code string
   const r = await page.evaluate(`(() => { ${HELPERS}
-    const TONES = ${JSON.stringify(TONES)}, rows = [], steps = [];
+    const TONES = window.__TONES, rows = [], steps = [];
     for (const t of TONES) { const bg = surface(t), row = { tone: t, bg: hex(bg), chroma: +chroma(bg).toFixed(3) }; for (const k in INKS) row[k] = +cr(INKS[k], bg).toFixed(2); rows.push(row); }
     for (const st of [6, 8, 10, 12]) { const per = TONES.map((t) => { const bg = surface(t, st); return { t, text: cr(INKS.text, bg), muted: cr(INKS.muted, bg), meta: cr(INKS.metaBase, bg) }; });
       const w = (k) => per.reduce((a, b) => (b[k] < a[k] ? b : a)); steps.push({ step: st, text: +w('text').text.toFixed(2), muted: +w('muted').muted.toFixed(2), mutedAt: w('muted').t, metaBase: +w('meta').meta.toFixed(2), metaAt: w('meta').t }); }
@@ -129,11 +130,12 @@ for (const scheme of ['light', 'dark']) {
     });
   });
   const png = (await page.screenshot({ fullPage: true })).toString('base64');
+  await page.evaluate((v) => { window.__TILES = v; }, tiles);
   const cl = await page.evaluate(`(async () => { ${HELPERS}
     const img = new Image(); img.src = 'data:image/png;base64,${png}'; await img.decode();
     const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(img, 0, 0);
     const INK = { dark: [23, 31, 36], light: [236, 239, 241] };
-    return ${JSON.stringify(tiles)}.map((t) => { const d = x.getImageData(t.x, t.y, t.cw, t.ch).data; let lo = [255, 255, 255], hi = [0, 0, 0], min = 99; const all = [];
+    return window.__TILES.map((t) => { const d = x.getImageData(t.x, t.y, t.cw, t.ch).data; let lo = [255, 255, 255], hi = [0, 0, 0], min = 99; const all = [];
       for (let i = 0; i < d.length; i += 4) { const p = [d[i], d[i + 1], d[i + 2]], v = cr(INK[t.ink], p); all.push(v); if (v < min) min = v; if (lum(p) < lum(lo)) lo = p; if (lum(p) > lum(hi)) hi = p; }
       all.sort((a, b) => a - b);
       return { ...t, min: +min.toFixed(2), p5: +all[Math.floor(all.length * 0.05)].toFixed(2), darkest: hex(lo), lightest: hex(hi) }; });
@@ -146,9 +148,10 @@ for (const scheme of ['light', 'dark']) {
   }
   // signs: the one drawn colour of each sign on the card, per sky tone; the worst tone is reported
   await page.goto(url('p2-overview.html', '?bilder=ruhig'));
+  await page.evaluate((v) => { window.__TONES = v; }, TONES);
   const sg = await page.evaluate(`(() => { ${HELPERS}
     const out = {};
-    for (const tone of ${JSON.stringify(TONES)}) { document.body.dataset.sky = tone;
+    for (const tone of window.__TONES) { document.body.dataset.sky = tone;
       document.querySelectorAll('.sign').forEach((s) => { const card = s.closest('.card'), bg = rgb(getComputedStyle(card).backgroundColor);
         s.querySelectorAll('path, rect, circle, ellipse, line').forEach((e) => { if (e.closest('clipPath')) return; const cs = getComputedStyle(e);
           [cs.fill, cs.stroke].forEach((c) => { if (!c || c === 'none') return; const v = rgb(c); if (hex(v) === hex(bg)) return; const k = cr(v, bg), o = out[s.dataset.sign] || (out[s.dataset.sign] = { sign: s.dataset.sign, hue: card.dataset.hue, min: 99, at: '' }); if (k < o.min) { o.min = +k.toFixed(2); o.at = tone; } }); }); });
