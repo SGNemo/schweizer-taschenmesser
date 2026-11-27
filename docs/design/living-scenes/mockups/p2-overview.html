@@ -1,0 +1,14 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lebende Bilder – Übersicht</title><link rel="stylesheet" href="mock.css">
+<script src="../../weather-scenes-2/mockups/palette.js"></script><script src="../../weather-scenes-2/mockups/scene.js"></script><script src="world.js"></script>
+<script src="icons.js"></script><script src="signs.js"></script><script src="cards.js"></script><script src="shell.js"></script></head>
+<body>
+<!-- The overview with the seeded cards of the app. Parameters: ?tone=6|12|0 (default 6), ?sky=day|evening|night|rain,
+     ?bilder=aus|ruhig|verspielt (default verspielt; aus = the app today). Dark theme: prefers-color-scheme. -->
+<script>
+var P = Shell.params();
+document.documentElement.style.setProperty('--tone', P.tone + '%');
+document.body.innerHTML = Shell.page(Shell.head() + '<div class="grid">' + Cards.overview({ bilder: P.bilder, sky: Cards.sky(P.sky) }) + '</div>');
+document.body.setAttribute('data-bilder', P.bilder);
+Cards.paint();
+</script></body></html>
