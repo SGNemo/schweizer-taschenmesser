@@ -186,7 +186,7 @@ a { color: inherit; }
 .ringName { font-weight: 500; }
 .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); gap: var(--space-2); }
 .link { text-decoration: underline; text-underline-offset: .2em; text-decoration-color: color-mix(in srgb, var(--text) 45%, transparent); }
-.mask { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border-radius: var(--radius-md); background: color-mix(in srgb, var(--text-muted) 14%, var(--card-bg, var(--surface-raised))); color: var(--text-muted); font-size: var(--text-xl); letter-spacing: .15em; align-self: flex-start; } /* the muted ink over the card: it would vanish as --surface-2 on a toned card */
+.mask { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border-radius: var(--radius-md); background: color-mix(in srgb, var(--text-muted) 10%, var(--card-bg, var(--surface-raised))); color: var(--text-muted); font-size: var(--text-xl); letter-spacing: .15em; align-self: flex-start; } /* the muted ink over the card: it would vanish as --surface-2 on a toned card */
 [data-tone='0'] .mask, .tone0 .mask { background: var(--surface-2); }
 .mask small { font-size: var(--text-sm); letter-spacing: 0; }
 .todayTask { display: flex; flex-direction: column; gap: 6px; }
