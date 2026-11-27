@@ -4,7 +4,7 @@
    its own things through the scene's `front` hook; their colours pass through the scene's light (X.C.lit), so a bed of
    flowers is dark at night and warm at dusk without a rule of its own.
    window.Living = { scene(spot, sky, data, opts), tile(sky, opts), SPOTS, count(svg), growth(n), FLOWERS }
-     spot  'garden' (habits) – more spots arrive with their module pages; opts.box [w, h] = the picture's size in px
+     spot  'garden' (habits), 'lake' (todos), 'way' (planner) – more spots arrive with their module pages; opts.box [w, h] = the picture's size in px
      sky   a weather scene state (phase, cond, season, moon, theme …) – the shared environment, never module data
      data  the module's variables, see each spot
    Colours: palette.js plus the block P below (the only new hex values; product: --scene-* tokens).
@@ -13,12 +13,17 @@
 (function () {
   var P = {
     soil: '#5b4334', soilLit: '#75573f', stone: '#a9a39a', stem: '#3f7a45', leaf: '#5fa052', leafLit: '#86bf62', bud: '#6f9a55',
-    core: '#f6d569', lamp: '#ffd98a', lampPost: '#3a2e28', can: '#7d98ad', canLit: '#a5bccb', wing: '#f4efe2', sign: '#c9b08a',
+    core: '#f6d569', hull: '#6b4a38', path: '#d9c9a3', walker: '#3d4a63', lamp: '#ffd98a', lampPost: '#3a2e28', can: '#7d98ad', canLit: '#a5bccb', wing: '#f4efe2', sign: '#c9b08a',
   };
   /* bloom colours by the goal's place in the list (1st, 2nd, …): a plant keeps its colour as long as the order stays */
   var FLOWERS = ['#e8807a', '#f2b56b', '#b79be8', '#f3e9a8', '#7fb2e6', '#f29ac0'];
   var SPOTS = {
     /* the meadow in front of the fence, the cabin behind it. Bed: baseline y, first x, step */
+    /* the meadow west of the lake (planner): the day as a way from the left (morning) to the right (evening) */
+    way: { span: [846, 1010], k: 1.7, line: [[850, 315], [874, 309], [900, 313], [926, 305], [952, 309], [978, 302], [1006, 304]] },
+    /* the lake below the massif (ToDos): boats on the water, stars over it */
+    lake: { span: [1000, 1346], slots: [[1066, 285], [1112, 276], [1158, 291], [1204, 275], [1244, 287], [1100, 297], [1186, 283]],
+      stars: [[1046, 56], [1090, 34], [1134, 50], [1180, 26], [1224, 46], [1264, 22], [1306, 42]] },
     garden: { span: [1470, 1596], bedY: 313, x0: 1486, x1: 1580, rowDy: -9, k: 1.7, max: 12 },
   };
   /* growth step from the number of days a goal was ever done: it only rises, a pause changes nothing */
@@ -84,7 +89,58 @@
     }
     return o;
   }
-  var DRAW = { garden: garden };
+
+  /* lake: data = { done } – things ticked today. One sailing boat per thing (at most seven; the text names the number).
+     By night every boat carries a lantern, and under a sky that shows stars the same number of stars stands over the lake,
+     joined to a figure that grows star by star. Nothing is drawn for what is open. A new day starts with the still lake. */
+  function lake(X, data) {
+    var S = SPOTS.lake, f = X.f, L = X.C.lit, o = '', n = Math.max(0, Math.min(7, data.done || 0)), dark = X.s.dark, i;
+    function p(d, fill, part, extra) { var a = { d: d, fill: fill, 'data-part': part }; for (var k in extra || {}) a[k] = extra[k]; o += X.el('path', a); }
+    if (dark && X.s.cover < 3 && !X.s.falling && !X.s.fog && n) {
+      var st = S.stars.slice(0, n), d = '';
+      if (n > 1) o += X.el('path', { d: X.pts(st), fill: 'none', stroke: X.PAL.c.star, 'stroke-width': 0.8, opacity: 0.38, 'data-part': 'figure' });
+      st.forEach(function (q) { d += X.circ(q[0], q[1], 2.1); });
+      p(d, X.PAL.c.star, 'done-stars');
+    }
+    for (i = 0; i < n; i++) {
+      var b = S.slots[i], x = b[0], y = b[1], k = 0.8 + (y - 274) / 60, col = FLOWERS[i % FLOWERS.length];
+      p('M' + f(x - 7 * k) + ',' + f(y) + 'h' + f(14 * k) + 'l' + f(-2.6 * k) + ',' + f(3.4 * k) + 'h' + f(-8.8 * k) + 'Z', L(P.hull), 'hull');
+      p('M' + f(x + 0.6 * k) + ',' + f(y - 1) + 'v' + f(-12 * k) + 'l' + f(7 * k) + ',' + f(11 * k) + 'Z', L(P.wing, 0.5), 'sail');
+      p('M' + f(x - 0.6 * k) + ',' + f(y - 1) + 'v' + f(-9 * k) + 'l' + f(-5 * k) + ',' + f(8.4 * k) + 'Z', L(col, 0.4), 'jib');
+      p('M' + f(x - 6 * k) + ',' + f(y + 4.6 * k) + 'h' + f(12 * k) + 'v' + f(0.9) + 'h' + f(-12 * k) + 'Z', X.C.waterHi, 'wake', { opacity: 0.5 });
+      if (dark || X.s.phase === 'golden') { // the lantern at the mast and its light on the water
+        o += X.el('circle', { cx: f(x), cy: f(y - 3 * k), r: f(8 * k), fill: X.radial(P.lamp, 0.5, 0), 'data-part': 'lantern-glow' });
+        p(X.circ(x, y - 3 * k, 1.5 * k), P.lamp, 'lantern');
+        p('M' + f(x - 1.2 * k) + ',' + f(y + 5.5 * k) + 'h' + f(2.4 * k) + 'v' + f(5 * k) + 'h' + f(-2.4 * k) + 'Z', P.lamp, 'lantern-mirror', { opacity: 0.35 });
+      }
+    }
+    return o;
+  }
+
+  /* way: data = { stations: [{ at: 0..1, done }], now: 0..1 | null } – the day as a way. `at` is the thing's start between the day's
+     begin and end; a done thing has its flag up, a coming one is a plain post; the walker stands at `now` (null outside the day:
+     no walker; at night the walker's lantern shows). Posts never fall, nothing turns red, a passed post without a flag is just a post. */
+  function way(X, data) {
+    var S = SPOTS.way, f = X.f, L = X.C.lit, o = '', P0 = S.line, dark = X.s.dark;
+    function p(d, fill, part, extra) { var a = { d: d, fill: fill, 'data-part': part }; for (var k in extra || {}) a[k] = extra[k]; o += X.el('path', a); }
+    function at(t) { var u = Math.max(0, Math.min(1, t)) * (P0.length - 1), i = Math.min(P0.length - 2, Math.floor(u)), r = u - i; return [P0[i][0] + (P0[i + 1][0] - P0[i][0]) * r, P0[i][1] + (P0[i + 1][1] - P0[i][1]) * r]; }
+    var up = P0.map(function (q) { return [q[0], q[1] - 2.2]; }), down = P0.slice().reverse().map(function (q) { return [q[0], q[1] + 2.2]; });
+    p(X.pts(up.concat(down), true), X.mix(X.C.meadow, L(P.path), 0.6), 'way');
+    var K = S.k;
+    function thing(x, y, inner) { o += '<g transform="translate(' + f(x) + ',' + f(y) + ') scale(' + K + ')">' + inner + '</g>'; }
+    function q(d, fill, part) { return X.el('path', { d: d, fill: fill, 'data-part': part }); }
+    (data.stations || []).slice(0, 8).forEach(function (st, i) {
+      var w = at(st.at);
+      thing(w[0], w[1] - 2, q('M-0.7,0v-11h1.4v11Z', L(P.lampPost), 'post') + (st.done ? q('M0.7,-11l8,2.6l-8,2.8Z', L(FLOWERS[i % FLOWERS.length], 0.4), 'flag') : q(X.circ(0, -11.4, 1.3), L(P.sign), 'knob')));
+    });
+    if (data.now != null) {
+      var w = at(data.now), lit = dark || X.s.phase === 'golden';
+      thing(w[0], w[1] - 2, (lit ? X.el('circle', { cx: 4, cy: -5, r: 9, fill: X.radial(P.lamp, 0.5, 0), 'data-part': 'lantern-glow' }) : '') +
+        q('M-2.6,0l2.6,-8.4l2.6,8.4Z', L(P.walker), 'walker') + q(X.circ(0, -10, 2), L(P.wing, 0.5), 'head') + q('M-3.6,-7.6h2.2v4.4h-2.2Z', L(X.PAL.c.flag, 0.5), 'pack') + (lit ? q(X.circ(4, -5, 1.4), P.lamp, 'lantern') : ''));
+    }
+    return o;
+  }
+  var DRAW = { garden: garden, lake: lake, way: way };
 
   /* the crop of a spot for a picture box [w, h] in px: the width is fixed by the module's things (the bed fills the picture's
      width), the height follows the box, the foot of the picture is the foot of the landscape. A tall box shows more forest,
