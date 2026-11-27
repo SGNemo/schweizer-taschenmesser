@@ -183,3 +183,41 @@ export async function knownShoppingNames(
   }
   return out;
 }
+
+/**
+ * The lists the planner can be asked to show, by name (`nameKey`): shopping and packing lists that are not put away and
+ * still hold an open entry – the lists source lists exactly those once asked in. Typing such a name into the planner's
+ * field puts the list's one row into the plan (V1 of the bundle question, after planner hub 2). Empty while Listen is
+ * off; two lists of the same name are no sure reading (left out).
+ */
+export async function knownLists(
+  opts: { database?: TaschenmesserDB; states?: ModuleStates } = {},
+): Promise<Map<string, { id: string; name: string }>> {
+  const states = opts.states ?? (await loadModuleStates(visibleManifests, opts.database));
+  const out = new Map<string, { id: string; name: string }>();
+  const lists = getManifest('lists');
+  if (!lists || !states.lists) return out;
+  const all = (await createCollectionRepo(lists, 'list', opts.database)
+    .active()
+    .toArray()) as Record<string, unknown>[];
+  const open = new Set(
+    (
+      (await createCollectionRepo(lists, 'item', opts.database).active().toArray()) as Record<
+        string,
+        unknown
+      >[]
+    )
+      .filter((i) => !i.done)
+      .map((i) => String(i.listId)),
+  );
+  const twice = new Set<string>();
+  for (const l of all) {
+    if ((l.kind !== 'shopping' && l.kind !== 'packing') || l.archived) continue;
+    if (typeof l.name !== 'string' || !l.name.trim() || !open.has(String(l.id))) continue;
+    const key = nameKey(l.name);
+    if (out.has(key)) twice.add(key);
+    else out.set(key, { id: String(l.id), name: l.name.trim() });
+  }
+  for (const key of twice) out.delete(key);
+  return out;
+}

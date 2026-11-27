@@ -668,6 +668,15 @@ export async function addKindFromField(
           key = await ownRow(ref);
           return {};
         }
+        case 'listRow': {
+          // Typed by its exact name: asked into the plan as „In den Plan“ in Listen would (its one row, under „Noch
+          // ohne Tag“); a list he put on „Nicht planen“ is asked in again – he typed it.
+          const ref = { moduleId: 'lists', id: reading.listId };
+          const row = await itemRepo.get(itemKeyOf(ref.moduleId, ref.id));
+          if (row?.excluded) await itemPatch(ref, { excluded: undefined });
+          key = await ownRow(ref);
+          return {};
+        }
         case 'event':
           await saveCapture('event', reading.fields);
           return {};

@@ -137,6 +137,34 @@ describe('addKindFromField', () => {
     expect((await itemRepo.get('lists:shopping-default'))?.updatedAt).toBe(before?.updatedAt);
   });
 
+  it('a list by its name: its one row asked in, no entry added, one undo takes it back; „Nicht planen“ is lifted', async () => {
+    await repo('lists', 'list').createMany([
+      { id: 'drog', data: { name: 'Drogerie', kind: 'shopping' } },
+    ]);
+    await repo('lists', 'item').createMany([
+      { id: 'd1', data: { listId: 'drog', name: 'Zahnpasta' } },
+    ]);
+    const entries = await live('lists_item');
+    expect(await addKindFromField({ kind: 'listRow', listId: 'drog', name: 'Drogerie' }, {})).toBe(
+      true,
+    );
+    expect((await itemRepo.get('lists:drog'))?.excluded).toBeUndefined();
+    expect(await live('lists_item')).toEqual(entries);
+    expect(await assignmentRepo.active().count()).toBe(0);
+    expect(messages()).toEqual(['Liste steht im Plan, unter „Noch ohne Tag“.']);
+    await undoLast();
+    expect(await itemRepo.get('lists:drog')).toBeUndefined();
+    // Put on „Nicht planen“ earlier: typing its name asks it in again.
+    await itemRepo.create(
+      { source: { module: 'lists', id: 'drog' }, order: 0, excluded: true },
+      { id: 'lists:drog' },
+    );
+    expect(await addKindFromField({ kind: 'listRow', listId: 'drog', name: 'Drogerie' }, {})).toBe(
+      true,
+    );
+    expect((await itemRepo.get('lists:drog'))?.excluded).toBeUndefined();
+  });
+
   it('rollback: a source that does not list the thing leaves nothing behind', async () => {
     await setSettings('module.invoices', { showInPlan: false });
     expect(await addKindFromField(invoice, {})).toBe(false);

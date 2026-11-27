@@ -8,8 +8,8 @@
  * „Freizeit …“, „heute nur …“, a lock word („fest“, „lock“, a closing „!“) and every instruction its rules read
  * („Do frei“). Then a sure kind that uses a date (Rechnung: the word and an amount; Termin: a day and a clock time)
  * wins over the planner's date reading and takes the date. A date word without a sure kind („Wäsche morgen“) stays
- * the planner's. Two kinds sure at once: the first of Rechnung, Termin, Einkaufsliste, Link, Notiz, Aufgabe mit
- * Schritten. German only, like the parser.
+ * the planner's. Two kinds sure at once: the first of Rechnung, Termin, Liste (the exact name of a list: its row into the
+ * plan), Einkaufsliste, Link, Notiz, Aufgabe mit Schritten. German only, like the parser.
  */
 import { trimTrailing, webAddress } from '@/core/net/webAddress';
 import { parseInstruction, type InstructionItem } from '@/core/plan/instructions';
@@ -23,6 +23,8 @@ export type FieldKind =
   | { kind: 'invoice'; fields: CaptureFields; deadline: string; host?: string }
   /** Entries of the shopping list (one per comma). */
   | { kind: 'list'; names: string[] }
+  /** An existing list by its exact name: its one row into the plan (no entry is added). */
+  | { kind: 'listRow'; listId: string; name: string }
   /** An appointment: a day and a clock time. */
   | { kind: 'event'; fields: CaptureFields }
   /** A note: what follows „Notiz:“ / „Idee:“. */
@@ -38,6 +40,7 @@ export type FieldKindName = FieldKind['kind'];
 export const KIND_MODULE: Record<FieldKindName, string> = {
   invoice: 'invoices',
   list: 'lists',
+  listRow: 'lists',
   event: 'calendar',
   note: 'notes',
   bookmark: 'bookmarks',
@@ -54,6 +57,8 @@ export interface FieldKindContext {
   on: (moduleId: string) => boolean;
   /** Names the shopping list or the pantry knows, as `nameKey` gives them. */
   known?: ReadonlySet<string>;
+  /** Lists the planner can show, by `nameKey` of their name (`knownLists`). */
+  lists?: ReadonlyMap<string, { id: string; name: string }>;
   /** The plan's things, so an instruction about one („Milch auf Fr“) stays the planner's. */
   items?: readonly InstructionItem[];
 }
@@ -149,6 +154,12 @@ function listOf(text: string, ctx: FieldKindContext): FieldKind | undefined {
   return { kind: 'list', names };
 }
 
+/** The exact name of a list the planner can show („Drogerie“): that list's row, not a new entry. */
+function listRowOf(text: string, ctx: FieldKindContext): FieldKind | undefined {
+  const list = ctx.lists?.get(nameKey(text));
+  return list ? { kind: 'listRow', listId: list.id, name: list.name } : undefined;
+}
+
 function bookmarkOf(text: string): FieldKind | undefined {
   if (!/^https?:\/\/\S+$/iu.test(text)) return undefined;
   const web = webAddress(text);
@@ -182,6 +193,7 @@ export function fieldKind(raw: string, ctx: FieldKindContext): FieldKind | undef
   const readers: [FieldKindName, () => FieldKind | undefined][] = [
     ['invoice', () => invoiceOf(text, ctx)],
     ['event', () => eventOf(text, ctx)],
+    ['listRow', () => listRowOf(text, ctx)],
     ['list', () => listOf(text, ctx)],
     ['bookmark', () => bookmarkOf(text)],
     ['note', () => noteOf(text)],

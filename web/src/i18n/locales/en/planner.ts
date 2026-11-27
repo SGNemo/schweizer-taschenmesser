@@ -131,6 +131,7 @@ export const planner: Strings['planner'] = {
     name: {
       invoice: 'invoice',
       list: 'shopping list',
+      listRow: 'list into the plan',
       event: 'appointment',
       note: 'note',
       bookmark: 'bookmark',
@@ -143,6 +144,7 @@ export const planner: Strings['planner'] = {
     toast: {
       invoice: 'Invoice created, under “No day yet”.',
       list: 'On the shopping list.',
+      listRow: 'List in the plan, under “No day yet”.',
       event: 'Appointment entered.',
       note: 'Note created.',
       bookmark: 'Bookmarked.',

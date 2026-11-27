@@ -148,3 +148,28 @@ for (const scheme of ['light', 'dark'] as const)
     ).violations.map((v) => `${v.id}: ${v.nodes[0]?.target.join(' ')}`);
     expect(violations).toEqual([]);
   });
+
+test('a list by its name (V1): „Liste in den Plan“, Enter puts its row under „Noch ohne Tag“, no entry added', async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize(DESKTOP);
+  await prepare(page);
+  await put(page, {
+    lists_list: [{ id: 'drog', name: 'Drogerie', kind: 'shopping', order: 1 }],
+    lists_item: [
+      { id: 'd1', listId: 'drog', name: 'Zahnpasta', done: false, order: 0 },
+      { id: 'd2', listId: 'drog', name: 'Duschgel', done: false, order: 1 },
+    ],
+  });
+  await page.reload();
+  await field(page).fill('Drogerie');
+  await expect(page.getByTestId('planner-kind')).toContainText('Liste in den Plan');
+  await expect(page.getByTestId('planner-kind')).toContainText('Drogerie');
+  await field(page).press('Enter');
+  await expect(page.getByText('Liste steht im Plan, unter „Noch ohne Tag“.')).toBeVisible();
+  await page.getByRole('button', { name: 'Noch ohne Tag ausklappen' }).click();
+  await expect(page.getByRole('button', { name: /^Einkaufen · 2 Dinge/ }).first()).toBeVisible();
+  expect(await count(page, 'lists_item')).toBe(2);
+  expect(await count(page, 'todos_task')).toBe(0);
+});

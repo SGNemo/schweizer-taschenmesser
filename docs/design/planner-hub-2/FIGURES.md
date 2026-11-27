@@ -102,7 +102,12 @@ Phone result: taps 16, perThing 13, switches 3 (planner → finance → budgets 
   - Work 7. taps **8**, perThing **7**, switches **0**.
 - „Als Routine speichern“ (2 handles) is not walked: `savedAsRoutine` is a constant, like the duration probe.
 
-### C2 – the errand round (5b, parked)
+### C2 – the errand round: V1 (built 2026-11-27), 5b (parked)
+
+**V1, both projects** (the maintainer chose it over 5b, 2026-11-26): type „Drogerie“ into the field – K1 „Liste in den Plan · Drogerie“, Enter (create **1**). The list's row („Einkaufen · 3 Dinge“) stands under „Noch ohne Tag“: unfold it (1), open the row (1), tick its three entries in the compartment (3), tick the two errands on today's sheet (2) = work **7**. perThing **6** (the opener and five ticks), switches **0**, rows **3** (two errands and the list, read after the list is in). Against today: switches 2 → 0, work 9 / 8 → 7; it costs one row (2 → 3), one create handle and one per-thing handle (the opener) – the script's lasting prices.
+
+**5b (parked), for the day it is built:**
+
 
 **Create, desktop:**
 

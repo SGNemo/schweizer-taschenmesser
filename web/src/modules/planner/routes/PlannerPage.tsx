@@ -6,7 +6,7 @@ import { useSearchParams } from 'react-router';
 import { getMeta, setMeta } from '@/core/db/metaKv';
 import { getLang } from '@/core/i18n/lang';
 import { useModuleStates } from '@/core/modules/activation';
-import { knownShoppingNames } from '@/quickCapture/targets/lookup';
+import { knownLists, knownShoppingNames } from '@/quickCapture/targets/lookup';
 import { dayName, explainAssignment, explainWait } from '@/core/plan/explain';
 import {
   isRestSentence,
@@ -320,6 +320,11 @@ export default function PlannerPage() {
     () => (kindsOn ? knownShoppingNames() : Promise.resolve(new Set<string>())),
     [kindsOn],
   );
+  const knownListNames = useLiveQuery(
+    () =>
+      kindsOn ? knownLists() : Promise.resolve(new Map<string, { id: string; name: string }>()),
+    [kindsOn],
+  );
   const kindItems = useMemo(() => (board ? instructionItems(board) : undefined), [board]);
   const kindReading = useMemo(() => {
     const day = data?.today ?? today();
@@ -330,6 +335,7 @@ export default function PlannerPage() {
       until: addDaysStr(day, Number(data?.settings.horizonDays ?? 14) - 1),
       on: (id) => !!states[id],
       ...(knownNames ? { known: knownNames } : {}),
+      ...(knownListNames ? { lists: knownListNames } : {}),
       ...(kindItems ? { items: kindItems } : {}),
     });
   }, [
@@ -338,6 +344,7 @@ export default function PlannerPage() {
     kindsOn,
     states,
     knownNames,
+    knownListNames,
     kindItems,
     data?.today,
     data?.settings.horizonDays,

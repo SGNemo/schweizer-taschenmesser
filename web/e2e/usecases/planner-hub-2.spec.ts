@@ -35,8 +35,9 @@ import { dismissNotices } from '../helpers';
  * `TARGET` (lower is better, except `HIGHER`); a word equals its `IST`. Named prices – a figure above its IST on
  * purpose, reaching it is no regression, more fails:
  *  - lasting (the bound is the TARGET): C1 `perThing` 6 → 7 (4a: the row expands first, then „Ganz öffnen“, from 5a
- *    „Los“); C2 `createTaps` 0 → 14 / phone 13 and `perThing` 5 → 7 (5b: the list asked into the plan in Listen, one
- *    trip, then „Auswählen“, three ticks, „Bündeln …“ – buys rows 2 → 1); D1 `taps` 11 → 15 and `perThing` 5 → 9 (4a:
+ *    „Los“); C2 `rows` 2 → 3, `createTaps` 0 → 1 and `perThing` 5 → 6 (V1: the list is typed into the field by its
+ *    name and stands as its own row, which opens to tick its entries – buys `moduleSwitches` 2 → 0 and `workTaps`
+ *    9 / 8 → 7); D1 `taps` 11 → 15 and `perThing` 5 → 9 (4a:
  *    the jump into a module is expand + „Ganz öffnen“; the note keeps its one-handle chip); D4 phone `taps` 22 → 23
  *    (11: Thursday's invoice waits under the phone's folded „Danach“ – one unfold; buys rows 20 → 7, switches 2 → 0);
  *  - for a while (the bound is `PRICE`, valid while the named IST word or figure still reads as before the package
@@ -73,6 +74,9 @@ const HIGHER = ['rightKind', 'linkedToPlan', 'doneInPlanner', 'markVisible', 'ma
  * (create 10 – „Ganz öffnen“ opens its editor at once, so no „Bearbeiten“ – switches 2); worked off with „Los“: the
  * next step only, the last „Fertig“ ticks the ToDo (work 7, taps 17, `nextStepOnly` ja). `perThing` keeps its IST 6
  * (measured 7: the lasting price of 4a). The C1 prices end here.
+ * C2 after V1 (2026-11-27): „Drogerie“ typed into the field asks the list into the plan (K1 „Liste in den Plan“), its
+ * row under „Noch ohne Tag“ opens and its three entries are ticked there, then the two errands (create 1, work 7 –
+ * the unfold, the opener, five ticks – switches 0, rows 3 read after the list is in, as C1 reads `created`).
  * D4 after 11 (2026-11-26): a topic in the planner itself – Monday's ⋯ „Thema …“ „Umzug“, then „Thema: Umzug“ in each
  * row's ⋯ (Thursday's invoice, Friday's appointment too), the page's ⋯ „Nur ein Thema zeigen …“ (rows 7, taps 22,
  * perThing 15, switches 0, planFilter ja). `rows` and `planFilter` are read after the filter is on. The phone measured
@@ -97,8 +101,8 @@ const IST: Record<string, Figures> = {
   'B Finanzen und Mails abarbeiten · pixel-7': { rowsBefore: 1, taps: 10, perThing: 8, moduleSwitches: 0, doneInPlanner: 5, rowsAfter: 0, mails: 'nicht möglich', replySwitches: 'nicht möglich' },
   'C1 Bündel Haushalt · desktop-chrome': { rows: 1, createTaps: 1, workTaps: 7, taps: 8, perThing: 6, moduleSwitches: 0, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'ja' },
   'C1 Bündel Haushalt · pixel-7': { rows: 1, createTaps: 1, workTaps: 7, taps: 8, perThing: 6, moduleSwitches: 0, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'ja' },
-  'C2 Besorgung · desktop-chrome': { rows: 2, createTaps: 0, workTaps: 9, perThing: 5, moduleSwitches: 2, oneRow: 'nein', mapShown: 'nicht möglich' },
-  'C2 Besorgung · pixel-7': { rows: 2, createTaps: 0, workTaps: 8, perThing: 5, moduleSwitches: 2, oneRow: 'nein', mapShown: 'nicht möglich' },
+  'C2 Besorgung · desktop-chrome': { rows: 2, createTaps: 0, workTaps: 7, perThing: 5, moduleSwitches: 0, oneRow: 'nein', mapShown: 'nicht möglich' },
+  'C2 Besorgung · pixel-7': { rows: 2, createTaps: 0, workTaps: 7, perThing: 5, moduleSwitches: 0, oneRow: 'nein', mapShown: 'nicht möglich' },
   'D1 Steht es im Plan, und wann · desktop-chrome': { taps: 11, perThing: 5, moduleSwitches: 10, markVisible: 5, markAgrees: 5, tripsToPlanner: 0 },
   'D1 Steht es im Plan, und wann · pixel-7': { taps: 11, perThing: 5, moduleSwitches: 10, markVisible: 5, markAgrees: 5, tripsToPlanner: 0 },
   'D2 Geteilter Link in den Planer · desktop-chrome': { taps: 2, moduleSwitches: 1, forms: 1, inPlanner: 'ja', wayBack: 'ja' },
@@ -112,8 +116,9 @@ const IST: Record<string, Figures> = {
 };
 
 // TARGET: the designed path after the last package of the flow, counted as this script counts (header). A2 is no longer
-// needed (A1 does it) and D5 is struck: both keep their IST. C2 is package 5b's flow, which is parked: its TARGET
-// stands for the day 5b is built.
+// needed (A1 does it) and D5 is struck: both keep their IST. C2 is V1 (the list asked into the plan from the field by
+// its name, 2026-11-27); 5b stays parked – its figures (rows 1, create 14 / 13, work 6, per thing 7, switches 2) are in
+// docs/design/planner-hub-2/FIGURES.md for the day it is built.
 // prettier-ignore
 const TARGET: Record<string, Figures> = {
   'A1 Alles ins Planer-Feld · desktop-chrome': { rows: 7, moduleSwitches: 0, taps: 12, perThing: 0, rightKind: 12, linkedToPlan: 10 },
@@ -124,8 +129,8 @@ const TARGET: Record<string, Figures> = {
   'B Finanzen und Mails abarbeiten · pixel-7': { rowsBefore: 1, taps: 10, perThing: 8, moduleSwitches: 0, doneInPlanner: 5, rowsAfter: 0, mails: 'nicht möglich', replySwitches: 'nicht möglich' },
   'C1 Bündel Haushalt · desktop-chrome': { rows: 1, createTaps: 1, workTaps: 7, taps: 8, perThing: 7, moduleSwitches: 0, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'ja' },
   'C1 Bündel Haushalt · pixel-7': { rows: 1, createTaps: 1, workTaps: 7, taps: 8, perThing: 7, moduleSwitches: 0, nextStepOnly: 'ja', savedAsRoutine: 'ja', durationProposed: 30, learned: 'ja' },
-  'C2 Besorgung · desktop-chrome': { rows: 1, createTaps: 14, workTaps: 6, perThing: 7, moduleSwitches: 2, oneRow: 'ja', mapShown: 'nicht möglich' },
-  'C2 Besorgung · pixel-7': { rows: 1, createTaps: 13, workTaps: 6, perThing: 7, moduleSwitches: 2, oneRow: 'ja', mapShown: 'nicht möglich' },
+  'C2 Besorgung · desktop-chrome': { rows: 3, createTaps: 1, workTaps: 7, perThing: 6, moduleSwitches: 0, oneRow: 'nein', mapShown: 'nicht möglich' },
+  'C2 Besorgung · pixel-7': { rows: 3, createTaps: 1, workTaps: 7, perThing: 6, moduleSwitches: 0, oneRow: 'nein', mapShown: 'nicht möglich' },
   'D1 Steht es im Plan, und wann · desktop-chrome': { taps: 15, perThing: 9, moduleSwitches: 10, markVisible: 5, markAgrees: 5, tripsToPlanner: 0 },
   'D1 Steht es im Plan, und wann · pixel-7': { taps: 15, perThing: 9, moduleSwitches: 10, markVisible: 5, markAgrees: 5, tripsToPlanner: 0 },
   'D2 Geteilter Link in den Planer · desktop-chrome': { taps: 2, moduleSwitches: 1, forms: 1, inPlanner: 'ja', wayBack: 'ja' },
@@ -1276,25 +1281,31 @@ test('C2 Besorgung', async ({ page, isMobile }, info) => {
   await expect(page.getByRole('menuitem')).toHaveCount(0);
   const hand = new Hand(page, isMobile);
   hand.start();
-  // The list lives in Listen (the plan has it only after „In den Plan“ there): open it, tick three; back; tick the
-  // two errands on today's sheet.
-  await go(hand, page, isMobile, 'lists');
-  // The only list opens by itself; with more lists it is one tap on its name.
-  const first = page.getByRole('checkbox', { name: DRUGSTORE[0], exact: true });
-  await expect(page.locator('main').getByText('Drogerie').first()).toBeVisible();
-  if (!(await appears(first)))
-    await hand.tap(
-      page.locator('main').getByRole('button', { name: 'Drogerie', exact: true }).first(),
-      'Liste Drogerie',
-    );
+  // V1 (after planner hub 2; 5b stays parked): the list is asked into the plan from the field by its name – „Drogerie“
+  // reads as „Liste in den Plan“ (K1), Enter puts its one row under „Noch ohne Tag“. No trip to Listen.
+  const field = page.getByRole('textbox', { name: 'Eintragen oder sagen' });
+  await hand.fill(field, 'Drogerie', 'Feld: Drogerie');
+  await expect(page.getByTestId('planner-kind')).toContainText('Liste in den Plan');
+  await field.press('Enter');
+  await expect(page.getByText('Liste steht im Plan, unter „Noch ohne Tag“.')).toBeVisible();
+  const created = await plannerRows(page);
+  const createTaps = hand.taps;
+  // Working the round in the planner: „Noch ohne Tag“ unfolds where it is folded, the list's row opens, its three
+  // entries are ticked in the compartment, then the two errands on today's sheet.
+  const head = page.getByRole('button', { name: /^Noch ohne Tag ausklappen$/ });
+  if (await head.count()) await hand.tap(head, 'Noch ohne Tag ausklappen');
+  // The list's row is „Einkaufen · 3 Dinge“ (the source's title for a shopping list).
+  const opener = page.getByRole('button', { name: /^Einkaufen · 3 Dinge.*Aufklappen$/ }).first();
+  await hand.tap(opener, 'Aufklappen: Drogerie', 'Drogerie');
+  // One compartment is open at a time: the list's.
+  const panel = page.getByTestId('row-compartment');
   for (const item of DRUGSTORE)
-    await hand.tap(page.getByRole('checkbox', { name: item, exact: true }), item, item);
+    await hand.tap(panel.getByRole('checkbox', { name: `„${item}“ abhaken` }), item, item);
   await expect
     .poll(
       async () => (await rows<{ done: boolean }>(page, 'lists_item')).filter((x) => x.done).length,
     )
     .toBe(3);
-  await go(hand, page, isMobile, 'planner');
   for (const title of ERRANDS)
     await hand.tap(
       page.getByRole('checkbox', { name: `Erledigt: ${title}`, exact: true }),
@@ -1306,17 +1317,16 @@ test('C2 Besorgung', async ({ page, isMobile }, info) => {
     info,
     name,
     {
-      rows: before.all,
-      // Getting the round into the plan as it is worked: nothing to do today (no bundle, the list stays out of the
-      // plan – the path works it in Listen).
-      createTaps: 0,
-      workTaps: hand.taps,
+      // Rows once the round is in the plan (as C1 reads `created`): the two errands and the list.
+      rows: created.all,
+      createTaps,
+      workTaps: hand.taps - createTaps,
       perThing: hand.perThing,
       moduleSwitches: hand.moduleSwitches,
       oneRow: menu.some((m) => /bündel|zusammen/i.test(m)) ? 'ja' : 'nein',
       mapShown: menu.some((m) => /Karte/i.test(m)) ? 'ja' : 'nicht möglich',
     },
-    { before, menu, places: hand.places, path: hand.path },
+    { before, created, menu, places: hand.places, path: hand.path },
   );
 });
 

@@ -9619,6 +9619,7 @@ export const de = {
       name: {
         invoice: 'Rechnung',
         list: 'Einkaufsliste',
+        listRow: 'Liste in den Plan',
         event: 'Termin',
         note: 'Notiz',
         bookmark: 'Merkliste',
@@ -9636,6 +9637,7 @@ export const de = {
       toast: {
         invoice: 'Rechnung angelegt, liegt unter „Noch ohne Tag“.',
         list: 'Steht auf der Einkaufsliste.',
+        listRow: 'Liste steht im Plan, unter „Noch ohne Tag“.',
         event: 'Termin eingetragen.',
         note: 'Notiz angelegt.',
         bookmark: 'Auf der Merkliste.',
