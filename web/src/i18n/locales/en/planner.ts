@@ -134,6 +134,7 @@ export const planner: Strings['planner'] = {
     name: {
       invoice: 'invoice',
       list: 'shopping list',
+      listRow: 'list in the plan',
       event: 'appointment',
       note: 'note',
       bookmark: 'bookmark',

@@ -642,6 +642,17 @@ export async function addKindFromField(
 ): Promise<boolean> {
   if (reading.kind === 'steps')
     return addFromField(reading.title, titles, shown, reading.steps, appointment, field);
+  // A list by its name (V1): exactly „In den Plan“ in Listen – its row, „Nicht planen“ lifted, a list without a day
+  // laid on today, one undo, the toast says where it lies. It takes no topic: K9 then follows as its own line.
+  if (reading.kind === 'listRow') {
+    const ok = await placeRequested(
+      { module: 'lists', id: reading.listId },
+      { title: reading.name },
+    );
+    const shownTopic = field.filtered ?? field.topic;
+    if (ok && shownTopic) toast(t.planner.topic.notIn(shownTopic.title));
+    return ok;
+  }
   const shownTopic = field.filtered ?? field.topic;
   let key: string | undefined;
   let noteRef: { id: string; title: string } | undefined;

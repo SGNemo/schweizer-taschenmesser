@@ -137,6 +137,76 @@ describe('addKindFromField', () => {
     expect((await itemRepo.get('lists:shopping-default'))?.updatedAt).toBe(before?.updatedAt);
   });
 
+  it('a list by its name: „In den Plan“ as in Listen – on today, no entry added, one undo takes it back', async () => {
+    await repo('lists', 'list').createMany([
+      { id: 'drog', data: { name: 'Drogerie', kind: 'shopping' } },
+    ]);
+    await repo('lists', 'item').createMany([
+      { id: 'd1', data: { listId: 'drog', name: 'Zahnpasta' } },
+    ]);
+    const entries = await live('lists_item');
+    expect(await addKindFromField({ kind: 'listRow', listId: 'drog', name: 'Drogerie' }, {})).toBe(
+      true,
+    );
+    expect((await itemRepo.get('lists:drog'))?.excluded).toBeUndefined();
+    expect((await assignmentRepo.active().toArray()).map((r) => r.date)).toEqual(['2026-11-30']);
+    expect(await live('lists_item')).toEqual(entries);
+    expect(messages().at(-1)).toBe('Im Plan: Einkaufen · 1 Ding · Mo');
+    await undoLast();
+    expect(await itemRepo.get('lists:drog')).toBeUndefined();
+    expect(await assignmentRepo.active().count()).toBe(0);
+  });
+
+  it('a list already in the plan stays where it lies; the toast names its day', async () => {
+    await repo('lists', 'list').createMany([
+      { id: 'drog', data: { name: 'Drogerie', kind: 'shopping' } },
+    ]);
+    await repo('lists', 'item').createMany([
+      { id: 'd1', data: { listId: 'drog', name: 'Zahnpasta' } },
+    ]);
+    await itemRepo.create(
+      { source: { module: 'lists', id: 'drog' }, order: 0 },
+      { id: 'lists:drog' },
+    );
+    await assignmentRepo.create(
+      {
+        itemKey: 'lists:drog',
+        k: 0,
+        of: 1,
+        date: '2026-12-01',
+        minutes: 45,
+        order: 0,
+        reason: 'new',
+      },
+      { id: 'lists:drog#0' },
+    );
+    expect(await addKindFromField({ kind: 'listRow', listId: 'drog', name: 'Drogerie' }, {})).toBe(
+      true,
+    );
+    expect((await assignmentRepo.active().toArray()).map((r) => r.date)).toEqual(['2026-12-01']);
+    expect(messages().at(-1)).toBe('Im Plan: Einkaufen · 1 Ding · Di');
+  });
+
+  it('„Nicht planen“ is lifted – he typed it – and one undo puts it back', async () => {
+    await repo('lists', 'list').createMany([
+      { id: 'drog', data: { name: 'Drogerie', kind: 'shopping' } },
+    ]);
+    await repo('lists', 'item').createMany([
+      { id: 'd1', data: { listId: 'drog', name: 'Zahnpasta' } },
+    ]);
+    await itemRepo.create(
+      { source: { module: 'lists', id: 'drog' }, order: 0, excluded: true },
+      { id: 'lists:drog' },
+    );
+    expect(await addKindFromField({ kind: 'listRow', listId: 'drog', name: 'Drogerie' }, {})).toBe(
+      true,
+    );
+    expect((await itemRepo.get('lists:drog'))?.excluded).toBeUndefined();
+    await undoLast();
+    expect((await itemRepo.get('lists:drog'))?.excluded).toBe(true);
+    expect(await assignmentRepo.active().count()).toBe(0);
+  });
+
   it('rollback: a source that does not list the thing leaves nothing behind', async () => {
     await setSettings('module.invoices', { showInPlan: false });
     expect(await addKindFromField(invoice, {})).toBe(false);

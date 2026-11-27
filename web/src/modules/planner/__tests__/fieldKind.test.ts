@@ -159,3 +159,33 @@ describe('fieldKind – the order of readings', () => {
     expect(kind('23.11. 15:00 Friseur')).toBeUndefined();
   });
 });
+
+describe('fieldKind – a list by its name (V1, after planner hub 2)', () => {
+  const lists = new Map([[nameKey('Drogerie'), { id: 'drog', name: 'Drogerie' }]]);
+  it('the exact name of a list the planner can show is that list’s row, case and spaces aside', () => {
+    expect(fieldKind('Drogerie', ctx({ lists }))).toEqual({
+      kind: 'listRow',
+      listId: 'drog',
+      name: 'Drogerie',
+    });
+    expect(kind('  drogerie ', { lists })).toBe('listRow');
+  });
+  it('anything more or less is no list: a ToDo, or the shopping entry it already was', () => {
+    expect(kind('Drogerie morgen', { lists })).toBeUndefined();
+    expect(kind('Droger', { lists })).toBeUndefined();
+    expect(kind('Drogerie kaufen', { lists })).toBe('list');
+    expect(kind('Milch', { lists })).toBe('list');
+  });
+  it('Listen off: a ToDo', () => {
+    expect(kind('Drogerie', { lists, on: (id) => id !== 'lists' })).toBeUndefined();
+  });
+  it('a list name that is also a known shopping name plans the list; „Einkauf: …“ still adds an entry', () => {
+    const both = new Map([
+      [nameKey('Milch'), { id: 'milk', name: 'Milch' }],
+      [nameKey('Einkauf'), { id: 'shopping-default', name: 'Einkauf' }],
+    ]);
+    expect(kind('Milch', { lists: both })).toBe('listRow');
+    expect(kind('Einkauf', { lists: both })).toBe('listRow');
+    expect(kind('Einkauf: Drogerie', { lists: both })).toBe('list');
+  });
+});

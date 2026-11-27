@@ -9625,6 +9625,7 @@ export const de = {
       name: {
         invoice: 'Rechnung',
         list: 'Einkaufsliste',
+        listRow: 'Liste im Plan',
         event: 'Termin',
         note: 'Notiz',
         bookmark: 'Merkliste',

@@ -148,3 +148,29 @@ for (const scheme of ['light', 'dark'] as const)
     ).violations.map((v) => `${v.id}: ${v.nodes[0]?.target.join(' ')}`);
     expect(violations).toEqual([]);
   });
+
+test('a list by its name (V1): „Liste im Plan“, Enter lays its row on today as Listen’s „In den Plan“, no entry added', async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize(DESKTOP);
+  await prepare(page);
+  await put(page, {
+    lists_list: [{ id: 'drog', name: 'Drogerie', kind: 'shopping', order: 1 }],
+    lists_item: [
+      { id: 'd1', listId: 'drog', name: 'Zahnpasta', done: false, order: 0 },
+      { id: 'd2', listId: 'drog', name: 'Duschgel', done: false, order: 1 },
+    ],
+  });
+  await page.reload();
+  await field(page).fill('Drogerie');
+  await expect(page.getByTestId('planner-kind')).toContainText('Liste im Plan');
+  await expect(page.getByTestId('planner-kind')).toContainText('Drogerie');
+  await field(page).press('Enter');
+  await expect(page.getByText('Im Plan: Einkaufen · 2 Dinge · Mo')).toBeVisible();
+  await expect(
+    page.getByTestId(`day-${TODAY}`).getByRole('button', { name: /^Einkaufen · 2 Dinge/ }),
+  ).toBeVisible();
+  expect(await count(page, 'lists_item')).toBe(2);
+  expect(await count(page, 'todos_task')).toBe(0);
+});

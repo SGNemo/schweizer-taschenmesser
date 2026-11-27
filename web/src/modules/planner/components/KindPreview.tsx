@@ -17,6 +17,7 @@ import styles from '../routes/planner.module.css';
 const GLYPH: Record<FieldKindName, IconName> = {
   invoice: 'receipt',
   list: 'cart',
+  listRow: 'cart',
   event: 'calendar',
   note: 'note',
   bookmark: 'bookmark',
@@ -44,6 +45,8 @@ function partsOf(r: FieldKind): { before: string[]; amount?: string; after: stri
       const more = r.names.length - NAMES_SHOWN;
       return { before: [more > 0 ? `${shown} ${t.planner.kinds.more(more)}` : shown], after: [] };
     }
+    case 'listRow':
+      return { before: [r.name], after: [] };
     case 'event':
       return {
         before: [
